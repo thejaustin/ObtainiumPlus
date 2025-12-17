@@ -41,18 +41,6 @@ See [GitHub Issues](https://github.com/thejaustin/ObtainiumPlus/issues) for upco
 - [#1 Drag-to-Reorder Categories](https://github.com/thejaustin/ObtainiumPlus/issues/1) - Customize category display order
 - [#2 Additional Sorting Methods](https://github.com/thejaustin/ObtainiumPlus/issues/2) - More app sorting options
 
-### 📊 What's Different from Original Obtainium?
-
-| Feature | Original Obtainium | Obtainium+ |
-|---------|-------------------|------------|
-| **Collapse Categories** | ❌ Always expanded | ✅ Optional setting to collapse by default |
-| **APK Signing** | ⚠️ Manual signing required | ✅ Automatic via GitHub Actions |
-| **Build Flavors** | Normal + F-Droid | Normal only (simplified) |
-| **APK Types** | Universal + Split per ABI | Universal only |
-| **Build Method** | Local SDK required | GitHub Actions (no SDK needed) |
-| **Version Tracking** | Semantic versioning | Semantic + patch count (`-pX`) |
-| **App Name** | Obtainium | Obtainium+ |
-
 ## Original Obtainium Resources
 
 - [Obtainium Wiki](https://wiki.obtainium.imranr.dev/) ([repository](https://github.com/ImranR98/Obtainium-Wiki))
