@@ -54,3 +54,8 @@ app.*.map.json
 TODO.txt
 data
 node_modules/
+# Signing files (should never be committed)
+obtainium-release-key.jks
+keystore-base64.txt
+release-keystore.jks
+key.properties
