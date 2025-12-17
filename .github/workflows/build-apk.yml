@@ -1,0 +1,122 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        type: boolean
+        description: Create a draft release?
+        default: false
+      beta:
+        type: boolean
+        description: Mark as pre-release?
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Extract Version
+        id: extract_version
+        run: |
+          VERSION=$(grep -oP "^version: [^\+]+" pubspec.yaml | tail -c +10)
+          BUILD_NUMBER=$(grep -oP "^version: .*\+\K.*" pubspec.yaml)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION (build $BUILD_NUMBER)"
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APKs
+        run: |
+          echo "Removing release signing config for unsigned builds..."
+          sed -i 's/signingConfig = signingConfigs.getByName("release")//g' android/app/build.gradle.kts
+
+          echo "Building universal APK (normal flavor)..."
+          flutter build apk --flavor normal
+
+          echo "Building split APKs by ABI (normal flavor)..."
+          flutter build apk --split-per-abi --flavor normal
+
+          echo "Renaming APKs to remove flavor suffix..."
+          for file in build/app/outputs/flutter-apk/app-*normal*.apk; do
+            if [ -f "$file" ]; then
+              mv "$file" "${file//-normal/}"
+            fi
+          done
+
+          echo "Building universal APK (F-Droid flavor)..."
+          flutter build apk --flavor fdroid -t lib/main_fdroid.dart
+
+          echo "Building split APKs by ABI (F-Droid flavor)..."
+          flutter build apk --split-per-abi --flavor fdroid -t lib/main_fdroid.dart
+
+          echo "Cleaning up SHA1 files..."
+          rm -f ./build/app/outputs/flutter-apk/*.sha1
+
+          echo "Listing built APKs..."
+          ls -lh ./build/app/outputs/flutter-apk/
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: obtainium-plus-apks-${{ steps.extract_version.outputs.version }}
+          path: build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create Draft Release
+        if: ${{ inputs.create_release }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.extract_version.outputs.tag }}
+          name: "Obtainium+ ${{ steps.extract_version.outputs.version }}"
+          draft: true
+          prerelease: ${{ inputs.beta }}
+          generateReleaseNotes: true
+          artifacts: "build/app/outputs/flutter-apk/*.apk"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            ## Obtainium+ ${{ steps.extract_version.outputs.version }}
+
+            ### What's New
+            - Collapse categories by default setting
+            - App renamed to Obtainium+
+
+            ### Installation
+            Download the appropriate APK for your device:
+            - **app-release.apk** - Universal APK (works on all devices, larger size)
+            - **app-armeabi-v7a-release.apk** - For 32-bit ARM devices
+            - **app-arm64-v8a-release.apk** - For 64-bit ARM devices (most modern phones)
+            - **app-x86_64-release.apk** - For x86_64 devices
+
+            ### F-Droid Flavor
+            F-Droid builds exclude proprietary components:
+            - **app-fdroid-release.apk** - Universal F-Droid build
+            - **app-*-fdroid-release.apk** - Split F-Droid builds
+
+            **Note:** These are unsigned APKs built by GitHub Actions.
