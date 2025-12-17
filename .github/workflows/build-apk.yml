@@ -93,17 +93,18 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Create Draft Release
-        if: ${{ inputs.create_release }}
+      - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.extract_version.outputs.tag }}
           name: "Obtainium+ ${{ steps.extract_version.outputs.version }}"
-          draft: true
+          draft: false
           prerelease: ${{ inputs.beta }}
           generateReleaseNotes: true
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          removeArtifacts: true
           body: |
             ## Obtainium+ ${{ steps.extract_version.outputs.version }}
 
