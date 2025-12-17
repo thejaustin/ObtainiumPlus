@@ -52,15 +52,27 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Setup Keystore
+        run: |
+          echo "Creating keystore from secret..."
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-keystore.jks
+          echo "Keystore created successfully"
+
+          echo "Creating key.properties file..."
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=release-keystore.jks
+          EOF
+          echo "key.properties created successfully"
+
       - name: Build APKs
         run: |
-          echo "Removing release signing config for unsigned builds..."
-          sed -i 's/signingConfig = signingConfigs.getByName("release")//g' android/app/build.gradle.kts
-
-          echo "Building universal APK (normal flavor)..."
+          echo "Building universal APK (Obtainium Plus)..."
           flutter build apk --flavor normal
 
-          echo "Building split APKs by ABI (normal flavor)..."
+          echo "Building split APKs by ABI (Obtainium Plus)..."
           flutter build apk --split-per-abi --flavor normal
 
           echo "Renaming APKs to remove flavor suffix..."
@@ -69,12 +81,6 @@ jobs:
               mv "$file" "${file//-normal/}"
             fi
           done
-
-          echo "Building universal APK (F-Droid flavor)..."
-          flutter build apk --flavor fdroid -t lib/main_fdroid.dart
-
-          echo "Building split APKs by ABI (F-Droid flavor)..."
-          flutter build apk --split-per-abi --flavor fdroid -t lib/main_fdroid.dart
 
           echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
@@ -121,9 +127,4 @@ jobs:
             - **app-arm64-v8a-release.apk** - For 64-bit ARM devices (most modern phones)
             - **app-x86_64-release.apk** - For x86_64 devices
 
-            ### F-Droid Flavor
-            F-Droid builds exclude proprietary components:
-            - **app-fdroid-release.apk** - Universal F-Droid build
-            - **app-*-fdroid-release.apk** - Split F-Droid builds
-
-            **Note:** These are unsigned APKs built by GitHub Actions.
+            **Note:** These APKs are automatically signed by GitHub Actions and ready to install on your device.
