@@ -47,7 +47,7 @@ jobs:
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
           echo "🏷️  Building Obtainium+ version: $VERSION (build $BUILD_NUMBER)"
-          echo "📦 Fork versioning: The 4th decimal (.2) represents commits since fork"
+          echo "📦 Fork versioning: -pX suffix represents commits since fork (e.g., 1.2.9-p3)"
 
       - name: Get dependencies
         run: flutter pub get
@@ -104,9 +104,9 @@ jobs:
           body: |
             ## Obtainium+ ${{ steps.extract_version.outputs.version }}
 
-            **Fork Version Naming:** `1.2.9.X` where X = number of commits since fork
-            - This release: `.2` = 2 commits since forking from upstream
-            - When merging from upstream, reset to `.0` and increment with each commit
+            **Fork Version Naming:** `1.2.9-pX` where X = number of commits since fork
+            - This release: `-p3` = 3 commits since forking from upstream
+            - When merging from upstream, reset to `-p0` and increment with each commit
 
             ### What's New in This Fork
             - ✨ Collapse categories by default setting
