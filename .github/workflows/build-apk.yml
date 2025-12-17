@@ -46,7 +46,8 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION (build $BUILD_NUMBER)"
+          echo "🏷️  Building Obtainium+ version: $VERSION (build $BUILD_NUMBER)"
+          echo "📦 Fork versioning: The 4th decimal (.2) represents commits since fork"
 
       - name: Get dependencies
         run: flutter pub get
@@ -103,9 +104,15 @@ jobs:
           body: |
             ## Obtainium+ ${{ steps.extract_version.outputs.version }}
 
-            ### What's New
-            - Collapse categories by default setting
-            - App renamed to Obtainium+
+            **Fork Version Naming:** `1.2.9.X` where X = number of commits since fork
+            - This release: `.2` = 2 commits since forking from upstream
+            - When merging from upstream, reset to `.0` and increment with each commit
+
+            ### What's New in This Fork
+            - ✨ Collapse categories by default setting
+            - 🎨 App renamed to Obtainium+
+            - 📝 Documentation for drag-to-reorder (Issue #1)
+            - 🔮 Future: Additional sorting methods (Issue #2)
 
             ### Installation
             Download the appropriate APK for your device:
