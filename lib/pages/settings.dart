@@ -858,6 +858,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Flexible(child: Text(tr('collapseCategoriesByDefault'))),
+                            Switch(
+                              value: settingsProvider.categoriesCollapsedByDefault,
+                              onChanged: (value) {
+                                settingsProvider.categoriesCollapsedByDefault = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                             Flexible(
                               child: Text(tr('dontShowTrackOnlyWarnings')),
                             ),

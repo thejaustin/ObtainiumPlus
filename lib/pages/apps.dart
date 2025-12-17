@@ -723,7 +723,7 @@ class AppsPageState extends State<AppsPage> {
 
       capFirstChar(String str) => str[0].toUpperCase() + str.substring(1);
       return ExpansionTile(
-        initiallyExpanded: true,
+        initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
         title: Text(
           capFirstChar(listedCategories[index] ?? tr('noCategory')),
           style: const TextStyle(fontWeight: FontWeight.bold),

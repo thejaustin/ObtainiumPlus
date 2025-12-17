@@ -232,6 +232,15 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get categoriesCollapsedByDefault {
+    return prefs?.getBool('categoriesCollapsedByDefault') ?? false;
+  }
+
+  set categoriesCollapsedByDefault(bool collapsed) {
+    prefs?.setBool('categoriesCollapsedByDefault', collapsed);
+    notifyListeners();
+  }
+
   bool get hideTrackOnlyWarning {
     return prefs?.getBool('hideTrackOnlyWarning') ?? false;
   }
