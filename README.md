@@ -1,19 +1,28 @@
 <div align="center"><a href="https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md"><img src="https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/banner-support.svg" alt="Support Palestine" style="width: 100%;"></a></div>
 
-# ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium
+# ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium+
 
 Get Android app updates straight from the source.
 
+> **Note:** This is a fork of [Obtainium](https://github.com/ImranR98/Obtainium) with additional features and improvements.
+
 Obtainium allows you to install and update apps directly from their releases pages, and receive notifications when new releases are made available.
 
-More info:
+## About This Fork
+
+Obtainium+ includes the following enhancements:
+- ✨ Collapse categories by default setting
+- 🔧 Simplified build process with automatic APK signing
+- 📦 Universal APK builds (compatible with all devices)
+
+## Original Obtainium Resources
+
 - [Obtainium Wiki](https://wiki.obtainium.imranr.dev/) ([repository](https://github.com/ImranR98/Obtainium-Wiki))
 - [Obtainium 101](https://www.youtube.com/watch?v=0MF_v2OBncw) - Tutorial video
 - [AppVerifier](https://github.com/soupslurpr/AppVerifier) - App verification tool (recommended, integrates with Obtainium)
 - [apps.obtainium.imranr.dev](https://apps.obtainium.imranr.dev/) - Crowdsourced app configurations ([repository](https://github.com/ImranR98/apps.obtainium.imranr.dev))
 - [Side Of Burritos - You should use this instead of F-Droid | How to use app RSS feed](https://youtu.be/FFz57zNR_M0) - Original motivation for this app
-- [Website](https://obtainium.imranr.dev) ([repository](https://github.com/ImranR98/obtainium.imranr.dev))
-- [Source code](https://github.com/ImranR98/Obtainium)
+- [Original Obtainium Repository](https://github.com/ImranR98/Obtainium)
 
 Currently supported App sources:
 - Open Source - General:
@@ -54,19 +63,21 @@ Or, contribute some configurations to the website by creating a PR at [this repo
 
 [<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png"
     alt="Get it on GitHub"
-    height="80">](https://github.com/ImranR98/Obtainium/releases)
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
-     alt="Get it on IzzyOnDroid"
-     height="80">](https://apt.izzysoft.de/fdroid/index/apk/dev.imranr.obtainium)
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/packages/dev.imranr.obtainium.fdroid/)
-     
-Verification info:
+    height="80">](https://github.com/thejaustin/ObtainiumPlus/releases)
+
+### How to Install
+
+1. Go to [Releases](https://github.com/thejaustin/ObtainiumPlus/releases)
+2. Download `app-release.apk` (universal APK, works on all Android devices)
+3. Install the APK on your device
+   - You may need to enable "Install from unknown sources" in your device settings
+
+**Note:** All APKs are automatically signed via GitHub Actions and ready to install.
+
+### Verification Info
+
 - Package ID: `dev.imranr.obtainium`
-- SHA-256 hash of signing certificate: `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
-  - Note: The above signature is also valid for the F-Droid flavour of Obtainium, thanks to [reproducible builds](https://f-droid.org/docs/Reproducible_Builds/).
-- [PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index) (to verify APK hashes)
+- Signing certificate is unique to this fork (different from original Obtainium)
 
 ## Limitations
 - For some sources, data is gathered using Web scraping and can easily break due to changes in website design. In such cases, more reliable methods may be unavailable.
