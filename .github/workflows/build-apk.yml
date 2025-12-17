@@ -67,15 +67,12 @@ jobs:
           EOF
           echo "key.properties created successfully"
 
-      - name: Build APKs
+      - name: Build APK
         run: |
           echo "Building universal APK (Obtainium Plus)..."
           flutter build apk --flavor normal
 
-          echo "Building split APKs by ABI (Obtainium Plus)..."
-          flutter build apk --split-per-abi --flavor normal
-
-          echo "Renaming APKs to remove flavor suffix..."
+          echo "Renaming APK to remove flavor suffix..."
           for file in build/app/outputs/flutter-apk/app-*normal*.apk; do
             if [ -f "$file" ]; then
               mv "$file" "${file//-normal/}"
@@ -85,7 +82,7 @@ jobs:
           echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
 
-          echo "Listing built APKs..."
+          echo "Built APK:"
           ls -lh ./build/app/outputs/flutter-apk/
 
       - name: Upload APK Artifacts
@@ -121,10 +118,6 @@ jobs:
             - 🔮 Future: Additional sorting methods (Issue #2)
 
             ### Installation
-            Download the appropriate APK for your device:
-            - **app-release.apk** - Universal APK (works on all devices, larger size)
-            - **app-armeabi-v7a-release.apk** - For 32-bit ARM devices
-            - **app-arm64-v8a-release.apk** - For 64-bit ARM devices (most modern phones)
-            - **app-x86_64-release.apk** - For x86_64 devices
+            Download **app-release.apk** - Universal APK that works on all devices.
 
-            **Note:** These APKs are automatically signed by GitHub Actions and ready to install on your device.
+            **Note:** The APK is automatically signed by GitHub Actions and ready to install on your device.
