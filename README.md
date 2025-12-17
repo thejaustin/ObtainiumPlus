@@ -117,38 +117,19 @@ Or, contribute some configurations to the website by creating a PR at [this repo
 - Package ID: `dev.imranr.obtainium`
 - Signing certificate is unique to this fork (different from original Obtainium)
 
-## Building from Source
+## Development
 
-### Using GitHub Actions (Recommended)
+For developers who want to contribute:
 
-This fork is designed to build exclusively via GitHub Actions:
-
-1. Fork this repository to your GitHub account
-2. Go to **Settings** → **Secrets and variables** → **Actions**
-3. The following secrets are already configured:
-   - `KEYSTORE_BASE64` - Base64-encoded signing keystore
-   - `KEYSTORE_PASSWORD` - Keystore password
-   - `KEY_ALIAS` - Key alias name
-   - `KEY_PASSWORD` - Key password
-4. Go to **Actions** tab → **Build APK** workflow
-5. Click **Run workflow**
-6. Download the signed APK from workflow artifacts
-
-**Why GitHub Actions only?**
-- No local Android SDK required
-- Consistent build environment
-- Automatic signing and artifact management
-- Works on any platform (Windows, Mac, Linux, even Termux!)
-
-### Local Development (Code Only)
-
-For code changes and testing:
 ```bash
+# Get dependencies
 flutter pub get
+
+# Run in development mode
 flutter run
 ```
 
-**Note:** Local builds won't be signed. Use GitHub Actions for production APKs.
+**Note:** Production APKs are built and signed automatically via GitHub Actions. Pre-built releases are available in the [Releases](https://github.com/thejaustin/ObtainiumPlus/releases) section.
 
 ## Contributing
 
@@ -156,7 +137,6 @@ Contributions are welcome! Please:
 1. Check [existing issues](https://github.com/thejaustin/ObtainiumPlus/issues) first
 2. Create a new issue to discuss major changes
 3. Submit pull requests with clear descriptions
-4. Test builds using GitHub Actions before submitting
 
 ## Limitations
 - For some sources, data is gathered using Web scraping and can easily break due to changes in website design. In such cases, more reliable methods may be unavailable.
