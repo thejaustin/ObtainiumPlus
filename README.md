@@ -10,10 +10,48 @@ Obtainium allows you to install and update apps directly from their releases pag
 
 ## About This Fork
 
-Obtainium+ includes the following enhancements:
-- ✨ Collapse categories by default setting
-- 🔧 Simplified build process with automatic APK signing
-- 📦 Universal APK builds (compatible with all devices)
+Obtainium+ is a feature-enhanced fork of Obtainium with improvements focused on user experience and simplified deployment.
+
+### ✨ New Features
+
+#### Collapse Categories by Default
+- **New Setting:** Toggle to collapse all category groups when opening the app
+- **Location:** Settings → Below "Group by category" option
+- **Use Case:** Keeps your app list clean and organized, especially useful with many categories
+- **How it works:** When enabled, all category groups start collapsed; tap to expand individual categories as needed
+
+### 🔧 Technical Improvements
+
+#### Automated Build System
+- **Signed APKs via GitHub Actions:** All releases are automatically signed and ready to install
+- **No local build required:** Trigger builds directly from GitHub Actions workflow
+- **Universal APK only:** Single APK works on all device architectures (ARM, x86_64)
+- **Simplified workflow:** Removed F-Droid flavor builds (normal flavor only)
+
+### 📦 Version Naming
+
+This fork uses a unique versioning scheme:
+- **Format:** `1.2.9-pX` where `X` = number of patches/commits since forking
+- **Current:** `1.2.9-p3` (3 commits beyond upstream v1.2.9)
+- **Purpose:** Track fork-specific changes while maintaining upstream version reference
+
+### 🚀 Planned Features
+
+See [GitHub Issues](https://github.com/thejaustin/ObtainiumPlus/issues) for upcoming features:
+- [#1 Drag-to-Reorder Categories](https://github.com/thejaustin/ObtainiumPlus/issues/1) - Customize category display order
+- [#2 Additional Sorting Methods](https://github.com/thejaustin/ObtainiumPlus/issues/2) - More app sorting options
+
+### 📊 What's Different from Original Obtainium?
+
+| Feature | Original Obtainium | Obtainium+ |
+|---------|-------------------|------------|
+| **Collapse Categories** | ❌ Always expanded | ✅ Optional setting to collapse by default |
+| **APK Signing** | ⚠️ Manual signing required | ✅ Automatic via GitHub Actions |
+| **Build Flavors** | Normal + F-Droid | Normal only (simplified) |
+| **APK Types** | Universal + Split per ABI | Universal only |
+| **Build Method** | Local SDK required | GitHub Actions (no SDK needed) |
+| **Version Tracking** | Semantic versioning | Semantic + patch count (`-pX`) |
+| **App Name** | Obtainium | Obtainium+ |
 
 ## Original Obtainium Resources
 
@@ -78,6 +116,47 @@ Or, contribute some configurations to the website by creating a PR at [this repo
 
 - Package ID: `dev.imranr.obtainium`
 - Signing certificate is unique to this fork (different from original Obtainium)
+
+## Building from Source
+
+### Using GitHub Actions (Recommended)
+
+This fork is designed to build exclusively via GitHub Actions:
+
+1. Fork this repository to your GitHub account
+2. Go to **Settings** → **Secrets and variables** → **Actions**
+3. The following secrets are already configured:
+   - `KEYSTORE_BASE64` - Base64-encoded signing keystore
+   - `KEYSTORE_PASSWORD` - Keystore password
+   - `KEY_ALIAS` - Key alias name
+   - `KEY_PASSWORD` - Key password
+4. Go to **Actions** tab → **Build APK** workflow
+5. Click **Run workflow**
+6. Download the signed APK from workflow artifacts
+
+**Why GitHub Actions only?**
+- No local Android SDK required
+- Consistent build environment
+- Automatic signing and artifact management
+- Works on any platform (Windows, Mac, Linux, even Termux!)
+
+### Local Development (Code Only)
+
+For code changes and testing:
+```bash
+flutter pub get
+flutter run
+```
+
+**Note:** Local builds won't be signed. Use GitHub Actions for production APKs.
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Check [existing issues](https://github.com/thejaustin/ObtainiumPlus/issues) first
+2. Create a new issue to discuss major changes
+3. Submit pull requests with clear descriptions
+4. Test builds using GitHub Actions before submitting
 
 ## Limitations
 - For some sources, data is gathered using Web scraping and can easily break due to changes in website design. In such cases, more reliable methods may be unavailable.
