@@ -47,7 +47,7 @@ jobs:
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
           echo "🏷️  Building Obtainium+ version: $VERSION (build $BUILD_NUMBER)"
-          echo "📦 Fork versioning: -pX suffix represents commits since fork (e.g., 1.2.9-p3)"
+          echo "📦 Fork versioning: -pX suffix represents commits since fork (e.g., 1.2.9-p4)"
 
       - name: Get dependencies
         run: flutter pub get
@@ -109,16 +109,35 @@ jobs:
             ## Obtainium+ ${{ steps.extract_version.outputs.version }}
 
             **Fork Version Naming:** `1.2.9-pX` where X = number of commits since fork
-            - This release: `-p3` = 3 commits since forking from upstream
+            - This release: Version reflects commits since forking from upstream v1.2.9
             - When merging from upstream, reset to `-p0` and increment with each commit
 
-            ### What's New in This Fork
-            - ✨ Collapse categories by default setting
-            - 🎨 App renamed to Obtainium+
-            - 📝 Documentation for drag-to-reorder (Issue #1)
-            - 🔮 Future: Additional sorting methods (Issue #2)
+            ### ✨ Features in Obtainium+
 
-            ### Installation
+            **Drag-to-Reorder Categories**
+            - Long-press and drag categories to reorganize them
+            - Visual drag handle indicator
+            - Custom order persists across app restarts
+
+            **Advanced Sorting Methods**
+            - New sort button in bottom navigation
+            - Multiple sorting options: Default, Latest Updates, A-Z, Z-A, Recently Added, Install Status
+            - Sort preference persists across app restarts
+
+            **Collapse Categories by Default**
+            - Setting to collapse all category groups when opening the app
+            - Location: Settings → Below "Group by category"
+
+            **Enhanced Animations & UX**
+            - Smooth transitions for all UI elements (200-300ms animations)
+            - Haptic feedback on interactive elements
+            - Enhanced ripple effects and touch feedback
+
+            **Technical Improvements**
+            - Automated build system with signed APKs
+            - Universal APK works on all device architectures
+
+            ### 📥 Installation
             Download **app-release.apk** - Universal APK that works on all devices.
 
             **Note:** The APK is automatically signed by GitHub Actions and ready to install on your device.
