@@ -20,9 +20,11 @@ Color obtainiumThemeColor = const Color(0xFF6438B5);
 
 enum ThemeSettings { system, light, dark }
 
-enum SortColumnSettings { added, nameAuthor, authorName, releaseDate }
+enum SortColumnSettings { added, nameAuthor, authorName, releaseDate, lastUpdated, source, installDate, lastCheckDate }
 
 enum SortOrderSettings { ascending, descending }
+
+enum AppSortMethod { latestUpdates, nameAZ, nameZA, recentlyAdded, installStatus, defaultSort }
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
@@ -63,6 +65,16 @@ class SettingsProvider with ChangeNotifier {
 
   set theme(ThemeSettings t) {
     prefs?.setInt('theme', t.index);
+    notifyListeners();
+  }
+
+  DynamicSchemeVariant get themeVariant {
+    return DynamicSchemeVariant.values[prefs?.getInt('themeVariant') ??
+        DynamicSchemeVariant.tonalSpot.index];
+  }
+
+  set themeVariant(DynamicSchemeVariant t) {
+    prefs?.setInt('themeVariant', t.index);
     notifyListeners();
   }
 
@@ -541,6 +553,25 @@ class SettingsProvider with ChangeNotifier {
 
   set useFGService(bool val) {
     prefs?.setBool('useFGService', val);
+    notifyListeners();
+  }
+
+  List<String> get categoryOrder {
+    return prefs?.getStringList('categoryOrder') ?? [];
+  }
+
+  set categoryOrder(List<String> order) {
+    prefs?.setStringList('categoryOrder', order);
+    notifyListeners();
+  }
+
+  AppSortMethod get appSortMethod {
+    return AppSortMethod.values[prefs?.getInt('appSortMethod') ??
+        AppSortMethod.defaultSort.index];
+  }
+
+  set appSortMethod(AppSortMethod method) {
+    prefs?.setInt('appSortMethod', method.index);
     notifyListeners();
   }
 }

@@ -264,41 +264,159 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
-    listedApps.sort((a, b) {
-      int result = 0;
-      if (settingsProvider.sortColumn == SortColumnSettings.authorName) {
-        result = ((a.author + a.name).toLowerCase()).compareTo(
-          (b.author + b.name).toLowerCase(),
-        );
-      } else if (settingsProvider.sortColumn == SortColumnSettings.nameAuthor) {
-        result = ((a.name + a.author).toLowerCase()).compareTo(
-          (b.name + b.author).toLowerCase(),
-        );
-      } else if (settingsProvider.sortColumn ==
-          SortColumnSettings.releaseDate) {
-        // Handle null dates: apps with unknown release dates are grouped at the end
-        final aDate = a.app.releaseDate;
-        final bDate = b.app.releaseDate;
+    // Apply sorting based on the selected method
+    if (settingsProvider.appSortMethod == AppSortMethod.latestUpdates) {
+      listedApps.sort((a, b) {
+        final aDate = a.installedInfo?.lastUpdateTime != null
+            ? DateTime.fromMillisecondsSinceEpoch(a.installedInfo!.lastUpdateTime!)
+            : null;
+        final bDate = b.installedInfo?.lastUpdateTime != null
+            ? DateTime.fromMillisecondsSinceEpoch(b.installedInfo!.lastUpdateTime!)
+            : null;
         if (aDate == null && bDate == null) {
-          // Both null: sort by name for consistency
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        } else if (aDate == null) {
+          return 1;
+        } else if (bDate == null) {
+          return -1;
+        } else {
+          return bDate.compareTo(aDate); // Most recent first
+        }
+      });
+    } else if (settingsProvider.appSortMethod == AppSortMethod.nameAZ) {
+      listedApps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    } else if (settingsProvider.appSortMethod == AppSortMethod.nameZA) {
+      listedApps.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+    } else if (settingsProvider.appSortMethod == AppSortMethod.recentlyAdded) {
+      listedApps.sort((a, b) {
+        return b.app.additionalData['addedDate'] != null && a.app.additionalData['addedDate'] != null
+            ? (b.app.additionalData['addedDate'] as int).compareTo(a.app.additionalData['addedDate'] as int)
+            : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+    } else if (settingsProvider.appSortMethod == AppSortMethod.installStatus) {
+      listedApps.sort((a, b) {
+        final aInstalled = a.installedInfo != null;
+        final bInstalled = b.installedInfo != null;
+        if (aInstalled == bInstalled) {
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        }
+        return aInstalled ? -1 : 1; // Installed apps first
+      });
+    } else {
+      // Default sort using existing logic
+      listedApps.sort((a, b) {
+        int result = 0;
+        if (settingsProvider.sortColumn == SortColumnSettings.authorName) {
+          result = ((a.author + a.name).toLowerCase()).compareTo(
+            (b.author + b.name).toLowerCase(),
+          );
+        } else if (settingsProvider.sortColumn == SortColumnSettings.nameAuthor) {
           result = ((a.name + a.author).toLowerCase()).compareTo(
             (b.name + b.author).toLowerCase(),
           );
-        } else if (aDate == null) {
-          // a has no date, push to end (ascending) or beginning (will be reversed for descending)
-          result = 1;
-        } else if (bDate == null) {
-          // b has no date, push to end
-          result = -1;
-        } else {
-          result = aDate.compareTo(bDate);
+        } else if (settingsProvider.sortColumn ==
+            SortColumnSettings.releaseDate) {
+          // Handle null dates: apps with unknown release dates are grouped at the end
+          final aDate = a.app.releaseDate;
+          final bDate = b.app.releaseDate;
+          if (aDate == null && bDate == null) {
+            // Both null: sort by name for consistency
+            result = ((a.name + a.author).toLowerCase()).compareTo(
+              (b.name + b.author).toLowerCase(),
+            );
+          } else if (aDate == null) {
+            // a has no date, push to end (ascending) or beginning (will be reversed for descending)
+            result = 1;
+          } else if (bDate == null) {
+            // b has no date, push to end
+            result = -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (settingsProvider.sortColumn ==
+            SortColumnSettings.lastUpdated) {
+          final aDate = a.installedInfo?.lastUpdateTime != null
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  a.installedInfo!.lastUpdateTime!,
+                )
+              : null;
+          final bDate = b.installedInfo?.lastUpdateTime != null
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  b.installedInfo!.lastUpdateTime!,
+                )
+              : null;
+          if (aDate == null && bDate == null) {
+            result = ((a.name + a.author).toLowerCase()).compareTo(
+              (b.name + b.author).toLowerCase(),
+            );
+          } else if (aDate == null) {
+            result = 1;
+          } else if (bDate == null) {
+            result = -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (settingsProvider.sortColumn == SortColumnSettings.source) {
+          result = sourceProvider
+              .getSource(
+                a.app.url,
+                overrideSource: a.app.overrideSource,
+              )
+              .name
+              .toLowerCase()
+              .compareTo(
+                sourceProvider
+                    .getSource(
+                      b.app.url,
+                      overrideSource: b.app.overrideSource,
+                    )
+                    .name
+                    .toLowerCase(),
+              );
+        } else if (settingsProvider.sortColumn == SortColumnSettings.installDate) {
+          final aDate = a.installedInfo?.firstInstallTime != null
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  a.installedInfo!.firstInstallTime!,
+                )
+              : null;
+          final bDate = b.installedInfo?.firstInstallTime != null
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  b.installedInfo!.firstInstallTime!,
+                )
+              : null;
+          if (aDate == null && bDate == null) {
+            result = ((a.name + a.author).toLowerCase()).compareTo(
+              (b.name + b.author).toLowerCase(),
+            );
+          } else if (aDate == null) {
+            result = 1;
+          } else if (bDate == null) {
+            result = -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (settingsProvider.sortColumn ==
+            SortColumnSettings.lastCheckDate) {
+          final aDate = a.app.lastUpdateCheck;
+          final bDate = b.app.lastUpdateCheck;
+          if (aDate == null && bDate == null) {
+            result = ((a.name + a.author).toLowerCase()).compareTo(
+              (b.name + b.author).toLowerCase(),
+            );
+          } else if (aDate == null) {
+            result = 1;
+          } else if (bDate == null) {
+            result = -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
         }
-      }
-      return result;
-    });
+        return result;
+      });
 
-    if (settingsProvider.sortOrder == SortOrderSettings.descending) {
-      listedApps = listedApps.reversed.toList();
+      if (settingsProvider.sortOrder == SortOrderSettings.descending) {
+        listedApps = listedApps.reversed.toList();
+      }
     }
 
     var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
@@ -382,13 +500,38 @@ class AppsPageState extends State<AppsPage> {
     }
 
     var listedCategories = getListedCategories();
-    listedCategories.sort((a, b) {
-      return a != null && b != null
-          ? a.toLowerCase().compareTo(b.toLowerCase())
-          : a == null
-          ? 1
-          : -1;
-    });
+
+    // Sort categories using custom order if available, otherwise alphabetically
+    var customOrder = settingsProvider.categoryOrder;
+    if (customOrder.isNotEmpty) {
+      listedCategories.sort((a, b) {
+        var aIndex = a != null ? customOrder.indexOf(a) : -1;
+        var bIndex = b != null ? customOrder.indexOf(b) : -1;
+
+        // If both are in custom order, sort by their position
+        if (aIndex != -1 && bIndex != -1) {
+          return aIndex.compareTo(bIndex);
+        }
+        // If only a is in custom order, it comes first
+        if (aIndex != -1) return -1;
+        // If only b is in custom order, it comes first
+        if (bIndex != -1) return 1;
+        // If neither is in custom order, fall back to alphabetical
+        return a != null && b != null
+            ? a.toLowerCase().compareTo(b.toLowerCase())
+            : a == null
+            ? 1
+            : -1;
+      });
+    } else {
+      listedCategories.sort((a, b) {
+        return a != null && b != null
+            ? a.toLowerCase().compareTo(b.toLowerCase())
+            : a == null
+            ? 1
+            : -1;
+      });
+    }
 
     Set<App> selectedApps = listedApps
         .map((e) => e.app)
@@ -622,7 +765,9 @@ class AppsPageState extends State<AppsPage> {
       if (stops.length == 2) {
         stops[0] = 0.9999;
       }
-      return Container(
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             stops: stops,
@@ -638,72 +783,93 @@ class AppsPageState extends State<AppsPage> {
             ],
           ),
         ),
-        child: ListTile(
-          tileColor: listedApps[index].app.pinned
-              ? Colors.grey.withOpacity(0.1)
-              : Colors.transparent,
-          selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(
-            listedApps[index].app.pinned ? 0.2 : 0.1,
-          ),
-          selected: selectedAppIds
-              .map((e) => e)
-              .contains(listedApps[index].app.id),
-          onLongPress: () {
-            toggleAppSelected(listedApps[index].app);
-          },
-          leading: getAppIcon(index),
-          title: Text(
-            maxLines: 1,
-            listedApps[index].name,
-            style: TextStyle(
-              overflow: TextOverflow.ellipsis,
-              fontWeight: listedApps[index].app.pinned
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-            ),
-          ),
-          subtitle: Text(
-            tr('byX', args: [listedApps[index].author]),
-            maxLines: 1,
-            style: TextStyle(
-              overflow: TextOverflow.ellipsis,
-              fontWeight: listedApps[index].app.pinned
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-            ),
-          ),
-          trailing: listedApps[index].downloadProgress != null
-              ? SizedBox(
-                  child: Text(
-                    listedApps[index].downloadProgress! >= 0
-                        ? tr(
-                            'percentProgress',
-                            args: [
-                              listedApps[index].downloadProgress!
-                                  .toInt()
-                                  .toString(),
-                            ],
-                          )
-                        : tr('installing'),
-                    textAlign: (listedApps[index].downloadProgress! >= 0)
-                        ? TextAlign.start
-                        : TextAlign.end,
-                  ),
-                )
-              : trailingRow,
-          onTap: () {
-            if (selectedAppIds.isNotEmpty) {
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onLongPress: () {
+              HapticFeedback.mediumImpact();
               toggleAppSelected(listedApps[index].app);
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      AppPage(appId: listedApps[index].app.id),
+            },
+            onTap: () {
+              if (selectedAppIds.isNotEmpty) {
+                toggleAppSelected(listedApps[index].app);
+              } else {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        AppPage(appId: listedApps[index].app.id),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(0.0, 0.05);
+                      const end = Offset.zero;
+                      const curve = Curves.easeOutCubic;
+                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: offsetAnimation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    transitionDuration: const Duration(milliseconds: 300),
+                  ),
+                );
+              }
+            },
+            child: ListTile(
+              tileColor: listedApps[index].app.pinned
+                  ? Colors.grey.withOpacity(0.1)
+                  : Colors.transparent,
+              selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(
+                listedApps[index].app.pinned ? 0.2 : 0.1,
+              ),
+              selected: selectedAppIds
+                  .map((e) => e)
+                  .contains(listedApps[index].app.id),
+              leading: getAppIcon(index),
+              title: Text(
+                maxLines: 1,
+                listedApps[index].name,
+                style: TextStyle(
+                  overflow: TextOverflow.ellipsis,
+                  fontWeight: listedApps[index].app.pinned
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
-              );
-            }
-          },
+              ),
+              subtitle: Text(
+                tr('byX', args: [listedApps[index].author]),
+                maxLines: 1,
+                style: TextStyle(
+                  overflow: TextOverflow.ellipsis,
+                  fontWeight: listedApps[index].app.pinned
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+              trailing: listedApps[index].downloadProgress != null
+                  ? SizedBox(
+                      child: Text(
+                        listedApps[index].downloadProgress! >= 0
+                            ? tr(
+                                'percentProgress',
+                                args: [
+                                  listedApps[index].downloadProgress!
+                                      .toInt()
+                                      .toString(),
+                                ],
+                              )
+                            : tr('installing'),
+                        textAlign: (listedApps[index].downloadProgress! >= 0)
+                            ? TextAlign.start
+                            : TextAlign.end,
+                      ),
+                    )
+                  : trailingRow,
+            ),
+          ),
         ),
       );
     }
@@ -722,15 +888,57 @@ class AppsPageState extends State<AppsPage> {
           .toList();
 
       capFirstChar(String str) => str[0].toUpperCase() + str.substring(1);
-      return ExpansionTile(
-        initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
-        title: Text(
-          capFirstChar(listedCategories[index] ?? tr('noCategory')),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+
+      var categoryName = listedCategories[index];
+      var categoryColorInt =
+          categoryName != null ? settingsProvider.categories[categoryName] : null;
+      var categoryColor =
+          categoryColorInt != null ? Color(categoryColorInt) : null;
+      var transparent =
+          Theme.of(context).colorScheme.surface.withAlpha(0).value;
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: const Alignment(-1, 0),
+            end: const Alignment(-0.97, 0),
+            colors: [
+              categoryColor ?? Color(transparent),
+              Color(transparent),
+            ],
+            stops: const [0.99, 1],
+          ),
         ),
-        controlAffinity: ListTileControlAffinity.leading,
-        trailing: Text(tiles.length.toString()),
-        children: tiles,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          ),
+          child: ExpansionTile(
+            initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            childrenPadding: const EdgeInsets.only(bottom: 8),
+            title: Text(
+              capFirstChar(listedCategories[index] ?? tr('noCategory')),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(tiles.length.toString()),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.drag_handle,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ],
+            ),
+            children: tiles,
+          ),
+        ),
       );
     }
 
@@ -1140,7 +1348,21 @@ class AppsPageState extends State<AppsPage> {
       return [
         IconButton(
           visualDensity: VisualDensity.compact,
-          onPressed: getMassObtainFunction(),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            showSortDialog();
+          },
+          tooltip: tr('sort'),
+          icon: const Icon(Icons.sort),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: getMassObtainFunction() != null
+              ? () {
+                  HapticFeedback.mediumImpact();
+                  getMassObtainFunction()!();
+                }
+              : null,
           tooltip: selectedAppIds.isEmpty
               ? tr('installUpdateApps')
               : tr('installUpdateSelectedApps'),
@@ -1151,6 +1373,7 @@ class AppsPageState extends State<AppsPage> {
           onPressed: selectedAppIds.isEmpty
               ? null
               : () {
+                  HapticFeedback.lightImpact();
                   appsProvider.removeAppsWithModal(
                     context,
                     selectedApps.toList(),
@@ -1161,17 +1384,153 @@ class AppsPageState extends State<AppsPage> {
         ),
         IconButton(
           visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty ? null : launchCategorizeDialog(),
+          onPressed: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  launchCategorizeDialog()!();
+                },
           tooltip: tr('categorize'),
           icon: const Icon(Icons.category_outlined),
         ),
         IconButton(
           visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty ? null : showMoreOptionsDialog,
+          onPressed: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  showMoreOptionsDialog();
+                },
           tooltip: tr('more'),
           icon: const Icon(Icons.more_horiz),
         ),
       ];
+    }
+
+    showSortDialog() async {
+      HapticFeedback.lightImpact();
+      await showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+        barrierColor: Colors.black54,
+        transitionDuration: const Duration(milliseconds: 250),
+        pageBuilder: (BuildContext context, Animation animation, Animation secondaryAnimation) {
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                title: Text(tr('sort')),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RadioListTile<AppSortMethod>(
+                      title: const Text('Default'),
+                      value: AppSortMethod.defaultSort,
+                      groupValue: settingsProvider.appSortMethod,
+                      onChanged: (AppSortMethod? value) {
+                        if (value != null) {
+                          setState(() {
+                            settingsProvider.appSortMethod = value;
+                          });
+                          setDialogState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<AppSortMethod>(
+                      title: const Text('Latest Updates'),
+                      value: AppSortMethod.latestUpdates,
+                      groupValue: settingsProvider.appSortMethod,
+                      onChanged: (AppSortMethod? value) {
+                        if (value != null) {
+                          setState(() {
+                            settingsProvider.appSortMethod = value;
+                          });
+                          setDialogState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<AppSortMethod>(
+                      title: const Text('A-Z'),
+                      value: AppSortMethod.nameAZ,
+                      groupValue: settingsProvider.appSortMethod,
+                      onChanged: (AppSortMethod? value) {
+                        if (value != null) {
+                          setState(() {
+                            settingsProvider.appSortMethod = value;
+                          });
+                          setDialogState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<AppSortMethod>(
+                      title: const Text('Z-A'),
+                      value: AppSortMethod.nameZA,
+                      groupValue: settingsProvider.appSortMethod,
+                      onChanged: (AppSortMethod? value) {
+                        if (value != null) {
+                          setState(() {
+                            settingsProvider.appSortMethod = value;
+                          });
+                          setDialogState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<AppSortMethod>(
+                      title: const Text('Recently Added'),
+                      value: AppSortMethod.recentlyAdded,
+                      groupValue: settingsProvider.appSortMethod,
+                      onChanged: (AppSortMethod? value) {
+                        if (value != null) {
+                          setState(() {
+                            settingsProvider.appSortMethod = value;
+                          });
+                          setDialogState(() {});
+                        }
+                      },
+                    ),
+                    RadioListTile<AppSortMethod>(
+                      title: const Text('Install Status'),
+                      value: AppSortMethod.installStatus,
+                      groupValue: settingsProvider.appSortMethod,
+                      onChanged: (AppSortMethod? value) {
+                        if (value != null) {
+                          setState(() {
+                            settingsProvider.appSortMethod = value;
+                          });
+                          setDialogState(() {});
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(tr('close')),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+            child: ScaleTransition(
+              scale: CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              ),
+              child: child,
+            ),
+          );
+        },
+      );
     }
 
     showFilterDialog() async {
@@ -1290,13 +1649,32 @@ class AppsPageState extends State<AppsPage> {
       return settingsProvider.groupByCategory &&
               !(listedCategories.isEmpty ||
                   (listedCategories.length == 1 && listedCategories[0] == null))
-          ? SliverList(
-              delegate: SliverChildBuilderDelegate((
+          ? SliverReorderableList(
+              itemBuilder: (
                 BuildContext context,
                 int index,
               ) {
-                return getCategoryCollapsibleTile(index);
-              }, childCount: listedCategories.length),
+                return ReorderableDragStartListener(
+                  key: ValueKey(listedCategories[index] ?? 'null_category'),
+                  index: index,
+                  child: getCategoryCollapsibleTile(index),
+                );
+              },
+              itemCount: listedCategories.length,
+              onReorder: (int oldIndex, int newIndex) {
+                // Update category order
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                final item = listedCategories.removeAt(oldIndex);
+                listedCategories.insert(newIndex, item);
+
+                // Save the new order to settings
+                settingsProvider.categoryOrder = listedCategories
+                    .where((c) => c != null)
+                    .map((c) => c!)
+                    .toList();
+              },
             )
           : SliverList(
               delegate: SliverChildBuilderDelegate((
