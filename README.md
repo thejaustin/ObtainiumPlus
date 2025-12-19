@@ -12,11 +12,38 @@ Obtainium+ is a feature-enhanced fork of Obtainium with improvements focused on 
 
 ### ✨ New Features
 
+#### Drag-to-Reorder Categories
+- **Feature:** Reorganize categories by long-pressing and dragging them up and down
+- **Visual Indicator:** Drag handle icon on category tiles for easy identification
+- **Persistent:** Custom category order is saved and persists across app restarts
+- **Use Case:** Prioritize your most important categories at the top
+
+#### Advanced Sorting Methods
+- **Feature:** New sort button in bottom navigation with multiple sorting options
+- **Available Sorts:**
+  - **Default:** Uses the existing sort column and order settings
+  - **Latest Updates:** Sort by most recently updated apps
+  - **A-Z:** Alphabetical by app name (ascending)
+  - **Z-A:** Alphabetical by app name (descending)
+  - **Recently Added:** Sort by when app was added to Obtainium+
+  - **Install Status:** Group installed apps first, then non-installed
+- **Persistent:** Sort preference is saved and persists across app restarts
+- **Integration:** Works seamlessly with category grouping
+
 #### Collapse Categories by Default
-- **New Setting:** Toggle to collapse all category groups when opening the app
+- **Setting:** Toggle to collapse all category groups when opening the app
 - **Location:** Settings → Below "Group by category" option
 - **Use Case:** Keeps your app list clean and organized, especially useful with many categories
 - **How it works:** When enabled, all category groups start collapsed; tap to expand individual categories as needed
+
+#### Enhanced Animations & UX
+- **Smooth Transitions:** All UI elements feature polished animations
+  - Category expansion animations (200ms)
+  - App list item transitions (150ms)
+  - Page navigation with fade and slide effects (300ms)
+  - Dialog animations with fade and scale (250ms)
+- **Haptic Feedback:** Tactile response on all interactive elements for better user experience
+- **Visual Polish:** Enhanced ripple effects and touch feedback throughout the app
 
 ### 🔧 Technical Improvements
 
@@ -30,14 +57,12 @@ Obtainium+ is a feature-enhanced fork of Obtainium with improvements focused on 
 
 This fork uses a unique versioning scheme:
 - **Format:** `1.2.9-pX` where `X` = number of patches/commits since forking
-- **Current:** `1.2.9-p3` (3 commits beyond upstream v1.2.9)
+- **Current:** `1.2.9-p4` (4 commits beyond upstream v1.2.9)
 - **Purpose:** Track fork-specific changes while maintaining upstream version reference
 
-### 🚀 Planned Features
+### 🚀 Contributing & Feature Requests
 
-See [GitHub Issues](https://github.com/thejaustin/ObtainiumPlus/issues) for upcoming features:
-- [#1 Drag-to-Reorder Categories](https://github.com/thejaustin/ObtainiumPlus/issues/1) - Customize category display order
-- [#2 Additional Sorting Methods](https://github.com/thejaustin/ObtainiumPlus/issues/2) - More app sorting options
+Have ideas for new features? Check out our [GitHub Issues](https://github.com/thejaustin/ObtainiumPlus/issues) or create a new one!
 
 ## Original Obtainium Resources
 
