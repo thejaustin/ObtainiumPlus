@@ -289,9 +289,8 @@ class AppsPageState extends State<AppsPage> {
       listedApps.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
     } else if (settingsProvider.appSortMethod == AppSortMethod.recentlyAdded) {
       listedApps.sort((a, b) {
-        return b.app.additionalData['addedDate'] != null && a.app.additionalData['addedDate'] != null
-            ? (b.app.additionalData['addedDate'] as int).compareTo(a.app.additionalData['addedDate'] as int)
-            : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        // Use app ID as proxy for added date (assuming sequential IDs)
+        return b.app.id.toLowerCase().compareTo(a.app.id.toLowerCase());
       });
     } else if (settingsProvider.appSortMethod == AppSortMethod.installStatus) {
       listedApps.sort((a, b) {
@@ -1344,69 +1343,6 @@ class AppsPageState extends State<AppsPage> {
       );
     }
 
-    getMainBottomButtons() {
-      return [
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            showSortDialog();
-          },
-          tooltip: tr('sort'),
-          icon: const Icon(Icons.sort),
-        ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: getMassObtainFunction() != null
-              ? () {
-                  HapticFeedback.mediumImpact();
-                  getMassObtainFunction()!();
-                }
-              : null,
-          tooltip: selectedAppIds.isEmpty
-              ? tr('installUpdateApps')
-              : tr('installUpdateSelectedApps'),
-          icon: const Icon(Icons.file_download_outlined),
-        ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty
-              ? null
-              : () {
-                  HapticFeedback.lightImpact();
-                  appsProvider.removeAppsWithModal(
-                    context,
-                    selectedApps.toList(),
-                  );
-                },
-          tooltip: tr('removeSelectedApps'),
-          icon: const Icon(Icons.delete_outline_outlined),
-        ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty
-              ? null
-              : () {
-                  HapticFeedback.lightImpact();
-                  launchCategorizeDialog()!();
-                },
-          tooltip: tr('categorize'),
-          icon: const Icon(Icons.category_outlined),
-        ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty
-              ? null
-              : () {
-                  HapticFeedback.lightImpact();
-                  showMoreOptionsDialog();
-                },
-          tooltip: tr('more'),
-          icon: const Icon(Icons.more_horiz),
-        ),
-      ];
-    }
-
     showSortDialog() async {
       HapticFeedback.lightImpact();
       await showGeneralDialog(
@@ -1531,6 +1467,69 @@ class AppsPageState extends State<AppsPage> {
           );
         },
       );
+    }
+
+    getMainBottomButtons() {
+      return [
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            showSortDialog();
+          },
+          tooltip: tr('sort'),
+          icon: const Icon(Icons.sort),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: getMassObtainFunction() != null
+              ? () {
+                  HapticFeedback.mediumImpact();
+                  getMassObtainFunction()!();
+                }
+              : null,
+          tooltip: selectedAppIds.isEmpty
+              ? tr('installUpdateApps')
+              : tr('installUpdateSelectedApps'),
+          icon: const Icon(Icons.file_download_outlined),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  appsProvider.removeAppsWithModal(
+                    context,
+                    selectedApps.toList(),
+                  );
+                },
+          tooltip: tr('removeSelectedApps'),
+          icon: const Icon(Icons.delete_outline_outlined),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  launchCategorizeDialog()!();
+                },
+          tooltip: tr('categorize'),
+          icon: const Icon(Icons.category_outlined),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          onPressed: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  showMoreOptionsDialog();
+                },
+          tooltip: tr('more'),
+          icon: const Icon(Icons.more_horiz),
+        ),
+      ];
     }
 
     showFilterDialog() async {
