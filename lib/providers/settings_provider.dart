@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:equations/equations.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:obtainium/app_sources/github.dart';
@@ -33,11 +34,79 @@ class SettingsProvider with ChangeNotifier {
 
   String sourceUrl = 'https://github.com/ImranR98/Obtainium';
 
+  List<int> updateIntervalNodes = [
+    15,
+    30,
+    60,
+    120,
+    180,
+    360,
+    720,
+    1440,
+    4320,
+    10080,
+    20160,
+    43200,
+  ];
+  late SplineInterpolation updateIntervalInterpolator;
+  String updateIntervalLabel = '';
+
   // Not done in constructor as we want to be able to await it
   Future<void> initializeSettings() async {
     prefs = await SharedPreferences.getInstance();
     defaultAppDir = (await getAppStorageDir()).path;
+    initUpdateIntervalInterpolator();
+    // Initialize label based on current slider value
+    processIntervalSliderValue(updateIntervalSliderVal, notify: false);
     notifyListeners();
+  }
+
+  void initUpdateIntervalInterpolator() {
+    List<InterpolationNode> nodes = [];
+    for (final (index, element) in updateIntervalNodes.indexed) {
+      nodes.add(
+        InterpolationNode(x: index.toDouble() + 1, y: element.toDouble()),
+      );
+    }
+    updateIntervalInterpolator = SplineInterpolation(nodes: nodes);
+  }
+
+  void processIntervalSliderValue(double val, {bool notify = true}) {
+    if (val < 0.5) {
+      updateInterval = 0;
+      updateIntervalLabel = tr('neverManualOnly');
+      if (notify) notifyListeners();
+      return;
+    }
+    int valInterpolated = 0;
+    if (val < 1) {
+      valInterpolated = 15;
+    } else {
+      valInterpolated = updateIntervalInterpolator.compute(val).round();
+    }
+    if (valInterpolated < 60) {
+      updateInterval = valInterpolated;
+      updateIntervalLabel = plural('minute', valInterpolated);
+    } else if (valInterpolated < 8 * 60) {
+      int valRounded = (valInterpolated / 15).floor() * 15;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('hour', valRounded ~/ 60);
+      int mins = valRounded % 60;
+      if (mins != 0) updateIntervalLabel += " ${plural('minute', mins)}";
+    } else if (valInterpolated < 24 * 60) {
+      int valRounded = (valInterpolated / 30).floor() * 30;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('hour', valRounded / 60);
+    } else if (valInterpolated < 7 * 24 * 60) {
+      int valRounded = (valInterpolated / (12 * 60)).floor() * 12 * 60;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('day', valRounded / (24 * 60));
+    } else {
+      int valRounded = (valInterpolated / (24 * 60)).floor() * 24 * 60;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
+    }
+    if (notify) notifyListeners();
   }
 
   bool get useSystemFont {
