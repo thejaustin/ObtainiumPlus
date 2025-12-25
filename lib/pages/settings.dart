@@ -993,7 +993,7 @@ class _LogsDialogState extends State<LogsDialog> {
         TextButton(
           onPressed: () async {
             var cont =
-                (await showDialog<Map<String, dynamic>?>(context: context, builder: (BuildContext ctx) { return const GeneratedFormModal(title: tr('appLogs'), items: [], initValid: true, message: tr('removeFromObtainium')); })) != null;
+                (await showDialog<Map<String, dynamic>?>(context: context, builder: (BuildContext ctx) { return GeneratedFormModal(title: tr('appLogs'), items: const [], initValid: true, message: tr('removeFromObtainium')); })) != null;
             if (cont) {
               logsProvider.clear();
               Navigator.of(context).pop();
