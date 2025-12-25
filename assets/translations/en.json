@@ -407,5 +407,25 @@
     "apk": {
         "one": "{} APK",
         "other": "{} APKs"
-    }
+    },
+    "categoryIconPreview": "Category Icon Preview",
+    "iconPosition": "Icon Position",
+    "iconCount": "Icon Count",
+    "belowName": "Below Name",
+    "viewOptions": "View Options",
+    "defaultViewMode": "Default View Mode",
+    "listView": "List View",
+    "gridView": "Grid View",
+    "gridCategoryDisplay": "Grid Category Display",
+    "categorySections": "Category Sections",
+    "flatGridOnly": "Flat Grid Only",
+    "categoryFolders": "Category Folders",
+    "comingSoon": "Coming Soon",
+    "gridColumns": "Grid Columns",
+    "auto": "Auto",
+    "switchToListView": "Switch to List View",
+    "switchToGridView": "Switch to Grid View",
+    "categorySettings": "Category Settings",
+    "viewMode": "View Mode",
+    "useGlobalSetting": "Use Global Setting"
 }
