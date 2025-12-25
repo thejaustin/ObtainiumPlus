@@ -873,7 +873,7 @@ class AppsPageState extends State<AppsPage> {
       );
     }
 
-    getCategoryCollapsibleTile(int index) {
+    getCategoryCollapsibleTile(Key key, int index) {
       var tiles = listedApps
           .asMap()
           .entries
@@ -896,9 +896,8 @@ class AppsPageState extends State<AppsPage> {
       var transparent =
           Theme.of(context).colorScheme.surface.withAlpha(0).value;
 
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
+      return Container(
+        key: key,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: const Alignment(-1, 0),
@@ -929,9 +928,12 @@ class AppsPageState extends State<AppsPage> {
               children: [
                 Text(tiles.length.toString()),
                 const SizedBox(width: 8),
-                Icon(
-                  Icons.drag_handle,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Icon(
+                    Icons.drag_handle,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  ),
                 ),
               ],
             ),
@@ -1653,10 +1655,9 @@ class AppsPageState extends State<AppsPage> {
                 BuildContext context,
                 int index,
               ) {
-                return ReorderableDragStartListener(
-                  key: ValueKey(listedCategories[index] ?? 'null_category'),
-                  index: index,
-                  child: getCategoryCollapsibleTile(index),
+                return getCategoryCollapsibleTile(
+                  ValueKey(listedCategories[index] ?? 'null_category'),
+                  index,
                 );
               },
               itemCount: listedCategories.length,

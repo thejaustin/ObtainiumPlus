@@ -367,10 +367,12 @@ class _ObtainiumState extends State<Obtainium> {
           } else {
             lightColorScheme = ColorScheme.fromSeed(
               seedColor: settingsProvider.themeColor,
+              dynamicSchemeVariant: settingsProvider.themeVariant,
             );
             darkColorScheme = ColorScheme.fromSeed(
               seedColor: settingsProvider.themeColor,
               brightness: Brightness.dark,
+              dynamicSchemeVariant: settingsProvider.themeVariant,
             );
           }
 
