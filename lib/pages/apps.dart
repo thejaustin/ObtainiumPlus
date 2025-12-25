@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -873,6 +876,75 @@ class AppsPageState extends State<AppsPage> {
       );
     }
 
+    void showCategorySettingsDialog(String? categoryName) {
+      if (categoryName == null) return;
+
+      showDialog(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          var currentOverride = settingsProvider.getCategoryViewMode(categoryName);
+
+          return AlertDialog(
+            title: Text(tr('categorySettings')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  categoryName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ViewMode?>(
+                  decoration: InputDecoration(
+                    labelText: tr('viewMode'),
+                  ),
+                  value: currentOverride,
+                  items: [
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text(tr('useGlobalSetting')),
+                    ),
+                    DropdownMenuItem(
+                      value: ViewMode.list,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.view_list),
+                          const SizedBox(width: 8),
+                          Text(tr('listView')),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: ViewMode.grid,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.grid_view),
+                          const SizedBox(width: 8),
+                          Text(tr('gridView')),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (ViewMode? value) {
+                    setState(() {
+                      settingsProvider.setCategoryViewMode(categoryName, value);
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(tr('close')),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     getCategoryCollapsibleTile(Key key, int index) {
       var tiles = listedApps
           .asMap()
@@ -896,6 +968,63 @@ class AppsPageState extends State<AppsPage> {
       var transparent =
           Theme.of(context).colorScheme.surface.withAlpha(0).value;
 
+      // Extract category icons for preview
+      List<Uint8List?> categoryIcons = [];
+      if (settingsProvider.categoryIconPosition != CategoryIconPosition.disabled &&
+          settingsProvider.categoryIconCount > 0) {
+        categoryIcons = listedApps
+            .where((e) =>
+                e.app.categories.contains(categoryName) ||
+                (e.app.categories.isEmpty && categoryName == null))
+            .take(settingsProvider.categoryIconCount)
+            .map((e) => e.icon)
+            .toList();
+      }
+
+      // Build title widget with optional icon preview
+      Widget categoryTitle = Row(
+        children: [
+          if (settingsProvider.categoryIconPosition ==
+                  CategoryIconPosition.leading &&
+              categoryIcons.isNotEmpty) ...[
+            CategoryIconStack(
+              icons: categoryIcons,
+              maxIcons: settingsProvider.categoryIconCount,
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  capFirstChar(listedCategories[index] ?? tr('noCategory')),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (settingsProvider.categoryIconPosition ==
+                        CategoryIconPosition.below &&
+                    categoryIcons.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  CategoryIconStack(
+                    icons: categoryIcons,
+                    maxIcons: settingsProvider.categoryIconCount,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (settingsProvider.categoryIconPosition ==
+                  CategoryIconPosition.trailing &&
+              categoryIcons.isNotEmpty) ...[
+            const SizedBox(width: 12),
+            CategoryIconStack(
+              icons: categoryIcons,
+              maxIcons: settingsProvider.categoryIconCount,
+            ),
+          ],
+        ],
+      );
+
       return Container(
         key: key,
         decoration: BoxDecoration(
@@ -918,15 +1047,20 @@ class AppsPageState extends State<AppsPage> {
             initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
             tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             childrenPadding: const EdgeInsets.only(bottom: 8),
-            title: Text(
-              capFirstChar(listedCategories[index] ?? tr('noCategory')),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            title: categoryTitle,
             controlAffinity: ListTileControlAffinity.leading,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(tiles.length.toString()),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.more_vert, size: 20),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => showCategorySettingsDialog(categoryName),
+                ),
                 const SizedBox(width: 8),
                 ReorderableDragStartListener(
                   index: index,
@@ -1646,44 +1780,231 @@ class AppsPageState extends State<AppsPage> {
       );
     }
 
-    getDisplayedList() {
-      return settingsProvider.groupByCategory &&
-              !(listedCategories.isEmpty ||
-                  (listedCategories.length == 1 && listedCategories[0] == null))
-          ? SliverReorderableList(
-              itemBuilder: (
-                BuildContext context,
-                int index,
-              ) {
-                return getCategoryCollapsibleTile(
-                  ValueKey(listedCategories[index] ?? 'null_category'),
-                  index,
+    int _calculateAdaptiveColumns(BuildContext context) {
+      final width = MediaQuery.of(context).size.width;
+      if (width >= 1200) return 6;
+      if (width >= 900) return 5;
+      if (width >= 600) return 4;
+      if (width >= 400) return 3;
+      return 2;
+    }
+
+    Widget getGridView(List<AppInMemory> apps) {
+      final columnCount = settingsProvider.gridColumnCount == 0
+          ? _calculateAdaptiveColumns(context)
+          : settingsProvider.gridColumnCount;
+
+      return SliverPadding(
+        padding: const EdgeInsets.all(8),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columnCount,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.8,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
+              var app = apps[index];
+              var hasUpdate = app.app.installedVersion != null &&
+                  app.app.installedVersion != app.app.latestVersion;
+
+              return AppGridTile(
+                appInMemory: app,
+                isSelected: selectedAppIds.contains(app.app.id),
+                hasUpdate: hasUpdate,
+                onTap: () {
+                  if (selectedAppIds.isNotEmpty) {
+                    toggleAppSelected(app.app);
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AppPage(appId: app.app.id),
+                      ),
+                    );
+                  }
+                },
+                onLongPress: () {
+                  toggleAppSelected(app.app);
+                },
+              );
+            },
+            childCount: apps.length,
+          ),
+        ),
+      );
+    }
+
+    Widget getCategoryGridSection(int index) {
+      capFirstChar(String str) => str[0].toUpperCase() + str.substring(1);
+
+      var categoryName = listedCategories[index];
+      var categoryColorInt =
+          categoryName != null ? settingsProvider.categories[categoryName] : null;
+      var categoryColor =
+          categoryColorInt != null ? Color(categoryColorInt) : null;
+
+      var appsInCategory = listedApps
+          .where((e) =>
+              e.app.categories.contains(categoryName) ||
+              (e.app.categories.isEmpty && categoryName == null))
+          .toList();
+
+      final columnCount = settingsProvider.gridColumnCount == 0
+          ? _calculateAdaptiveColumns(context)
+          : settingsProvider.gridColumnCount;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: const Alignment(-1, 0),
+                end: const Alignment(-0.97, 0),
+                colors: [
+                  categoryColor ?? Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.surface.withAlpha(0),
+                ],
+                stops: const [0.99, 1],
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  capFirstChar(categoryName ?? tr('noCategory')),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  appsInCategory.length.toString(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Grid of apps
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columnCount,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.8,
+              ),
+              itemCount: appsInCategory.length,
+              itemBuilder: (context, appIndex) {
+                var app = appsInCategory[appIndex];
+                var hasUpdate = app.app.installedVersion != null &&
+                    app.app.installedVersion != app.app.latestVersion;
+
+                return AppGridTile(
+                  appInMemory: app,
+                  isSelected: selectedAppIds.contains(app.app.id),
+                  hasUpdate: hasUpdate,
+                  onTap: () {
+                    if (selectedAppIds.isNotEmpty) {
+                      toggleAppSelected(app.app);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AppPage(appId: app.app.id),
+                        ),
+                      );
+                    }
+                  },
+                  onLongPress: () {
+                    toggleAppSelected(app.app);
+                  },
                 );
               },
-              itemCount: listedCategories.length,
-              onReorder: (int oldIndex, int newIndex) {
-                // Update category order
-                if (oldIndex < newIndex) {
-                  newIndex -= 1;
-                }
-                final item = listedCategories.removeAt(oldIndex);
-                listedCategories.insert(newIndex, item);
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      );
+    }
 
-                // Save the new order to settings
-                settingsProvider.categoryOrder = listedCategories
-                    .where((c) => c != null)
-                    .map((c) => c!)
-                    .toList();
+    getDisplayedList() {
+      final isGridView = settingsProvider.globalViewMode == ViewMode.grid;
+      final showCategoriesInGrid = settingsProvider.groupByCategory &&
+          settingsProvider.gridCategoryMode == GridCategoryMode.sections;
+
+      if (settingsProvider.groupByCategory &&
+          !(listedCategories.isEmpty ||
+              (listedCategories.length == 1 && listedCategories[0] == null))) {
+        // Has categories
+        if (isGridView && showCategoriesInGrid) {
+          // Grid with category sections
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (BuildContext context, int index) {
+                return getCategoryGridSection(index);
               },
-            )
-          : SliverList(
-              delegate: SliverChildBuilderDelegate((
-                BuildContext context,
-                int index,
-              ) {
-                return getSingleAppHorizTile(index);
-              }, childCount: listedApps.length),
-            );
+              childCount: listedCategories.length,
+            ),
+          );
+        } else if (isGridView &&
+            settingsProvider.gridCategoryMode == GridCategoryMode.disabled) {
+          // Pure grid, ignore categories
+          return getGridView(listedApps);
+        } else {
+          // List view with categories (existing)
+          return SliverReorderableList(
+            itemBuilder: (
+              BuildContext context,
+              int index,
+            ) {
+              return getCategoryCollapsibleTile(
+                ValueKey(listedCategories[index] ?? 'null_category'),
+                index,
+              );
+            },
+            itemCount: listedCategories.length,
+            onReorder: (int oldIndex, int newIndex) {
+              // Update category order
+              if (oldIndex < newIndex) {
+                newIndex -= 1;
+              }
+              final item = listedCategories.removeAt(oldIndex);
+              listedCategories.insert(newIndex, item);
+
+              // Save the new order to settings
+              settingsProvider.categoryOrder = listedCategories
+                  .where((c) => c != null)
+                  .map((c) => c!)
+                  .toList();
+            },
+          );
+        }
+      } else {
+        // No categories
+        if (isGridView) {
+          return getGridView(listedApps);
+        } else {
+          return SliverList(
+            delegate: SliverChildBuilderDelegate((
+              BuildContext context,
+              int index,
+            ) {
+              return getSingleAppHorizTile(index);
+            }, childCount: listedApps.length),
+          );
+        }
+      }
     }
 
     return Scaffold(
@@ -1698,7 +2019,29 @@ class AppsPageState extends State<AppsPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             controller: scrollController,
             slivers: <Widget>[
-              CustomAppBar(title: tr('appsString')),
+              CustomAppBar(
+                title: tr('appsString'),
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      settingsProvider.globalViewMode == ViewMode.grid
+                          ? Icons.view_list
+                          : Icons.grid_view,
+                    ),
+                    tooltip: settingsProvider.globalViewMode == ViewMode.grid
+                        ? tr('switchToListView')
+                        : tr('switchToGridView'),
+                    onPressed: () {
+                      setState(() {
+                        settingsProvider.globalViewMode =
+                            settingsProvider.globalViewMode == ViewMode.grid
+                                ? ViewMode.list
+                                : ViewMode.grid;
+                      });
+                    },
+                  ),
+                ],
+              ),
               ...getLoadingWidgets(),
               getDisplayedList(),
             ],

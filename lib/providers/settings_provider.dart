@@ -27,6 +27,12 @@ enum SortOrderSettings { ascending, descending }
 
 enum AppSortMethod { latestUpdates, nameAZ, nameZA, recentlyAdded, installStatus, defaultSort }
 
+enum CategoryIconPosition { leading, trailing, below, disabled }
+
+enum ViewMode { list, grid }
+
+enum GridCategoryMode { sections, disabled, folders }
+
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   String? defaultAppDir;
@@ -641,6 +647,81 @@ class SettingsProvider with ChangeNotifier {
 
   set appSortMethod(AppSortMethod method) {
     prefs?.setInt('appSortMethod', method.index);
+    notifyListeners();
+  }
+
+  // Category Icon Preview Settings
+  CategoryIconPosition get categoryIconPosition {
+    return CategoryIconPosition.values[prefs?.getInt('categoryIconPosition') ??
+        CategoryIconPosition.disabled.index];
+  }
+
+  set categoryIconPosition(CategoryIconPosition pos) {
+    prefs?.setInt('categoryIconPosition', pos.index);
+    notifyListeners();
+  }
+
+  int get categoryIconCount {
+    return prefs?.getInt('categoryIconCount') ?? 0;
+  }
+
+  set categoryIconCount(int count) {
+    prefs?.setInt('categoryIconCount', count.clamp(0, 8));
+    notifyListeners();
+  }
+
+  // Grid View Settings
+  ViewMode get globalViewMode {
+    return ViewMode.values[prefs?.getInt('globalViewMode') ??
+        ViewMode.list.index];
+  }
+
+  set globalViewMode(ViewMode mode) {
+    prefs?.setInt('globalViewMode', mode.index);
+    notifyListeners();
+  }
+
+  Map<String, int> get categoryViewModeOverrides {
+    return Map<String, int>.from(
+        jsonDecode(prefs?.getString('categoryViewModeOverrides') ?? '{}'));
+  }
+
+  set categoryViewModeOverrides(Map<String, int> overrides) {
+    prefs?.setString('categoryViewModeOverrides', jsonEncode(overrides));
+    notifyListeners();
+  }
+
+  ViewMode? getCategoryViewMode(String categoryName) {
+    int? override = categoryViewModeOverrides[categoryName];
+    return override != null ? ViewMode.values[override] : null;
+  }
+
+  void setCategoryViewMode(String categoryName, ViewMode? mode) {
+    var overrides = categoryViewModeOverrides;
+    if (mode == null) {
+      overrides.remove(categoryName);
+    } else {
+      overrides[categoryName] = mode.index;
+    }
+    categoryViewModeOverrides = overrides;
+  }
+
+  GridCategoryMode get gridCategoryMode {
+    return GridCategoryMode.values[prefs?.getInt('gridCategoryMode') ??
+        GridCategoryMode.sections.index];
+  }
+
+  set gridCategoryMode(GridCategoryMode mode) {
+    prefs?.setInt('gridCategoryMode', mode.index);
+    notifyListeners();
+  }
+
+  int get gridColumnCount {
+    return prefs?.getInt('gridColumnCount') ?? 0;
+  }
+
+  set gridColumnCount(int count) {
+    prefs?.setInt('gridColumnCount', count.clamp(0, 6));
     notifyListeners();
   }
 }
