@@ -653,6 +653,177 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ],
                           ),
+                          height16,
+                          const Divider(),
+                          height16,
+                          Text(
+                            tr('categoryIconPreview'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          height8,
+                          DropdownButtonFormField<CategoryIconPosition>(
+                            decoration: InputDecoration(labelText: tr('iconPosition')),
+                            value: settingsProvider.categoryIconPosition,
+                            items: [
+                              DropdownMenuItem(
+                                value: CategoryIconPosition.disabled,
+                                child: Text(tr('disabled')),
+                              ),
+                              DropdownMenuItem(
+                                value: CategoryIconPosition.leading,
+                                child: Text(tr('leading')),
+                              ),
+                              DropdownMenuItem(
+                                value: CategoryIconPosition.trailing,
+                                child: Text(tr('trailing')),
+                              ),
+                              DropdownMenuItem(
+                                value: CategoryIconPosition.below,
+                                child: Text(tr('belowName')),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  settingsProvider.categoryIconPosition = value;
+                                });
+                              }
+                            },
+                          ),
+                          height16,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${tr('iconCount')}: ${settingsProvider.categoryIconCount}',
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Slider(
+                                  value: settingsProvider.categoryIconCount.toDouble(),
+                                  min: 0,
+                                  max: 8,
+                                  divisions: 8,
+                                  label: settingsProvider.categoryIconCount == 0
+                                      ? tr('disabled')
+                                      : settingsProvider.categoryIconCount.toString(),
+                                  onChanged: settingsProvider.categoryIconPosition ==
+                                          CategoryIconPosition.disabled
+                                      ? null
+                                      : (value) {
+                                          setState(() {
+                                            settingsProvider.categoryIconCount =
+                                                value.toInt();
+                                          });
+                                        },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ]),
+
+                        _buildSection(context, tr('viewOptions'), [
+                          DropdownButtonFormField<ViewMode>(
+                            decoration: InputDecoration(labelText: tr('defaultViewMode')),
+                            value: settingsProvider.globalViewMode,
+                            items: [
+                              DropdownMenuItem(
+                                value: ViewMode.list,
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.view_list),
+                                    const SizedBox(width: 8),
+                                    Text(tr('listView')),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: ViewMode.grid,
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.grid_view),
+                                    const SizedBox(width: 8),
+                                    Text(tr('gridView')),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  settingsProvider.globalViewMode = value;
+                                });
+                              }
+                            },
+                          ),
+                          if (settingsProvider.globalViewMode == ViewMode.grid) ...[
+                            height16,
+                            DropdownButtonFormField<GridCategoryMode>(
+                              decoration: InputDecoration(labelText: tr('gridCategoryDisplay')),
+                              value: settingsProvider.gridCategoryMode,
+                              items: [
+                                DropdownMenuItem(
+                                  value: GridCategoryMode.sections,
+                                  child: Text(tr('categorySections')),
+                                ),
+                                DropdownMenuItem(
+                                  value: GridCategoryMode.disabled,
+                                  child: Text(tr('flatGridOnly')),
+                                ),
+                                DropdownMenuItem(
+                                  value: GridCategoryMode.folders,
+                                  child: Row(
+                                    children: [
+                                      Text(tr('categoryFolders')),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '(${tr('comingSoon')})',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null && value != GridCategoryMode.folders) {
+                                  setState(() {
+                                    settingsProvider.gridCategoryMode = value;
+                                  });
+                                }
+                              },
+                            ),
+                            height16,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${tr('gridColumns')}: ${settingsProvider.gridColumnCount == 0 ? tr('auto') : settingsProvider.gridColumnCount}',
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Slider(
+                                    value: settingsProvider.gridColumnCount.toDouble(),
+                                    min: 0,
+                                    max: 6,
+                                    divisions: 6,
+                                    label: settingsProvider.gridColumnCount == 0
+                                        ? tr('auto')
+                                        : settingsProvider.gridColumnCount.toString(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        settingsProvider.gridColumnCount = value.toInt();
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ]),
 
                         _buildSection(context, tr('general'), [ // Fallback title
