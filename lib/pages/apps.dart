@@ -612,38 +612,41 @@ class AppsPageState extends State<AppsPage> {
         child: FutureBuilder(
           future: appsProvider.updateAppIcon(listedApps[appIndex].app.id),
           builder: (ctx, val) {
-            return listedApps[appIndex].icon != null
-                ? Image.memory(
-                    listedApps[appIndex].icon!,
-                    gaplessPlayback: true,
-                    opacity: AlwaysStoppedAnimation(
-                      listedApps[appIndex].installedInfo == null ? 0.6 : 1,
-                    ),
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.rotationZ(0.31),
-                        child: Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Image(
-                            image: const AssetImage(
-                              'assets/graphics/icon_small.png',
+            return Hero(
+              tag: 'app_icon_${listedApps[appIndex].app.id}',
+              child: listedApps[appIndex].icon != null
+                  ? Image.memory(
+                      listedApps[appIndex].icon!,
+                      gaplessPlayback: true,
+                      opacity: AlwaysStoppedAnimation(
+                        listedApps[appIndex].installedInfo == null ? 0.6 : 1,
+                      ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.rotationZ(0.31),
+                          child: Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: Image(
+                              image: const AssetImage(
+                                'assets/graphics/icon_small.png',
+                              ),
+                              color:
+                                  Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white.withOpacity(0.4)
+                                  : Colors.white.withOpacity(0.3),
+                              colorBlendMode: BlendMode.modulate,
+                              gaplessPlayback: true,
                             ),
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withOpacity(0.4)
-                                : Colors.white.withOpacity(0.3),
-                            colorBlendMode: BlendMode.modulate,
-                            gaplessPlayback: true,
                           ),
                         ),
-                      ),
-                    ],
-                  );
+                      ],
+                    ),
+            );
           },
         ),
         onDoubleTap: () {
@@ -972,13 +975,15 @@ class AppsPageState extends State<AppsPage> {
       List<Uint8List?> categoryIcons = [];
       if (settingsProvider.categoryIconPosition != CategoryIconPosition.disabled &&
           settingsProvider.categoryIconCount > 0) {
-        categoryIcons = listedApps
+        var categoryApps = listedApps
             .where((e) =>
                 e.app.categories.contains(categoryName) ||
-                (e.app.categories.isEmpty && categoryName == null))
-            .take(settingsProvider.categoryIconCount)
-            .map((e) => e.icon)
-            .toList();
+                (e.app.categories.isEmpty && categoryName == null));
+
+        // If categoryIconCount is 20 (max), show all apps; otherwise limit to count
+        categoryIcons = settingsProvider.categoryIconCount >= 20
+            ? categoryApps.map((e) => e.icon).toList()
+            : categoryApps.take(settingsProvider.categoryIconCount).map((e) => e.icon).toList();
       }
 
       // Build title widget with optional icon preview
@@ -1974,6 +1979,19 @@ class AppsPageState extends State<AppsPage> {
               );
             },
             itemCount: listedCategories.length,
+            proxyDecorator: (Widget child, int index, Animation<double> animation) {
+              return AnimatedBuilder(
+                animation: animation,
+                builder: (BuildContext context, Widget? child) {
+                  return Material(
+                    color: Colors.transparent,
+                    elevation: 0,
+                    child: child,
+                  );
+                },
+                child: child,
+              );
+            },
             onReorder: (int oldIndex, int newIndex) {
               // Update category order
               if (oldIndex < newIndex) {

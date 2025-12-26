@@ -703,11 +703,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                 child: Slider(
                                   value: settingsProvider.categoryIconCount.toDouble(),
                                   min: 0,
-                                  max: 8,
-                                  divisions: 8,
+                                  max: 20,
+                                  divisions: 20,
                                   label: settingsProvider.categoryIconCount == 0
                                       ? tr('disabled')
-                                      : settingsProvider.categoryIconCount.toString(),
+                                      : settingsProvider.categoryIconCount == 20
+                                          ? 'All'
+                                          : settingsProvider.categoryIconCount.toString(),
                                   onChanged: settingsProvider.categoryIconPosition ==
                                           CategoryIconPosition.disabled
                                       ? null

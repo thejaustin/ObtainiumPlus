@@ -666,7 +666,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   set categoryIconCount(int count) {
-    prefs?.setInt('categoryIconCount', count.clamp(0, 8));
+    prefs?.setInt('categoryIconCount', count.clamp(0, 20));
     notifyListeners();
   }
 
