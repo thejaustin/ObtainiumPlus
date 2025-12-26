@@ -335,10 +335,13 @@ class _AppPageState extends State<AppPage> {
                         onTap: app == null
                             ? null
                             : () => pm.openApp(app.app.id),
-                        child: Image.memory(
-                          app!.icon!,
-                          height: small ? 70 : 150,
-                          gaplessPlayback: true,
+                        child: Hero(
+                          tag: 'app_icon_${widget.appId}',
+                          child: Image.memory(
+                            app!.icon!,
+                            height: small ? 70 : 150,
+                            gaplessPlayback: true,
+                          ),
                         ),
                       ),
                     ],

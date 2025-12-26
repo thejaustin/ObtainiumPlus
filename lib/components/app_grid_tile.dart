@@ -49,34 +49,37 @@ class AppGridTile extends StatelessWidget {
               // App Icon
               Stack(
                 children: [
-                  SizedBox(
-                    width: 56,
-                    height: 56,
-                    child: appInMemory.icon != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.memory(
-                              appInMemory.icon!,
-                              fit: BoxFit.cover,
-                              gaplessPlayback: true,
-                              opacity: AlwaysStoppedAnimation(
-                                appInMemory.installedInfo == null ? 0.6 : 1,
+                  Hero(
+                    tag: 'app_icon_${appInMemory.app.id}',
+                    child: SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: appInMemory.icon != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                appInMemory.icon!,
+                                fit: BoxFit.cover,
+                                gaplessPlayback: true,
+                                opacity: AlwaysStoppedAnimation(
+                                  appInMemory.installedInfo == null ? 0.6 : 1,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.apps,
+                                size: 32,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                             ),
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.apps,
-                              size: 32,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
+                    ),
                   ),
                   // Update indicator badge
                   if (hasUpdate)
