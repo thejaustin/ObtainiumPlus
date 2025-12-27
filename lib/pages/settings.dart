@@ -2,6 +2,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -34,21 +35,42 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildSection(BuildContext context, String title, List<Widget> children, {bool initiallyExpanded = false}) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: initiallyExpanded ? 2 : 0,
+      shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-      child: ExpansionTile(
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
         ),
-        initiallyExpanded: initiallyExpanded,
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        children: children,
+        child: ExpansionTile(
+          onExpansionChanged: (expanded) {
+            HapticFeedback.lightImpact();
+          },
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              letterSpacing: 0.15,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          iconColor: Theme.of(context).colorScheme.primary,
+          collapsedIconColor: Theme.of(context).colorScheme.onSurfaceVariant,
+          initiallyExpanded: initiallyExpanded,
+          childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          expandedAlignment: Alignment.centerLeft,
+          children: children,
+        ),
       ),
     );
   }
@@ -148,6 +170,7 @@ class _SettingsPageState extends State<SettingsPage> {
         color: settingsProvider.themeColor,
         onSelectFocus: false,
         onSelect: () async {
+          HapticFeedback.lightImpact();
           final Color colorBeforeDialog = settingsProvider.themeColor;
           if (!(await colorPickerDialog())) {
             setState(() {
@@ -168,6 +191,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   Switch(
                     value: settingsProvider.useMaterialYou,
                     onChanged: (value) {
+                      HapticFeedback.selectionClick();
                       settingsProvider.useMaterialYou = value;
                     },
                   ),
@@ -324,6 +348,8 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        cacheExtent: 300.0,
         slivers: <Widget>[
           CustomAppBar(title: tr('settings')),
           SliverToBoxAdapter(
@@ -354,6 +380,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ],
                             onChanged: (value) {
                               if (value != null) {
+                                HapticFeedback.selectionClick();
                                 settingsProvider.theme = value;
                               }
                             },
@@ -370,6 +397,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 Switch(
                                   value: settingsProvider.useBlackTheme,
                                   onChanged: (value) {
+                                    HapticFeedback.selectionClick();
                                     settingsProvider.useBlackTheme = value;
                                   },
                                 ),
@@ -388,6 +416,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             }).toList(),
                             onChanged: (value) {
                               if (value != null) {
+                                HapticFeedback.selectionClick();
                                 settingsProvider.themeVariant = value;
                               }
                             },
@@ -409,6 +438,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                             Switch(
                                               value: settingsProvider.useSystemFont,
                                               onChanged: (useSystemFont) {
+                                                HapticFeedback.selectionClick();
                                                 if (useSystemFont) {
                                                   NativeFeatures.loadSystemFont().then((val) {
                                                     settingsProvider.useSystemFont = true;

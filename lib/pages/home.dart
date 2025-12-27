@@ -324,6 +324,13 @@ class _HomePageState extends State<HomePage> {
               .widget,
         ),
         bottomNavigationBar: NavigationBar(
+          elevation: 3,
+          surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+          indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
+          animationDuration: const Duration(milliseconds: 300),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: pages
               .map(
                 (e) =>
