@@ -1,12 +1,11 @@
 name: Build APK
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
-      create_release:
-        type: boolean
-        description: Create a draft release?
-        default: false
       beta:
         type: boolean
         description: Mark as pre-release?
@@ -99,7 +98,7 @@ jobs:
           tag: ${{ steps.extract_version.outputs.tag }}
           name: "Obtainium+ ${{ steps.extract_version.outputs.version }}"
           draft: false
-          prerelease: ${{ inputs.beta }}
+          prerelease: ${{ inputs.beta || false }}
           generateReleaseNotes: true
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
