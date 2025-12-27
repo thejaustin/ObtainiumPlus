@@ -823,16 +823,22 @@ class AppsPageState extends State<AppsPage> {
                 );
               }
             },
-            child: ListTile(
-              tileColor: listedApps[index].app.pinned
-                  ? Colors.grey.withOpacity(0.1)
-                  : Colors.transparent,
-              selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(
-                listedApps[index].app.pinned ? 0.2 : 0.1,
-              ),
-              selected: selectedAppIds
-                  .map((e) => e)
-                  .contains(listedApps[index].app.id),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: ListTile(
+                tileColor: listedApps[index].app.pinned
+                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)
+                    : Colors.transparent,
+                selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(
+                  listedApps[index].app.pinned ? 0.7 : 0.5,
+                ),
+                selected: selectedAppIds
+                    .map((e) => e)
+                    .contains(listedApps[index].app.id),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               leading: getAppIcon(index),
               title: Text(
                 maxLines: 1,
@@ -873,6 +879,7 @@ class AppsPageState extends State<AppsPage> {
                       ),
                     )
                   : trailingRow,
+              ),
             ),
           ),
         ),
@@ -888,7 +895,16 @@ class AppsPageState extends State<AppsPage> {
           var currentOverride = settingsProvider.getCategoryViewMode(categoryName);
 
           return AlertDialog(
-            title: Text(tr('categorySettings')),
+            surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text(
+              tr('categorySettings'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -929,6 +945,7 @@ class AppsPageState extends State<AppsPage> {
                     ),
                   ],
                   onChanged: (ViewMode? value) {
+                    HapticFeedback.selectionClick();
                     setState(() {
                       settingsProvider.setCategoryViewMode(categoryName, value);
                     });
@@ -939,7 +956,14 @@ class AppsPageState extends State<AppsPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.of(context).pop();
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
                 child: Text(tr('close')),
               ),
             ],
@@ -1049,6 +1073,9 @@ class AppsPageState extends State<AppsPage> {
             splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
           ),
           child: ExpansionTile(
+            onExpansionChanged: (expanded) {
+              HapticFeedback.lightImpact();
+            },
             initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
             tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             childrenPadding: const EdgeInsets.only(bottom: 8),
@@ -1064,7 +1091,10 @@ class AppsPageState extends State<AppsPage> {
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  onPressed: () => showCategorySettingsDialog(categoryName),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    showCategorySettingsDialog(categoryName);
+                  },
                 ),
                 const SizedBox(width: 8),
                 ReorderableDragStartListener(
@@ -1085,8 +1115,13 @@ class AppsPageState extends State<AppsPage> {
     getSelectAllButton() {
       return selectedAppIds.isEmpty
           ? TextButton.icon(
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
               onPressed: () {
+                HapticFeedback.selectionClick();
                 selectThese(listedApps.map((e) => e.app).toList());
               },
               icon: Icon(
@@ -1096,8 +1131,13 @@ class AppsPageState extends State<AppsPage> {
               label: Text(listedApps.length.toString()),
             )
           : TextButton.icon(
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
               onPressed: () {
+                HapticFeedback.selectionClick();
                 selectedAppIds.isEmpty
                     ? selectThese(listedApps.map((e) => e.app).toList())
                     : clearSelected();
@@ -1496,7 +1536,16 @@ class AppsPageState extends State<AppsPage> {
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return AlertDialog(
-                title: Text(tr('sort')),
+                surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                title: Text(
+                  tr('sort'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1506,6 +1555,7 @@ class AppsPageState extends State<AppsPage> {
                       groupValue: settingsProvider.appSortMethod,
                       onChanged: (AppSortMethod? value) {
                         if (value != null) {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             settingsProvider.appSortMethod = value;
                           });
@@ -1519,6 +1569,7 @@ class AppsPageState extends State<AppsPage> {
                       groupValue: settingsProvider.appSortMethod,
                       onChanged: (AppSortMethod? value) {
                         if (value != null) {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             settingsProvider.appSortMethod = value;
                           });
@@ -1532,6 +1583,7 @@ class AppsPageState extends State<AppsPage> {
                       groupValue: settingsProvider.appSortMethod,
                       onChanged: (AppSortMethod? value) {
                         if (value != null) {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             settingsProvider.appSortMethod = value;
                           });
@@ -1545,6 +1597,7 @@ class AppsPageState extends State<AppsPage> {
                       groupValue: settingsProvider.appSortMethod,
                       onChanged: (AppSortMethod? value) {
                         if (value != null) {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             settingsProvider.appSortMethod = value;
                           });
@@ -1558,6 +1611,7 @@ class AppsPageState extends State<AppsPage> {
                       groupValue: settingsProvider.appSortMethod,
                       onChanged: (AppSortMethod? value) {
                         if (value != null) {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             settingsProvider.appSortMethod = value;
                           });
@@ -1571,6 +1625,7 @@ class AppsPageState extends State<AppsPage> {
                       groupValue: settingsProvider.appSortMethod,
                       onChanged: (AppSortMethod? value) {
                         if (value != null) {
+                          HapticFeedback.selectionClick();
                           setState(() {
                             settingsProvider.appSortMethod = value;
                           });
@@ -1583,8 +1638,13 @@ class AppsPageState extends State<AppsPage> {
                 actions: [
                   TextButton(
                     onPressed: () {
+                      HapticFeedback.lightImpact();
                       Navigator.of(context).pop();
                     },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
                     child: Text(tr('close')),
                   ),
                 ],
@@ -1903,6 +1963,7 @@ class AppsPageState extends State<AppsPage> {
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              addRepaintBoundaries: true,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columnCount,
                 mainAxisSpacing: 8,
@@ -2030,11 +2091,16 @@ class AppsPageState extends State<AppsPage> {
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: refresh,
+        color: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        strokeWidth: 3.0,
+        displacement: 60.0,
         child: Scrollbar(
           interactive: true,
           controller: scrollController,
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            cacheExtent: 500.0,
             controller: scrollController,
             slivers: <Widget>[
               CustomAppBar(
@@ -2050,6 +2116,7 @@ class AppsPageState extends State<AppsPage> {
                         ? tr('switchToListView')
                         : tr('switchToGridView'),
                     onPressed: () {
+                      HapticFeedback.selectionClick();
                       setState(() {
                         settingsProvider.globalViewMode =
                             settingsProvider.globalViewMode == ViewMode.grid
