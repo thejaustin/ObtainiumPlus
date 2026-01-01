@@ -400,6 +400,72 @@ class _ObtainiumState extends State<Obtainium> {
               fontFamily: settingsProvider.useSystemFont
                   ? 'SystemFont'
                   : 'Montserrat',
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: (settingsProvider.theme == ThemeSettings.dark
+                        ? darkColorScheme
+                        : lightColorScheme)
+                    .primaryContainer
+                    .withOpacity(0.4),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: (settingsProvider.theme == ThemeSettings.dark
+                            ? darkColorScheme
+                            : lightColorScheme)
+                        .outline,
+                    width: 2.0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: (settingsProvider.theme == ThemeSettings.dark
+                            ? darkColorScheme
+                            : lightColorScheme)
+                        .outline,
+                    width: 2.0,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: (settingsProvider.theme == ThemeSettings.dark
+                            ? darkColorScheme
+                            : lightColorScheme)
+                        .primary,
+                    width: 2.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                labelStyle: TextStyle(
+                  color: (settingsProvider.theme == ThemeSettings.dark
+                          ? darkColorScheme
+                          : lightColorScheme)
+                      .onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+                floatingLabelStyle: TextStyle(
+                  color: (settingsProvider.theme == ThemeSettings.dark
+                          ? darkColorScheme
+                          : lightColorScheme)
+                      .primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              dropdownMenuTheme: DropdownMenuThemeData(
+                textStyle: TextStyle(
+                  color: (settingsProvider.theme == ThemeSettings.dark
+                          ? darkColorScheme
+                          : lightColorScheme)
+                      .onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
             darkTheme: ThemeData(
               useMaterial3: true,
@@ -409,6 +475,72 @@ class _ObtainiumState extends State<Obtainium> {
               fontFamily: settingsProvider.useSystemFont
                   ? 'SystemFont'
                   : 'Montserrat',
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: (settingsProvider.theme == ThemeSettings.light
+                        ? lightColorScheme
+                        : darkColorScheme)
+                    .primaryContainer
+                    .withOpacity(0.4),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: (settingsProvider.theme == ThemeSettings.light
+                            ? lightColorScheme
+                            : darkColorScheme)
+                        .outline,
+                    width: 2.0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: (settingsProvider.theme == ThemeSettings.light
+                            ? lightColorScheme
+                            : darkColorScheme)
+                        .outline,
+                    width: 2.0,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: (settingsProvider.theme == ThemeSettings.light
+                            ? lightColorScheme
+                            : darkColorScheme)
+                        .primary,
+                    width: 2.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                labelStyle: TextStyle(
+                  color: (settingsProvider.theme == ThemeSettings.light
+                          ? lightColorScheme
+                          : darkColorScheme)
+                      .onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+                floatingLabelStyle: TextStyle(
+                  color: (settingsProvider.theme == ThemeSettings.light
+                          ? lightColorScheme
+                          : darkColorScheme)
+                      .primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              dropdownMenuTheme: DropdownMenuThemeData(
+                textStyle: TextStyle(
+                  color: (settingsProvider.theme == ThemeSettings.light
+                          ? lightColorScheme
+                          : darkColorScheme)
+                      .onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
             home: Shortcuts(
               shortcuts: <LogicalKeySet, Intent>{
