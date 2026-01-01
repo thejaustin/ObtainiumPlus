@@ -145,7 +145,7 @@ class SettingsProvider with ChangeNotifier {
 
   DynamicSchemeVariant get themeVariant {
     return DynamicSchemeVariant.values[prefs?.getInt('themeVariant') ??
-        DynamicSchemeVariant.tonalSpot.index];
+        DynamicSchemeVariant.expressive.index];
   }
 
   set themeVariant(DynamicSchemeVariant t) {
