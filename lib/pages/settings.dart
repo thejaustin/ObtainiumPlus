@@ -205,6 +205,12 @@ class _SettingsPageState extends State<SettingsPage> {
     var sortDropdown = DropdownButtonFormField(
       isExpanded: true,
       decoration: InputDecoration(labelText: tr('appSortBy')),
+      dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 16,
+      ),
+      iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
       value: settingsProvider.sortColumn,
       items: [
         DropdownMenuItem(
@@ -250,6 +256,12 @@ class _SettingsPageState extends State<SettingsPage> {
     var orderDropdown = DropdownButtonFormField(
       isExpanded: true,
       decoration: InputDecoration(labelText: tr('appSortOrder')),
+      dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 16,
+      ),
+      iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
       value: settingsProvider.sortOrder,
       items: [
         DropdownMenuItem(
@@ -270,6 +282,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
     var localeDropdown = DropdownButtonFormField(
       decoration: InputDecoration(labelText: tr('language')),
+      dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 16,
+      ),
+      iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
       value: settingsProvider.forcedLocale,
       items: [
         DropdownMenuItem(value: null, child: Text(tr('followSystem'))),
@@ -363,6 +381,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         _buildSection(context, tr('appearance'), [
                           DropdownButtonFormField(
                             decoration: InputDecoration(labelText: tr('theme')),
+                            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                            ),
+                            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
                             value: settingsProvider.theme,
                             items: [
                               DropdownMenuItem(
@@ -406,6 +430,12 @@ class _SettingsPageState extends State<SettingsPage> {
                           height16,
                           DropdownButtonFormField<DynamicSchemeVariant>(
                             decoration: const InputDecoration(labelText: 'Theme Style'),
+                            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                            ),
+                            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
                             value: settingsProvider.themeVariant,
                             items: DynamicSchemeVariant.values.map((v) {
                               String name = v.name.substring(0, 1).toUpperCase() + v.name.substring(1).replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
@@ -693,6 +723,12 @@ class _SettingsPageState extends State<SettingsPage> {
                           height8,
                           DropdownButtonFormField<CategoryIconPosition>(
                             decoration: InputDecoration(labelText: tr('iconPosition')),
+                            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                            ),
+                            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
                             value: settingsProvider.categoryIconPosition,
                             items: [
                               DropdownMenuItem(
@@ -758,6 +794,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         _buildSection(context, tr('viewOptions'), [
                           DropdownButtonFormField<ViewMode>(
                             decoration: InputDecoration(labelText: tr('defaultViewMode')),
+                            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                            ),
+                            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
                             value: settingsProvider.globalViewMode,
                             items: [
                               DropdownMenuItem(
@@ -793,6 +835,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             height16,
                             DropdownButtonFormField<GridCategoryMode>(
                               decoration: InputDecoration(labelText: tr('gridCategoryDisplay')),
+                              dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 16,
+                              ),
+                              iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
                               value: settingsProvider.gridCategoryMode,
                               items: [
                                 DropdownMenuItem(
@@ -1177,6 +1225,12 @@ class _LogsDialogState extends State<LogsDialog> {
       content: Column(
         children: [
           DropdownButtonFormField(
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+            ),
+            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
             value: days.first,
             items: days
                 .map(
