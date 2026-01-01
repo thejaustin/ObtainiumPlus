@@ -60,138 +60,164 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-      child: Card(
-        elevation: widget.isSelected ? 8 : 1,
-        shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.3) : null,
-        surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
-        color: widget.isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
-            : null,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: widget.appInMemory.app.pinned
-              ? BorderSide(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                )
-              : BorderSide.none,
-        ),
-        child: InkWell(
-        onTap: widget.onTap,
-        onLongPress: () {
-          HapticFeedback.mediumImpact();
-          widget.onLongPress();
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // App Icon
-              Stack(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate responsive sizes based on available width
+        double availableWidth = constraints.maxWidth - 24; // Account for padding
+
+        // Icon size: 60-70% of available width (min 40, max 80)
+        double iconSize = (availableWidth * 0.65).clamp(40.0, 80.0);
+
+        // Border radius: proportional to icon size for consistent appearance
+        double iconBorderRadius = (iconSize * 0.18).clamp(8.0, 14.0);
+
+        // Card border radius: slightly larger for card container
+        double cardBorderRadius = (iconSize * 0.21).clamp(10.0, 16.0);
+
+        // Padding: scale with grid size (min 8, max 12)
+        double padding = (availableWidth * 0.1).clamp(8.0, 12.0);
+
+        // Badge size: proportional to icon size (min 12, max 18)
+        double badgeSize = (iconSize * 0.25).clamp(12.0, 18.0);
+
+        // Placeholder icon size: proportional to icon size
+        double placeholderIconSize = (iconSize * 0.57).clamp(24.0, 48.0);
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          child: Card(
+            elevation: widget.isSelected ? 8 : 1,
+            shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.3) : null,
+            surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
+            color: widget.isSelected
+                ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
+                : null,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(cardBorderRadius),
+              side: widget.appInMemory.app.pinned
+                  ? BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    )
+                  : BorderSide.none,
+            ),
+            child: InkWell(
+            onTap: widget.onTap,
+            onLongPress: () {
+              HapticFeedback.mediumImpact();
+              widget.onLongPress();
+            },
+            borderRadius: BorderRadius.circular(cardBorderRadius),
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Hero(
-                    tag: 'app_icon_${widget.appInMemory.app.id}',
-                    child: SizedBox(
-                      width: 56,
-                      height: 56,
-                      child: widget.appInMemory.icon != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.memory(
-                                widget.appInMemory.icon!,
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
-                                opacity: AlwaysStoppedAnimation(
-                                  widget.appInMemory.installedInfo == null ? 0.6 : 1,
+                  // App Icon
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Hero(
+                        tag: 'app_icon_${widget.appInMemory.app.id}',
+                        child: SizedBox(
+                          width: iconSize,
+                          height: iconSize,
+                          child: widget.appInMemory.icon != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(iconBorderRadius),
+                                  child: Image.memory(
+                                    widget.appInMemory.icon!,
+                                    fit: BoxFit.cover,
+                                    gaplessPlayback: true,
+                                    opacity: AlwaysStoppedAnimation(
+                                      widget.appInMemory.installedInfo == null ? 0.6 : 1,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(iconBorderRadius),
+                                  ),
+                                  child: Icon(
+                                    Icons.apps,
+                                    size: placeholderIconSize,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.apps,
-                                size: 32,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
+                        ),
+                      ),
+                      // Update indicator badge with pulsing animation
+                      if (widget.hasUpdate)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: _pulseAnimation.value,
+                                child: Container(
+                                  width: badgeSize,
+                                  height: badgeSize,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Theme.of(context).colorScheme.surface,
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                        blurRadius: 4 * _pulseAnimation.value,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // App Name
+                  Text(
+                    widget.appInMemory.name,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          widget.appInMemory.app.pinned ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
-                  // Update indicator badge with pulsing animation
-                  if (widget.hasUpdate)
-                    Positioned(
-                      right: -4,
-                      top: -4,
-                      child: AnimatedBuilder(
-                        animation: _pulseAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _pulseAnimation.value,
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                                    blurRadius: 4 * _pulseAnimation.value,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                  // Download progress
+                  if (widget.appInMemory.downloadProgress != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: SizedBox(
+                        height: 2,
+                        child: LinearProgressIndicator(
+                          value: widget.appInMemory.downloadProgress! >= 0
+                              ? widget.appInMemory.downloadProgress! / 100
+                              : null,
+                        ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
-              // App Name
-              Text(
-                widget.appInMemory.name,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight:
-                      widget.appInMemory.app.pinned ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              // Download progress
-              if (widget.appInMemory.downloadProgress != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: SizedBox(
-                    height: 2,
-                    child: LinearProgressIndicator(
-                      value: widget.appInMemory.downloadProgress! >= 0
-                          ? widget.appInMemory.downloadProgress! / 100
-                          : null,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
+        );
+      },
     );
   }
 }

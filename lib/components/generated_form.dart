@@ -372,6 +372,12 @@ class _GeneratedFormState extends State<GeneratedForm> {
           }
           return DropdownButtonFormField(
             decoration: InputDecoration(labelText: formItem.label),
+            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+            ),
+            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
             value: values[formItem.key],
             items: formItem.opts!.map((e2) {
               var enabled = formItem.disabledOptKeys?.contains(e2.key) != true;
