@@ -32,6 +32,20 @@ class _SettingsPageState extends State<SettingsPage> {
         ColorTools.createPrimarySwatch(obtainiumThemeColor): 'Obtainium',
       };
 
+  // PERFORMANCE: Cache DeviceInfoPlugin result to avoid redundant async calls
+  AndroidDeviceInfo? _cachedAndroidInfo;
+  Future<AndroidDeviceInfo>? _androidInfoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cache the android info on init
+    _androidInfoFuture = DeviceInfoPlugin().androidInfo.then((info) {
+      _cachedAndroidInfo = info;
+      return info;
+    });
+  }
+
   Widget _buildSection(BuildContext context, String title, List<Widget> children, {bool initiallyExpanded = false}) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -90,7 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
               )
             : const SizedBox.shrink();
       },
-      future: DeviceInfoPlugin().androidInfo,
+      future: _androidInfoFuture,
     );
 
     Future<bool> colorPickerDialog() async {
@@ -199,7 +213,7 @@ class _SettingsPageState extends State<SettingsPage> {
               )
             : const SizedBox.shrink();
       },
-      future: DeviceInfoPlugin().androidInfo,
+      future: _androidInfoFuture,
     );
 
     var sortDropdown = DropdownButtonFormField(
@@ -542,7 +556,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     )
                                   : const SizedBox.shrink();
                             },
-                            future: DeviceInfoPlugin().androidInfo,
+                            future: _androidInfoFuture,
                           ),
 
                           // Animations subsection
@@ -702,7 +716,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     )
                                   : const SizedBox.shrink();
                             },
-                            future: DeviceInfoPlugin().androidInfo,
+                            future: _androidInfoFuture,
                           ),
                           height16,
                           Row(
