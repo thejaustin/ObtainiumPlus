@@ -294,7 +294,37 @@ class _HomePageState extends State<HomePage> {
     prevAppCount = appsProvider.apps.length;
     prevIsLoading = appsProvider.loadingApps;
 
-    return WillPopScope(
+    // Determine if we can pop based on the current state
+    bool canPopNow() {
+      if (isLinkActivity &&
+          selectedIndexHistory.length == 1 &&
+          selectedIndexHistory.last == 1) {
+        return true;
+      }
+      if (selectedIndexHistory.isNotEmpty) {
+        return false;
+      }
+      return !(pages[0].widget.key as GlobalKey<AppsPageState>).currentState!
+          .clearSelected();
+    }
+
+    return PopScope(
+      canPop: canPopNow(),
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+
+        // Handle navigation history
+        if (selectedIndexHistory.isNotEmpty) {
+          setIsReversing(
+            selectedIndexHistory.length >= 2
+                ? selectedIndexHistory.reversed.toList()[1]
+                : 0,
+          );
+          setState(() {
+            selectedIndexHistory.removeLast();
+          });
+        }
+      },
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: PageTransitionSwitcher(
@@ -346,26 +376,6 @@ class _HomePageState extends State<HomePage> {
               : selectedIndexHistory.last,
         ),
       ),
-      onWillPop: () async {
-        if (isLinkActivity &&
-            selectedIndexHistory.length == 1 &&
-            selectedIndexHistory.last == 1) {
-          return true;
-        }
-        setIsReversing(
-          selectedIndexHistory.length >= 2
-              ? selectedIndexHistory.reversed.toList()[1]
-              : 0,
-        );
-        if (selectedIndexHistory.isNotEmpty) {
-          setState(() {
-            selectedIndexHistory.removeLast();
-          });
-          return false;
-        }
-        return !(pages[0].widget.key as GlobalKey<AppsPageState>).currentState!
-            .clearSelected();
-      },
     );
   }
 
