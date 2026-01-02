@@ -9,6 +9,7 @@ import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -407,157 +408,17 @@ class _ObtainiumState extends State<Obtainium> {
             locale: context.locale,
             navigatorKey: globalNavigatorKey,
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              useMaterial3: true,
+            theme: ThemeBuilder.buildTheme(
               colorScheme: settingsProvider.theme == ThemeSettings.dark
                   ? darkColorScheme
                   : lightColorScheme,
-              fontFamily: settingsProvider.useSystemFont
-                  ? 'SystemFont'
-                  : 'Montserrat',
-              inputDecorationTheme: InputDecorationTheme(
-                filled: true,
-                fillColor: (settingsProvider.theme == ThemeSettings.dark
-                        ? darkColorScheme
-                        : lightColorScheme)
-                    .surfaceContainerHigh,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: (settingsProvider.theme == ThemeSettings.dark
-                            ? darkColorScheme
-                            : lightColorScheme)
-                        .onSurfaceVariant
-                        .withOpacity(0.5),
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: (settingsProvider.theme == ThemeSettings.dark
-                            ? darkColorScheme
-                            : lightColorScheme)
-                        .onSurfaceVariant
-                        .withOpacity(0.5),
-                    width: 2.0,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: (settingsProvider.theme == ThemeSettings.dark
-                            ? darkColorScheme
-                            : lightColorScheme)
-                        .primary,
-                    width: 2.5,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                labelStyle: TextStyle(
-                  color: (settingsProvider.theme == ThemeSettings.dark
-                          ? darkColorScheme
-                          : lightColorScheme)
-                      .onSurface,
-                  fontWeight: FontWeight.w500,
-                ),
-                floatingLabelStyle: TextStyle(
-                  color: (settingsProvider.theme == ThemeSettings.dark
-                          ? darkColorScheme
-                          : lightColorScheme)
-                      .primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              dropdownMenuTheme: DropdownMenuThemeData(
-                textStyle: TextStyle(
-                  color: (settingsProvider.theme == ThemeSettings.dark
-                          ? darkColorScheme
-                          : lightColorScheme)
-                      .onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              useSystemFont: settingsProvider.useSystemFont,
             ),
-            darkTheme: ThemeData(
-              useMaterial3: true,
+            darkTheme: ThemeBuilder.buildTheme(
               colorScheme: settingsProvider.theme == ThemeSettings.light
                   ? lightColorScheme
                   : darkColorScheme,
-              fontFamily: settingsProvider.useSystemFont
-                  ? 'SystemFont'
-                  : 'Montserrat',
-              inputDecorationTheme: InputDecorationTheme(
-                filled: true,
-                fillColor: (settingsProvider.theme == ThemeSettings.light
-                        ? lightColorScheme
-                        : darkColorScheme)
-                    .surfaceContainerHigh,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: (settingsProvider.theme == ThemeSettings.light
-                            ? lightColorScheme
-                            : darkColorScheme)
-                        .onSurfaceVariant
-                        .withOpacity(0.5),
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: (settingsProvider.theme == ThemeSettings.light
-                            ? lightColorScheme
-                            : darkColorScheme)
-                        .onSurfaceVariant
-                        .withOpacity(0.5),
-                    width: 2.0,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: (settingsProvider.theme == ThemeSettings.light
-                            ? lightColorScheme
-                            : darkColorScheme)
-                        .primary,
-                    width: 2.5,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                labelStyle: TextStyle(
-                  color: (settingsProvider.theme == ThemeSettings.light
-                          ? lightColorScheme
-                          : darkColorScheme)
-                      .onSurface,
-                  fontWeight: FontWeight.w500,
-                ),
-                floatingLabelStyle: TextStyle(
-                  color: (settingsProvider.theme == ThemeSettings.light
-                          ? lightColorScheme
-                          : darkColorScheme)
-                      .primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              dropdownMenuTheme: DropdownMenuThemeData(
-                textStyle: TextStyle(
-                  color: (settingsProvider.theme == ThemeSettings.light
-                          ? lightColorScheme
-                          : darkColorScheme)
-                      .onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              useSystemFont: settingsProvider.useSystemFont,
             ),
             home: Shortcuts(
               shortcuts: <LogicalKeySet, Intent>{
