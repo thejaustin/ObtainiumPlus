@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 /// Utility class for building Material 3 themes with consistent styling
 class ThemeBuilder {
@@ -24,29 +25,29 @@ class ThemeBuilder {
       filled: true,
       fillColor: colorScheme.surfaceContainerHigh,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
           color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-          width: 2.0,
+          width: AppConstants.enabledBorderWidth,
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
           color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-          width: 2.0,
+          width: AppConstants.enabledBorderWidth,
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
           color: colorScheme.primary,
-          width: 2.5,
+          width: AppConstants.focusedBorderWidth,
         ),
       ),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 16,
+        horizontal: AppConstants.inputHorizontalPadding,
+        vertical: AppConstants.inputVerticalPadding,
       ),
       labelStyle: TextStyle(
         color: colorScheme.onSurface,
