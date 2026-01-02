@@ -541,8 +541,14 @@ String getSourceRegex(List<String> hosts) {
 HttpClient createHttpClient(bool insecure) {
   final client = HttpClient();
   if (insecure) {
+    // SECURITY WARNING: Bypassing SSL/TLS certificate verification
+    // This makes the connection vulnerable to man-in-the-middle attacks
+    print('⚠️ SECURITY: Creating HTTP client with SSL verification DISABLED');
     client.badCertificateCallback =
-        (X509Certificate cert, String host, int port) => true;
+        (X509Certificate cert, String host, int port) {
+      print('⚠️ SECURITY: Accepting untrusted certificate for $host:$port');
+      return true;
+    };
   }
   return client;
 }
@@ -813,7 +819,8 @@ abstract class AppSource {
     [
       GeneratedFormSwitch(
         'allowInsecure',
-        label: tr('allowInsecure'),
+        label: '${tr('allowInsecure')} ${tr('allowInsecureWarning')}',
+        additionalInfo: tr('allowInsecureDescription'),
         defaultValue: false,
       ),
     ],
