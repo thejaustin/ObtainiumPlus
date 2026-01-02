@@ -379,6 +379,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSection(context, tr('appearance'), [
+                          // Theme & Colors subsection
+                          Text(
+                            'Theme & Colors',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          height8,
                           DropdownButtonFormField(
                             decoration: InputDecoration(labelText: tr('theme')),
                             dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -414,53 +424,101 @@ class _SettingsPageState extends State<SettingsPage> {
                             followSystemThemeExplanation,
                           height16,
                           if (settingsProvider.theme != ThemeSettings.light)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(child: Text(tr('useBlackTheme'))),
+                                    Switch(
+                                      value: settingsProvider.useBlackTheme,
+                                      onChanged: (value) {
+                                        HapticFeedback.selectionClick();
+                                        settingsProvider.useBlackTheme = value;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                height16,
+                              ],
+                            ),
+                          useMaterialThemeSwitch,
+                          if (settingsProvider.useMaterialYou) ...[
+                            height8,
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Flexible(child: Text(tr('useBlackTheme'))),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Match System Material Style'),
+                                      Text(
+                                        'Use system\'s complete Material You theme',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 Switch(
-                                  value: settingsProvider.useBlackTheme,
+                                  value: settingsProvider.matchSystemMaterialStyle,
                                   onChanged: (value) {
                                     HapticFeedback.selectionClick();
-                                    settingsProvider.useBlackTheme = value;
+                                    settingsProvider.matchSystemMaterialStyle = value;
                                   },
                                 ),
                               ],
                             ),
-                          height16,
-                          DropdownButtonFormField<DynamicSchemeVariant>(
-                            decoration: const InputDecoration(labelText: 'Theme Style'),
-                            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
+                          ],
+                          if (!settingsProvider.useMaterialYou || !settingsProvider.matchSystemMaterialStyle) ...[
+                            height16,
+                            DropdownButtonFormField<DynamicSchemeVariant>(
+                              decoration: const InputDecoration(labelText: 'Theme Style'),
+                              dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 16,
+                              ),
+                              iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                              value: settingsProvider.themeVariant,
+                              items: DynamicSchemeVariant.values.map((v) {
+                                String name = v.name.substring(0, 1).toUpperCase() + v.name.substring(1).replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
+                                return DropdownMenuItem(
+                                  value: v,
+                                  child: Text(name),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  HapticFeedback.selectionClick();
+                                  settingsProvider.themeVariant = value;
+                                }
+                              },
                             ),
-                            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                            value: settingsProvider.themeVariant,
-                            items: DynamicSchemeVariant.values.map((v) {
-                              String name = v.name.substring(0, 1).toUpperCase() + v.name.substring(1).replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
-                              return DropdownMenuItem(
-                                value: v,
-                                child: Text(name),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value != null) {
-                                HapticFeedback.selectionClick();
-                                settingsProvider.themeVariant = value;
-                              }
-                            },
-                          ),
-                          height8,
-                          useMaterialThemeSwitch,
+                          ],
                           if (!settingsProvider.useMaterialYou) colorPicker,
+
+                          // Typography subsection
+                          height32,
+                          Text(
+                            'Typography',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                           FutureBuilder(
                             builder: (ctx, val) {
                               return (val.data?.version.sdkInt ?? 0) >= 34
                                   ? Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        height16,
+                                        height8,
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
@@ -486,7 +544,18 @@ class _SettingsPageState extends State<SettingsPage> {
                             },
                             future: DeviceInfoPlugin().androidInfo,
                           ),
-                          height16,
+
+                          // Animations subsection
+                          height32,
+                          Text(
+                            'Animations',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          height8,
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
