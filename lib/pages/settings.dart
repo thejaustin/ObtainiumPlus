@@ -381,7 +381,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         _buildSection(context, tr('appearance'), [
                           // Theme & Colors subsection
                           Text(
-                            'Theme & Colors',
+                            tr('themeAndColors'),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -453,9 +453,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('Match System Material Style'),
+                                      Text(tr('matchSystemMaterialStyle')),
                                       Text(
-                                        'Use system\'s complete Material You theme',
+                                        tr('matchSystemMaterialStyleDescription'),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -477,7 +477,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (!settingsProvider.useMaterialYou || !settingsProvider.matchSystemMaterialStyle) ...[
                             height16,
                             DropdownButtonFormField<DynamicSchemeVariant>(
-                              decoration: const InputDecoration(labelText: 'Theme Style'),
+                              decoration: InputDecoration(labelText: tr('themeStyle')),
                               dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -505,7 +505,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           // Typography subsection
                           height32,
                           Text(
-                            'Typography',
+                            tr('typography'),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -548,7 +548,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           // Animations subsection
                           height32,
                           Text(
-                            'Animations',
+                            tr('animations'),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

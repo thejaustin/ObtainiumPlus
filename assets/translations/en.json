@@ -427,5 +427,11 @@
     "switchToGridView": "Switch to Grid View",
     "categorySettings": "Category Settings",
     "viewMode": "View Mode",
-    "useGlobalSetting": "Use Global Setting"
+    "useGlobalSetting": "Use Global Setting",
+    "themeAndColors": "Theme & Colors",
+    "typography": "Typography",
+    "animations": "Animations",
+    "themeStyle": "Theme Style",
+    "matchSystemMaterialStyle": "Match System Material Style",
+    "matchSystemMaterialStyleDescription": "Use system's complete Material You theme"
 }
