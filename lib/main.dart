@@ -412,7 +412,8 @@ class _ObtainiumState extends State<Obtainium> {
                     color: (settingsProvider.theme == ThemeSettings.dark
                             ? darkColorScheme
                             : lightColorScheme)
-                        .outline,
+                        .onSurfaceVariant
+                        .withOpacity(0.5),
                     width: 2.0,
                   ),
                 ),
@@ -422,7 +423,8 @@ class _ObtainiumState extends State<Obtainium> {
                     color: (settingsProvider.theme == ThemeSettings.dark
                             ? darkColorScheme
                             : lightColorScheme)
-                        .outline,
+                        .onSurfaceVariant
+                        .withOpacity(0.5),
                     width: 2.0,
                   ),
                 ),
@@ -486,7 +488,8 @@ class _ObtainiumState extends State<Obtainium> {
                     color: (settingsProvider.theme == ThemeSettings.light
                             ? lightColorScheme
                             : darkColorScheme)
-                        .outline,
+                        .onSurfaceVariant
+                        .withOpacity(0.5),
                     width: 2.0,
                   ),
                 ),
@@ -496,7 +499,8 @@ class _ObtainiumState extends State<Obtainium> {
                     color: (settingsProvider.theme == ThemeSettings.light
                             ? lightColorScheme
                             : darkColorScheme)
-                        .outline,
+                        .onSurfaceVariant
+                        .withOpacity(0.5),
                     width: 2.0,
                   ),
                 ),
