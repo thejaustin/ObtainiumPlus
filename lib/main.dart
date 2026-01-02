@@ -405,8 +405,7 @@ class _ObtainiumState extends State<Obtainium> {
                 fillColor: (settingsProvider.theme == ThemeSettings.dark
                         ? darkColorScheme
                         : lightColorScheme)
-                    .primaryContainer
-                    .withOpacity(0.4),
+                    .surfaceContainerHigh,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
@@ -480,8 +479,7 @@ class _ObtainiumState extends State<Obtainium> {
                 fillColor: (settingsProvider.theme == ThemeSettings.light
                         ? lightColorScheme
                         : darkColorScheme)
-                    .primaryContainer
-                    .withOpacity(0.4),
+                    .surfaceContainerHigh,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
