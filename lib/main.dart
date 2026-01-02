@@ -362,8 +362,16 @@ class _ObtainiumState extends State<Obtainium> {
           if (lightDynamic != null &&
               darkDynamic != null &&
               settingsProvider.useMaterialYou) {
-            lightColorScheme = lightDynamic.harmonized();
-            darkColorScheme = darkDynamic.harmonized();
+            // When Material You is enabled, use system color as seed but apply selected variant
+            lightColorScheme = ColorScheme.fromSeed(
+              seedColor: lightDynamic.primary,
+              dynamicSchemeVariant: settingsProvider.themeVariant,
+            ).harmonized();
+            darkColorScheme = ColorScheme.fromSeed(
+              seedColor: darkDynamic.primary,
+              brightness: Brightness.dark,
+              dynamicSchemeVariant: settingsProvider.themeVariant,
+            ).harmonized();
           } else {
             lightColorScheme = ColorScheme.fromSeed(
               seedColor: settingsProvider.themeColor,
