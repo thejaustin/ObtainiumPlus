@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class AppGridTile extends StatefulWidget {
   final AppInMemory appInMemory;
@@ -84,7 +85,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
         double placeholderIconSize = (iconSize * 0.57).clamp(24.0, 48.0);
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: AppConstants.shortAnimationMs),
           curve: Curves.easeOutCubic,
           child: Card(
             elevation: widget.isSelected ? 8 : 1,
@@ -102,14 +103,18 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                     )
                   : BorderSide.none,
             ),
-            child: InkWell(
-            onTap: widget.onTap,
-            onLongPress: () {
-              HapticFeedback.mediumImpact();
-              widget.onLongPress();
-            },
-            borderRadius: BorderRadius.circular(cardBorderRadius),
-            child: Padding(
+            child: Semantics(
+              label: _buildSemanticLabel(),
+              button: true,
+              selected: widget.isSelected,
+              child: InkWell(
+              onTap: widget.onTap,
+              onLongPress: () {
+                HapticFeedback.mediumImpact();
+                widget.onLongPress();
+              },
+              borderRadius: BorderRadius.circular(cardBorderRadius),
+              child: Padding(
               padding: EdgeInsets.all(padding),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -215,9 +220,42 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
               ),
             ),
           ),
+            ),
         ),
         );
       },
     );
+  }
+
+  /// Builds a semantic label for screen readers
+  String _buildSemanticLabel() {
+    final StringBuffer label = StringBuffer(widget.appInMemory.name);
+
+    if (widget.hasUpdate) {
+      label.write(', update available');
+    }
+
+    if (widget.appInMemory.installedInfo != null) {
+      label.write(', installed');
+    } else {
+      label.write(', not installed');
+    }
+
+    if (widget.appInMemory.app.pinned) {
+      label.write(', pinned');
+    }
+
+    if (widget.isSelected) {
+      label.write(', selected');
+    }
+
+    if (widget.appInMemory.downloadProgress != null) {
+      final progress = widget.appInMemory.downloadProgress! >= 0
+          ? '${widget.appInMemory.downloadProgress}%'
+          : 'in progress';
+      label.write(', downloading $progress');
+    }
+
+    return label.toString();
   }
 }
