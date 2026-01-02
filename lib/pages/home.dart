@@ -13,6 +13,7 @@ import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/url_validator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -169,14 +170,61 @@ class _HomePageState extends State<HomePage> {
     }
 
     interpretLink(Uri uri) async {
+      // SECURITY: Validate deep link before processing
+      if (!URLValidator.isValidDeepLink(uri)) {
+        // ignore: use_build_context_synchronously
+        showDialog(
+          context: context,
+          builder: (BuildContext ctx) {
+            return AlertDialog(
+              title: Text(tr('error')),
+              content: Text('Invalid or unauthorized deep link. This link may be malicious.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(tr('ok')),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
+
       isLinkActivity = true;
       var action = uri.host;
       var data = uri.path.length > 1 ? uri.path.substring(1) : "";
+
+      // SECURITY: Sanitize input data
+      data = URLValidator.sanitizeInput(data);
+
       try {
         if (action == 'add') {
           await goToAddApp(data);
         } else if (action == 'app' || action == 'apps') {
           var dataStr = Uri.decodeComponent(data);
+
+          // SECURITY: Validate JSON input
+          if (!URLValidator.isValidJSONInput(dataStr)) {
+            // ignore: use_build_context_synchronously
+            showDialog(
+              context: context,
+              builder: (BuildContext ctx) {
+                return AlertDialog(
+                  title: Text(tr('error')),
+                  content: Text('Invalid or potentially malicious JSON data.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(tr('ok')),
+                    ),
+                  ],
+                );
+              },
+            );
+            return;
+          }
+
           if (await showDialog(
                 context: context,
                 builder: (BuildContext ctx) {

@@ -433,5 +433,11 @@
     "animations": "Animations",
     "themeStyle": "Theme Style",
     "matchSystemMaterialStyle": "Match System Material Style",
-    "matchSystemMaterialStyleDescription": "Use system's complete Material You theme"
+    "matchSystemMaterialStyleDescription": "Use system's complete Material You theme",
+    "allowInsecureWarning": "⚠️ SECURITY WARNING",
+    "allowInsecureDescription": "Bypasses SSL/TLS certificate verification. Only use for trusted sources. Enables man-in-the-middle attacks.",
+    "securityRiskTitle": "Security Risk",
+    "securityRiskMessage": "Enabling 'Allow Insecure Connections' bypasses SSL/TLS certificate verification.\n\nThis makes you vulnerable to man-in-the-middle attacks and should ONLY be used for:\n\n• Self-signed certificates from sources you control\n• Local network servers you trust\n• Testing purposes\n\nNEVER use this for public websites or untrusted sources.\n\nDo you want to enable this risky option?",
+    "enableAnyway": "Enable Anyway",
+    "insecureConnectionInUse": "⚠️ Insecure connection bypass active"
 }
