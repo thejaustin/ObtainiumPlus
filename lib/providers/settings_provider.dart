@@ -172,6 +172,15 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get matchSystemMaterialStyle {
+    return prefs?.getBool('matchSystemMaterialStyle') ?? false;
+  }
+
+  set matchSystemMaterialStyle(bool matchSystemMaterialStyle) {
+    prefs?.setBool('matchSystemMaterialStyle', matchSystemMaterialStyle);
+    notifyListeners();
+  }
+
   bool get useBlackTheme {
     return prefs?.getBool('useBlackTheme') ?? false;
   }
