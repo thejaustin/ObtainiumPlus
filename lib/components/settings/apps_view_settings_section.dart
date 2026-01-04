@@ -24,7 +24,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       children: [
         // Categories section
         height16,
-        const CategoryEditorSelector(showLabelWhenNotEmpty: false),
+        CategoryEditorSelector(showLabelWhenNotEmpty: false),
         height16,
         _buildGroupByCategoryToggle(context),
         height16,
