@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -450,74 +451,3 @@ class _LogsDialogState extends State<LogsDialog> {
   }
 }
 
-class CategoryEditorSelector extends StatefulWidget {
-  final void Function(List<String> categories)? onSelected;
-  final bool singleSelect;
-  final Set<String> preselected;
-  final WrapAlignment alignment;
-  final bool showLabelWhenNotEmpty;
-  const CategoryEditorSelector({
-    super.key,
-    this.onSelected,
-    this.singleSelect = false,
-    this.preselected = const {},
-    this.alignment = WrapAlignment.start,
-    this.showLabelWhenNotEmpty = true,
-  });
-
-  @override
-  State<CategoryEditorSelector> createState() => _CategoryEditorSelectorState();
-}
-
-class _CategoryEditorSelectorState extends State<CategoryEditorSelector> {
-  Map<String, MapEntry<int, bool>> storedValues = {};
-
-  @override
-  Widget build(BuildContext context) {
-    var settingsProvider = context.watch<SettingsProvider>();
-    var appsProvider = context.watch<AppsProvider>();
-    storedValues = settingsProvider.categories.map(
-      (key, value) => MapEntry(
-        key,
-        MapEntry(
-          value,
-          storedValues[key]?.value ?? widget.preselected.contains(key),
-        ),
-      ),
-    );
-    return GeneratedForm(
-      items: [
-        [
-          GeneratedFormTagInput(
-            'categories',
-            label: tr('categories'),
-            emptyMessage: tr('noCategories'),
-            defaultValue: storedValues,
-            alignment: widget.alignment,
-            deleteConfirmationMessage: MapEntry(
-              tr('deleteCategoriesQuestion'),
-              tr('categoryDeleteWarning'),
-            ),
-            singleSelect: widget.singleSelect,
-            showLabelWhenNotEmpty: widget.showLabelWhenNotEmpty,
-          ),
-        ],
-      ],
-      onValueChanges: ((values, valid, isBuilding) {
-        if (!isBuilding) {
-          storedValues =
-              values['categories'] as Map<String, MapEntry<int, bool>>;
-          settingsProvider.setCategories(
-            storedValues.map((key, value) => MapEntry(key, value.key)),
-            appsProvider: appsProvider,
-          );
-          if (widget.onSelected != null) {
-            widget.onSelected!(
-              storedValues.keys.where((k) => storedValues[k]!.value).toList(),
-            );
-          }
-        }
-      }),
-    );
-  }
-}

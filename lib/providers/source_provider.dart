@@ -820,7 +820,6 @@ abstract class AppSource {
       GeneratedFormSwitch(
         'allowInsecure',
         label: '${tr('allowInsecure')} ${tr('allowInsecureWarning')}',
-        additionalInfo: tr('allowInsecureDescription'),
         defaultValue: false,
       ),
     ],
