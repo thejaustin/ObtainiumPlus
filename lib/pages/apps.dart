@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
