@@ -53,6 +53,15 @@ This document outlines the strategy for ongoing performance and code quality imp
   - Extracted `AppListView`, `AppGridView`, `CategorySections`, `AppListTile`
   - Centralized utilities in `version_utils.dart`, `app_utils.dart`, `language_utils.dart`
 
+### ✅ App Discovery & Unified Search (v1.2.9-p21)
+- **Files**: `lib/pages/discover.dart`, `lib/pages/home.dart`
+- **Change**: Added a new "Discover" tab for aggregated app search across multiple sources
+- **Impact**: Provides a central location for users to find and add new apps directly
+- **Implementation**:
+  - Integrated `DiscoverPage` into main navigation
+  - Implemented multi-source parallel search logic
+  - Added direct navigation to "Add App" with auto-population
+
 **Performance Results**:
 - Before: ANY setting change rebuilt ENTIRE page (~1400 lines)
 - After: Only affected widget rebuilds (~50-100 lines per change)
@@ -349,4 +358,4 @@ Based on effort vs impact:
 ---
 
 Last Updated: 2026-01-14
-Version: 1.2.9-p20
+Version: 1.2.9-p21
