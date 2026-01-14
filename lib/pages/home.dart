@@ -13,6 +13,7 @@ import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -377,7 +378,9 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: PageTransitionSwitcher(
           duration: Duration(
-            milliseconds: settingsProvider.disablePageTransitions ? 0 : 300,
+            milliseconds: settingsProvider.disablePageTransitions
+                ? 0
+                : AppConstants.expressiveAnimationMs,
           ),
           reverse: settingsProvider.reversePageTransitions
               ? !isReversing
@@ -388,8 +391,13 @@ class _HomePageState extends State<HomePage> {
                 Animation<double> animation,
                 Animation<double> secondaryAnimation,
               ) {
+                // Apply expressive curve for smoother motion
+                final curvedAnimation = CurvedAnimation(
+                  parent: animation,
+                  curve: AppConstants.expressiveStandard,
+                );
                 return SharedAxisTransition(
-                  animation: animation,
+                  animation: curvedAnimation,
                   secondaryAnimation: secondaryAnimation,
                   transitionType: SharedAxisTransitionType.horizontal,
                   child: child,

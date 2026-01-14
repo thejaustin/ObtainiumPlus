@@ -26,6 +26,7 @@ class AppGridTile extends StatefulWidget {
 class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  bool _isPressed = false;
 
   @override
   void initState() {
@@ -84,36 +85,52 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
         // Placeholder icon size: proportional to icon size
         double placeholderIconSize = (iconSize * 0.57).clamp(24.0, 48.0);
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: AppConstants.shortAnimationMs),
-          curve: Curves.easeOutCubic,
-          child: Card(
-            elevation: widget.isSelected ? 8 : 1,
-            shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.3) : null,
-            surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
-            color: widget.isSelected
-                ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
-                : null,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(cardBorderRadius),
-              side: widget.appInMemory.app.pinned
-                  ? BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 2,
-                    )
-                  : BorderSide.none,
-            ),
-            child: Semantics(
-              label: _buildSemanticLabel(),
-              button: true,
-              selected: widget.isSelected,
-              child: InkWell(
-              onTap: widget.onTap,
-              onLongPress: () {
-                HapticFeedback.mediumImpact();
-                widget.onLongPress();
-              },
-              borderRadius: BorderRadius.circular(cardBorderRadius),
+        return AnimatedScale(
+          scale: _isPressed ? 0.95 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          curve: AppConstants.expressiveStandard,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: AppConstants.shortAnimationMs),
+            curve: Curves.easeOutCubic,
+            child: Card(
+              elevation: widget.isSelected ? 8 : 1,
+              shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.3) : null,
+              surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
+              color: widget.isSelected
+                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
+                  : null,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(cardBorderRadius),
+                side: widget.appInMemory.app.pinned
+                    ? BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      )
+                    : BorderSide.none,
+              ),
+              child: Semantics(
+                label: _buildSemanticLabel(),
+                button: true,
+                selected: widget.isSelected,
+                child: GestureDetector(
+                onTapDown: (_) => setState(() => _isPressed = true),
+                onTapUp: (_) {
+                  setState(() => _isPressed = false);
+                  widget.onTap();
+                },
+                onTapCancel: () => setState(() => _isPressed = false),
+                onLongPressStart: (_) {
+                  setState(() => _isPressed = true);
+                  HapticFeedback.mediumImpact();
+                },
+                onLongPressEnd: (_) {
+                  setState(() => _isPressed = false);
+                  widget.onLongPress();
+                },
+                child: InkWell(
+                onTap: null, // Handled by GestureDetector
+                onLongPress: null, // Handled by GestureDetector
+                borderRadius: BorderRadius.circular(cardBorderRadius),
               child: Padding(
               padding: EdgeInsets.all(padding),
               child: Column(
@@ -219,9 +236,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                 ],
               ),
             ),
+            ),
           ),
             ),
-        ),
+          ),
         );
       },
     );

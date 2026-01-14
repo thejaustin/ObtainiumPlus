@@ -19,6 +19,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -53,45 +54,58 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildSection(BuildContext context, String title, List<Widget> children, {bool initiallyExpanded = false}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      elevation: initiallyExpanded ? 2 : 0,
-      shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-        ),
-        child: ExpansionTile(
-          onExpansionChanged: (expanded) {
-            HapticFeedback.lightImpact();
-          },
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              letterSpacing: 0.15,
-              color: Theme.of(context).colorScheme.onSurface,
+    return StatefulBuilder(
+      builder: (context, setState) {
+        bool isExpanded = initiallyExpanded;
+        return AnimatedContainer(
+          duration: Duration(milliseconds: AppConstants.mediumAnimationMs + 50),
+          curve: AppConstants.expressiveStandard,
+          transform: Matrix4.identity()..scale(isExpanded ? 1.0 : 0.98),
+          margin: const EdgeInsets.only(bottom: 16.0),
+          child: Card(
+            elevation: isExpanded ? 2 : 0,
+            shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            clipBehavior: Clip.antiAlias,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Colors.transparent,
+                splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                highlightColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              ),
+              child: ExpansionTile(
+                onExpansionChanged: (expanded) {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    isExpanded = expanded;
+                  });
+                },
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    letterSpacing: 0.15,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                iconColor: Theme.of(context).colorScheme.primary,
+                collapsedIconColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                initiallyExpanded: initiallyExpanded,
+                childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                expandedAlignment: Alignment.centerLeft,
+                children: children,
+              ),
             ),
           ),
-          iconColor: Theme.of(context).colorScheme.primary,
-          collapsedIconColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          initiallyExpanded: initiallyExpanded,
-          childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          expandedAlignment: Alignment.centerLeft,
-          children: children,
-        ),
-      ),
+        );
+      },
     );
   }
 
