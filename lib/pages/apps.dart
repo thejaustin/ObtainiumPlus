@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
@@ -142,6 +143,17 @@ class AppsPageState extends State<AppsPage> {
   Set<String> selectedAppIds = {};
   DateTime? refreshingSince;
 
+  // Cache for category colors to avoid repeated Color object creation
+  final Map<int, Color> _categoryColorCache = {};
+
+  // Get cached category color or create and cache new one
+  Color _getCachedCategoryColor(int colorInt) {
+    return _categoryColorCache.putIfAbsent(
+      colorInt,
+      () => Color(colorInt),
+    );
+  }
+
   bool clearSelected() {
     if (selectedAppIds.isNotEmpty) {
       setState(() {
@@ -170,6 +182,50 @@ class AppsPageState extends State<AppsPage> {
   var sourceProvider = SourceProvider();
 
   @override
+  void initState() {
+    super.initState();
+    // Set up icon precaching on scroll
+    scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    scrollController.removeListener(_onScroll);
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Trigger precaching when user scrolls
+    // Use context.read to avoid rebuild dependencies
+    final appsProvider = context.read<AppsProvider>();
+    final listedApps = appsProvider.getAppValues().toList();
+
+    if (listedApps.isEmpty) return;
+
+    // Calculate visible range (rough estimate)
+    final scrollOffset = scrollController.offset;
+    final viewportHeight = scrollController.position.viewportDimension;
+    final itemHeight = 72.0; // Approximate list item height
+
+    final firstVisibleIndex = (scrollOffset / itemHeight).floor();
+    final lastVisibleIndex = ((scrollOffset + viewportHeight) / itemHeight).ceil();
+
+    // Precache buffer: 10 items ahead and behind
+    final startIndex = (firstVisibleIndex - 10).clamp(0, listedApps.length);
+    final endIndex = (lastVisibleIndex + 10).clamp(0, listedApps.length);
+
+    // Get app IDs in the range
+    final appIdsToCache = listedApps
+        .sublist(startIndex, endIndex)
+        .map((app) => app.app.id)
+        .toList();
+
+    // Trigger precaching
+    appsProvider.precacheIcons(appIdsToCache);
+  }
+
+  @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
@@ -187,6 +243,7 @@ class AppsPageState extends State<AppsPage> {
             return <App>[];
           })
           .whenComplete(() {
+            HapticFeedback.lightImpact();
             setState(() {
               refreshingSince = null;
             });
@@ -609,46 +666,23 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getAppIcon(int appIndex) {
+      // Trigger icon loading if not loaded yet (non-blocking)
+      if (listedApps[appIndex].icon == null) {
+        appsProvider.updateAppIcon(listedApps[appIndex].app.id);
+      }
+
       return GestureDetector(
-        child: FutureBuilder(
-          future: appsProvider.updateAppIcon(listedApps[appIndex].app.id),
-          builder: (ctx, val) {
-            return Hero(
-              tag: 'app_icon_${listedApps[appIndex].app.id}',
-              child: listedApps[appIndex].icon != null
-                  ? Image.memory(
-                      listedApps[appIndex].icon!,
-                      gaplessPlayback: true,
-                      opacity: AlwaysStoppedAnimation(
-                        listedApps[appIndex].installedInfo == null ? 0.6 : 1,
-                      ),
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.rotationZ(0.31),
-                          child: Padding(
-                            padding: const EdgeInsets.all(15),
-                            child: Image(
-                              image: const AssetImage(
-                                'assets/graphics/icon_small.png',
-                              ),
-                              color:
-                                  Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.white.withOpacity(0.4)
-                                  : Colors.white.withOpacity(0.3),
-                              colorBlendMode: BlendMode.modulate,
-                              gaplessPlayback: true,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-            );
-          },
+        child: Hero(
+          tag: 'app_icon_${listedApps[appIndex].app.id}',
+          child: listedApps[appIndex].icon != null
+              ? Image.memory(
+                  listedApps[appIndex].icon!,
+                  gaplessPlayback: true,
+                  opacity: AlwaysStoppedAnimation(
+                    listedApps[appIndex].installedInfo == null ? 0.6 : 1,
+                  ),
+                )
+              : const AppIconShimmer(size: 48),
         ),
         onDoubleTap: () {
           pm.openApp(listedApps[appIndex].app.id);
@@ -781,11 +815,11 @@ class AppsPageState extends State<AppsPage> {
             end: const Alignment(-0.97, 0),
             colors: [
               ...listedApps[index].app.categories.map(
-                (e) => Color(
+                (e) => _getCachedCategoryColor(
                   settingsProvider.categories[e] ?? transparent,
                 ).withAlpha(255),
               ),
-              Color(transparent),
+              _getCachedCategoryColor(transparent),
             ],
           ),
         ),
@@ -992,7 +1026,7 @@ class AppsPageState extends State<AppsPage> {
       var categoryColorInt =
           categoryName != null ? settingsProvider.categories[categoryName] : null;
       var categoryColor =
-          categoryColorInt != null ? Color(categoryColorInt) : null;
+          categoryColorInt != null ? _getCachedCategoryColor(categoryColorInt) : null;
       var transparent =
           Theme.of(context).colorScheme.surface.withAlpha(0).value;
 
@@ -1909,7 +1943,7 @@ class AppsPageState extends State<AppsPage> {
       var categoryColorInt =
           categoryName != null ? settingsProvider.categories[categoryName] : null;
       var categoryColor =
-          categoryColorInt != null ? Color(categoryColorInt) : null;
+          categoryColorInt != null ? _getCachedCategoryColor(categoryColorInt) : null;
 
       var appsInCategory = listedApps
           .where((e) =>
@@ -2080,7 +2114,9 @@ class AppsPageState extends State<AppsPage> {
               BuildContext context,
               int index,
             ) {
-              return getSingleAppHorizTile(index);
+              return RepaintBoundary(
+                child: getSingleAppHorizTile(index),
+              );
             }, childCount: listedApps.length),
           );
         }
@@ -2101,7 +2137,7 @@ class AppsPageState extends State<AppsPage> {
           controller: scrollController,
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-            cacheExtent: 500.0,
+            cacheExtent: 1000.0, // Increased for smoother scrolling
             controller: scrollController,
             slivers: <Widget>[
               CustomAppBar(
