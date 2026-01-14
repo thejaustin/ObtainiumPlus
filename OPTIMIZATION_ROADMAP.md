@@ -44,6 +44,15 @@ This document outlines the strategy for ongoing performance and code quality imp
   - Added Material 3 expressive animation curves
   - Implemented `AppIconShimmer` for loading states
 
+### ✅ Monolithic File Refactoring (v1.2.9-p20)
+- **Files**: `lib/providers/apps_provider.dart` (reduced 63%), `lib/pages/apps.dart` (reduced 85%)
+- **Change**: Extracted logic into specialized services and modular components
+- **Impact**: Improved maintainability, better testability, and clearer project structure
+- **Implementation**:
+  - Created `AppFileService`, `AppInstallService`, `AppUpdateService`
+  - Extracted `AppListView`, `AppGridView`, `CategorySections`, `AppListTile`
+  - Centralized utilities in `version_utils.dart`, `app_utils.dart`, `language_utils.dart`
+
 **Performance Results**:
 - Before: ANY setting change rebuilt ENTIRE page (~1400 lines)
 - After: Only affected widget rebuilds (~50-100 lines per change)
@@ -339,5 +348,5 @@ Based on effort vs impact:
 
 ---
 
-Last Updated: 2026-01-13
-Version: 1.2.9-p19
+Last Updated: 2026-01-14
+Version: 1.2.9-p20

@@ -21,6 +21,8 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 // ignore: implementation_imports
 import 'package:easy_localization/src/localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/services/app_install_service.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -315,7 +317,7 @@ class _ObtainiumState extends State<Obtainium> {
         logs.add('This is the first ever run of Obtainium.');
         // If this is the first run, add Obtainium to the Apps list
         if (!fdroid) {
-          getInstalledInfo(obtainiumId)
+          AppInstallService.getInstalledInfo(obtainiumId)
               .then((value) {
                 if (value?.versionName != null) {
                   appsProvider.saveApps([
