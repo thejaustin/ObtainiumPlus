@@ -113,31 +113,31 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                 button: true,
                 selected: widget.isSelected,
                 child: GestureDetector(
-                onTapDown: (_) => setState(() => _isPressed = true),
-                onTapUp: (_) {
-                  setState(() => _isPressed = false);
-                  widget.onTap();
-                },
-                onTapCancel: () => setState(() => _isPressed = false),
-                onLongPressStart: (_) {
-                  setState(() => _isPressed = true);
-                  HapticFeedback.mediumImpact();
-                },
-                onLongPressEnd: (_) {
-                  setState(() => _isPressed = false);
-                  widget.onLongPress();
-                },
-                child: InkWell(
-                onTap: null, // Handled by GestureDetector
-                onLongPress: null, // Handled by GestureDetector
-                borderRadius: BorderRadius.circular(cardBorderRadius),
-              child: Padding(
-              padding: EdgeInsets.all(padding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // App Icon
-                  Stack(
+                  onTapDown: (_) => setState(() => _isPressed = true),
+                  onTapUp: (_) {
+                    setState(() => _isPressed = false);
+                    widget.onTap();
+                  },
+                  onTapCancel: () => setState(() => _isPressed = false),
+                  onLongPressStart: (_) {
+                    setState(() => _isPressed = true);
+                    HapticFeedback.mediumImpact();
+                  },
+                  onLongPressEnd: (_) {
+                    setState(() => _isPressed = false);
+                    widget.onLongPress();
+                  },
+                  child: InkWell(
+                    onTap: null, // Handled by GestureDetector
+                    onLongPress: null, // Handled by GestureDetector
+                    borderRadius: BorderRadius.circular(cardBorderRadius),
+                    child: Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // App Icon
+                          Stack(
                     clipBehavior: Clip.none,
                     children: [
                       Hero(
@@ -236,11 +236,12 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                 ],
               ),
             ),
-            ),
           ),
-            ),
-          ),
-        );
+        ),
+      ),
+    ),
+  ),
+);
       },
     );
   }
