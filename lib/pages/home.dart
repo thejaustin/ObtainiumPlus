@@ -9,6 +9,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
+import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -22,7 +23,7 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePage> createState() => HomePageState();
 }
 
 class NavigationPageItem {
@@ -33,7 +34,7 @@ class NavigationPageItem {
   NavigationPageItem(this.title, this.icon, this.widget);
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   List<int> selectedIndexHistory = [];
   bool isReversing = false;
   int prevAppCount = -1;
@@ -47,6 +48,11 @@ class _HomePageState extends State<HomePage> {
       tr('appsString'),
       Icons.apps,
       AppsPage(key: GlobalKey<AppsPageState>()),
+    ),
+    NavigationPageItem(
+      tr('discover'),
+      Icons.explore,
+      const DiscoverPage(),
     ),
     NavigationPageItem(
       tr('addApp'),
@@ -160,13 +166,13 @@ class _HomePageState extends State<HomePage> {
     _appLinks = AppLinks();
 
     goToAddApp(String data) async {
-      switchToPage(1);
-      while ((pages[1].widget.key as GlobalKey<AddAppPageState>?)
+      switchToPage(2);
+      while ((pages[2].widget.key as GlobalKey<AddAppPageState>?)
               ?.currentState ==
           null) {
         await Future.delayed(const Duration(microseconds: 1));
       }
-      (pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState
+      (pages[2].widget.key as GlobalKey<AddAppPageState>?)?.currentState
           ?.linkFn(data);
     }
 
@@ -336,7 +342,7 @@ class _HomePageState extends State<HomePage> {
         prevAppCount >= 0 &&
         appsProvider.apps.length > prevAppCount &&
         selectedIndexHistory.isNotEmpty &&
-        selectedIndexHistory.last == 1 &&
+        selectedIndexHistory.last == 2 &&
         !isLinkActivity) {
       switchToPage(0);
     }
@@ -347,7 +353,7 @@ class _HomePageState extends State<HomePage> {
     bool canPopNow() {
       if (isLinkActivity &&
           selectedIndexHistory.length == 1 &&
-          selectedIndexHistory.last == 1) {
+          selectedIndexHistory.last == 2) {
         return true;
       }
       if (selectedIndexHistory.isNotEmpty) {

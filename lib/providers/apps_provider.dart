@@ -49,6 +49,7 @@ import 'package:obtainium/components/apps/app_dialogs.dart';
 
 String obtainiumId = 'dev.imranr.obtainium';
 String obtainiumTempId = 'imranr98_obtainium_github.com';
+String obtainiumTempId = 'imranr98_obtainium_github.com';
 
 class AppInMemory {
   late App app;
