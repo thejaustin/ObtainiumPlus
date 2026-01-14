@@ -44,14 +44,17 @@ This document outlines the strategy for ongoing performance and code quality imp
   - Added Material 3 expressive animation curves
   - Implemented `AppIconShimmer` for loading states
 
-### ✅ Monolithic File Refactoring (v1.2.9-p20)
-- **Files**: `lib/providers/apps_provider.dart` (reduced 63%), `lib/pages/apps.dart` (reduced 85%)
+### ✅ Monolithic File Refactoring (v1.2.9-p20, v1.2.9-p22)
+- **Files**: `lib/providers/apps_provider.dart` (reduced 63% from original, then 23% more), `lib/pages/apps.dart` (reduced 85%)
 - **Change**: Extracted logic into specialized services and modular components
 - **Impact**: Improved maintainability, better testability, and clearer project structure
 - **Implementation**:
   - Created `AppFileService`, `AppInstallService`, `AppUpdateService`
+  - Created `AppCRUDService`, `AppDownloadService`, `AppExportService` (v1.2.9-p22)
+  - Extracted `AppInMemory` model to `lib/models/app_in_memory.dart`
   - Extracted `AppListView`, `AppGridView`, `CategorySections`, `AppListTile`
   - Centralized utilities in `version_utils.dart`, `app_utils.dart`, `language_utils.dart`
+  - Reduced `apps_provider.dart` from 1386 to 1064 lines (v1.2.9-p22)
 
 ### ✅ App Discovery & Unified Search (v1.2.9-p21)
 - **Files**: `lib/pages/discover.dart`, `lib/pages/home.dart`
@@ -181,22 +184,24 @@ class BehaviorSettingsProvider extends ChangeNotifier {
 
 **Files to Refactor**:
 
-#### apps_provider.dart (2400+ lines)
-**Sections to Extract**:
+#### ✅ apps_provider.dart (COMPLETED v1.2.9-p22)
+**Status**: ✅ Completed - reduced from 1386 → 1064 lines (original was 2400+ lines)
+**Sections Extracted**:
 - App CRUD operations → `app_crud_service.dart`
 - Update checking logic → `app_update_service.dart`
 - Installation handling → `app_install_service.dart`
-- App filtering/sorting → `app_filter_service.dart`
+- Download handling → `app_download_service.dart`
+- Export/Import logic → `app_export_service.dart`
+- AppInMemory model → `lib/models/app_in_memory.dart`
 
-#### ✅ settings.dart (COMPLETED v1.2.9-p18)
-**Status**: ✅ Completed - reduced from 1431 → 522 lines (63.5% reduction)
-**Implementation**: Extracted into 5 modular section widgets
-
-#### apps.dart (2000+ lines)
-**Sections to Extract**:
+#### ✅ apps.dart (COMPLETED)
+**Status**: ✅ Completed - reduced from 2000+ to 559 lines
+**Sections Extracted**:
 - Grid view → `lib/components/apps/app_grid_view.dart`
 - List view → `lib/components/apps/app_list_view.dart`
 - Category sections → `lib/components/apps/category_sections.dart`
+- App dialogs → `lib/components/apps/app_dialogs.dart`
+
 
 **Strategy**: Extract logical sections into separate files, maintain public API
 
@@ -358,4 +363,4 @@ Based on effort vs impact:
 ---
 
 Last Updated: 2026-01-14
-Version: 1.2.9-p21
+Version: 1.2.9-p22
