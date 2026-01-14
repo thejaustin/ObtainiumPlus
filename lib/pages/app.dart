@@ -11,8 +11,7 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:obtainium/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 
