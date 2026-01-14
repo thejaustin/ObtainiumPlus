@@ -10,6 +10,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/version_utils.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class GitHub extends AppSource {
