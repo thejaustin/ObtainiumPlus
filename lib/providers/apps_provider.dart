@@ -43,27 +43,18 @@ import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/services/app_crud_service.dart';
+import 'package:obtainium/services/app_download_service.dart';
+import 'package:obtainium/services/app_export_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
-import 'package:obtainium/utils/version_utils.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
+import 'package:obtainium/models/app_in_memory.dart';
+
+export 'package:obtainium/models/app_in_memory.dart';
 
 String obtainiumId = 'dev.imranr.obtainium';
 String obtainiumTempId = 'imranr98_obtainium_github.com';
 String obtainiumTempId = 'imranr98_obtainium_github.com';
-
-class AppInMemory {
-  late App app;
-  double? downloadProgress;
-  PackageInfo? installedInfo;
-  Uint8List? icon;
-
-  AppInMemory(this.app, this.downloadProgress, this.installedInfo, this.icon);
-  AppInMemory deepCopy() =>
-      AppInMemory(app.deepCopy(), downloadProgress, installedInfo, icon);
-
-  String get name => app.overrideName ?? app.finalName;
-  String get author => app.overrideAuthor ?? app.finalAuthor;
-}
 
 class DownloadedApk {
   String appId;
@@ -176,166 +167,52 @@ class AppsProvider with ChangeNotifier {
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
   }) async {
-    var notifId = DownloadNotification(app.finalName, 0).id;
-    if (apps[app.id] != null) {
-      apps[app.id]!.downloadProgress = 0;
-      notifyListeners();
+    Map<String, dynamic> res = await AppDownloadService.downloadApp(
+      app: app,
+      apps: apps,
+      settingsProvider: settingsProvider,
+      logs: logs,
+      APKDir: APKDir,
+      notifyListeners: notifyListeners,
+      context: context,
+      notificationsProvider: notificationsProvider,
+      useExisting: useExisting,
+    ) as Map<String, dynamic>;
+
+    PackageInfo? newInfo = res['newInfo'];
+    File downloadedFile = res['downloadedFile'];
+    String downloadUrl = res['downloadUrl'];
+    bool isAPK = res['isAPK'];
+    Directory? apkDir = res['apkDir'];
+    bool isXAPK = res['isXAPK'];
+
+    if (newInfo == null) {
+      downloadedFile.delete();
+      throw ObtainiumError('Could not get ID from APK');
     }
-    try {
-      AppSource source = SourceProvider().getSource(
-        app.url,
-        overrideSource: app.overrideSource,
-      );
-      var additionalSettingsPlusSourceConfig = {
-        ...app.additionalSettings,
-        ...(await source.getSourceConfigValues(
-          app.additionalSettings,
-          settingsProvider,
-        )),
-      };
-      String downloadUrl = await source.assetUrlPrefetchModifier(
-        await source.generalReqPrefetchModifier(
-          app.apkUrls[app.preferredApkIndex].value,
-          additionalSettingsPlusSourceConfig,
-        ),
-        app.url,
-        additionalSettingsPlusSourceConfig,
-      );
-      var notif = DownloadNotification(app.finalName, 100);
-      notificationsProvider?.cancel(notif.id);
-      int? prevProg;
-      var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
-      if (source.urlsAlwaysHaveExtension) {
-        fileNameNoExt =
-            '$fileNameNoExt.${app.apkUrls[app.preferredApkIndex].key.split('.').last}';
+    downloadedFile = await handleAPKIDChange(
+      app,
+      newInfo,
+      downloadedFile,
+      downloadUrl,
+    );
+    for (var file in downloadedFile.parent.listSync()) {
+      var fn = file.path.split('/').last;
+      if (fn.startsWith('${app.id}-') &&
+          FileSystemEntity.isFileSync(file.path) &&
+          file.path != downloadedFile.path) {
+        file.delete(recursive: true);
       }
-      var headers = await source.getRequestHeaders(
-        app.additionalSettings,
-        downloadUrl,
-        forAPKDownload: true,
-      );
-      var downloadedFile = await AppFileService.downloadFileWithRetry(
-        downloadUrl,
-        fileNameNoExt,
-        source.urlsAlwaysHaveExtension,
-        headers: headers,
-        (double? progress) {
-          int? prog = progress?.ceil();
-          if (apps[app.id] != null) {
-            apps[app.id]!.downloadProgress = progress;
-            notifyListeners();
-          }
-          notif = DownloadNotification(app.finalName, prog ?? 100);
-          if (prog != null && prevProg != prog) {
-            notificationsProvider?.notify(notif);
-          }
-          prevProg = prog;
-        },
-        APKDir.path,
-        useExisting: useExisting,
-        allowInsecure: app.additionalSettings['allowInsecure'] == true,
-        logs: logs,
-      );
-      if (apps[app.id] != null) {
-        apps[app.id]!.downloadProgress = -1;
-        notifyListeners();
-        notif = DownloadNotification(app.finalName, -1);
-        notificationsProvider?.notify(notif);
-      }
-      PackageInfo? newInfo;
-      var isAPK = downloadedFile.path.toLowerCase().endsWith('.apk');
-      var isXAPK = downloadedFile.path.toLowerCase().endsWith('.xapk');
-      Directory? apkDir;
-      if (isAPK) {
-        newInfo = await pm.getPackageArchiveInfo(
-          archiveFilePath: downloadedFile.path,
-        );
-      } else {
-        String apkDirPath = '${downloadedFile.path}-dir';
-        await AppFileService.unzipFile(downloadedFile.path, '${downloadedFile.path}-dir');
-        apkDir = Directory(apkDirPath);
-        var apks = apkDir
-            .listSync()
-            .where((e) => e.path.toLowerCase().endsWith('.apk'))
-            .toList();
-
-        FileSystemEntity? temp;
-        apks.removeWhere((element) {
-          bool res = element.uri.pathSegments.last.startsWith(app.id);
-          if (res) {
-            temp = element;
-          }
-          return res;
-        });
-        if (temp != null) {
-          apks = [temp!, ...apks];
-        }
-
-        if (app.additionalSettings['zippedApkFilterRegEx']?.isNotEmpty ==
-            true) {
-          var reg = RegExp(app.additionalSettings['zippedApkFilterRegEx']);
-          apks.removeWhere((apk) {
-            var shouldDelete = !reg.hasMatch(apk.uri.pathSegments.last);
-            if (shouldDelete) {
-              apk.delete();
-            }
-            return shouldDelete;
-          });
-        }
-
-        if (apks.isEmpty) {
-          throw NoAPKError();
-        }
-
-        for (var i = 0; i < apks.length; i++) {
-          try {
-            newInfo = await pm.getPackageArchiveInfo(
-              archiveFilePath: apks[i].path,
-            );
-            if (newInfo != null) {
-              break;
-            }
-          } catch (e) {
-            if (i == apks.length - 1) {
-              rethrow;
-            }
-          }
-        }
-      }
-      if (newInfo == null) {
-        downloadedFile.delete();
-        throw ObtainiumError('Could not get ID from APK');
-      }
-      downloadedFile = await handleAPKIDChange(
-        app,
-        newInfo,
+    }
+    if (isAPK) {
+      return DownloadedApk(app.id, downloadedFile);
+    } else {
+      return DownloadedDir(
+        app.id,
         downloadedFile,
-        downloadUrl,
+        apkDir!,
+        isXAPK ? DownloadedDirType.XAPK : DownloadedDirType.ZIP,
       );
-      for (var file in downloadedFile.parent.listSync()) {
-        var fn = file.path.split('/').last;
-        if (fn.startsWith('${app.id}-') &&
-            FileSystemEntity.isFileSync(file.path) &&
-            file.path != downloadedFile.path) {
-          file.delete(recursive: true);
-        }
-      }
-      if (isAPK) {
-        return DownloadedApk(app.id, downloadedFile);
-      } else {
-        return DownloadedDir(
-          app.id,
-          downloadedFile,
-          apkDir!,
-          isXAPK ? DownloadedDirType.XAPK : DownloadedDirType.ZIP,
-        );
-      }
-    } finally {
-      notificationsProvider?.cancel(notifId);
-      if (apps[app.id] != null) {
-        apps[app.id]!.downloadProgress = null;
-        notifyListeners();
-      }
     }
   }
 
@@ -805,105 +682,7 @@ class AppsProvider with ChangeNotifier {
     return downloadedIds;
   }
 
-  bool isVersionDetectionPossible(AppInMemory? app) {
-    if (app?.app == null) {
-      return false;
-    }
-    var source = SourceProvider().getSource(
-      app!.app.url,
-      overrideSource: app.app.overrideSource,
-    );
-    var naiveStandardVersionDetection =
-        app.app.additionalSettings['naiveStandardVersionDetection'] == true ||
-        source.naiveStandardVersionDetection;
-    String? realInstalledVersion =
-        app.app.additionalSettings['useVersionCodeAsOSVersion'] == true
-        ? app.installedInfo?.versionCode.toString()
-        : app.installedInfo?.versionName;
-    bool isHTMLWithNoVersionDetection =
-        (source.runtimeType == HTML().runtimeType &&
-        (app.app.additionalSettings['versionExtractionRegEx'] as String?)
-                ?.isNotEmpty !=
-            true);
-    bool isDirectAPKLink = source.runtimeType == DirectAPKLink().runtimeType;
-    return app.app.additionalSettings['trackOnly'] != true &&
-        app.app.additionalSettings['releaseDateAsVersion'] != true &&
-        !isHTMLWithNoVersionDetection &&
-        !isDirectAPKLink &&
-        realInstalledVersion != null &&
-        app.app.installedVersion != null &&
-        (reconcileVersionDifferences(
-                  realInstalledVersion,
-                  app.app.installedVersion!,
-                ) !=
-                null ||
-            naiveStandardVersionDetection);
-  }
 
-  App? getCorrectedInstallStatusAppIfPossible(
-    App app,
-    PackageInfo? installedInfo,
-  ) {
-    var modded = false;
-    var trackOnly = app.additionalSettings['trackOnly'] == true;
-    var versionDetectionIsStandard =
-        app.additionalSettings['versionDetection'] == true;
-    var naiveStandardVersionDetection =
-        app.additionalSettings['naiveStandardVersionDetection'] == true ||
-        SourceProvider()
-            .getSource(app.url, overrideSource: app.overrideSource)
-            .naiveStandardVersionDetection;
-    String? realInstalledVersion =
-        app.additionalSettings['useVersionCodeAsOSVersion'] == true
-        ? installedInfo?.versionCode.toString()
-        : installedInfo?.versionName;
-    if (installedInfo == null && app.installedVersion != null && !trackOnly) {
-      app.installedVersion = null;
-      modded = true;
-    } else if (realInstalledVersion != null && app.installedVersion == null) {
-      app.installedVersion = realInstalledVersion;
-      modded = true;
-    }
-    if (realInstalledVersion != null &&
-        realInstalledVersion != app.installedVersion &&
-        versionDetectionIsStandard) {
-      var correctedInstalledVersion = reconcileVersionDifferences(
-        realInstalledVersion,
-        app.installedVersion!,
-      );
-      if (correctedInstalledVersion?.key == false) {
-        app.installedVersion = correctedInstalledVersion!.value;
-        modded = true;
-      } else if (naiveStandardVersionDetection) {
-        app.installedVersion = realInstalledVersion;
-        modded = true;
-      }
-    }
-    if (app.installedVersion != null &&
-        app.installedVersion != app.latestVersion &&
-        versionDetectionIsStandard) {
-      var correctedInstalledVersion = reconcileVersionDifferences(
-        app.installedVersion!,
-        app.latestVersion,
-      );
-      if (correctedInstalledVersion?.key == true) {
-        app.installedVersion = correctedInstalledVersion!.value;
-        modded = true;
-      }
-    }
-    if (installedInfo != null &&
-        versionDetectionIsStandard &&
-        !isVersionDetectionPossible(
-          AppInMemory(app, null, installedInfo, null),
-        )) {
-      app.additionalSettings['versionDetection'] = false;
-      app.installedVersion = app.latestVersion;
-      logs.add('Could not reconcile version formats for: ${app.id}');
-      modded = true;
-    }
-
-    return modded ? app : null;
-  }
 
   Future<void> loadApps({String? singleId}) async {
     while (loadingApps) {
@@ -960,9 +739,10 @@ class AppsProvider with ChangeNotifier {
                   );
                 } catch (e) {
                 }
-                var moddedApp = getCorrectedInstallStatusAppIfPossible(
+                var moddedApp = AppCRUDService.getCorrectedInstallStatusAppIfPossible(
                   app,
                   installedInfo,
+                  logs,
                 );
                 if (moddedApp != null) {
                   app = moddedApp;
@@ -1060,14 +840,10 @@ class AppsProvider with ChangeNotifier {
         var icon = await info?.applicationInfo?.getAppIcon();
         app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
         if (attemptToCorrectInstallStatus) {
-          app = getCorrectedInstallStatusAppIfPossible(app, info) ?? app;
+          app = AppCRUDService.getCorrectedInstallStatusAppIfPossible(app, info, logs) ?? app;
         }
         if (!onlyIfExists || this.apps.containsKey(app.id)) {
-          String filePath = '${(await AppFileService.getAppsDir()).path}/${app.id}.json';
-          File(
-            '$filePath.tmp',
-          ).writeAsStringSync(jsonEncode(app.toJson()));
-          File('$filePath.tmp').renameSync(filePath);
+          await AppCRUDService.saveAppToDisk(app);
         }
         try {
           this.apps.update(
@@ -1092,10 +868,7 @@ class AppsProvider with ChangeNotifier {
     var apkFiles = APKDir.listSync();
     await Future.wait(
       appIds.map((appId) async {
-        File file = File('${(await AppFileService.getAppsDir()).path}/$appId.json');
-        if (file.existsSync()) {
-          AppFileService.deleteFile(file);
-        }
+        await AppCRUDService.deleteAppFile(appId);
         apkFiles
             .where(
               (element) => element.path.split('/').last.startsWith('$appId-'),
@@ -1229,34 +1002,12 @@ class AppsProvider with ChangeNotifier {
     List<String>? appIds,
     int? overrideExportSettings,
   }) {
-    Map<String, dynamic> finalExport = {};
-    finalExport['apps'] = apps.values
-        .where((e) {
-          if (appIds == null) {
-            return true;
-          } else {
-            return appIds.contains(e.app.id);
-          }
-        })
-        .map((e) => e.app.toJson())
-        .toList();
-    int shouldExportSettings = settingsProvider.exportSettings;
-    if (overrideExportSettings != null) {
-      shouldExportSettings = overrideExportSettings;
-    }
-    if (shouldExportSettings > 0) {
-      var settingsValueKeys = settingsProvider.prefs?.getKeys();
-      if (shouldExportSettings < 2) {
-        settingsValueKeys?.removeWhere((k) => k.endsWith('-creds'));
-      }
-      finalExport['settings'] = Map<String, Object?>.fromEntries(
-        (settingsValueKeys
-                ?.map((key) => MapEntry(key, settingsProvider.prefs?.get(key)))
-                .toList()) ??
-            [],
-      );
-    }
-    return finalExport;
+    return AppExportService.generateExportJSON(
+      apps: apps,
+      settingsProvider: settingsProvider,
+      appIds: appIds,
+      overrideExportSettings: overrideExportSettings,
+    );
   }
 
   Future<String?> export({
@@ -1264,94 +1015,21 @@ class AppsProvider with ChangeNotifier {
     isAuto = false,
     SettingsProvider? sp,
   }) async {
-    SettingsProvider settingsProvider = sp ?? this.settingsProvider;
-    var exportDir = await settingsProvider.getExportDir();
-    if (isAuto) {
-      if (settingsProvider.autoExportOnChanges != true) {
-        return null;
-      }
-      if (exportDir == null) {
-        return null;
-      }
-      var files = await saf
-          .listFiles(exportDir, columns: [saf.DocumentFileColumn.id])
-          .where((f) => f.uri.pathSegments.last.endsWith('-auto.json'))
-          .toList();
-      if (files.isNotEmpty) {
-        for (var f in files) {
-          saf.delete(f.uri);
-        }
-      }
-    }
-    if (exportDir == null || pickOnly) {
-      await settingsProvider.pickExportDir();
-      exportDir = await settingsProvider.getExportDir();
-    }
-    if (exportDir == null) {
-      return null;
-    }
-    String? returnPath;
-    if (!pickOnly) {
-      var encoder = const JsonEncoder.withIndent("    ");
-      Map<String, dynamic> finalExport = generateExportJSON();
-      var result = await saf.createFile(
-        exportDir,
-        displayName:
-            '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}${isAuto ? '-auto' : ''}.json',
-        mimeType: 'application/json',
-        bytes: Uint8List.fromList(utf8.encode(encoder.convert(finalExport))),
-      );
-      if (result == null) {
-        throw ObtainiumError(tr('unexpectedError'));
-      }
-      returnPath = exportDir.pathSegments
-          .join('/')
-          .replaceFirst('tree/primary:', '/');
-    }
-    return returnPath;
+    return AppExportService.export(
+      apps: apps,
+      settingsProvider: sp ?? settingsProvider,
+      pickOnly: pickOnly,
+      isAuto: isAuto,
+    );
   }
 
   Future<MapEntry<List<App>, bool>> import(String appsJSON) async {
-    var decodedJSON = jsonDecode(appsJSON);
-    var newFormat = decodedJSON is! List;
-    List<App> importedApps =
-        ((newFormat ? decodedJSON['apps'] : decodedJSON) as List<dynamic>)
-            .map((e) => App.fromJson(e))
-            .toList();
-    while (loadingApps) {
-      await Future.delayed(const Duration(microseconds: 1));
-    }
-    for (App a in importedApps) {
-      var installedInfo = await AppInstallService.getInstalledInfo(a.id, printErr: false);
-      a.installedVersion =
-          a.additionalSettings['useVersionCodeAsOSVersion'] == true
-          ? installedInfo?.versionCode.toString()
-          : installedInfo?.versionName;
-    }
-    await saveApps(importedApps, onlyIfExists: false);
-    notifyListeners();
-    if (newFormat && decodedJSON['settings'] != null) {
-      var settingsMap = decodedJSON['settings'] as Map<String, Object?>;
-      settingsMap.forEach((key, value) {
-        if (value is int) {
-          settingsProvider.prefs?.setInt(key, value);
-        } else if (value is double) {
-          settingsProvider.prefs?.setDouble(key, value);
-        } else if (value is bool) {
-          settingsProvider.prefs?.setBool(key, value);
-        } else if (value is List) {
-          settingsProvider.prefs?.setStringList(
-            key,
-            value.map((e) => e as String).toList(),
-          );
-        } else {
-          settingsProvider.prefs?.setString(key, value as String);
-        }
-      });
-    }
-    return MapEntry<List<App>, bool>(
-      importedApps,
-      newFormat && decodedJSON['settings'] != null,
+    return AppExportService.import(
+      appsJSON: appsJSON,
+      getLoadingApps: () => loadingApps,
+      settingsProvider: settingsProvider,
+      saveApps: saveApps,
+      notifyListeners: notifyListeners,
     );
   }
 
