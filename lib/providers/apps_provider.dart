@@ -1739,7 +1739,8 @@ class AppsProvider with ChangeNotifier {
           ? (await cachedIcon.readAsBytes())
           : (await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon());
       if (icon != null && !alreadyCached) {
-        cachedIcon.writeAsBytes(icon.toList());
+        // Non-blocking cache write to avoid UI jank
+        unawaited(cachedIcon.writeAsBytes(icon.toList()));
       }
       if (icon != null) {
         apps.update(
@@ -1759,6 +1760,25 @@ class AppsProvider with ChangeNotifier {
         );
         notifyListeners();
       }
+    }
+  }
+
+  /// Precaches icons for a list of app IDs to improve scroll performance
+  /// Batch loads icons without blocking the UI thread
+  Future<void> precacheIcons(List<String> appIds) async {
+    // Filter to only apps that need icons loaded
+    final appsNeedingIcons = appIds.where((id) =>
+      apps[id] != null && apps[id]!.icon == null
+    ).toList();
+
+    if (appsNeedingIcons.isEmpty) return;
+
+    // Batch load icons - limit to 10 at a time to avoid overwhelming the system
+    final batch = appsNeedingIcons.take(10).toList();
+
+    // Load icons in parallel without awaiting (fire and forget)
+    for (final appId in batch) {
+      unawaited(updateAppIcon(appId));
     }
   }
 
