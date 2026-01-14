@@ -34,6 +34,16 @@ This document outlines the strategy for ongoing performance and code quality imp
   - Each widget uses Consumer for granular subscriptions
   - Only affected widgets rebuild when settings change
 
+### ✅ UI Responsiveness & Icon Performance (v1.2.9-p19)
+- **Files**: `lib/components/app_grid_tile.dart`, `lib/pages/apps.dart`, `lib/providers/apps_provider.dart`
+- **Change**: Implement icon precaching, non-blocking I/O, and shimmer effects
+- **Impact**: Smoother scrolling and more responsive UI interactions
+- **Implementation**:
+  - Added `IconCache` logic to `AppsProvider`
+  - Integrated `RepaintBoundary` for list/grid items
+  - Added Material 3 expressive animation curves
+  - Implemented `AppIconShimmer` for loading states
+
 **Performance Results**:
 - Before: ANY setting change rebuilt ENTIRE page (~1400 lines)
 - After: Only affected widget rebuilds (~50-100 lines per change)
@@ -329,5 +339,5 @@ Based on effort vs impact:
 
 ---
 
-Last Updated: 2026-01-03
-Version: 1.2.9-p18
+Last Updated: 2026-01-13
+Version: 1.2.9-p19
