@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:obtainium/custom_errors.dart';
 
