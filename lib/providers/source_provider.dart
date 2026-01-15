@@ -302,7 +302,7 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   } else if (overrideSourceWasUndefined) {
     // Similar to above, but for third-party F-Droid repos
     RegExpMatch? match = RegExp(
-      '^https?://.+/fdroid/([^/]+(/|\?)|[^/]+\)
+      r'^https?://.+/fdroid/([^/]+(/|\?)|[^/]+)'
     ).firstMatch(json['url'] as String);
     if (match != null) {
       json['overrideSource'] = FDroidRepo().runtimeType.toString();
@@ -1040,14 +1040,12 @@ String? intValidator(String? value, {bool positive = false}) {
 
 bool isTempId(App app) {
   // return app.id == generateTempID(app.url, app.additionalSettings);
-  return RegExp('^[0-9]+\$
-').hasMatch(app.id);
+  return RegExp(r'^[0-9]+$').hasMatch(app.id);
 }
 
 String? replaceMatchGroupsInString(RegExpMatch match, String matchGroupString) {
-  if (RegExp('^\\d+\$
-').hasMatch(matchGroupString)) {
-    matchGroupString = '\\$matchGroupString';
+  if (RegExp(r'^\d+$').hasMatch(matchGroupString)) {
+    matchGroupString = r'\$' + matchGroupString;
   }
   // Regular expression to match numbers in the input string
   final numberRegex = RegExp(r'\\$\d+');
@@ -1177,7 +1175,7 @@ class SourceProvider {
     for (var s in sources.where((element) => element.hosts.isNotEmpty)) {
       try {
         if (RegExp(
-          '^${s.allowSubDomains ? '([^\\.]+\\.)*' : '(www\\.)?'}(${getSourceRegex(s.hosts)})
+          '^${s.allowSubDomains ? r'([^\.]+\.)*' : r'(www\.)?'}(${getSourceRegex(s.hosts)})'
         ).hasMatch(Uri.parse(url).host)) {
           source = s;
           break;
