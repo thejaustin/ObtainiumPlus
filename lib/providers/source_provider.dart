@@ -40,6 +40,9 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/language_utils.dart';
+import 'package:obtainium/utils/version_utils.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class AppNames {
   late String author;
@@ -75,7 +78,6 @@ List<MapEntry<String, String>> assumed2DlistToStringMapList(
 ) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
 
 // App JSON schema has changed multiple times over the many versions of Obtainium
-// This function takes an App JSON and modifies it if needed to conform to the latest (current) version
 Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   var source = SourceProvider().getSource(
     json['url'],
@@ -214,7 +216,7 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
         }
       }
       replacementAdditionalSettings['customLinkFilterRegex'] =
-          '/${additionalSettings['app']}-(([0-9]+\\.?){1,})\\.apk';
+          '/${additionalSettings['app']}-(([0-9]+\.?){1,})\.apk';
       replacementAdditionalSettings['versionExtractionRegEx'] =
           replacementAdditionalSettings['customLinkFilterRegex'];
       replacementAdditionalSettings['matchGroupToUse'] = '\$1';
@@ -300,7 +302,7 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   } else if (overrideSourceWasUndefined) {
     // Similar to above, but for third-party F-Droid repos
     RegExpMatch? match = RegExp(
-      '^https?://.+/fdroid/([^/]+(/|\\?)|[^/]+\$)',
+      '^https?://.+/fdroid/([^/]+(/|\?)|[^/]+\)
     ).firstMatch(json['url'] as String);
     if (match != null) {
       json['overrideSource'] = FDroidRepo().runtimeType.toString();
@@ -471,8 +473,8 @@ String preStandardizeUrl(String url) {
   var uri = Uri.tryParse(url);
   var trailingSlash =
       ((uri?.path.endsWith('/') ?? false) ||
-          ((uri?.path.isEmpty ?? false) && url.endsWith('/'))) &&
-      (uri?.queryParameters.isEmpty ?? false);
+          ((uri?.path.isEmpty ?? false) && url.endsWith('/')))
+      && (uri?.queryParameters.isEmpty ?? false);
 
   url =
       url
@@ -554,7 +556,7 @@ HttpClient createHttpClient(bool insecure) {
 }
 
 Future<MapEntry<Uri, MapEntry<HttpClient, HttpClientResponse>>>
-sourceRequestStreamResponse(
+    sourceRequestStreamResponse(
   String method,
   String url,
   Map<String, String>? requestHeaders,
@@ -744,8 +746,7 @@ abstract class AppSource {
   }
 
   // Different Sources may need different kinds of additional data for Apps
-  List<List<GeneratedFormItem>> additionalSourceAppSpecificSettingFormItems =
-      [];
+  List<List<GeneratedFormItem>> additionalSourceAppSpecificSettingFormItems = [];
 
   // Some additional data may be needed for Apps regardless of Source
   List<List<GeneratedFormItem>>
@@ -762,7 +763,8 @@ abstract class AppSource {
     [
       GeneratedFormTextField(
         'matchGroupToUse',
-        label: tr('matchGroupToUseForX', args: [tr('trimVersionString')]),
+        label: tr('matchGroupToUseForX', args: [tr('trimVersionString')])
+        ,
         required: false,
         hint: '\$0',
       ),
@@ -854,8 +856,8 @@ abstract class AppSource {
                       (GeneratedFormItem i) => i.key == 'releaseDateAsVersion',
                     ) >=
                     0,
-              ) <
-          0) {
+              )
+          < 0) {
         additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
             .insert(
               additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
@@ -1038,15 +1040,17 @@ String? intValidator(String? value, {bool positive = false}) {
 
 bool isTempId(App app) {
   // return app.id == generateTempID(app.url, app.additionalSettings);
-  return RegExp('^[0-9]+\$').hasMatch(app.id);
+  return RegExp('^[0-9]+\$
+').hasMatch(app.id);
 }
 
 String? replaceMatchGroupsInString(RegExpMatch match, String matchGroupString) {
-  if (RegExp('^\\d+\$').hasMatch(matchGroupString)) {
-    matchGroupString = '\$$matchGroupString';
+  if (RegExp('^\\d+\$
+').hasMatch(matchGroupString)) {
+    matchGroupString = '\\$matchGroupString';
   }
   // Regular expression to match numbers in the input string
-  final numberRegex = RegExp(r'\$\d+');
+  final numberRegex = RegExp(r'\\$\d+');
   // Extract all numbers from the input string
   final numbers = numberRegex.allMatches(matchGroupString);
   if (numbers.isEmpty) {
@@ -1173,7 +1177,7 @@ class SourceProvider {
     for (var s in sources.where((element) => element.hosts.isNotEmpty)) {
       try {
         if (RegExp(
-          '^${s.allowSubDomains ? '([^\\.]+\\.)*' : '(www\\.)?'}(${getSourceRegex(s.hosts)})\$',
+          '^${s.allowSubDomains ? '([^\\.]+\\.)*' : '(www\\.)?'}(${getSourceRegex(s.hosts)})
         ).hasMatch(Uri.parse(url).host)) {
           source = s;
           break;

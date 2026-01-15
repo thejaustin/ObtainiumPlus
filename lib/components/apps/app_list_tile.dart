@@ -9,6 +9,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class AppListTile extends StatelessWidget {
   final AppInMemory appInMemory;
@@ -81,7 +82,7 @@ class AppListTile extends StatelessWidget {
               : const AppIconShimmer(size: 48),
         ),
         onDoubleTap: () {
-          pm.openApp(appInMemory.app.id);
+          AppInstallService.openApp(appInMemory.app.id);
         },
         onLongPress: () {
           Navigator.push(

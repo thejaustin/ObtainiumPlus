@@ -7,6 +7,7 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_file_service.dart';
 
 String ensureAbsoluteUrl(String ambiguousUrl, Uri referenceAbsoluteUrl) {
   try {
@@ -441,7 +442,7 @@ class HTML extends AppSource {
     );
     if (version == null &&
         additionalSettings['defaultPseudoVersioningMethod'] == 'ETag') {
-      version = await checkETagHeader(
+      version = await AppFileService.checkETagHeader(
         rel,
         headers: apkReqHeaders,
         allowInsecure: additionalSettings['allowInsecure'] == true,
@@ -453,7 +454,7 @@ class HTML extends AppSource {
     version ??=
         additionalSettings['defaultPseudoVersioningMethod'] == 'APKLinkHash'
         ? rel.hashCode.toString()
-        : (await checkPartialDownloadHashDynamic(
+        : (await AppFileService.checkPartialDownloadHashDynamic(
             rel,
             headers: apkReqHeaders,
             allowInsecure: additionalSettings['allowInsecure'] == true,

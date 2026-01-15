@@ -52,10 +52,6 @@ import 'package:obtainium/models/app_in_memory.dart';
 
 export 'package:obtainium/models/app_in_memory.dart';
 
-String obtainiumId = 'dev.imranr.obtainium';
-String obtainiumTempId = 'imranr98_obtainium_github.com';
-String obtainiumTempId = 'imranr98_obtainium_github.com';
-
 class DownloadedApk {
   String appId;
   File file;

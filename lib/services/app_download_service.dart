@@ -9,6 +9,7 @@ import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/custom_errors.dart';
 
 class AppDownloadService {
   AppDownloadService._();

@@ -5,9 +5,10 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/apps_provider.dart' hide obtainiumId, obtainiumTempId;
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 
 class APKMirror extends AppSource {
   APKMirror() {
@@ -45,9 +46,8 @@ class APKMirror extends AppSource {
     bool forAPKDownload = false,
   }) async {
     return {
-      "User-Agent":
-          "Obtainium/${(await getInstalledInfo(obtainiumId))?.versionName ?? '1.0.0'}",
-    };
+                "User-Agent":
+                    "Obtainium/${(await AppInstallService.getInstalledInfo(obtainiumId))?.versionName ?? '1.0.0'}",    };
   }
 
   @override

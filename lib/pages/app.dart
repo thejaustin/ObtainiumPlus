@@ -12,8 +12,11 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class AppPage extends StatefulWidget {
   const AppPage({
@@ -334,7 +337,7 @@ class _AppPageState extends State<AppPage> {
                       GestureDetector(
                         onTap: app == null
                             ? null
-                            : () => pm.openApp(app.app.id),
+                            : () => AppInstallService.openApp(app.app.id),
                         child: Hero(
                           tag: 'app_icon_${widget.appId}',
                           child: Image.memory(

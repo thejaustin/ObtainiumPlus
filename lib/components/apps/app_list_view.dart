@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
+import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/pages/app.dart';
 
 class AppListView extends StatelessWidget {
   final List<AppInMemory> apps;
@@ -55,12 +59,4 @@ class AppListView extends StatelessWidget {
       ),
     );
   }
-}
-
-// Placeholder for AppPage to avoid import error if not available in context
-class AppPage extends StatelessWidget {
-  final String appId;
-  const AppPage({super.key, required this.appId});
-  @override
-  Widget build(BuildContext context) => Container();
 }
