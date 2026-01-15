@@ -13,7 +13,9 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:obtainium/models/app_in_memory.dart';
 
 final pm = AndroidPackageManager();
 
@@ -59,6 +61,10 @@ class AppInstallService {
       data: 'package:$appId',
     );
     await intent.launch();
+  }
+
+  static Future<void> openApp(String appId) async {
+    await pm.openApp(appId);
   }
 
   static Future<bool> canInstallSilently(App app, SettingsProvider settingsProvider, LogsProvider logs) async {
