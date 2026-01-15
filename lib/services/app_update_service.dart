@@ -272,7 +272,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
         errors = e['errors'];
         errors!.rawErrors.forEach((key, err) {
           logs.add(
-            'BG update task: Got error on checking for $key \'${err.toString()}\	extvariable.toString()'.
+            'BG update task: Got error on checking for $key \'${err.toString()}\''
           );
 
           var toCheckApp = toCheck.where((element) => element.key == key).first;

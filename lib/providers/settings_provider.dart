@@ -10,6 +10,7 @@ import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_file_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
@@ -60,7 +61,7 @@ class SettingsProvider with ChangeNotifier {
   // Not done in constructor as we want to be able to await it
   Future<void> initializeSettings() async {
     prefs = await SharedPreferences.getInstance();
-    defaultAppDir = (await getAppStorageDir()).path;
+    defaultAppDir = (await AppFileService.getAppStorageDir()).path;
     initUpdateIntervalInterpolator();
     // Initialize label based on current slider value
     processIntervalSliderValue(updateIntervalSliderVal, notify: false);
