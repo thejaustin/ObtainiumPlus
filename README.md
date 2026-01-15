@@ -90,6 +90,23 @@
 </tr>
 </table>
 
+<details>
+<summary><b>📅 View Update History & Technical Milestones</b></summary>
+<br>
+
+| Version | Type | Change Highlights |
+|:-------:|:----:|:------------------|
+| **v1.2.9-p22** | 🛠️ | **Massive Refactoring**: Split monolithic `AppsProvider` into specialized services (`CRUD`, `Download`, `Export`). Improved code modularity by 23%. |
+| **v1.2.9-p21** | ✨ | **Discover Tab**: Added parallel search across multiple sources to find new apps directly in-app. |
+| **v1.2.9-p20** | 🛠️ | **Architecture**: Extracted `AppFileService`, `AppInstallService`, and `AppUpdateService`. Modularized Apps page. |
+| **v1.2.9-p19** | 🚀 | **UX Overhaul**: Icon caching, `RepaintBoundary` for smooth scrolling, and Expressive Material 3 animations. |
+| **v1.2.9-p18** | 🚀 | **Settings Speed**: Modularized settings sections. **80-90% reduction** in rebuilds using the Consumer pattern. |
+| **v1.2.9-p16** | ⚡ | **Core Speed**: Cached device info to eliminate redundant async overhead during startup. |
+| **v1.2.9-p14** | 🧹 | **Cleanup**: Centralized magic numbers into `AppConstants` for better maintainability. |
+| **v1.2.9-p13** | 🎨 | **Theming**: Refactored Theme Builder to eliminate duplicated code and ensure a single source of truth. |
+
+</details>
+
 ### ⚡ Performance & Security
 
 <table>
