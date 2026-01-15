@@ -11,7 +11,9 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:http/http.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
 
