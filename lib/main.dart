@@ -131,8 +131,19 @@ class MyTaskHandler extends TaskHandler {
   void onReceiveData(Object data) {}
 }
 
+String? _startupError;
+String? _startupStackTrace;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global error handler to catch uncaught errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    _startupError = details.exceptionAsString();
+    _startupStackTrace = details.stack?.toString();
+  };
+
   try {
     ByteData data = await PlatformAssetBundle().load(
       'assets/ca/lets-encrypt-r3.pem',
@@ -143,34 +154,122 @@ void main() async {
   } catch (e) {
     // Already added, do nothing (see #375)
   }
-  await EasyLocalization.ensureInitialized();
-  if ((await DeviceInfoPlugin().androidInfo).version.sdkInt >= 29) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
-    );
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  }
-  final np = NotificationsProvider();
-  await np.initialize();
-  FlutterForegroundTask.initCommunicationPort();
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => AppsProvider()),
-        ChangeNotifierProvider(create: (context) => SettingsProvider()),
-        Provider(create: (context) => np),
-        Provider(create: (context) => LogsProvider()),
-      ],
-      child: EasyLocalization(
-        supportedLocales: supportedLocales.map((e) => e.key).toList(),
-        path: localeDir,
-        fallbackLocale: fallbackLocale,
-        useOnlyLangCode: false,
-        child: const Obtainium(),
+
+  try {
+    await EasyLocalization.ensureInitialized();
+    if ((await DeviceInfoPlugin().androidInfo).version.sdkInt >= 29) {
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
+      );
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+    final np = NotificationsProvider();
+    await np.initialize();
+    FlutterForegroundTask.initCommunicationPort();
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => AppsProvider()),
+          ChangeNotifierProvider(create: (context) => SettingsProvider()),
+          Provider(create: (context) => np),
+          Provider(create: (context) => LogsProvider()),
+        ],
+        child: EasyLocalization(
+          supportedLocales: supportedLocales.map((e) => e.key).toList(),
+          path: localeDir,
+          fallbackLocale: fallbackLocale,
+          useOnlyLangCode: false,
+          child: const Obtainium(),
+        ),
       ),
-    ),
-  );
-  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+    );
+    BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+  } catch (e, stackTrace) {
+    _startupError = e.toString();
+    _startupStackTrace = stackTrace.toString();
+    runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
+  }
+}
+
+/// Error display app shown when startup fails
+class ErrorApp extends StatelessWidget {
+  final String error;
+  final String stackTrace;
+
+  const ErrorApp({super.key, required this.error, required this.stackTrace});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.red.shade900,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Obtainium+ Startup Error',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'The app failed to start. Please report this error:',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    error,
+                    style: const TextStyle(
+                      color: Colors.yellowAccent,
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Stack Trace:',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        stackTrace,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class Obtainium extends StatefulWidget {
@@ -182,14 +281,58 @@ class Obtainium extends StatefulWidget {
 
 class _ObtainiumState extends State<Obtainium> {
   var existingUpdateInterval = -1;
+  String? _buildError;
+  String? _buildStackTrace;
 
   @override
   void initState() {
     super.initState();
+    // Set custom error widget builder to catch build errors
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      _buildError = details.exceptionAsString();
+      _buildStackTrace = details.stack?.toString();
+      return _buildErrorWidget(details.exceptionAsString(), details.stack?.toString() ?? '');
+    };
     initPlatformState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       requestNonOptionalPermissions();
     });
+  }
+
+  Widget _buildErrorWidget(String error, String stackTrace) {
+    return Material(
+      color: Colors.red.shade900,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Obtainium+ Build Error',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                child: SelectableText(error, style: const TextStyle(color: Colors.yellowAccent, fontSize: 11, fontFamily: 'monospace')),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+                  child: SingleChildScrollView(
+                    child: SelectableText(stackTrace, style: const TextStyle(color: Colors.white60, fontSize: 9, fontFamily: 'monospace')),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> requestNonOptionalPermissions() async {
