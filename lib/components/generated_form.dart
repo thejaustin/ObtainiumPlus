@@ -367,7 +367,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
             hideOnEmpty: true,
           );
         } else if (formItem is GeneratedFormDropdown) {
-          if (formItem.opts!.isEmpty) {
+          if (formItem.opts == null || formItem.opts!.isEmpty) {
             return Text(tr('dropdownNoOptsError'));
           }
           return DropdownButtonFormField(
@@ -596,9 +596,11 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                     values[fieldKey]
                                         as Map<String, MapEntry<int, bool>>;
                                 // get selected category str where bool is true
-                                final oldEntry = temp.entries.firstWhere(
+                                final oldEntryMatch = temp.entries.where(
                                   (entry) => entry.value.value,
                                 );
+                                if (oldEntryMatch.isEmpty) return;
+                                final oldEntry = oldEntryMatch.first;
                                 // generate new color, ensure it is not the same
                                 int newColor = oldEntry.value.key;
                                 while (oldEntry.value.key == newColor) {

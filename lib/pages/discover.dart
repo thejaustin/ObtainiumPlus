@@ -109,8 +109,8 @@ class DiscoverPageState extends State<DiscoverPage> {
                 (context, index) {
                   final url = results.keys.elementAt(index);
                   final result = results[url]!;
-                  final name = result.value[0];
-                  final description = result.value[1];
+                  final name = result.value.isNotEmpty ? result.value[0] : '';
+                  final description = result.value.length > 1 ? result.value[1] : '';
                   final sourceName = result.key;
 
                   return ListTile(
