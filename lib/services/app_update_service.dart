@@ -20,11 +20,29 @@ import 'package:obtainium/utils/app_utils.dart';
 class AppUpdateService {
   AppUpdateService._();
 
-  static Future<App?> checkUpdate(String appId, Map<String, AppInMemory> apps, Function(List<App>) saveApps) async {
+  static final Map<String, (App, DateTime)> _updateCache = {};
+  static const Duration _cacheTtl = Duration(minutes: 5);
+
+  static Future<App?> checkUpdate(
+    String appId,
+    Map<String, AppInMemory> apps,
+    Function(List<App>) saveApps, {
+    bool ignoreCache = false,
+  }) async {
     if (!apps.containsKey(appId)) {
       throw ObtainiumError(tr('appNotFound'));
     }
     App currentApp = apps[appId]!.app;
+
+    if (!ignoreCache && _updateCache.containsKey(appId)) {
+      var (cachedApp, timestamp) = _updateCache[appId]!;
+      if (DateTime.now().difference(timestamp) < _cacheTtl) {
+        return cachedApp.latestVersion != currentApp.latestVersion
+            ? cachedApp
+            : null;
+      }
+    }
+
     SourceProvider sourceProvider = SourceProvider();
     App newApp = await sourceProvider.getApp(
       sourceProvider.getSource(
@@ -39,6 +57,10 @@ class AppUpdateService {
       newApp.preferredApkIndex = currentApp.preferredApkIndex;
     }
     await saveApps([newApp]);
+
+    // Update cache
+    _updateCache[appId] = (newApp, DateTime.now());
+
     return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
   }
 
@@ -85,6 +107,7 @@ class AppUpdateService {
     List<String>? specificIds,
     bool gettingUpdates = false,
     Function(bool)? setGettingUpdates,
+    bool ignoreCache = false,
   }) async {
     List<App> updates = [];
     MultiAppMultiError errors = MultiAppMultiError();

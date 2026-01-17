@@ -145,6 +145,14 @@ class AppsPageState extends State<AppsPage> {
   Set<String> selectedAppIds = {};
   DateTime? refreshingSince;
 
+  // Memoization for sorting
+  List<AppInMemory>? _cachedSortedApps;
+  AppSortMethod? _lastSortMethod;
+  SortColumnSettings? _lastSortColumn;
+  SortOrderSettings? _lastSortOrder;
+  int? _lastAppsHashCode;
+  int? _lastFilterHashCode;
+
   final Map<int, Color> _categoryColorCache = {};
 
   Color _getCachedCategoryColor(int colorInt) {
@@ -230,7 +238,7 @@ class AppsPageState extends State<AppsPage> {
         refreshingSince = DateTime.now();
       });
       return appsProvider
-          .checkUpdates()
+          .checkUpdates(ignoreCache: true)
           .catchError((e) {
             showError(e is Map ? e['errors'] : e, context);
             return <App>[];
@@ -265,6 +273,18 @@ class AppsPageState extends State<AppsPage> {
     }
 
     listedApps = listedApps.where((app) {
+      if (filter.statusFilter.isNotEmpty) {
+        bool hasUpdate = app.app.installedVersion != null && app.app.installedVersion != app.app.latestVersion;
+        bool upToDate = app.app.installedVersion != null && app.app.installedVersion == app.app.latestVersion;
+        bool notInstalled = app.app.installedVersion == null;
+
+        bool matches = false;
+        if (filter.statusFilter.contains('updates') && hasUpdate) matches = true;
+        if (filter.statusFilter.contains('uptodate') && upToDate) matches = true;
+        if (filter.statusFilter.contains('notinstalled') && notInstalled) matches = true;
+        if (!matches) return false;
+      }
+
       if (app.app.installedVersion == app.app.latestVersion &&
           !(filter.includeUptodate)) {
         return false;
@@ -297,8 +317,31 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
-    // Sorting logic
-    if (settingsProvider.appSortMethod == AppSortMethod.latestUpdates) {
+    // Calculate hashes for memoization
+    int filterHash = Object.hash(
+      filter.nameFilter,
+      filter.authorFilter,
+      filter.idFilter,
+      filter.includeUptodate,
+      filter.includeNonInstalled,
+      filter.sourceFilter,
+      Object.hashAll(filter.categoryFilter),
+      Object.hashAll(filter.statusFilter),
+    );
+    int appsHash = Object.hashAll(listedApps.map((e) => e.app.id));
+
+    bool cacheValid = _cachedSortedApps != null &&
+        _lastSortMethod == settingsProvider.appSortMethod &&
+        _lastSortColumn == settingsProvider.sortColumn &&
+        _lastSortOrder == settingsProvider.sortOrder &&
+        _lastAppsHashCode == appsHash &&
+        _lastFilterHashCode == filterHash;
+
+    if (cacheValid) {
+      listedApps = _cachedSortedApps!;
+    } else {
+      // Sorting logic
+      if (settingsProvider.appSortMethod == AppSortMethod.latestUpdates) {
       listedApps.sort((a, b) {
         final aDate = a.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(a.installedInfo!.lastUpdateTime!) : null;
         final bDate = b.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(b.installedInfo!.lastUpdateTime!) : null;
@@ -337,9 +380,22 @@ class AppsPageState extends State<AppsPage> {
         return result;
       });
       if (settingsProvider.sortOrder == SortOrderSettings.descending) listedApps = listedApps.reversed.toList();
+      
+      // Update cache
+      _cachedSortedApps = List.from(listedApps);
+      _lastSortMethod = settingsProvider.appSortMethod;
+      _lastSortColumn = settingsProvider.sortColumn;
+      _lastSortOrder = settingsProvider.sortOrder;
+      _lastAppsHashCode = appsHash;
+      _lastFilterHashCode = filterHash;
     }
 
     var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
+    // Counts for chips
+    int updatesCount = appsProvider.getAppValues().where((a) => a.app.installedVersion != null && a.app.installedVersion != a.app.latestVersion).length;
+    int uptodateCount = appsProvider.getAppValues().where((a) => a.app.installedVersion != null && a.app.installedVersion == a.app.latestVersion).length;
+    int notInstalledCount = appsProvider.getAppValues().where((a) => a.app.installedVersion == null).length;
+
     var existingUpdateIds = existingUpdates.where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
     var newInstallIds = appsProvider.findExistingUpdates(nonInstalledOnly: true).where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
 
@@ -372,6 +428,48 @@ class AppsPageState extends State<AppsPage> {
       if (bIndex != -1) return 1;
       return a != null && b != null ? a.toLowerCase().compareTo(b.toLowerCase()) : (a == null ? 1 : -1);
     });
+
+    getFilterChips() {
+      return SliverToBoxAdapter(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              FilterChip(
+                label: Text('${tr('updatesAvailable')} ($updatesCount)'),
+                selected: filter.statusFilter.contains('updates'),
+                onSelected: (val) {
+                  setState(() {
+                    val ? filter.statusFilter.add('updates') : filter.statusFilter.remove('updates');
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                label: Text('${tr('upToDateApps')} ($uptodateCount)'),
+                selected: filter.statusFilter.contains('uptodate'),
+                onSelected: (val) {
+                  setState(() {
+                    val ? filter.statusFilter.add('uptodate') : filter.statusFilter.remove('uptodate');
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                label: Text('${tr('notInstalled')} ($notInstalledCount)'),
+                selected: filter.statusFilter.contains('notinstalled'),
+                onSelected: (val) {
+                  setState(() {
+                    val ? filter.statusFilter.add('notinstalled') : filter.statusFilter.remove('notinstalled');
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     getLoadingWidgets() {
       return [
@@ -560,6 +658,7 @@ class AppsPageState extends State<AppsPage> {
             controller: scrollController,
             slivers: <Widget>[
               CustomAppBar(title: tr('appsString')),
+              getFilterChips(),
               ...getLoadingWidgets(),
               settingsProvider.groupByCategory 
                 ? CategorySections(
@@ -589,6 +688,7 @@ class AppsFilter {
   bool includeUptodate = true;
   bool includeNonInstalled = true;
   Set<String> categoryFilter = {};
+  Set<String> statusFilter = {};
   String sourceFilter = '';
 
   AppsFilter();
@@ -606,5 +706,6 @@ class AppsFilter {
   bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
       authorFilter == other.authorFilter && nameFilter == other.nameFilter && idFilter == other.idFilter &&
       includeUptodate == other.includeUptodate && includeNonInstalled == other.includeNonInstalled &&
-      settingsProvider.setEqual(categoryFilter, other.categoryFilter) && sourceFilter == other.sourceFilter;
+      settingsProvider.setEqual(categoryFilter, other.categoryFilter) && sourceFilter == other.sourceFilter &&
+      settingsProvider.setEqual(statusFilter, other.statusFilter);
 }
