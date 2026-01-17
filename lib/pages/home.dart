@@ -9,7 +9,6 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
-import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -48,11 +47,6 @@ class HomePageState extends State<HomePage> {
       tr('appsString'),
       Icons.apps,
       AppsPage(key: GlobalKey<AppsPageState>()),
-    ),
-    NavigationPageItem(
-      tr('discover'),
-      Icons.explore,
-      const DiscoverPage(),
     ),
     NavigationPageItem(
       tr('addApp'),

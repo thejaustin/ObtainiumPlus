@@ -341,6 +341,14 @@ class _ObtainiumState extends State<Obtainium> {
     if (notificationPermission != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
+    try {
+      if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
+    } catch (e) {
+      // Ignore errors on devices (like Xiaomi) that don't handle this intent correctly
+      print('Failed to request battery optimization: $e');
+    }
   }
 
   void initForegroundService() {
