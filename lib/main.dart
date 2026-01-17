@@ -341,9 +341,6 @@ class _ObtainiumState extends State<Obtainium> {
     if (notificationPermission != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
-    if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-    }
   }
 
   void initForegroundService() {
