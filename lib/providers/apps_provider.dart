@@ -1043,8 +1043,8 @@ class AppsProvider with ChangeNotifier {
     settingsProvider.setCategories(cats, appsProvider: this);
   }
 
-  Future<App?> checkUpdate(String appId) async {
-    return AppUpdateService.checkUpdate(appId, apps, saveApps);
+  Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
+    return AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
   }
 
   List<String> getAppsSortedByUpdateCheckTime({
@@ -1063,16 +1063,18 @@ class AppsProvider with ChangeNotifier {
     bool throwErrorsForRetry = false,
     List<String>? specificIds,
     SettingsProvider? sp,
+    bool ignoreCache = false,
   }) async {
     return AppUpdateService.checkUpdates(
       apps: apps,
       settingsProvider: sp ?? settingsProvider,
-      checkUpdateFn: checkUpdate,
+      checkUpdateFn: (id) => checkUpdate(id, ignoreCache: ignoreCache),
       ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
       throwErrorsForRetry: throwErrorsForRetry,
       specificIds: specificIds,
       gettingUpdates: gettingUpdates,
       setGettingUpdates: (val) => gettingUpdates = val,
+      ignoreCache: ignoreCache,
     );
   }
 
