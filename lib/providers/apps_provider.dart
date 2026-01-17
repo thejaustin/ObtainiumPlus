@@ -75,6 +75,9 @@ class AppsProvider with ChangeNotifier {
   bool gettingUpdates = false;
   LogsProvider logs = LogsProvider();
 
+  // Completer for proper async synchronization of loadApps
+  Completer<void>? _loadAppsCompleter;
+
   // Variables to keep track of the app foreground status (installs can't run in the background)
   bool isForeground = true;
   late Stream<FGBGType>? foregroundStream;
@@ -681,10 +684,13 @@ class AppsProvider with ChangeNotifier {
 
 
   Future<void> loadApps({String? singleId}) async {
-    while (loadingApps) {
-      await Future.delayed(const Duration(microseconds: 1));
+    // If already loading, wait for the existing operation to complete
+    if (loadingApps && _loadAppsCompleter != null) {
+      await _loadAppsCompleter!.future;
+      return;
     }
     loadingApps = true;
+    _loadAppsCompleter = Completer<void>();
     notifyListeners();
     var sp = SourceProvider();
     List<List<String>> errors = [];
@@ -728,12 +734,13 @@ class AppsProvider with ChangeNotifier {
               notifyListeners();
               try {
                 sp.getSource(app.url, overrideSource: app.overrideSource);
+                // Find installed info for this app (null if not installed)
                 PackageInfo? installedInfo;
-                try {
-                  installedInfo = installedAppsData.firstWhere(
-                    (i) => i.packageName == app!.id,
-                  );
-                } catch (e) {
+                for (var info in installedAppsData) {
+                  if (info.packageName == app!.id) {
+                    installedInfo = info;
+                    break;
+                  }
                 }
                 var moddedApp = AppCRUDService.getCorrectedInstallStatusAppIfPossible(
                   app,
@@ -775,6 +782,8 @@ class AppsProvider with ChangeNotifier {
       }
     }
     loadingApps = false;
+    _loadAppsCompleter?.complete();
+    _loadAppsCompleter = null;
     notifyListeners();
   }
 

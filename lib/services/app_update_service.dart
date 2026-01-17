@@ -21,7 +21,10 @@ class AppUpdateService {
   AppUpdateService._();
 
   static Future<App?> checkUpdate(String appId, Map<String, AppInMemory> apps, Function(List<App>) saveApps) async {
-    App? currentApp = apps[appId]!.app;
+    if (!apps.containsKey(appId)) {
+      throw ObtainiumError(tr('appNotFound'));
+    }
+    App currentApp = apps[appId]!.app;
     SourceProvider sourceProvider = SourceProvider();
     App newApp = await sourceProvider.getApp(
       sourceProvider.getSource(
@@ -270,12 +273,16 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
       if (e is Map) {
         updates = e['updates'];
         errors = e['errors'];
-        errors!.rawErrors.forEach((key, err) {
+        for (var entry in errors!.rawErrors.entries) {
+          var key = entry.key;
+          var err = entry.value;
           logs.add(
             'BG update task: Got error on checking for $key \'${err.toString()}\''
           );
 
-          var toCheckApp = toCheck.where((element) => element.key == key).first;
+          var toCheckAppMatch = toCheck.where((element) => element.key == key);
+          if (toCheckAppMatch.isEmpty) continue;
+          var toCheckApp = toCheckAppMatch.first;
           if (toCheckApp.value < maxAttempts) {
             toRetry.add(MapEntry(toCheckApp.key, toCheckApp.value + 1));
             int minRetryIntervalForThisApp = err is RateLimitError
@@ -294,7 +301,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
               toThrow.add(key, err, appName: errors?.appIdNames[key]);
             }
           }
-        });
+        }
       } else {
         logs.add('Fatal error in BG update task: ${e.toString()}');
         rethrow;
