@@ -104,32 +104,105 @@ class DiscoverPageState extends State<DiscoverPage> {
             ),
           ),
           if (results.isNotEmpty)
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final url = results.keys.elementAt(index);
-                  final result = results[url]!;
-                  final name = result.value.isNotEmpty ? result.value[0] : '';
-                  final description = result.value.length > 1 ? result.value[1] : '';
-                  final sourceName = result.key;
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.8,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final url = results.keys.elementAt(index);
+                    final result = results[url]!;
+                    final name = result.value.isNotEmpty ? result.value[0] : '';
+                    final description = result.value.length > 1 ? result.value[1] : '';
+                    final sourceName = result.key;
 
-                  return ListTile(
-                    title: Text(name),
-                    subtitle: Text('$sourceName • $description', maxLines: 2, overflow: TextOverflow.ellipsis),
-                    onTap: () {
-                      final homeState = context.findAncestorStateOfType<HomePageState>();
-                      if (homeState != null) {
-                        homeState.switchToPage(2);
-                        // Wait for page to build then call linkFn
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          final addAppKey = homeState.pages[2].widget.key as GlobalKey<AddAppPageState>?;
-                          addAppKey?.currentState?.linkFn(url);
-                        });
-                      }
-                    },
-                  );
-                },
-                childCount: results.length,
+                    return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          final homeState = context.findAncestorStateOfType<HomePageState>();
+                          if (homeState != null) {
+                            homeState.switchToPage(2);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final addAppKey = homeState.pages[2].widget.key as GlobalKey<AddAppPageState>?;
+                              addAppKey?.currentState?.linkFn(url);
+                            });
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: Center(
+                                  child: Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primaryContainer,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                sourceName,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Theme.of(context).colorScheme.secondary,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              FilledButton.tonal(
+                                onPressed: () {
+                                  final homeState = context.findAncestorStateOfType<HomePageState>();
+                                  if (homeState != null) {
+                                    homeState.switchToPage(2);
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      final addAppKey = homeState.pages[2].widget.key as GlobalKey<AddAppPageState>?;
+                                      addAppKey?.currentState?.linkFn(url);
+                                    });
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                child: Text(tr('add')),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: results.length,
+                ),
               ),
             )
           else if (!searching && searchQuery.isNotEmpty)
