@@ -312,10 +312,13 @@ class HomePageState extends State<HomePage> {
   Future<void> switchToPage(int index) async {
     setIsReversing(index);
     if (index == 0) {
-      while ((pages[0].widget.key as GlobalKey<AppsPageState>).currentState !=
-          null) {
-        // Avoid duplicate GlobalKey error
-        await Future.delayed(const Duration(microseconds: 1));
+      // Safely check key with null protection
+      final key = pages[0].widget.key;
+      if (key != null && key is GlobalKey<AppsPageState>) {
+        while (key.currentState != null) {
+          // Avoid duplicate GlobalKey error
+          await Future.delayed(const Duration(microseconds: 1));
+        }
       }
       setState(() {
         selectedIndexHistory.clear();
@@ -359,8 +362,12 @@ class HomePageState extends State<HomePage> {
       if (selectedIndexHistory.isNotEmpty) {
         return false;
       }
-      return !(pages[0].widget.key as GlobalKey<AppsPageState>).currentState!
-          .clearSelected();
+      // Safely get apps page state with null checks
+      final key = pages[0].widget.key;
+      if (key == null || key is! GlobalKey<AppsPageState>) return true;
+      final appsPageState = key.currentState;
+      if (appsPageState == null) return true;
+      return !appsPageState.clearSelected();
     }
 
     return PopScope(
@@ -411,7 +418,7 @@ class HomePageState extends State<HomePage> {
               },
           child: pages
               .elementAt(
-                selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last,
+                selectedIndexHistory.isEmpty ? 0 : (selectedIndexHistory.last).clamp(0, pages.length - 1),
               )
               .widget,
         ),
