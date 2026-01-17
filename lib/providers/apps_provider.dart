@@ -68,6 +68,49 @@ class DownloadedDir {
   DownloadedDir(this.appId, this.file, this.extracted, this.type);
 }
 
+/// LRU Cache for app icons to manage memory usage
+class IconLRUCache {
+  final int maxSize;
+  final Map<String, Uint8List> _cache = {};
+  final List<String> _accessOrder = [];
+
+  IconLRUCache({this.maxSize = 50});
+
+  Uint8List? get(String appId) {
+    if (_cache.containsKey(appId)) {
+      // Move to end (most recently used)
+      _accessOrder.remove(appId);
+      _accessOrder.add(appId);
+      return _cache[appId];
+    }
+    return null;
+  }
+
+  void put(String appId, Uint8List icon) {
+    if (_cache.containsKey(appId)) {
+      _accessOrder.remove(appId);
+    } else if (_cache.length >= maxSize) {
+      // Evict least recently used
+      final lru = _accessOrder.removeAt(0);
+      _cache.remove(lru);
+    }
+    _cache[appId] = icon;
+    _accessOrder.add(appId);
+  }
+
+  void remove(String appId) {
+    _cache.remove(appId);
+    _accessOrder.remove(appId);
+  }
+
+  void clear() {
+    _cache.clear();
+    _accessOrder.clear();
+  }
+
+  int get length => _cache.length;
+}
+
 class AppsProvider with ChangeNotifier {
   // In memory App state (should always be kept in sync with local storage versions)
   Map<String, AppInMemory> apps = {};
@@ -77,6 +120,12 @@ class AppsProvider with ChangeNotifier {
 
   // Completer for proper async synchronization of loadApps
   Completer<void>? _loadAppsCompleter;
+
+  // LRU cache for icons (limit memory usage to ~50 icons)
+  final IconLRUCache _iconCache = IconLRUCache(maxSize: 50);
+
+  // Track icons currently being loaded to prevent duplicate requests
+  final Set<String> _iconsLoading = {};
 
   // Variables to keep track of the app foreground status (installs can't run in the background)
   bool isForeground = true;
@@ -788,7 +837,34 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
-    if (apps[appId]?.icon == null) {
+    if (appId == null || apps[appId] == null) return;
+
+    // Check if already loading this icon
+    if (_iconsLoading.contains(appId)) return;
+
+    // Check LRU cache first
+    final cachedInMemory = _iconCache.get(appId);
+    if (cachedInMemory != null && !ignoreCache) {
+      if (apps[appId]?.icon == null) {
+        apps.update(
+          appId,
+          (value) => AppInMemory(
+            value.app,
+            value.downloadProgress,
+            value.installedInfo,
+            cachedInMemory,
+          ),
+        );
+        notifyListeners();
+      }
+      return;
+    }
+
+    // Skip if already has icon and not forcing refresh
+    if (apps[appId]?.icon != null && !ignoreCache) return;
+
+    _iconsLoading.add(appId);
+    try {
       var iconsCacheDir = this.iconsCacheDir;
       var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
       var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
@@ -799,10 +875,12 @@ class AppsProvider with ChangeNotifier {
         unawaited(cachedIcon.writeAsBytes(icon.toList()));
       }
       if (icon != null) {
+        // Add to LRU cache
+        _iconCache.put(appId, icon);
         apps.update(
-          apps[appId]!.app.id,
+          appId,
           (value) => AppInMemory(
-            apps[appId]!.app,
+            value.app,
             value.downloadProgress,
             value.installedInfo,
             icon,
@@ -816,17 +894,23 @@ class AppsProvider with ChangeNotifier {
         );
         notifyListeners();
       }
+    } finally {
+      _iconsLoading.remove(appId);
     }
   }
 
   Future<void> precacheIcons(List<String> appIds) async {
+    // Filter to apps that need icons and aren't currently loading
     final appsNeedingIcons = appIds.where((id) =>
-      apps[id] != null && apps[id]!.icon == null
+      apps[id] != null &&
+      apps[id]!.icon == null &&
+      !_iconsLoading.contains(id)
     ).toList();
 
     if (appsNeedingIcons.isEmpty) return;
 
-    final batch = appsNeedingIcons.take(10).toList();
+    // Batch load with concurrency limit
+    final batch = appsNeedingIcons.take(15).toList();
 
     for (final appId in batch) {
       unawaited(updateAppIcon(appId));
