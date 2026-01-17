@@ -145,8 +145,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
             setState(() {
               importInProgress = true;
             });
-            if (result != null) {
-              String data = File(result.files.single.path!).readAsStringSync();
+            if (result != null && result.files.length == 1 && result.files.first.path != null) {
+              String data = File(result.files.first.path!).readAsStringSync();
               try {
                 jsonDecode(data);
               } catch (e) {
@@ -183,11 +183,11 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
     runUrlImport() {
       FilePicker.platform.pickFiles().then((result) {
-        if (result != null) {
+        if (result != null && result.files.length == 1 && result.files.first.path != null) {
           urlListImport(
             overrideInitValid: true,
             initValue: RegExp('https?://[^"]+')
-                .allMatches(File(result.files.single.path!).readAsStringSync())
+                .allMatches(File(result.files.first.path!).readAsStringSync())
                 .map((e) => e.input.substring(e.start, e.end))
                 .toSet()
                 .toList()

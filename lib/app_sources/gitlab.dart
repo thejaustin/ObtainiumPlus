@@ -236,7 +236,9 @@ class GitLab extends AppSource {
       apkDetailsList = apkDetailsList
           .where((e) => e.apkUrls.isNotEmpty)
           .toList();
-      finalResult = apkDetailsList.first;
+      if (apkDetailsList.isNotEmpty) {
+        finalResult = apkDetailsList.first;
+      }
     }
 
     if (finalResult.apkUrls.isEmpty && !trackOnly) {

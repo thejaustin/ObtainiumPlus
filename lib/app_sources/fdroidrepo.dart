@@ -243,9 +243,10 @@ class FDroidRepo extends AppSource {
         ).toList();
         if (selectedReleases.length > 1 && pickHighestVersionCode) {
           selectedReleases.sort((e1, e2) {
-            return int.parse(e2.querySelector('versioncode')!.innerHtml)
-              .compareTo(int.parse(e1.querySelector('versioncode')!.innerHtml));
-        });
+            final vc1 = int.tryParse(e1.querySelector('versioncode')?.innerHtml ?? '') ?? 0;
+            final vc2 = int.tryParse(e2.querySelector('versioncode')?.innerHtml ?? '') ?? 0;
+            return vc2.compareTo(vc1);
+          });
           selectedReleases = [selectedReleases[0]];
         }
       }

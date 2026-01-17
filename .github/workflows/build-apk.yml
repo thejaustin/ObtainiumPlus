@@ -156,34 +156,5 @@ jobs:
 
             ---
 
-            ### 📦 Version Naming
-            `1.2.9-pX` where X = patch number (auto-incremented on each build)
-
-            ### ✨ Features in Obtainium+
-
-            **Drag-to-Reorder Categories**
-            - Long-press and drag categories to reorganize them
-            - Visual drag handle indicator
-            - Custom order persists across app restarts
-
-            **Advanced Sorting Methods**
-            - New sort button in bottom navigation
-            - Multiple sorting options: Default, Latest Updates, A-Z, Z-A, Recently Added, Install Status
-            - Sort preference persists across app restarts
-
-            **Collapse Categories by Default**
-            - Setting to collapse all category groups when opening the app
-            - Location: Settings → Below "Group by category"
-
-            **Enhanced Animations & UX**
-            - Smooth transitions for all UI elements (200-300ms animations)
-            - Haptic feedback on interactive elements
-            - Enhanced ripple effects and touch feedback
-
-            **Technical Improvements**
-            - Automated build system with signed APKs
-            - Auto-versioning ensures every build creates a new release
-            - Universal APK works on all device architectures
-
-            ### 📥 Installation
-            Download **app-release.apk** - Universal APK that works on all devices.
+            ### 📝 Changes
+            *(See auto-generated notes below)*
