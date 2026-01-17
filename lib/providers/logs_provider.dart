@@ -31,7 +31,8 @@ class Log {
 
   Log.fromMap(Map<String, Object?> map) {
     id = map[idColumn] as int;
-    level = LogLevels.values.elementAt(map[levelColumn] as int);
+    final levelIndex = (map[levelColumn] as int).clamp(0, LogLevels.values.length - 1);
+    level = LogLevels.values.elementAt(levelIndex);
     message = map[messageColumn] as String;
     timestamp = DateTime.fromMillisecondsSinceEpoch(
       map[timestampColumn] as int,

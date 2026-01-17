@@ -20,6 +20,7 @@ import 'package:obtainium/components/apps/app_dialogs.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -488,6 +489,48 @@ class AppsPageState extends State<AppsPage> {
           IconButton(
             onPressed: isFilterOff ? showFilterDialog : () => setState(() => filter = AppsFilter()),
             icon: Icon(isFilterOff ? Icons.search_rounded : Icons.search_off_rounded),
+          ),
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (context) => const ImportExportPage(),
+              );
+            },
+            icon: const Icon(Icons.import_export),
+          ),
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return GeneratedFormModal(
+                    title: tr('appSortMethod'),
+                    items: [
+                      [
+                        GeneratedFormDropdown(
+                          'sortMethod',
+                          label: tr('sortMethod'),
+                          defaultValue: settingsProvider.appSortMethod.toString(),
+                          AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
+                        )
+                      ],
+                    ],
+                  );
+                },
+              ).then((value) {
+                if (value != null) {
+                  settingsProvider.setAppSortMethod(
+                    AppSortMethod.values.firstWhere(
+                      (e) => e.toString() == value['sortMethod'],
+                    ),
+                  );
+                }
+              });
+            },
+            icon: const Icon(Icons.sort_rounded),
           ),
           const Expanded(child: SizedBox()),
           IconButton(

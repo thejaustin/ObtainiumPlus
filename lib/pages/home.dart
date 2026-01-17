@@ -59,11 +59,6 @@ class HomePageState extends State<HomePage> {
       Icons.add,
       AddAppPage(key: GlobalKey<AddAppPageState>()),
     ),
-    NavigationPageItem(
-      tr('importExport'),
-      Icons.import_export,
-      const ImportExportPage(),
-    ),
     NavigationPageItem(tr('settings'), Icons.settings, const SettingsPage()),
   ];
 

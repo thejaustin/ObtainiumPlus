@@ -66,6 +66,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: "${{ steps.extract_version.outputs.tag }}"
           tag_prefix: ""
+
+      - name: Generate Release Body
+        run: |
+          echo "## Build Info" > release_body.md
+          echo "- **Date:** $(date)" >> release_body.md
+          echo "- **Commit:** $GITHUB_SHA" >> release_body.md
       
       - name: Create Draft Release
         uses: ncipollo/release-action@v1
@@ -75,3 +81,5 @@ jobs:
           prerelease: "${{ steps.extract_version.outputs.beta }}"
           draft: "true"
           generateReleaseNotes: true
+          allowUpdates: true
+          bodyFile: release_body.md
