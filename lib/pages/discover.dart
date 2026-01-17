@@ -11,7 +11,8 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 
 class DiscoverPage extends StatefulWidget {
-  const DiscoverPage({super.key});
+  final bool showAppBar;
+  const DiscoverPage({super.key, this.showAppBar = true});
 
   @override
   State<DiscoverPage> createState() => DiscoverPageState();
@@ -74,7 +75,7 @@ class DiscoverPageState extends State<DiscoverPage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          CustomAppBar(title: tr('discover')),
+          if (widget.showAppBar) CustomAppBar(title: tr('discover')),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),

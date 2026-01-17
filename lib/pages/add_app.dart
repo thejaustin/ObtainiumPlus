@@ -8,6 +8,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -24,12 +25,13 @@ class AddAppPage extends StatefulWidget {
   State<AddAppPage> createState() => AddAppPageState();
 }
 
-class AddAppPageState extends State<AddAppPage> {
+class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool gettingAppInfo = false;
-  bool searching = false;
+  // bool searching = false; // Moved to DiscoverPage
 
   String userInput = '';
-  String searchQuery = '';
+  // String searchQuery = ''; // Moved to DiscoverPage
   String? pickedSourceOverride;
   String? previousPickedSourceOverride;
   AppSource? pickedSource;
@@ -40,7 +42,23 @@ class AddAppPageState extends State<AddAppPage> {
   int urlInputKey = 0;
   SourceProvider sourceProvider = SourceProvider();
 
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   void linkFn(String input) {
+    // If input comes from DiscoverPage, we might need to switch to URL tab
+    if (_tabController.index != 0) {
+      _tabController.animateTo(0);
+    }
     try {
       if (input.isEmpty) {
         throw UnsupportedURLError();
@@ -51,6 +69,8 @@ class AddAppPageState extends State<AddAppPage> {
       showError(e, context);
     }
   }
+
+  // ... (changeUserInput remains same)
 
   void changeUserInput(
     String input,
@@ -106,7 +126,9 @@ class AddAppPageState extends State<AddAppPage> {
     NotificationsProvider notificationsProvider = context
         .read<NotificationsProvider>();
 
-    bool doingSomething = gettingAppInfo || searching;
+    bool doingSomething = gettingAppInfo; // || searching;
+
+    // ... (rest of helper functions)
 
     Future<bool> getTrackOnlyConfirmationIfNeeded(
       bool userPickedTrackOnly, {
@@ -299,158 +321,7 @@ class AddAppPageState extends State<AddAppPage> {
       ],
     );
 
-    runSearch({bool filtered = true}) async {
-      setState(() {
-        searching = true;
-      });
-      var sourceStrings = <String, List<String>>{};
-      sourceProvider.sources.where((e) => e.canSearch).forEach((s) {
-        sourceStrings[s.name] = [s.name];
-      });
-      try {
-        var searchSources =
-            await showDialog<List<String>?>(
-              context: context,
-              builder: (BuildContext ctx) {
-                return SelectionModal(
-                  title: tr(
-                    'selectX',
-                    args: [plural('source', 2).toLowerCase()],
-                  ),
-                  entries: sourceStrings,
-                  selectedByDefault: true,
-                  onlyOneSelectionAllowed: false,
-                  titlesAreLinks: false,
-                  deselectThese: settingsProvider.searchDeselected,
-                );
-              },
-            ) ??
-            [];
-        if (searchSources.isNotEmpty) {
-          settingsProvider.searchDeselected = sourceStrings.keys
-              .where((s) => !searchSources.contains(s))
-              .toList();
-          List<MapEntry<String, Map<String, List<String>>>?>
-          results = (await Future.wait(
-            sourceProvider.sources
-                .where((e) => searchSources.contains(e.name))
-                .map((e) async {
-                  try {
-                    Map<String, dynamic>? querySettings = {};
-                    if (e.includeAdditionalOptsInMainSearch) {
-                      querySettings = await showDialog<Map<String, dynamic>?>(
-                        context: context,
-                        builder: (BuildContext ctx) {
-                          return GeneratedFormModal(
-                            title: tr('searchX', args: [e.name]),
-                            items: [
-                              ...e.searchQuerySettingFormItems.map((e) => [e]),
-                              [
-                                GeneratedFormTextField(
-                                  'url',
-                                  label: e.hosts.isNotEmpty
-                                      ? tr('overrideSource')
-                                      : plural('url', 1).substring(2),
-                                  autoCompleteOptions: [
-                                    ...(e.hosts.isNotEmpty ? [e.hosts[0]] : []),
-                                    ...appsProvider.apps.values
-                                        .where(
-                                          (a) =>
-                                              sourceProvider
-                                                  .getSource(
-                                                    a.app.url,
-                                                    overrideSource:
-                                                        a.app.overrideSource,
-                                                  )
-                                                  .runtimeType ==
-                                              e.runtimeType,
-                                        )
-                                        .map((a) {
-                                          var uri = Uri.parse(a.app.url);
-                                          return '${uri.origin}${uri.path}';
-                                        }),
-                                  ],
-                                  defaultValue: e.hosts.isNotEmpty
-                                      ? e.hosts[0]
-                                      : '',
-                                  required: true,
-                                ),
-                              ],
-                            ],
-                          );
-                        },
-                      );
-                      if (querySettings == null) {
-                        return null;
-                      }
-                    }
-                    return MapEntry(
-                      e.runtimeType.toString(),
-                      await e.search(searchQuery, querySettings: querySettings),
-                    );
-                  } catch (err) {
-                    if (err is! CredsNeededError) {
-                      rethrow;
-                    } else {
-                      err.unexpected = true;
-                      showError(err, context);
-                      return null;
-                    }
-                  }
-                }),
-          )).where((a) => a != null).toList();
-
-          // Interleave results instead of simple reduce
-          Map<String, MapEntry<String, List<String>>> res = {};
-          var si = 0;
-          var done = false;
-          while (!done) {
-            done = true;
-            for (var r in results) {
-              var sourceName = r!.key;
-              if (r.value.length > si) {
-                done = false;
-                var singleRes = r.value.entries.elementAt(si);
-                res[singleRes.key] = MapEntry(sourceName, singleRes.value);
-              }
-            }
-            si++;
-          }
-          if (res.isEmpty) {
-            throw ObtainiumError(tr('noResults'));
-          }
-          List<String>? selectedUrls = res.isEmpty
-              ? []
-              // ignore: use_build_context_synchronously
-              : await showDialog<List<String>?>(
-                  context: context,
-                  builder: (BuildContext ctx) {
-                    return SelectionModal(
-                      entries: res.map((k, v) => MapEntry(k, v.value)),
-                      selectedByDefault: false,
-                      onlyOneSelectionAllowed: true,
-                    );
-                  },
-                );
-          if (selectedUrls != null && selectedUrls.isNotEmpty) {
-            var sourceName = res[selectedUrls[0]]?.key;
-            changeUserInput(
-              selectedUrls[0],
-              true,
-              false,
-              updateUrlInput: true,
-              overrideSource: sourceName,
-            );
-          }
-        }
-      } catch (e) {
-        showError(e, context);
-      } finally {
-        setState(() {
-          searching = false;
-        });
-      }
-    }
+    // runSearch removed as it's replaced by DiscoverPage
 
     Widget getHTMLSourceOverrideDropdown() => Column(
       children: [
@@ -504,47 +375,6 @@ class AddAppPageState extends State<AddAppPage> {
           ],
         ),
         const SizedBox(height: 16),
-      ],
-    );
-
-    bool shouldShowSearchBar() =>
-        sourceProvider.sources.where((e) => e.canSearch).isNotEmpty &&
-        pickedSource == null &&
-        userInput.isEmpty;
-
-    Widget getSearchBarRow() => Row(
-      children: [
-        Expanded(
-          child: GeneratedForm(
-            items: [
-              [
-                GeneratedFormTextField(
-                  'searchSomeSources',
-                  label: tr('searchSomeSourcesLabel'),
-                  required: false,
-                ),
-              ],
-            ],
-            onValueChanges: (values, valid, isBuilding) {
-              if (values.isNotEmpty && valid && !isBuilding) {
-                setState(() {
-                  searchQuery = values['searchSomeSources']!.trim();
-                });
-              }
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        searching
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: searchQuery.isEmpty || doingSomething
-                    ? null
-                    : () {
-                        runSearch();
-                      },
-                child: Text(tr('search')),
-              ),
       ],
     );
 
@@ -732,39 +562,53 @@ class AddAppPageState extends State<AddAppPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
-      body: CustomScrollView(
-        shrinkWrap: true,
-        slivers: <Widget>[
-          CustomAppBar(title: tr('addApp')),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  getUrlInputRow(),
-                  const SizedBox(height: 16),
-                  if (pickedSource != null) getHTMLSourceOverrideDropdown(),
-                  if (shouldShowSearchBar()) getSearchBarRow(),
-                  if (pickedSource != null)
-                    FutureBuilder(
-                      builder: (ctx, val) {
-                        return val.data != null && val.data!.isNotEmpty
-                            ? Text(
-                                val.data!,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              )
-                            : const SizedBox();
-                      },
-                      future: pickedSource?.getSourceNote(),
-                    ),
-                  if (pickedSource != null) getAdditionalOptsCol(),
-                ],
+      appBar: CustomAppBar(
+        title: tr('addApp'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: tr('appSourceURL')), // Or 'Add by URL'
+            Tab(text: tr('discover')),
+          ],
+        ),
+      ),
+      bottomNavigationBar: pickedSource == null && _tabController.index == 0 ? getSourcesListWidget() : null, // Only show sources list on URL tab
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          CustomScrollView(
+            shrinkWrap: true,
+            slivers: <Widget>[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      getUrlInputRow(),
+                      const SizedBox(height: 16),
+                      if (pickedSource != null) getHTMLSourceOverrideDropdown(),
+                      if (pickedSource != null)
+                        FutureBuilder(
+                          builder: (ctx, val) {
+                            return val.data != null && val.data!.isNotEmpty
+                                ? Text(
+                                    val.data!,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  )
+                                : const SizedBox();
+                          },
+                          future: pickedSource?.getSourceNote(),
+                        ),
+                      if (pickedSource != null) getAdditionalOptsCol(),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
+          const DiscoverPage(showAppBar: false),
         ],
       ),
     );
