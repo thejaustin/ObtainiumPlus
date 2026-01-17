@@ -532,6 +532,14 @@ class AppsPageState extends State<AppsPage> {
             },
             icon: const Icon(Icons.sort_rounded),
           ),
+          IconButton(
+            onPressed: () {
+              settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
+                  ? ViewMode.grid
+                  : ViewMode.list;
+            },
+            icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
+          ),
           const Expanded(child: SizedBox()),
           IconButton(
             onPressed: getMassObtainFunction(),
