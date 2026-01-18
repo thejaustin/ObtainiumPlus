@@ -59,10 +59,6 @@ android {
             dimension = "flavor"
             applicationIdSuffix = ""
         }
-        create("fdroid") {
-            dimension = "flavor"
-            applicationIdSuffix = ".fdroid"
-        }
     }
 
     signingConfigs {
