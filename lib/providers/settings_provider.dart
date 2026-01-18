@@ -660,6 +660,10 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void setAppSortMethod(AppSortMethod method) {
+    appSortMethod = method;
+  }
+
   // Category Icon Preview Settings
   CategoryIconPosition get categoryIconPosition {
     return CategoryIconPosition.values[prefs?.getInt('categoryIconPosition') ??

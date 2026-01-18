@@ -7,6 +7,7 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
@@ -562,12 +563,12 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(
-        title: tr('addApp'),
+      appBar: AppBar(
+        title: Text(tr('addApp')),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: tr('appSourceURL')), // Or 'Add by URL'
+            Tab(text: tr('appSourceURL')),
             Tab(text: tr('discover')),
           ],
         ),

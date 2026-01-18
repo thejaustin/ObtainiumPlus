@@ -20,7 +20,7 @@ class AppDownloadService {
   static final pm = AndroidPackageManager();
 
   // Helper for moving string to end of list
-  static List<String> _moveStrToEnd(List<String> list, String str, {String? strB}) {
+  static List<String> moveStrToEnd(List<String> list, String str, {String? strB}) {
     int indA = list.indexOf(str);
     int indB = strB != null ? list.indexOf(strB) : -1;
     if (indA != -1) {
@@ -98,12 +98,12 @@ class AppDownloadService {
     List<String> installedIds = [];
 
     // Prioritize Obtainium updates last
-    appsToInstall = _moveStrToEnd(
+    appsToInstall = moveStrToEnd(
       appsToInstall,
       'dev.imranr.obtainium',
       strB: 'imranr98_obtainium_github.com',
     );
-    appsToInstall = _moveStrToEnd(appsToInstall, 'dev.imranr.obtainium.fdroid');
+    appsToInstall = moveStrToEnd(appsToInstall, 'dev.imranr.obtainium.fdroid');
 
     Future<void> installFn(
       String id,

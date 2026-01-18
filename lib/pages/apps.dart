@@ -342,45 +342,46 @@ class AppsPageState extends State<AppsPage> {
     } else {
       // Sorting logic
       if (settingsProvider.appSortMethod == AppSortMethod.latestUpdates) {
-      listedApps.sort((a, b) {
-        final aDate = a.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(a.installedInfo!.lastUpdateTime!) : null;
-        final bDate = b.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(b.installedInfo!.lastUpdateTime!) : null;
-        if (aDate == null && bDate == null) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        if (aDate == null) return 1;
-        if (bDate == null) return -1;
-        return bDate.compareTo(aDate);
-      });
-    } else if (settingsProvider.appSortMethod == AppSortMethod.nameAZ) {
-      listedApps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    } else if (settingsProvider.appSortMethod == AppSortMethod.nameZA) {
-      listedApps.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
-    } else if (settingsProvider.appSortMethod == AppSortMethod.recentlyAdded) {
-      listedApps.sort((a, b) => b.app.id.toLowerCase().compareTo(a.app.id.toLowerCase()));
-    } else if (settingsProvider.appSortMethod == AppSortMethod.installStatus) {
-      listedApps.sort((a, b) {
-        if ((a.installedInfo != null) == (b.installedInfo != null)) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        return a.installedInfo != null ? -1 : 1;
-      });
-    } else {
-      listedApps.sort((a, b) {
-        int result = 0;
-        if (settingsProvider.sortColumn == SortColumnSettings.authorName) {
-          result = ((a.author + a.name).toLowerCase()).compareTo((b.author + b.name).toLowerCase());
-        } else if (settingsProvider.sortColumn == SortColumnSettings.nameAuthor) {
-          result = ((a.name + a.author).toLowerCase()).compareTo((b.name + b.author).toLowerCase());
-        } else if (settingsProvider.sortColumn == SortColumnSettings.releaseDate) {
-          final aDate = a.app.releaseDate;
-          final bDate = b.app.releaseDate;
-          if (aDate == null && bDate == null) {
+        listedApps.sort((a, b) {
+          final aDate = a.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(a.installedInfo!.lastUpdateTime!) : null;
+          final bDate = b.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(b.installedInfo!.lastUpdateTime!) : null;
+          if (aDate == null && bDate == null) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          if (aDate == null) return 1;
+          if (bDate == null) return -1;
+          return bDate.compareTo(aDate);
+        });
+      } else if (settingsProvider.appSortMethod == AppSortMethod.nameAZ) {
+        listedApps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      } else if (settingsProvider.appSortMethod == AppSortMethod.nameZA) {
+        listedApps.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+      } else if (settingsProvider.appSortMethod == AppSortMethod.recentlyAdded) {
+        listedApps.sort((a, b) => b.app.id.toLowerCase().compareTo(a.app.id.toLowerCase()));
+      } else if (settingsProvider.appSortMethod == AppSortMethod.installStatus) {
+        listedApps.sort((a, b) {
+          if ((a.installedInfo != null) == (b.installedInfo != null)) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          return a.installedInfo != null ? -1 : 1;
+        });
+      } else {
+        listedApps.sort((a, b) {
+          int result = 0;
+          if (settingsProvider.sortColumn == SortColumnSettings.authorName) {
+            result = ((a.author + a.name).toLowerCase()).compareTo((b.author + b.name).toLowerCase());
+          } else if (settingsProvider.sortColumn == SortColumnSettings.nameAuthor) {
             result = ((a.name + a.author).toLowerCase()).compareTo((b.name + b.author).toLowerCase());
-          } else if (aDate == null) { result = 1; } else if (bDate == null) { result = -1; } else {
-            result = aDate.compareTo(bDate);
+          } else if (settingsProvider.sortColumn == SortColumnSettings.releaseDate) {
+            final aDate = a.app.releaseDate;
+            final bDate = b.app.releaseDate;
+            if (aDate == null && bDate == null) {
+              result = ((a.name + a.author).toLowerCase()).compareTo((b.name + b.author).toLowerCase());
+            } else if (aDate == null) { result = 1; } else if (bDate == null) { result = -1; } else {
+              result = aDate.compareTo(bDate);
+            }
           }
-        }
-        return result;
-      });
-      if (settingsProvider.sortOrder == SortOrderSettings.descending) listedApps = listedApps.reversed.toList();
-      
+          return result;
+        });
+        if (settingsProvider.sortOrder == SortOrderSettings.descending) listedApps = listedApps.reversed.toList();
+      }
+
       // Update cache
       _cachedSortedApps = List.from(listedApps);
       _lastSortMethod = settingsProvider.appSortMethod;
