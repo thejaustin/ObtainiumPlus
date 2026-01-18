@@ -125,4 +125,103 @@ class AppCRUDService {
       AppFileService.deleteFile(file);
     }
   }
+
+  static Future<void> loadApps({
+    required Map<String, AppInMemory> apps,
+    required LogsProvider logs,
+    required SettingsProvider settingsProvider,
+    required Function() notifyListeners,
+    required Function(List<String>) removeApps,
+    String? singleId,
+  }) async {
+    var sp = SourceProvider();
+    List<List<String>> errors = [];
+    var installedAppsData = await AppInstallService.getAllInstalledInfo();
+    List<String> removedAppIds = [];
+    await Future.wait(
+      (await AppFileService.getAppsDir())
+          .listSync()
+          .map((item) async {
+            App? app;
+            if (item.path.toLowerCase().endsWith('.json') &&
+                (singleId == null ||
+                    item.path.split('/').last.toLowerCase() ==
+                        '${singleId.toLowerCase()}.json')) {
+              try {
+                app = App.fromJson(
+                  jsonDecode(File(item.path).readAsStringSync()),
+                );
+              } catch (err) {
+                if (err is FormatException) {
+                  logs.add(
+                    'Corrupt JSON when loading App (will be ignored): $err',
+                  );
+                  item.renameSync('${item.path}.corrupt');
+                } else {
+                  rethrow;
+                }
+              }
+            }
+            if (app != null) {
+              apps.update(
+                app.id,
+                (value) => AppInMemory(
+                  app!,
+                  value.downloadProgress,
+                  value.installedInfo,
+                  value.icon,
+                ),
+                ifAbsent: () => AppInMemory(app!, null, null, null),
+              );
+              notifyListeners();
+              try {
+                sp.getSource(app.url, overrideSource: app.overrideSource);
+                // Find installed info for this app (null if not installed)
+                PackageInfo? installedInfo;
+                for (var info in installedAppsData) {
+                  if (info.packageName == app!.id) {
+                    installedInfo = info;
+                    break;
+                  }
+                }
+                var moddedApp = AppCRUDService.getCorrectedInstallStatusAppIfPossible(
+                  app,
+                  installedInfo,
+                  logs,
+                );
+                if (moddedApp != null) {
+                  app = moddedApp;
+                  if (moddedApp.installedVersion == null) {
+                    removedAppIds.add(moddedApp.id);
+                  }
+                }
+                apps.update(
+                  app.id,
+                  (value) => AppInMemory(
+                    app!,
+                    value.downloadProgress,
+                    installedInfo,
+                    value.icon,
+                  ),
+                  ifAbsent: () => AppInMemory(app!, null, installedInfo, null),
+                );
+                notifyListeners();
+              } catch (e) {
+                errors.add([app!.id, app.finalName, e.toString()]);
+              }
+            }
+          }),
+    );
+    if (errors.isNotEmpty) {
+      removeApps(errors.map((e) => e[0]).toList());
+      NotificationsProvider().notify(
+        AppsRemovedNotification(errors.map((e) => [e[1], e[2]]).toList()),
+      );
+    }
+    if (removedAppIds.isNotEmpty) {
+      if (settingsProvider.removeOnExternalUninstall) {
+        await removeApps(removedAppIds);
+      }
+    }
+  }
 }
