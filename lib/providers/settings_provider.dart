@@ -734,4 +734,22 @@ class SettingsProvider with ChangeNotifier {
     prefs?.setInt('gridColumnCount', count.clamp(0, 6));
     notifyListeners();
   }
+
+  // Retry Queue persistence
+  Map<String, Map<String, dynamic>> get retryQueue {
+    var str = prefs?.getString('retryQueue');
+    if (str == null) return {};
+    try {
+      return Map<String, Map<String, dynamic>>.from(
+        jsonDecode(str).map((key, value) => MapEntry(key, Map<String, dynamic>.from(value)))
+      );
+    } catch (e) {
+      return {};
+    }
+  }
+
+  set retryQueue(Map<String, Map<String, dynamic>> queue) {
+    prefs?.setString('retryQueue', jsonEncode(queue));
+    notifyListeners();
+  }
 }
