@@ -67,15 +67,6 @@ jobs:
           echo "build_number=$NEW_BUILD" >> $GITHUB_OUTPUT
           echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Commit version bump
-        if: steps.bump_version.outputs.version_changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml
-          git commit -m "Auto-bump version to ${{ steps.bump_version.outputs.version }}"
-          git push
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -128,6 +119,17 @@ jobs:
           echo "Built APK:"
           ls -lh ./build/app/outputs/flutter-apk/
 
+      - name: Commit version bump
+        id: commit_bump
+        if: steps.bump_version.outputs.version_changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml
+          git commit -m "Auto-bump version to ${{ steps.bump_version.outputs.version }}"
+          git push
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -141,12 +143,13 @@ jobs:
         with:
           tag: ${{ steps.bump_version.outputs.tag }}
           name: "Obtainium+ ${{ steps.bump_version.outputs.version }}"
+          commit: ${{ steps.commit_bump.outputs.sha || github.sha }}
           draft: false
           prerelease: ${{ inputs.beta || false }}
           generateReleaseNotes: true
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
-          allowUpdates: false
+          allowUpdates: true
           skipIfReleaseExists: false
           body: |
             ## Obtainium+ ${{ steps.bump_version.outputs.version }}
