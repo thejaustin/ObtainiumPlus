@@ -46,70 +46,13 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_crud_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_export_service.dart';
+import 'package:obtainium/services/app_icon_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
 import 'package:obtainium/models/app_in_memory.dart';
+import 'package:obtainium/models/downloaded_artifact.dart';
 
 export 'package:obtainium/models/app_in_memory.dart';
-
-class DownloadedApk {
-  String appId;
-  File file;
-  DownloadedApk(this.appId, this.file);
-}
-
-enum DownloadedDirType { XAPK, ZIP }
-
-class DownloadedDir {
-  String appId;
-  File file;
-  Directory extracted;
-  DownloadedDirType type;
-  DownloadedDir(this.appId, this.file, this.extracted, this.type);
-}
-
-/// LRU Cache for app icons to manage memory usage
-class IconLRUCache {
-  final int maxSize;
-  final Map<String, Uint8List> _cache = {};
-  final List<String> _accessOrder = [];
-
-  IconLRUCache({this.maxSize = 50});
-
-  Uint8List? get(String appId) {
-    if (_cache.containsKey(appId)) {
-      // Move to end (most recently used)
-      _accessOrder.remove(appId);
-      _accessOrder.add(appId);
-      return _cache[appId];
-    }
-    return null;
-  }
-
-  void put(String appId, Uint8List icon) {
-    if (_cache.containsKey(appId)) {
-      _accessOrder.remove(appId);
-    } else if (_cache.length >= maxSize) {
-      // Evict least recently used
-      final lru = _accessOrder.removeAt(0);
-      _cache.remove(lru);
-    }
-    _cache[appId] = icon;
-    _accessOrder.add(appId);
-  }
-
-  void remove(String appId) {
-    _cache.remove(appId);
-    _accessOrder.remove(appId);
-  }
-
-  void clear() {
-    _cache.clear();
-    _accessOrder.clear();
-  }
-
-  int get length => _cache.length;
-}
 
 class AppsProvider with ChangeNotifier {
   // In memory App state (should always be kept in sync with local storage versions)
@@ -120,12 +63,6 @@ class AppsProvider with ChangeNotifier {
 
   // Completer for proper async synchronization of loadApps
   Completer<void>? _loadAppsCompleter;
-
-  // LRU cache for icons (limit memory usage to ~50 icons)
-  final IconLRUCache _iconCache = IconLRUCache(maxSize: 50);
-
-  // Track icons currently being loaded to prevent duplicate requests
-  final Set<String> _iconsLoading = {};
 
   // Variables to keep track of the app foreground status (installs can't run in the background)
   bool isForeground = true;
@@ -404,218 +341,23 @@ class AppsProvider with ChangeNotifier {
     bool forceParallelDownloads = false,
     bool useExisting = true,
   }) async {
-    notificationsProvider =
-        notificationsProvider ?? context?.read<NotificationsProvider>();
-    List<String> appsToInstall = [];
-    List<String> trackOnlyAppsToUpdate = [];
-    for (var id in appIds) {
-      if (apps[id] == null) {
-        throw ObtainiumError(tr('appNotFound'));
-      }
-      MapEntry<String, String>? apkUrl;
-      var trackOnly = apps[id]!.app.additionalSettings['trackOnly'] == true;
-      var refreshBeforeDownload =
-          apps[id]!.app.additionalSettings['refreshBeforeDownload'] == true ||
-          apps[id]!.app.apkUrls.isNotEmpty &&
-              apps[id]!.app.apkUrls.first.value == 'placeholder';
-      if (refreshBeforeDownload) {
-        await checkUpdate(apps[id]!.app.id);
-      }
-      if (!trackOnly) {
-        apkUrl = await confirmAppFileUrl(apps[id]!.app, context, false);
-      }
-      if (apkUrl != null) {
-        int urlInd = apps[id]!.app.apkUrls
-            .map((e) => e.value)
-            .toList()
-            .indexOf(apkUrl.value);
-        if (urlInd >= 0 && urlInd != apps[id]!.app.preferredApkIndex) {
-          apps[id]!.app.preferredApkIndex = urlInd;
-          await saveApps([apps[id]!.app]);
-        }
-        if (context != null || await canInstallSilently(apps[id]!.app)) {
-          appsToInstall.add(id);
-        }
-      }
-      if (trackOnly) {
-        trackOnlyAppsToUpdate.add(id);
-      }
-    }
-    saveApps(
-      trackOnlyAppsToUpdate.map((e) {
-        var a = apps[e]!.app;
-        a.installedVersion = a.latestVersion;
-        return a;
-      }).toList(),
+    return AppDownloadService.downloadAndInstallLatestApps(
+      appIds: appIds,
+      apps: apps,
+      settingsProvider: settingsProvider,
+      logs: logs,
+      APKDir: APKDir,
+      notifyListeners: notifyListeners,
+      saveApps: saveApps,
+      checkUpdate: checkUpdate,
+      confirmAppFileUrl: confirmAppFileUrl,
+      canInstallSilently: canInstallSilently,
+      waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+      context: context,
+      notificationsProvider: notificationsProvider,
+      forceParallelDownloads: forceParallelDownloads,
+      useExisting: useExisting,
     );
-
-    MultiAppMultiError errors = MultiAppMultiError();
-    List<String> installedIds = [];
-
-    appsToInstall = moveStrToEnd(
-      appsToInstall,
-      obtainiumId,
-      strB: obtainiumTempId,
-    );
-    appsToInstall = moveStrToEnd(appsToInstall, '$obtainiumId.fdroid');
-
-    Future<void> installFn(
-      String id,
-      bool willBeSilent,
-      DownloadedApk? downloadedFile,
-      DownloadedDir? downloadedDir,
-    ) async {
-      apps[id]?.downloadProgress = -1;
-      notifyListeners();
-      try {
-        bool sayInstalled = true;
-        var contextIfNewInstall = apps[id]?.installedInfo == null
-            ? context
-            : null;
-        bool needBGWorkaround =
-            willBeSilent && context == null && !settingsProvider.useShizuku;
-        bool shizukuPretendToBeGooglePlay =
-            settingsProvider.shizukuPretendToBeGooglePlay ||
-            apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] ==
-                true;
-        if (downloadedFile != null) {
-          if (needBGWorkaround) {
-            installApk(
-              downloadedFile,
-              contextIfNewInstall,
-              needsBGWorkaround: true,
-              shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-            );
-          } else {
-            sayInstalled = await installApk(
-              downloadedFile,
-              contextIfNewInstall,
-              shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-            );
-          }
-        } else {
-          if (needBGWorkaround) {
-            installApkDir(
-              downloadedDir!,
-              contextIfNewInstall,
-              needsBGWorkaround: true,
-            );
-          } else {
-            sayInstalled = await installApkDir(
-              downloadedDir!,
-              contextIfNewInstall,
-              shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-            );
-          }
-        }
-        if (willBeSilent && context == null) {
-          if (!settingsProvider.useShizuku) {
-            notificationsProvider?.notify(
-              SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
-            );
-          } else {
-            notificationsProvider?.notify(
-              SilentUpdateNotification(
-                [apps[id]!.app],
-                sayInstalled,
-                id: id.hashCode,
-              ),
-            );
-          }
-        }
-        if (sayInstalled) {
-          installedIds.add(id);
-          notificationsProvider?.cancel(UpdateNotification([]).id);
-        }
-      } finally {
-        apps[id]?.downloadProgress = null;
-        notifyListeners();
-      }
-    }
-
-    Future<Map<Object?, Object?>> downloadFn(
-      String id, {
-      bool skipInstalls = false,
-    }) async {
-      bool willBeSilent = false;
-      DownloadedApk? downloadedFile;
-      DownloadedDir? downloadedDir;
-      try {
-        var downloadedArtifact =
-            await downloadApp(
-              apps[id]!.app,
-              context,
-              notificationsProvider: notificationsProvider,
-              useExisting: useExisting,
-            );
-        if (downloadedArtifact is DownloadedApk) {
-          downloadedFile = downloadedArtifact;
-        } else {
-          downloadedDir = downloadedArtifact as DownloadedDir;
-        }
-        id = downloadedFile?.appId ?? downloadedDir!.appId;
-        willBeSilent = await canInstallSilently(apps[id]!.app);
-        if (!settingsProvider.useShizuku) {
-          if (!(await settingsProvider.getInstallPermission(enforce: false))) {
-            throw ObtainiumError(tr('cancelled'));
-          }
-        } else {
-          switch ((await ShizukuApkInstaller.checkPermission())!) {
-            case 'binder_not_found':
-              throw ObtainiumError(tr('shizukuBinderNotFound'));
-            case 'old_shizuku':
-              throw ObtainiumError(tr('shizukuOld'));
-            case 'old_android_with_adb':
-              throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
-            case 'denied':
-              throw ObtainiumError(tr('cancelled'));
-          }
-        }
-        if (!willBeSilent && context != null && !settingsProvider.useShizuku) {
-          await waitForUserToReturnToForeground(context);
-        }
-      } catch (e) {
-        errors.add(id, e, appName: apps[id]?.name);
-      }
-      return {
-        'id': id,
-        'willBeSilent': willBeSilent,
-        'downloadedFile': downloadedFile,
-        'downloadedDir': downloadedDir,
-      };
-    }
-
-    List<Map<Object?, Object?>> downloadResults = [];
-    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
-      for (var id in appsToInstall) {
-        downloadResults.add(await downloadFn(id));
-      }
-    } else {
-      downloadResults = await Future.wait(
-        appsToInstall.map((id) => downloadFn(id, skipInstalls: true)),
-      );
-    }
-    for (var res in downloadResults) {
-      if (!errors.appIdNames.containsKey(res['id'])) {
-        try {
-          await installFn(
-            res['id'] as String,
-            res['willBeSilent'] as bool,
-            res['downloadedFile'] as DownloadedApk?,
-            res['downloadedDir'] as DownloadedDir?,
-          );
-        } catch (e) {
-          var id = res['id'] as String;
-          errors.add(id, e, appName: apps[id]?.name);
-        }
-      }
-    }
-
-    if (errors.idsByErrorString.isNotEmpty) {
-      throw errors;
-    }
-
-    return installedIds;
   }
 
   Future<List<String>> downloadAppAssets(
@@ -741,180 +483,41 @@ class AppsProvider with ChangeNotifier {
     loadingApps = true;
     _loadAppsCompleter = Completer<void>();
     notifyListeners();
-    var sp = SourceProvider();
-    List<List<String>> errors = [];
-    var installedAppsData = await AppInstallService.getAllInstalledInfo();
-    List<String> removedAppIds = [];
-    await Future.wait(
-      (await AppFileService.getAppsDir())
-          .listSync()
-          .map((item) async {
-            App? app;
-            if (item.path.toLowerCase().endsWith('.json') &&
-                (singleId == null ||
-                    item.path.split('/').last.toLowerCase() ==
-                        '${singleId.toLowerCase()}.json')) {
-              try {
-                app = App.fromJson(
-                  jsonDecode(File(item.path).readAsStringSync()),
-                );
-              } catch (err) {
-                if (err is FormatException) {
-                  logs.add(
-                    'Corrupt JSON when loading App (will be ignored): $err',
-                  );
-                  item.renameSync('${item.path}.corrupt');
-                } else {
-                  rethrow;
-                }
-              }
-            }
-            if (app != null) {
-              apps.update(
-                app.id,
-                (value) => AppInMemory(
-                  app!,
-                  value.downloadProgress,
-                  value.installedInfo,
-                  value.icon,
-                ),
-                ifAbsent: () => AppInMemory(app!, null, null, null),
-              );
-              notifyListeners();
-              try {
-                sp.getSource(app.url, overrideSource: app.overrideSource);
-                // Find installed info for this app (null if not installed)
-                PackageInfo? installedInfo;
-                for (var info in installedAppsData) {
-                  if (info.packageName == app!.id) {
-                    installedInfo = info;
-                    break;
-                  }
-                }
-                var moddedApp = AppCRUDService.getCorrectedInstallStatusAppIfPossible(
-                  app,
-                  installedInfo,
-                  logs,
-                );
-                if (moddedApp != null) {
-                  app = moddedApp;
-                  if (moddedApp.installedVersion == null) {
-                    removedAppIds.add(moddedApp.id);
-                  }
-                }
-                apps.update(
-                  app.id,
-                  (value) => AppInMemory(
-                    app!,
-                    value.downloadProgress,
-                    installedInfo,
-                    value.icon,
-                  ),
-                  ifAbsent: () => AppInMemory(app!, null, installedInfo, null),
-                );
-                notifyListeners();
-              } catch (e) {
-                errors.add([app!.id, app.finalName, e.toString()]);
-              }
-            }
-          }),
-    );
-    if (errors.isNotEmpty) {
-      removeApps(errors.map((e) => e[0]).toList());
-      NotificationsProvider().notify(
-        AppsRemovedNotification(errors.map((e) => [e[1], e[2]]).toList()),
+
+    try {
+      await AppCRUDService.loadApps(
+        apps: apps,
+        logs: logs,
+        settingsProvider: settingsProvider,
+        notifyListeners: notifyListeners,
+        removeApps: removeApps,
+        singleId: singleId,
       );
+    } finally {
+      loadingApps = false;
+      _loadAppsCompleter?.complete();
+      _loadAppsCompleter = null;
+      notifyListeners();
     }
-    if (removedAppIds.isNotEmpty) {
-      if (settingsProvider.removeOnExternalUninstall) {
-        await removeApps(removedAppIds);
-      }
-    }
-    loadingApps = false;
-    _loadAppsCompleter?.complete();
-    _loadAppsCompleter = null;
-    notifyListeners();
   }
 
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
-    if (appId == null || apps[appId] == null) return;
-
-    // Check if already loading this icon
-    if (_iconsLoading.contains(appId)) return;
-
-    // Check LRU cache first
-    final cachedInMemory = _iconCache.get(appId);
-    if (cachedInMemory != null && !ignoreCache) {
-      if (apps[appId]?.icon == null) {
-        apps.update(
-          appId,
-          (value) => AppInMemory(
-            value.app,
-            value.downloadProgress,
-            value.installedInfo,
-            cachedInMemory,
-          ),
-        );
-        notifyListeners();
-      }
-      return;
-    }
-
-    // Skip if already has icon and not forcing refresh
-    if (apps[appId]?.icon != null && !ignoreCache) return;
-
-    _iconsLoading.add(appId);
-    try {
-      var iconsCacheDir = this.iconsCacheDir;
-      var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
-      var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
-      var icon = alreadyCached
-          ? (await cachedIcon.readAsBytes())
-          : (await (await AppInstallService.getInstalledInfo(appId))?.applicationInfo?.getAppIcon());
-      if (icon != null && !alreadyCached) {
-        unawaited(cachedIcon.writeAsBytes(icon.toList()));
-      }
-      if (icon != null) {
-        // Add to LRU cache
-        _iconCache.put(appId, icon);
-        apps.update(
-          appId,
-          (value) => AppInMemory(
-            value.app,
-            value.downloadProgress,
-            value.installedInfo,
-            icon,
-          ),
-          ifAbsent: () => AppInMemory(
-            apps[appId]!.app,
-            null,
-            apps[appId]?.installedInfo,
-            icon,
-          ),
-        );
-        notifyListeners();
-      }
-    } finally {
-      _iconsLoading.remove(appId);
-    }
+    await AppIconService.updateAppIcon(
+      appId: appId,
+      apps: apps,
+      iconsCacheDir: iconsCacheDir,
+      notifyListeners: notifyListeners,
+      ignoreCache: ignoreCache,
+    );
   }
 
   Future<void> precacheIcons(List<String> appIds) async {
-    // Filter to apps that need icons and aren't currently loading
-    final appsNeedingIcons = appIds.where((id) =>
-      apps[id] != null &&
-      apps[id]!.icon == null &&
-      !_iconsLoading.contains(id)
-    ).toList();
-
-    if (appsNeedingIcons.isEmpty) return;
-
-    // Batch load with concurrency limit
-    final batch = appsNeedingIcons.take(15).toList();
-
-    for (final appId in batch) {
-      unawaited(updateAppIcon(appId));
-    }
+    await AppIconService.precacheIcons(
+      appIds: appIds,
+      apps: apps,
+      iconsCacheDir: iconsCacheDir,
+      notifyListeners: notifyListeners,
+    );
   }
 
   Future<void> saveApps(

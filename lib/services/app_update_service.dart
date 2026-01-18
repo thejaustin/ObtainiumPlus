@@ -188,7 +188,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
   AppsProvider appsProvider = AppsProvider(isBg: true);
   await appsProvider.loadApps();
 
-  int maxAttempts = 4;
+  int maxAttempts = 4; // Immediate retries
   int maxRetryWaitSeconds = 5;
 
   var netResult = await (Connectivity().checkConnectivity());
@@ -206,6 +206,16 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
         0,
       ).compareTo(appsProvider.settingsProvider.lastCompletedBGCheckTime) ==
       0;
+
+  // Load Retry Queue and add due items
+  var retryQueue = appsProvider.settingsProvider.retryQueue;
+  int now = DateTime.now().millisecondsSinceEpoch;
+  List<String> dueRetries = [];
+  retryQueue.forEach((appId, data) {
+    if (data['nextRetry'] <= now) {
+      dueRetries.add(appId);
+    }
+  });
 
   List<MapEntry<String, int>> toCheck = <MapEntry<String, int>>[
     ...(params['toCheck']
@@ -230,6 +240,16 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
             )
             .map((e) => MapEntry(e, 0))),
   ];
+
+  // Add due retries if not already in toCheck
+  for (var appId in dueRetries) {
+    if (!toCheck.any((e) => e.key == appId) && appsProvider.apps.containsKey(appId)) {
+      // Use 0 for immediate attempt count, persistent attempts tracked in retryQueue
+      toCheck.add(MapEntry(appId, 0));
+      logs.add('BG update task: Including queued retry for $appId');
+    }
+  }
+
   List<MapEntry<String, int>> toInstall = <MapEntry<String, int>>[
     ...(params['toInstall']
             ?.map(
@@ -267,7 +287,9 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
               Duration(minutes: appsProvider.settingsProvider.updateInterval),
             )
             .isBefore(DateTime.now());
-    if (!enoughTimePassed) {
+    
+    // Bypass time check if we have forced retries
+    if (!enoughTimePassed && params['toCheck'] == null && dueRetries.isEmpty) {
       print(
         'BG update task: Too early for another check (last check was ${appsProvider.settingsProvider.lastCompletedBGCheckTime.toIso8601String()}, interval is ${appsProvider.settingsProvider.updateInterval}).',
       );
@@ -292,10 +314,33 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
         specificIds: toCheck.map((e) => e.key).toList(),
         sp: appsProvider.settingsProvider,
       );
+      
+      // Clear successful updates from retry queue
+      var queue = appsProvider.settingsProvider.retryQueue;
+      for (var update in updates) {
+        if (queue.containsKey(update.id)) {
+          queue.remove(update.id);
+        }
+      }
+      // Also clear checked apps that didn't have updates but didn't error
+      for (var entry in toCheck) {
+        if (!updates.any((u) => u.id == entry.key) && 
+            (errors == null || !errors.idsByErrorString.containsKey(entry.key))) {
+           if (queue.containsKey(entry.key)) {
+             queue.remove(entry.key);
+           }
+        }
+      }
+      appsProvider.settingsProvider.retryQueue = queue;
+
     } catch (e) {
       if (e is Map) {
         updates = e['updates'];
         errors = e['errors'];
+        
+        // Clear successful/non-error ones from retry queue
+        var queue = appsProvider.settingsProvider.retryQueue;
+        
         for (var entry in errors!.rawErrors.entries) {
           var key = entry.key;
           var err = entry.value;
@@ -306,7 +351,9 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
           var toCheckAppMatch = toCheck.where((element) => element.key == key);
           if (toCheckAppMatch.isEmpty) continue;
           var toCheckApp = toCheckAppMatch.first;
+          
           if (toCheckApp.value < maxAttempts) {
+            // Immediate retry within this task
             toRetry.add(MapEntry(toCheckApp.key, toCheckApp.value + 1));
             int minRetryIntervalForThisApp = err is RateLimitError
                 ? (err.remainingMinutes * 60)
@@ -320,11 +367,37 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
               retryAfterXSeconds = minRetryIntervalForThisApp;
             }
           } else {
+            // Persistent Retry Logic
             if (err is! RateLimitError) {
-              toThrow.add(key, err, appName: errors?.appIdNames[key]);
+               int currentPersistentAttempts = queue[key]?['attempts'] ?? 0;
+               // Exponential backoff: 15min * 2^attempts
+               int nextBackoffMinutes = (15 * pow(2, min(currentPersistentAttempts, 6))).toInt(); // Cap backoff multiplier
+               int nextRetryTime = DateTime.now().add(Duration(minutes: nextBackoffMinutes)).millisecondsSinceEpoch;
+               
+               queue[key] = {
+                 'attempts': currentPersistentAttempts + 1,
+                 'nextRetry': nextRetryTime
+               };
+               logs.add('BG update task: Queued $key for persistent retry in $nextBackoffMinutes mins (Persistent Attempt ${currentPersistentAttempts + 1})');
+            } else {
+               toThrow.add(key, err, appName: errors?.appIdNames[key]);
             }
           }
         }
+        
+        // Clean up successes from queue in partial failure case
+        for (var update in updates) {
+          if (queue.containsKey(update.id)) queue.remove(update.id);
+        }
+        // And non-errors
+        for (var entry in toCheck) {
+           if (!updates.any((u) => u.id == entry.key) && 
+               !errors.idsByErrorString.containsKey(entry.key)) {
+              if (queue.containsKey(entry.key)) queue.remove(entry.key);
+           }
+        }
+        appsProvider.settingsProvider.retryQueue = queue;
+
       } else {
         logs.add('Fatal error in BG update task: ${e.toString()}');
         rethrow;
@@ -404,12 +477,22 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
       );
       if (tempObtArr.isNotEmpty) {
         var obt = tempObtArr.first;
-        toInstall = moveStrToEndMapEntryWithCount(toInstall, obt);
+        toInstall = _moveStrToEnd(toInstall.map((e) => e.key).toList(), obt.key).map((k) => MapEntry(k, 0)).toList(); 
+        // Corrected logic for moving map entry
       }
       try {
-        await appsProvider.downloadAndInstallLatestApps(
-          toInstall.map((e) => e.key).toList(),
-          null,
+        await AppDownloadService.downloadAndInstallLatestApps(
+          appIds: toInstall.map((e) => e.key).toList(),
+          apps: appsProvider.apps,
+          settingsProvider: appsProvider.settingsProvider,
+          logs: logs,
+          APKDir: appsProvider.APKDir,
+          notifyListeners: appsProvider.notifyListeners,
+          saveApps: appsProvider.saveApps,
+          checkUpdate: appsProvider.checkUpdate,
+          confirmAppFileUrl: appsProvider.confirmAppFileUrl,
+          canInstallSilently: appsProvider.canInstallSilently,
+          waitForUserToReturnToForeground: appsProvider.waitForUserToReturnToForeground,
           notificationsProvider: notificationsProvider,
           forceParallelDownloads: true,
         );
