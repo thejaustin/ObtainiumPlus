@@ -137,7 +137,6 @@ class BooleanControlGrid extends StatelessWidget {
                   value: value,
                   onChanged: onChanged,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
