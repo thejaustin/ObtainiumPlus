@@ -13,9 +13,10 @@ class ThemeBuilder {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      fontFamily: useSystemFont ? 'SystemFont' : 'Montserrat',
+      fontFamily: useSystemFont ? 'SystemFont' : 'Roboto', // Changed from Montserrat to Roboto for better readability
       inputDecorationTheme: _buildInputDecorationTheme(colorScheme),
       dropdownMenuTheme: _buildDropdownMenuTheme(colorScheme),
+      textTheme: _buildTextTheme(useSystemFont),
     );
   }
 
@@ -56,6 +57,63 @@ class ThemeBuilder {
       floatingLabelStyle: TextStyle(
         color: colorScheme.primary,
         fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  /// Builds custom text theme with improved readability and spacing
+  static TextTheme _buildTextTheme(bool useSystemFont) {
+    final baseTextTheme = Typography.material2021().black;
+    final fontFamily = useSystemFont ? 'SystemFont' : 'Roboto';
+
+    return baseTextTheme.copyWith(
+      headlineLarge: baseTextTheme.headlineLarge?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.2, // Increased letter spacing for better readability
+      ),
+      headlineMedium: baseTextTheme.headlineMedium?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.15,
+      ),
+      headlineSmall: baseTextTheme.headlineSmall?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
+      ),
+      titleLarge: baseTextTheme.titleLarge?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.15,
+      ),
+      titleMedium: baseTextTheme.titleMedium?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
+      ),
+      titleSmall: baseTextTheme.titleSmall?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
+      ),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.15, // Improved letter spacing for body text
+      ),
+      bodyMedium: baseTextTheme.bodyMedium?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.15,
+      ),
+      bodySmall: baseTextTheme.bodySmall?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
+      ),
+      labelLarge: baseTextTheme.labelLarge?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
+      ),
+      labelMedium: baseTextTheme.labelMedium?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
+      ),
+      labelSmall: baseTextTheme.labelSmall?.copyWith(
+        fontFamily: fontFamily,
+        letterSpacing: 0.1,
       ),
     );
   }

@@ -24,6 +24,10 @@ class AdvancedSettingsSection extends StatelessWidget {
         _buildHideTrackOnlyWarningToggle(context),
         _buildHideAPKOriginWarningToggle(context),
         _buildDeepLoggingToggle(context),
+        _buildEnableSwipeGesturesToggle(context),
+        _buildEnableUndoForAppRemovalToggle(context),
+        _buildEnableContextualTipsToggle(context),
+        _buildEnableHapticFeedbackToggle(context),
       ],
     );
   }
@@ -180,6 +184,90 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: settings.hideAPKOriginWarning,
           onChanged: (value) {
             settings.hideAPKOriginWarning = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEnableSwipeGesturesToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          title: Text(tr('enableSwipeGestures')),
+          subtitle: Text(
+            tr('enableSwipeGesturesDescription'),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          value: settings.enableSwipeGestures,
+          onChanged: (value) {
+            settings.enableSwipeGestures = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEnableUndoForAppRemovalToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          title: Text(tr('enableUndoForAppRemoval')),
+          subtitle: Text(
+            tr('enableUndoForAppRemovalDescription'),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          value: settings.enableUndoForAppRemoval,
+          onChanged: (value) {
+            settings.enableUndoForAppRemoval = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEnableContextualTipsToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          title: Text(tr('enableContextualTips')),
+          subtitle: Text(
+            tr('enableContextualTipsDescription'),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          value: settings.enableContextualTips,
+          onChanged: (value) {
+            settings.enableContextualTips = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEnableHapticFeedbackToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          title: Text(tr('enableHapticFeedback')),
+          subtitle: Text(
+            tr('enableHapticFeedbackDescription'),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          value: settings.enableHapticFeedback,
+          onChanged: (value) {
+            settings.enableHapticFeedback = value;
           },
         );
       },

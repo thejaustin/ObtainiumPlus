@@ -32,14 +32,14 @@ import 'package:url_launcher/url_launcher_string.dart';
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+class TabbedSettingsPage extends StatefulWidget {
+  const TabbedSettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  State<TabbedSettingsPage> createState() => _TabbedSettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
+class _TabbedSettingsPageState extends State<TabbedSettingsPage> with TickerProviderStateMixin {
   late TabController _tabController;
   
   bool showIntervalLabel = true;
@@ -221,8 +221,9 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
           controller: _tabController,
           tabs: [
             Tab(text: tr('appearance')),
-            Tab(text: tr('networkingSources')),
-            Tab(text: tr('management')),
+            Tab(text: tr('updatesSources')),
+            Tab(text: tr('appManagement')),
+            Tab(text: tr('advanced')),
           ],
         ),
       ),
@@ -249,8 +250,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
               ),
             ],
           ),
-          
-          // Tab 2: Networking/Sources
+
+          // Tab 2: Updates & Sources
           CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -276,8 +277,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
               ),
             ],
           ),
-          
-          // Tab 3: Management
+
+          // Tab 3: App Management
           CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -295,8 +296,23 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         orderDropdown: orderDropdown,
                         localeDropdown: localeDropdown,
                       ),
-                      height16,
-                      const AdvancedSettingsSection(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Tab 4: Advanced
+          CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AdvancedSettingsSection(),
                     ],
                   ),
                 ),

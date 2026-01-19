@@ -48,6 +48,15 @@ import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_export_service.dart';
 import 'package:obtainium/services/app_icon_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
+
+// Data class to store removed apps for undo functionality
+class RemovedAppData {
+  final App app;
+  final List<File> apkFiles;
+  final DateTime removalTime;
+
+  RemovedAppData(this.app, this.apkFiles, this.removalTime);
+}
 import 'package:obtainium/components/apps/app_dialogs.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
@@ -60,6 +69,10 @@ class AppsProvider with ChangeNotifier {
   bool loadingApps = false;
   bool gettingUpdates = false;
   LogsProvider logs = LogsProvider();
+
+  // Undo functionality - store recently removed apps
+  final List<RemovedAppData> _recentlyRemovedApps = [];
+  Timer? _cleanupTimer;
 
   // Completer for proper async synchronization of loadApps
   Completer<void>? _loadAppsCompleter;
@@ -570,28 +583,107 @@ class AppsProvider with ChangeNotifier {
     );
     notifyListeners();
     export(isAuto: true);
+
+    // Update app count for smart defaults in settings
+    settingsProvider.prefs?.setInt('trackedAppCount', this.apps.length);
   }
 
   Future<void> removeApps(List<String> appIds) async {
     var apkFiles = APKDir.listSync();
-    await Future.wait(
-      appIds.map((appId) async {
-        await AppCRUDService.deleteAppFile(appId);
-        apkFiles
-            .where(
-              (element) => element.path.split('/').last.startsWith('$appId-'),
-            )
-            .forEach((element) {
-              element.delete(recursive: true);
-            });
-        if (apps.containsKey(appId)) {
-          apps.remove(appId);
+
+    // Store removed apps for potential undo
+    for (String appId in appIds) {
+      if (apps.containsKey(appId)) {
+        try {
+          // Find associated APK files for this app
+          List<File> appApkFiles = apkFiles
+              .where((element) => element.path.split('/').last.startsWith('$appId-'))
+              .cast<File>()
+              .toList();
+
+          // Store the app data for potential undo
+          _recentlyRemovedApps.add(RemovedAppData(
+            apps[appId]!.app, // Store the original app object
+            appApkFiles,      // Store associated APK files
+            DateTime.now(),   // Timestamp for cleanup later
+          ));
+        } catch (e, stack) {
+          logs.add('Error preparing app $appId for removal: $e\n$stack');
         }
-      }),
-    );
+      }
+    }
+
+    try {
+      await Future.wait(
+        appIds.map((appId) async {
+          try {
+            await AppCRUDService.deleteAppFile(appId);
+            apkFiles
+                .where(
+                  (element) => element.path.split('/').last.startsWith('$appId-'),
+                )
+                .forEach((element) {
+                  try {
+                    element.delete(recursive: true);
+                  } catch (e) {
+                    logs.add('Error deleting APK file ${element.path}: $e');
+                  }
+                });
+            if (apps.containsKey(appId)) {
+              apps.remove(appId);
+            }
+          } catch (e, stack) {
+            logs.add('Error removing app $appId: $e\n$stack');
+          }
+        }),
+      );
+    } catch (e, stack) {
+      logs.add('Error in bulk app removal: $e\n$stack');
+    }
+
     if (appIds.isNotEmpty) {
       notifyListeners();
       export(isAuto: true);
+
+      // Start timer to clean up old removed apps after 30 seconds
+      _cleanupTimer?.cancel();
+      _cleanupTimer = Timer(const Duration(seconds: 30), () {
+        _cleanupOldRemovedApps();
+      });
+    }
+  }
+
+  // Helper method to clean up old removed apps
+  void _cleanupOldRemovedApps() {
+    final now = DateTime.now();
+    _recentlyRemovedApps.removeWhere((removedApp) {
+      return now.difference(removedApp.removalTime).inSeconds > 30;
+    });
+  }
+
+  // Method to undo the last app removal
+  Future<bool> undoLastRemoval() async {
+    if (_recentlyRemovedApps.isEmpty) {
+      return false; // Nothing to undo
+    }
+
+    // Get the most recently removed app
+    RemovedAppData lastRemoved = _recentlyRemovedApps.removeLast();
+
+    try {
+      // Restore the app to the apps list
+      apps[lastRemoved.app.id] = AppInMemory(lastRemoved.app, null);
+
+      // Notify listeners about the change
+      notifyListeners();
+      export(isAuto: true);
+
+      return true;
+    } catch (e, stack) {
+      // If restoration fails, add it back to the list
+      _recentlyRemovedApps.add(lastRemoved);
+      logs.add('Error restoring app ${lastRemoved.app.id}: $e\n$stack');
+      return false;
     }
   }
 
@@ -643,7 +735,27 @@ class AppsProvider with ChangeNotifier {
         await saveApps(apps, attemptToCorrectInstallStatus: false);
       }
       if (remove) {
-        await removeApps(apps.map((e) => e.id).toList());
+        List<String> appIdsToRemove = apps.map((e) => e.id).toList();
+        await removeApps(appIdsToRemove);
+
+        // Show snackbar with undo option if enabled in settings
+        if (context.mounted && settingsProvider.enableUndoForAppRemoval) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(plural('appsRemoved', apps.length)),
+              action: SnackBarAction(
+                label: tr('undo'),
+                onPressed: () async {
+                  bool success = await undoLastRemoval();
+                  if (success && context.mounted) {
+                    showMessage(tr('appsRestored'), context);
+                  }
+                },
+              ),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       }
       return uninstall || remove;
     }

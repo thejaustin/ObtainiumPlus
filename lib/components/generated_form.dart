@@ -325,47 +325,62 @@ class _GeneratedFormState extends State<GeneratedForm> {
           return TypeAheadField<String>(
             controller: ctrl,
             builder: (context, controller, focusNode) {
-              return TextFormField(
-                controller: ctrl,
-                focusNode: focusNode,
-                keyboardType: formItem.textInputType,
-                obscureText: formItem.password,
-                autocorrect: !formItem.password,
-                enableSuggestions: !formItem.password,
-                key: formFieldKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onChanged: (value) {
-                  setState(() {
-                    values[formItem.key] = value;
-                    someValueChanged();
-                  });
-                },
-                decoration: InputDecoration(
-                  helperText: formItem.label + (formItem.required ? ' *' : ''),
-                  hintText: formItem.hint,
-                  suffixIcon: formItem.tooltip != null
-                      ? Tooltip(
-                          message: formItem.tooltip!,
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: const Icon(Icons.info_outline, size: 20),
-                        )
-                      : null,
+              return Container( // Wrapped in container for better visual hierarchy
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      formItem.label + (formItem.required ? ' *' : ''),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith( // More prominent title
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: ctrl,
+                      focusNode: focusNode,
+                      keyboardType: formItem.textInputType,
+                      obscureText: formItem.password,
+                      autocorrect: !formItem.password,
+                      enableSuggestions: !formItem.password,
+                      key: formFieldKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      onChanged: (value) {
+                        setState(() {
+                          values[formItem.key] = value;
+                          someValueChanged();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: formItem.hint,
+                        suffixIcon: formItem.tooltip != null
+                            ? Tooltip(
+                                message: formItem.tooltip!,
+                                triggerMode: TooltipTriggerMode.tap,
+                                child: const Icon(Icons.info_outline, size: 20),
+                              )
+                            : null,
+                      ),
+                      minLines: formItem.max <= 1 ? null : formItem.max,
+                      maxLines: formItem.max <= 1 ? 1 : formItem.max,
+                      validator: (value) {
+                        if (formItem.required &&
+                            (value == null || value.trim().isEmpty)) {
+                          return '${formItem.label} ${tr('requiredInBrackets')}';
+                        }
+                        for (var validator in formItem.additionalValidators) {
+                          String? result = validator(value);
+                          if (result != null) {
+                            return result;
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
-                minLines: formItem.max <= 1 ? null : formItem.max,
-                maxLines: formItem.max <= 1 ? 1 : formItem.max,
-                validator: (value) {
-                  if (formItem.required &&
-                      (value == null || value.trim().isEmpty)) {
-                    return '${formItem.label} ${tr('requiredInBrackets')}';
-                  }
-                  for (var validator in formItem.additionalValidators) {
-                    String? result = validator(value);
-                    if (result != null) {
-                      return result;
-                    }
-                  }
-                  return null;
-                },
               );
             },
             itemBuilder: (context, value) {
@@ -389,41 +404,56 @@ class _GeneratedFormState extends State<GeneratedForm> {
           if (formItem.opts == null || formItem.opts!.isEmpty) {
             return Text(tr('dropdownNoOptsError'));
           }
-          return DropdownButtonFormField(
-            decoration: InputDecoration(
-              labelText: formItem.label,
-              suffixIcon: formItem.tooltip != null
-                  ? Tooltip(
-                      message: formItem.tooltip!,
-                      triggerMode: TooltipTriggerMode.tap,
-                      child: const Icon(Icons.info_outline, size: 20),
-                    )
-                  : null,
-            ),
-            dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 16,
-            ),
-            iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            value: values[formItem.key],
-            items: formItem.opts!.map((e2) {
-              var enabled = formItem.disabledOptKeys?.contains(e2.key) != true;
-              return DropdownMenuItem(
-                value: e2.key,
-                enabled: enabled,
-                child: Opacity(
-                  opacity: enabled ? 1 : 0.5,
-                  child: Text(e2.value),
+          return Container( // Wrapped in container for better visual hierarchy
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  formItem.label,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith( // More prominent title
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
                 ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                values[formItem.key] = value ?? formItem.opts!.first.key;
-                someValueChanged();
-              });
-            },
+                const SizedBox(height: 8),
+                DropdownButtonFormField(
+                  decoration: InputDecoration(
+                    suffixIcon: formItem.tooltip != null
+                        ? Tooltip(
+                            message: formItem.tooltip!,
+                            triggerMode: TooltipTriggerMode.tap,
+                            child: const Icon(Icons.info_outline, size: 20),
+                          )
+                        : null,
+                  ),
+                  dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 16,
+                  ),
+                  iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                  value: values[formItem.key],
+                  items: formItem.opts!.map((e2) {
+                    var enabled = formItem.disabledOptKeys?.contains(e2.key) != true;
+                    return DropdownMenuItem(
+                      value: e2.key,
+                      enabled: enabled,
+                      child: Opacity(
+                        opacity: enabled ? 1 : 0.5,
+                        child: Text(e2.value),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      values[formItem.key] = value ?? formItem.opts!.first.key;
+                      someValueChanged();
+                    });
+                  },
+                ),
+              ],
+            ),
           );
         } else if (formItem is GeneratedFormSubForm) {
           values[formItem.key] = [];
@@ -459,39 +489,76 @@ class _GeneratedFormState extends State<GeneratedForm> {
       for (var e = 0; e < formInputs[r].length; e++) {
         String fieldKey = widget.items[r][e].key;
         if (widget.items[r][e] is GeneratedFormSwitch) {
-          formInputs[r][e] = Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          formInputs[r][e] = Container( // Changed from Row to Container for better visual hierarchy
+            padding: const EdgeInsets.symmetric(vertical: 8.0), // Add vertical padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: Text(widget.items[r][e].label)),
-                    if (widget.items[r][e].tooltip != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Tooltip(
-                          message: widget.items[r][e].tooltip!,
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: const Icon(Icons.info_outline, size: 18),
-                        ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.items[r][e].label,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith( // More prominent title
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          if (widget.items[r][e].tooltip != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Tooltip(
+                                message: widget.items[r][e].tooltip!,
+                                triggerMode: TooltipTriggerMode.tap,
+                                child: const Icon(Icons.info_outline, size: 18),
+                              ),
+                            ),
+                        ],
                       ),
+                    ),
+                    Switch(
+                      value: values[fieldKey],
+                      onChanged: (widget.items[r][e] as GeneratedFormSwitch).disabled
+                          ? null
+                          : (value) {
+                              setState(() {
+                                values[fieldKey] = value;
+                                someValueChanged();
+                              });
+                            },
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Switch(
-                value: values[fieldKey],
-                onChanged: (widget.items[r][e] as GeneratedFormSwitch).disabled
-                    ? null
-                    : (value) {
-                        setState(() {
-                          values[fieldKey] = value;
-                          someValueChanged();
-                        });
-                      },
-              ),
-            ],
+                // Add description/subtext below if needed
+                if (widget.items[r][e].belowWidgets.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0, left: 8.0),
+                    child: Opacity(
+                      opacity: 0.7, // Make description visually lighter
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: widget.items[r][e].belowWidgets
+                            .map((w) => Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: DefaultTextStyle(
+                                    style: Theme.of(context).textTheme.bodySmall!.copyWith( // Smaller, lighter text
+                                      fontSize: 13,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                                    ),
+                                    child: w,
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           );
         } else if (widget.items[r][e] is GeneratedFormTagInput) {
           onAddPressed() {
@@ -564,196 +631,209 @@ class _GeneratedFormState extends State<GeneratedForm> {
                     const SizedBox(height: 8),
                   ],
                 ),
-              Wrap(
-                alignment:
-                    (widget.items[r][e] as GeneratedFormTagInput).alignment,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  // (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
-                  //             ?.isEmpty ==
-                  //         true
-                  //     ? Text(
-                  //         (widget.items[r][e] as GeneratedFormTagInput)
-                  //             .emptyMessage,
-                  //       )
-                  //     : const SizedBox.shrink(),
-                  ...(values[fieldKey] as Map<String, MapEntry<int, bool>>?)
-                          ?.entries
-                          .map((e2) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: ChoiceChip(
-                                label: Text(e2.key),
-                                backgroundColor: Color(
-                                  e2.value.key,
-                                ).withAlpha(50),
-                                selectedColor: Color(e2.value.key),
-                                visualDensity: VisualDensity.compact,
-                                selected: e2.value.value,
-                                onSelected: (value) {
-                                  setState(() {
-                                    (values[fieldKey]
-                                        as Map<String, MapEntry<int, bool>>)[e2
-                                        .key] = MapEntry(
-                                      (values[fieldKey]
-                                              as Map<
-                                                String,
-                                                MapEntry<int, bool>
-                                              >)[e2.key]!
-                                          .key,
-                                      value,
-                                    );
-                                    if ((widget.items[r][e]
-                                                as GeneratedFormTagInput)
-                                            .singleSelect &&
-                                        value == true) {
-                                      for (var key
-                                          in (values[fieldKey]
-                                                  as Map<
-                                                    String,
-                                                    MapEntry<int, bool>
-                                                  >)
-                                              .keys) {
-                                        if (key != e2.key) {
+              Container( // Wrapped in container for better visual hierarchy
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.items[r][e].label,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith( // More prominent title
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      alignment:
+                          (widget.items[r][e] as GeneratedFormTagInput).alignment,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ...(values[fieldKey] as Map<String, MapEntry<int, bool>>?)
+                                ?.entries
+                                .map((e2) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 2, // Reduced padding for more compact layout
+                                      vertical: 2,   // Added vertical padding for better touch targets
+                                    ),
+                                    child: ChoiceChip(
+                                      label: Text(
+                                        e2.key,
+                                        style: const TextStyle(fontSize: 12), // Smaller text for compactness
+                                      ),
+                                      backgroundColor: Color(
+                                        e2.value.key,
+                                      ).withAlpha(50),
+                                      selectedColor: Color(e2.value.key),
+                                      visualDensity: VisualDensity.compact,
+                                      selected: e2.value.value,
+                                      onSelected: (value) {
+                                        setState(() {
                                           (values[fieldKey]
-                                              as Map<
-                                                String,
-                                                MapEntry<int, bool>
-                                              >)[key] = MapEntry(
+                                              as Map<String, MapEntry<int, bool>>)[e2
+                                              .key] = MapEntry(
                                             (values[fieldKey]
                                                     as Map<
                                                       String,
                                                       MapEntry<int, bool>
-                                                    >)[key]!
+                                                    >)[e2.key]!
                                                 .key,
-                                            false,
+                                            value,
                                           );
-                                        }
+                                          if ((widget.items[r][e]
+                                                      as GeneratedFormTagInput)
+                                              .singleSelect &&
+                                              value == true) {
+                                            for (var key
+                                                in (values[fieldKey]
+                                                        as Map<
+                                                          String,
+                                                          MapEntry<int, bool>
+                                                        >)
+                                                    .keys) {
+                                              if (key != e2.key) {
+                                                (values[fieldKey]
+                                                    as Map<
+                                                      String,
+                                                      MapEntry<int, bool>
+                                                    >)[key] = MapEntry(
+                                                  (values[fieldKey]
+                                                          as Map<
+                                                            String,
+                                                            MapEntry<int, bool>
+                                                          >)[key]!
+                                                      .key,
+                                                  false,
+                                                );
+                                              }
+                                            }
+                                          }
+                                          someValueChanged();
+                                        });
+                                      },
+                                    ),
+                                  );
+                                }) ??
+                            [const SizedBox.shrink()],
+                        (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
+                                    ?.values
+                                    .where((e) => e.value)
+                                    .length ==
+                                1
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      var temp =
+                                          values[fieldKey]
+                                              as Map<String, MapEntry<int, bool>>;
+                                      // get selected category str where bool is true
+                                      final oldEntryMatch = temp.entries.where(
+                                        (entry) => entry.value.value,
+                                      );
+                                      if (oldEntryMatch.isEmpty) return;
+                                      final oldEntry = oldEntryMatch.first;
+                                      // generate new color, ensure it is not the same
+                                      int newColor = oldEntry.value.key;
+                                      while (oldEntry.value.key == newColor) {
+                                        newColor = generateRandomLightColor().value;
                                       }
-                                    }
-                                    someValueChanged();
-                                  });
-                                },
-                              ),
-                            );
-                          }) ??
-                      [const SizedBox.shrink()],
-                  (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
-                              ?.values
-                              .where((e) => e.value)
-                              .length ==
-                          1
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                var temp =
-                                    values[fieldKey]
-                                        as Map<String, MapEntry<int, bool>>;
-                                // get selected category str where bool is true
-                                final oldEntryMatch = temp.entries.where(
-                                  (entry) => entry.value.value,
-                                );
-                                if (oldEntryMatch.isEmpty) return;
-                                final oldEntry = oldEntryMatch.first;
-                                // generate new color, ensure it is not the same
-                                int newColor = oldEntry.value.key;
-                                while (oldEntry.value.key == newColor) {
-                                  newColor = generateRandomLightColor().value;
-                                }
-                                // Update entry with new color, remain selected
-                                temp.update(
-                                  oldEntry.key,
-                                  (old) => MapEntry(newColor, old.value),
-                                );
-                                values[fieldKey] = temp;
-                                someValueChanged();
-                              });
-                            },
-                            icon: const Icon(Icons.format_color_fill_rounded),
-                            visualDensity: VisualDensity.compact,
-                            tooltip: tr('colour'),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                  (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
-                              ?.values
-                              .where((e) => e.value)
-                              .isNotEmpty ==
-                          true
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: IconButton(
-                            onPressed: () {
-                              fn() {
-                                setState(() {
-                                  var temp =
-                                      values[fieldKey]
-                                          as Map<String, MapEntry<int, bool>>;
-                                  temp.removeWhere((key, value) => value.value);
-                                  values[fieldKey] = temp;
-                                  someValueChanged();
-                                });
-                              }
-
-                              if ((widget.items[r][e] as GeneratedFormTagInput)
-                                      .deleteConfirmationMessage !=
-                                  null) {
-                                var message =
-                                    (widget.items[r][e]
-                                            as GeneratedFormTagInput)
-                                        .deleteConfirmationMessage!;
-                                showDialog<Map<String, dynamic>?>(
-                                  context: context,
-                                  builder: (BuildContext ctx) {
-                                    return GeneratedFormModal(
-                                      title: message.key,
-                                      message: message.value,
-                                      items: const [],
-                                    );
+                                      // Update entry with new color, remain selected
+                                      temp.update(
+                                        oldEntry.key,
+                                        (old) => MapEntry(newColor, old.value),
+                                      );
+                                      values[fieldKey] = temp;
+                                      someValueChanged();
+                                    });
                                   },
-                                ).then((value) {
-                                  if (value != null) {
-                                    fn();
-                                  }
-                                });
-                              } else {
-                                fn();
-                              }
-                            },
-                            icon: const Icon(Icons.remove),
-                            visualDensity: VisualDensity.compact,
-                            tooltip: tr('remove'),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                  (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
-                              ?.isEmpty ==
-                          true
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: TextButton.icon(
-                            onPressed: onAddPressed,
-                            icon: const Icon(Icons.add),
-                            label: Text(
-                              (widget.items[r][e] as GeneratedFormTagInput)
-                                  .label,
-                            ),
-                          ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: IconButton(
-                            onPressed: onAddPressed,
-                            icon: const Icon(Icons.add),
-                            visualDensity: VisualDensity.compact,
-                            tooltip: tr('add'),
-                          ),
-                        ),
-                ],
+                                  icon: const Icon(Icons.format_color_fill_rounded, size: 16), // Smaller icon
+                                  visualDensity: VisualDensity.compact,
+                                  tooltip: tr('colour'),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                        (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
+                                    ?.values
+                                    .where((e) => e.value)
+                                    .isNotEmpty ==
+                                true
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: IconButton(
+                                  onPressed: () {
+                                    fn() {
+                                      setState(() {
+                                        var temp =
+                                            values[fieldKey]
+                                                as Map<String, MapEntry<int, bool>>;
+                                        temp.removeWhere((key, value) => value.value);
+                                        values[fieldKey] = temp;
+                                        someValueChanged();
+                                      });
+                                    }
+
+                                    if ((widget.items[r][e] as GeneratedFormTagInput)
+                                            .deleteConfirmationMessage !=
+                                        null) {
+                                      var message =
+                                          (widget.items[r][e]
+                                                  as GeneratedFormTagInput)
+                                              .deleteConfirmationMessage!;
+                                      showDialog<Map<String, dynamic>?>(
+                                        context: context,
+                                        builder: (BuildContext ctx) {
+                                          return GeneratedFormModal(
+                                            title: message.key,
+                                            message: message.value,
+                                            items: const [],
+                                          );
+                                        },
+                                      ).then((value) {
+                                        if (value != null) {
+                                          fn();
+                                        }
+                                      });
+                                    } else {
+                                      fn();
+                                    }
+                                  },
+                                  icon: const Icon(Icons.remove, size: 16), // Smaller icon
+                                  visualDensity: VisualDensity.compact,
+                                  tooltip: tr('remove'),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                        (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
+                                    ?.isEmpty ==
+                                true
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: TextButton.icon(
+                                  onPressed: onAddPressed,
+                                  icon: const Icon(Icons.add, size: 16), // Smaller icon
+                                  label: Text(
+                                    (widget.items[r][e] as GeneratedFormTagInput)
+                                        .label,
+                                    style: const TextStyle(fontSize: 12), // Smaller text
+                                  ),
+                                ),
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: IconButton(
+                                  onPressed: onAddPressed,
+                                  icon: const Icon(Icons.add, size: 16), // Smaller icon
+                                  visualDensity: VisualDensity.compact,
+                                  tooltip: tr('add'),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           );
