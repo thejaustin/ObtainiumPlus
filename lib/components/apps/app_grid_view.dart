@@ -51,34 +51,36 @@ class AppGridView extends StatelessWidget {
             var hasUpdate = app.app.installedVersion != null &&
                 app.app.installedVersion != app.app.latestVersion;
 
-            return OpenContainer(
-              tappable: false,
-              transitionType: ContainerTransitionType.fadeThrough,
-              openBuilder: (BuildContext context, VoidCallback _) {
-                return AppPage(appId: app.app.id);
-              },
-              closedElevation: 0,
-              closedColor: Colors.transparent,
-              closedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                return AppGridTile(
-                  appInMemory: app,
-                  isSelected: selectedAppIds.contains(app.app.id),
-                  hasUpdate: hasUpdate,
-                  onTap: () {
-                    if (selectedAppIds.isNotEmpty) {
+            return RepaintBoundary(
+              child: OpenContainer(
+                tappable: false,
+                transitionType: ContainerTransitionType.fadeThrough,
+                openBuilder: (BuildContext context, VoidCallback _) {
+                  return AppPage(appId: app.app.id);
+                },
+                closedElevation: 0,
+                closedColor: Colors.transparent,
+                closedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                  return AppGridTile(
+                    appInMemory: app,
+                    isSelected: selectedAppIds.contains(app.app.id),
+                    hasUpdate: hasUpdate,
+                    onTap: () {
+                      if (selectedAppIds.isNotEmpty) {
+                        toggleAppSelected(app.app);
+                      } else {
+                        openContainer();
+                      }
+                    },
+                    onLongPress: () {
                       toggleAppSelected(app.app);
-                    } else {
-                      openContainer();
-                    }
-                  },
-                  onLongPress: () {
-                    toggleAppSelected(app.app);
-                  },
-                );
-              },
+                    },
+                  );
+                },
+              ),
             );
           },
           childCount: apps.length,

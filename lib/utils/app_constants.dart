@@ -13,34 +13,34 @@ class AppConstants {
   /// 900000ms = 15 minutes
   static const int defaultUpdateIntervalMs = 900000;
 
-  // Animation Durations (Material 3 Motion Tokens)
-  /// Short duration for quick transitions (Material 3)
-  static const int shortAnimationMs = 200;
+  // Animation Durations (Snappy & Responsive)
+  /// Short duration for quick transitions (Reduced for snappiness)
+  static const int shortAnimationMs = 150;
 
-  /// Medium duration for standard transitions (Material 3)
-  static const int mediumAnimationMs = 300;
+  /// Medium duration for standard transitions (Reduced for responsiveness)
+  static const int mediumAnimationMs = 200;
 
-  /// Long duration for complex transitions (Material 3)
-  static const int longAnimationMs = 400;
+  /// Long duration for complex transitions (Reduced for better feel)
+  static const int longAnimationMs = 250;
 
-  /// Expressive duration for Material You animations
-  static const int expressiveAnimationMs = 500;
+  /// Expressive duration for Material You animations (Reduced for tactile feel)
+  static const int expressiveAnimationMs = 200;
 
-  // Material You Expressive Curves
-  /// Standard expressive easing curve (Material 3)
-  static const Curve expressiveStandard = Curves.easeOutCubic;
+  // Snappy & Tactile Curves
+  /// Standard responsive easing curve (More immediate response)
+  static const Curve expressiveStandard = Curves.easeOut; // Changed from easeOutCubic
 
-  /// Decelerate curve for enter animations (Material 3)
-  static const Curve expressiveDecelerate = Curves.easeOutQuint;
+  /// Decelerate curve for enter animations (Snappier)
+  static const Curve expressiveDecelerate = Curves.easeOut; // Changed from easeOutQuint
 
-  /// Accelerate curve for exit animations (Material 3)
-  static const Curve expressiveAccelerate = Curves.easeInQuint;
+  /// Accelerate curve for exit animations (Snappier)
+  static const Curve expressiveAccelerate = Curves.easeIn; // Changed from easeInQuint
 
-  /// Emphasized curve for important transitions (Material 3)
-  static const Curve expressiveEmphasized = Cubic(0.2, 0.0, 0.0, 1.0);
+  /// Emphasized curve for important transitions (More direct)
+  static const Curve expressiveEmphasized = Cubic(0.3, 0.0, 0.7, 1.0); // More linear
 
-  /// Smooth curve for micro-interactions
-  static const Curve expressiveSmooth = Curves.easeInOutCubicEmphasized;
+  /// Smooth curve for micro-interactions (Snappier)
+  static const Curve expressiveSmooth = Curves.linear; // Changed from easeInOutCubicEmphasized
 
   // Spring Physics for Micro-interactions
   /// Spring physics for press animations

@@ -650,9 +650,62 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Animation speed control setting
+  double get animationSpeedMultiplier {
+    return prefs?.getDouble('animationSpeedMultiplier') ?? 1.0;
+  }
+
+  set animationSpeedMultiplier(double multiplier) {
+    prefs?.setDouble('animationSpeedMultiplier', multiplier);
+    notifyListeners();
+  }
+
+  // App icon cache expiration setting
+  int get appIconCacheDays {
+    return prefs?.getInt('appIconCacheDays') ?? 30;
+  }
+
+  set appIconCacheDays(int days) {
+    prefs?.setInt('appIconCacheDays', days);
+    notifyListeners();
+  }
+
+  // Number of apps to preload setting
+  int get appsToPreload {
+    return prefs?.getInt('appsToPreload') ?? 50;
+  }
+
+  set appsToPreload(int count) {
+    prefs?.setInt('appsToPreload', count);
+    notifyListeners();
+  }
+
+  // Enable haptic feedback setting
+  bool get enableHapticFeedback {
+    return prefs?.getBool('enableHapticFeedback') ?? true;
+  }
+
+  set enableHapticFeedback(bool enabled) {
+    prefs?.setBool('enableHapticFeedback', enabled);
+    notifyListeners();
+  }
+
   AppSortMethod get appSortMethod {
-    return AppSortMethod.values[prefs?.getInt('appSortMethod') ??
-        AppSortMethod.defaultSort.index];
+    // Smart default: if user has many apps, default to name sorting for easier scanning
+    // Otherwise, default to most recent updates
+    int defaultIndex = AppSortMethod.defaultSort.index;
+
+    // Try to get app count from preferences to determine smart default
+    int appCount = prefs?.getInt('trackedAppCount') ?? 0;
+    if (appCount > 20) {
+      // For many apps, name sorting is easier to scan
+      defaultIndex = AppSortMethod.nameAZ.index;
+    } else if (appCount > 0) {
+      // For fewer apps, show latest updates first
+      defaultIndex = AppSortMethod.latestUpdates.index;
+    }
+
+    return AppSortMethod.values[prefs?.getInt('appSortMethod') ?? defaultIndex];
   }
 
   set appSortMethod(AppSortMethod method) {
@@ -718,6 +771,61 @@ class SettingsProvider with ChangeNotifier {
       overrides[categoryName] = mode.index;
     }
     categoryViewModeOverrides = overrides;
+  }
+
+  // Predictive feature: Track most commonly used sort method
+  String get mostUsedSortMethod {
+    return prefs?.getString('mostUsedSortMethod') ?? 'default';
+  }
+
+  void setMostUsedSortMethod(String method) {
+    prefs?.setString('mostUsedSortMethod', method);
+  }
+
+  // Predictive feature: Track user's preferred update interval
+  int get preferredUpdateInterval {
+    return prefs?.getInt('preferredUpdateInterval') ?? 0; // Default to manual
+  }
+
+  void setPreferredUpdateInterval(int interval) {
+    prefs?.setInt('preferredUpdateInterval', interval);
+  }
+
+  // Settings for new features
+  bool get enableSwipeGestures {
+    return prefs?.getBool('enableSwipeGestures') ?? true;
+  }
+
+  set enableSwipeGestures(bool enabled) {
+    prefs?.setBool('enableSwipeGestures', enabled);
+    notifyListeners();
+  }
+
+  bool get enableUndoForAppRemoval {
+    return prefs?.getBool('enableUndoForAppRemoval') ?? true;
+  }
+
+  set enableUndoForAppRemoval(bool enabled) {
+    prefs?.setBool('enableUndoForAppRemoval', enabled);
+    notifyListeners();
+  }
+
+  bool get enableHelpTooltips {
+    return prefs?.getBool('enableHelpTooltips') ?? true;
+  }
+
+  set enableHelpTooltips(bool enabled) {
+    prefs?.setBool('enableHelpTooltips', enabled);
+    notifyListeners();
+  }
+
+  bool get enableContextualTips {
+    return prefs?.getBool('enableContextualTips') ?? true;
+  }
+
+  set enableContextualTips(bool enabled) {
+    prefs?.setBool('enableContextualTips', enabled);
+    notifyListeners();
   }
 
   GridCategoryMode get gridCategoryMode {
