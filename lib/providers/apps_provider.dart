@@ -48,6 +48,11 @@ import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_export_service.dart';
 import 'package:obtainium/services/app_icon_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/components/apps/app_dialogs.dart';
+import 'package:obtainium/models/app_in_memory.dart';
+import 'package:obtainium/models/downloaded_artifact.dart';
+
+export 'package:obtainium/models/app_in_memory.dart';
 
 // Data class to store removed apps for undo functionality
 class RemovedAppData {
@@ -57,11 +62,6 @@ class RemovedAppData {
 
   RemovedAppData(this.app, this.apkFiles, this.removalTime);
 }
-import 'package:obtainium/components/apps/app_dialogs.dart';
-import 'package:obtainium/models/app_in_memory.dart';
-import 'package:obtainium/models/downloaded_artifact.dart';
-
-export 'package:obtainium/models/app_in_memory.dart';
 
 class AppsProvider with ChangeNotifier {
   // In memory App state (should always be kept in sync with local storage versions)
