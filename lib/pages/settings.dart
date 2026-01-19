@@ -27,7 +27,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
@@ -379,6 +379,7 @@ class LogsDialog extends StatefulWidget {
 class _LogsDialogState extends State<LogsDialog> {
   String? logString;
   List<int> days = [7, 5, 4, 3, 2, 1];
+  final Future<AndroidDeviceInfo> _androidInfoFuture = DeviceInfoPlugin().androidInfo;
 
   Future<void> _reportIssue() async {
     var logs = logString ?? '';
@@ -387,7 +388,7 @@ class _LogsDialogState extends State<LogsDialog> {
     }
 
     var appInfo = await AppInstallService.getInstalledInfo(obtainiumId);
-    var deviceInfo = await _cachedDeviceInfo;
+    var deviceInfo = _cachedDeviceInfo;
     var androidInfo = await _androidInfoFuture;
 
     var body = '''${tr('reportIssue')}
@@ -425,15 +426,16 @@ $logs''';
                   child: Text(logString!),
                 ),
               )
-            : FutureBuilder(
+            : FutureBuilder<List<Log>>(
                 future: context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7))),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    logString = snapshot.data;
+                    final logs = snapshot.data!;
+                    logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
                     return Scrollbar(
                       thumbVisibility: true,
                       child: SingleChildScrollView(
-                        child: Text(snapshot.data ?? ''),
+                        child: Text(logString ?? ''),
                       ),
                     );
                   } else {
