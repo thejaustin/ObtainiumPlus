@@ -22,6 +22,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/tabbed_settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -477,10 +478,35 @@ class AppsPageState extends State<AppsPage> {
         if (listedApps.isEmpty)
           SliverFillRemaining(
             child: Center(
-              child: Text(
-                appsProvider.apps.isEmpty ? (appsProvider.loadingApps ? tr('pleaseWait') : tr('noApps')) : tr('noAppsForFilter'),
-                style: Theme.of(context).textTheme.headlineMedium,
-                textAlign: TextAlign.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (appsProvider.loadingApps)
+                    const CircularProgressIndicator(
+                      semanticsLabel: 'Loading apps',
+                      strokeWidth: 3,
+                    )
+                  else
+                    Icon(
+                      appsProvider.apps.isEmpty ? Icons.apps_outlined : Icons.search_off_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    appsProvider.apps.isEmpty ? (appsProvider.loadingApps ? tr('pleaseWait') : tr('noApps')) : tr('noAppsForFilter'),
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  if (appsProvider.loadingApps)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        tr('loadingApps'),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -488,6 +514,7 @@ class AppsPageState extends State<AppsPage> {
           SliverToBoxAdapter(
             child: LinearProgressIndicator(
               value: appsProvider.loadingApps ? null : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
+              semanticsLabel: appsProvider.loadingApps ? tr('loadingApps') : tr('checkingForUpdates'),
             ),
           ),
       ];
@@ -606,7 +633,7 @@ class AppsPageState extends State<AppsPage> {
                 context: context,
                 builder: (context) {
                   return GeneratedFormModal(
-                    title: tr('appSortMethod'),
+                    title: tr('sortOptions'),
                     items: [
                       [
                         GeneratedFormDropdown(
@@ -650,34 +677,300 @@ class AppsPageState extends State<AppsPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: RefreshIndicator(
-        key: _refreshIndicatorKey,
-        onRefresh: refresh,
-        child: Scrollbar(
-          controller: scrollController,
-          child: CustomScrollView(
+      appBar: AppBar(
+        title: Text(tr('appsString')),
+        actions: [
+          // Move Import/Export to AppBar as requested
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (context) => const ImportExportPage(),
+              );
+            },
+            icon: const Icon(Icons.import_export),
+            tooltip: tr('importExport'),
+          ),
+          // Conditionally show help icon based on settings
+          if (settingsProvider.enableContextualTips)
+            IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(tr('tips')),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(tr('appManagementTips')),
+                          const SizedBox(height: 16),
+                          Text(tr('swipeActionsTip')),
+                          const SizedBox(height: 16),
+                          Text(tr('longPressSelectionTip')),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(tr('ok')),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              icon: const Icon(Icons.help_outline),
+              tooltip: tr('help'),
+            ),
+          // Add settings icon as well
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TabbedSettingsPage()),
+              );
+            },
+            icon: const Icon(Icons.settings),
+            tooltip: tr('settings'),
+          ),
+        ],
+      ),
+      body: Padding( // Added horizontal padding to prevent layout bleeding
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: RefreshIndicator(
+          key: _refreshIndicatorKey,
+          onRefresh: refresh,
+          child: Scrollbar(
             controller: scrollController,
-            slivers: <Widget>[
-              CustomAppBar(title: tr('appsString')),
-              getFilterChips(),
-              ...getLoadingWidgets(),
-              settingsProvider.groupByCategory 
-                ? CategorySections(
-                    listedApps: listedApps,
-                    listedCategories: listedCategories,
-                    selectedAppIds: selectedAppIds,
-                    toggleAppSelected: toggleAppSelected,
-                    getChangeLogFn: getChangeLogFn,
-                    getCachedCategoryColor: _getCachedCategoryColor,
-                  )
-                : settingsProvider.globalViewMode == ViewMode.grid
-                  ? AppGridView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected)
-                  : AppListView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected, getChangeLogFn: getChangeLogFn),
+            child: Consumer<SettingsProvider>(
+              builder: (context, settingsProvider, _) {
+                Widget scrollView = CustomScrollView(
+                  controller: scrollController,
+                  slivers: <Widget>[
+                    // Moved app count to subtitle in CustomAppBar
+                    SliverAppBar(
+                      title: Text(tr('appsString')),
+                      automaticallyImplyLeading: false, // We're using a custom app bar
+                      flexibleSpace: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+                            child: Text(
+                              '${listedApps.length} ${plural('apps', listedApps.length)}',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    getFilterChips(),
+                    ...getLoadingWidgets(),
+                    // Performance optimization: Use RepaintBoundary to isolate expensive widgets
+                    RepaintBoundary(
+                      child: settingsProvider.groupByCategory
+                        ? CategorySections(
+                            listedApps: listedApps,
+                            listedCategories: listedCategories,
+                            selectedAppIds: selectedAppIds,
+                            toggleAppSelected: toggleAppSelected,
+                            getChangeLogFn: getChangeLogFn,
+                            getCachedCategoryColor: _getCachedCategoryColor,
+                          )
+                        : settingsProvider.globalViewMode == ViewMode.grid
+                          ? AppGridView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected)
+                          : AppListView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected, getChangeLogFn: getChangeLogFn),
+                    ),
+                  ],
+                );
+
+                // Conditionally wrap with GestureDetector based on settings
+                if (settingsProvider.enableSwipeGestures) {
+                  return GestureDetector(
+                    onPanUpdate: (details) {
+                      // Handle swipe gestures for additional functionality
+                      if (details.delta.dx > 10) { // Swipe right
+                        // Could implement pull-out menu or other functionality
+                      } else if (details.delta.dx < -10) { // Swipe left
+                        // Could implement quick actions menu
+                      }
+                    },
+                    child: scrollView,
+                  );
+                } else {
+                  return scrollView;
+                }
+              },
+            ),
+          ),
+        ),
+      ),
+      // Replace persistentFooterButtons with proper bottomNavigationBar
+      bottomNavigationBar: appsProvider.apps.isEmpty ? null : _buildBottomNavigationBar(),
+    );
+  }
+
+  // New method to build the bottom navigation bar with proper spacing
+  Widget _buildBottomNavigationBar() {
+    var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          child: Row(
+            children: [
+              // Select All button with increased touch target and improved accessibility
+              Semantics(
+                button: true,
+                label: selectedAppIds.isEmpty
+                  ? tr('selectAll')
+                  : tr('deselectX', args: [selectedAppIds.length.toString()]),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      selectedAppIds.isEmpty ? selectThese(listedApps.map((e) => e.app).toList()) : clearSelected();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      child: Icon(
+                        selectedAppIds.isEmpty
+                          ? Icons.select_all_outlined
+                          : Icons.deselect_outlined,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const Spacer(), // Push other buttons to the right
+
+              // Search button
+              Semantics(
+                button: true,
+                label: isFilterOff ? tr('search') : tr('clear'),
+                child: IconButton(
+                  onPressed: () {
+                    if (isFilterOff) {
+                      showFilterDialog();
+                    } else {
+                      setState(() => filter = AppsFilter());
+                    }
+                  },
+                  icon: Icon(isFilterOff ? Icons.search_rounded : Icons.search_off_rounded),
+                  tooltip: isFilterOff ? tr('search') : tr('clear'),
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                ),
+              ),
+
+              // Sort button
+              Semantics(
+                button: true,
+                label: tr('sortMethod'),
+                child: IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return GeneratedFormModal(
+                          title: tr('sortOptions'),
+                          items: [
+                            [
+                              GeneratedFormDropdown(
+                                'sortMethod',
+                                label: tr('sortMethod'),
+                                defaultValue: settingsProvider.appSortMethod.toString(),
+                                AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
+                              )
+                            ],
+                          ],
+                        );
+                      },
+                    ).then((value) {
+                      if (value != null) {
+                        settingsProvider.setAppSortMethod(
+                          AppSortMethod.values.firstWhere(
+                            (e) => e.toString() == value['sortMethod'],
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.sort_rounded),
+                  tooltip: tr('sortMethod'),
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                ),
+              ),
+
+              // Filter button
+              Semantics(
+                button: true,
+                label: tr('filter'),
+                child: IconButton(
+                  onPressed: () {
+                    showFilterDialog();
+                  },
+                  icon: const Icon(Icons.filter_alt_outlined),
+                  tooltip: tr('filter'),
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                ),
+              ),
+
+              // View Toggle button
+              Semantics(
+                button: true,
+                label: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                child: IconButton(
+                  onPressed: () {
+                    settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
+                        ? ViewMode.grid
+                        : ViewMode.list;
+                  },
+                  icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
+                  tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                ),
+              ),
+
+              // Mass Obtain button (Download/Update)
+              if (getMassObtainFunction() != null)
+                Semantics(
+                  button: true,
+                  label: tr('installUpdateSelectedApps'),
+                  child: IconButton(
+                    onPressed: getMassObtainFunction(),
+                    icon: const Icon(Icons.file_download_outlined),
+                    tooltip: tr('installUpdateSelectedApps'),
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  ),
+                ),
             ],
           ),
         ),
       ),
-      persistentFooterButtons: appsProvider.apps.isEmpty ? null : [getFilterButtonsRow()],
     );
   }
 }
