@@ -9,9 +9,7 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
-import 'package:obtainium/components/settings/apps_view_settings_section.dart';
-import 'package:obtainium/components/settings/behavior_settings_section.dart';
-import 'package:obtainium/components/settings/advanced_settings_section.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -378,8 +376,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
-
-import 'package:obtainium/services/app_install_service.dart';
 
 class LogsDialog extends StatefulWidget {
   const LogsDialog({super.key});

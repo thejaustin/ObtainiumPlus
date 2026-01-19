@@ -5,8 +5,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
