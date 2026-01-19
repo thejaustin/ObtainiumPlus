@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +21,6 @@ class UpdateSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const height8 = SizedBox(height: 8);
     const height16 = SizedBox(height: 16);
 
     return Column(
@@ -31,9 +31,7 @@ class UpdateSettingsSection extends StatelessWidget {
         _buildForegroundServiceSection(context),
         height16,
         _buildCheckOnStartToggle(context),
-        height16,
         _buildOnlyCheckInstalledToggle(context),
-        height16,
         _buildParallelDownloadsToggle(context),
       ],
     );
@@ -44,8 +42,13 @@ class UpdateSettingsSection extends StatelessWidget {
       builder: (context, settings, child) {
         if (showIntervalLabel) {
           return SizedBox(
-            child: Text(
-              "${tr('bgUpdateCheckInterval')}: ${settings.updateIntervalLabel}",
+            child: Row(
+              children: [
+                Text(
+                  "${tr('bgUpdateCheckInterval')}: ${settings.updateIntervalLabel}",
+                ),
+                InfoTooltip(message: tr('backgroundUpdateCheckIntervalTooltip')),
+              ],
             ),
           );
         } else {
@@ -82,7 +85,6 @@ class UpdateSettingsSection extends StatelessWidget {
 
   Widget _buildForegroundServiceSection(BuildContext context) {
     const height8 = SizedBox(height: 8);
-    const height16 = SizedBox(height: 16);
 
     return FutureBuilder<AndroidDeviceInfo>(
       future: androidInfoFuture,
@@ -103,86 +105,53 @@ class UpdateSettingsSection extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        tr('foregroundServiceExplanation'),
-                      ),
-                    ),
-                    Switch(
-                      value: settings.useFGService,
-                      onChanged: (value) {
-                        settings.useFGService = value;
-                      },
-                    ),
-                  ],
+                SwitchListTile(
+                  title: Text(tr('foregroundService')),
+                  subtitle: Text(tr('foregroundServiceExplanation')),
+                  secondary: InfoTooltip(message: tr('foregroundServiceTooltip')),
+                  value: settings.useFGService,
+                  onChanged: (value) {
+                    settings.useFGService = value;
+                  },
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        tr('enableBackgroundUpdates'),
-                      ),
-                    ),
-                    Switch(
-                      value: settings.enableBackgroundUpdates,
-                      onChanged: (value) {
-                        settings.enableBackgroundUpdates = value;
-                      },
-                    ),
-                  ],
+                SwitchListTile(
+                  title: Text(tr('enableBackgroundUpdates')),
+                  value: settings.enableBackgroundUpdates,
+                  onChanged: (value) {
+                    settings.enableBackgroundUpdates = value;
+                  },
                 ),
-                height8,
-                Text(
-                  tr('backgroundUpdateReqsExplanation'),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                Text(
-                  tr('backgroundUpdateLimitsExplanation'),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                height8,
                 if (settings.enableBackgroundUpdates)
-                  Column(
-                    children: [
-                      height16,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              tr('bgUpdatesOnWiFiOnly'),
-                            ),
-                          ),
-                          Switch(
-                            value: settings.bgUpdatesOnWiFiOnly,
-                            onChanged: (value) {
-                              settings.bgUpdatesOnWiFiOnly = value;
-                            },
-                          ),
-                        ],
-                      ),
-                      height16,
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              tr('bgUpdatesWhileChargingOnly'),
-                            ),
-                          ),
-                          Switch(
-                            value: settings.bgUpdatesWhileChargingOnly,
-                            onChanged: (value) {
-                              settings.bgUpdatesWhileChargingOnly = value;
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr('backgroundUpdateReqsExplanation'),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        Text(
+                          tr('backgroundUpdateLimitsExplanation'),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        height8,
+                        SwitchListTile(
+                          title: Text(tr('bgUpdatesOnWiFiOnly')),
+                          value: settings.bgUpdatesOnWiFiOnly,
+                          onChanged: (value) {
+                            settings.bgUpdatesOnWiFiOnly = value;
+                          },
+                        ),
+                        SwitchListTile(
+                          title: Text(tr('bgUpdatesWhileChargingOnly')),
+                          value: settings.bgUpdatesWhileChargingOnly,
+                          onChanged: (value) {
+                            settings.bgUpdatesWhileChargingOnly = value;
+                          },
+                        ),
+                      ],
+                    ),
                   ),
               ],
             );
@@ -195,17 +164,12 @@ class UpdateSettingsSection extends StatelessWidget {
   Widget _buildCheckOnStartToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('checkOnStart'))),
-            Switch(
-              value: settings.checkOnStart,
-              onChanged: (value) {
-                settings.checkOnStart = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('checkOnStart')),
+          value: settings.checkOnStart,
+          onChanged: (value) {
+            settings.checkOnStart = value;
+          },
         );
       },
     );
@@ -214,19 +178,12 @@ class UpdateSettingsSection extends StatelessWidget {
   Widget _buildOnlyCheckInstalledToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(tr('onlyCheckInstalledOrTrackOnlyApps')),
-            ),
-            Switch(
-              value: settings.onlyCheckInstalledOrTrackOnlyApps,
-              onChanged: (value) {
-                settings.onlyCheckInstalledOrTrackOnlyApps = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('onlyCheckInstalledOrTrackOnlyApps')),
+          value: settings.onlyCheckInstalledOrTrackOnlyApps,
+          onChanged: (value) {
+            settings.onlyCheckInstalledOrTrackOnlyApps = value;
+          },
         );
       },
     );
@@ -235,17 +192,13 @@ class UpdateSettingsSection extends StatelessWidget {
   Widget _buildParallelDownloadsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('parallelDownloads'))),
-            Switch(
-              value: settings.parallelDownloads,
-              onChanged: (value) {
-                settings.parallelDownloads = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('parallelDownloads')),
+          secondary: InfoTooltip(message: tr('parallelDownloadsTooltip')),
+          value: settings.parallelDownloads,
+          onChanged: (value) {
+            settings.parallelDownloads = value;
+          },
         );
       },
     );

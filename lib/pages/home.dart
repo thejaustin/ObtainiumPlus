@@ -418,7 +418,7 @@ class HomePageState extends State<HomePage> {
           shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
           indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
           animationDuration: const Duration(milliseconds: 300),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          labelBehavior: settingsProvider.navigationLabelBehavior,
           destinations: pages
               .map(
                 (e) =>

@@ -160,7 +160,7 @@ class AppInstallService {
       } catch (e) {
         //
       } finally {
-        throw ObtainiumError(tr('badDownload'));
+        throw BadDownloadError(appId: file.appId);
       }
     }
     PackageInfo? appInfo = await getInstalledInfo(apps[file.appId]!.app.id);
@@ -170,7 +170,7 @@ class AppInstallService {
     if (appInfo != null &&
         newInfo.versionCode! < appInfo.versionCode! &&
         !(await canDowngradeApps())) {
-      throw DowngradeError(appInfo.versionCode!, newInfo.versionCode!);
+      throw DowngradeError(appInfo.versionCode!, newInfo.versionCode!, appId: apps[file.appId]!.app.id);
     }
     if (needsBGWorkaround) {
       // Background workaround logic might need to be moved back to AppsProvider
@@ -197,7 +197,7 @@ class AppInstallService {
       } catch (e) {
         //
       } finally {
-        throw InstallError(code);
+        throw InstallError(code, appId: apps[file.appId]!.app.id);
       }
     } else if (code == 0) {
       installed = true;

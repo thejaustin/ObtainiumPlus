@@ -10,6 +10,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 abstract class GeneratedFormItem {
   late String key;
   late String label;
+  late String? tooltip;
   late List<Widget> belowWidgets;
   late dynamic defaultValue;
   List<dynamic> additionalValidators;
@@ -19,6 +20,7 @@ abstract class GeneratedFormItem {
   GeneratedFormItem(
     this.key, {
     this.label = 'Input',
+    this.tooltip,
     this.belowWidgets = const [],
     this.defaultValue,
     this.additionalValidators = const [],
@@ -36,6 +38,7 @@ class GeneratedFormTextField extends GeneratedFormItem {
   GeneratedFormTextField(
     super.key, {
     super.label,
+    super.tooltip,
     super.belowWidgets,
     String super.defaultValue = '',
     List<String? Function(String? value)> super.additionalValidators = const [],
@@ -57,6 +60,7 @@ class GeneratedFormTextField extends GeneratedFormItem {
     return GeneratedFormTextField(
       key,
       label: label,
+      tooltip: tooltip,
       belowWidgets: belowWidgets,
       defaultValue: defaultValue,
       additionalValidators: List.from(additionalValidators),
@@ -77,6 +81,7 @@ class GeneratedFormDropdown extends GeneratedFormItem {
     super.key,
     this.opts, {
     super.label,
+    super.tooltip,
     super.belowWidgets,
     String super.defaultValue = '',
     this.disabledOptKeys,
@@ -94,6 +99,7 @@ class GeneratedFormDropdown extends GeneratedFormItem {
       key,
       opts?.map((e) => MapEntry(e.key, e.value)).toList(),
       label: label,
+      tooltip: tooltip,
       belowWidgets: belowWidgets,
       defaultValue: defaultValue,
       disabledOptKeys: disabledOptKeys != null
@@ -110,6 +116,7 @@ class GeneratedFormSwitch extends GeneratedFormItem {
   GeneratedFormSwitch(
     super.key, {
     super.label,
+    super.tooltip,
     super.belowWidgets,
     bool super.defaultValue = false,
     bool disabled = false,
@@ -126,6 +133,7 @@ class GeneratedFormSwitch extends GeneratedFormItem {
     return GeneratedFormSwitch(
       key,
       label: label,
+      tooltip: tooltip,
       belowWidgets: belowWidgets,
       defaultValue: defaultValue,
       disabled: false,
@@ -143,6 +151,7 @@ class GeneratedFormTagInput extends GeneratedFormItem {
   GeneratedFormTagInput(
     super.key, {
     super.label,
+    super.tooltip,
     super.belowWidgets,
     Map<String, MapEntry<int, bool>> super.defaultValue = const {},
     List<String? Function(Map<String, MapEntry<int, bool>> value)>
@@ -165,6 +174,7 @@ class GeneratedFormTagInput extends GeneratedFormItem {
     return GeneratedFormTagInput(
       key,
       label: label,
+      tooltip: tooltip,
       belowWidgets: belowWidgets,
       defaultValue: defaultValue,
       additionalValidators: List.from(additionalValidators),
@@ -215,6 +225,7 @@ class GeneratedFormSubForm extends GeneratedFormItem {
     super.key,
     this.items, {
     super.label,
+    super.tooltip,
     super.belowWidgets,
     super.defaultValue = const [],
   });
@@ -230,6 +241,7 @@ class GeneratedFormSubForm extends GeneratedFormItem {
       key,
       cloneFormItems(items),
       label: label,
+      tooltip: tooltip,
       belowWidgets: belowWidgets,
       defaultValue: defaultValue,
     );
@@ -331,6 +343,13 @@ class _GeneratedFormState extends State<GeneratedForm> {
                 decoration: InputDecoration(
                   helperText: formItem.label + (formItem.required ? ' *' : ''),
                   hintText: formItem.hint,
+                  suffixIcon: formItem.tooltip != null
+                      ? Tooltip(
+                          message: formItem.tooltip!,
+                          triggerMode: TooltipTriggerMode.tap,
+                          child: const Icon(Icons.info_outline, size: 20),
+                        )
+                      : null,
                 ),
                 minLines: formItem.max <= 1 ? null : formItem.max,
                 maxLines: formItem.max <= 1 ? 1 : formItem.max,
@@ -371,7 +390,16 @@ class _GeneratedFormState extends State<GeneratedForm> {
             return Text(tr('dropdownNoOptsError'));
           }
           return DropdownButtonFormField(
-            decoration: InputDecoration(labelText: formItem.label),
+            decoration: InputDecoration(
+              labelText: formItem.label,
+              suffixIcon: formItem.tooltip != null
+                  ? Tooltip(
+                      message: formItem.tooltip!,
+                      triggerMode: TooltipTriggerMode.tap,
+                      child: const Icon(Icons.info_outline, size: 20),
+                    )
+                  : null,
+            ),
             dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
@@ -434,7 +462,23 @@ class _GeneratedFormState extends State<GeneratedForm> {
           formInputs[r][e] = Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: Text(widget.items[r][e].label)),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(child: Text(widget.items[r][e].label)),
+                    if (widget.items[r][e].tooltip != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Tooltip(
+                          message: widget.items[r][e].tooltip!,
+                          triggerMode: TooltipTriggerMode.tap,
+                          child: const Icon(Icons.info_outline, size: 18),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
               const SizedBox(width: 8),
               Switch(
                 value: values[fieldKey],
@@ -502,7 +546,21 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       ? CrossAxisAlignment.center
                       : CrossAxisAlignment.stretch,
                   children: [
-                    Text(widget.items[r][e].label),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: Text(widget.items[r][e].label)),
+                        if (widget.items[r][e].tooltip != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Tooltip(
+                              message: widget.items[r][e].tooltip!,
+                              triggerMode: TooltipTriggerMode.tap,
+                              child: const Icon(Icons.info_outline, size: 18),
+                            ),
+                          ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
                   ],
                 ),

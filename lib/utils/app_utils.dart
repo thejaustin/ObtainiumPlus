@@ -34,3 +34,12 @@ List<MapEntry<String, int>> moveStrToEndMapEntryWithCount(
   }
   return arr;
 }
+
+DateTime? tryParseDateTime(String? dateStr) {
+  if (dateStr == null) return null;
+  try {
+    return DateTime.parse(dateStr);
+  } catch (e) {
+    return null;
+  }
+}
