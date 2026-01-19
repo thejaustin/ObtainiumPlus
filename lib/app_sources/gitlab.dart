@@ -21,7 +21,8 @@ class GitLab extends AppSource {
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
         'gitlab-creds',
-        label: tr('gitlabPATLabel'),
+        label: tr('gitlabToken'),
+        tooltip: tr('gitlabTokenTooltip'),
         password: true,
         required: false,
         belowWidgets: [
@@ -51,6 +52,7 @@ class GitLab extends AppSource {
         GeneratedFormSwitch(
           'fallbackToOlderReleases',
           label: tr('fallbackToOlderReleases'),
+          tooltip: tr('fallbackToOlderReleasesTooltip'),
           defaultValue: true,
         ),
       ],

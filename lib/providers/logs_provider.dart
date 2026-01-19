@@ -78,6 +78,11 @@ create table if not exists $logTable (
     return l;
   }
 
+  Future<Log> logEvent(String event, Map<String, dynamic> params, {LogLevels level = LogLevels.info}) async {
+    String message = 'EVENT: $event | ${params.entries.map((e) => '${e.key}=${e.value}').join(', ')}';
+    return add(message, level: level);
+  }
+
   Future<List<Log>> get({DateTime? before, DateTime? after}) async {
     var where = getWhereDates(before: before, after: after);
     return (await (await getDB()).query(

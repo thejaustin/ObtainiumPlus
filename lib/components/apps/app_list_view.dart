@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/pages/app.dart';
 
 class AppListView extends StatelessWidget {
@@ -30,28 +29,32 @@ class AppListView extends StatelessWidget {
               app.app.installedVersion != app.app.latestVersion;
           
           return RepaintBoundary(
-            child: AppListTile(
-              appInMemory: app,
-              isSelected: selectedAppIds.contains(app.app.id),
-              hasUpdate: hasUpdate,
-              onTap: () {
-                if (selectedAppIds.isNotEmpty) {
-                  toggleAppSelected(app.app);
-                } else {
-                  // Navigation handled in ListTile usually, 
-                  // but we'll follow the pattern from apps.dart
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AppPage(appId: app.app.id),
-                    ),
-                  );
-                }
+            child: OpenContainer(
+              tappable: false,
+              transitionType: ContainerTransitionType.fadeThrough,
+              openBuilder: (BuildContext context, VoidCallback _) {
+                return AppPage(appId: app.app.id);
               },
-              onLongPress: () {
-                toggleAppSelected(app.app);
+              closedElevation: 0,
+              closedColor: Colors.transparent,
+              closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                return AppListTile(
+                  appInMemory: app,
+                  isSelected: selectedAppIds.contains(app.app.id),
+                  hasUpdate: hasUpdate,
+                  onTap: () {
+                    if (selectedAppIds.isNotEmpty) {
+                      toggleAppSelected(app.app);
+                    } else {
+                      openContainer();
+                    }
+                  },
+                  onLongPress: () {
+                    toggleAppSelected(app.app);
+                  },
+                  onShowChanges: getChangeLogFn(context, app.app),
+                );
               },
-              onShowChanges: getChangeLogFn(context, app.app),
             ),
           );
         },

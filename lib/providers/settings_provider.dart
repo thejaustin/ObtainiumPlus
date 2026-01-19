@@ -381,7 +381,7 @@ class SettingsProvider with ChangeNotifier {
   void setCategories(Map<String, int> cats, {AppsProvider? appsProvider}) {
     if (appsProvider != null) {
       List<App> changedApps = appsProvider
-          .getAppValues()
+          .getAppValues(deepCopy: false)
           .map((a) {
             var n1 = a.app.categories.length;
             a.app.categories.removeWhere((c) => !cats.keys.contains(c));
@@ -754,6 +754,25 @@ class SettingsProvider with ChangeNotifier {
 
   set retryQueue(Map<String, Map<String, dynamic>> queue) {
     prefs?.setString('retryQueue', jsonEncode(queue));
+    notifyListeners();
+  }
+
+  bool get enableDeepLogging {
+    return prefs?.getBool('enableDeepLogging') ?? false;
+  }
+
+  set enableDeepLogging(bool val) {
+    prefs?.setBool('enableDeepLogging', val);
+    notifyListeners();
+  }
+
+  NavigationDestinationLabelBehavior get navigationLabelBehavior {
+    return NavigationDestinationLabelBehavior.values[prefs?.getInt('navigationLabelBehavior') ??
+        NavigationDestinationLabelBehavior.alwaysShow.index];
+  }
+
+  set navigationLabelBehavior(NavigationDestinationLabelBehavior behavior) {
+    prefs?.setInt('navigationLabelBehavior', behavior.index);
     notifyListeners();
   }
 }

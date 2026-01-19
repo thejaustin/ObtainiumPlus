@@ -72,7 +72,9 @@ class AppsProvider with ChangeNotifier {
   late Directory iconsCacheDir;
   late SettingsProvider settingsProvider = SettingsProvider();
 
-  Iterable<AppInMemory> getAppValues() => apps.values.map((a) => a.deepCopy());
+  // Optimized: Return values directly unless deep copy is explicitly needed
+  Iterable<AppInMemory> getAppValues({bool deepCopy = true}) => 
+      deepCopy ? apps.values.map((a) => a.deepCopy()) : apps.values;
 
   AppsProvider({isBg = false}) {
     // Subscribe to changes in the app foreground status
@@ -83,39 +85,47 @@ class AppsProvider with ChangeNotifier {
         await loadApps();
       }
     });
-    () async {
-      await settingsProvider.initializeSettings();
-      var cacheDirs = await getExternalCacheDirectories();
-      if (cacheDirs?.isNotEmpty ?? false) {
-        APKDir = cacheDirs!.first;
-        iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync();
-        }
-      } else {
-        APKDir = Directory('${(await AppFileService.getAppStorageDir()).path}/apks');
-        if (!APKDir.existsSync()) {
-          APKDir.createSync();
-        }
-        iconsCacheDir = Directory('${(await AppFileService.getAppStorageDir()).path}/icons');
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync();
-        }
+    if (!isBg) {
+      initialize();
+    }
+  }
+
+  /// Initializes the AppsProvider by loading settings and apps from storage.
+  /// This method is called automatically in the constructor for foreground instances.
+  Future<void> initialize() async {
+    await settingsProvider.initializeSettings();
+    var cacheDirs = await getExternalCacheDirectories();
+    if (cacheDirs?.isNotEmpty ?? false) {
+      APKDir = cacheDirs!.first;
+      iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
+      if (!iconsCacheDir.existsSync()) {
+        iconsCacheDir.createSync();
       }
-      if (!isBg) {
-        // Load Apps into memory (in background processes, this is done later instead of in the constructor)
-        await loadApps();
-        // Delete any partial APKs (if safe to do so)
-        var cutoff = DateTime.now().subtract(const Duration(days: 7));
-        APKDir.listSync()
-            .where((element) => element.statSync().modified.isBefore(cutoff))
-            .forEach((partialApk) {
-              if (!areDownloadsRunning()) {
-                partialApk.delete(recursive: true);
-              }
-            });
+    } else {
+      APKDir = Directory('${(await AppFileService.getAppStorageDir()).path}/apks');
+      if (!APKDir.existsSync()) {
+        APKDir.createSync();
       }
-    }();
+      iconsCacheDir = Directory('${(await AppFileService.getAppStorageDir()).path}/icons');
+      if (!iconsCacheDir.existsSync()) {
+        iconsCacheDir.createSync();
+      }
+    }
+    // Load Apps into memory
+    await loadApps();
+    // Delete any partial APKs (if safe to do so)
+    var cutoff = DateTime.now().subtract(const Duration(days: 7));
+    try {
+      APKDir.listSync()
+          .where((element) => element.statSync().modified.isBefore(cutoff))
+          .forEach((partialApk) {
+            if (!areDownloadsRunning()) {
+              partialApk.delete(recursive: true);
+            }
+          });
+    } catch (e) {
+      // Ignore errors listing/deleting directory
+    }
   }
 
   Future<File> handleAPKIDChange(
@@ -146,6 +156,8 @@ class AppsProvider with ChangeNotifier {
     return downloadedFile;
   }
 
+  /// Downloads the latest version of the app.
+  /// Returns a [DownloadedApk] or [DownloadedDir] object.
   Future<Object> downloadApp(
     App app,
     BuildContext? context, {
@@ -246,6 +258,8 @@ class AppsProvider with ChangeNotifier {
     return installed;
   }
 
+  /// Installs a downloaded APK file.
+  /// Returns true if installation was successful.
   Future<bool> installApk(
     DownloadedApk file,
     BuildContext? firstTimeWithContext, {
@@ -474,6 +488,8 @@ class AppsProvider with ChangeNotifier {
 
 
 
+  /// Loads apps from storage into memory.
+  /// If [singleId] is provided, only that app is reloaded.
   Future<void> loadApps({String? singleId}) async {
     // If already loading, wait for the existing operation to complete
     if (loadingApps && _loadAppsCompleter != null) {
@@ -634,6 +650,21 @@ class AppsProvider with ChangeNotifier {
     return false;
   }
 
+  void clearAppCache(String appId) {
+    var apkFiles = APKDir.listSync();
+    apkFiles
+        .where(
+          (element) => element.path.split('/').last.startsWith('$appId-'),
+        )
+        .forEach((element) {
+          try {
+            element.deleteSync(recursive: true);
+          } catch (e) {
+            // Ignore
+          }
+        });
+  }
+
   void addMissingCategories(SettingsProvider settingsProvider) {
     var cats = settingsProvider.categories;
     apps.forEach((key, value) {
@@ -646,6 +677,8 @@ class AppsProvider with ChangeNotifier {
     settingsProvider.setCategories(cats, appsProvider: this);
   }
 
+  /// Checks for updates for a single app.
+  /// Returns the updated [App] object if an update is found, or null if no update is found.
   Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
     return AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
   }

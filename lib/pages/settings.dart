@@ -379,6 +379,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
+import 'package:obtainium/services/app_install_service.dart';
+
 class LogsDialog extends StatefulWidget {
   const LogsDialog({super.key});
 
@@ -389,6 +391,39 @@ class LogsDialog extends StatefulWidget {
 class _LogsDialogState extends State<LogsDialog> {
   String? logString;
   List<int> days = [7, 5, 4, 3, 2, 1];
+
+  Future<void> _reportIssue() async {
+    var logs = logString ?? '';
+    if (logs.length > 2000) {
+      logs = logs.substring(logs.length - 2000);
+    }
+    
+    var appInfo = await AppInstallService.getInstalledInfo(obtainiumId);
+    var androidInfo = await DeviceInfoPlugin().androidInfo;
+    
+    var body = '''
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**Logs**
+```
+$logs
+```
+
+**Environment**
+- App Version: ${appInfo?.versionName ?? 'Unknown'}
+- Android Version: ${androidInfo.version.release} (SDK ${androidInfo.version.sdkInt})
+- Device: ${androidInfo.manufacturer} ${androidInfo.model}
+''';
+
+    var url = Uri.https(
+      'github.com',
+      '/ImranR98/Obtainium/issues/new',
+      {'body': body},
+    ).toString();
+    
+    launchUrlString(url, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -455,10 +490,23 @@ class _LogsDialogState extends State<LogsDialog> {
         ),
         TextButton(
           onPressed: () {
+            Clipboard.setData(ClipboardData(text: logString ?? ''));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+          },
+          child: Text(tr('copy')),
+        ),
+        TextButton(
+          onPressed: () {
             Share.share(logString ?? '', subject: tr('appLogs'));
             Navigator.of(context).pop();
           },
           child: Text(tr('share')),
+        ),
+        TextButton(
+          onPressed: _reportIssue,
+          child: Text(tr('reportIssue')),
         ),
       ],
     );

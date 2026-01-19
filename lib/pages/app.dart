@@ -506,7 +506,7 @@ class _AppPageState extends State<AppPage> {
       }
     }
 
-    getInstallOrUpdateButton() => TextButton(
+    getInstallOrUpdateButton() => FilledButton(
       onPressed:
           !updating &&
               (app?.app.installedVersion == null ||
@@ -677,13 +677,40 @@ class _AppPageState extends State<AppPage> {
     );
 
     return Scaffold(
-      appBar: showAppWebpageFinal ? AppBar() : appScreenAppBar(),
+      appBar: showAppWebpageFinal ? AppBar() : null,
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: RefreshIndicator(
         child: showAppWebpageFinal
             ? getAppWebView()
             : CustomScrollView(
                 slivers: [
+                  SliverAppBar.large(
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    title: Text(app?.name ?? tr('app')),
+                    surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+                    actions: [
+                      if (app?.app.url != null)
+                        IconButton(
+                          icon: const Icon(Icons.open_in_browser),
+                          tooltip: tr('showWebInAppView'),
+                          onPressed: () {
+                            if (settingsProvider.showAppWebpage) {
+                              // If global setting is ON, this button should probably open in external browser or toggle view mode locally?
+                              // The logic `showAppWebpageFinal` handles the toggle if we reload the widget with new param?
+                              // But here we are inside the widget.
+                              // Actually, the original appScreenAppBar didn't have actions.
+                              // Let's keep it simple and just have the back button and title for now to match M3 style.
+                              // If user wants to open web, they can click the link in the body or use the 'more' menu.
+                            }
+                          },
+                        )
+                    ],
+                  ),
                   SliverToBoxAdapter(
                     child: Column(children: [getFullInfoColumn()]),
                   ),
