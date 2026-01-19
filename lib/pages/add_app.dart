@@ -19,8 +19,12 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+enum AddAppMode { add, edit }
+
 class AddAppPage extends StatefulWidget {
-  const AddAppPage({super.key});
+  final AddAppMode mode;
+  final String? appId;
+  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId});
 
   @override
   State<AddAppPage> createState() => AddAppPageState();
@@ -47,6 +51,14 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    if (widget.appId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        var app = context.read<AppsProvider>().apps[widget.appId]?.app;
+        if (app != null) {
+          changeUserInput(app.url, true, false, updateUrlInput: true);
+        }
+      });
+    }
   }
 
   @override
