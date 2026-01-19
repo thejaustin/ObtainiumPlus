@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -37,11 +38,8 @@ class BehaviorSettingsSection extends StatelessWidget {
         ),
         height16,
         _buildShowWebInAppViewToggle(context),
-        height16,
         _buildPinUpdatesToggle(context),
-        height16,
         _buildBuryNonInstalledToggle(context),
-        height16,
         _buildCheckUpdateOnDetailPageToggle(context),
       ],
     );
@@ -50,17 +48,12 @@ class BehaviorSettingsSection extends StatelessWidget {
   Widget _buildShowWebInAppViewToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('showWebInAppView'))),
-            Switch(
-              value: settings.showAppWebpage,
-              onChanged: (value) {
-                settings.showAppWebpage = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('showWebInAppView')),
+          value: settings.showAppWebpage,
+          onChanged: (value) {
+            settings.showAppWebpage = value;
+          },
         );
       },
     );
@@ -69,17 +62,12 @@ class BehaviorSettingsSection extends StatelessWidget {
   Widget _buildPinUpdatesToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('pinUpdates'))),
-            Switch(
-              value: settings.pinUpdates,
-              onChanged: (value) {
-                settings.pinUpdates = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('pinUpdates')),
+          value: settings.pinUpdates,
+          onChanged: (value) {
+            settings.pinUpdates = value;
+          },
         );
       },
     );
@@ -88,19 +76,13 @@ class BehaviorSettingsSection extends StatelessWidget {
   Widget _buildBuryNonInstalledToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(tr('moveNonInstalledAppsToBottom')),
-            ),
-            Switch(
-              value: settings.buryNonInstalled,
-              onChanged: (value) {
-                settings.buryNonInstalled = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('moveNonInstalledAppsToBottom')),
+          secondary: InfoTooltip(message: tr('moveNonInstalledAppsToBottomTooltip')),
+          value: settings.buryNonInstalled,
+          onChanged: (value) {
+            settings.buryNonInstalled = value;
+          },
         );
       },
     );
@@ -109,19 +91,12 @@ class BehaviorSettingsSection extends StatelessWidget {
   Widget _buildCheckUpdateOnDetailPageToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(tr('checkUpdateOnDetailPage')),
-            ),
-            Switch(
-              value: settings.checkUpdateOnDetailPage,
-              onChanged: (value) {
-                settings.checkUpdateOnDetailPage = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('checkUpdateOnDetailPage')),
+          value: settings.checkUpdateOnDetailPage,
+          onChanged: (value) {
+            settings.checkUpdateOnDetailPage = value;
+          },
         );
       },
     );

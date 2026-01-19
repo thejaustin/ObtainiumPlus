@@ -129,12 +129,22 @@ class AppUpdateService {
             App? newApp;
             try {
               newApp = await checkUpdateFn(appId);
-            } catch (e) {
+            } catch (e, stackTrace) {
               if ((e is RateLimitError || e is SocketException) &&
                   throwErrorsForRetry) {
                 rethrow;
               }
-              errors.add(appId, e, appName: apps[appId]?.name);
+              if (e is IDChangedError) {
+                e.appId = appId;
+              }
+              if (e is DowngradeError && e.appId == null) {
+                e.appId = appId;
+              }
+              if (e is InvalidURLError && e.appId == null) e.appId = appId;
+              if (e is NoReleasesError && e.appId == null) e.appId = appId;
+              if (e is NoAPKError && e.appId == null) e.appId = appId;
+              if (e is NoVersionError && e.appId == null) e.appId = appId;
+              errors.add(appId, e, appName: apps[appId]?.name, stackTrace: stackTrace);
             }
             if (newApp != null) {
               updates.add(newApp);

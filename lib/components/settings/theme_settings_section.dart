@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -47,6 +48,7 @@ class ThemeSettingsSection extends StatelessWidget {
         _buildMaterialYouToggle(context),
         _buildMatchSystemMaterialStyleToggle(context),
         _buildThemeStyleDropdown(context),
+        _buildNavigationLabelDropdown(context),
         _buildColorPicker(context),
 
         // Typography subsection
@@ -73,9 +75,7 @@ class ThemeSettingsSection extends StatelessWidget {
         ),
         height8,
         _buildPageTransitionsToggle(context),
-        height16,
         _buildReverseTransitionsToggle(context),
-        height16,
         _buildHighlightTouchTargetsToggle(context),
       ],
     );
@@ -146,24 +146,13 @@ class ThemeSettingsSection extends StatelessWidget {
         if (settings.theme == ThemeSettings.light) {
           return const SizedBox.shrink();
         }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(child: Text(tr('useBlackTheme'))),
-                Switch(
-                  value: settings.useBlackTheme,
-                  onChanged: (value) {
-                    HapticFeedback.selectionClick();
-                    settings.useBlackTheme = value;
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+        return SwitchListTile(
+          title: Text(tr('useBlackTheme')),
+          value: settings.useBlackTheme,
+          onChanged: (value) {
+            HapticFeedback.selectionClick();
+            settings.useBlackTheme = value;
+          },
         );
       },
     );
@@ -178,18 +167,13 @@ class ThemeSettingsSection extends StatelessWidget {
         }
         return Consumer<SettingsProvider>(
           builder: (context, settings, child) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(child: Text(tr('useMaterialYou'))),
-                Switch(
-                  value: settings.useMaterialYou,
-                  onChanged: (value) {
-                    HapticFeedback.selectionClick();
-                    settings.useMaterialYou = value;
-                  },
-                ),
-              ],
+            return SwitchListTile(
+              title: Text(tr('useMaterialYou')),
+              value: settings.useMaterialYou,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                settings.useMaterialYou = value;
+              },
             );
           },
         );
@@ -203,37 +187,20 @@ class ThemeSettingsSection extends StatelessWidget {
         if (!settings.useMaterialYou) {
           return const SizedBox.shrink();
         }
-        return Column(
-          children: [
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(tr('matchSystemMaterialStyle')),
-                      Text(
-                        tr('matchSystemMaterialStyleDescription'),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: settings.matchSystemMaterialStyle,
-                  onChanged: (value) {
-                    HapticFeedback.selectionClick();
-                    settings.matchSystemMaterialStyle = value;
-                  },
-                ),
-              ],
+        return SwitchListTile(
+          title: Text(tr('matchSystemMaterialStyle')),
+          subtitle: Text(
+            tr('matchSystemMaterialStyleDescription'),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-          ],
+          ),
+          value: settings.matchSystemMaterialStyle,
+          onChanged: (value) {
+            HapticFeedback.selectionClick();
+            settings.matchSystemMaterialStyle = value;
+          },
         );
       },
     );
@@ -272,6 +239,48 @@ class ThemeSettingsSection extends StatelessWidget {
                 if (value != null) {
                   HapticFeedback.selectionClick();
                   settings.themeVariant = value;
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNavigationLabelDropdown(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return Column(
+          children: [
+            const SizedBox(height: 16),
+            DropdownButtonFormField<NavigationDestinationLabelBehavior>(
+              decoration: InputDecoration(labelText: tr('navigationLabels')),
+              dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 16,
+              ),
+              iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
+              value: settings.navigationLabelBehavior,
+              items: [
+                DropdownMenuItem(
+                  value: NavigationDestinationLabelBehavior.alwaysShow,
+                  child: Text(tr('alwaysShow')),
+                ),
+                DropdownMenuItem(
+                  value: NavigationDestinationLabelBehavior.onlyShowSelected,
+                  child: Text(tr('onlyShowSelected')),
+                ),
+                DropdownMenuItem(
+                  value: NavigationDestinationLabelBehavior.alwaysHide,
+                  child: Text(tr('neverShow')),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  HapticFeedback.selectionClick();
+                  settings.navigationLabelBehavior = value;
                 }
               },
             ),
@@ -370,30 +379,19 @@ class ThemeSettingsSection extends StatelessWidget {
         }
         return Consumer<SettingsProvider>(
           builder: (context, settings, child) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(child: Text(tr('useSystemFont'))),
-                    Switch(
-                      value: settings.useSystemFont,
-                      onChanged: (useSystemFont) {
-                        HapticFeedback.selectionClick();
-                        if (useSystemFont) {
-                          NativeFeatures.loadSystemFont().then((val) {
-                            settings.useSystemFont = true;
-                          });
-                        } else {
-                          settings.useSystemFont = false;
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ],
+            return SwitchListTile(
+              title: Text(tr('useSystemFont')),
+              value: settings.useSystemFont,
+              onChanged: (useSystemFont) {
+                HapticFeedback.selectionClick();
+                if (useSystemFont) {
+                  NativeFeatures.loadSystemFont().then((val) {
+                    settings.useSystemFont = true;
+                  });
+                } else {
+                  settings.useSystemFont = false;
+                }
+              },
             );
           },
         );
@@ -404,17 +402,12 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildPageTransitionsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('disablePageTransitions'))),
-            Switch(
-              value: settings.disablePageTransitions,
-              onChanged: (value) {
-                settings.disablePageTransitions = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('disablePageTransitions')),
+          value: settings.disablePageTransitions,
+          onChanged: (value) {
+            settings.disablePageTransitions = value;
+          },
         );
       },
     );
@@ -423,19 +416,14 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildReverseTransitionsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('reversePageTransitions'))),
-            Switch(
-              value: settings.reversePageTransitions,
-              onChanged: settings.disablePageTransitions
-                  ? null
-                  : (value) {
-                      settings.reversePageTransitions = value;
-                    },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('reversePageTransitions')),
+          value: settings.reversePageTransitions,
+          onChanged: settings.disablePageTransitions
+              ? null
+              : (value) {
+                  settings.reversePageTransitions = value;
+                },
         );
       },
     );
@@ -444,17 +432,12 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildHighlightTouchTargetsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('highlightTouchTargets'))),
-            Switch(
-              value: settings.highlightTouchTargets,
-              onChanged: (value) {
-                settings.highlightTouchTargets = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          title: Text(tr('highlightTouchTargets')),
+          value: settings.highlightTouchTargets,
+          onChanged: (value) {
+            settings.highlightTouchTargets = value;
+          },
         );
       },
     );

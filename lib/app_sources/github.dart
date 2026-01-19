@@ -11,6 +11,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/version_utils.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class GitHub extends AppSource {
@@ -24,7 +25,8 @@ class GitHub extends AppSource {
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
         'github-creds',
-        label: tr('githubPATLabel'),
+        label: tr('githubToken'),
+        tooltip: tr('githubTokenTooltip'),
         password: true,
         required: false,
         belowWidgets: [
@@ -49,7 +51,8 @@ class GitHub extends AppSource {
       ),
       GeneratedFormTextField(
         'GHReqPrefix',
-        label: tr('GHReqPrefix'),
+        label: tr('githubProxy'),
+        tooltip: tr('githubProxyTooltip'),
         hint: 'gh-proxy.org',
         required: false,
         additionalValidators: [
@@ -94,6 +97,7 @@ class GitHub extends AppSource {
         GeneratedFormSwitch(
           'includePrereleases',
           label: tr('includePrereleases'),
+          tooltip: tr('includePrereleasesTooltip'),
           defaultValue: false,
         ),
       ],
@@ -101,13 +105,15 @@ class GitHub extends AppSource {
         GeneratedFormSwitch(
           'fallbackToOlderReleases',
           label: tr('fallbackToOlderReleases'),
+          tooltip: tr('fallbackToOlderReleasesTooltip'),
           defaultValue: true,
         ),
       ],
       [
         GeneratedFormTextField(
           'filterReleaseTitlesByRegEx',
-          label: tr('filterReleaseTitlesByRegEx'),
+          label: tr('filterReleaseTitlesByRegExLabel'),
+          tooltip: tr('filterReleaseTitlesByRegExTooltip'),
           required: false,
           additionalValidators: [
             (value) {
@@ -119,7 +125,8 @@ class GitHub extends AppSource {
       [
         GeneratedFormTextField(
           'filterReleaseNotesByRegEx',
-          label: tr('filterReleaseNotesByRegEx'),
+          label: tr('filterReleaseNotesByRegExLabel'),
+          tooltip: tr('filterReleaseNotesByRegExTooltip'),
           required: false,
           additionalValidators: [
             (value) {
@@ -128,7 +135,7 @@ class GitHub extends AppSource {
           ],
         ),
       ],
-      [GeneratedFormSwitch('verifyLatestTag', label: tr('verifyLatestTag'))],
+      [GeneratedFormSwitch('verifyLatestTag', label: tr('verifyLatestTag'), tooltip: tr('verifyLatestTagTooltip'))],
       [
         GeneratedFormDropdown(
           'sortMethodChoice',
@@ -143,20 +150,23 @@ class GitHub extends AppSource {
             MapEntry('name', tr('name')),
           ],
           label: tr('sortMethod'),
+          tooltip: tr('sortMethodTooltip'),
           defaultValue: 'date',
         ),
       ],
       [
         GeneratedFormSwitch(
           'useLatestAssetDateAsReleaseDate',
-          label: tr('useLatestAssetDateAsReleaseDate'),
+          label: tr('useLatestAssetDateAsReleaseDateLabel'),
+          tooltip: tr('useLatestAssetDateAsReleaseDateTooltip'),
           defaultValue: false,
         ),
       ],
       [
         GeneratedFormSwitch(
           'releaseTitleAsVersion',
-          label: tr('releaseTitleAsVersion'),
+          label: tr('releaseTitleAsVersionLabel'),
+          tooltip: tr('releaseTitleAsVersionTooltip'),
           defaultValue: false,
         ),
       ],
@@ -423,9 +433,9 @@ class GitHub extends AppSource {
 
       DateTime? getPublishDateFromRelease(dynamic rel) =>
           rel?['published_at'] != null
-          ? DateTime.parse(rel['published_at'])
+          ? tryParseDateTime(rel['published_at'])
           : rel?['commit']?['created'] != null
-          ? DateTime.parse(rel['commit']['created'])
+          ? tryParseDateTime(rel['commit']['created'])
           : null;
       DateTime? getNewestAssetDateFromRelease(dynamic rel) {
         var allAssets = rel['assets'] as List<dynamic>?;
@@ -433,7 +443,7 @@ class GitHub extends AppSource {
         var t = (filteredAssets ?? allAssets)
             ?.map((e) {
               return e?['updated_at'] != null
-                  ? DateTime.parse(e['updated_at'])
+                  ? tryParseDateTime(e['updated_at'])
                   : null;
             })
             .where((e) => e != null)
@@ -765,10 +775,13 @@ class GitHub extends AppSource {
 
   void rateLimitErrorCheck(Response res) {
     if (res.headers['x-ratelimit-remaining'] == '0') {
-      throw RateLimitError(
-        (int.parse(res.headers['x-ratelimit-reset'] ?? '1800000000') / 60000000)
-            .round(),
-      );
+      int resetTime = 1800000000;
+      try {
+        resetTime = int.parse(res.headers['x-ratelimit-reset'] ?? '1800000000');
+      } catch (e) {
+        // ignore
+      }
+      throw RateLimitError((resetTime / 60000000).round());
     }
   }
 }
