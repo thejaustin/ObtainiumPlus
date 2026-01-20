@@ -672,7 +672,7 @@ class AppsProvider with ChangeNotifier {
 
     try {
       // Restore the app to the apps list
-      apps[lastRemoved.app.id] = AppInMemory(lastRemoved.app, null);
+      apps[lastRemoved.app.id] = AppInMemory(lastRemoved.app, null, null, null);
 
       // Notify listeners about the change
       notifyListeners();
