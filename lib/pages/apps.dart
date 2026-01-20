@@ -813,12 +813,22 @@ class AppsPageState extends State<AppsPage> {
         ),
       ),
       // Replace persistentFooterButtons with proper bottomNavigationBar
-      bottomNavigationBar: appsProvider.apps.isEmpty ? null : _buildBottomNavigationBar(),
+      bottomNavigationBar: appsProvider.apps.isEmpty ? null : _buildBottomNavigationBar(
+        settingsProvider: settingsProvider,
+        listedApps: listedApps,
+        showFilterDialog: showFilterDialog,
+        getMassObtainFunction: getMassObtainFunction,
+      ),
     );
   }
 
   // New method to build the bottom navigation bar with proper spacing
-  Widget _buildBottomNavigationBar() {
+  Widget _buildBottomNavigationBar({
+    required SettingsProvider settingsProvider,
+    required List<AppInMemory> listedApps,
+    required Future<void> Function() showFilterDialog,
+    required VoidCallback? Function() getMassObtainFunction,
+  }) {
     var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
     return Container(
       decoration: BoxDecoration(
