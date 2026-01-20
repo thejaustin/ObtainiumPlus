@@ -375,8 +375,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, int> get categories =>
-      Map<String, int>.from(jsonDecode(prefs?.getString('categories') ?? '{}'));
+  Map<String, int> get categories {
+    try {
+      return Map<String, int>.from(jsonDecode(prefs?.getString('categories') ?? '{}'));
+    } catch (e) {
+      return {};
+    }
+  }
 
   void setCategories(Map<String, int> cats, {AppsProvider? appsProvider}) {
     if (appsProvider != null) {
@@ -749,8 +754,12 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Map<String, int> get categoryViewModeOverrides {
-    return Map<String, int>.from(
-        jsonDecode(prefs?.getString('categoryViewModeOverrides') ?? '{}'));
+    try {
+      return Map<String, int>.from(
+          jsonDecode(prefs?.getString('categoryViewModeOverrides') ?? '{}'));
+    } catch (e) {
+      return {};
+    }
   }
 
   set categoryViewModeOverrides(Map<String, int> overrides) {
