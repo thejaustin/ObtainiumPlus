@@ -77,6 +77,17 @@ List<MapEntry<String, String>> assumed2DlistToStringMapList(
   List<dynamic> arr,
 ) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
 
+/// Safely decode JSON string with a fallback value if parsing fails
+dynamic safeJsonDecode(String? jsonString, dynamic fallback) {
+  if (jsonString == null) return fallback;
+  try {
+    return jsonDecode(jsonString);
+  } catch (e) {
+    LogsProvider().add('Failed to parse JSON, using fallback: $e');
+    return fallback;
+  }
+}
+
 // App JSON schema has changed multiple times over the many versions of Obtainium
 Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   var source = SourceProvider().getSource(
@@ -91,10 +102,11 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   ]);
   Map<String, dynamic> originalAdditionalSettings = {};
   if (json['additionalSettings'] != null) {
-    originalAdditionalSettings = Map<String, dynamic>.from(
-      jsonDecode(json['additionalSettings']),
-    );
-    additionalSettings.addEntries(originalAdditionalSettings.entries);
+    var decoded = safeJsonDecode(json['additionalSettings'], <String, dynamic>{});
+    if (decoded is Map) {
+      originalAdditionalSettings = Map<String, dynamic>.from(decoded);
+      additionalSettings.addEntries(originalAdditionalSettings.entries);
+    }
   }
   
   _migrateV1Settings(json, additionalSettings, formItems);
@@ -133,7 +145,9 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
 
 void _migrateV1Settings(Map<String, dynamic> json, Map<String, dynamic> additionalSettings, List<GeneratedFormItem> formItems) {
   if (json['additionalData'] != null) {
-    List<String> temp = List<String>.from(jsonDecode(json['additionalData']));
+    var decoded = safeJsonDecode(json['additionalData'], <dynamic>[]);
+    if (decoded is! List) return;
+    List<String> temp = List<String>.from(decoded);
     temp.asMap().forEach((i, value) {
       if (i < formItems.length) {
         if (formItems[i] is GeneratedFormSwitch) {
@@ -192,7 +206,8 @@ int _getValidPreferredApkIndex(Map<String, dynamic> json) {
 String _getStandardizedApkUrls(Map<String, dynamic> json) {
   List<MapEntry<String, String>> apkUrls = [];
   if (json['apkUrls'] != null) {
-    var apkUrlJson = jsonDecode(json['apkUrls']);
+    var apkUrlJson = safeJsonDecode(json['apkUrls'], <dynamic>[]);
+    if (apkUrlJson is! List) return '[]';
     try {
       apkUrls = getApkUrlsFromUrls(List<String>.from(apkUrlJson));
     } catch (e) {
@@ -388,10 +403,10 @@ class App {
           : json['installedVersion'] as String,
       (json['latestVersion'] ?? tr('unknown')) as String,
       assumed2DlistToStringMapList(
-        jsonDecode((json['apkUrls'] ?? '[["placeholder", "placeholder"]]')),
+        safeJsonDecode(json['apkUrls'], [["placeholder", "placeholder"]]) as List<dynamic>,
       ),
       (json['preferredApkIndex'] ?? -1) as int,
-      jsonDecode(json['additionalSettings']) as Map<String, dynamic>,
+      safeJsonDecode(json['additionalSettings'], <String, dynamic>{}) as Map<String, dynamic>,
       json['lastUpdateCheck'] == null
           ? null
           : DateTime.fromMicrosecondsSinceEpoch(json['lastUpdateCheck']),
@@ -410,7 +425,7 @@ class App {
       overrideSource: json['overrideSource'],
       allowIdChange: json['allowIdChange'] ?? false,
       otherAssetUrls: assumed2DlistToStringMapList(
-        jsonDecode((json['otherAssetUrls'] ?? '[]')),
+        safeJsonDecode(json['otherAssetUrls'], <dynamic>[]) as List<dynamic>,
       ),
     );
   }
