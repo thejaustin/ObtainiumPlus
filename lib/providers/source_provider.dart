@@ -77,11 +77,20 @@ List<MapEntry<String, String>> assumed2DlistToStringMapList(
   List<dynamic> arr,
 ) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
 
-/// Safely decode JSON string with a fallback value if parsing fails
-dynamic safeJsonDecode(String? jsonString, dynamic fallback) {
-  if (jsonString == null) return fallback;
+/// Safely decode JSON string with a fallback value if parsing fails.
+/// Also handles cases where the input is already decoded (not a String).
+dynamic safeJsonDecode(dynamic jsonValue, dynamic fallback) {
+  if (jsonValue == null) return fallback;
+  // If it's already decoded (not a String), return it directly
+  if (jsonValue is! String) {
+    // If fallback is a List and value is a List, or fallback is a Map and value is a Map, return value
+    if ((fallback is List && jsonValue is List) || (fallback is Map && jsonValue is Map)) {
+      return jsonValue;
+    }
+    return fallback;
+  }
   try {
-    return jsonDecode(jsonString);
+    return jsonDecode(jsonValue);
   } catch (e) {
     LogsProvider().add('Failed to parse JSON, using fallback: $e');
     return fallback;
