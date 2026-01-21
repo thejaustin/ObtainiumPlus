@@ -1,12 +1,40 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Quick Toggles Dashboard - A grid of important settings toggles
 /// Placed at the top of the settings page for quick access
-class QuickTogglesDashboard extends StatelessWidget {
+class QuickTogglesDashboard extends StatefulWidget {
   const QuickTogglesDashboard({super.key});
+
+  @override
+  State<QuickTogglesDashboard> createState() => _QuickTogglesDashboardState();
+}
+
+class _QuickTogglesDashboardState extends State<QuickTogglesDashboard> {
+  bool _isIgnoringBatteryOptimizations = false;
+  AndroidDeviceInfo? _deviceInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future<void> _checkStatus() async {
+    final isIgnoring = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+    final info = await DeviceInfoPlugin().androidInfo;
+    if (mounted) {
+      setState(() {
+        _isIgnoringBatteryOptimizations = isIgnoring;
+        _deviceInfo = info;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +89,43 @@ class QuickTogglesDashboard extends StatelessWidget {
                     value: settingsProvider.updateInterval > 0,
                     onChanged: (value) {
                       settingsProvider.updateInterval = value ? 60 : 0; // Default to 1 hour if enabled
+                    },
+                  ),
+                  _buildQuickToggle(
+                    context: context,
+                    icon: Icons.battery_saver_outlined,
+                    label: tr('batteryOpt'),
+                    value: _isIgnoringBatteryOptimizations,
+                    onChanged: (value) async {
+                      if (!_isIgnoringBatteryOptimizations) {
+                        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                        _checkStatus();
+                      } else if (_deviceInfo != null) {
+                        var isXiaomi = [
+                          'xiaomi',
+                          'poco',
+                          'redmi'
+                        ].contains(_deviceInfo!.manufacturer.toLowerCase()) ||
+                            [
+                              'xiaomi',
+                              'poco',
+                              'redmi'
+                            ].contains(_deviceInfo!.brand.toLowerCase());
+                        
+                        if (isXiaomi) {
+                          // Show the troubleshooting dialog directly
+                          if (mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => UpdateSettingsSection(
+                                showIntervalLabel: true, 
+                                onIntervalLabelChange: (_) {}, 
+                                androidInfoFuture: Future.value(_deviceInfo)
+                              ).buildXiaomiTroubleshootingDialog(context),
+                            );
+                          }
+                        }
+                      }
                     },
                   ),
                   _buildQuickToggle(

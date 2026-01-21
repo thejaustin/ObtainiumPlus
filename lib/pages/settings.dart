@@ -15,6 +15,7 @@ import 'package:obtainium/components/settings/behavior_settings_section.dart';
 import 'package:obtainium/components/settings/boolean_control_grid.dart';
 import 'package:obtainium/components/settings/quick_toggles_dashboard.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
+import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -315,6 +316,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AdvancedSettingsSection(),
+                      SizedBox(height: 32),
+                      TroubleshootingSection(),
                     ],
                   ),
                 ),
