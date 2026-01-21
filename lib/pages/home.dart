@@ -87,12 +87,12 @@ class HomePageState extends State<HomePage> {
                   GestureDetector(
                     onTap: () {
                       launchUrlString(
-                        'https://github.com/ImranR98/Obtainium/blob/main/README.md',
+                        'https://github.com/thejaustin/ObtainiumPlus/blob/main/README.md',
                         mode: LaunchMode.externalApplication,
                       );
                     },
                     child: Text(
-                      'https://github.com/ImranR98/Obtainium/blob/main/README.md',
+                      'https://github.com/thejaustin/ObtainiumPlus',
                       style: const TextStyle(
                         decoration: TextDecoration.underline,
                         fontWeight: FontWeight.bold,
