@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 import 'package:android_package_manager/android_package_manager.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class AppInMemory {

@@ -17,13 +17,17 @@ import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
+import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -514,38 +518,33 @@ class AppsPageState extends State<AppsPage> {
       return [
         if (listedApps.isEmpty)
           SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (appsProvider.loadingApps)
-                    const CircularProgressIndicator(
+            hasScrollBody: false,
+            child: appsProvider.loadingApps
+                ? const Center(
+                    child: CircularProgressIndicator(
                       semanticsLabel: 'Loading apps',
                       strokeWidth: 3,
-                    )
-                  else
-                    Icon(
-                      appsProvider.apps.isEmpty ? Icons.apps_outlined : Icons.search_off_outlined,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                  const SizedBox(height: 16),
-                  Text(
-                    appsProvider.apps.isEmpty ? (appsProvider.loadingApps ? tr('pleaseWait') : tr('noApps')) : tr('noAppsForFilter'),
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
+                  )
+                : EmptyStateWidget(
+                    title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
+                    subtitle: appsProvider.apps.isEmpty
+                        ? tr('startByAddingFirstApp')
+                        : tr('tryAdjustingFilters'),
+                    icon: appsProvider.apps.isEmpty ? Icons.apps_outage_rounded : Icons.search_off_rounded,
+                    actionLabel: appsProvider.apps.isEmpty ? tr('addApp') : null,
+                    onActionPressed: appsProvider.apps.isEmpty
+                        ? () {
+                            HapticFeedback.lightImpact();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AddAppPage(),
+                              ),
+                            );
+                          }
+                        : null,
                   ),
-                  if (appsProvider.loadingApps)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        tr('loadingApps'),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                ],
-              ),
-            ),
           ),
         if (refreshingSince != null || appsProvider.loadingApps)
           SliverToBoxAdapter(

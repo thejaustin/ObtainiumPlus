@@ -5,6 +5,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class RuStore extends AppSource {
@@ -59,7 +62,7 @@ class RuStore extends AppSource {
       additionalSettings,
     );
     if (res0.statusCode != 200) {
-      throw getObtainiumHttpError(res0);
+      throw SourceUtils.getObtainiumHttpError(res0);
     }
     var appDetails = (await decodeJsonBody(res0.bodyBytes))['body'];
     if (appDetails['appId'] == null) {

@@ -2,6 +2,9 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class Mullvad extends AppSource {
@@ -69,7 +72,7 @@ class Mullvad extends AppSource {
         changeLog: changeLog,
       );
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 }

@@ -3,6 +3,9 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class FDroidRepo extends AppSource {
@@ -93,7 +96,7 @@ class FDroidRepo extends AppSource {
       });
       return results;
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 
@@ -270,7 +273,7 @@ class FDroidRepo extends AppSource {
         changeLog: changeLog,
       );
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 }

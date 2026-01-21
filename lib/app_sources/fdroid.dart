@@ -7,6 +7,9 @@ import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/app_sources/gitlab.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class FDroid extends AppSource {
@@ -23,7 +26,7 @@ class FDroid extends AppSource {
           required: false,
           additionalValidators: [
             (value) {
-              return regExValidator(value);
+              return SourceUtils.regExValidator(value);
             },
           ],
         ),
@@ -176,7 +179,7 @@ class FDroid extends AppSource {
       });
       return urlsWithDescriptions;
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 
@@ -206,7 +209,7 @@ class FDroid extends AppSource {
       if (apkFilterRegEx != null) {
         releases = releases.where((rel) {
           String apk = '${apkUrlPrefix}_${rel['versionCode']}.apk';
-          return filterApks(
+          return SourceUtils.filterApks(
             [MapEntry(apk, apk)],
             apkFilterRegEx,
             false,
@@ -285,7 +288,7 @@ class FDroid extends AppSource {
         AppNames(sourceName, Uri.parse(standardUrl).pathSegments.last),
       );
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 }

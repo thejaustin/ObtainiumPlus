@@ -4,6 +4,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 extension Unique<E, Id> on List<E> {
@@ -171,7 +174,7 @@ class APKPure extends AppSource {
       additionalSettings,
     );
     if (res.statusCode != 200) {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
     List<Map<String, dynamic>> apks = jsonDecode(
       res.body,
