@@ -44,8 +44,12 @@ class UpdateSettingsSection extends StatelessWidget {
           return SizedBox(
             child: Row(
               children: [
-                Text(
-                  "${tr('bgUpdateCheckInterval')}: ${settings.updateIntervalLabel}",
+                const Icon(Icons.history_toggle_off_outlined),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    "${tr('bgUpdateCheckInterval')}: ${settings.updateIntervalLabel}",
+                  ),
                 ),
                 InfoTooltip(message: tr('backgroundUpdateCheckIntervalTooltip')),
               ],
@@ -61,23 +65,26 @@ class UpdateSettingsSection extends StatelessWidget {
   Widget _buildIntervalSlider(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Slider(
-          value: settings.updateIntervalSliderVal,
-          max: settings.updateIntervalNodes.length.toDouble(),
-          divisions: settings.updateIntervalNodes.length * 20,
-          label: settings.updateIntervalLabel,
-          onChanged: (double value) {
-            settings.updateIntervalSliderVal = value;
-            settings.processIntervalSliderValue(value);
-            // Trigger callback for parent state change
-            onIntervalLabelChange(false);
-          },
-          onChangeStart: (double value) {
-            onIntervalLabelChange(false);
-          },
-          onChangeEnd: (double value) {
-            onIntervalLabelChange(true);
-          },
+        return Padding(
+          padding: const EdgeInsets.only(left: 40.0),
+          child: Slider(
+            value: settings.updateIntervalSliderVal,
+            max: settings.updateIntervalNodes.length.toDouble(),
+            divisions: settings.updateIntervalNodes.length * 20,
+            label: settings.updateIntervalLabel,
+            onChanged: (double value) {
+              settings.updateIntervalSliderVal = value;
+              settings.processIntervalSliderValue(value);
+              // Trigger callback for parent state change
+              onIntervalLabelChange(false);
+            },
+            onChangeStart: (double value) {
+              onIntervalLabelChange(false);
+            },
+            onChangeEnd: (double value) {
+              onIntervalLabelChange(true);
+            },
+          ),
         );
       },
     );
@@ -106,15 +113,21 @@ class UpdateSettingsSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SwitchListTile(
-                  title: Text(tr('foregroundService')),
+                  secondary: const Icon(Icons.notifications_active_outlined),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(tr('foregroundService'))),
+                      InfoTooltip(message: tr('foregroundServiceTooltip')),
+                    ],
+                  ),
                   subtitle: Text(tr('foregroundServiceExplanation')),
-                  secondary: InfoTooltip(message: tr('foregroundServiceTooltip')),
                   value: settings.useFGService,
                   onChanged: (value) {
                     settings.useFGService = value;
                   },
                 ),
                 SwitchListTile(
+                  secondary: const Icon(Icons.sync_outlined),
                   title: Text(tr('enableBackgroundUpdates')),
                   value: settings.enableBackgroundUpdates,
                   onChanged: (value) {
@@ -123,7 +136,7 @@ class UpdateSettingsSection extends StatelessWidget {
                 ),
                 if (settings.enableBackgroundUpdates)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.only(left: 48.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -137,6 +150,8 @@ class UpdateSettingsSection extends StatelessWidget {
                         ),
                         height8,
                         SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          secondary: const Icon(Icons.wifi_outlined),
                           title: Text(tr('bgUpdatesOnWiFiOnly')),
                           value: settings.bgUpdatesOnWiFiOnly,
                           onChanged: (value) {
@@ -144,6 +159,8 @@ class UpdateSettingsSection extends StatelessWidget {
                           },
                         ),
                         SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          secondary: const Icon(Icons.battery_charging_full_outlined),
                           title: Text(tr('bgUpdatesWhileChargingOnly')),
                           value: settings.bgUpdatesWhileChargingOnly,
                           onChanged: (value) {
@@ -165,6 +182,7 @@ class UpdateSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.power_settings_new_outlined),
           title: Text(tr('checkOnStart')),
           value: settings.checkOnStart,
           onChanged: (value) {
@@ -179,6 +197,7 @@ class UpdateSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.check_circle_outline),
           title: Text(tr('onlyCheckInstalledOrTrackOnlyApps')),
           value: settings.onlyCheckInstalledOrTrackOnlyApps,
           onChanged: (value) {
@@ -193,8 +212,13 @@ class UpdateSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('parallelDownloads')),
-          secondary: InfoTooltip(message: tr('parallelDownloadsTooltip')),
+          secondary: const Icon(Icons.file_download_outlined),
+          title: Row(
+            children: [
+              Expanded(child: Text(tr('parallelDownloads'))),
+              InfoTooltip(message: tr('parallelDownloadsTooltip')),
+            ],
+          ),
           value: settings.parallelDownloads,
           onChanged: (value) {
             settings.parallelDownloads = value;

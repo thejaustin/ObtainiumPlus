@@ -22,7 +22,6 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
-import 'package:obtainium/pages/tabbed_settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -32,7 +31,9 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
 
 class AppsPage extends StatefulWidget {
-  const AppsPage({super.key});
+  const AppsPage({super.key, this.initialFilter});
+
+  final AppsFilter? initialFilter;
 
   @override
   State<AppsPage> createState() => AppsPageState();
@@ -193,6 +194,9 @@ class AppsPageState extends State<AppsPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialFilter != null) {
+      filter = widget.initialFilter!;
+    }
     scrollController.addListener(_onScroll);
   }
 
@@ -438,34 +442,67 @@ class AppsPageState extends State<AppsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              FilterChip(
-                label: Text('${tr('updatesAvailable')} ($updatesCount)'),
-                selected: filter.statusFilter.contains('updates'),
-                onSelected: (val) {
-                  setState(() {
-                    val ? filter.statusFilter.add('updates') : filter.statusFilter.remove('updates');
-                  });
+              GestureDetector(
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(initialTab: 2),
+                    ),
+                  );
                 },
+                child: FilterChip(
+                  label: Text('${tr('updatesAvailable')} ($updatesCount)'),
+                  selected: filter.statusFilter.contains('updates'),
+                  onSelected: (val) {
+                    setState(() {
+                      val ? filter.statusFilter.add('updates') : filter.statusFilter.remove('updates');
+                    });
+                  },
+                ),
               ),
               const SizedBox(width: 8),
-              FilterChip(
-                label: Text('${tr('upToDateApps')} ($uptodateCount)'),
-                selected: filter.statusFilter.contains('uptodate'),
-                onSelected: (val) {
-                  setState(() {
-                    val ? filter.statusFilter.add('uptodate') : filter.statusFilter.remove('uptodate');
-                  });
+              GestureDetector(
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(initialTab: 2),
+                    ),
+                  );
                 },
+                child: FilterChip(
+                  label: Text('${tr('upToDateApps')} ($uptodateCount)'),
+                  selected: filter.statusFilter.contains('uptodate'),
+                  onSelected: (val) {
+                    setState(() {
+                      val ? filter.statusFilter.add('uptodate') : filter.statusFilter.remove('uptodate');
+                    });
+                  },
+                ),
               ),
               const SizedBox(width: 8),
-              FilterChip(
-                label: Text('${tr('notInstalled')} ($notInstalledCount)'),
-                selected: filter.statusFilter.contains('notinstalled'),
-                onSelected: (val) {
-                  setState(() {
-                    val ? filter.statusFilter.add('notinstalled') : filter.statusFilter.remove('notinstalled');
-                  });
+              GestureDetector(
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(initialTab: 2),
+                    ),
+                  );
                 },
+                child: FilterChip(
+                  label: Text('${tr('notInstalled')} ($notInstalledCount)'),
+                  selected: filter.statusFilter.contains('notinstalled'),
+                  onSelected: (val) {
+                    setState(() {
+                      val ? filter.statusFilter.add('notinstalled') : filter.statusFilter.remove('notinstalled');
+                    });
+                  },
+                ),
               ),
             ],
           ),
@@ -731,7 +768,7 @@ class AppsPageState extends State<AppsPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const TabbedSettingsPage()),
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
             icon: const Icon(Icons.settings),
@@ -739,9 +776,7 @@ class AppsPageState extends State<AppsPage> {
           ),
         ],
       ),
-      body: Padding( // Added horizontal padding to prevent layout bleeding
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: RefreshIndicator(
+      body: RefreshIndicator(
           key: _refreshIndicatorKey,
           onRefresh: refresh,
           child: Scrollbar(
@@ -753,25 +788,49 @@ class AppsPageState extends State<AppsPage> {
                   slivers: <Widget>[
                     // Moved app count to subtitle in CustomAppBar
                     SliverAppBar(
-                      title: Text(tr('appsString')),
+                      title: GestureDetector(
+                        onLongPress: () {
+                          HapticFeedback.heavyImpact();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsPage(initialTab: 0),
+                            ),
+                          );
+                        },
+                        child: Text(tr('appsString')),
+                      ),
                       automaticallyImplyLeading: false, // We're using a custom app bar
                       flexibleSpace: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-                            child: Text(
-                              '${listedApps.length} ${plural('apps', listedApps.length)}',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          if (settingsProvider.displayShowAppCount)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+                              child: GestureDetector(
+                                onLongPress: () {
+                                  HapticFeedback.heavyImpact();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SettingsPage(initialTab: 2),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  '${listedApps.length} ${plural('apps', listedApps.length)}',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),
-                    getFilterChips(),
+                    if (settingsProvider.displayShowFilterChips)
+                      getFilterChips(),
                     ...getLoadingWidgets(),
                     // These widgets return slivers (SliverList/SliverGrid), so they go directly in slivers list
                     if (settingsProvider.groupByCategory)
@@ -808,11 +867,9 @@ class AppsPageState extends State<AppsPage> {
                 }
               },
             ),
-          ),
-        ),
-      ),
-      // Replace persistentFooterButtons with proper bottomNavigationBar
-      bottomNavigationBar: appsProvider.apps.isEmpty ? null : _buildBottomNavigationBar(
+                  ),
+                ),
+                // Replace persistentFooterButtons with proper bottomNavigationBar      bottomNavigationBar: appsProvider.apps.isEmpty ? null : _buildBottomNavigationBar(
         settingsProvider: settingsProvider,
         listedApps: listedApps,
         showFilterDialog: showFilterDialog,
@@ -876,18 +933,29 @@ class AppsPageState extends State<AppsPage> {
               Semantics(
                 button: true,
                 label: isFilterOff ? tr('search') : tr('clear'),
-                child: IconButton(
-                  onPressed: () {
-                    if (isFilterOff) {
-                      showFilterDialog();
-                    } else {
-                      setState(() => filter = AppsFilter());
-                    }
+                child: GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 1),
+                      ),
+                    );
                   },
-                  icon: Icon(isFilterOff ? Icons.search_rounded : Icons.search_off_rounded),
-                  tooltip: isFilterOff ? tr('search') : tr('clear'),
-                  padding: const EdgeInsets.all(12),
-                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  child: IconButton(
+                    onPressed: () {
+                      if (isFilterOff) {
+                        showFilterDialog();
+                      } else {
+                        setState(() => filter = AppsFilter());
+                      }
+                    },
+                    icon: Icon(isFilterOff ? Icons.search_rounded : Icons.search_off_rounded),
+                    tooltip: isFilterOff ? tr('search') : tr('clear'),
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  ),
                 ),
               ),
 
@@ -895,39 +963,50 @@ class AppsPageState extends State<AppsPage> {
               Semantics(
                 button: true,
                 label: tr('sortMethod'),
-                child: IconButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return GeneratedFormModal(
-                          title: tr('sortOptions'),
-                          items: [
-                            [
-                              GeneratedFormDropdown(
-                                'sortMethod',
-                                label: tr('sortMethod'),
-                                defaultValue: settingsProvider.appSortMethod.toString(),
-                                AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
-                              )
-                            ],
-                          ],
-                        );
-                      },
-                    ).then((value) {
-                      if (value != null) {
-                        settingsProvider.setAppSortMethod(
-                          AppSortMethod.values.firstWhere(
-                            (e) => e.toString() == value['sortMethod'],
-                          ),
-                        );
-                      }
-                    });
+                child: GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 2),
+                      ),
+                    );
                   },
-                  icon: const Icon(Icons.sort_rounded),
-                  tooltip: tr('sortMethod'),
-                  padding: const EdgeInsets.all(12),
-                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  child: IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return GeneratedFormModal(
+                            title: tr('sortOptions'),
+                            items: [
+                              [
+                                GeneratedFormDropdown(
+                                  'sortMethod',
+                                  label: tr('sortMethod'),
+                                  defaultValue: settingsProvider.appSortMethod.toString(),
+                                  AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
+                                )
+                              ],
+                            ],
+                          );
+                        },
+                      ).then((value) {
+                        if (value != null) {
+                          settingsProvider.setAppSortMethod(
+                            AppSortMethod.values.firstWhere(
+                              (e) => e.toString() == value['sortMethod'],
+                            ),
+                          );
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.sort_rounded),
+                    tooltip: tr('sortMethod'),
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  ),
                 ),
               ),
 
@@ -935,14 +1014,25 @@ class AppsPageState extends State<AppsPage> {
               Semantics(
                 button: true,
                 label: tr('filter'),
-                child: IconButton(
-                  onPressed: () {
-                    showFilterDialog();
+                child: GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 2),
+                      ),
+                    );
                   },
-                  icon: const Icon(Icons.filter_alt_outlined),
-                  tooltip: tr('filter'),
-                  padding: const EdgeInsets.all(12),
-                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  child: IconButton(
+                    onPressed: () {
+                      showFilterDialog();
+                    },
+                    icon: const Icon(Icons.filter_alt_outlined),
+                    tooltip: tr('filter'),
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  ),
                 ),
               ),
 
@@ -950,16 +1040,27 @@ class AppsPageState extends State<AppsPage> {
               Semantics(
                 button: true,
                 label: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
-                child: IconButton(
-                  onPressed: () {
-                    settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
-                        ? ViewMode.grid
-                        : ViewMode.list;
+                child: GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 2),
+                      ),
+                    );
                   },
-                  icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
-                  tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
-                  padding: const EdgeInsets.all(12),
-                  constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  child: IconButton(
+                    onPressed: () {
+                      settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
+                          ? ViewMode.grid
+                          : ViewMode.list;
+                    },
+                    icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
+                    tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  ),
                 ),
               ),
 
@@ -968,12 +1069,23 @@ class AppsPageState extends State<AppsPage> {
                 Semantics(
                   button: true,
                   label: tr('installUpdateSelectedApps'),
-                  child: IconButton(
-                    onPressed: getMassObtainFunction(),
-                    icon: const Icon(Icons.file_download_outlined),
-                    tooltip: tr('installUpdateSelectedApps'),
-                    padding: const EdgeInsets.all(12),
-                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                  child: GestureDetector(
+                    onLongPress: () {
+                      HapticFeedback.heavyImpact();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(initialTab: 1),
+                        ),
+                      );
+                    },
+                    child: IconButton(
+                      onPressed: getMassObtainFunction(),
+                      icon: const Icon(Icons.file_download_outlined),
+                      tooltip: tr('installUpdateSelectedApps'),
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                    ),
                   ),
                 ),
             ],

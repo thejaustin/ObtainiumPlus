@@ -84,8 +84,11 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildThemeDropdown(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return DropdownButtonFormField(
-          decoration: InputDecoration(labelText: tr('theme')),
+        return DropdownButtonFormField<ThemeSettings>(
+          decoration: InputDecoration(
+            labelText: tr('theme'),
+            prefixIcon: const Icon(Icons.palette_outlined),
+          ),
           dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
@@ -130,9 +133,12 @@ class ThemeSettingsSection extends StatelessWidget {
             if ((snapshot.data?.version.sdkInt ?? 30) >= 29) {
               return const SizedBox.shrink();
             }
-            return Text(
-              tr('followSystemThemeExplanation'),
-              style: Theme.of(context).textTheme.labelSmall,
+            return Padding(
+              padding: const EdgeInsets.only(left: 48.0, top: 4.0),
+              child: Text(
+                tr('followSystemThemeExplanation'),
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
             );
           },
         );
@@ -147,6 +153,7 @@ class ThemeSettingsSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return SwitchListTile(
+          secondary: const Icon(Icons.dark_mode_outlined),
           title: Text(tr('useBlackTheme')),
           value: settings.useBlackTheme,
           onChanged: (value) {
@@ -168,6 +175,7 @@ class ThemeSettingsSection extends StatelessWidget {
         return Consumer<SettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile(
+              secondary: const Icon(Icons.auto_awesome_outlined),
               title: Text(tr('useMaterialYou')),
               value: settings.useMaterialYou,
               onChanged: (value) {
@@ -188,6 +196,7 @@ class ThemeSettingsSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return SwitchListTile(
+          secondary: const Icon(Icons.settings_suggest_outlined),
           title: Text(tr('matchSystemMaterialStyle')),
           subtitle: Text(
             tr('matchSystemMaterialStyleDescription'),
@@ -216,7 +225,10 @@ class ThemeSettingsSection extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             DropdownButtonFormField<DynamicSchemeVariant>(
-              decoration: InputDecoration(labelText: tr('themeStyle')),
+              decoration: InputDecoration(
+                labelText: tr('themeStyle'),
+                prefixIcon: const Icon(Icons.style_outlined),
+              ),
               dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
@@ -255,7 +267,10 @@ class ThemeSettingsSection extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             DropdownButtonFormField<NavigationDestinationLabelBehavior>(
-              decoration: InputDecoration(labelText: tr('navigationLabels')),
+              decoration: InputDecoration(
+                labelText: tr('navigationLabels'),
+                prefixIcon: const Icon(Icons.label_important_outlined),
+              ),
               dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
@@ -299,6 +314,7 @@ class ThemeSettingsSection extends StatelessWidget {
         return ListTile(
           dense: true,
           contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.color_lens_outlined),
           title: Text(tr('selectX', args: [tr('colour').toLowerCase()])),
           subtitle: Text(
             "${ColorTools.nameThatColor(settings.themeColor)} "
@@ -380,6 +396,7 @@ class ThemeSettingsSection extends StatelessWidget {
         return Consumer<SettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile(
+              secondary: const Icon(Icons.font_download_outlined),
               title: Text(tr('useSystemFont')),
               value: settings.useSystemFont,
               onChanged: (useSystemFont) {
@@ -403,6 +420,7 @@ class ThemeSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.animation_outlined),
           title: Text(tr('disablePageTransitions')),
           value: settings.disablePageTransitions,
           onChanged: (value) {
@@ -417,6 +435,7 @@ class ThemeSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.swap_horizontal_circle_outlined),
           title: Text(tr('reversePageTransitions')),
           value: settings.reversePageTransitions,
           onChanged: settings.disablePageTransitions
@@ -433,6 +452,7 @@ class ThemeSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.touch_app_outlined),
           title: Text(tr('highlightTouchTargets')),
           value: settings.highlightTouchTargets,
           onChanged: (value) {

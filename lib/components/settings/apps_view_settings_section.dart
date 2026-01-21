@@ -53,25 +53,127 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
         height8,
         _buildViewModeDropdown(context),
+        const SizedBox(height: 8),
+        _buildDensityDropdown(context),
         _buildGridSettings(context),
+
+        // App Tile Display Section
+        const SizedBox(height: 32),
+        Text(
+          tr('appTileDisplay'),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        height8,
+        _buildShowAuthorToggle(context),
+        _buildShowVersionToggle(context),
+        _buildShowDateToggle(context),
+
+        // App List Header Section
+        const SizedBox(height: 32),
+        Text(
+          tr('appListHeader'),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        height8,
+        _buildShowFilterChipsToggle(context),
+        _buildShowAppCountToggle(context),
       ],
+    );
+  }
+
+  Widget _buildShowAuthorToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          secondary: const Icon(Icons.person_outline),
+          title: Text(tr('showAuthor')),
+          value: settings.displayShowAuthor,
+          onChanged: (value) {
+            settings.displayShowAuthor = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildShowVersionToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          secondary: const Icon(Icons.code),
+          title: Text(tr('showVersion')),
+          value: settings.displayShowVersion,
+          onChanged: (value) {
+            settings.displayShowVersion = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildShowDateToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          secondary: const Icon(Icons.calendar_today_outlined),
+          title: Text(tr('showDate')),
+          value: settings.displayShowDate,
+          onChanged: (value) {
+            settings.displayShowDate = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildShowFilterChipsToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          secondary: const Icon(Icons.filter_list_outlined),
+          title: Text(tr('showFilterChips')),
+          value: settings.displayShowFilterChips,
+          onChanged: (value) {
+            settings.displayShowFilterChips = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildShowAppCountToggle(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile(
+          secondary: const Icon(Icons.summarize_outlined),
+          title: Text(tr('showAppCount')),
+          value: settings.displayShowAppCount,
+          onChanged: (value) {
+            settings.displayShowAppCount = value;
+          },
+        );
+      },
     );
   }
 
   Widget _buildGroupByCategoryToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('groupByCategory'))),
-            Switch(
-              value: settings.groupByCategory,
-              onChanged: (value) {
-                settings.groupByCategory = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          secondary: const Icon(Icons.category_outlined),
+          title: Text(tr('groupByCategory')),
+          value: settings.groupByCategory,
+          onChanged: (value) {
+            settings.groupByCategory = value;
+          },
         );
       },
     );
@@ -80,17 +182,13 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildCollapseCategoriesToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: Text(tr('collapseCategoriesByDefault'))),
-            Switch(
-              value: settings.categoriesCollapsedByDefault,
-              onChanged: (value) {
-                settings.categoriesCollapsedByDefault = value;
-              },
-            ),
-          ],
+        return SwitchListTile(
+          secondary: const Icon(Icons.unfold_less_outlined),
+          title: Text(tr('collapseCategoriesByDefault')),
+          value: settings.categoriesCollapsedByDefault,
+          onChanged: (value) {
+            settings.categoriesCollapsedByDefault = value;
+          },
         );
       },
     );
@@ -100,7 +198,10 @@ class AppsViewSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return DropdownButtonFormField<CategoryIconPosition>(
-          decoration: InputDecoration(labelText: tr('iconPosition')),
+          decoration: InputDecoration(
+            labelText: tr('iconPosition'),
+            prefixIcon: const Icon(Icons.branding_watermark_outlined),
+          ),
           dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
@@ -143,6 +244,8 @@ class AppsViewSettingsSection extends StatelessWidget {
       builder: (context, settings, child) {
         return Row(
           children: [
+            const Icon(Icons.numbers_outlined),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 '${tr('iconCount')}: ${settings.categoryIconCount}',
@@ -179,7 +282,10 @@ class AppsViewSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return DropdownButtonFormField<ViewMode>(
-          decoration: InputDecoration(labelText: tr('defaultViewMode')),
+          decoration: InputDecoration(
+            labelText: tr('defaultViewMode'),
+            prefixIcon: const Icon(Icons.view_quilt_outlined),
+          ),
           dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
@@ -221,6 +327,27 @@ class AppsViewSettingsSection extends StatelessWidget {
     );
   }
 
+  Widget _buildDensityDropdown(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        if (settings.globalViewMode != ViewMode.list) return const SizedBox.shrink();
+        return DropdownButtonFormField<AppListDensity>(
+          decoration: InputDecoration(labelText: tr('listDensity')),
+          dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          value: settings.appListDensity,
+          items: AppListDensity.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('density_${e.name}')))).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              onSetState(() {
+                settings.appListDensity = value;
+              });
+            }
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildGridSettings(BuildContext context) {
     const height16 = SizedBox(height: 16);
 
@@ -234,7 +361,10 @@ class AppsViewSettingsSection extends StatelessWidget {
           children: [
             height16,
             DropdownButtonFormField<GridCategoryMode>(
-              decoration: InputDecoration(labelText: tr('gridCategoryDisplay')),
+              decoration: InputDecoration(
+                labelText: tr('gridCategoryDisplay'),
+                prefixIcon: const Icon(Icons.grid_view_outlined),
+              ),
               dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
@@ -279,6 +409,8 @@ class AppsViewSettingsSection extends StatelessWidget {
             height16,
             Row(
               children: [
+                const Icon(Icons.view_column_outlined),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     '${tr('gridColumns')}: ${settings.gridColumnCount == 0 ? tr('auto') : settings.gridColumnCount}',
