@@ -155,13 +155,19 @@ class AppCRUDService {
                   jsonDecode(File(item.path).readAsStringSync()),
                 );
               } catch (err) {
-                if (err is FormatException) {
+                // Catch FormatException and any JSON-related errors
+                if (err is FormatException || err.toString().contains('FormatException')) {
                   logs.add(
                     'Corrupt JSON when loading App (will be ignored): $err',
                   );
-                  item.renameSync('${item.path}.corrupt');
+                  try {
+                    item.renameSync('${item.path}.corrupt');
+                  } catch (renameErr) {
+                    logs.add('Failed to rename corrupt file: $renameErr');
+                  }
                 } else {
-                  rethrow;
+                  // Log but don't crash on other errors during app loading
+                  logs.add('Error loading app from ${item.path}: $err');
                 }
               }
             }
