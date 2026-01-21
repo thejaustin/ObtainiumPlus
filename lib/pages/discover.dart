@@ -24,6 +24,9 @@ class DiscoverPageState extends State<DiscoverPage> {
   Map<String, MapEntry<String, List<String>>> results = {};
   SourceProvider sourceProvider = SourceProvider();
 
+  List<AppSource> get searchableSources =>
+      sourceProvider.sources.where((e) => e.canSearch).toList();
+
   Future<void> runSearch() async {
     if (searchQuery.isEmpty) return;
 
@@ -34,7 +37,6 @@ class DiscoverPageState extends State<DiscoverPage> {
 
     try {
       final settingsProvider = context.read<SettingsProvider>();
-      final searchableSources = sourceProvider.sources.where((e) => e.canSearch).toList();
       
       final List<MapEntry<String, Map<String, List<String>>>?> searchResults = await Future.wait(
         searchableSources.map((source) async {
@@ -94,6 +96,31 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                     onChanged: (value) => searchQuery = value,
                     onSubmitted: (_) => runSearch(),
+                  ),
+                  const SizedBox(height: 12),
+                  Consumer<SettingsProvider>(
+                    builder: (context, settingsProvider, child) {
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: searchableSources.map((source) {
+                          final isSelected = !settingsProvider.searchDeselected.contains(source.name);
+                          return FilterChip(
+                            label: Text(source.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              final currentDeselected = List<String>.from(settingsProvider.searchDeselected);
+                              if (selected) {
+                                currentDeselected.remove(source.name);
+                              } else {
+                                currentDeselected.add(source.name);
+                              }
+                              settingsProvider.searchDeselected = currentDeselected;
+                            },
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                   if (searching)
                     const Padding(
