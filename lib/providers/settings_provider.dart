@@ -15,9 +15,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 
-String obtainiumTempId = 'imranr98_obtainium_${GitHub().hosts[0]}';
+String obtainiumTempId = 'thejaustin_obtainiumplus_${GitHub().hosts[0]}';
 String obtainiumId = 'dev.imranr.obtainium';
-String obtainiumUrl = 'https://github.com/ImranR98/Obtainium';
+String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 Color obtainiumThemeColor = const Color(0xFF6438B5);
 
 enum ThemeSettings { system, light, dark }
@@ -43,7 +43,7 @@ class SettingsProvider with ChangeNotifier {
   String? defaultAppDir;
   bool justStarted = true;
 
-  String sourceUrl = 'https://github.com/ImranR98/Obtainium';
+  String sourceUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 
   List<int> updateIntervalNodes = [
     15,
