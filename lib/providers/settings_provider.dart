@@ -271,6 +271,15 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get xiaomiSetupShown {
+    return prefs?.getBool('xiaomiSetupShown') ?? false;
+  }
+
+  set xiaomiSetupShown(bool value) {
+    prefs?.setBool('xiaomiSetupShown', value);
+    notifyListeners();
+  }
+
   bool checkJustStarted() {
     if (justStarted) {
       justStarted = false;

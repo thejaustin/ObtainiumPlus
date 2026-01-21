@@ -159,7 +159,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                           if (homeState != null) {
                             homeState.switchToPage(2);
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              final addAppKey = homeState.pages[2].widget.key as GlobalKey<AddAppPageState>?;
+                              final addAppKey = homeState.addAppPage.key as GlobalKey<AddAppPageState>?;
                               addAppKey?.currentState?.linkFn(url);
                             });
                           }
@@ -213,7 +213,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                                   if (homeState != null) {
                                     homeState.switchToPage(2);
                                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                                      final addAppKey = homeState.pages[2].widget.key as GlobalKey<AddAppPageState>?;
+                                      final addAppKey = homeState.addAppPage.key as GlobalKey<AddAppPageState>?;
                                       addAppKey?.currentState?.linkFn(url);
                                     });
                                   }

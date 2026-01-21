@@ -64,7 +64,8 @@ class AppListView extends StatelessWidget {
                 appsProvider.downloadAndInstallLatestApps([app.app.id], context);
                 break;
               case AppSwipeAction.togglePin:
-                appsProvider.togglePin(app.app.id);
+                app.app.pinned = !app.app.pinned;
+                appsProvider.saveApps([app.app]);
                 break;
               case AppSwipeAction.share:
                 Share.share(app.app.url);

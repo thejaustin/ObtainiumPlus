@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:animations/animations.dart';
 import 'package:app_links/app_links.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ import 'package:obtainium/pages/logs_page.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:provider/provider.dart';
@@ -157,7 +159,79 @@ class HomePageState extends State<HomePage> {
           },
         );
       }
+      // Show Xiaomi setup dialog if needed
+      if (!sp.xiaomiSetupShown) {
+        await _showXiaomiSetupDialogIfNeeded(context, sp);
+      }
     });
+  }
+
+  Future<void> _showXiaomiSetupDialogIfNeeded(BuildContext context, SettingsProvider sp) async {
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      final manufacturer = info.manufacturer?.toLowerCase() ?? '';
+      final brand = info.brand?.toLowerCase() ?? '';
+      final isXiaomi = ['xiaomi', 'redmi', 'poco'].any(
+        (x) => manufacturer.contains(x) || brand.contains(x),
+      );
+
+      if (!isXiaomi) return;
+      if (!context.mounted) return;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(Icons.battery_alert_outlined, color: Colors.orange, size: 48),
+          title: Text(tr('xiaomiSetupRequired')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr('xiaomiSetupDescription')),
+              const SizedBox(height: 16),
+              Text(
+                tr('xiaomiSetupSteps'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await AppInstallService.openXiaomiAutostartSettings();
+                  },
+                  icon: const Icon(Icons.rocket_launch_outlined),
+                  label: Text(tr('enableAutoStart')),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await AppInstallService.openXiaomiBatterySaverSettings();
+                  },
+                  icon: const Icon(Icons.battery_saver_outlined),
+                  label: Text(tr('disableBatterySaver')),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () {
+                    sp.xiaomiSetupShown = true;
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text(tr('done')),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // Ignore errors in device detection
+    }
   }
 
   Future<void> initDeepLinks() async {
