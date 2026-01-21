@@ -614,8 +614,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   List<String> get searchDeselected {
-    return prefs?.getStringList('searchDeselected') ??
-        SourceProvider().sources.map((s) => s.name).toList();
+    return prefs?.getStringList('searchDeselected') ?? [];
   }
 
   set searchDeselected(List<String> list) {
