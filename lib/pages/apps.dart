@@ -773,21 +773,20 @@ class AppsPageState extends State<AppsPage> {
                     ),
                     getFilterChips(),
                     ...getLoadingWidgets(),
-                    // Performance optimization: Use RepaintBoundary to isolate expensive widgets
-                    RepaintBoundary(
-                      child: settingsProvider.groupByCategory
-                        ? CategorySections(
-                            listedApps: listedApps,
-                            listedCategories: listedCategories,
-                            selectedAppIds: selectedAppIds,
-                            toggleAppSelected: toggleAppSelected,
-                            getChangeLogFn: getChangeLogFn,
-                            getCachedCategoryColor: _getCachedCategoryColor,
-                          )
-                        : settingsProvider.globalViewMode == ViewMode.grid
-                          ? AppGridView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected)
-                          : AppListView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected, getChangeLogFn: getChangeLogFn),
-                    ),
+                    // These widgets return slivers (SliverList/SliverGrid), so they go directly in slivers list
+                    if (settingsProvider.groupByCategory)
+                      CategorySections(
+                        listedApps: listedApps,
+                        listedCategories: listedCategories,
+                        selectedAppIds: selectedAppIds,
+                        toggleAppSelected: toggleAppSelected,
+                        getChangeLogFn: getChangeLogFn,
+                        getCachedCategoryColor: _getCachedCategoryColor,
+                      )
+                    else if (settingsProvider.globalViewMode == ViewMode.grid)
+                      AppGridView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected)
+                    else
+                      AppListView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected, getChangeLogFn: getChangeLogFn),
                   ],
                 );
 
