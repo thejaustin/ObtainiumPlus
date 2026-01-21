@@ -47,7 +47,7 @@ Android: $androidInfo
 $logs''';
 
     var url = Uri.parse(
-      'https://github.com/ImranR98/Obtainium/issues/new?body=${Uri.encodeComponent(body)}',
+      'https://github.com/thejaustin/ObtainiumPlus/issues/new?body=${Uri.encodeComponent(body)}',
     );
     if (await canLaunchUrl(url)) {
       await launchUrl(

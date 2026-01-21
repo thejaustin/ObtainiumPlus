@@ -495,8 +495,8 @@ class _ObtainiumState extends State<Obtainium> {
                     App(
                       obtainiumId,
                       obtainiumUrl,
-                      'ImranR98',
-                      'Obtainium',
+                      'thejaustin',
+                      'Obtainium+',
                       value!.versionName,
                       value.versionName!,
                       [],
