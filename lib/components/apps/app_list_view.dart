@@ -73,14 +73,7 @@ class AppListView extends StatelessWidget {
                 AppInstallService.openApp(app.app.id);
                 break;
               case AppSwipeAction.delete:
-                // Trigger uninstall flow (requires context)
-                // We'll rely on the app details page or long press for now for safe uninstall
-                // Or simulate long press menu? 
-                // For now, let's just use the existing uninstall logic if possible.
-                // AppsProvider doesn't expose uninstall UI directly.
-                // We'll skip delete for now or just show a message.
-                // Actually, let's implement delete via removeApp (which shows dialog).
-                appsProvider.removeApp(app.app.id, context);
+                appsProvider.removeAppsWithModal(context, [app.app]);
                 break;
               case AppSwipeAction.none:
                 break;
