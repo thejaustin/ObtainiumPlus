@@ -867,14 +867,16 @@ class AppsPageState extends State<AppsPage> {
                 }
               },
             ),
-                  ),
-                ),
-                // Replace persistentFooterButtons with proper bottomNavigationBar      bottomNavigationBar: appsProvider.apps.isEmpty ? null : _buildBottomNavigationBar(
-        settingsProvider: settingsProvider,
-        listedApps: listedApps,
-        showFilterDialog: showFilterDialog,
-        getMassObtainFunction: getMassObtainFunction,
-      ),
+          ),
+        ),
+      bottomNavigationBar: appsProvider.apps.isEmpty
+          ? null
+          : _buildBottomNavigationBar(
+              settingsProvider: settingsProvider,
+              listedApps: listedApps,
+              showFilterDialog: showFilterDialog,
+              getMassObtainFunction: getMassObtainFunction,
+            ),
     );
   }
 
