@@ -34,6 +34,10 @@ enum ViewMode { list, grid }
 
 enum GridCategoryMode { sections, disabled, folders }
 
+enum AppSwipeAction { none, update, togglePin, share, launch, delete }
+
+enum AppListDensity { comfortable, compact }
+
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   String? defaultAppDir;
@@ -890,6 +894,73 @@ class SettingsProvider with ChangeNotifier {
 
   set navigationLabelBehavior(NavigationDestinationLabelBehavior behavior) {
     prefs?.setInt('navigationLabelBehavior', behavior.index);
+    notifyListeners();
+  }
+
+  // App Tile Display Settings
+  bool get displayShowAuthor => prefs?.getBool('displayShowAuthor') ?? true;
+  set displayShowAuthor(bool val) {
+    prefs?.setBool('displayShowAuthor', val);
+    notifyListeners();
+  }
+
+  bool get displayShowVersion => prefs?.getBool('displayShowVersion') ?? true;
+  set displayShowVersion(bool val) {
+    prefs?.setBool('displayShowVersion', val);
+    notifyListeners();
+  }
+
+  bool get displayShowDate => prefs?.getBool('displayShowDate') ?? true;
+  set displayShowDate(bool val) {
+    prefs?.setBool('displayShowDate', val);
+    notifyListeners();
+  }
+
+  // App List Header Settings
+  bool get displayShowFilterChips => prefs?.getBool('displayShowFilterChips') ?? true;
+  set displayShowFilterChips(bool val) {
+    prefs?.setBool('displayShowFilterChips', val);
+    notifyListeners();
+  }
+
+  bool get displayShowAppCount => prefs?.getBool('displayShowAppCount') ?? true;
+  set displayShowAppCount(bool val) {
+    prefs?.setBool('displayShowAppCount', val);
+    notifyListeners();
+  }
+
+  // Swipe Actions
+  AppSwipeAction get swipeRightAction =>
+      AppSwipeAction.values[prefs?.getInt('swipeRightAction') ??
+          AppSwipeAction.none.index];
+  set swipeRightAction(AppSwipeAction action) {
+    prefs?.setInt('swipeRightAction', action.index);
+    notifyListeners();
+  }
+
+  AppSwipeAction get swipeLeftAction =>
+      AppSwipeAction.values[prefs?.getInt('swipeLeftAction') ??
+          AppSwipeAction.none.index];
+  set swipeLeftAction(AppSwipeAction action) {
+    prefs?.setInt('swipeLeftAction', action.index);
+    notifyListeners();
+  }
+
+  // List Density
+  AppListDensity get appListDensity =>
+      AppListDensity.values[prefs?.getInt('appListDensity') ??
+          AppListDensity.comfortable.index];
+  set appListDensity(AppListDensity density) {
+    prefs?.setInt('appListDensity', density.index);
+    notifyListeners();
+  }
+
+  List<String> get bottomTabs {
+    return prefs?.getStringList('bottomTabs') ?? ['apps', 'add'];
+  }
+
+  set bottomTabs(List<String> tabs) {
+    prefs?.setStringList('bottomTabs', tabs);
     notifyListeners();
   }
 }
