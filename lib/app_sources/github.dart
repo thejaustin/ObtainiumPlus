@@ -9,6 +9,9 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/version_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -117,7 +120,7 @@ class GitHub extends AppSource {
           required: false,
           additionalValidators: [
             (value) {
-              return regExValidator(value);
+              return SourceUtils.regExValidator(value);
             },
           ],
         ),
@@ -130,7 +133,7 @@ class GitHub extends AppSource {
           required: false,
           additionalValidators: [
             (value) {
-              return regExValidator(value);
+              return SourceUtils.regExValidator(value);
             },
           ],
         ),
@@ -411,7 +414,7 @@ class GitHub extends AppSource {
         if (onHttpErrorCode != null) {
           onHttpErrorCode(res);
         }
-        throw getObtainiumHttpError(res);
+        throw SourceUtils.getObtainiumHttpError(res);
       }
       latestRelease = jsonDecode(res.body);
     }
@@ -584,7 +587,7 @@ class GitHub extends AppSource {
           return ext == 'apk' || ext == 'xapk' || (includeZips && ext == 'zip');
         }).toList();
 
-        var filteredApkUrls = filterApks(
+        var filteredApkUrls = SourceUtils.filterApks(
           apkAssetsWithUrls
               .map((e) => e['final_url'] as MapEntry<String, String>)
               .toList(),
@@ -664,7 +667,7 @@ class GitHub extends AppSource {
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 
@@ -749,7 +752,7 @@ class GitHub extends AppSource {
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 

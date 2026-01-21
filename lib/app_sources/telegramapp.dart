@@ -2,6 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class TelegramApp extends AppSource {
@@ -40,7 +43,7 @@ class TelegramApp extends AppSource {
         MapEntry<String, String>('telegram-$version.apk', apkUrl),
       ], AppNames('Telegram', 'Telegram'));
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 }

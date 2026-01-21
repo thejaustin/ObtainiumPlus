@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class Jenkins extends AppSource {
@@ -70,7 +73,7 @@ class Jenkins extends AppSource {
         AppNames(Uri.parse(standardUrl).host, standardUrl.split('/').last),
       );
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 }
