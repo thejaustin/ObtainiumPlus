@@ -338,14 +338,30 @@ class GitHub extends AppSource {
     return reqUrl;
   }
 
-  Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async =>
-      'https://api.${hosts[0]}';
+  Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async {
+    // Always use the official GitHub API endpoint, regardless of user input host
+    // This fixes issues when users enter www.github.com instead of github.com
+    return 'https://api.github.com';
+  }
 
   Future<String> convertStandardUrlToAPIUrl(
     String standardUrl,
     Map<String, dynamic> additionalSettings,
-  ) async =>
-      '${await getAPIHost(additionalSettings)}/repos${standardUrl.substring('https://${hosts[0]}'.length)}';
+  ) async {
+    // Parse the standard URL to extract the user/repo path
+    Uri uri = Uri.parse(standardUrl);
+
+    // Extract the path part after the host (e.g., from /user/repo/path to /user/repo)
+    List<String> pathSegments = uri.pathSegments;
+    if (pathSegments.length < 2) {
+      throw Exception('Invalid GitHub URL format: $standardUrl');
+    }
+
+    // Take only the first two segments (user and repo) to form the API path
+    String userRepoPath = '/${pathSegments[0]}/${pathSegments[1]}';
+
+    return '${await getAPIHost(additionalSettings)}/repos$userRepoPath';
+  }
 
   @override
   String? changeLogPageFromStandardUrl(String standardUrl) =>
