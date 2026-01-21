@@ -335,18 +335,41 @@ class _ObtainiumState extends State<Obtainium> {
     );
   }
 
+  Future<bool> _isXiaomiDevice() async {
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      final manufacturer = info.manufacturer?.toLowerCase() ?? '';
+      final brand = info.brand?.toLowerCase() ?? '';
+      return ['xiaomi', 'redmi', 'poco'].any(
+        (x) => manufacturer.contains(x) || brand.contains(x),
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> requestNonOptionalPermissions() async {
     final NotificationPermission notificationPermission =
         await FlutterForegroundTask.checkNotificationPermission();
     if (notificationPermission != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
+
+    // Check if this is a Xiaomi device
+    final isXiaomi = await _isXiaomiDevice();
+
+    if (isXiaomi) {
+      // Skip standard battery optimization on Xiaomi - it causes issues
+      // The Xiaomi setup dialog will handle this instead
+      return;
+    }
+
     try {
       if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
         await FlutterForegroundTask.requestIgnoreBatteryOptimization();
       }
     } catch (e) {
-      // Ignore errors on devices (like Xiaomi) that don't handle this intent correctly
+      // Ignore errors on devices that don't handle this intent correctly
       print('Failed to request battery optimization: $e');
     }
   }
