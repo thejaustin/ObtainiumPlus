@@ -7,6 +7,9 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide obtainiumId, obtainiumTempId;
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 
@@ -31,7 +34,7 @@ class APKMirror extends AppSource {
           required: false,
           additionalValidators: [
             (value) {
-              return regExValidator(value);
+              return SourceUtils.regExValidator(value);
             },
           ],
         ),
@@ -127,7 +130,7 @@ class APKMirror extends AppSource {
         releaseDate: releaseDate,
       );
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 

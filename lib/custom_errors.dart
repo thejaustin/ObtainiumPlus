@@ -9,6 +9,8 @@ import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/pages/settings.dart';

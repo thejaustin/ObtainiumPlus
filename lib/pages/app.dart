@@ -10,6 +10,8 @@ import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -315,17 +317,20 @@ class _AppPageState extends State<AppPage> {
               ),
             ),
           const SizedBox(height: 48),
-          CategoryEditorSelector(
-            alignment: WrapAlignment.center,
-            preselected: app?.app.categories != null
-                ? app!.app.categories.toSet()
-                : {},
-            onSelected: (categories) {
-              if (app != null) {
-                app.app.categories = categories;
-                appsProvider.saveApps([app.app]);
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: CategoryEditorSelector(
+              alignment: WrapAlignment.center,
+              preselected: app?.app.categories != null
+                  ? app!.app.categories.toSet()
+                  : {},
+              onSelected: (categories) {
+                if (app != null) {
+                  app.app.categories = categories;
+                  appsProvider.saveApps([app.app]);
+                }
+              },
+            ),
           ),
           if (app?.app.additionalSettings['about'] is String &&
               app?.app.additionalSettings['about'].isNotEmpty)

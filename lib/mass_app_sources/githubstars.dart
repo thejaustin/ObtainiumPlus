@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class GitHubStars implements MassAppUrlSource {

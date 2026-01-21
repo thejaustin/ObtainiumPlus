@@ -74,7 +74,7 @@ This document outlines the strategy for ongoing performance and code quality imp
 
 ## Pending High-Priority Optimizations
 
-### 1. SettingsProvider Split (MEDIUM - DEFERRED)
+### 1. SettingsProvider Split (MEDIUM - DEFERRED) [Issue #33]
 
 **Status**: Deferred - Current Consumer pattern provides sufficient optimization
 
@@ -178,7 +178,7 @@ class BehaviorSettingsProvider extends ChangeNotifier {
 
 ---
 
-### 2. Large File Refactoring (MEDIUM)
+### 2. Large File Refactoring (MEDIUM) [Issue #16]
 
 **Problem**: Several files exceed recommended 500-line limit
 
@@ -207,7 +207,7 @@ class BehaviorSettingsProvider extends ChangeNotifier {
 
 ---
 
-### 3. Animation Controller Optimization (LOW)
+### 3. Animation Controller Optimization (LOW) [Issue #32]
 
 **Problem**: Every grid tile creates its own AnimationController
 
@@ -237,7 +237,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
 
 ---
 
-### 4. Image Memory Management (MEDIUM)
+### 4. Image Memory Management (MEDIUM) [Issue #31]
 
 **Problem**: `Image.memory()` with `gaplessPlayback: true` may consume excessive memory on large app lists
 

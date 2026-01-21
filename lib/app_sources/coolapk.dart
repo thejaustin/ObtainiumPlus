@@ -3,6 +3,9 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:crypto/crypto.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'dart:math';
 
@@ -53,7 +56,7 @@ class CoolApk extends AppSource {
     var res = await sourceRequest(detailUrl, additionalSettings);
 
     if (res.statusCode != 200) {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
 
     var json = jsonDecode(res.body);

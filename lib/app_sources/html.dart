@@ -6,6 +6,9 @@ import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 
@@ -119,7 +122,7 @@ Future<List<MapEntry<String, String>>> grabLinksCommonFromRes(
   Map<String, dynamic> additionalSettings,
 ) async {
   if (res.statusCode != 200) {
-    throw getObtainiumHttpError(res);
+    throw SourceUtils.getObtainiumHttpError(res);
   }
   return grabLinksCommon(res.body, res.request!.url, additionalSettings);
 }
@@ -233,7 +236,7 @@ class HTML extends AppSource {
         required: false,
         additionalValidators: [
           (value) {
-            return regExValidator(value);
+            return SourceUtils.regExValidator(value);
           },
         ],
       ),
@@ -269,7 +272,7 @@ class HTML extends AppSource {
         label: tr('intermediateLinkRegex'),
         hint: '([0-9]+.)*[0-9]+/\$',
         required: true,
-        additionalValidators: [(value) => regExValidator(value)],
+        additionalValidators: [(value) => SourceUtils.regExValidator(value)],
       ),
     ],
     [
@@ -409,7 +412,7 @@ class HTML extends AppSource {
           .split('\n')
           .join('\\n');
       links = await grabLinksCommonFromRes(res, additionalSettings);
-      links = filterApks(
+      links = SourceUtils.filterApks(
         links,
         additionalSettings['apkFilterRegEx'],
         additionalSettings['invertAPKFilter'],
@@ -428,7 +431,7 @@ class HTML extends AppSource {
       // Some links may not have valid encoding
     }
     String? version;
-    version = extractVersion(
+    version = SourceUtils.extractVersion(
       additionalSettings['versionExtractionRegEx'] as String?,
       additionalSettings['matchGroupToUse'] as String?,
       additionalSettings['versionExtractWholePage'] == true

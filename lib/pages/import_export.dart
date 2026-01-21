@@ -11,6 +11,8 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:provider/provider.dart';

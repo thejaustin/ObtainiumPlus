@@ -1,6 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 DateTime? parseDateTimeMMMddCommayyyy(String? dateString) {
@@ -57,7 +60,7 @@ class Uptodown extends AppSource {
   ) async {
     var res = await sourceRequest(standardUrl, additionalSettings);
     if (res.statusCode != 200) {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
     var html = parse(res.body);
     String? version = html.querySelector('div.version')?.innerHtml;
@@ -131,7 +134,7 @@ class Uptodown extends AppSource {
   ) async {
     var res = await sourceRequest(assetUrl, additionalSettings);
     if (res.statusCode != 200) {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
     var html = parse(res.body);
     var finalUrlKey = html

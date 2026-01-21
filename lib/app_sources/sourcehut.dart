@@ -2,6 +2,9 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -136,7 +139,7 @@ class SourceHut extends AppSource {
       }
       return apkDetailsList.first;
     } else {
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 }

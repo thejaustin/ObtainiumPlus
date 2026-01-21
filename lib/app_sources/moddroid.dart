@@ -1,5 +1,8 @@
 import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class Moddroid extends AppSource {
@@ -18,7 +21,7 @@ class Moddroid extends AppSource {
   Future<APKDetails> getLatestAPKDetails(String standardUrl, Map<String, dynamic> additionalSettings) async {
     try {
       var mainRes = await sourceRequest(standardUrl, additionalSettings);
-      if (mainRes.statusCode != 200) throw getObtainiumHttpError(mainRes);
+      if (mainRes.statusCode != 200) throw SourceUtils.getObtainiumHttpError(mainRes);
       
       var baseUrl = Uri.parse(standardUrl);
       var intermediateUrl = parse(mainRes.body).querySelectorAll('a')
@@ -29,7 +32,7 @@ class Moddroid extends AppSource {
               orElse: () => throw NoReleasesError(note: 'No download page found'));
 
       var intRes = await sourceRequest(intermediateUrl, additionalSettings);
-      if (intRes.statusCode != 200) throw getObtainiumHttpError(intRes);
+      if (intRes.statusCode != 200) throw SourceUtils.getObtainiumHttpError(intRes);
 
       var apkUrl = parse(intRes.body).querySelectorAll('a')
           .map((e) => e.attributes['href'])
