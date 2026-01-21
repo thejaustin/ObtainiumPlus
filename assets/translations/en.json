@@ -543,6 +543,7 @@
     "appListHeader": "App List Header",
     "showFilterChips": "Show Filter Chips",
     "showAppCount": "Show App Count",
+    "batteryOpt": "Battery Opt",
     "versionOptions": "Version Options",
     "sourceOptions": "Source Options",
     "swipeActions": "Swipe Actions",
@@ -560,5 +561,16 @@
     "backgroundUpdateCheckIntervalTooltip": "The frequency at which Obtainium checks for app updates in the background.",
     "foregroundServiceTooltip": "Maintains a persistent notification to ensure background update checks are not killed by the system.",
     "parallelDownloadsTooltip": "Allow multiple apps to be downloaded simultaneously.",
-    "moveNonInstalledAppsToBottomTooltip": "Keep apps that are not currently installed at the end of the list."
+    "moveNonInstalledAppsToBottomTooltip": "Keep apps that are not currently installed at the end of the list.",
+    "xiaomiBatteryTroubleshooting": "Xiaomi Battery Troubleshooting",
+    "xiaomiBatteryTroubleshootingDescription": "Fix background update issues on Xiaomi/MIUI/HyperOS devices",
+    "xiaomiTroubleshootingTitle": "Xiaomi Battery Optimization",
+    "xiaomiTroubleshootingDescription": "On Xiaomi devices (MIUI/HyperOS), background tasks are often restricted even if standard Android battery optimization is disabled.\n\nTo ensure reliable background updates, please configure the following settings:\n\n1. Enable **Autostart**.\n2. In **Battery Saver**, select **No restrictions**.\n3. In **Other permissions**, allow **Display pop-up windows while running in the background** (required for background installs).",
+    "disableBatterySaver": "Disable Battery Saver",
+    "troubleshootingAndSystem": "Troubleshooting & System Settings",
+    "notificationSettings": "Notification Settings",
+    "batteryOptimizationSettings": "Battery Optimization Settings",
+    "installUnknownApps": "Install Unknown Apps",
+    "overlaySettings": "Overlay Settings",
+    "usageAccessSettings": "Usage Access Settings"
 }

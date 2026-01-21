@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
 
 /// Update settings section widget
@@ -29,10 +30,115 @@ class UpdateSettingsSection extends StatelessWidget {
         _buildIntervalLabel(context),
         _buildIntervalSlider(context),
         _buildForegroundServiceSection(context),
+        _buildXiaomiTroubleshooting(context),
         height16,
         _buildCheckOnStartToggle(context),
         _buildOnlyCheckInstalledToggle(context),
         _buildParallelDownloadsToggle(context),
+      ],
+    );
+  }
+
+  Widget _buildXiaomiTroubleshooting(BuildContext context) {
+    return FutureBuilder<AndroidDeviceInfo>(
+      future: androidInfoFuture,
+      builder: (ctx, snapshot) {
+        if (snapshot.hasData) {
+          var device = snapshot.data!;
+          var isXiaomi = [
+            'xiaomi',
+            'poco',
+            'redmi'
+          ].contains(device.manufacturer.toLowerCase()) ||
+              [
+                'xiaomi',
+                'poco',
+                'redmi'
+              ].contains(device.brand.toLowerCase());
+
+          if (isXiaomi) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.battery_alert_outlined,
+                      color: Colors.orange),
+                  title: Text(tr('xiaomiBatteryTroubleshooting')),
+                  subtitle:
+                      Text(tr('xiaomiBatteryTroubleshootingDescription')),
+                  onTap: () {
+                    showXiaomiTroubleshootingDialog(context);
+                  },
+                ),
+              ],
+            );
+          }
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  void showXiaomiTroubleshootingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return buildXiaomiTroubleshootingDialog(ctx);
+      },
+    );
+  }
+
+  Widget buildXiaomiTroubleshootingDialog(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.battery_alert_outlined, color: Colors.orange),
+          const SizedBox(width: 8),
+          Expanded(child: Text(tr('xiaomiTroubleshootingTitle'))),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(tr('xiaomiTroubleshootingDescription')),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                AppInstallService.openXiaomiAutostartSettings();
+              },
+              icon: const Icon(Icons.play_arrow_outlined),
+              label: Text(tr('enableAutostart')),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                AppInstallService.openXiaomiBatterySaverSettings();
+              },
+              icon: const Icon(Icons.battery_saver_outlined),
+              label: Text(tr('disableBatterySaver')),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                AppInstallService.openAppSettings(obtainiumId);
+              },
+              icon: const Icon(Icons.settings_outlined),
+              label: Text(tr('openAppInfo')),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(tr('ok')),
+        ),
       ],
     );
   }

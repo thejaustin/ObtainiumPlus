@@ -65,8 +65,83 @@ class AppInstallService {
     await intent.launch();
   }
 
+  static Future<void> openNotificationSettings(String appId) async {
+    final AndroidIntent intent = AndroidIntent(
+      action: 'android.settings.APP_NOTIFICATION_SETTINGS',
+      arguments: <String, dynamic>{
+        'android.provider.extra.APP_PACKAGE': appId,
+      },
+    );
+    await intent.launch();
+  }
+
+  static Future<void> openBatteryOptimizationSettings() async {
+    const AndroidIntent intent = AndroidIntent(
+      action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+    );
+    await intent.launch();
+  }
+
+  static Future<void> openInstallUnknownAppsSettings(String appId) async {
+    final AndroidIntent intent = AndroidIntent(
+      action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
+      data: 'package:$appId',
+    );
+    await intent.launch();
+  }
+
+  static Future<void> openOverlaySettings(String appId) async {
+    final AndroidIntent intent = AndroidIntent(
+      action: 'android.settings.action.MANAGE_OVERLAY_PERMISSION',
+      data: 'package:$appId',
+    );
+    await intent.launch();
+  }
+
+  static Future<void> openUsageAccessSettings() async {
+    const AndroidIntent intent = AndroidIntent(
+      action: 'android.settings.USAGE_ACCESS_SETTINGS',
+    );
+    await intent.launch();
+  }
+
   static Future<void> openApp(String appId) async {
     await pm.openApp(appId);
+  }
+
+  static Future<void> openXiaomiAutostartSettings() async {
+    final AndroidIntent intent = AndroidIntent(
+      action: 'miui.intent.action.OP_AUTO_START',
+      componentName: 'com.miui.securitycenter/com.miui.permcenter.autostart.AutoStartManagementActivity',
+    );
+    try {
+      await intent.launch();
+    } catch (e) {
+      // Fallback to security center
+      final AndroidIntent fallback = AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        package: 'com.miui.securitycenter',
+      );
+      try {
+        await fallback.launch();
+      } catch (e2) {
+        openAppSettings('dev.imranr.obtainium');
+      }
+    }
+  }
+
+  static Future<void> openXiaomiBatterySaverSettings() async {
+    // This is more complex across MIUI versions, usually app settings is best
+    // but we can try to open the power center
+    final AndroidIntent intent = AndroidIntent(
+      action: 'miui.intent.action.POWER_HIDE_MODE_LIST',
+      componentName: 'com.miui.securitycenter/com.miui.powercenter.PowerSettings',
+    );
+    try {
+      await intent.launch();
+    } catch (e) {
+      openAppSettings('dev.imranr.obtainium');
+    }
   }
 
   static Future<bool> canInstallSilently(App app, SettingsProvider settingsProvider, LogsProvider logs) async {
