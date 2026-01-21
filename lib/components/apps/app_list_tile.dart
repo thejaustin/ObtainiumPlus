@@ -143,38 +143,40 @@ class AppListTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width / 4,
+                if (settingsProvider.displayShowVersion)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width / 4,
+                        ),
+                        child: Text(
+                          getVersionText(),
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: isVersionPseudo(appInMemory.app)
+                              ? const TextStyle(fontStyle: FontStyle.italic)
+                              : null,
+                        ),
                       ),
-                      child: Text(
-                        getVersionText(),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.end,
-                        style: isVersionPseudo(appInMemory.app)
-                            ? const TextStyle(fontStyle: FontStyle.italic)
-                            : null,
+                    ],
+                  ),
+                if (settingsProvider.displayShowDate)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        getChangesButtonString(),
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          decoration: onShowChanges != null
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      getChangesButtonString(),
-                      style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        decoration: onShowChanges != null
-                            ? TextDecoration.underline
-                            : TextDecoration.none,
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -194,6 +196,8 @@ class AppListTile extends StatelessWidget {
     if (stops.length == 2) {
       stops[0] = 0.9999;
     }
+
+    final isCompact = settingsProvider.appListDensity == AppListDensity.compact;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
@@ -222,6 +226,9 @@ class AppListTile extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             child: ListTile(
+              visualDensity: isCompact ? VisualDensity.compact : null,
+              contentPadding: isCompact ? const EdgeInsets.symmetric(horizontal: 12) : null,
+              dense: isCompact,
               tileColor: appInMemory.app.pinned
                   ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)
                   : Colors.transparent,
@@ -243,7 +250,7 @@ class AppListTile extends StatelessWidget {
                       : FontWeight.normal,
                 ),
               ),
-              subtitle: Text(
+              subtitle: settingsProvider.displayShowAuthor ? Text(
                 tr('byX', args: [appInMemory.author]),
                 maxLines: 1,
                 style: TextStyle(
@@ -252,7 +259,7 @@ class AppListTile extends StatelessWidget {
                       ? FontWeight.bold
                       : FontWeight.normal,
                 ),
-              ),
+              ) : null,
               trailing: appInMemory.downloadProgress != null
                   ? SizedBox(
                       child: Text(

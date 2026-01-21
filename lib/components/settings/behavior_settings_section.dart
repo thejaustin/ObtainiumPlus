@@ -25,7 +25,7 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        localeDropdown,
+        _buildLocaleDropdown(context),
         height16,
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -41,7 +41,58 @@ class BehaviorSettingsSection extends StatelessWidget {
         _buildPinUpdatesToggle(context),
         _buildBuryNonInstalledToggle(context),
         _buildCheckUpdateOnDetailPageToggle(context),
+        height16,
+        Text(
+          tr('swipeActions'),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildSwipeRightDropdown(context),
+        const SizedBox(height: 8),
+        _buildSwipeLeftDropdown(context),
       ],
+    );
+  }
+
+  Widget _buildLocaleDropdown(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        inputDecorationTheme: InputDecorationTheme(
+          prefixIconColor: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      child: DropdownButtonFormField(
+        decoration: InputDecoration(
+          labelText: tr('language'),
+          prefixIcon: const Icon(Icons.language_outlined),
+        ),
+        dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 16,
+        ),
+        iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
+        value: Provider.of<SettingsProvider>(context).forcedLocale,
+        items: [
+          DropdownMenuItem(value: null, child: Text(tr('followSystem'))),
+          ...supportedLocales.map(
+            (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+          ),
+        ],
+        onChanged: (value) {
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          settings.forcedLocale = value;
+          if (value != null) {
+            context.setLocale(value);
+          } else {
+            settings.resetLocaleSafe(context);
+          }
+        },
+      ),
     );
   }
 
@@ -49,6 +100,7 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.open_in_browser_outlined),
           title: Text(tr('showWebInAppView')),
           value: settings.showAppWebpage,
           onChanged: (value) {
@@ -63,6 +115,7 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.push_pin_outlined),
           title: Text(tr('pinUpdates')),
           value: settings.pinUpdates,
           onChanged: (value) {
@@ -77,8 +130,13 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('moveNonInstalledAppsToBottom')),
-          secondary: InfoTooltip(message: tr('moveNonInstalledAppsToBottomTooltip')),
+          secondary: const Icon(Icons.vertical_align_bottom_outlined),
+          title: Row(
+            children: [
+              Expanded(child: Text(tr('moveNonInstalledAppsToBottom'))),
+              InfoTooltip(message: tr('moveNonInstalledAppsToBottomTooltip')),
+            ],
+          ),
           value: settings.buryNonInstalled,
           onChanged: (value) {
             settings.buryNonInstalled = value;
@@ -92,10 +150,59 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.sync_outlined),
           title: Text(tr('checkUpdateOnDetailPage')),
           value: settings.checkUpdateOnDetailPage,
           onChanged: (value) {
             settings.checkUpdateOnDetailPage = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSwipeRightDropdown(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return DropdownButtonFormField<AppSwipeAction>(
+          decoration: InputDecoration(
+            labelText: tr('swipeRightAction'),
+            prefixIcon: const Icon(Icons.swipe_right_outlined),
+          ),
+          dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          value: settings.swipeRightAction,
+          items: AppSwipeAction.values
+              .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(tr('action_${e.name}')),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            if (value != null) settings.swipeRightAction = value;
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSwipeLeftDropdown(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return DropdownButtonFormField<AppSwipeAction>(
+          decoration: InputDecoration(
+            labelText: tr('swipeLeftAction'),
+            prefixIcon: const Icon(Icons.swipe_left_outlined),
+          ),
+          dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          value: settings.swipeLeftAction,
+          items: AppSwipeAction.values
+              .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(tr('action_${e.name}')),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            if (value != null) settings.swipeLeftAction = value;
           },
         );
       },

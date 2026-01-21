@@ -38,6 +38,36 @@ class _AppPageState extends State<AppPage> {
   AppInMemory? prevApp;
   bool updating = false;
 
+  void _showContextMenu({
+    required String title,
+    required List<MapEntry<String, VoidCallback>> actions,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+              ),
+              const Divider(height: 1),
+              ...actions.map((action) => ListTile(
+                title: Text(action.key),
+                onTap: () {
+                  Navigator.pop(context);
+                  action.value();
+                },
+              )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -172,12 +202,37 @@ class _AppPageState extends State<AppPage> {
             child: Column(
               children: [
                 const SizedBox(height: 8),
-                Text(
-                  versionLines,
-                  textAlign: TextAlign.start,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
+                GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    _showContextMenu(
+                      title: tr('versionOptions'),
+                      actions: [
+                        MapEntry(
+                          tr('update'),
+                          () => getUpdate(app!.app.id),
+                        ),
+                        MapEntry(
+                          tr('appManagement'),
+                          () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsPage(initialTab: 2),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                  child: Text(
+                    versionLines,
+                    textAlign: TextAlign.start,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
+                  ),
                 ),
                 changeLogFn != null || app?.app.releaseDate != null
                     ? GestureDetector(
@@ -338,6 +393,30 @@ class _AppPageState extends State<AppPage> {
                         onTap: app == null
                             ? null
                             : () => AppInstallService.openApp(app.app.id),
+                        onLongPress: () {
+                          HapticFeedback.heavyImpact();
+                          _showContextMenu(
+                            title: tr('appearance'),
+                            actions: [
+                              if (app?.installedInfo != null)
+                                MapEntry(
+                                  tr('openAppInfo'),
+                                  () => AppInstallService.openAppSettings(app!.app.id),
+                                ),
+                              MapEntry(
+                                tr('appearance'),
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SettingsPage(initialTab: 0),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        },
                         child: Hero(
                           tag: 'app_icon_${widget.appId}',
                           child: Image.memory(
@@ -360,12 +439,36 @@ class _AppPageState extends State<AppPage> {
               ? Theme.of(context).textTheme.displaySmall
               : Theme.of(context).textTheme.displayLarge,
         ),
-        Text(
-          tr('byX', args: [app?.author ?? tr('unknown')]),
-          textAlign: TextAlign.center,
-          style: small
-              ? Theme.of(context).textTheme.headlineSmall
-              : Theme.of(context).textTheme.headlineMedium,
+        GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('author'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.author ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                }),
+                MapEntry(tr('appearance'), () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(initialTab: 0),
+                    ),
+                  );
+                }),
+              ],
+            );
+          },
+          child: Text(
+            tr('byX', args: [app?.author ?? tr('unknown')]),
+            textAlign: TextAlign.center,
+            style: small
+                ? Theme.of(context).textTheme.headlineSmall
+                : Theme.of(context).textTheme.headlineMedium,
+          ),
         ),
         const SizedBox(height: 24),
         GestureDetector(
@@ -378,10 +481,26 @@ class _AppPageState extends State<AppPage> {
             }
           },
           onLongPress: () {
-            Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('sourceOptions'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                }),
+                MapEntry(tr('updatesSources'), () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(initialTab: 1),
+                    ),
+                  );
+                }),
+              ],
+            );
           },
           child: Text(
             app?.app.url ?? '',
@@ -392,10 +511,42 @@ class _AppPageState extends State<AppPage> {
             ),
           ),
         ),
-        Text(
-          app?.app.id ?? '',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.labelSmall,
+        GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('appId'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                }),
+                if (app?.installedInfo != null)
+                  MapEntry(
+                    tr('openAppInfo'),
+                    () => AppInstallService.openAppSettings(app!.app.id),
+                  ),
+                MapEntry(
+                  tr('appManagement'),
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 2),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+          child: Text(
+            app?.app.id ?? '',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
         ),
         getInfoColumn(),
         const SizedBox(height: 150),

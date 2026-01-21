@@ -571,16 +571,13 @@ class _ObtainiumState extends State<Obtainium> {
                   : darkColorScheme,
               useSystemFont: settingsProvider.useSystemFont,
             ),
-            home: Padding( // Added horizontal padding to prevent layout bleeding
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Shortcuts(
+            home: Shortcuts(
                 shortcuts: <LogicalKeySet, Intent>{
                   LogicalKeySet(LogicalKeyboardKey.select):
                       const ActivateIntent(),
                 },
                 child: const HomePage(),
               ),
-            ),
           );
         },
       ),

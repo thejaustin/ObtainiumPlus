@@ -36,6 +36,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.bug_report_outlined),
           title: Text(tr('enableDeepLogging')),
           subtitle: Text(
             tr('deepLoggingExplanation'),
@@ -57,8 +58,13 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('removeOnExternalUninstall')),
-          secondary: InfoTooltip(message: tr('removeOnExternalUninstallTooltip')),
+          secondary: const Icon(Icons.delete_sweep_outlined),
+          title: Row(
+            children: [
+              Expanded(child: Text(tr('removeOnExternalUninstall'))),
+              InfoTooltip(message: tr('removeOnExternalUninstallTooltip')),
+            ],
+          ),
           value: settings.removeOnExternalUninstall,
           onChanged: (value) {
             settings.removeOnExternalUninstall = value;
@@ -72,7 +78,14 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('beforeNewInstallsShareToAppVerifier')),
+          secondary: const Icon(Icons.verified_user_outlined),
+          title: Row(
+            children: [
+              Text(tr('beforeNewInstallsShareToAppVerifier')),
+              const SizedBox(width: 8),
+              InfoTooltip(message: tr('beforeNewInstallsShareToAppVerifierTooltip')),
+            ],
+          ),
           subtitle: GestureDetector(
             onTap: () {
               launchUrlString(
@@ -89,7 +102,6 @@ class AdvancedSettingsSection extends StatelessWidget {
               ),
             ),
           ),
-          secondary: InfoTooltip(message: tr('beforeNewInstallsShareToAppVerifierTooltip')),
           value: settings.beforeNewInstallsShareToAppVerifier,
           onChanged: (value) {
             settings.beforeNewInstallsShareToAppVerifier = value;
@@ -103,8 +115,14 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('useShizuku')),
-          secondary: InfoTooltip(message: tr('useShizukuTooltip')),
+          secondary: const Icon(Icons.terminal_outlined),
+          title: Row(
+            children: [
+              Text(tr('useShizuku')),
+              const SizedBox(width: 8),
+              InfoTooltip(message: tr('useShizukuTooltip')),
+            ],
+          ),
           value: settings.useShizuku,
           onChanged: (useShizuku) {
             if (useShizuku) {
@@ -149,8 +167,13 @@ class AdvancedSettingsSection extends StatelessWidget {
       builder: (context, settings, child) {
         if (!settings.useShizuku) return const SizedBox.shrink();
         return SwitchListTile(
-          title: Text(tr('shizukuPretendToBeGooglePlay')),
-          secondary: InfoTooltip(message: tr('shizukuPretendToBeGooglePlayTooltip')),
+          secondary: const Icon(Icons.shop_outlined),
+          title: Row(
+            children: [
+              Expanded(child: Text(tr('shizukuPretendToBeGooglePlay'))),
+              InfoTooltip(message: tr('shizukuPretendToBeGooglePlayTooltip')),
+            ],
+          ),
           value: settings.shizukuPretendToBeGooglePlay,
           onChanged: (value) {
             settings.shizukuPretendToBeGooglePlay = value;
@@ -164,8 +187,13 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('dontShowTrackOnlyWarnings')),
-          secondary: InfoTooltip(message: tr('hideTrackOnlyWarningTooltip')),
+          secondary: const Icon(Icons.report_off_outlined),
+          title: Row(
+            children: [
+              Expanded(child: Text(tr('dontShowTrackOnlyWarnings'))),
+              InfoTooltip(message: tr('hideTrackOnlyWarningTooltip')),
+            ],
+          ),
           value: settings.hideTrackOnlyWarning,
           onChanged: (value) {
             settings.hideTrackOnlyWarning = value;
@@ -179,8 +207,13 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
-          title: Text(tr('dontShowAPKOriginWarnings')),
-          secondary: InfoTooltip(message: tr('hideAPKOriginWarningTooltip')),
+          secondary: const Icon(Icons.security_outlined),
+          title: Row(
+            children: [
+              Expanded(child: Text(tr('dontShowAPKOriginWarnings'))),
+              InfoTooltip(message: tr('hideAPKOriginWarningTooltip')),
+            ],
+          ),
           value: settings.hideAPKOriginWarning,
           onChanged: (value) {
             settings.hideAPKOriginWarning = value;
@@ -194,6 +227,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.gesture_outlined),
           title: Text(tr('enableSwipeGestures')),
           subtitle: Text(
             tr('enableSwipeGesturesDescription'),
@@ -215,6 +249,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.undo_outlined),
           title: Text(tr('enableUndoForAppRemoval')),
           subtitle: Text(
             tr('enableUndoForAppRemovalDescription'),
@@ -236,6 +271,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.lightbulb_outline),
           title: Text(tr('enableContextualTips')),
           subtitle: Text(
             tr('enableContextualTipsDescription'),
@@ -257,6 +293,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile(
+          secondary: const Icon(Icons.vibration_outlined),
           title: Text(tr('enableHapticFeedback')),
           subtitle: Text(
             tr('enableHapticFeedbackDescription'),

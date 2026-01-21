@@ -316,20 +316,31 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         const SizedBox(width: 16),
         gettingAppInfo
             ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed:
-                    doingSomething ||
-                        pickedSource == null ||
-                        (pickedSource!
-                                .combinedAppSpecificSettingFormItems
-                                .isNotEmpty &&
-                            !additionalSettingsValid)
-                    ? null
-                    : () {
-                        HapticFeedback.selectionClick();
-                        addApp();
-                      },
-                child: Text(tr('add')),
+            : GestureDetector(
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(initialTab: 1),
+                    ),
+                  );
+                },
+                child: ElevatedButton(
+                  onPressed:
+                      doingSomething ||
+                          pickedSource == null ||
+                          (pickedSource!
+                                  .combinedAppSpecificSettingFormItems
+                                  .isNotEmpty &&
+                              !additionalSettingsValid)
+                      ? null
+                      : () {
+                          HapticFeedback.selectionClick();
+                          addApp();
+                        },
+                  child: Text(tr('add')),
+                ),
               ),
       ],
     );

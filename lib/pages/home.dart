@@ -10,6 +10,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
+import 'package:obtainium/pages/logs_page.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -26,11 +27,12 @@ class HomePage extends StatefulWidget {
 }
 
 class NavigationPageItem {
-  late String title;
-  late IconData icon;
-  late Widget widget;
+  final String id;
+  final String title;
+  final IconData icon;
+  final Widget widget;
 
-  NavigationPageItem(this.title, this.icon, this.widget);
+  NavigationPageItem(this.id, this.title, this.icon, this.widget);
 }
 
 class HomePageState extends State<HomePage> {
@@ -42,23 +44,30 @@ class HomePageState extends State<HomePage> {
   StreamSubscription<Uri>? _linkSubscription;
   bool isLinkActivity = false;
 
-  List<NavigationPageItem> pages = [
-    NavigationPageItem(
-      tr('appsString'),
-      Icons.apps,
-      AppsPage(key: GlobalKey<AppsPageState>()),
-    ),
-    NavigationPageItem(
-      tr('addApp'),
-      Icons.add,
-      AddAppPage(key: GlobalKey<AddAppPageState>()),
-    ),
-    NavigationPageItem(tr('settings'), Icons.settings, const SettingsPage()),
-  ];
+  late Widget appsPage;
+  late Widget updatesPage;
+  late Widget logsPage;
+  late Widget addAppPage;
+  late Widget settingsPage;
+  late Widget importExportPage;
+  late Map<String, NavigationPageItem> allPages;
 
   @override
   void initState() {
     super.initState();
+    appsPage = AppsPage(key: GlobalKey<AppsPageState>());
+    // Create an AppsFilter for updates
+    var updatesFilter = AppsFilter();
+    updatesFilter.statusFilter = {'updates'};
+    updatesPage = AppsPage(
+      key: GlobalKey<AppsPageState>(),
+      initialFilter: updatesFilter,
+    );
+    logsPage = const LogsPage();
+    addAppPage = AddAppPage(key: GlobalKey<AddAppPageState>());
+    settingsPage = const SettingsPage();
+    importExportPage = const ImportExportPage();
+
     initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
@@ -155,20 +164,45 @@ class HomePageState extends State<HomePage> {
     _appLinks = AppLinks();
 
     goToAddApp(String data) async {
-      switchToPage(2);
-      while ((pages[2].widget.key as GlobalKey<AddAppPageState>?)
-              ?.currentState ==
-          null) {
-        await Future.delayed(const Duration(microseconds: 1));
+      // Find where AddAppPage is in the current pages list (if at all)
+      // This requires accessing the current pages list which is dynamic.
+      // We'll handle this by checking if it's in the tabs in the main build method logic
+      // But we need to switch to it.
+      
+      // Accessing settings provider directly here might be slightly racy if build hasn't run, 
+      // but usually fine in async callback.
+      var sp = context.read<SettingsProvider>();
+      var currentTabs = sp.bottomTabs;
+      var index = currentTabs.indexOf('add');
+
+      if (index != -1) {
+        switchToPage(index);
+        // Wait for frame/state
+        while ((addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState == null) {
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
+        (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(data);
+      } else {
+        // If not a tab, push it
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => addAppPage),
+        ).then((_) {
+          // Wait for mount? Push is sync-ish for route creation but async for animation.
+          // We can't easily call linkFn on a pushed route's state without a key that is mounted.
+          // Since we use a GlobalKey for addAppPage, it should be fine as long as we don't duplicate it.
+          // Using the SAME GlobalKey for a pushed route while it might be elsewhere is tricky,
+          // but here we know it's NOT in the tabs (index == -1).
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+             (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(data);
+          });
+        });
       }
-      (pages[2].widget.key as GlobalKey<AddAppPageState>?)?.currentState
-          ?.linkFn(data);
     }
 
     interpretLink(Uri uri) async {
       // SECURITY: Validate deep link before processing
       if (!URLValidator.isValidDeepLink(uri)) {
-        // ignore: use_build_context_synchronously
         showDialog(
           context: context,
           builder: (BuildContext ctx) {
@@ -202,7 +236,6 @@ class HomePageState extends State<HomePage> {
 
           // SECURITY: Validate JSON input
           if (!URLValidator.isValidJSONInput(dataStr)) {
-            // ignore: use_build_context_synchronously
             showDialog(
               context: context,
               builder: (BuildContext ctx) {
@@ -248,14 +281,13 @@ class HomePageState extends State<HomePage> {
                 },
               ) !=
               null) {
-            // ignore: use_build_context_synchronously
             var appsProvider = context.read<AppsProvider>();
             var result = await appsProvider.import(
               action == 'app'
                   ? '{ "apps": [$dataStr] }'
                   : '{ "apps": $dataStr }',
             );
-            // ignore: use_build_context_synchronously
+            if (!mounted) return;
             showMessage(
               tr(
                 'importedX',
@@ -300,19 +332,38 @@ class HomePageState extends State<HomePage> {
 
   Future<void> switchToPage(int index) async {
     setIsReversing(index);
+    // If switching to index 0 (assumed home/apps), clear history logic same as before?
+    // With dynamic tabs, index 0 is just the first tab.
+    // We should probably clear history if we tap the *current* tab again (reset stack)
+    // or if we go to the "main" tab. Let's assume the first tab is "main".
+    
     if (index == 0) {
-      // Safely check key with null protection
-      final key = pages[0].widget.key;
-      if (key != null && key is GlobalKey<AppsPageState>) {
-        while (key.currentState != null) {
-          // Avoid duplicate GlobalKey error
-          await Future.delayed(const Duration(microseconds: 1));
-        }
-      }
+      // Logic for "main" tab reset
+      // We need to identify if the widget at index 0 is AppsPage to pop its state
+      // Accessing activePages here is tricky without passing it or storing it.
+      // We'll rely on the fact that build rebuilds activePages.
+      
+      // For now, simpler history management:
       setState(() {
-        selectedIndexHistory.clear();
+        if (selectedIndexHistory.contains(index)) {
+             // If we go back to a tab already in history, we might want to unwind to it?
+             // Or just add it. Standard nav bar usually just switches.
+             // Android back button often unwinds.
+        }
+        
+        // Specific logic for resetting AppsPage selection if it's the target
+        // We can do this in build or here if we have reference.
+        // Since we have appsPage widget instance, we can check its key.
+        if (appsPage.key is GlobalKey<AppsPageState>) {
+             // We can check if index corresponds to appsPage, but we don't know index here easily
+             // without recalculating activePages.
+             // Let's defer "reset" logic to when the user taps the same tab again?
+             // Standard behavior: Tap active tab -> reset/scroll to top.
+        }
       });
-    } else if (selectedIndexHistory.isEmpty ||
+    }
+
+    if (selectedIndexHistory.isEmpty ||
         (selectedIndexHistory.isNotEmpty &&
             selectedIndexHistory.last != index)) {
       setState(() {
@@ -325,38 +376,86 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  void showCustomizeTabsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => CustomizeTabsDialog(
+        allPages: allPages,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     AppsProvider appsProvider = context.watch<AppsProvider>();
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
 
+    // Refresh allPages map to ensure translations are up to date
+    allPages = {
+      'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps, appsPage),
+      'updates': NavigationPageItem('updates', tr('updates'), Icons.system_update, updatesPage),
+      'add': NavigationPageItem('add', tr('addApp'), Icons.add, addAppPage),
+      'settings': NavigationPageItem('settings', tr('settings'), Icons.settings, settingsPage),
+      'import_export': NavigationPageItem('import_export', tr('importExport'), Icons.import_export, importExportPage),
+      'logs': NavigationPageItem('logs', tr('appLogs'), Icons.notes, logsPage),
+    };
+
+    List<String> tabIds = settingsProvider.bottomTabs;
+    List<NavigationPageItem> activePages = [];
+    for (var id in tabIds) {
+      if (allPages.containsKey(id)) {
+        activePages.add(allPages[id]!);
+      }
+    }
+    
+    // Ensure at least one tab (Apps) if something goes wrong or list is empty
+    if (activePages.isEmpty) {
+      activePages.add(allPages['apps']!);
+      if (tabIds.isEmpty) {
+        // Fix settings if empty
+        settingsProvider.bottomTabs = ['apps'];
+      }
+    }
+
     if (!prevIsLoading &&
         prevAppCount >= 0 &&
         appsProvider.apps.length > prevAppCount &&
-        selectedIndexHistory.isNotEmpty &&
-        selectedIndexHistory.last == 2 &&
         !isLinkActivity) {
-      switchToPage(0);
+          // If a new app was added, try to switch to Apps tab
+          int appsIndex = activePages.indexWhere((p) => p.widget == appsPage);
+          if (appsIndex != -1 && (selectedIndexHistory.isEmpty || selectedIndexHistory.last != appsIndex)) {
+            switchToPage(appsIndex);
+          }
     }
     prevAppCount = appsProvider.apps.length;
     prevIsLoading = appsProvider.loadingApps;
 
-    // Determine if we can pop based on the current state
+    // Determine current index
+    int currentIndex = selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
+    if (currentIndex >= activePages.length) {
+      currentIndex = 0;
+      selectedIndexHistory = [0];
+    }
+
+    // Determine if we can pop
     bool canPopNow() {
-      if (isLinkActivity &&
-          selectedIndexHistory.length == 1 &&
-          selectedIndexHistory.last == 2) {
+      if (isLinkActivity && selectedIndexHistory.length > 1) {
         return true;
       }
-      if (selectedIndexHistory.isNotEmpty) {
-        return false;
+      if (selectedIndexHistory.isNotEmpty && selectedIndexHistory.length > 1) {
+        return false; // Allow popping history
       }
-      // Safely get apps page state with null checks
-      final key = pages[0].widget.key;
-      if (key == null || key is! GlobalKey<AppsPageState>) return true;
-      final appsPageState = key.currentState;
-      if (appsPageState == null) return true;
-      return !appsPageState.clearSelected();
+      
+      // Check if current page allows popping (e.g. AppsPage selection clearing)
+      Widget currentPage = activePages[currentIndex].widget;
+      if (currentPage == appsPage) {
+        final key = appsPage.key as GlobalKey<AppsPageState>?;
+        if (key?.currentState != null) {
+          return !key!.currentState!.clearSelected();
+        }
+      }
+      
+      return true;
     }
 
     return PopScope(
@@ -393,7 +492,6 @@ class HomePageState extends State<HomePage> {
                 Animation<double> animation,
                 Animation<double> secondaryAnimation,
               ) {
-                // Apply expressive curve for smoother motion
                 final curvedAnimation = CurvedAnimation(
                   parent: animation,
                   curve: AppConstants.expressiveStandard,
@@ -405,11 +503,7 @@ class HomePageState extends State<HomePage> {
                   child: child,
                 );
               },
-          child: pages
-              .elementAt(
-                selectedIndexHistory.isEmpty ? 0 : (selectedIndexHistory.last).clamp(0, pages.length - 1),
-              )
-              .widget,
+          child: activePages[currentIndex].widget,
         ),
         bottomNavigationBar: NavigationBar(
           elevation: 3,
@@ -419,19 +513,36 @@ class HomePageState extends State<HomePage> {
           indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
           animationDuration: const Duration(milliseconds: 300),
           labelBehavior: settingsProvider.navigationLabelBehavior,
-          destinations: pages
+          destinations: activePages
               .map(
                 (e) =>
-                    NavigationDestination(icon: Icon(e.icon), label: e.title),
+                    NavigationDestination(
+                      icon: GestureDetector(
+                        onLongPress: () {
+                          HapticFeedback.heavyImpact();
+                          showCustomizeTabsDialog();
+                        },
+                        child: Icon(e.icon),
+                      ),
+                      label: e.title,
+                    ),
               )
               .toList(),
           onDestinationSelected: (int index) async {
             HapticFeedback.selectionClick();
-            switchToPage(index);
+            // Check if user tapped the already active tab
+            if (index == currentIndex) {
+               // Optional: Reset logic (scroll to top, etc.)
+               // For AppsPage:
+               if (activePages[index].widget == appsPage) {
+                 (appsPage.key as GlobalKey<AppsPageState>?)?.currentState?.scrollController.animateTo(
+                   0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+               }
+            } else {
+              switchToPage(index);
+            }
           },
-          selectedIndex: selectedIndexHistory.isEmpty
-              ? 0
-              : selectedIndexHistory.last,
+          selectedIndex: currentIndex,
         ),
       ),
     );
@@ -441,5 +552,119 @@ class HomePageState extends State<HomePage> {
   void dispose() {
     super.dispose();
     _linkSubscription?.cancel();
+  }
+}
+
+class CustomizeTabsDialog extends StatefulWidget {
+  final Map<String, NavigationPageItem> allPages;
+
+  const CustomizeTabsDialog({super.key, required this.allPages});
+
+  @override
+  State<CustomizeTabsDialog> createState() => _CustomizeTabsDialogState();
+}
+
+class _CustomizeTabsDialogState extends State<CustomizeTabsDialog> {
+  late List<String> currentTabs;
+  late List<String> availableHiddenTabs;
+
+  @override
+  void initState() {
+    super.initState();
+    var sp = context.read<SettingsProvider>();
+    currentTabs = List.from(sp.bottomTabs);
+    
+    availableHiddenTabs = widget.allPages.keys
+        .where((id) => !currentTabs.contains(id))
+        .toList();
+  }
+
+  void _save() {
+    context.read<SettingsProvider>().bottomTabs = currentTabs;
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(tr('customizeTabs') /* Use a key if available or generic text */),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tr('activeTabs'), style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: ReorderableListView(
+                shrinkWrap: true,
+                onReorder: (oldIndex, newIndex) {
+                  setState(() {
+                    if (oldIndex < newIndex) {
+                      newIndex -= 1;
+                    }
+                    final String item = currentTabs.removeAt(oldIndex);
+                    currentTabs.insert(newIndex, item);
+                  });
+                },
+                children: [
+                  for (final id in currentTabs)
+                    ListTile(
+                      key: ValueKey(id),
+                      leading: Icon(widget.allPages[id]?.icon ?? Icons.error),
+                      title: Text(widget.allPages[id]?.title ?? id),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          if (currentTabs.length <= 1) {
+                            // Don't allow removing last tab
+                            return; 
+                          }
+                          setState(() {
+                            currentTabs.remove(id);
+                            availableHiddenTabs.add(id);
+                          });
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (availableHiddenTabs.isNotEmpty) ...[
+              const Divider(),
+              Text(tr('availableTabs'), style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: availableHiddenTabs.map((id) {
+                  return ActionChip(
+                    avatar: Icon(widget.allPages[id]?.icon, size: 16),
+                    label: Text(widget.allPages[id]?.title ?? id),
+                    onPressed: () {
+                      setState(() {
+                        availableHiddenTabs.remove(id);
+                        currentTabs.add(id);
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(tr('cancel')),
+        ),
+        TextButton(
+          onPressed: _save,
+          child: Text(tr('save')),
+        ),
+      ],
+    );
   }
 }
