@@ -7,6 +7,7 @@ import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
 
 class SourceUtils {
   static Future<Response> httpRequest(
@@ -184,7 +185,7 @@ class SourceUtils {
     bool? invert,
   ) {
     if (apkFilterRegEx?.isNotEmpty == true) {
-      var reg = RegExp(apkFilterRegEx!)
+      var reg = RegExp(apkFilterRegEx!);
       apkUrls = apkUrls.where((element) {
         var hasMatch = reg.hasMatch(element.key);
         return invert == true ? !hasMatch : hasMatch;

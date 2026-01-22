@@ -18,6 +18,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/source_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -220,7 +221,7 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
             inferAppIdIfOptional: inferAppIdIfOptional,
           );
           // Only download the APK here if you need to for the package ID
-          if (isTempId(app) && app.additionalSettings['trackOnly'] != true) {
+          if (SourceUtils.isTempId(app) && app.additionalSettings['trackOnly'] != true) {
             // ignore: use_build_context_synchronously
             var apkUrl = await appsProvider.confirmAppFileUrl(
               app,
