@@ -125,7 +125,7 @@ class FDroidRepo extends AppSource {
   App endOfGetAppChanges(App app) {
     var uri = Uri.parse(app.url);
     String? appId;
-    if (!isTempId(app)) {
+    if (!SourceUtils.isTempId(app)) {
       appId = app.id;
     } else if (uri.queryParameters['appId'] != null) {
       appId = uri.queryParameters['appId'];
