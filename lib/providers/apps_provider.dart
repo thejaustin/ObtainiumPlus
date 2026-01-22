@@ -36,6 +36,7 @@ import 'package:flutter_fgbg/flutter_fgbg.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/source_utils.dart';
 import 'package:http/http.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter_archive/flutter_archive.dart';
@@ -149,7 +150,7 @@ class AppsProvider with ChangeNotifier {
     File downloadedFile,
     String downloadUrl,
   ) async {
-    var isTempIdBool = isTempId(app);
+    var isTempIdBool = SourceUtils.isTempId(app);
     if (app.id != newInfo.packageName) {
       if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
         throw IDChangedError(newInfo.packageName!);

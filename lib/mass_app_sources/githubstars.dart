@@ -7,6 +7,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/source_utils.dart';
 
 class GitHubStars implements MassAppUrlSource {
   @override
@@ -41,7 +42,7 @@ class GitHubStars implements MassAppUrlSource {
     } else {
       var gh = GitHub();
       gh.rateLimitErrorCheck(res);
-      throw getObtainiumHttpError(res);
+      throw SourceUtils.getObtainiumHttpError(res);
     }
   }
 

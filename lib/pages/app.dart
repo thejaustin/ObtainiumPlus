@@ -14,6 +14,7 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
+import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -153,7 +154,7 @@ class _AppPageState extends State<AppPage> {
         app?.app.additionalSettings['versionDetection'] == true;
 
     bool installedVersionIsEstimate = app?.app != null
-        ? isVersionPseudo(app!.app)
+        ? SourceUtils.isVersionPseudo(app!.app)
         : false;
 
     if (app != null && !_wasWebViewOpened) {
