@@ -58,7 +58,7 @@ class ThemeSettingsSection extends StatelessWidget {
       children: [
         if (themeWidgets.any((w) => w is! SizedBox))
           SettingsGroup(
-            title: isSearching ? null : tr('themeAndColors'),
+            title: isSearching ? null : (tr('appearance') ?? 'Appearance'),
             children: themeWidgets,
           ),
         if (typographyWidgets.any((w) => w is! SizedBox))
