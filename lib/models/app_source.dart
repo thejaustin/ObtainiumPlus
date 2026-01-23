@@ -6,8 +6,10 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
+
 import 'package:obtainium/utils/version_utils.dart';
 
 abstract class AppSource {
@@ -141,7 +143,7 @@ abstract class AppSource {
         'versionExtractionRegEx',
         label: tr('trimVersionString'),
         required: false,
-        additionalValidators: [(value) => regExValidator(value)],
+        additionalValidators: [(value) => SourceUtils.regExValidator(value)],
       ),
     ],
     [
@@ -174,7 +176,7 @@ abstract class AppSource {
         required: false,
         additionalValidators: [
           (value) {
-            return regExValidator(value);
+            return SourceUtils.regExValidator(value);
           },
         ],
       ),
@@ -292,7 +294,7 @@ abstract class AppSource {
             required: false,
             additionalValidators: [
               (value) {
-                return regExValidator(value);
+                return SourceUtils.regExValidator(value);
               },
             ],
           ),

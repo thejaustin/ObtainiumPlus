@@ -996,3 +996,15 @@ class _GeneratedFormState extends State<GeneratedForm> {
     );
   }
 }
+
+Map<String, dynamic> getDefaultValuesFromFormItems(
+  List<List<GeneratedFormItem>> items,
+) {
+  Map<String, dynamic> values = {};
+  for (var row in items) {
+    for (var e in row) {
+      values[e.key] = e.defaultValue;
+    }
+  }
+  return values;
+}
