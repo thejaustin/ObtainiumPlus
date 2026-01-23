@@ -782,7 +782,7 @@ class _SelectionModalState extends State<SelectionModal> {
                   required: false,
                   additionalValidators: [
                     (value) {
-                      return regExValidator(value);
+                      return SourceUtils.regExValidator(value);
                     },
                   ],
                 ),
