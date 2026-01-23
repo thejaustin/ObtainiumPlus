@@ -119,6 +119,28 @@ jobs:
           echo "Built APK:"
           ls -lh ./build/app/outputs/flutter-apk/
 
+      - name: Generate Changelog
+        id: build_changelog
+        run: |
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found. Listing all commits."
+            CHANGELOG=$(git log --pretty=format:"* %s (%h)" --no-merges)
+          else
+            echo "Generating changelog since $PREVIOUS_TAG"
+            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"* %s (%h)" --no-merges)
+          fi
+          
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No significant changes."
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Commit version bump
         id: commit_bump
         if: steps.bump_version.outputs.version_changed == 'true'
@@ -160,4 +182,4 @@ jobs:
             ---
 
             ### 📝 Changes
-            *(See auto-generated notes below)*
+            ${{ steps.build_changelog.outputs.changelog }}
