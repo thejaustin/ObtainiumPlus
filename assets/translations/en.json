@@ -144,6 +144,7 @@
     "appearance": "Appearance",
     "general": "General",
     "advanced": "Advanced",
+    "basics": "Basics",
     "showWebInAppView": "Show source webpage in app view",
     "pinUpdates": "Pin updates to top of apps view",
     "updates": "Updates",

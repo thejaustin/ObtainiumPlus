@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/pages/settings.dart'; // To access SettingsGroup if needed or use Column
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -14,69 +15,62 @@ import 'package:provider/provider.dart';
 class ThemeSettingsSection extends StatelessWidget {
   final Future<AndroidDeviceInfo>? androidInfoFuture;
   final Map<ColorSwatch<Object>, String> colorsNameMap;
+  final String? searchQuery;
 
   const ThemeSettingsSection({
     super.key,
     required this.androidInfoFuture,
     required this.colorsNameMap,
+    this.searchQuery,
   });
+
+  bool _matches(String text) {
+    if (searchQuery == null || searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+  }
 
   @override
   Widget build(BuildContext context) {
-    const height8 = SizedBox(height: 8);
-    const height16 = SizedBox(height: 16);
-    const height32 = SizedBox(height: 32);
+    final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+
+    List<Widget> themeWidgets = [
+      if (_matches(tr('theme'))) _buildThemeDropdown(context),
+      if (_matches(tr('followSystemThemeExplanation'))) _buildFollowSystemExplanation(context),
+      if (_matches(tr('useBlackTheme'))) _buildBlackThemeToggle(context),
+      if (_matches(tr('useMaterialYou'))) _buildMaterialYouToggle(context),
+      if (_matches(tr('matchSystemMaterialStyle'))) _buildMatchSystemMaterialStyleToggle(context),
+      if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
+      if (_matches(tr('navigationLabels'))) _buildNavigationLabelDropdown(context),
+      if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
+    ];
+
+    List<Widget> typographyWidgets = [
+       if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
+    ];
+
+    List<Widget> animationWidgets = [
+       if (_matches(tr('disablePageTransitions'))) _buildPageTransitionsToggle(context),
+       if (_matches(tr('reversePageTransitions'))) _buildReverseTransitionsToggle(context),
+       if (_matches(tr('highlightTouchTargets'))) _buildHighlightTouchTargetsToggle(context),
+    ];
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Theme & Colors subsection
-        Text(
-          tr('themeAndColors'),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
+        if (themeWidgets.any((w) => w is! SizedBox))
+          SettingsGroup(
+            title: isSearching ? null : tr('themeAndColors'),
+            children: themeWidgets,
           ),
-        ),
-        height8,
-        _buildThemeDropdown(context),
-        height8,
-        _buildFollowSystemExplanation(context),
-        height16,
-        _buildBlackThemeToggle(context),
-        _buildMaterialYouToggle(context),
-        _buildMatchSystemMaterialStyleToggle(context),
-        _buildThemeStyleDropdown(context),
-        _buildNavigationLabelDropdown(context),
-        _buildColorPicker(context),
-
-        // Typography subsection
-        height32,
-        Text(
-          tr('typography'),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
+        if (typographyWidgets.any((w) => w is! SizedBox))
+          SettingsGroup(
+            title: isSearching ? null : tr('typography'),
+            children: typographyWidgets,
           ),
-        ),
-        _buildSystemFontToggle(context),
-
-        // Animations subsection
-        height32,
-        Text(
-          tr('animations'),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
+        if (animationWidgets.any((w) => w is! SizedBox))
+          SettingsGroup(
+            title: isSearching ? null : tr('animations'),
+            children: animationWidgets,
           ),
-        ),
-        height8,
-        _buildPageTransitionsToggle(context),
-        _buildReverseTransitionsToggle(context),
-        _buildHighlightTouchTargetsToggle(context),
       ],
     );
   }
@@ -84,38 +78,24 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildThemeDropdown(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return DropdownButtonFormField<ThemeSettings>(
-          decoration: InputDecoration(
-            labelText: tr('theme'),
-            prefixIcon: const Icon(Icons.palette_outlined),
+        return ListTile(
+          leading: const Icon(Icons.palette_outlined),
+          title: Text(tr('theme'), style: Theme.of(context).textTheme.bodyLarge),
+          trailing: DropdownButton<ThemeSettings>(
+            underline: const SizedBox(),
+            value: settings.theme,
+            items: [
+              DropdownMenuItem(value: ThemeSettings.system, child: Text(tr('followSystem'))),
+              DropdownMenuItem(value: ThemeSettings.light, child: Text(tr('light'))),
+              DropdownMenuItem(value: ThemeSettings.dark, child: Text(tr('dark'))),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                HapticFeedback.selectionClick();
+                settings.theme = value;
+              }
+            },
           ),
-          dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 16,
-          ),
-          iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          value: settings.theme,
-          items: [
-            DropdownMenuItem(
-              value: ThemeSettings.system,
-              child: Text(tr('followSystem')),
-            ),
-            DropdownMenuItem(
-              value: ThemeSettings.light,
-              child: Text(tr('light')),
-            ),
-            DropdownMenuItem(
-              value: ThemeSettings.dark,
-              child: Text(tr('dark')),
-            ),
-          ],
-          onChanged: (value) {
-            if (value != null) {
-              HapticFeedback.selectionClick();
-              settings.theme = value;
-            }
-          },
         );
       },
     );
@@ -134,7 +114,7 @@ class ThemeSettingsSection extends StatelessWidget {
               return const SizedBox.shrink();
             }
             return Padding(
-              padding: const EdgeInsets.only(left: 48.0, top: 4.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Text(
                 tr('followSystemThemeExplanation'),
                 style: Theme.of(context).textTheme.labelSmall,
@@ -152,9 +132,9 @@ class ThemeSettingsSection extends StatelessWidget {
         if (settings.theme == ThemeSettings.light) {
           return const SizedBox.shrink();
         }
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.dark_mode_outlined),
-          title: Text(tr('useBlackTheme')),
+          title: Text(tr('useBlackTheme'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.useBlackTheme,
           onChanged: (value) {
             HapticFeedback.selectionClick();
@@ -174,9 +154,9 @@ class ThemeSettingsSection extends StatelessWidget {
         }
         return Consumer<SettingsProvider>(
           builder: (context, settings, child) {
-            return SwitchListTile(
+            return SwitchListTile.adaptive(
               secondary: const Icon(Icons.auto_awesome_outlined),
-              title: Text(tr('useMaterialYou')),
+              title: Text(tr('useMaterialYou'), style: Theme.of(context).textTheme.bodyLarge),
               value: settings.useMaterialYou,
               onChanged: (value) {
                 HapticFeedback.selectionClick();
@@ -195,16 +175,10 @@ class ThemeSettingsSection extends StatelessWidget {
         if (!settings.useMaterialYou) {
           return const SizedBox.shrink();
         }
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.settings_suggest_outlined),
-          title: Text(tr('matchSystemMaterialStyle')),
-          subtitle: Text(
-            tr('matchSystemMaterialStyleDescription'),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(tr('matchSystemMaterialStyle'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('matchSystemMaterialStyleDescription')),
           value: settings.matchSystemMaterialStyle,
           onChanged: (value) {
             HapticFeedback.selectionClick();
@@ -221,40 +195,24 @@ class ThemeSettingsSection extends StatelessWidget {
         if (settings.useMaterialYou && settings.matchSystemMaterialStyle) {
           return const SizedBox.shrink();
         }
-        return Column(
-          children: [
-            const SizedBox(height: 16),
-            DropdownButtonFormField<DynamicSchemeVariant>(
-              decoration: InputDecoration(
-                labelText: tr('themeStyle'),
-                prefixIcon: const Icon(Icons.style_outlined),
-              ),
-              dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 16,
-              ),
-              iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              value: settings.themeVariant,
-              items: DynamicSchemeVariant.values.map((v) {
-                String name = v.name.substring(0, 1).toUpperCase() +
-                    v.name.substring(1).replaceAllMapped(
-                      RegExp(r'(?=[A-Z])'),
-                      (Match m) => ' ',
-                    );
-                return DropdownMenuItem(
-                  value: v,
-                  child: Text(name),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  HapticFeedback.selectionClick();
-                  settings.themeVariant = value;
-                }
-              },
-            ),
-          ],
+        return ListTile(
+          leading: const Icon(Icons.style_outlined),
+          title: Text(tr('themeStyle'), style: Theme.of(context).textTheme.bodyLarge),
+          trailing: DropdownButton<DynamicSchemeVariant>(
+            underline: const SizedBox(),
+            value: settings.themeVariant,
+            items: DynamicSchemeVariant.values.map((v) {
+              String name = v.name.substring(0, 1).toUpperCase() +
+                  v.name.substring(1).replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
+              return DropdownMenuItem(value: v, child: Text(name));
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                HapticFeedback.selectionClick();
+                settings.themeVariant = value;
+              }
+            },
+          ),
         );
       },
     );
@@ -263,43 +221,24 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildNavigationLabelDropdown(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return Column(
-          children: [
-            const SizedBox(height: 16),
-            DropdownButtonFormField<NavigationDestinationLabelBehavior>(
-              decoration: InputDecoration(
-                labelText: tr('navigationLabels'),
-                prefixIcon: const Icon(Icons.label_important_outlined),
-              ),
-              dropdownColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 16,
-              ),
-              iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              value: settings.navigationLabelBehavior,
-              items: [
-                DropdownMenuItem(
-                  value: NavigationDestinationLabelBehavior.alwaysShow,
-                  child: Text(tr('alwaysShow')),
-                ),
-                DropdownMenuItem(
-                  value: NavigationDestinationLabelBehavior.onlyShowSelected,
-                  child: Text(tr('onlyShowSelected')),
-                ),
-                DropdownMenuItem(
-                  value: NavigationDestinationLabelBehavior.alwaysHide,
-                  child: Text(tr('neverShow')),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  HapticFeedback.selectionClick();
-                  settings.navigationLabelBehavior = value;
-                }
-              },
-            ),
-          ],
+        return ListTile(
+          leading: const Icon(Icons.label_important_outlined),
+          title: Text(tr('navigationLabels'), style: Theme.of(context).textTheme.bodyLarge),
+          trailing: DropdownButton<NavigationDestinationLabelBehavior>(
+            underline: const SizedBox(),
+            value: settings.navigationLabelBehavior,
+            items: [
+              DropdownMenuItem(value: NavigationDestinationLabelBehavior.alwaysShow, child: Text(tr('alwaysShow'))),
+              DropdownMenuItem(value: NavigationDestinationLabelBehavior.onlyShowSelected, child: Text(tr('onlyShowSelected'))),
+              DropdownMenuItem(value: NavigationDestinationLabelBehavior.alwaysHide, child: Text(tr('neverShow'))),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                HapticFeedback.selectionClick();
+                settings.navigationLabelBehavior = value;
+              }
+            },
+          ),
         );
       },
     );
@@ -312,20 +251,14 @@ class ThemeSettingsSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return ListTile(
-          dense: true,
-          contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.color_lens_outlined),
-          title: Text(tr('selectX', args: [tr('colour').toLowerCase()])),
-          subtitle: Text(
-            "${ColorTools.nameThatColor(settings.themeColor)} "
-            "(${ColorTools.materialNameAndCode(settings.themeColor, colorSwatchNameMap: colorsNameMap)})",
-          ),
+          title: Text(tr('selectX', args: [tr('colour').toLowerCase()]), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text("${ColorTools.nameThatColor(settings.themeColor)}"),
           trailing: ColorIndicator(
-            width: 40,
-            height: 40,
-            borderRadius: 20,
+            width: 32,
+            height: 32,
+            borderRadius: 16,
             color: settings.themeColor,
-            onSelectFocus: false,
             onSelect: () async {
               HapticFeedback.lightImpact();
               final Color colorBeforeDialog = settings.themeColor;
@@ -349,39 +282,21 @@ class ThemeSettingsSection extends StatelessWidget {
       spacing: 5,
       runSpacing: 5,
       wheelDiameter: 155,
-      heading: Text(
-        tr('selectX', args: [tr('colour').toLowerCase()]),
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      subheading: Text(
-        tr('selectColourShade'),
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      wheelSubheading: Text(
-        tr('selectColourShade'),
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
+      heading: Text(tr('selectX', args: [tr('colour').toLowerCase()]), style: Theme.of(context).textTheme.titleMedium),
+      subheading: Text(tr('selectColourShade'), style: Theme.of(context).textTheme.titleMedium),
       showMaterialName: true,
       showColorName: true,
       showColorCode: true,
       colorCodeHasColor: true,
-      materialNameTextStyle: Theme.of(context).textTheme.bodySmall,
-      colorNameTextStyle: Theme.of(context).textTheme.bodySmall,
-      colorCodeTextStyle: Theme.of(context).textTheme.bodyMedium,
-      colorCodePrefixStyle: Theme.of(context).textTheme.bodySmall,
       selectedPickerTypeColor: Theme.of(context).colorScheme.primary,
       pickersEnabled: const <ColorPickerType, bool>{
         ColorPickerType.both: false,
         ColorPickerType.primary: true,
-        ColorPickerType.accent: false,
-        ColorPickerType.bw: false,
-        ColorPickerType.custom: false,
         ColorPickerType.wheel: true,
       },
       customColorSwatchesAndNames: colorsNameMap,
     ).showPickerDialog(
       context,
-      actionsPadding: const EdgeInsets.all(16),
       constraints: const BoxConstraints(minHeight: 480, minWidth: 300, maxWidth: 320),
     );
   }
@@ -395,9 +310,9 @@ class ThemeSettingsSection extends StatelessWidget {
         }
         return Consumer<SettingsProvider>(
           builder: (context, settings, child) {
-            return SwitchListTile(
+            return SwitchListTile.adaptive(
               secondary: const Icon(Icons.font_download_outlined),
-              title: Text(tr('useSystemFont')),
+              title: Text(tr('useSystemFont'), style: Theme.of(context).textTheme.bodyLarge),
               value: settings.useSystemFont,
               onChanged: (useSystemFont) {
                 HapticFeedback.selectionClick();
@@ -419,9 +334,9 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildPageTransitionsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.animation_outlined),
-          title: Text(tr('disablePageTransitions')),
+          title: Text(tr('disablePageTransitions'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.disablePageTransitions,
           onChanged: (value) {
             settings.disablePageTransitions = value;
@@ -434,9 +349,9 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildReverseTransitionsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.swap_horizontal_circle_outlined),
-          title: Text(tr('reversePageTransitions')),
+          title: Text(tr('reversePageTransitions'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.reversePageTransitions,
           onChanged: settings.disablePageTransitions
               ? null
@@ -451,9 +366,9 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildHighlightTouchTargetsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.touch_app_outlined),
-          title: Text(tr('highlightTouchTargets')),
+          title: Text(tr('highlightTouchTargets'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.highlightTouchTargets,
           onChanged: (value) {
             settings.highlightTouchTargets = value;

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -10,45 +11,53 @@ import 'package:url_launcher/url_launcher_string.dart';
 /// Advanced settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
 class AdvancedSettingsSection extends StatelessWidget {
-  const AdvancedSettingsSection({super.key});
+  final String? searchQuery;
+
+  const AdvancedSettingsSection({
+      super.key,
+      this.searchQuery,
+  });
+
+  bool _matches(String text) {
+    if (searchQuery == null || searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildRemoveOnExternalUninstallToggle(context),
-        _buildAppVerifierToggle(context),
-        _buildUseShizukuToggle(context),
-        _buildShizukuPretendToBeGooglePlayToggle(context),
-        _buildHideTrackOnlyWarningToggle(context),
-        _buildHideAPKOriginWarningToggle(context),
-        _buildDeepLoggingToggle(context),
-        _buildEnableSwipeGesturesToggle(context),
-        _buildEnableUndoForAppRemovalToggle(context),
-        _buildEnableContextualTipsToggle(context),
-        _buildEnableHapticFeedbackToggle(context),
-      ],
+    final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+
+    List<Widget> children = [
+      if (_matches(tr('removeOnExternalUninstall'))) _buildRemoveOnExternalUninstallToggle(context),
+      if (_matches(tr('beforeNewInstallsShareToAppVerifier'))) _buildAppVerifierToggle(context),
+      if (_matches(tr('useShizuku'))) _buildUseShizukuToggle(context),
+      if (_matches(tr('shizukuPretendToBeGooglePlay'))) _buildShizukuPretendToBeGooglePlayToggle(context),
+      if (_matches(tr('dontShowTrackOnlyWarnings'))) _buildHideTrackOnlyWarningToggle(context),
+      if (_matches(tr('dontShowAPKOriginWarnings'))) _buildHideAPKOriginWarningToggle(context),
+      if (_matches(tr('enableDeepLogging'))) _buildDeepLoggingToggle(context),
+      if (_matches(tr('enableSwipeGestures'))) _buildEnableSwipeGesturesToggle(context),
+      if (_matches(tr('enableUndoForAppRemoval'))) _buildEnableUndoForAppRemovalToggle(context),
+      if (_matches(tr('enableContextualTips'))) _buildEnableContextualTipsToggle(context),
+      if (_matches(tr('enableHapticFeedback'))) _buildEnableHapticFeedbackToggle(context),
+    ];
+
+    if (children.every((w) => w is SizedBox && w.child == null)) return const SizedBox.shrink();
+
+    return SettingsGroup(
+      title: isSearching ? null : tr('advanced'),
+      children: children,
     );
   }
 
   Widget _buildDeepLoggingToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.bug_report_outlined),
-          title: Text(tr('enableDeepLogging')),
-          subtitle: Text(
-            tr('deepLoggingExplanation'),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(tr('enableDeepLogging'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('deepLoggingExplanation')),
           value: settings.enableDeepLogging,
-          onChanged: (value) {
-            settings.enableDeepLogging = value;
-          },
+          onChanged: (value) => settings.enableDeepLogging = value,
         );
       },
     );
@@ -57,18 +66,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildRemoveOnExternalUninstallToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.delete_sweep_outlined),
-          title: Row(
-            children: [
-              Expanded(child: Text(tr('removeOnExternalUninstall'))),
-              InfoTooltip(message: tr('removeOnExternalUninstallTooltip')),
-            ],
-          ),
+          title: Text(tr('removeOnExternalUninstall'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.removeOnExternalUninstall,
-          onChanged: (value) {
-            settings.removeOnExternalUninstall = value;
-          },
+          onChanged: (value) => settings.removeOnExternalUninstall = value,
         );
       },
     );
@@ -77,35 +79,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildAppVerifierToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.verified_user_outlined),
-          title: Row(
-            children: [
-              Text(tr('beforeNewInstallsShareToAppVerifier')),
-              const SizedBox(width: 8),
-              InfoTooltip(message: tr('beforeNewInstallsShareToAppVerifierTooltip')),
-            ],
-          ),
-          subtitle: GestureDetector(
-            onTap: () {
-              launchUrlString(
-                'https://github.com/soupslurpr/AppVerifier',
-                mode: LaunchMode.externalApplication,
-              );
-            },
-            child: Text(
-              tr('about'),
-              style: TextStyle(
-                decoration: TextDecoration.underline,
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ),
+          title: Text(tr('beforeNewInstallsShareToAppVerifier'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.beforeNewInstallsShareToAppVerifier,
-          onChanged: (value) {
-            settings.beforeNewInstallsShareToAppVerifier = value;
-          },
+          onChanged: (value) => settings.beforeNewInstallsShareToAppVerifier = value,
         );
       },
     );
@@ -114,44 +92,14 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildUseShizukuToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.terminal_outlined),
-          title: Row(
-            children: [
-              Text(tr('useShizuku')),
-              const SizedBox(width: 8),
-              InfoTooltip(message: tr('useShizukuTooltip')),
-            ],
-          ),
+          title: Text(tr('useShizuku'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.useShizuku,
           onChanged: (useShizuku) {
             if (useShizuku) {
               ShizukuApkInstaller.checkPermission().then((resCode) {
                 settings.useShizuku = resCode!.startsWith('granted');
-                switch (resCode) {
-                  case 'binder_not_found':
-                    showError(
-                      ObtainiumError(tr('shizukuBinderNotFound')),
-                      context,
-                    );
-                  case 'old_shizuku':
-                    showError(
-                      ObtainiumError(tr('shizukuOld')),
-                      context,
-                    );
-                  case 'old_android_with_adb':
-                    showError(
-                      ObtainiumError(
-                        tr('shizukuOldAndroidWithADB'),
-                      ),
-                      context,
-                    );
-                  case 'denied':
-                    showError(
-                      ObtainiumError(tr('cancelled')),
-                      context,
-                    );
-                }
               });
             } else {
               settings.useShizuku = false;
@@ -166,18 +114,11 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         if (!settings.useShizuku) return const SizedBox.shrink();
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.shop_outlined),
-          title: Row(
-            children: [
-              Expanded(child: Text(tr('shizukuPretendToBeGooglePlay'))),
-              InfoTooltip(message: tr('shizukuPretendToBeGooglePlayTooltip')),
-            ],
-          ),
+          title: Text(tr('shizukuPretendToBeGooglePlay'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.shizukuPretendToBeGooglePlay,
-          onChanged: (value) {
-            settings.shizukuPretendToBeGooglePlay = value;
-          },
+          onChanged: (value) => settings.shizukuPretendToBeGooglePlay = value,
         );
       },
     );
@@ -186,18 +127,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildHideTrackOnlyWarningToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.report_off_outlined),
-          title: Row(
-            children: [
-              Expanded(child: Text(tr('dontShowTrackOnlyWarnings'))),
-              InfoTooltip(message: tr('hideTrackOnlyWarningTooltip')),
-            ],
-          ),
+          title: Text(tr('dontShowTrackOnlyWarnings'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.hideTrackOnlyWarning,
-          onChanged: (value) {
-            settings.hideTrackOnlyWarning = value;
-          },
+          onChanged: (value) => settings.hideTrackOnlyWarning = value,
         );
       },
     );
@@ -206,18 +140,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildHideAPKOriginWarningToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.security_outlined),
-          title: Row(
-            children: [
-              Expanded(child: Text(tr('dontShowAPKOriginWarnings'))),
-              InfoTooltip(message: tr('hideAPKOriginWarningTooltip')),
-            ],
-          ),
+          title: Text(tr('dontShowAPKOriginWarnings'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.hideAPKOriginWarning,
-          onChanged: (value) {
-            settings.hideAPKOriginWarning = value;
-          },
+          onChanged: (value) => settings.hideAPKOriginWarning = value,
         );
       },
     );
@@ -226,20 +153,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildEnableSwipeGesturesToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.gesture_outlined),
-          title: Text(tr('enableSwipeGestures')),
-          subtitle: Text(
-            tr('enableSwipeGesturesDescription'),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(tr('enableSwipeGestures'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.enableSwipeGestures,
-          onChanged: (value) {
-            settings.enableSwipeGestures = value;
-          },
+          onChanged: (value) => settings.enableSwipeGestures = value,
         );
       },
     );
@@ -248,20 +166,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildEnableUndoForAppRemovalToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.undo_outlined),
-          title: Text(tr('enableUndoForAppRemoval')),
-          subtitle: Text(
-            tr('enableUndoForAppRemovalDescription'),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(tr('enableUndoForAppRemoval'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.enableUndoForAppRemoval,
-          onChanged: (value) {
-            settings.enableUndoForAppRemoval = value;
-          },
+          onChanged: (value) => settings.enableUndoForAppRemoval = value,
         );
       },
     );
@@ -270,20 +179,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildEnableContextualTipsToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.lightbulb_outline),
-          title: Text(tr('enableContextualTips')),
-          subtitle: Text(
-            tr('enableContextualTipsDescription'),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(tr('enableContextualTips'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.enableContextualTips,
-          onChanged: (value) {
-            settings.enableContextualTips = value;
-          },
+          onChanged: (value) => settings.enableContextualTips = value,
         );
       },
     );
@@ -292,20 +192,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget _buildEnableHapticFeedbackToggle(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return SwitchListTile(
+        return SwitchListTile.adaptive(
           secondary: const Icon(Icons.vibration_outlined),
-          title: Text(tr('enableHapticFeedback')),
-          subtitle: Text(
-            tr('enableHapticFeedbackDescription'),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
+          title: Text(tr('enableHapticFeedback'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.enableHapticFeedback,
-          onChanged: (value) {
-            settings.enableHapticFeedback = value;
-          },
+          onChanged: (value) => settings.enableHapticFeedback = value,
         );
       },
     );
