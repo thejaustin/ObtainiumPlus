@@ -556,17 +556,6 @@ class AppsPageState extends State<AppsPage> {
       ];
     }
 
-    getSelectAllButton() {
-      return TextButton.icon(
-        onPressed: () {
-          HapticFeedback.selectionClick();
-          selectedAppIds.isEmpty ? selectThese(listedApps.map((e) => e.app).toList()) : clearSelected();
-        },
-        icon: Icon(selectedAppIds.isEmpty ? Icons.select_all_outlined : Icons.deselect_outlined),
-        label: Text(selectedAppIds.isEmpty ? listedApps.length.toString() : selectedAppIds.length.toString()),
-      );
-    }
-
     getMassObtainFunction() {
       if (appsProvider.areDownloadsRunning() || (existingUpdateIds.isEmpty && newInstallIds.isEmpty && trackOnlyUpdateIds.isEmpty)) return null;
       return () {
@@ -641,74 +630,6 @@ class AppsPageState extends State<AppsPage> {
         },
       );
       if (values != null) setState(() => filter.setFormValuesFromMap(values));
-    }
-
-    getFilterButtonsRow() {
-      var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
-      return Row(
-        children: [
-          getSelectAllButton(),
-          IconButton(
-            onPressed: isFilterOff ? showFilterDialog : () => setState(() => filter = AppsFilter()),
-            icon: Icon(isFilterOff ? Icons.search_rounded : Icons.search_off_rounded),
-          ),
-          IconButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                builder: (context) => const ImportExportPage(),
-              );
-            },
-            icon: const Icon(Icons.import_export),
-          ),
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return GeneratedFormModal(
-                    title: tr('sortOptions'),
-                    items: [
-                      [
-                        GeneratedFormDropdown(
-                          'sortMethod',
-                          label: tr('sortMethod'),
-                          defaultValue: settingsProvider.appSortMethod.toString(),
-                          AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
-                        )
-                      ],
-                    ],
-                  );
-                },
-              ).then((value) {
-                if (value != null) {
-                  settingsProvider.setAppSortMethod(
-                    AppSortMethod.values.firstWhere(
-                      (e) => e.toString() == value['sortMethod'],
-                    ),
-                  );
-                }
-              });
-            },
-            icon: const Icon(Icons.sort_rounded),
-          ),
-          IconButton(
-            onPressed: () {
-              settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
-                  ? ViewMode.grid
-                  : ViewMode.list;
-            },
-            icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
-          ),
-          const Expanded(child: SizedBox()),
-          IconButton(
-            onPressed: getMassObtainFunction(),
-            icon: const Icon(Icons.file_download_outlined),
-          ),
-        ],
-      );
     }
 
     return Scaffold(
