@@ -601,15 +601,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
 
       const _SubMenuPage({required this.title, required this.child});
 
-      @override
-      Widget build(BuildContext context) {
-        return Scaffold(
-          appBar: CustomAppBar(title: title, context: context),
-          body: child,
-        );
-      }
-    }
-    
+        @override
+        Widget build(BuildContext context) {
+          return Scaffold(
+            appBar: CustomAppBar(title: title),
+            body: child,
+          );
+        }
+      }    
     class SettingsGroup extends StatelessWidget {
     
       final String? title;
