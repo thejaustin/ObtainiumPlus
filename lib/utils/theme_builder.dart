@@ -16,7 +16,7 @@ class ThemeBuilder {
       fontFamily: useSystemFont ? 'SystemFont' : 'Roboto', // Changed from Montserrat to Roboto for better readability
       inputDecorationTheme: _buildInputDecorationTheme(colorScheme),
       dropdownMenuTheme: _buildDropdownMenuTheme(colorScheme),
-      textTheme: _buildTextTheme(useSystemFont),
+      textTheme: _buildTextTheme(useSystemFont, colorScheme),
     );
   }
 
@@ -62,8 +62,10 @@ class ThemeBuilder {
   }
 
   /// Builds custom text theme with improved readability and spacing
-  static TextTheme _buildTextTheme(bool useSystemFont) {
-    final baseTextTheme = Typography.material2021().black;
+  static TextTheme _buildTextTheme(bool useSystemFont, ColorScheme colorScheme) {
+    final baseTextTheme = colorScheme.brightness == Brightness.dark
+        ? Typography.material2021().white
+        : Typography.material2021().black;
     final fontFamily = useSystemFont ? 'SystemFont' : 'Roboto';
 
     return baseTextTheme.copyWith(
