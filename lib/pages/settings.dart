@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -13,7 +14,6 @@ import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/components/settings/behavior_settings_section.dart';
 import 'package:obtainium/components/settings/boolean_control_grid.dart';
-import 'package:obtainium/components/settings/quick_toggles_dashboard.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
@@ -37,7 +37,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 AndroidDeviceInfo? _cachedDeviceInfo;
 
 class SettingsPage extends StatefulWidget {
-  final int initialTab;
+  final int initialTab; // Kept for backward compatibility, though tabs are removed
   const SettingsPage({super.key, this.initialTab = 0});
 
   @override
@@ -45,9 +45,10 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
-  late TabController _tabController;
-  
   bool showIntervalLabel = true;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   final Map<ColorSwatch<Object>, String> colorsNameMap =
       <ColorSwatch<Object>, String>{
         ColorTools.createPrimarySwatch(obtainiumThemeColor): 'Obtainium',
@@ -56,22 +57,37 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   // PERFORMANCE: Cache DeviceInfoPlugin result to avoid redundant async calls
   AndroidDeviceInfo? _cachedAndroidInfo;
   Future<AndroidDeviceInfo>? _androidInfoFuture;
+  bool _isIgnoringBatteryOptimizations = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this, initialIndex: widget.initialTab);
     // Cache the android info on init
     _androidInfoFuture = DeviceInfoPlugin().androidInfo.then((info) {
       _cachedAndroidInfo = info;
       return info;
     });
+    _checkBatteryStatus();
+  }
+
+  Future<void> _checkBatteryStatus() async {
+    final isIgnoring = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+    if (mounted) {
+      setState(() {
+        _isIgnoringBatteryOptimizations = isIgnoring;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  bool _matches(String text) {
+    if (_searchQuery.isEmpty) return true;
+    return text.toLowerCase().contains(_searchQuery.toLowerCase());
   }
 
   @override
@@ -80,6 +96,9 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     SourceProvider sourceProvider = SourceProvider();
     if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
 
+    final bool isSearching = _searchQuery.isNotEmpty;
+
+    // --- Dropdowns for Behavior Settings ---
     var sortDropdown = DropdownButtonFormField(
       isExpanded: true,
       decoration: InputDecoration(labelText: tr('appSortBy')),
@@ -90,40 +109,41 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       ),
       iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
       value: settingsProvider.sortColumn,
-      items: [
-        DropdownMenuItem(
-          value: SortColumnSettings.authorName,
-          child: Text(tr('authorName')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.nameAuthor,
-          child: Text(tr('nameAuthor')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.added,
-          child: Text(tr('asAdded')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.releaseDate,
-          child: Text(tr('releaseDate')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.lastUpdated,
-          child: Text(tr('lastUpdated')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.source,
-          child: Text(tr('appSource')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.installDate,
-          child: Text(tr('installDate')),
-        ),
-        DropdownMenuItem(
-          value: SortColumnSettings.lastCheckDate,
-          child: Text(tr('lastCheckDate')),
-        ),
-      ],
+      items:
+          [
+            DropdownMenuItem(
+              value: SortColumnSettings.authorName,
+              child: Text(tr('authorName')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.nameAuthor,
+              child: Text(tr('nameAuthor')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.added,
+              child: Text(tr('asAdded')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.releaseDate,
+              child: Text(tr('releaseDate')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.lastUpdated,
+              child: Text(tr('lastUpdated')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.source,
+              child: Text(tr('appSource')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.installDate,
+              child: Text(tr('installDate')),
+            ),
+            DropdownMenuItem(
+              value: SortColumnSettings.lastCheckDate,
+              child: Text(tr('lastCheckDate')),
+            ),
+          ],
       onChanged: (value) {
         if (value != null) {
           settingsProvider.sortColumn = value;
@@ -141,16 +161,17 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       ),
       iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
       value: settingsProvider.sortOrder,
-      items: [
-        DropdownMenuItem(
-          value: SortOrderSettings.ascending,
-          child: Text(tr('ascending')),
-        ),
-        DropdownMenuItem(
-          value: SortOrderSettings.descending,
-          child: Text(tr('descending')),
-        ),
-      ],
+      items:
+          [
+            DropdownMenuItem(
+              value: SortOrderSettings.ascending,
+              child: Text(tr('ascending')),
+            ),
+            DropdownMenuItem(
+              value: SortOrderSettings.descending,
+              child: Text(tr('descending')),
+            ),
+          ],
       onChanged: (value) {
         if (value != null) {
           settingsProvider.sortOrder = value;
@@ -167,12 +188,13 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       ),
       iconEnabledColor: Theme.of(context).colorScheme.onSurfaceVariant,
       value: settingsProvider.forcedLocale,
-      items: [
-        DropdownMenuItem(value: null, child: Text(tr('followSystem'))),
-        ...supportedLocales.map(
-          (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-        ),
-      ],
+      items:
+          [
+            DropdownMenuItem(value: null, child: Text(tr('followSystem'))),
+            ...supportedLocales.map(
+              (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+            ),
+          ],
       onChanged: (value) {
         settingsProvider.forcedLocale = value;
         if (value != null) {
@@ -182,9 +204,12 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         }
       },
     );
+    // ----------------------------------------
 
     var sourceSpecificFields = sourceProvider.sources.map((e) {
       if (e.sourceConfigSettingFormItems.isNotEmpty) {
+        // We filter these based on source name if needed, but for now show them all
+        // or filter by items inside. GeneratedForm is complex, so we just wrap it.
         return GeneratedForm(
           items: e.sourceConfigSettingFormItems.map((e) {
             if (e is GeneratedFormSwitch) {
@@ -214,184 +239,349 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       }
     });
 
-    const height8 = SizedBox(height: 8);
-    const height16 = SizedBox(height: 16);
-    const height32 = SizedBox(height: 32);
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(tr('settings')),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: tr('appearance')),
-            Tab(text: tr('updatesSources')),
-            Tab(text: tr('appManagement')),
-            Tab(text: tr('advanced')),
+        const height16 = SizedBox(height: 16);
+        const height24 = SizedBox(height: 24);
+    
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          body: CustomScrollView(
+            slivers: [
+                        // 1. Search Header (Chrome Style)
+                        SliverAppBar.large(
+                          backgroundColor: Theme.of(context).colorScheme.surface,
+                          surfaceTintColor: Colors.transparent,
+                          expandedHeight: 180,
+                          flexibleSpace: FlexibleSpaceBar(
+                            titlePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            centerTitle: false,
+                            title: isSearching 
+                              ? null 
+                              : Text(
+                                  tr('settings'),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                            background: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 64),
+                                child: SearchBar(
+                                  controller: _searchController,
+                                  hintText: tr('searchSettings'),
+                                  leading: const Icon(Icons.search),
+                                  elevation: MaterialStateProperty.all(0),
+                                  backgroundColor: MaterialStateProperty.all(
+                                    Theme.of(context).colorScheme.surfaceContainerHigh,
+                                  ),
+                                  shape: MaterialStateProperty.all(
+                                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchQuery = value;
+                                    });
+                                  },
+                                  trailing: [
+                                    if (_searchQuery.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          setState(() {
+                                            _searchQuery = '';
+                                            _searchController.clear();
+                                          });
+                                        },
+                                      )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+              
+                        // 2. Settings Content
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          sliver: SliverList(
+              
+                  delegate: SliverChildListDelegate([
+                    // --- SECTION: BASICS ---
+                    SettingsGroup(
+                      title: isSearching ? null : (tr('basics') ?? 'Basics'),
+                      children: [
+                        if (_matches(tr('theme')))
+                          SwitchListTile.adaptive(
+                            secondary: settingsProvider.theme == ThemeSettings.dark
+                                ? const Icon(Icons.dark_mode_outlined)
+                                : const Icon(Icons.light_mode_outlined),
+                            title: Text(tr('theme'), style: Theme.of(context).textTheme.bodyLarge),
+                            subtitle: Text(settingsProvider.theme == ThemeSettings.dark ? tr('dark') : tr('light')),
+                            value: settingsProvider.theme == ThemeSettings.dark,
+                            onChanged: (value) {
+                               settingsProvider.theme = value ? ThemeSettings.dark : ThemeSettings.light;
+                            },
+                          ),
+                        
+                        if (_matches(tr('backgroundUpdates')))
+                          SwitchListTile.adaptive(
+                            secondary: const Icon(Icons.sync_outlined),
+                            title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
+                            value: settingsProvider.updateInterval > 0,
+                            onChanged: (value) {
+                              settingsProvider.updateInterval = value ? 60 : 0;
+                            },
+                          ),
+    
+                        if (_matches(tr('batteryOpt')))
+                          SwitchListTile.adaptive(
+                            secondary: const Icon(Icons.battery_saver_outlined),
+                            title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
+                            subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
+                            value: _isIgnoringBatteryOptimizations,
+                            onChanged: (value) async {
+                              if (!_isIgnoringBatteryOptimizations) {
+                                await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                                _checkBatteryStatus();
+                              } else if (_cachedAndroidInfo != null) {
+                                 var isXiaomi = ['xiaomi', 'poco', 'redmi'].contains(_cachedAndroidInfo!.manufacturer.toLowerCase()) ||
+                                                ['xiaomi', 'poco', 'redmi'].contains(_cachedAndroidInfo!.brand.toLowerCase());
+                                 if (isXiaomi) {
+                                   if (mounted) {
+                                     showDialog(
+                                       context: context,
+                                       builder: (context) => UpdateSettingsSection(
+                                         showIntervalLabel: true, 
+                                         onIntervalLabelChange: (_) {}, 
+                                         androidInfoFuture: Future.value(_cachedAndroidInfo)
+                                       ).buildXiaomiTroubleshootingDialog(context),
+                                     );
+                                   }
+                                 }
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+    
+                    ThemeSettingsSection(
+                      androidInfoFuture: _androidInfoFuture,
+                      colorsNameMap: colorsNameMap,
+                      searchQuery: _searchQuery,
+                    ),
+    
+                    UpdateSettingsSection(
+                      showIntervalLabel: showIntervalLabel,
+                      onIntervalLabelChange: (value) {
+                        setState(() {
+                          showIntervalLabel = value;
+                        });
+                      },
+                      androidInfoFuture: _androidInfoFuture,
+                      searchQuery: _searchQuery,
+                    ),
+    
+                    if (sourceSpecificFields.isNotEmpty)
+                    SettingsGroup(
+                      title: isSearching ? null : tr('sourceSpecific'),
+                      children: sourceSpecificFields.toList(),
+                    ),
+    
+                    // --- SECTION: ADVANCED ---
+                    SettingsGroup(
+                      title: isSearching ? null : tr('advanced'),
+                      children: [
+                        AppsViewSettingsSection(
+                          onSetState: setState,
+                          searchQuery: _searchQuery,
+                        ),
+                        BehaviorSettingsSection(
+                          sortDropdown: sortDropdown,
+                          orderDropdown: orderDropdown,
+                          localeDropdown: localeDropdown,
+                          searchQuery: _searchQuery,
+                        ),
+                        AdvancedSettingsSection(searchQuery: _searchQuery),
+                      ],
+                    ),
+                    
+                    if (!isSearching || _matches('Troubleshooting'))
+                    SettingsGroup(
+                      children: [
+                        const TroubleshootingSection(),
+                      ],
+                    ),
+    
+                    // --- SECTION: ABOUT ---
+                    SettingsGroup(
+                      title: isSearching ? null : tr('about'),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.code_outlined),
+                          title: Text(tr('appSource'), style: Theme.of(context).textTheme.bodyLarge),
+                          onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.help_outline_rounded),
+                          title: Text(tr('wiki'), style: Theme.of(context).textTheme.bodyLarge),
+                          onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.apps_rounded),
+                          title: Text(tr('crowdsourcedConfigsLabel'), style: Theme.of(context).textTheme.bodyLarge),
+                          onTap: () => launchUrlString('https://apps.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.bug_report_outlined),
+                          title: Text(tr('appLogs'), style: Theme.of(context).textTheme.bodyLarge),
+                          onTap: () {
+                            context.read<LogsProvider>().get().then((logs) {
+                              if (logs.isEmpty) {
+                                showMessage(ObtainiumError(tr('noLogs')), context);
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext ctx) {
+                                    return const LogsDialog();
+                                  },
+                                );
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+    
+                    const SizedBox(height: 64),
+                  ]),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+    
+    class SettingsGroup extends StatelessWidget {
+    
+      final String? title;
+    
+      final List<Widget> children;
+    
+    
+    
+      const SettingsGroup({super.key, this.title, required this.children});
+    
+    
+    
+      @override
+    
+      Widget build(BuildContext context) {
+    
+        // Robustly filter out hidden/empty widgets
+    
+        final visibleChildren = children.where((child) {
+    
+          if (child is SizedBox && child.child == null) return false;
+    
+          if (child is Visibility && !child.visible) return false;
+    
+          return true;
+    
+        }).toList();
+    
+    
+    
+        if (visibleChildren.isEmpty) return const SizedBox.shrink();
+    
+    
+    
+        return Column(
+    
+          crossAxisAlignment: CrossAxisAlignment.start,
+    
+          children: [
+    
+            if (title != null)
+    
+              Padding(
+    
+                padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
+    
+                child: Text(
+    
+                  title!,
+    
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+    
+                        color: Theme.of(context).colorScheme.primary,
+    
+                        fontWeight: FontWeight.bold,
+    
+                      ),
+    
+                ),
+    
+              ),
+    
+            Container(
+    
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+    
+              decoration: BoxDecoration(
+    
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+    
+                borderRadius: BorderRadius.circular(28.0),
+    
+              ),
+    
+              clipBehavior: Clip.antiAlias,
+    
+              child: Column(
+    
+                children: List.generate(visibleChildren.length, (index) {
+    
+                  return Column(
+    
+                    children: [
+    
+                      visibleChildren[index],
+    
+                      if (index < visibleChildren.length - 1)
+    
+                        Divider(
+    
+                          height: 1,
+    
+                          indent: 64, // Standard M3 indent for icons
+    
+                          endIndent: 20,
+    
+                          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+    
+                        ),
+    
+                    ],
+    
+                  );
+    
+                }),
+    
+              ),
+    
+            ),
+    
           ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tab 1: Appearance
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const QuickTogglesDashboard(),
-                      ThemeSettingsSection(
-                        androidInfoFuture: _androidInfoFuture,
-                        colorsNameMap: colorsNameMap,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Tab 2: Updates & Sources
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      UpdateSettingsSection(
-                        showIntervalLabel: showIntervalLabel,
-                        onIntervalLabelChange: (value) {
-                          setState(() {
-                            showIntervalLabel = value;
-                          });
-                        },
-                        androidInfoFuture: _androidInfoFuture,
-                      ),
-                      height16,
-                      ...sourceSpecificFields,
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Tab 3: App Management
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppsViewSettingsSection(
-                        onSetState: setState,
-                      ),
-                      height16,
-                      BehaviorSettingsSection(
-                        sortDropdown: sortDropdown,
-                        orderDropdown: orderDropdown,
-                        localeDropdown: localeDropdown,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Tab 4: Advanced
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AdvancedSettingsSection(),
-                      SizedBox(height: 32),
-                      TroubleshootingSection(),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Divider(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                onPressed: () {
-                  launchUrlString(
-                    settingsProvider.sourceUrl,
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.code),
-                tooltip: tr('appSource'),
-              ),
-              IconButton(
-                onPressed: () {
-                  launchUrlString(
-                    'https://wiki.obtainium.imranr.dev/',
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.help_outline_rounded),
-                tooltip: tr('wiki'),
-              ),
-              IconButton(
-                onPressed: () {
-                  launchUrlString(
-                    'https://apps.obtainium.imranr.dev/',
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.apps_rounded),
-                tooltip: tr('crowdsourcedConfigsLabel'),
-              ),
-              IconButton(
-                onPressed: () {
-                  context.read<LogsProvider>().get().then((logs) {
-                    if (logs.isEmpty) {
-                      showMessage(ObtainiumError(tr('noLogs')), context);
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext ctx) {
-                          return const LogsDialog();
-                        },
-                      );
-                    }
-                  });
-                },
-                icon: const Icon(Icons.bug_report_outlined),
-                tooltip: tr('appLogs'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
+    
+        );
+    
+      }
+    
+    }
+    
+    
+    
 class LogsDialog extends StatefulWidget {
   const LogsDialog({super.key});
 
