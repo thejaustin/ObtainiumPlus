@@ -373,6 +373,8 @@ abstract class AppSource {
   }) {
     throw NotImplementedError();
   }
+
+  void runOnAddAppInputChange(String input) {}
 }
 
 abstract class MassAppUrlSource {

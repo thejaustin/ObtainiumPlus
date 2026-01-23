@@ -9,6 +9,56 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
+HttpClient createHttpClient(bool allowInsecure) {
+  var client = HttpClient();
+  if (allowInsecure) {
+    client.badCertificateCallback =
+        ((X509Certificate cert, String host, int port) => true);
+  }
+  return client;
+}
+
+Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>> sourceRequestStreamResponse(
+  String method,
+  String url,
+  Map<String, String> headers,
+  Map<String, dynamic> sourceConfigSettingValues, {
+  bool followRedirects = true,
+  int maxRedirects = 5,
+  bool allowInsecure = false,
+}) async {
+  var httpClient = createHttpClient(allowInsecure);
+  var currentUrl = url;
+  for (var i = 0; i <= maxRedirects; i++) {
+    var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
+    request.followRedirects = false;
+    headers.forEach((key, value) {
+      request.headers.set(key, value);
+    });
+    var response = await request.close();
+    if (followRedirects &&
+        (
+            response.statusCode == 301 ||
+            response.statusCode == 302 ||
+            response.statusCode == 303 ||
+            response.statusCode == 307 ||
+            response.statusCode == 308)) {
+      var location = response.headers.value('location');
+      if (location != null) {
+        if (location.startsWith('/')) {
+          var uri = Uri.parse(currentUrl);
+          currentUrl = '${uri.scheme}://${uri.host}$location';
+        } else {
+          currentUrl = location;
+        }
+        continue;
+      }
+    }
+    return MapEntry(currentUrl, MapEntry(httpClient, response));
+  }
+  throw ObtainiumError('Too many redirects ($maxRedirects)');
+}
+
 class SourceUtils {
   static Future<Response> httpRequest(
     String url,
@@ -21,11 +71,7 @@ class SourceUtils {
     int maxRedirects = 5,
     bool allowInsecure = false,
   }) async {
-    var httpClient = HttpClient();
-    if (allowInsecure) {
-      httpClient.badCertificateCallback =
-          ((X509Certificate cert, String host, int port) => true);
-    }
+    var httpClient = createHttpClient(allowInsecure);
     var currentUrl = url;
     for (var i = 0; i <= maxRedirects; i++) {
       var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
