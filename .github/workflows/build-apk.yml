@@ -178,9 +178,12 @@ jobs:
             ## Obtainium+ ${{ steps.bump_version.outputs.version }}
 
             **Build:** ${{ steps.bump_version.outputs.build_number }}
-            **Commit:** ${{ github.sha }}
+            **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}
 
             ---
 
             ### 📝 Changes
             ${{ steps.build_changelog.outputs.changelog }}
+            
+            ---
+            *Built with GitHub Actions*
