@@ -17,15 +17,6 @@ class TroubleshootingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          tr('troubleshootingAndSystem'),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        height8,
         _buildSystemShortcutTile(
           context,
           icon: Icons.info_outlined,

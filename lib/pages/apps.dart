@@ -785,8 +785,8 @@ class AppsPageState extends State<AppsPage> {
                 Widget scrollView = CustomScrollView(
                   controller: scrollController,
                   slivers: <Widget>[
-                    // Moved app count to subtitle in CustomAppBar
-                    SliverAppBar(
+                    // Standard M3 Large App Bar
+                    SliverAppBar.large(
                       title: GestureDetector(
                         onLongPress: () {
                           HapticFeedback.heavyImpact();
@@ -799,35 +799,25 @@ class AppsPageState extends State<AppsPage> {
                         },
                         child: Text(tr('appsString')),
                       ),
-                      automaticallyImplyLeading: false, // We're using a custom app bar
-                      flexibleSpace: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (settingsProvider.displayShowAppCount)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-                              child: GestureDetector(
-                                onLongPress: () {
-                                  HapticFeedback.heavyImpact();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const SettingsPage(initialTab: 2),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  '${listedApps.length} ${plural('apps', listedApps.length)}',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
+                      automaticallyImplyLeading: false,
+                      actions: [
+                        if (settingsProvider.displayShowAppCount)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: Text(
+                                '${listedApps.length}',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
+
+                    // Filter Chips & App Count Context (Moved to body to prevent overlap)
                     if (settingsProvider.displayShowFilterChips)
                       getFilterChips(),
                     ...getLoadingWidgets(),
