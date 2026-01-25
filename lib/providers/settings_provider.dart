@@ -1046,4 +1046,71 @@ class SettingsProvider with ChangeNotifier {
     prefs?.setStringList('bottomTabs', tabs);
     notifyListeners();
   }
+
+  // ============================================================
+  // OBTAINIUM+ FEATURES - Granular control over Plus enhancements
+  // ============================================================
+
+  /// Master toggle for all Plus features
+  bool get enableAllPlusFeatures => prefs?.getBool('enableAllPlusFeatures') ?? true;
+  set enableAllPlusFeatures(bool val) {
+    prefs?.setBool('enableAllPlusFeatures', val);
+    notifyListeners();
+  }
+
+  /// Grid View feature (vs list-only)
+  bool get plusEnableGridView => enableAllPlusFeatures && (prefs?.getBool('plusEnableGridView') ?? true);
+  set plusEnableGridView(bool val) {
+    prefs?.setBool('plusEnableGridView', val);
+    notifyListeners();
+  }
+
+  /// Quick status filter chips on Apps page
+  bool get plusEnableQuickFilters => enableAllPlusFeatures && (prefs?.getBool('plusEnableQuickFilters') ?? true);
+  set plusEnableQuickFilters(bool val) {
+    prefs?.setBool('plusEnableQuickFilters', val);
+    notifyListeners();
+  }
+
+  /// Discover tab in Add App page
+  bool get plusEnableDiscover => enableAllPlusFeatures && (prefs?.getBool('plusEnableDiscover') ?? true);
+  set plusEnableDiscover(bool val) {
+    prefs?.setBool('plusEnableDiscover', val);
+    notifyListeners();
+  }
+
+  /// Enhanced M3 animations and transitions
+  bool get plusEnableEnhancedAnimations => enableAllPlusFeatures && (prefs?.getBool('plusEnableEnhancedAnimations') ?? true);
+  set plusEnableEnhancedAnimations(bool val) {
+    prefs?.setBool('plusEnableEnhancedAnimations', val);
+    notifyListeners();
+  }
+
+  /// Advanced sorting options (Latest Updates, Recently Added, etc.)
+  bool get plusEnableAdvancedSorting => enableAllPlusFeatures && (prefs?.getBool('plusEnableAdvancedSorting') ?? true);
+  set plusEnableAdvancedSorting(bool val) {
+    prefs?.setBool('plusEnableAdvancedSorting', val);
+    notifyListeners();
+  }
+
+  /// Category drag-and-drop reordering
+  bool get plusEnableCategoryReorder => enableAllPlusFeatures && (prefs?.getBool('plusEnableCategoryReorder') ?? true);
+  set plusEnableCategoryReorder(bool val) {
+    prefs?.setBool('plusEnableCategoryReorder', val);
+    notifyListeners();
+  }
+
+  /// Swipe actions on app list
+  bool get plusEnableSwipeActions => enableAllPlusFeatures && (prefs?.getBool('plusEnableSwipeActions') ?? true);
+  set plusEnableSwipeActions(bool val) {
+    prefs?.setBool('plusEnableSwipeActions', val);
+    notifyListeners();
+  }
+
+  /// Update schedule feature
+  bool get plusEnableUpdateSchedule => enableAllPlusFeatures && (prefs?.getBool('plusEnableUpdateSchedule') ?? true);
+  set plusEnableUpdateSchedule(bool val) {
+    prefs?.setBool('plusEnableUpdateSchedule', val);
+    notifyListeners();
+  }
 }

@@ -15,6 +15,7 @@ import 'package:obtainium/components/settings/behavior_settings_section.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
+import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
@@ -357,6 +358,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           localeDropdown: localeDropdown,
                           searchQuery: _searchQuery,
                         ),
+                        const SizedBox(height: 24),
+                        PlusFeaturesSection(searchQuery: _searchQuery),
                         const SizedBox(height: 24),
                         AdvancedSettingsSection(searchQuery: _searchQuery),
                         const SizedBox(height: 24),

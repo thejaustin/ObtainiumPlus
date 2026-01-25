@@ -196,7 +196,8 @@ class UpdateSettingsSection extends StatelessWidget {
                     value: settings.bgUpdatesWhileChargingOnly,
                     onChanged: (value) => settings.bgUpdatesWhileChargingOnly = value,
                   ),
-                if (_matches(tr('updateSchedule')))
+                // Only show Update Schedule section if Plus Feature is enabled
+                if (_matches(tr('updateSchedule')) && settings.plusEnableUpdateSchedule)
                   _buildUpdateScheduleSection(context, settings),
               ]
             ];
