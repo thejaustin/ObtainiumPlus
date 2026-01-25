@@ -1,4 +1,4 @@
-package dev.imranr.obtainium
+package app.obtainiumplus
 
 import io.flutter.embedding.android.FlutterActivity
 

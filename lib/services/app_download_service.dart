@@ -72,10 +72,10 @@ class AppDownloadService {
     // Prioritize Obtainium updates last
     appsToInstall = moveStrToEnd(
       appsToInstall,
-      'dev.imranr.obtainium',
+      'app.obtainiumplus',
       strB: 'imranr98_obtainium_github.com',
     );
-    appsToInstall = moveStrToEnd(appsToInstall, 'dev.imranr.obtainium.fdroid');
+    appsToInstall = moveStrToEnd(appsToInstall, 'app.obtainiumplus.fdroid');
 
     List<Map<String, dynamic>> downloadResults = [];
     if (forceParallelDownloads || !settingsProvider.parallelDownloads) {

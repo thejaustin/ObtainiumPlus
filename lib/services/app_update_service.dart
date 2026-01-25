@@ -486,7 +486,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
     if (toInstall.isNotEmpty) {
       var tempObtArr = toInstall.where(
         (element) =>
-            element.key == 'dev.imranr.obtainium' || element.key == 'dev.imranr.obtainium.fdroid',
+            element.key == 'app.obtainiumplus' || element.key == 'app.obtainiumplus.fdroid',
       );
       if (tempObtArr.isNotEmpty) {
         var obt = tempObtArr.first;

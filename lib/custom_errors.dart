@@ -202,7 +202,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
             // We use standard intent as permission_handler request sometimes flakely redirects
              const AndroidIntent intent = AndroidIntent(
                 action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
-                data: 'package:dev.imranr.obtainium', 
+                data: 'package:app.obtainiumplus', 
               );
               intent.launch();
           })
@@ -214,7 +214,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
       fix: FixAction(tr('openInstallUnknownApps'), () {
          const AndroidIntent intent = AndroidIntent(
             action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
-            data: 'package:dev.imranr.obtainium', 
+            data: 'package:app.obtainiumplus', 
           );
           intent.launch();
       })
