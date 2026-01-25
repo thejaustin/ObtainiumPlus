@@ -544,6 +544,18 @@ class AppsPageState extends State<AppsPage> {
                             );
                           }
                         : null,
+                    secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
+                    onSecondaryActionPressed: appsProvider.apps.isEmpty
+                        ? () {
+                            HapticFeedback.lightImpact();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AddAppPage(initialTab: 1),
+                              ),
+                            );
+                          }
+                        : null,
                   ),
           ),
         if (refreshingSince != null || appsProvider.loadingApps)
