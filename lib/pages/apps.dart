@@ -544,8 +544,9 @@ class AppsPageState extends State<AppsPage> {
                             );
                           }
                         : null,
-                    secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
-                    onSecondaryActionPressed: appsProvider.apps.isEmpty
+                    // Only show Discover link if Plus Feature is enabled
+                    secondaryActionLabel: appsProvider.apps.isEmpty && settingsProvider.plusEnableDiscover ? tr('discover') : null,
+                    onSecondaryActionPressed: appsProvider.apps.isEmpty && settingsProvider.plusEnableDiscover
                         ? () {
                             HapticFeedback.lightImpact();
                             Navigator.push(
@@ -751,7 +752,8 @@ class AppsPageState extends State<AppsPage> {
                     ),
 
                     // Filter Chips & App Count Context (Moved to body to prevent overlap)
-                    if (settingsProvider.displayShowFilterChips)
+                    // Only show quick filters if Plus Feature is enabled
+                    if (settingsProvider.displayShowFilterChips && settingsProvider.plusEnableQuickFilters)
                       getFilterChips(),
                     ...getLoadingWidgets(),
                     // These widgets return slivers (SliverList/SliverGrid), so they go directly in slivers list
@@ -764,7 +766,8 @@ class AppsPageState extends State<AppsPage> {
                         getChangeLogFn: getChangeLogFn,
                         getCachedCategoryColor: _getCachedCategoryColor,
                       )
-                    else if (settingsProvider.globalViewMode == ViewMode.grid)
+                    // Only show grid view if Plus Feature is enabled
+                    else if (settingsProvider.plusEnableGridView && settingsProvider.globalViewMode == ViewMode.grid)
                       AppGridView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected)
                     else
                       AppListView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected, getChangeLogFn: getChangeLogFn),
@@ -899,6 +902,13 @@ class AppsPageState extends State<AppsPage> {
                   },
                   child: IconButton(
                     onPressed: () {
+                      // Determine available sort methods based on Plus Feature
+                      final basicSortMethods = [AppSortMethod.nameAZ, AppSortMethod.nameZA, AppSortMethod.defaultSort];
+                      final advancedSortMethods = [AppSortMethod.latestUpdates, AppSortMethod.recentlyAdded, AppSortMethod.installStatus];
+                      final availableMethods = settingsProvider.plusEnableAdvancedSorting
+                          ? AppSortMethod.values
+                          : basicSortMethods;
+
                       showDialog(
                         context: context,
                         builder: (context) {
@@ -909,8 +919,10 @@ class AppsPageState extends State<AppsPage> {
                                 GeneratedFormDropdown(
                                   'sortMethod',
                                   label: tr('sortMethod'),
-                                  defaultValue: settingsProvider.appSortMethod.toString(),
-                                  AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
+                                  defaultValue: availableMethods.contains(settingsProvider.appSortMethod)
+                                      ? settingsProvider.appSortMethod.toString()
+                                      : AppSortMethod.nameAZ.toString(),
+                                  availableMethods.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
                                 )
                               ],
                             ],
@@ -960,33 +972,34 @@ class AppsPageState extends State<AppsPage> {
                 ),
               ),
 
-              // View Toggle button
-              Semantics(
-                button: true,
-                label: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
-                child: GestureDetector(
-                  onLongPress: () {
-                    HapticFeedback.heavyImpact();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(initialTab: 2),
-                      ),
-                    );
-                  },
-                  child: IconButton(
-                    onPressed: () {
-                      settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
-                          ? ViewMode.grid
-                          : ViewMode.list;
+              // View Toggle button - only show if Grid View Plus Feature is enabled
+              if (settingsProvider.plusEnableGridView)
+                Semantics(
+                  button: true,
+                  label: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                  child: GestureDetector(
+                    onLongPress: () {
+                      HapticFeedback.heavyImpact();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(initialTab: 2),
+                        ),
+                      );
                     },
-                    icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
-                    tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
-                    padding: const EdgeInsets.all(12),
-                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                    child: IconButton(
+                      onPressed: () {
+                        settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
+                            ? ViewMode.grid
+                            : ViewMode.list;
+                      },
+                      icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
+                      tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+                    ),
                   ),
                 ),
-              ),
 
               // Mass Obtain button (Download/Update)
               if (getMassObtainFunction() != null)
