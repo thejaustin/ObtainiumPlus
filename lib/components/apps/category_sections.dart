@@ -54,10 +54,11 @@ class CategorySections extends StatelessWidget {
           childCount: listedCategories.length,
         ),
       );
-    } else {
+    } else if (settingsProvider.plusEnableCategoryReorder) {
+      // Enable drag-to-reorder when Plus Feature is enabled
       return SliverReorderableList(
         itemBuilder: (BuildContext context, int index) {
-          return _buildCategoryCollapsibleTile(context, index, settingsProvider);
+          return _buildCategoryCollapsibleTile(context, index, settingsProvider, enableReorder: true);
         },
         itemCount: listedCategories.length,
         onReorder: (int oldIndex, int newIndex) {
@@ -71,6 +72,16 @@ class CategorySections extends StatelessWidget {
               .map((c) => c!)
               .toList();
         },
+      );
+    } else {
+      // Simple list when reorder is disabled
+      return SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (BuildContext context, int index) {
+            return _buildCategoryCollapsibleTile(context, index, settingsProvider, enableReorder: false);
+          },
+          childCount: listedCategories.length,
+        ),
       );
     }
   }
@@ -153,7 +164,7 @@ class CategorySections extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCollapsibleTile(BuildContext context, int index, SettingsProvider settingsProvider) {
+  Widget _buildCategoryCollapsibleTile(BuildContext context, int index, SettingsProvider settingsProvider, {bool enableReorder = true}) {
     final String? categoryName = listedCategories[index];
     final categoryColorInt = categoryName != null ? settingsProvider.categories[categoryName] : null;
     final categoryColor = categoryColorInt != null ? getCachedCategoryColor(categoryColorInt) : null;
@@ -215,8 +226,10 @@ class CategorySections extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(appsInCategory.length.toString()),
-            const SizedBox(width: 8),
-            ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_handle)),
+            if (enableReorder) ...[
+              const SizedBox(width: 8),
+              ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_handle)),
+            ],
           ],
         ),
         children: appsInCategory.map((app) => AppListTile(

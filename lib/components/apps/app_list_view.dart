@@ -84,10 +84,14 @@ class AppListView extends StatelessWidget {
             return false; // Don't dismiss the row
           }
 
+          // Check if swipe actions are enabled via Plus Features
+          final swipeEnabled = settings.plusEnableSwipeActions &&
+              !(settings.swipeRightAction == AppSwipeAction.none && settings.swipeLeftAction == AppSwipeAction.none);
+
           return Dismissible(
             key: Key('dismiss_${app.app.id}'),
-            direction: (settings.swipeRightAction == AppSwipeAction.none && settings.swipeLeftAction == AppSwipeAction.none) 
-                ? DismissDirection.none 
+            direction: !swipeEnabled
+                ? DismissDirection.none
                 : (settings.swipeRightAction == AppSwipeAction.none ? DismissDirection.endToStart : (settings.swipeLeftAction == AppSwipeAction.none ? DismissDirection.startToEnd : DismissDirection.horizontal)),
             background: Container(
               color: getActionColor(settings.swipeRightAction),
@@ -109,33 +113,53 @@ class AppListView extends StatelessWidget {
               }
             },
             child: RepaintBoundary(
-              child: OpenContainer(
-                tappable: false,
-                transitionType: ContainerTransitionType.fadeThrough,
-                openBuilder: (BuildContext context, VoidCallback _) {
-                  return AppPage(appId: app.app.id);
-                },
-                closedElevation: 0,
-                closedColor: Colors.transparent,
-                closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                  return AppListTile(
-                    appInMemory: app,
-                    isSelected: selectedAppIds.contains(app.app.id),
-                    hasUpdate: hasUpdate,
-                    onTap: () {
-                      if (selectedAppIds.isNotEmpty) {
+              child: settings.plusEnableEnhancedAnimations
+                  ? OpenContainer(
+                      tappable: false,
+                      transitionType: ContainerTransitionType.fadeThrough,
+                      openBuilder: (BuildContext context, VoidCallback _) {
+                        return AppPage(appId: app.app.id);
+                      },
+                      closedElevation: 0,
+                      closedColor: Colors.transparent,
+                      closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                        return AppListTile(
+                          appInMemory: app,
+                          isSelected: selectedAppIds.contains(app.app.id),
+                          hasUpdate: hasUpdate,
+                          onTap: () {
+                            if (selectedAppIds.isNotEmpty) {
+                              toggleAppSelected(app.app);
+                            } else {
+                              openContainer();
+                            }
+                          },
+                          onLongPress: () {
+                            toggleAppSelected(app.app);
+                          },
+                          onShowChanges: getChangeLogFn(context, app.app),
+                        );
+                      },
+                    )
+                  : AppListTile(
+                      appInMemory: app,
+                      isSelected: selectedAppIds.contains(app.app.id),
+                      hasUpdate: hasUpdate,
+                      onTap: () {
+                        if (selectedAppIds.isNotEmpty) {
+                          toggleAppSelected(app.app);
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AppPage(appId: app.app.id)),
+                          );
+                        }
+                      },
+                      onLongPress: () {
                         toggleAppSelected(app.app);
-                      } else {
-                        openContainer();
-                      }
-                    },
-                    onLongPress: () {
-                      toggleAppSelected(app.app);
-                    },
-                    onShowChanges: getChangeLogFn(context, app.app),
-                  );
-                },
-              ),
+                      },
+                      onShowChanges: getChangeLogFn(context, app.app),
+                    ),
             ),
           );
         },
