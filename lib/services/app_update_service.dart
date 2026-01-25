@@ -284,12 +284,27 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
       appsProvider.settingsProvider.bgUpdatesWhileChargingOnly &&
       (await Battery().batteryState) != BatteryState.charging;
 
+  var scheduleRestricted =
+      appsProvider.settingsProvider.useUpdateSchedule &&
+      !appsProvider.settingsProvider.isWithinUpdateSchedule();
+
   if (networkRestricted) {
     logs.add('BG update task: Network restriction in effect.');
   }
 
   if (chargingRestricted) {
     logs.add('BG update task: Charging restriction in effect.');
+  }
+
+  if (scheduleRestricted) {
+    logs.add('BG update task: Outside scheduled update window (${appsProvider.settingsProvider.getScheduleDescription()}).');
+  }
+
+  // Skip update if any restriction is active (except for forced retries)
+  if ((networkRestricted || chargingRestricted || scheduleRestricted) &&
+      params['toCheck'] == null && dueRetries.isEmpty) {
+    logs.add('BG update task: Skipped due to restrictions.');
+    return;
   }
 
   if (toCheck.isNotEmpty) {

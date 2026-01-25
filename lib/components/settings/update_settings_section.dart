@@ -196,6 +196,8 @@ class UpdateSettingsSection extends StatelessWidget {
                     value: settings.bgUpdatesWhileChargingOnly,
                     onChanged: (value) => settings.bgUpdatesWhileChargingOnly = value,
                   ),
+                if (_matches(tr('updateSchedule')))
+                  _buildUpdateScheduleSection(context, settings),
               ]
             ];
 
@@ -242,6 +244,151 @@ class UpdateSettingsSection extends StatelessWidget {
           onChanged: (value) => settings.parallelDownloads = value,
         );
       },
+    );
+  }
+
+  Widget _buildUpdateScheduleSection(BuildContext context, SettingsProvider settings) {
+    return Column(
+      children: [
+        SwitchListTile.adaptive(
+          secondary: const Icon(Icons.schedule_outlined),
+          title: Text(tr('updateSchedule'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: settings.useUpdateSchedule
+              ? Text(settings.getScheduleDescription())
+              : Text(tr('updateScheduleDescription')),
+          value: settings.useUpdateSchedule,
+          onChanged: (value) => settings.useUpdateSchedule = value,
+        ),
+        if (settings.useUpdateSchedule) ...[
+          ListTile(
+            leading: const SizedBox(width: 24),
+            title: Text(tr('activeHours'), style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text('${settings.updateScheduleStartHour.toString().padLeft(2, '0')}:00 - ${settings.updateScheduleEndHour.toString().padLeft(2, '0')}:00'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showTimeRangePicker(context, settings),
+          ),
+          ListTile(
+            leading: const SizedBox(width: 24),
+            title: Text(tr('activeDays'), style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(_getDaysDescription(settings.updateScheduleDays)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showDaysPicker(context, settings),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _getDaysDescription(List<int> days) {
+    if (days.length == 7) return tr('everyDay');
+    if (days.length == 5 && !days.contains(6) && !days.contains(7)) return tr('weekdays');
+    if (days.length == 2 && days.contains(6) && days.contains(7)) return tr('weekends');
+
+    final dayNames = ['', tr('mon'), tr('tue'), tr('wed'), tr('thu'), tr('fri'), tr('sat'), tr('sun')];
+    return days.map((d) => dayNames[d]).join(', ');
+  }
+
+  void _showTimeRangePicker(BuildContext context, SettingsProvider settings) {
+    int startHour = settings.updateScheduleStartHour;
+    int endHour = settings.updateScheduleEndHour;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(tr('activeHours')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(tr('startTime')),
+                trailing: DropdownButton<int>(
+                  value: startHour,
+                  items: List.generate(24, (i) => DropdownMenuItem(
+                    value: i,
+                    child: Text('${i.toString().padLeft(2, '0')}:00'),
+                  )),
+                  onChanged: (val) => setState(() => startHour = val ?? startHour),
+                ),
+              ),
+              ListTile(
+                title: Text(tr('endTime')),
+                trailing: DropdownButton<int>(
+                  value: endHour,
+                  items: List.generate(24, (i) => DropdownMenuItem(
+                    value: i,
+                    child: Text('${i.toString().padLeft(2, '0')}:00'),
+                  )),
+                  onChanged: (val) => setState(() => endHour = val ?? endHour),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(tr('cancel')),
+            ),
+            FilledButton(
+              onPressed: () {
+                settings.updateScheduleStartHour = startHour;
+                settings.updateScheduleEndHour = endHour;
+                Navigator.of(context).pop();
+              },
+              child: Text(tr('save')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDaysPicker(BuildContext context, SettingsProvider settings) {
+    List<int> selectedDays = List.from(settings.updateScheduleDays);
+    final dayNames = [tr('mon'), tr('tue'), tr('wed'), tr('thu'), tr('fri'), tr('sat'), tr('sun')];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(tr('activeDays')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(7, (index) {
+              final day = index + 1; // 1=Mon, 7=Sun
+              return CheckboxListTile(
+                title: Text(dayNames[index]),
+                value: selectedDays.contains(day),
+                onChanged: (val) {
+                  setState(() {
+                    if (val == true) {
+                      if (!selectedDays.contains(day)) selectedDays.add(day);
+                    } else {
+                      selectedDays.remove(day);
+                    }
+                    selectedDays.sort();
+                  });
+                },
+              );
+            }),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(tr('cancel')),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (selectedDays.isNotEmpty) {
+                  settings.updateScheduleDays = selectedDays;
+                }
+                Navigator.of(context).pop();
+              },
+              child: Text(tr('save')),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
