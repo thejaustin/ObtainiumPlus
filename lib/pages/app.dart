@@ -448,12 +448,17 @@ class _AppPageState extends State<AppPage> {
           },
         ),
         SizedBox(height: small ? 10 : 25),
-        Text(
-          app?.name ?? tr('app'),
-          textAlign: TextAlign.center,
-          style: small
-              ? Theme.of(context).textTheme.displaySmall
-              : Theme.of(context).textTheme.displayLarge,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            app?.name ?? tr('app'),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: small
+                ? Theme.of(context).textTheme.displaySmall
+                : Theme.of(context).textTheme.displayLarge,
+          ),
         ),
         GestureDetector(
           onLongPress: () {
@@ -478,12 +483,17 @@ class _AppPageState extends State<AppPage> {
               ],
             );
           },
-          child: Text(
-            tr('byX', args: [app?.author ?? tr('unknown')]),
-            textAlign: TextAlign.center,
-            style: small
-                ? Theme.of(context).textTheme.headlineSmall
-                : Theme.of(context).textTheme.headlineMedium,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              tr('byX', args: [app?.author ?? tr('unknown')]),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: small
+                  ? Theme.of(context).textTheme.headlineSmall
+                  : Theme.of(context).textTheme.headlineMedium,
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -518,12 +528,17 @@ class _AppPageState extends State<AppPage> {
               ],
             );
           },
-          child: Text(
-            app?.app.url ?? '',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelSmall!.copyWith(
-              decoration: TextDecoration.underline,
-              fontStyle: FontStyle.italic,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              app?.app.url ?? '',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                decoration: TextDecoration.underline,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
         ),
@@ -724,82 +739,95 @@ class _AppPageState extends State<AppPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                if (source != null &&
-                    source.combinedAppSpecificSettingFormItems.isNotEmpty)
-                  IconButton(
-                    onPressed: app?.downloadProgress != null || updating
-                        ? null
-                        : () async {
-                            var values = await showAdditionalOptionsDialog();
-                            handleAdditionalOptionChanges(values);
-                          },
-                    tooltip: tr('additionalOptions'),
-                    icon: const Icon(Icons.edit),
-                  ),
-                if (app != null && app.installedInfo != null)
-                  IconButton(
-                    onPressed: () {
-                      appsProvider.openAppSettings(app.app.id);
-                    },
-                    icon: const Icon(Icons.settings),
-                    tooltip: tr('settings'),
-                  ),
-                if (app != null && showAppWebpageFinal)
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext ctx) {
-                          return AlertDialog(
-                            scrollable: true,
-                            content: getFullInfoColumn(small: true),
-                            title: Text(app.name),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
+                // Scrollable action buttons for narrow screens
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (source != null &&
+                            source.combinedAppSpecificSettingFormItems.isNotEmpty)
+                          IconButton(
+                            onPressed: app?.downloadProgress != null || updating
+                                ? null
+                                : () async {
+                                    var values = await showAdditionalOptionsDialog();
+                                    handleAdditionalOptionChanges(values);
+                                  },
+                            tooltip: tr('additionalOptions'),
+                            icon: const Icon(Icons.edit),
+                          ),
+                        if (app != null && app.installedInfo != null)
+                          IconButton(
+                            onPressed: () {
+                              appsProvider.openAppSettings(app.app.id);
+                            },
+                            icon: const Icon(Icons.settings),
+                            tooltip: tr('settings'),
+                          ),
+                        if (app != null && showAppWebpageFinal)
+                          IconButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext ctx) {
+                                  return AlertDialog(
+                                    scrollable: true,
+                                    content: getFullInfoColumn(small: true),
+                                    title: Text(app.name),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text(tr('continue')),
+                                      ),
+                                    ],
+                                  );
                                 },
-                                child: Text(tr('continue')),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    icon: const Icon(Icons.more_horiz),
-                    tooltip: tr('more'),
+                              );
+                            },
+                            icon: const Icon(Icons.more_horiz),
+                            tooltip: tr('more'),
+                          ),
+                        if (app?.app.installedVersion != null &&
+                            app?.app.installedVersion != app?.app.latestVersion &&
+                            !isVersionDetectionStandard &&
+                            !trackOnly)
+                          IconButton(
+                            onPressed: app?.downloadProgress != null || updating
+                                ? null
+                                : showMarkUpdatedDialog,
+                            tooltip: tr('markUpdated'),
+                            icon: const Icon(Icons.done),
+                          ),
+                        if ((!isVersionDetectionStandard || trackOnly) &&
+                            app?.app.installedVersion != null &&
+                            app?.app.installedVersion == app?.app.latestVersion)
+                          IconButton(
+                            onPressed: app?.app == null || updating
+                                ? null
+                                : () {
+                                    app!.app.installedVersion = null;
+                                    appsProvider.saveApps([app.app]);
+                                  },
+                            icon: const Icon(Icons.restore_rounded),
+                            tooltip: tr('resetInstallStatus'),
+                          ),
+                      ],
+                    ),
                   ),
-                if (app?.app.installedVersion != null &&
-                    app?.app.installedVersion != app?.app.latestVersion &&
-                    !isVersionDetectionStandard &&
-                    !trackOnly)
-                  IconButton(
-                    onPressed: app?.downloadProgress != null || updating
-                        ? null
-                        : showMarkUpdatedDialog,
-                    tooltip: tr('markUpdated'),
-                    icon: const Icon(Icons.done),
-                  ),
-                if ((!isVersionDetectionStandard || trackOnly) &&
-                    app?.app.installedVersion != null &&
-                    app?.app.installedVersion == app?.app.latestVersion)
-                  IconButton(
-                    onPressed: app?.app == null || updating
-                        ? null
-                        : () {
-                            app!.app.installedVersion = null;
-                            appsProvider.saveApps([app.app]);
-                          },
-                    icon: const Icon(Icons.restore_rounded),
-                    tooltip: tr('resetInstallStatus'),
-                  ),
-                const SizedBox(width: 16.0),
-                Expanded(child: getInstallOrUpdateButton()),
-                const SizedBox(width: 16.0),
+                ),
+                const SizedBox(width: 8.0),
+                Flexible(
+                  flex: 2,
+                  child: getInstallOrUpdateButton(),
+                ),
+                const SizedBox(width: 8.0),
                 IconButton(
                   onPressed: app?.downloadProgress != null || updating
                       ? null
