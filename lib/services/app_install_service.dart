@@ -127,7 +127,7 @@ class AppInstallService {
       try {
         await fallback.launch();
       } catch (e2) {
-        openAppSettings('dev.imranr.obtainium');
+        openAppSettings('app.obtainiumplus');
       }
     }
   }
@@ -142,7 +142,7 @@ class AppInstallService {
     try {
       await intent.launch();
     } catch (e) {
-      openAppSettings('dev.imranr.obtainium');
+      openAppSettings('app.obtainiumplus');
     }
   }
 
@@ -189,10 +189,10 @@ class AppInstallService {
       return true;
     }
 
-    if (app.id == 'dev.imranr.obtainium') { // obtainiumId
+    if (app.id == 'app.obtainiumplus') { // obtainiumId
       return false;
     }
-    if (installerPackageName != 'dev.imranr.obtainium') {
+    if (installerPackageName != 'app.obtainiumplus') {
       return false;
     }
     if (osInfo.version.sdkInt < 31) {
