@@ -98,6 +98,16 @@ class _AppPageState extends State<AppPage> {
   }
 
   @override
+  void dispose() {
+    // WebViewController doesn't have a dispose method but we should
+    // clear any pending operations to avoid memory leaks
+    if (_wasWebViewOpened) {
+      _webViewController.loadRequest(Uri.parse('about:blank'));
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
