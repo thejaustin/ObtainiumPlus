@@ -357,7 +357,7 @@ class GitHub extends AppSource {
     // Extract the path part after the host (e.g., from /user/repo/path to /user/repo)
     List<String> pathSegments = uri.pathSegments;
     if (pathSegments.length < 2) {
-      throw Exception('Invalid GitHub URL format: $standardUrl');
+      throw InvalidURLError(name);
     }
 
     // Take only the first two segments (user and repo) to form the API path
