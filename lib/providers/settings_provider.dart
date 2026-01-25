@@ -515,6 +515,79 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Scheduled Update Windows
+  bool get useUpdateSchedule {
+    return prefs?.getBool('useUpdateSchedule') ?? false;
+  }
+
+  set useUpdateSchedule(bool val) {
+    prefs?.setBool('useUpdateSchedule', val);
+    notifyListeners();
+  }
+
+  int get updateScheduleStartHour {
+    return prefs?.getInt('updateScheduleStartHour') ?? 9;
+  }
+
+  set updateScheduleStartHour(int val) {
+    prefs?.setInt('updateScheduleStartHour', val.clamp(0, 23));
+    notifyListeners();
+  }
+
+  int get updateScheduleEndHour {
+    return prefs?.getInt('updateScheduleEndHour') ?? 23;
+  }
+
+  set updateScheduleEndHour(int val) {
+    prefs?.setInt('updateScheduleEndHour', val.clamp(0, 23));
+    notifyListeners();
+  }
+
+  // Days of week: 1=Mon, 7=Sun (ISO 8601)
+  List<int> get updateScheduleDays {
+    String? stored = prefs?.getString('updateScheduleDays');
+    if (stored == null) return [1, 2, 3, 4, 5, 6, 7]; // All days by default
+    return stored.split(',').map((e) => int.tryParse(e) ?? 1).toList();
+  }
+
+  set updateScheduleDays(List<int> val) {
+    prefs?.setString('updateScheduleDays', val.join(','));
+    notifyListeners();
+  }
+
+  /// Check if current time is within the update schedule window
+  bool isWithinUpdateSchedule() {
+    if (!useUpdateSchedule) return true; // No schedule = always allowed
+
+    final now = DateTime.now();
+    final currentHour = now.hour;
+    final currentDay = now.weekday; // 1=Mon, 7=Sun
+
+    // Check if today is an allowed day
+    if (!updateScheduleDays.contains(currentDay)) return false;
+
+    // Check if current hour is within the window
+    if (updateScheduleStartHour <= updateScheduleEndHour) {
+      // Normal range (e.g., 9-23)
+      return currentHour >= updateScheduleStartHour && currentHour < updateScheduleEndHour;
+    } else {
+      // Overnight range (e.g., 22-6)
+      return currentHour >= updateScheduleStartHour || currentHour < updateScheduleEndHour;
+    }
+  }
+
+  /// Get human-readable schedule description
+  String getScheduleDescription() {
+    if (!useUpdateSchedule) return tr('always');
+
+    final dayNames = ['', tr('mon'), tr('tue'), tr('wed'), tr('thu'), tr('fri'), tr('sat'), tr('sun')];
+    final days = updateScheduleDays.map((d) => dayNames[d]).join(', ');
+    final startHour = updateScheduleStartHour.toString().padLeft(2, '0');
+    final endHour = updateScheduleEndHour.toString().padLeft(2, '0');
+
+    return '$days, $startHour:00 - $endHour:00';
+  }
+
   DateTime get lastCompletedBGCheckTime {
     int? temp = prefs?.getInt('lastCompletedBGCheckTime');
     return temp != null
