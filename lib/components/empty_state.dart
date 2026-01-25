@@ -8,6 +8,8 @@ class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onActionPressed;
   final String? actionLabel;
+  final VoidCallback? onSecondaryActionPressed;
+  final String? secondaryActionLabel;
 
   const EmptyStateWidget({
     super.key,
@@ -16,6 +18,8 @@ class EmptyStateWidget extends StatelessWidget {
     required this.icon,
     this.onActionPressed,
     this.actionLabel,
+    this.onSecondaryActionPressed,
+    this.secondaryActionLabel,
   });
 
   @override
@@ -70,6 +74,20 @@ class EmptyStateWidget extends StatelessWidget {
                   actionLabel!,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
+              ),
+            ],
+            if (onSecondaryActionPressed != null && secondaryActionLabel != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: onSecondaryActionPressed,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+                  ),
+                ),
+                icon: const Icon(Icons.explore_rounded),
+                label: Text(secondaryActionLabel!),
               ),
             ],
           ],

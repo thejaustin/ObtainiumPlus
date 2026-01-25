@@ -27,7 +27,8 @@ enum AddAppMode { add, edit }
 class AddAppPage extends StatefulWidget {
   final AddAppMode mode;
   final String? appId;
-  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId});
+  final int initialTab;
+  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialTab = 0});
 
   @override
   State<AddAppPage> createState() => AddAppPageState();
@@ -53,7 +54,7 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab);
     if (widget.appId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         var app = context.read<AppsProvider>().apps[widget.appId]?.app;
