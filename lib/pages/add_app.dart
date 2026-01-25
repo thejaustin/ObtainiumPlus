@@ -93,8 +93,8 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
 
   void linkFn(String input) {
     // If input comes from DiscoverPage, we might need to switch to URL tab
-    if (_tabController.index != 0) {
-      _tabController.animateTo(0);
+    if (_tabController?.index != 0) {
+      _tabController?.animateTo(0);
     }
     try {
       if (input.isEmpty) {
