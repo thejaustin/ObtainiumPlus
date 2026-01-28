@@ -32,9 +32,10 @@ class NavigationPageItem {
   final String id;
   final String title;
   final IconData icon;
+  final IconData selectedIcon;
   final Widget widget;
 
-  NavigationPageItem(this.id, this.title, this.icon, this.widget);
+  NavigationPageItem(this.id, this.title, this.icon, this.selectedIcon, this.widget);
 }
 
 class HomePageState extends State<HomePage> {
@@ -465,13 +466,14 @@ class HomePageState extends State<HomePage> {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
 
     // Refresh allPages map to ensure translations are up to date
+    // Using M3 icon pattern: outlined for unselected, filled for selected
     allPages = {
-      'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps, appsPage),
-      'updates': NavigationPageItem('updates', tr('updates'), Icons.system_update, updatesPage),
-      'add': NavigationPageItem('add', tr('addApp'), Icons.add, addAppPage),
-      'settings': NavigationPageItem('settings', tr('settings'), Icons.settings, settingsPage),
-      'import_export': NavigationPageItem('import_export', tr('importExport'), Icons.import_export, importExportPage),
-      'logs': NavigationPageItem('logs', tr('appLogs'), Icons.notes, logsPage),
+      'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
+      'updates': NavigationPageItem('updates', tr('updates'), Icons.update_outlined, Icons.update, updatesPage),
+      'add': NavigationPageItem('add', tr('addApp'), Icons.add_circle_outline, Icons.add_circle, addAppPage),
+      'settings': NavigationPageItem('settings', tr('settings'), Icons.settings_outlined, Icons.settings, settingsPage),
+      'import_export': NavigationPageItem('import_export', tr('importExport'), Icons.swap_vert_outlined, Icons.swap_vert, importExportPage),
+      'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
     };
 
     List<String> tabIds = settingsProvider.bottomTabs;
@@ -598,6 +600,13 @@ class HomePageState extends State<HomePage> {
                         },
                         child: Icon(e.icon),
                       ),
+                      selectedIcon: GestureDetector(
+                        onLongPress: () {
+                          HapticFeedback.heavyImpact();
+                          showCustomizeTabsDialog();
+                        },
+                        child: Icon(e.selectedIcon),
+                      ),
                       label: e.title,
                     ),
               )
@@ -687,14 +696,14 @@ class _CustomizeTabsDialogState extends State<CustomizeTabsDialog> {
                   for (final id in currentTabs)
                     ListTile(
                       key: ValueKey(id),
-                      leading: Icon(widget.allPages[id]?.icon ?? Icons.error),
+                      leading: Icon(widget.allPages[id]?.selectedIcon ?? Icons.error),
                       title: Text(widget.allPages[id]?.title ?? id),
                       trailing: IconButton(
                         icon: const Icon(Icons.remove_circle_outline),
                         onPressed: () {
                           if (currentTabs.length <= 1) {
                             // Don't allow removing last tab
-                            return; 
+                            return;
                           }
                           setState(() {
                             currentTabs.remove(id);
@@ -714,7 +723,7 @@ class _CustomizeTabsDialogState extends State<CustomizeTabsDialog> {
                 spacing: 8,
                 children: availableHiddenTabs.map((id) {
                   return ActionChip(
-                    avatar: Icon(widget.allPages[id]?.icon, size: 16),
+                    avatar: Icon(widget.allPages[id]?.selectedIcon, size: 16),
                     label: Text(widget.allPages[id]?.title ?? id),
                     onPressed: () {
                       setState(() {

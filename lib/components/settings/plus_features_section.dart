@@ -37,7 +37,7 @@ class PlusFeaturesSection extends StatelessWidget {
             ),
 
           if (settings.enableAllPlusFeatures) ...[
-            const Divider(),
+            const SizedBox(height: 8),
 
             // UI Features
             if (_matches(tr('plusGridView')))

@@ -102,7 +102,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.code),
+          secondary: const Icon(Icons.numbers_outlined),
           title: Text(tr('showVersion'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.displayShowVersion,
           onChanged: (value) => settings.displayShowVersion = value,
@@ -141,7 +141,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.summarize_outlined),
+          secondary: const Icon(Icons.tag_outlined),
           title: Text(tr('showAppCount'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.displayShowAppCount,
           onChanged: (value) => settings.displayShowAppCount = value,
