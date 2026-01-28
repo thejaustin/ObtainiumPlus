@@ -40,6 +40,11 @@ enum AppSwipeAction { none, update, togglePin, share, launch, delete }
 
 enum AppListDensity { comfortable, compact }
 
+/// App bar style options
+/// - compact: Standard AppBar with fixed height
+/// - large: SliverAppBar.large with expanding/collapsing title
+enum AppBarStyle { compact, large }
+
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   String? defaultAppDir;
@@ -1112,5 +1117,67 @@ class SettingsProvider with ChangeNotifier {
   set plusEnableUpdateSchedule(bool val) {
     prefs?.setBool('plusEnableUpdateSchedule', val);
     notifyListeners();
+  }
+
+  // ============================================================
+  // APP BAR STYLE SETTINGS
+  // ============================================================
+
+  /// Global app bar style (compact or large)
+  AppBarStyle get appBarStyle {
+    return AppBarStyle.values[prefs?.getInt('appBarStyle') ?? AppBarStyle.compact.index];
+  }
+
+  set appBarStyle(AppBarStyle style) {
+    prefs?.setInt('appBarStyle', style.index);
+    notifyListeners();
+  }
+
+  /// Per-page app bar style overrides
+  /// Keys are page identifiers (e.g., 'settings', 'apps', 'appearance')
+  Map<String, int> get appBarStyleOverrides {
+    try {
+      return Map<String, int>.from(
+          jsonDecode(prefs?.getString('appBarStyleOverrides') ?? '{}'));
+    } catch (e) {
+      return {};
+    }
+  }
+
+  set appBarStyleOverrides(Map<String, int> overrides) {
+    prefs?.setString('appBarStyleOverrides', jsonEncode(overrides));
+    notifyListeners();
+  }
+
+  /// Get the effective app bar style for a specific page
+  /// Returns the page-specific override if set, otherwise the global setting
+  AppBarStyle getAppBarStyleForPage(String pageId) {
+    int? override = appBarStyleOverrides[pageId];
+    if (override != null) {
+      return AppBarStyle.values[override];
+    }
+    return appBarStyle;
+  }
+
+  /// Set app bar style override for a specific page
+  /// Pass null to remove the override and use global setting
+  void setAppBarStyleForPage(String pageId, AppBarStyle? style) {
+    var overrides = appBarStyleOverrides;
+    if (style == null) {
+      overrides.remove(pageId);
+    } else {
+      overrides[pageId] = style.index;
+    }
+    appBarStyleOverrides = overrides;
+  }
+
+  /// Check if a page has a custom override
+  bool hasAppBarStyleOverride(String pageId) {
+    return appBarStyleOverrides.containsKey(pageId);
+  }
+
+  /// Clear all per-page overrides
+  void clearAppBarStyleOverrides() {
+    appBarStyleOverrides = {};
   }
 }
