@@ -245,19 +245,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: CustomScrollView(
             slivers: [
-                                  // 1. Header with Title (Chrome Style)
-                                  SliverAppBar.large(
-                                    backgroundColor: Theme.of(context).colorScheme.surface,
-                                    surfaceTintColor: Colors.transparent,
-                                    title: isSearching 
-                                      ? null 
-                                      : Text(
-                                          tr('settings'),
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                          ),
-                                        ),
-                                  ),
+                                  // 1. Header with Title (Adaptive based on user preference)
+                                  if (!isSearching)
+                                    AdaptiveSliverAppBar(
+                                      title: tr('settings'),
+                                      pageId: 'settings',
+                                      automaticallyImplyLeading: false,
+                                    )
+                                  else
+                                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
                         
                                   // 2. Search Pill (Persistent below title)
                                   SliverToBoxAdapter(
@@ -307,7 +303,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           children: [
                             if (_matches(tr('backgroundUpdates')))
                               SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.sync_outlined),
+                                secondary: const Icon(Icons.cloud_sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
@@ -316,7 +312,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               ),
                             if (_matches(tr('batteryOpt')))
                               SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.battery_saver_outlined),
+                                secondary: const Icon(Icons.battery_charging_full_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
                                 subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
                                 value: _isIgnoringBatteryOptimizations,
@@ -375,7 +371,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           title: tr('basics'),
                           children: [
                              SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.sync_outlined),
+                                secondary: const Icon(Icons.cloud_sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
@@ -383,7 +379,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                 },
                               ),
                              SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.battery_saver_outlined),
+                                secondary: const Icon(Icons.battery_charging_full_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
                                 subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
                                 value: _isIgnoringBatteryOptimizations,
@@ -400,8 +396,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                          showDialog(
                                            context: context,
                                            builder: (context) => UpdateSettingsSection(
-                                             showIntervalLabel: true, 
-                                             onIntervalLabelChange: (_) {}, 
+                                             showIntervalLabel: true,
+                                             onIntervalLabelChange: (_) {},
                                              androidInfoFuture: Future.value(_cachedAndroidInfo)
                                            ).buildXiaomiTroubleshootingDialog(context),
                                          );
@@ -421,16 +417,13 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.palette_outlined,
                               title: tr('appearance') ?? 'Appearance',
-                              destination: _SubMenuPage(
-                                title: tr('appearance') ?? 'Appearance',
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: ThemeSettingsSection(
-                                      androidInfoFuture: _androidInfoFuture,
-                                      colorsNameMap: colorsNameMap,
-                                    ),
-                                  ),
+                              subtitle: tr('appearanceSubtitle') ?? 'Theme, colors, animations',
+                              pageId: 'appearance',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: ThemeSettingsSection(
+                                  androidInfoFuture: _androidInfoFuture,
+                                  colorsNameMap: colorsNameMap,
                                 ),
                               ),
                             ),
@@ -438,17 +431,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.system_update_outlined,
                               title: tr('updates'),
-                              destination: _SubMenuPage(
-                                title: tr('updates'),
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: UpdateSettingsSection(
-                                      showIntervalLabel: showIntervalLabel,
-                                      onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
-                                      androidInfoFuture: _androidInfoFuture,
-                                    ),
-                                  ),
+                              subtitle: tr('updatesSubtitle') ?? 'Background checks, intervals',
+                              pageId: 'updates',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: UpdateSettingsSection(
+                                  showIntervalLabel: showIntervalLabel,
+                                  onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
+                                  androidInfoFuture: _androidInfoFuture,
                                 ),
                               ),
                             ),
@@ -457,77 +447,73 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                 context,
                                 icon: Icons.storage_outlined,
                                 title: tr('sourceSpecific'),
-                                destination: _SubMenuPage(
-                                  title: tr('sourceSpecific'),
-                                  child: SingleChildScrollView(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: SettingsGroup(
-                                        title: tr('sourceSpecific'),
-                                        children: sourceSpecificFields.toList(),
-                                      ),
-                                    ),
+                                subtitle: tr('sourceSpecificSubtitle') ?? 'Source-specific options',
+                                pageId: 'sourceSpecific',
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: SettingsGroup(
+                                    title: tr('sourceSpecific'),
+                                    children: sourceSpecificFields.toList(),
                                   ),
                                 ),
                               ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.view_quilt_outlined,
-                              title: tr('viewOptions'), // "Apps & View"
-                              destination: _SubMenuPage(
-                                title: tr('viewOptions'),
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: AppsViewSettingsSection(onSetState: setState),
-                                  ),
-                                ),
+                              title: tr('viewOptions'),
+                              subtitle: tr('viewOptionsSubtitle') ?? 'List, grid, categories',
+                              pageId: 'viewOptions',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: AppsViewSettingsSection(onSetState: setState),
                               ),
                             ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.tune_outlined,
-                              title: tr('general'), // Behavior
-                              destination: _SubMenuPage(
-                                title: tr('general'),
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: BehaviorSettingsSection(
-                                      sortDropdown: sortDropdown,
-                                      orderDropdown: orderDropdown,
-                                      localeDropdown: localeDropdown,
-                                    ),
-                                  ),
+                              title: tr('general'),
+                              subtitle: tr('generalSubtitle') ?? 'Language, sorting, behavior',
+                              pageId: 'general',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: BehaviorSettingsSection(
+                                  sortDropdown: sortDropdown,
+                                  orderDropdown: orderDropdown,
+                                  localeDropdown: localeDropdown,
                                 ),
+                              ),
+                            ),
+                            _buildSubMenuTile(
+                              context,
+                              icon: Icons.auto_awesome,
+                              title: tr('obtainiumPlusFeatures') ?? 'Plus Features',
+                              subtitle: tr('plusFeaturesSubtitle') ?? 'Enhanced features & UI',
+                              pageId: 'plusFeatures',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: PlusFeaturesSection(),
                               ),
                             ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.build_outlined,
                               title: tr('advanced'),
-                              destination: _SubMenuPage(
-                                title: tr('advanced'),
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: AdvancedSettingsSection(),
-                                  ),
-                                ),
+                              subtitle: tr('advancedSubtitle') ?? 'Installation, warnings, debugging',
+                              pageId: 'advanced',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: AdvancedSettingsSection(),
                               ),
                             ),
                              _buildSubMenuTile(
                               context,
                               icon: Icons.help_outline,
                               title: tr('troubleshootingAndSystem') ?? 'Troubleshooting',
-                              destination: _SubMenuPage(
-                                title: tr('troubleshootingAndSystem') ?? 'Troubleshooting',
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: SettingsGroup(children: [const TroubleshootingSection()]),
-                                  ),
-                                ),
+                              subtitle: tr('troubleshootingSubtitle') ?? 'Help, logs, support',
+                              pageId: 'troubleshooting',
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: SettingsGroup(children: [const TroubleshootingSection()]),
                               ),
                             ),
                           ],
@@ -542,16 +528,19 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ListTile(
                           leading: const Icon(Icons.code_outlined),
                           title: Text(tr('appSource'), style: Theme.of(context).textTheme.bodyLarge),
+                          trailing: Icon(Icons.open_in_new, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication),
                         ),
                         ListTile(
                           leading: const Icon(Icons.help_outline_rounded),
                           title: Text(tr('wiki'), style: Theme.of(context).textTheme.bodyLarge),
+                          trailing: Icon(Icons.open_in_new, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
                         ),
                         ListTile(
                           leading: const Icon(Icons.apps_rounded),
                           title: Text(tr('crowdsourcedConfigsLabel'), style: Theme.of(context).textTheme.bodyLarge),
+                          trailing: Icon(Icons.open_in_new, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onTap: () => launchUrlString('https://apps.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
                         ),
                         ListTile(
@@ -584,14 +573,23 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         );
       }
 
-      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget destination}) {
+      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required String pageId, required Widget child}) {
         return ListTile(
-          leading: Icon(icon),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)) : null,
+          trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => destination),
+              MaterialPageRoute(builder: (context) => _SubMenuPage(title: title, pageId: pageId, child: child)),
             );
           },
         );
@@ -600,135 +598,96 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
 
     class _SubMenuPage extends StatelessWidget {
       final String title;
+      final String pageId;
       final Widget child;
 
-      const _SubMenuPage({required this.title, required this.child});
+      const _SubMenuPage({required this.title, required this.pageId, required this.child});
 
         @override
         Widget build(BuildContext context) {
-          return Scaffold(
-            appBar: CustomAppBar(title: title),
-            body: child,
-          );
+          final settings = context.watch<SettingsProvider>();
+          final style = settings.getAppBarStyleForPage(pageId);
+
+          if (style == AppBarStyle.large) {
+            // Use CustomScrollView with sliver app bar for large style
+            return Scaffold(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              body: CustomScrollView(
+                slivers: [
+                  CustomSliverAppBar(title: title),
+                  SliverToBoxAdapter(child: child),
+                ],
+              ),
+            );
+          } else {
+            // Use standard scaffold with compact app bar
+            return Scaffold(
+              appBar: CustomAppBar(title: title),
+              body: child,
+            );
+          }
         }
       }    
     class SettingsGroup extends StatelessWidget {
-    
-      final String? title;
-    
-      final List<Widget> children;
-    
-    
-    
-      const SettingsGroup({super.key, this.title, required this.children});
-    
-    
-    
-      @override
-    
-      Widget build(BuildContext context) {
-    
-        // Robustly filter out hidden/empty widgets
-    
-        final visibleChildren = children.where((child) {
-    
-          if (child is SizedBox && child.child == null) return false;
-    
-          if (child is Visibility && !child.visible) return false;
-    
-          return true;
-    
-        }).toList();
-    
-    
-    
-        if (visibleChildren.isEmpty) return const SizedBox.shrink();
-    
-    
-    
-        return Column(
-    
-          crossAxisAlignment: CrossAxisAlignment.start,
-    
-          children: [
-    
-            if (title != null)
-    
-              Padding(
-    
-                padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
-    
-                child: Text(
-    
-                  title!,
-    
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-    
-                        color: Theme.of(context).colorScheme.primary,
-    
-                        fontWeight: FontWeight.bold,
-    
-                      ),
-    
-                ),
-    
-              ),
-    
-            Container(
-    
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-    
-              decoration: BoxDecoration(
-    
-                color: Theme.of(context).colorScheme.surfaceContainerHigh, // Changed to surfaceContainerHigh
-    
-                borderRadius: BorderRadius.circular(28.0),
-    
-              ),
-    
-              clipBehavior: Clip.antiAlias,
-    
-              child: Column(
-    
-                children: List.generate(visibleChildren.length, (index) {
-    
-                  return Column(
-    
-                    children: [
-    
-                      visibleChildren[index],
-    
-                      if (index < visibleChildren.length - 1)
-    
-                        Divider(
-    
-                          height: 1,
-    
-                          indent: 64, // Standard M3 indent for icons
-    
-                          endIndent: 20,
-    
-                          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
-    
-                        ),
-    
-                    ],
-    
-                  );
-    
-                }),
-    
-              ),
-    
+  final String? title;
+  final List<Widget> children;
+
+  const SettingsGroup({super.key, this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    // Robustly filter out hidden/empty widgets
+    final visibleChildren = children.where((child) {
+      if (child is SizedBox && child.child == null) return false;
+      if (child is Visibility && !child.visible) return false;
+      return true;
+    }).toList();
+
+    if (visibleChildren.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
+            child: Text(
+              title!,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-    
-          ],
-    
-        );
-    
-      }
-    
-    }
+          ),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 4.0),
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: List.generate(visibleChildren.length, (index) {
+              return Column(
+                children: [
+                  visibleChildren[index],
+                  if (index < visibleChildren.length - 1)
+                    Divider(
+                      height: 1,
+                      indent: 64,
+                      endIndent: 20,
+                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                    ),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+}
     
     
     
