@@ -605,7 +605,8 @@ class HomePageState extends State<HomePage> {
           selectedIndex: currentIndex,
         ),
       ),
-    );
+    ),
+  );
   }
 
   @override
