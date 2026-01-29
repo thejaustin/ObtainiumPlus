@@ -24,6 +24,8 @@ class AppsViewSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final settingsProvider = settings;
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> categoryWidgets = [
