@@ -943,7 +943,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                           ),
                         ),
                         height16,
-                        const CategoryEditorSelector(
+                        CategoryEditorSelector(
                           showLabelWhenNotEmpty: false,
                         ),
                       ],
@@ -996,7 +996,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                             showDialog(
                               context: context,
                               builder: (BuildContext ctx) {
-                                return const LogsDialog();
+                                return LogsDialog();
                               },
                             );
                           }
