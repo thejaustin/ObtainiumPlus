@@ -172,7 +172,7 @@ class _AppPageState extends State<AppPage> {
       _webViewController.loadRequest(Uri.parse(app.app.url));
     }
 
-    getInfoColumn() {
+    getInfoColumn({bool alignStart = false}) {
       String versionLines = '';
       bool installed = app?.app.installedVersion != null;
       bool upToDate = app?.app.installedVersion == app?.app.latestVersion;
@@ -208,11 +208,12 @@ class _AppPageState extends State<AppPage> {
       var changeLogFn = app != null ? getChangeLogFn(context, app.app) : null;
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: alignStart ? CrossAxisAlignment.start : CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
             child: Column(
+              crossAxisAlignment: alignStart ? CrossAxisAlignment.start : CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 8),
                 GestureDetector(
@@ -241,7 +242,7 @@ class _AppPageState extends State<AppPage> {
                   },
                   child: Text(
                     versionLines,
-                    textAlign: TextAlign.start,
+                    textAlign: alignStart ? TextAlign.start : TextAlign.center,
                     style: Theme.of(
                       context,
                     ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
@@ -254,7 +255,7 @@ class _AppPageState extends State<AppPage> {
                           app?.app.releaseDate == null
                               ? tr('changes')
                               : app!.app.releaseDate!.toLocal().toString(),
-                          textAlign: TextAlign.center,
+                          textAlign: alignStart ? TextAlign.start : TextAlign.center,
                           style: Theme.of(context).textTheme.labelSmall!
                               .copyWith(
                                 decoration: changeLogFn != null
@@ -273,7 +274,7 @@ class _AppPageState extends State<AppPage> {
           ),
           Text(
             infoLines,
-            textAlign: TextAlign.center,
+            textAlign: alignStart ? TextAlign.start : TextAlign.center,
             style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
           ),
           if (app?.app.apkUrls.isNotEmpty == true ||
@@ -291,7 +292,7 @@ class _AppPageState extends State<AppPage> {
                       }
                     },
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: alignStart ? MainAxisAlignment.start : MainAxisAlignment.center,
                 children: [
                   Container(
                     decoration: BoxDecoration(
@@ -317,7 +318,7 @@ class _AppPageState extends State<AppPage> {
                         'downloadX',
                         args: [lowerCaseIfEnglish(tr('releaseAsset'))],
                       ),
-                      textAlign: TextAlign.center,
+                      textAlign: alignStart ? TextAlign.start : TextAlign.center,
                       style: Theme.of(context).textTheme.labelSmall!.copyWith(
                         decoration: TextDecoration.underline,
                         fontStyle: FontStyle.italic,
@@ -329,9 +330,9 @@ class _AppPageState extends State<AppPage> {
             ),
           const SizedBox(height: 48),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: alignStart ? 0 : 16.0),
             child: CategoryEditorSelector(
-              alignment: WrapAlignment.center,
+              alignment: alignStart ? WrapAlignment.start : WrapAlignment.center,
               preselected: app?.app.categories != null
                   ? app!.app.categories.toSet()
                   : {},
@@ -347,6 +348,7 @@ class _AppPageState extends State<AppPage> {
               app?.app.additionalSettings['about'].isNotEmpty)
             Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: alignStart ? CrossAxisAlignment.start : CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 48),
                 GestureDetector(
@@ -367,7 +369,7 @@ class _AppPageState extends State<AppPage> {
                       blockquoteDecoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
                       ),
-                      textAlign: WrapAlignment.center,
+                      textAlign: alignStart ? WrapAlignment.start : WrapAlignment.center,
                     ),
                     data: app?.app.additionalSettings['about'],
                     onTapLink: (text, href, title) {
@@ -393,9 +395,9 @@ class _AppPageState extends State<AppPage> {
       );
     }
 
-    getFullInfoColumn({bool small = false}) => Column(
+    getFullInfoColumn({bool small = false, bool alignStart = false}) => Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: alignStart ? CrossAxisAlignment.start : CrossAxisAlignment.stretch,
       children: [
         SizedBox(height: small ? 5 : 20),
         FutureBuilder(
@@ -403,7 +405,7 @@ class _AppPageState extends State<AppPage> {
           builder: (ctx, val) {
             return app?.icon != null
                 ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: alignStart ? MainAxisAlignment.start : MainAxisAlignment.center,
                     children: [
                       GestureDetector(
                         onTap: app == null
@@ -439,6 +441,7 @@ class _AppPageState extends State<AppPage> {
                             app!.icon!,
                             height: small ? 70 : 150,
                             gaplessPlayback: true,
+                            cacheHeight: ((small ? 70 : 150) * MediaQuery.of(context).devicePixelRatio).round(),
                           ),
                         ),
                       ),
@@ -449,10 +452,10 @@ class _AppPageState extends State<AppPage> {
         ),
         SizedBox(height: small ? 10 : 25),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: alignStart ? 0 : 16.0),
           child: Text(
             app?.name ?? tr('app'),
-            textAlign: TextAlign.center,
+            textAlign: alignStart ? TextAlign.start : TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: small
@@ -484,10 +487,10 @@ class _AppPageState extends State<AppPage> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: alignStart ? 0 : 16.0),
             child: Text(
               tr('byX', args: [app?.author ?? tr('unknown')]),
-              textAlign: TextAlign.center,
+              textAlign: alignStart ? TextAlign.start : TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: small
@@ -529,10 +532,10 @@ class _AppPageState extends State<AppPage> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: alignStart ? 0 : 16.0),
             child: Text(
               app?.app.url ?? '',
-              textAlign: TextAlign.center,
+              textAlign: alignStart ? TextAlign.start : TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall!.copyWith(
@@ -575,11 +578,11 @@ class _AppPageState extends State<AppPage> {
           },
           child: Text(
             app?.app.id ?? '',
-            textAlign: TextAlign.center,
+            textAlign: alignStart ? TextAlign.start : TextAlign.center,
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ),
-        getInfoColumn(),
+        getInfoColumn(alignStart: alignStart),
         const SizedBox(height: 150),
       ],
     );
@@ -874,47 +877,85 @@ class _AppPageState extends State<AppPage> {
     return Scaffold(
       appBar: showAppWebpageFinal ? AppBar() : null,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: RefreshIndicator(
-        child: showAppWebpageFinal
-            ? getAppWebView()
-            : CustomScrollView(
-                slivers: [
-                  SliverAppBar.large(
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    title: Text(app?.name ?? tr('app')),
-                    surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-                    actions: [
-                      if (app?.app.url != null)
-                        IconButton(
-                          icon: const Icon(Icons.open_in_browser),
-                          tooltip: tr('showWebInAppView'),
-                          onPressed: () {
-                            if (settingsProvider.showAppWebpage) {
-                              // If global setting is ON, this button should probably open in external browser or toggle view mode locally?
-                              // The logic `showAppWebpageFinal` handles the toggle if we reload the widget with new param?
-                              // But here we are inside the widget.
-                              // Actually, the original appScreenAppBar didn't have actions.
-                              // Let's keep it simple and just have the back button and title for now to match M3 style.
-                              // If user wants to open web, they can click the link in the body or use the 'more' menu.
-                            }
-                          },
-                        )
-                    ],
-                  ),
-                  SliverToBoxAdapter(
-                    child: Column(children: [getFullInfoColumn()]),
-                  ),
-                ],
-              ),
-        onRefresh: () async {
-          if (app != null) {
-            getUpdate(app.app.id);
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 800;
+          
+          if (showAppWebpageFinal) {
+            return getAppWebView();
           }
+
+          if (isWide) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                if (app != null) getUpdate(app.app.id);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left Column: Icon and Info
+                    Expanded(
+                      flex: 4,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: getFullInfoColumn(alignStart: true),
+                      ),
+                    ),
+                    const VerticalDivider(width: 64, indent: 32, endIndent: 32),
+                    // Right Column: Source Webview or Placeholder
+                    Expanded(
+                      flex: 6,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              tr('appSource'),
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: Card(
+                                elevation: 0,
+                                clipBehavior: Clip.antiAlias,
+                                child: getAppWebView(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // Default Mobile Layout
+          return RefreshIndicator(
+            onRefresh: () async {
+              if (app != null) getUpdate(app.app.id);
+            },
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar.large(
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                  title: Text(app?.name ?? tr('app')),
+                  surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+                ),
+                SliverToBoxAdapter(
+                  child: Column(children: [getFullInfoColumn()]),
+                ),
+              ],
+            ),
+          );
         },
       ),
       bottomSheet: getBottomSheetMenu(),

@@ -12,6 +12,7 @@ import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
+import 'package:obtainium/pages/onboarding.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -75,44 +76,16 @@ class HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
       if (!sp.welcomeShown) {
-        await showDialog(
-          context: context,
-          builder: (BuildContext ctx) {
-            return AlertDialog(
-              title: Text(tr('welcome')),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 20,
-                children: [
-                  Text(tr('documentationLinksNote')),
-                  GestureDetector(
-                    onTap: () {
-                      launchUrlString(
-                        'https://github.com/thejaustin/ObtainiumPlus/blob/main/README.md',
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                    child: Text(
-                      'https://github.com/thejaustin/ObtainiumPlus',
-                      style: const TextStyle(
-                        decoration: TextDecoration.underline,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    sp.welcomeShown = true;
-                    Navigator.of(context).pop(null);
-                  },
-                  child: Text(tr('ok')),
-                ),
-              ],
-            );
-          },
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OnboardingPage(
+              onDone: () {
+                sp.welcomeShown = true;
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
         );
       }
       if (!sp.googleVerificationWarningShown &&
@@ -534,24 +507,28 @@ class HomePageState extends State<HomePage> {
       return true;
     }
 
-    return PopScope(
-      canPop: canPopNow(),
-      onPopInvokedWithResult: (bool didPop, dynamic result) {
-        if (didPop) return;
-
-        // Handle navigation history
-        if (selectedIndexHistory.isNotEmpty) {
-          setIsReversing(
-            selectedIndexHistory.length >= 2
-                ? selectedIndexHistory.reversed.toList()[1]
-                : 0,
-          );
-          setState(() {
-            selectedIndexHistory.removeLast();
-          });
-        }
+    return Shortcuts(
+      shortcuts: <LogicalKeySet, Intent>{
+        LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
       },
-      child: Scaffold(
+      child: PopScope(
+        canPop: canPopNow(),
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
+
+          // Handle navigation history
+          if (selectedIndexHistory.isNotEmpty) {
+            setIsReversing(
+              selectedIndexHistory.length >= 2
+                  ? selectedIndexHistory.reversed.toList()[1]
+                  : 0,
+            );
+            setState(() {
+              selectedIndexHistory.removeLast();
+            });
+          }
+        },
+        child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: PageTransitionSwitcher(
           duration: Duration(

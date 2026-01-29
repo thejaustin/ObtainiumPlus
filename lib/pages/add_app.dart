@@ -53,8 +53,8 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
   SourceProvider sourceProvider = SourceProvider();
 
   void _initTabController(bool discoverEnabled) {
-    final int tabCount = discoverEnabled ? 2 : 1;
-    final int initialIndex = discoverEnabled ? widget.initialTab.clamp(0, 1) : 0;
+    final int tabCount = discoverEnabled ? 3 : 2;
+    final int initialIndex = widget.initialTab.clamp(0, tabCount - 1);
     _tabController?.dispose();
     _tabController = TabController(length: tabCount, vsync: this, initialIndex: initialIndex);
     _discoverEnabled = discoverEnabled;
@@ -63,8 +63,8 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    // Initialize with default - will be updated in didChangeDependencies
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab.clamp(0, 1));
+    // Initialize with default (assuming discover is enabled initially, corrected in didChangeDependencies)
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTab.clamp(0, 2));
     if (widget.appId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         var app = context.read<AppsProvider>().apps[widget.appId]?.app;
@@ -80,7 +80,9 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
     super.didChangeDependencies();
     final settingsProvider = context.watch<SettingsProvider>();
     final discoverEnabled = settingsProvider.plusEnableDiscover;
-    if (_discoverEnabled != discoverEnabled) {
+    // We also need to check if length matches expected length (3 or 2)
+    final expectedLength = discoverEnabled ? 3 : 2;
+    if (_discoverEnabled != discoverEnabled || _tabController!.length != expectedLength) {
       _initTabController(discoverEnabled);
     }
   }
@@ -614,88 +616,55 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(tr('addApp')),
-        bottom: showDiscoverTab
-            ? TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: tr('appSourceURL')),
-                  Tab(text: tr('discover')),
-                ],
-              )
-            : null,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: tr('appSourceURL')),
+            if (showDiscoverTab) Tab(text: tr('discover')),
+            Tab(text: tr('importExport')),
+          ],
+        ),
       ),
       bottomNavigationBar: pickedSource == null && (_tabController?.index ?? 0) == 0 ? getSourcesListWidget() : null, // Only show sources list on URL tab
-      body: showDiscoverTab
-          ? TabBarView(
-              controller: _tabController,
-              children: [
-                CustomScrollView(
-                  shrinkWrap: true,
-                  slivers: <Widget>[
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            getUrlInputRow(),
-                            const SizedBox(height: 16),
-                            if (pickedSource != null) getHTMLSourceOverrideDropdown(),
-                            if (pickedSource != null)
-                              FutureBuilder(
-                                builder: (ctx, val) {
-                                  return val.data != null && val.data!.isNotEmpty
-                                      ? Text(
-                                          val.data!,
-                                          style: Theme.of(context).textTheme.bodySmall,
-                                        )
-                                      : const SizedBox();
-                                },
-                                future: pickedSource?.getSourceNote(),
-                              ),
-                            if (pickedSource != null) getAdditionalOptsCol(),
-                          ],
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          CustomScrollView(
+            shrinkWrap: true,
+            slivers: <Widget>[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      getUrlInputRow(),
+                      const SizedBox(height: 16),
+                      if (pickedSource != null) getHTMLSourceOverrideDropdown(),
+                      if (pickedSource != null)
+                        FutureBuilder(
+                          builder: (ctx, val) {
+                            return val.data != null && val.data!.isNotEmpty
+                                ? Text(
+                                    val.data!,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  )
+                                : const SizedBox();
+                          },
+                          future: pickedSource?.getSourceNote(),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                const DiscoverPage(showAppBar: false),
-              ],
-            )
-          : CustomScrollView(
-              shrinkWrap: true,
-              slivers: <Widget>[
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        getUrlInputRow(),
-                        const SizedBox(height: 16),
-                        if (pickedSource != null) getHTMLSourceOverrideDropdown(),
-                        if (pickedSource != null)
-                          FutureBuilder(
-                            builder: (ctx, val) {
-                              return val.data != null && val.data!.isNotEmpty
-                                  ? Text(
-                                      val.data!,
-                                      style: Theme.of(context).textTheme.bodySmall,
-                                    )
-                                  : const SizedBox();
-                            },
-                            future: pickedSource?.getSourceNote(),
-                          ),
-                        if (pickedSource != null) getAdditionalOptsCol(),
-                      ],
-                    ),
+                      if (pickedSource != null) getAdditionalOptsCol(),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+          if (showDiscoverTab) const DiscoverPage(showAppBar: false),
+          const ImportExportPage(showAppBar: false),
+        ],
+      ),
     );
   }
 }

@@ -152,6 +152,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                                     widget.appInMemory.icon!,
                                     fit: BoxFit.cover,
                                     gaplessPlayback: true,
+                                    cacheWidth: (iconSize * MediaQuery.of(context).devicePixelRatio).round(),
                                     opacity: AlwaysStoppedAnimation(
                                       widget.appInMemory.installedInfo == null ? 0.6 : 1,
                                     ),

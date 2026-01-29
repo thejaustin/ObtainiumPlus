@@ -584,7 +584,7 @@
     "appListHeader": "App List Header",
     "showFilterChips": "Show Filter Chips",
     "showAppCount": "Show App Count",
-    "batteryOpt": "Battery Opt",
+    "batteryOpt": "Battery Optimization",
     "versionOptions": "Version Options",
     "sourceOptions": "Source Options",
     "swipeActions": "Swipe Actions",
@@ -617,5 +617,8 @@
     "batteryOptimizationSettings": "Battery Optimization Settings",
     "installUnknownApps": "Install Unknown Apps",
     "overlaySettings": "Overlay Settings",
-    "usageAccessSettings": "Usage Access Settings"
+    "usageAccessSettings": "Usage Access Settings",
+    "searchSettings": "Search settings",
+    "samsungUsageAccessTitle": "Samsung Device Detected",
+    "samsungUsageAccessMessage": "On Samsung devices, 'Obtainium' may be hidden in the Usage Access list.\n\nTap the 'More' or 'Menu' button (top right) and select 'Show system apps' to find it."
 }

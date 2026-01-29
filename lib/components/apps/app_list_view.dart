@@ -30,10 +30,14 @@ class AppListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final appsProvider = context.read<AppsProvider>();
+    final width = MediaQuery.of(context).size.width;
+    final horizontalPadding = width > 800 ? (width - 800) / 2 : 0.0;
 
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (BuildContext context, int index) {
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (BuildContext context, int index) {
           final app = apps[index];
           final hasUpdate = app.app.installedVersion != null &&
               app.app.installedVersion != app.app.latestVersion;

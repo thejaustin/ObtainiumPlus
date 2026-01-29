@@ -17,6 +17,7 @@ import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
+import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
@@ -515,18 +516,39 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getLoadingWidgets() {
+      final isGrid = !settingsProvider.groupByCategory && 
+                     settingsProvider.plusEnableGridView && 
+                     settingsProvider.globalViewMode == ViewMode.grid;
+
       return [
         if (listedApps.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: appsProvider.loadingApps
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      semanticsLabel: 'Loading apps',
-                      strokeWidth: 3,
-                    ),
-                  )
-                : EmptyStateWidget(
+          appsProvider.loadingApps
+              ? isGrid
+                  ? SliverPadding(
+                      padding: const EdgeInsets.all(12),
+                      sliver: SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: settingsProvider.gridColumnCount > 0
+                              ? settingsProvider.gridColumnCount
+                              : (MediaQuery.of(context).size.width / 120).floor().clamp(2, 6),
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => const AppTileSkeleton(isGrid: true),
+                          childCount: 12,
+                        ),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => const AppTileSkeleton(isGrid: false),
+                        childCount: 10,
+                      ),
+                    )
+              : SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: EmptyStateWidget(
                     title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
                     subtitle: appsProvider.apps.isEmpty
                         ? tr('startByAddingFirstApp')
@@ -558,8 +580,8 @@ class AppsPageState extends State<AppsPage> {
                           }
                         : null,
                   ),
-          ),
-        if (refreshingSince != null || appsProvider.loadingApps)
+                ),
+        if (refreshingSince != null || (appsProvider.loadingApps && listedApps.isNotEmpty))
           SliverToBoxAdapter(
             child: LinearProgressIndicator(
               value: appsProvider.loadingApps ? null : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
@@ -648,21 +670,32 @@ class AppsPageState extends State<AppsPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(tr('appsString')),
+        title: GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsPage(initialTab: 0),
+              ),
+            );
+          },
+          child: Text(tr('appsString')),
+        ),
         actions: [
-          // Move Import/Export to AppBar as requested
-          IconButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                builder: (context) => const ImportExportPage(),
-              );
-            },
-            icon: const Icon(Icons.import_export),
-            tooltip: tr('importExport'),
-          ),
+          if (settingsProvider.displayShowAppCount)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Text(
+                  '${listedApps.length}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           // Conditionally show help icon based on settings
           if (settingsProvider.enableContextualTips)
             IconButton(
@@ -719,38 +752,6 @@ class AppsPageState extends State<AppsPage> {
                 Widget scrollView = CustomScrollView(
                   controller: scrollController,
                   slivers: <Widget>[
-                    // Standard M3 Large App Bar
-                    SliverAppBar.large(
-                      title: GestureDetector(
-                        onLongPress: () {
-                          HapticFeedback.heavyImpact();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsPage(initialTab: 0),
-                            ),
-                          );
-                        },
-                        child: Text(tr('appsString')),
-                      ),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        if (settingsProvider.displayShowAppCount)
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 16.0),
-                              child: Text(
-                                '${listedApps.length}',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-
                     // Filter Chips & App Count Context (Moved to body to prevent overlap)
                     // Only show quick filters if Plus Feature is enabled
                     if (settingsProvider.displayShowFilterChips && settingsProvider.plusEnableQuickFilters)
