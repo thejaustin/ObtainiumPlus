@@ -169,6 +169,7 @@ class AppListView extends StatelessWidget {
         },
         childCount: apps.length,
       ),
-    );
+    ),
+  );
   }
 }
