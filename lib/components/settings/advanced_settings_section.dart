@@ -46,7 +46,7 @@ class AdvancedSettingsSection extends StatelessWidget {
       if (_matches(tr('enableSwipeGestures'))) _buildEnableSwipeGesturesToggle(context),
       if (_matches(tr('enableUndoForAppRemoval'))) _buildEnableUndoForAppRemovalToggle(context),
       if (_matches(tr('enableContextualTips'))) _buildEnableContextualTipsToggle(context),
-      if (_matches(tr('enableHapticFeedback'))) _buildEnableHapticFeedbackToggle(context),
+      if (Provider.of<SettingsProvider>(context).plusEnableHapticFeedback && _matches(tr('enableHapticFeedback'))) _buildEnableHapticFeedbackToggle(context),
     ];
 
     // Debugging group

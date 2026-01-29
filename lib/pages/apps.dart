@@ -233,7 +233,9 @@ class AppsPageState extends State<AppsPage> {
         .map((app) => app.app.id)
         .toList();
 
-    appsProvider.precacheIcons(appIdsToCache);
+    if (context.read<SettingsProvider>().plusEnableIconCaching) {
+      appsProvider.precacheIcons(appIdsToCache);
+    }
   }
 
   @override
@@ -712,8 +714,6 @@ class AppsPageState extends State<AppsPage> {
                           Text(tr('appManagementTips')),
                           const SizedBox(height: 16),
                           Text(tr('swipeActionsTip')),
-                          const SizedBox(height: 16),
-                          Text(tr('longPressSelectionTip')),
                         ],
                       ),
                       actions: [
@@ -754,7 +754,7 @@ class AppsPageState extends State<AppsPage> {
                   slivers: <Widget>[
                     // Filter Chips & App Count Context (Moved to body to prevent overlap)
                     // Only show quick filters if Plus Feature is enabled
-                    if (settingsProvider.displayShowFilterChips && settingsProvider.plusEnableQuickFilters)
+                    if (appsProvider.apps.isNotEmpty && settingsProvider.displayShowFilterChips && settingsProvider.plusEnableQuickFilters)
                       getFilterChips(),
                     ...getLoadingWidgets(),
                     // These widgets return slivers (SliverList/SliverGrid), so they go directly in slivers list
