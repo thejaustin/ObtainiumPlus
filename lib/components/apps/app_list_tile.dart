@@ -270,17 +270,17 @@ class AppListTile extends StatelessWidget {
               trailing: appInMemory.downloadProgress != null
                   ? SizedBox(
                       child: Text(
-                        appInMemory.downloadProgress! >= 0
+                        (appInMemory.downloadProgress ?? -1) >= 0
                             ? tr(
                                 'percentProgress',
                                 args: [
-                                  appInMemory.downloadProgress!
+                                  appInMemory.downloadProgress ?? 0
                                       .toInt()
                                       .toString(),
                                 ],
                               )
                             : tr('installing'),
-                        textAlign: (appInMemory.downloadProgress! >= 0)
+                        textAlign: ((appInMemory.downloadProgress ?? -1) >= 0)
                             ? TextAlign.start
                             : TextAlign.end,
                       ),

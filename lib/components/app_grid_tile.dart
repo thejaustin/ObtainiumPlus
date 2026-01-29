@@ -228,8 +228,8 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                       child: SizedBox(
                         height: 2,
                         child: LinearProgressIndicator(
-                          value: widget.appInMemory.downloadProgress! >= 0
-                              ? widget.appInMemory.downloadProgress! / 100
+                          value: (widget.appInMemory.downloadProgress ?? -1) >= 0
+                              ? (widget.appInMemory.downloadProgress ?? 0) / 100
                               : null,
                         ),
                       ),
@@ -270,7 +270,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
     }
 
     if (widget.appInMemory.downloadProgress != null) {
-      final progress = widget.appInMemory.downloadProgress! >= 0
+      final progress = (widget.appInMemory.downloadProgress ?? -1) >= 0
           ? '${widget.appInMemory.downloadProgress}%'
           : 'in progress';
       label.write(', downloading $progress');

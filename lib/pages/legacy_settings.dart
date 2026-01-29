@@ -644,9 +644,10 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                                   ShizukuApkInstaller.checkPermission().then((
                                     resCode,
                                   ) {
-                                    settingsProvider.useShizuku = resCode!
-                                        .startsWith('granted');
-                                    switch (resCode) {
+                                    if (resCode != null) {
+                                      settingsProvider.useShizuku = resCode
+                                          .startsWith('granted');
+                                      switch (resCode) {
                                       case 'binder_not_found':
                                         showError(
                                           ObtainiumError(
@@ -672,7 +673,13 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                                           context,
                                         );
                                     }
-                                  });
+                                  } else {
+                                    // Handle the null case appropriately
+                                    showError(
+                                      ObtainiumError('Shizuku permission result is null'),
+                                      context,
+                                    );
+                                  }
                                 } else {
                                   settingsProvider.useShizuku = false;
                                 }
