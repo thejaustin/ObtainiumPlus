@@ -192,6 +192,11 @@ class GitHub extends AppSource {
           },
         ],
       ),
+      GeneratedFormSwitch(
+        'includeForks',
+        label: tr('includeForks'),
+        defaultValue: true,
+      ),
     ];
   }
 
@@ -772,9 +777,11 @@ class GitHub extends AppSource {
     var sp = SettingsProvider();
     await sp.initializeSettings();
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
+    bool includeForks = querySettings['includeForks'] == true || querySettings['includeForks'] == 'true';
+    String forkParam = includeForks ? '+fork:true' : '';
     var results = await searchCommon(
       query,
-      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}+fork:true&per_page=100',
+      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}$forkParam&per_page=100',
       'items',
       onHttpErrorCode: (Response res) {
         rateLimitErrorCheck(res);
