@@ -100,6 +100,28 @@ dependencies:
   flutter_lints: ^6.0.0
   flutter_foreground_task: ^9.1.0
 
+  # Enhanced networking
+  dio: ^5.7.0
+
+  # Modern database
+  isar_flutter_libs: ^3.1.0+1
+
+  # Code generation for data classes
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Dependency injection
+  get_it: ^8.0.2
+
+  # Error tracking
+  sentry_flutter: ^8.10.0
+
+  # Enhanced caching
+  flutter_cache_manager: ^3.5.0
+
+  # Equatable for efficient comparisons
+  equatable: ^2.0.5
+
 flutter_launcher_icons:
   android: "ic_launcher"
   image_path: "assets/graphics/icon.png"
@@ -155,3 +177,20 @@ flutter:
       - family: Montserrat
         fonts:
           - asset: assets/fonts/Montserrat-Regular.ttf
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+  # Code generation
+  build_runner: ^2.4.12
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+  isar_generator: ^3.1.0+1
