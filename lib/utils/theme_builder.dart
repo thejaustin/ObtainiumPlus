@@ -143,9 +143,9 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds CardTheme with M3 tonal elevation
-  static CardTheme _buildCardTheme(ColorScheme colorScheme) {
-    return CardTheme(
+  /// Builds CardThemeData with M3 tonal elevation
+  static CardThemeData _buildCardTheme(ColorScheme colorScheme) {
+    return CardThemeData(
       color: colorScheme.surfaceContainerLow,
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -205,9 +205,9 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds DialogTheme with M3 surface container high and rounded corners
-  static DialogTheme _buildDialogTheme(ColorScheme colorScheme) {
-    return DialogTheme(
+  /// Builds DialogThemeData with M3 surface container high and rounded corners
+  static DialogThemeData _buildDialogTheme(ColorScheme colorScheme) {
+    return DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
       elevation: 6,
       shape: RoundedRectangleBorder(
