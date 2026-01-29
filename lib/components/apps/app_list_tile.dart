@@ -74,16 +74,16 @@ class AppListTile extends StatelessWidget {
       return GestureDetector(
         child: Hero(
           tag: 'app_icon_${appInMemory.app.id}',
-            child: widget.appInMemory.icon != null
+            child: appInMemory.icon != null
               ? Image.memory(
-                  widget.appInMemory.icon!,
+                  appInMemory.icon!,
                   width: 40,
                   height: 40,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
                   cacheWidth: (40 * MediaQuery.of(context).devicePixelRatio).round(),
                   opacity: AlwaysStoppedAnimation(
-                    widget.appInMemory.installedInfo == null ? 0.6 : 1,
+                    appInMemory.installedInfo == null ? 0.6 : 1,
                   ),
                 )
               : const AppIconShimmer(size: 48),
