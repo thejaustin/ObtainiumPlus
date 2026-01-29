@@ -102,12 +102,16 @@ class AppFileService {
     }
     req.headers[HttpHeaders.rangeHeader] = 'bytes=0-$bytesToGrab';
     var client = IOClient(createHttpClient(allowInsecure));
-    var response = await client.send(req);
-    if (response.statusCode < 200 || response.statusCode > 299) {
-      throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'));
+    try {
+      var response = await client.send(req);
+      if (response.statusCode < 200 || response.statusCode > 299) {
+        throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'));
+      }
+      List<List<int>> bytes = await response.stream.take(bytesToGrab).toList();
+      return hashListOfLists(bytes);
+    } finally {
+      client.close();
     }
-    List<List<int>> bytes = await response.stream.take(bytesToGrab).toList();
-    return hashListOfLists(bytes);
   }
 
   static Future<String?> checkETagHeader(
@@ -119,13 +123,16 @@ class AppFileService {
     var req = Request('GET', Uri.parse(url));
     req.headers.addAll(reqHeaders);
     var client = IOClient(createHttpClient(allowInsecure));
-    StreamedResponse response = await client.send(req);
-    var resHeaders = response.headers;
-    client.close();
-    return resHeaders[HttpHeaders.etagHeader]
-        ?.replaceAll('"', '')
-        .hashCode
-        .toString();
+    try {
+      StreamedResponse response = await client.send(req);
+      var resHeaders = response.headers;
+      return resHeaders[HttpHeaders.etagHeader]
+          ?.replaceAll('"', '')
+          .hashCode
+          .toString();
+    } finally {
+      client.close();
+    }
   }
 
   static Future<File> downloadFileWithRetry(
