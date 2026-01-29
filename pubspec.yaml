@@ -103,9 +103,6 @@ dependencies:
   # Enhanced networking
   dio: ^5.7.0
 
-  # Modern database
-  isar_flutter_libs: ^3.1.0+1
-
   # Code generation for data classes
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
@@ -193,4 +190,3 @@ dev_dependencies:
   build_runner: ^2.4.12
   freezed: ^2.5.2
   json_serializable: ^6.8.0
-  isar_generator: ^3.1.0+1
