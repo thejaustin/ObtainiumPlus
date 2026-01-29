@@ -976,6 +976,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   NavigationDestinationLabelBehavior get navigationLabelBehavior {
+    if (!plusEnableUICustomization) return NavigationDestinationLabelBehavior.alwaysShow;
     return NavigationDestinationLabelBehavior.values[prefs?.getInt('navigationLabelBehavior') ??
         NavigationDestinationLabelBehavior.alwaysShow.index];
   }
@@ -986,19 +987,19 @@ class SettingsProvider with ChangeNotifier {
   }
 
   // App Tile Display Settings
-  bool get displayShowAuthor => prefs?.getBool('displayShowAuthor') ?? true;
+  bool get displayShowAuthor => !plusEnableUICustomization || (prefs?.getBool('displayShowAuthor') ?? true);
   set displayShowAuthor(bool val) {
     prefs?.setBool('displayShowAuthor', val);
     notifyListeners();
   }
 
-  bool get displayShowVersion => prefs?.getBool('displayShowVersion') ?? true;
+  bool get displayShowVersion => !plusEnableUICustomization || (prefs?.getBool('displayShowVersion') ?? true);
   set displayShowVersion(bool val) {
     prefs?.setBool('displayShowVersion', val);
     notifyListeners();
   }
 
-  bool get displayShowDate => prefs?.getBool('displayShowDate') ?? true;
+  bool get displayShowDate => !plusEnableUICustomization || (prefs?.getBool('displayShowDate') ?? true);
   set displayShowDate(bool val) {
     prefs?.setBool('displayShowDate', val);
     notifyListeners();
@@ -1035,9 +1036,11 @@ class SettingsProvider with ChangeNotifier {
   }
 
   // List Density
-  AppListDensity get appListDensity =>
-      AppListDensity.values[prefs?.getInt('appListDensity') ??
+  AppListDensity get appListDensity {
+    if (!plusEnableUICustomization) return AppListDensity.comfortable;
+    return AppListDensity.values[prefs?.getInt('appListDensity') ??
           AppListDensity.comfortable.index];
+  }
   set appListDensity(AppListDensity density) {
     prefs?.setInt('appListDensity', density.index);
     notifyListeners();
@@ -1119,12 +1122,55 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Advanced UI Customization (App Bar Style, Nav Labels, Tile Display)
+  bool get plusEnableUICustomization => enableAllPlusFeatures && (prefs?.getBool('plusEnableUICustomization') ?? true);
+  set plusEnableUICustomization(bool val) {
+    prefs?.setBool('plusEnableUICustomization', val);
+    notifyListeners();
+  }
+
+  /// Haptic Feedback (Vibration)
+  bool get plusEnableHapticFeedback => enableAllPlusFeatures && (prefs?.getBool('plusEnableHapticFeedback') ?? true);
+  set plusEnableHapticFeedback(bool val) {
+    prefs?.setBool('plusEnableHapticFeedback', val);
+    notifyListeners();
+  }
+
+  /// Icon Caching / Preloading (Performance)
+  bool get plusEnableIconCaching => enableAllPlusFeatures && (prefs?.getBool('plusEnableIconCaching') ?? true);
+  set plusEnableIconCaching(bool val) {
+    prefs?.setBool('plusEnableIconCaching', val);
+    notifyListeners();
+  }
+
+  /// Modern Settings UI (Search, Categories)
+  bool get plusEnableModernSettings => enableAllPlusFeatures && (prefs?.getBool('plusEnableModernSettings') ?? true);
+  set plusEnableModernSettings(bool val) {
+    prefs?.setBool('plusEnableModernSettings', val);
+    notifyListeners();
+  }
+
+  /// Modern App Page UI (New Layout, Bottom Sheet)
+  bool get plusEnableModernAppPage => enableAllPlusFeatures && (prefs?.getBool('plusEnableModernAppPage') ?? true);
+  set plusEnableModernAppPage(bool val) {
+    prefs?.setBool('plusEnableModernAppPage', val);
+    notifyListeners();
+  }
+
+  /// Responsive App Page Layout (Wide screen support)
+  bool get plusEnableResponsiveAppLayout => enableAllPlusFeatures && (prefs?.getBool('plusEnableResponsiveAppLayout') ?? true);
+  set plusEnableResponsiveAppLayout(bool val) {
+    prefs?.setBool('plusEnableResponsiveAppLayout', val);
+    notifyListeners();
+  }
+
   // ============================================================
   // APP BAR STYLE SETTINGS
   // ============================================================
 
   /// Global app bar style (compact or large)
   AppBarStyle get appBarStyle {
+    if (!plusEnableUICustomization) return AppBarStyle.compact;
     return AppBarStyle.values[prefs?.getInt('appBarStyle') ?? AppBarStyle.compact.index];
   }
 

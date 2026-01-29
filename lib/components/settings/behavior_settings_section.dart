@@ -63,10 +63,14 @@ class BehaviorSettingsSection extends StatelessWidget {
     ];
 
     // Swipe Actions group
-    List<Widget> swipeChildren = [
-      if (_matches(tr('swipeRightAction'))) _buildSwipeRightDropdown(context),
-      if (_matches(tr('swipeLeftAction'))) _buildSwipeLeftDropdown(context),
-    ];
+    List<Widget> swipeChildren = [];
+    final settings = Provider.of<SettingsProvider>(context);
+    if (settings.plusEnableSwipeActions) {
+      swipeChildren = [
+        if (_matches(tr('swipeRightAction'))) _buildSwipeRightDropdown(context),
+        if (_matches(tr('swipeLeftAction'))) _buildSwipeLeftDropdown(context),
+      ];
+    }
 
     return Column(
       children: [

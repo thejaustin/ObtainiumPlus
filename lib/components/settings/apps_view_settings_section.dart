@@ -29,7 +29,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category')) CategoryEditorSelector(showLabelWhenNotEmpty: false),
       if (_matches(tr('groupByCategory'))) _buildGroupByCategoryToggle(context),
-      if (_matches(tr('collapseCategoriesByDefault'))) _buildCollapseCategoriesToggle(context),
+      if (settings.plusEnableUICustomization && _matches(tr('collapseCategoriesByDefault'))) _buildCollapseCategoriesToggle(context),
     ];
 
     List<Widget> iconWidgets = [
@@ -39,19 +39,22 @@ class AppsViewSettingsSection extends StatelessWidget {
 
     List<Widget> viewWidgets = [
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
-      if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
+      if (settings.plusEnableUICustomization && _matches(tr('listDensity'))) _buildDensityDropdown(context),
       _buildGridSettings(context),
     ];
 
-    List<Widget> displayWidgets = [
-      if (_matches(tr('showAuthor'))) _buildShowAuthorToggle(context),
-      if (_matches(tr('showVersion'))) _buildShowVersionToggle(context),
-      if (_matches(tr('showDate'))) _buildShowDateToggle(context),
-    ];
+    List<Widget> displayWidgets = [];
+    if (settings.plusEnableUICustomization) {
+      displayWidgets = [
+        if (_matches(tr('showAuthor'))) _buildShowAuthorToggle(context),
+        if (_matches(tr('showVersion'))) _buildShowVersionToggle(context),
+        if (_matches(tr('showDate'))) _buildShowDateToggle(context),
+      ];
+    }
 
     List<Widget> headerWidgets = [
-      if (_matches(tr('showFilterChips'))) _buildShowFilterChipsToggle(context),
-      if (_matches(tr('showAppCount'))) _buildShowAppCountToggle(context),
+      if (settingsProvider.plusEnableQuickFilters && _matches(tr('showFilterChips'))) _buildShowFilterChipsToggle(context),
+      if (settingsProvider.plusEnableUICustomization && _matches(tr('showAppCount'))) _buildShowAppCountToggle(context),
     ];
 
     return Column(
@@ -210,7 +213,7 @@ class AppsViewSettingsSection extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.numbers_outlined),
               title: Text(tr('iconCount'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text(settings.categoryIconCount.toString()),
+              subtitle: Text("${settings.categoryIconCount}px"),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -241,7 +244,8 @@ class AppsViewSettingsSection extends StatelessWidget {
             value: settings.globalViewMode,
             items: [
               DropdownMenuItem(value: ViewMode.list, child: Text(tr('listView'))),
-              DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
+              if (settings.plusEnableGridView)
+                DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
             ],
             onChanged: (value) {
               if (value != null) {

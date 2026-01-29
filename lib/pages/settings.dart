@@ -32,18 +32,36 @@ import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:obtainium/pages/legacy_settings.dart';
+
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
 
-class SettingsPage extends StatefulWidget {
-  final int initialTab; // Kept for backward compatibility, though tabs are removed
+class SettingsPage extends StatelessWidget {
+  final int initialTab;
   const SettingsPage({super.key, this.initialTab = 0});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    // If Modern Settings is enabled (default), show ModernSettingsPage
+    if (settings.plusEnableModernSettings) {
+      return ModernSettingsPage(initialTab: initialTab);
+    }
+    // Otherwise show LegacySettingsPage
+    return const LegacySettingsPage();
+  }
 }
 
-class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
+class ModernSettingsPage extends StatefulWidget {
+  final int initialTab; // Kept for backward compatibility, though tabs are removed
+  const ModernSettingsPage({super.key, this.initialTab = 0});
+
+  @override
+  State<ModernSettingsPage> createState() => _ModernSettingsPageState();
+}
+
+class _ModernSettingsPageState extends State<ModernSettingsPage> with TickerProviderStateMixin {
   bool showIntervalLabel = true;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();

@@ -90,7 +90,40 @@ class _OnboardingPageState extends State<OnboardingPage> {
           decoration: pageDecoration,
         ),
 
-        // 2. Permissions (Notifications & Install)
+        // 2. Experience Selection
+        PageViewModel(
+          title: "Choose Your Experience",
+          body: "Obtainium+ includes enhanced features like Grid View, Animations, and more. You can toggle these anytime in Settings.",
+          image: Icon(Icons.auto_awesome, size: 100, color: Theme.of(context).colorScheme.tertiary),
+          decoration: pageDecoration,
+          footer: Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              return Column(
+                children: [
+                  SwitchListTile.adaptive(
+                    title: const Text("Enable Obtainium+ Enhancements", style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text("Recommended for most users"),
+                    value: settings.enableAllPlusFeatures,
+                    onChanged: (val) => settings.enableAllPlusFeatures = val,
+                    secondary: const Icon(Icons.stars),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    settings.enableAllPlusFeatures 
+                      ? "Enhanced Experience Enabled" 
+                      : "Standard Obtainium Experience",
+                    style: TextStyle(
+                      color: settings.enableAllPlusFeatures ? Colors.green : Colors.grey,
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ],
+              );
+            }
+          ),
+        ),
+
+        // 3. Permissions (Notifications & Install)
         PageViewModel(
           title: "Permissions",
           body: "Obtainium needs permissions to notify you about updates and to install apps.",
