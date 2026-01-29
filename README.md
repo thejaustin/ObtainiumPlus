@@ -308,6 +308,22 @@
 - 🎯 Shizuku (silent installs)
 - 🛡️ AppVerifier (security)
 
+### 🎛️ Customization & "Vanilla Mode"
+
+Obtainium+ puts you in control. While we believe the enhanced experience is the best way to use the app, we respect your preference for the original workflow.
+
+**🍦 Vanilla Mode**
+Want the stability and fixes of Obtainium+ but the exact look and feel of the original?
+- Go to **Settings > Obtainium+ Features**
+- Toggle **OFF** "Enable All Plus Features"
+- The app will instantly revert to the standard list view, standard animations, and original UI density.
+
+**🛠️ Granular Control**
+You can also mix and match! Keep the **Grid View** but disable **Haptic Feedback**? No problem.
+- **Modern Settings UI**: Toggle between the new search-based settings and the classic list.
+- **Modern App Page**: Toggle between the new responsive detail screen and the classic bottom-sheet design.
+- **Performance**: Toggle Icon Caching and Enhanced Animations independently.
+
 </td>
 </tr>
 </table>

@@ -21,7 +21,9 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class AppPage extends StatefulWidget {
+import 'package:obtainium/pages/legacy_app.dart';
+
+class AppPage extends StatelessWidget {
   const AppPage({
     super.key,
     required this.appId,
@@ -32,10 +34,36 @@ class AppPage extends StatefulWidget {
   final bool showOppositeOfPreferredView;
 
   @override
-  State<AppPage> createState() => _AppPageState();
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    if (settings.plusEnableModernAppPage) {
+      return ModernAppPage(
+        appId: appId,
+        showOppositeOfPreferredView: showOppositeOfPreferredView,
+      );
+    }
+    return LegacyAppPage(
+      appId: appId,
+      showOppositeOfPreferredView: showOppositeOfPreferredView,
+    );
+  }
 }
 
-class _AppPageState extends State<AppPage> {
+class ModernAppPage extends StatefulWidget {
+  const ModernAppPage({
+    super.key,
+    required this.appId,
+    this.showOppositeOfPreferredView = false,
+  });
+
+  final String appId;
+  final bool showOppositeOfPreferredView;
+
+  @override
+  State<ModernAppPage> createState() => _ModernAppPageState();
+}
+
+class _ModernAppPageState extends State<ModernAppPage> {
   late final WebViewController _webViewController;
   bool _wasWebViewOpened = false;
   AppInMemory? prevApp;
@@ -879,7 +907,7 @@ class _AppPageState extends State<AppPage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 800;
+          final isWide = settingsProvider.plusEnableResponsiveAppLayout && constraints.maxWidth > 800;
           
           if (showAppWebpageFinal) {
             return getAppWebView();
