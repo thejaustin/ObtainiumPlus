@@ -31,6 +31,7 @@ class ThemeSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> themeWidgets = [

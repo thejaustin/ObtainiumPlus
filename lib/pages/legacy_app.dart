@@ -262,45 +262,6 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
               ),
             ),
 
-          /* Certificate Hashes */
-          if (app != null && app.certificateHashes.isNotEmpty)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 40),
-                Text(
-                  "${plural('certificateHash', app.certificateHashes.length)}"
-                  "${app.hasMultipleSigners ? " (${tr('multipleSigners')})" : ""}",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: app.certificateHashes.map((hash) {
-                    return GestureDetector(
-                      onLongPress: () {
-                        Clipboard.setData(ClipboardData(text: hash));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(tr('copiedToClipboard'))),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25,
-                          vertical: 0,
-                        ),
-                        child: Text(
-                          hash,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-
           const SizedBox(height: 40),
           CategoryEditorSelector(
             alignment: WrapAlignment.center,
@@ -379,7 +340,7 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
                       GestureDetector(
                         onTap: app == null
                             ? null
-                            : () => pm.openApp(app.app.id),
+                            : () => AppInstallService.openApp(app.app.id),
                         child: Image.memory(
                           app!.icon!,
                           height: small ? 70 : 150,
