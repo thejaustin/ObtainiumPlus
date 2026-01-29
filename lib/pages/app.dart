@@ -103,7 +103,7 @@ class _ModernAppPageState extends State<ModernAppPage> {
   void initState() {
     super.initState();
     _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setJavaScriptMode(JavaScriptMode.disabled)
       ..setNavigationDelegate(
         NavigationDelegate(
           onWebResourceError: (WebResourceError error) {
@@ -284,7 +284,7 @@ class _ModernAppPageState extends State<ModernAppPage> {
                               ? tr('changes')
                               : app!.app.releaseDate!.toLocal().toString(),
                           textAlign: alignStart ? TextAlign.start : TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall!
+                          style: Theme.of(context).textTheme.labelSmall ?? const TextStyle()
                               .copyWith(
                                 decoration: changeLogFn != null
                                     ? TextDecoration.underline
@@ -347,7 +347,7 @@ class _ModernAppPageState extends State<ModernAppPage> {
                         args: [lowerCaseIfEnglish(tr('releaseAsset'))],
                       ),
                       textAlign: alignStart ? TextAlign.start : TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                      style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
                         decoration: TextDecoration.underline,
                         fontStyle: FontStyle.italic,
                       ),
@@ -566,7 +566,7 @@ class _ModernAppPageState extends State<ModernAppPage> {
               textAlign: alignStart ? TextAlign.start : TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall!.copyWith(
+              style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
                 decoration: TextDecoration.underline,
                 fontStyle: FontStyle.italic,
               ),
@@ -884,8 +884,8 @@ class _ModernAppPageState extends State<ModernAppPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
               child: LinearProgressIndicator(
-                value: app!.downloadProgress! >= 0
-                    ? app.downloadProgress! / 100
+                value: (app!.downloadProgress ?? -1) >= 0
+                    ? (app.downloadProgress ?? 0) / 100
                     : null,
               ),
             ),

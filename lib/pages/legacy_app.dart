@@ -44,7 +44,7 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
   void initState() {
     super.initState();
     _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setJavaScriptMode(JavaScriptMode.disabled)
       ..setNavigationDelegate(
         NavigationDelegate(
           onWebResourceError: (WebResourceError error) {
@@ -189,7 +189,7 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
                               ? tr('changes')
                               : app!.app.releaseDate!.toLocal().toString(),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall!
+                          style: Theme.of(context).textTheme.labelSmall ?? const TextStyle()
                               .copyWith(
                                 decoration: changeLogFn != null
                                     ? TextDecoration.underline
@@ -252,7 +252,7 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
                         args: [lowerCaseIfEnglish(tr('releaseAsset'))],
                       ),
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                      style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
                         decoration: TextDecoration.underline,
                         fontStyle: FontStyle.italic,
                       ),
@@ -407,7 +407,7 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
                 child: Text(
                   app?.app.url ?? '',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                  style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
                     decoration: TextDecoration.underline,
                     fontStyle: FontStyle.italic,
                   ),
@@ -682,8 +682,8 @@ class _LegacyAppPageState extends State<LegacyAppPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
               child: LinearProgressIndicator(
-                value: app!.downloadProgress! >= 0
-                    ? app.downloadProgress! / 100
+                value: (app!.downloadProgress ?? -1) >= 0
+                    ? (app.downloadProgress ?? 0) / 100
                     : null,
               ),
             ),

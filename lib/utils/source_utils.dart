@@ -9,7 +9,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
-HttpClient createHttpClient(bool allowInsecure) {
+HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
   if (allowInsecure) {
     client.badCertificateCallback =
@@ -27,7 +27,7 @@ Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>> sourceRequest
   int maxRedirects = 5,
   bool allowInsecure = false,
 }) async {
-  var httpClient = createHttpClient(allowInsecure);
+  var httpClient = createHttpClient(allowInsecure: allowInsecure);
   var currentUrl = url;
   for (var i = 0; i <= maxRedirects; i++) {
     var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
@@ -71,7 +71,7 @@ class SourceUtils {
     int maxRedirects = 5,
     bool allowInsecure = false,
   }) async {
-    var httpClient = createHttpClient(allowInsecure);
+    var httpClient = createHttpClient(allowInsecure: allowInsecure);
     var currentUrl = url;
     for (var i = 0; i <= maxRedirects; i++) {
       var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
@@ -141,7 +141,7 @@ class SourceUtils {
 
   static ObtainiumError getObtainiumHttpError(Response res) {
     return ObtainiumError(
-      (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
+      (res.reasonPhrase?.isNotEmpty == true)
           ? res.reasonPhrase!
           : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]),
     );
