@@ -774,7 +774,7 @@ class GitHub extends AppSource {
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
     var results = await searchCommon(
       query,
-      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}&per_page=100',
+      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}+fork:true&per_page=100',
       'items',
       onHttpErrorCode: (Response res) {
         rateLimitErrorCheck(res);
