@@ -40,7 +40,8 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('useMaterialYou'))) _buildMaterialYouToggle(context),
       if (_matches(tr('matchSystemMaterialStyle'))) _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
-      if (_matches(tr('navigationLabels'))) _buildNavigationLabelDropdown(context),
+      // Only show Navigation Labels if UI Customization is enabled
+      if (settings.plusEnableUICustomization && _matches(tr('navigationLabels'))) _buildNavigationLabelDropdown(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
     ];
 
@@ -55,7 +56,8 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> appBarWidgets = [
-       if (_matches(tr('appBarStyle') ?? 'App Bar Style')) _buildAppBarStylePicker(context),
+       // Only show App Bar Style if UI Customization is enabled
+       if (settings.plusEnableUICustomization && (_matches(tr('appBarStyle') ?? 'App Bar Style'))) _buildAppBarStylePicker(context),
     ];
 
     return Column(
