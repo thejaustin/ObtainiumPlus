@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
@@ -9,6 +10,11 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:obtainium/custom_errors.dart';
+
+Uint8List _encodeJson(Map<String, dynamic> data) {
+  var encoder = const JsonEncoder.withIndent("    ");
+  return Uint8List.fromList(utf8.encode(encoder.convert(data)));
+}
 
 class AppExportService {
   AppExportService._();
@@ -82,17 +88,20 @@ class AppExportService {
     }
     String? returnPath;
     if (!pickOnly) {
-      var encoder = const JsonEncoder.withIndent("    ");
       Map<String, dynamic> finalExport = generateExportJSON(
         apps: apps,
         settingsProvider: settingsProvider,
       );
+      
+      // Run JSON encoding in a background isolate to prevent UI freeze
+      Uint8List bytes = await compute(_encodeJson, finalExport);
+
       var result = await saf.createFile(
         exportDir,
         displayName:
             '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}${isAuto ? '-auto' : ''}.json',
         mimeType: 'application/json',
-        bytes: Uint8List.fromList(utf8.encode(encoder.convert(finalExport))),
+        bytes: bytes,
       );
       if (result == null) {
         throw ObtainiumError(tr('unexpectedError'));

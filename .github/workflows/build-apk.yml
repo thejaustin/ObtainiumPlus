@@ -124,19 +124,46 @@ jobs:
         run: |
           # Get previous tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous tag found. Listing all commits."
-            CHANGELOG=$(git log --pretty=format:"* %s (%h)" --no-merges)
+            echo "No previous tag found. Using last commit only."
+            COMMIT_RANGE="HEAD~1..HEAD"
           else
             echo "Generating changelog since $PREVIOUS_TAG"
-            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"* %s (%h)" --no-merges)
+            COMMIT_RANGE="$PREVIOUS_TAG..HEAD"
           fi
-          
+
+          # Generate detailed changelog with full commit body (like AutoCat)
+          # This includes co-authorship info from commit messages
+          CHANGELOG=""
+          while IFS= read -r commit_hash; do
+            if [ -n "$commit_hash" ]; then
+              SUBJECT=$(git log -1 --pretty=format:'%s' "$commit_hash")
+              BODY=$(git log -1 --pretty=format:'%b' "$commit_hash" | sed '/^$/d')
+              SHORT_HASH=$(git log -1 --pretty=format:'%h' "$commit_hash")
+
+              if [ -n "$CHANGELOG" ]; then
+                CHANGELOG="${CHANGELOG}
+
+          ---
+
+          "
+              fi
+
+              CHANGELOG="${CHANGELOG}**${SUBJECT}** (\`${SHORT_HASH}\`)"
+
+              if [ -n "$BODY" ]; then
+                CHANGELOG="${CHANGELOG}
+
+          ${BODY}"
+              fi
+            fi
+          done < <(git log $COMMIT_RANGE --pretty=format:'%H' --no-merges)
+
           if [ -z "$CHANGELOG" ]; then
             CHANGELOG="No significant changes."
           fi
-          
+
           DELIMITER=$(openssl rand -hex 8)
           echo "changelog<<$DELIMITER" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
@@ -175,15 +202,23 @@ jobs:
           allowUpdates: true
           skipIfReleaseExists: false
           body: |
-            ## Obtainium+ ${{ steps.bump_version.outputs.version }}
+            **Obtainium+ Build #${{ steps.bump_version.outputs.build_number }}**
 
-            **Build:** ${{ steps.bump_version.outputs.build_number }}
-            **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}
+            ### Version Info
+            - **Version**: ${{ steps.bump_version.outputs.version }}
+            - **Commit**: [`${{ steps.commit_bump.outputs.sha || github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ steps.commit_bump.outputs.sha || github.sha }})
+            - **Build Date**: ${{ github.event.head_commit.timestamp }}
 
-            ---
+            ### Installation
+            1. Download `app-release.apk` below
+            2. Enable 'Install from Unknown Sources' in Android settings
+            3. Install the APK
 
-            ### 📝 Changes
+            ### Changes in this build
             ${{ steps.build_changelog.outputs.changelog }}
-            
+
             ---
-            *Built with GitHub Actions*
+
+            📥 **[Download Latest](https://github.com/${{ github.repository }}/releases/latest)** | 📝 **[All Releases](https://github.com/${{ github.repository }}/releases)**
+
+            🤖 *Built with [Claude Code](https://claude.com/claude-code) and GitHub Actions*
