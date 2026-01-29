@@ -418,5 +418,12 @@
     "apk": {
         "one": "{} APK",
         "other": "{} APKs"
-    }
+    },
+    "batteryOpt": "Optimisation de la batterie",
+    "searchSettings": "Paramètres de recherche",
+    "openSettings": "Ouvrir les paramètres",
+    "samsungUsageAccessTitle": "Appareil Samsung Détecté",
+    "samsungUsageAccessMessage": "Sur les appareils Samsung, 'Obtainium' peut être caché dans la liste d'Accès à l'utilisation.\n\nAppuyez sur le bouton 'Plus' ou 'Menu' (en haut à droite) et sélectionnez 'Afficher les applications système' pour le trouver.",
+    "xiaomiTroubleshootingTitle": "Optimisation Batterie Xiaomi",
+    "xiaomiTroubleshootingDescription": "Sur Xiaomi (MIUI/HyperOS), les tâches de fond sont souvent restreintes.\n\nPour des mises à jour fiables :\n\n1. Activez **Démarrage automatique**.\n2. Dans **Économiseur de batterie**, choisissez **Pas de restriction**.\n3. Dans **Autres permissions**, autorisez **Afficher des fenêtres contextuelles**."
 }

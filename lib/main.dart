@@ -25,6 +25,7 @@ import 'package:easy_localization/src/localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/router.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -63,7 +64,7 @@ const fallbackLocale = Locale('en');
 const localeDir = 'assets/translations';
 var fdroid = false;
 
-final globalNavigatorKey = GlobalKey<NavigatorState>();
+final globalNavigatorKey = rootNavigatorKey;
 
 Future<void> loadTranslations() async {
   // See easy_localization/issues/210
@@ -582,12 +583,12 @@ class _ObtainiumState extends State<Obtainium> {
 
           if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();
 
-          return MaterialApp(
+          return MaterialApp.router(
             title: 'Obtainium',
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            navigatorKey: globalNavigatorKey,
+            routerConfig: router,
             debugShowCheckedModeBanner: false,
             theme: ThemeBuilder.buildTheme(
               colorScheme: settingsProvider.theme == ThemeSettings.dark
@@ -601,13 +602,6 @@ class _ObtainiumState extends State<Obtainium> {
                   : darkColorScheme,
               useSystemFont: settingsProvider.useSystemFont,
             ),
-            home: Shortcuts(
-                shortcuts: <LogicalKeySet, Intent>{
-                  LogicalKeySet(LogicalKeyboardKey.select):
-                      const ActivateIntent(),
-                },
-                child: const HomePage(),
-              ),
           );
         },
       ),
