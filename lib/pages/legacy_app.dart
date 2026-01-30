@@ -15,6 +15,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/app_utils.dart'; // Added for pm
 import 'package:obtainium/utils/language_utils.dart'; // Added
 import 'package:obtainium/utils/source_utils.dart'; // Added
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:provider/provider.dart';
