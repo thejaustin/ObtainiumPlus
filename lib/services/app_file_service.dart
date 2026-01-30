@@ -101,7 +101,7 @@ class AppFileService {
       req.headers.addAll(headers);
     }
     req.headers[HttpHeaders.rangeHeader] = 'bytes=0-$bytesToGrab';
-    var client = IOClient(createHttpClient(allowInsecure));
+    var client = IOClient(createHttpClient(allowInsecure: allowInsecure));
     try {
       var response = await client.send(req);
       if (response.statusCode < 200 || response.statusCode > 299) {
@@ -122,7 +122,7 @@ class AppFileService {
     var reqHeaders = headers ?? {};
     var req = Request('GET', Uri.parse(url));
     req.headers.addAll(reqHeaders);
-    var client = IOClient(createHttpClient(allowInsecure));
+    var client = IOClient(createHttpClient(allowInsecure: allowInsecure));
     try {
       StreamedResponse response = await client.send(req);
       var resHeaders = response.headers;
@@ -194,7 +194,7 @@ class AppFileService {
     var reqHeaders = headers ?? {};
     var req = Request('GET', Uri.parse(url));
     req.headers.addAll(reqHeaders);
-    var headersClient = IOClient(createHttpClient(allowInsecure));
+    var headersClient = IOClient(createHttpClient(allowInsecure: allowInsecure));
     StreamedResponse headersResponse = await headersClient.send(req);
     var resHeaders = headersResponse.headers;
 
