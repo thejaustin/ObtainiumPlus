@@ -274,9 +274,7 @@ class AppListTile extends StatelessWidget {
                             ? tr(
                                 'percentProgress',
                                 args: [
-                                  appInMemory.downloadProgress ?? 0
-                                      .toInt()
-                                      .toString(),
+                                  (appInMemory.downloadProgress ?? 0).toInt().toString(),
                                 ],
                               )
                             : tr('installing'),

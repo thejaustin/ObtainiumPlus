@@ -18,6 +18,8 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/pages/settings.dart';
 
 class LegacySettingsPage extends StatefulWidget {
   const LegacySettingsPage({super.key});
@@ -680,6 +682,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                                       context,
                                     );
                                   }
+                                });
                                 } else {
                                   settingsProvider.useShizuku = false;
                                 }
