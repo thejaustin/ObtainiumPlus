@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -25,9 +26,86 @@ class DiscoverPageState extends State<DiscoverPage> {
   String searchQuery = '';
   Map<String, MapEntry<String, List<String>>> results = {};
   SourceProvider sourceProvider = SourceProvider();
+  Map<String, dynamic> querySettings = {};
 
   List<AppSource> get searchableSources =>
       sourceProvider.sources.where((e) => e.canSearch).toList();
+
+  @override
+  void initState() {
+    super.initState();
+    _initQuerySettings();
+  }
+
+  void _initQuerySettings() {
+    for (var source in sourceProvider.sources) {
+      if (source.canSearch) {
+        for (var item in source.searchQuerySettingFormItems) {
+          if (!querySettings.containsKey(item.key) &&
+              item.defaultValue != null) {
+            querySettings[item.key] = item.defaultValue;
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> openSearchOptions() async {
+    // Collect all unique form items from active sources
+    Map<String, GeneratedFormItem> uniqueItems = {};
+    for (var source in searchableSources) {
+      // You might want to filter by currently selected sources (from SettingsProvider)
+      // But showing all available options is also fine, or we can filter inside the loop.
+      // Let's filter by selected sources to avoid confusion
+      final settingsProvider = context.read<SettingsProvider>();
+      if (settingsProvider.searchDeselected.contains(source.name)) continue;
+
+      for (var item in source.searchQuerySettingFormItems) {
+        if (!uniqueItems.containsKey(item.key)) {
+          // Set the current value from querySettings if available
+          if (querySettings.containsKey(item.key)) {
+            // We need to clone the item or set a temporary value? 
+            // GeneratedFormModal uses defaultValue if value not provided in the 'values' map passed to it?
+            // Actually GeneratedFormModal takes `items` but manages `values` internally based on defaults.
+            // We should pre-fill the modal with current `querySettings`.
+            // But GeneratedFormModal implementation initializes `values` from defaults if not provided?
+            // Wait, GeneratedFormModal doesn't take 'initialValues'. It uses defaults from items.
+            // We need to update the item.defaultValue to match querySettings for the modal to show current state.
+            // This is a bit hacky but `GeneratedFormItem` is mutable?
+            // Let's just update the defaultValue of the item we pass to the modal.
+            item.defaultValue = querySettings[item.key];
+          }
+          uniqueItems[item.key] = item;
+        }
+      }
+    }
+
+    if (uniqueItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('noOptionsAvailable'))),
+      );
+      return;
+    }
+
+    var res = await showDialog(
+      context: context,
+      builder: (context) => GeneratedFormModal(
+        title: tr('searchOptions'),
+        items: uniqueItems.values.map((e) => [e]).toList(),
+        initValid: true,
+      ),
+    );
+
+    if (res != null) {
+      setState(() {
+        querySettings.addAll(res);
+      });
+      // Optionally auto-search if query is not empty
+      if (searchQuery.isNotEmpty) {
+        runSearch();
+      }
+    }
+  }
 
   Future<void> runSearch() async {
     if (searchQuery.isEmpty) return;
@@ -44,7 +122,7 @@ class DiscoverPageState extends State<DiscoverPage> {
         searchableSources.map((source) async {
           if (settingsProvider.searchDeselected.contains(source.name)) return null;
           try {
-            final res = await source.search(searchQuery);
+            final res = await source.search(searchQuery, querySettings: querySettings);
             return MapEntry(source.name, res);
           } catch (e) {
             return null;
@@ -85,19 +163,34 @@ class DiscoverPageState extends State<DiscoverPage> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: tr('searchSomeSourcesLabel'),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.search),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: tr('searchSomeSourcesLabel'),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          onChanged: (value) => searchQuery = value,
+                          onSubmitted: (_) => runSearch(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        onPressed: openSearchOptions,
+                        icon: const Icon(Icons.tune),
+                        tooltip: tr('searchOptions'),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filled(
                         onPressed: runSearch,
+                        icon: const Icon(Icons.search),
+                        tooltip: tr('search'),
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onChanged: (value) => searchQuery = value,
-                    onSubmitted: (_) => runSearch(),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Consumer<SettingsProvider>(
