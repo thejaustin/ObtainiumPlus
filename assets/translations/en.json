@@ -637,5 +637,7 @@
     "usageAccessSettings": "Usage Access Settings",
     "searchSettings": "Search settings",
     "samsungUsageAccessTitle": "Samsung Device Detected",
-    "samsungUsageAccessMessage": "On Samsung devices, 'Obtainium' may be hidden in the Usage Access list.\n\nTap the 'More' or 'Menu' button (top right) and select 'Show system apps' to find it."
+    "samsungUsageAccessMessage": "On Samsung devices, 'Obtainium' may be hidden in the Usage Access list.\n\nTap the 'More' or 'Menu' button (top right) and select 'Show system apps' to find it.",
+    "searchOptions": "Search options",
+    "noOptionsAvailable": "No options available"
 }
