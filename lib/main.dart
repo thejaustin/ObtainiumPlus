@@ -490,7 +490,8 @@ class _ObtainiumState extends State<Obtainium> {
       if (isFirstRun) {
         logs.add('This is the first ever run of Obtainium.');
         // If this is the first run, add Obtainium to the Apps list
-        if (!fdroid) {
+        // MOVED TO ONBOARDING PAGE
+        /*if (!fdroid) {
           AppInstallService.getInstalledInfo(obtainiumId)
               .then((value) {
                 if (value?.versionName != null) {
@@ -518,7 +519,7 @@ class _ObtainiumState extends State<Obtainium> {
               .catchError((err) {
                 print(err);
               });
-        }
+        }*/
       }
       if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
           (settingsProvider.forcedLocale == null &&
