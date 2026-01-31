@@ -32,6 +32,8 @@ import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:obtainium/pages/onboarding.dart'; // Import OnboardingPage
+
 import 'package:obtainium/pages/legacy_settings.dart';
 
 // Global variable for cached device info
@@ -543,6 +545,22 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> with TickerProv
                     SettingsGroup(
                       title: isSearching ? null : tr('about'),
                       children: [
+                        ListTile(
+                          leading: const Icon(Icons.rocket_launch_outlined),
+                          title: Text(tr('welcome'), style: Theme.of(context).textTheme.bodyLarge),
+                          trailing: Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => OnboardingPage(
+                                  onDone: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                         ListTile(
                           leading: const Icon(Icons.code_outlined),
                           title: Text(tr('appSource'), style: Theme.of(context).textTheme.bodyLarge),
