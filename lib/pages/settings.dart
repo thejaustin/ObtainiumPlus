@@ -26,6 +26,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/app_constants.dart'; // Import AppConstants
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -70,7 +71,7 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
 
   final Map<ColorSwatch<Object>, String> colorsNameMap =
       <ColorSwatch<Object>, String>{
-        ColorTools.createPrimarySwatch(obtainiumThemeColor): 'Obtainium',
+        ColorTools.createPrimarySwatch(AppConstants.obtainiumThemeColor): 'Obtainium',
       };
 
   // PERFORMANCE: Cache DeviceInfoPlugin result to avoid redundant async calls
