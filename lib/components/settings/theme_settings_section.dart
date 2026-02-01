@@ -8,6 +8,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/settings.dart'; // To access SettingsGroup if needed or use Column
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Theme & Colors settings section widget
@@ -32,6 +33,7 @@ class ThemeSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final themeSettings = context.watch<ThemeSettingsProvider>();
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> themeWidgets = [
@@ -88,7 +90,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildThemeDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.palette_outlined),
@@ -114,7 +116,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildFollowSystemExplanation(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.theme != ThemeSettings.system) {
           return const SizedBox.shrink();
@@ -139,7 +141,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildBlackThemeToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.theme == ThemeSettings.light) {
           return const SizedBox.shrink();
@@ -164,7 +166,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if ((snapshot.data?.version.sdkInt ?? 0) < 31) {
           return const SizedBox.shrink();
         }
-        return Consumer<SettingsProvider>(
+        return Consumer<ThemeSettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile.adaptive(
               secondary: const Icon(Icons.auto_awesome_outlined),
@@ -182,7 +184,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildMatchSystemMaterialStyleToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (!settings.useMaterialYou) {
           return const SizedBox.shrink();
@@ -202,7 +204,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildThemeStyleDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.useMaterialYou && settings.matchSystemMaterialStyle) {
           return const SizedBox.shrink();
@@ -257,7 +259,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildColorPicker(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.useMaterialYou) {
           return const SizedBox.shrink();
@@ -284,7 +286,7 @@ class ThemeSettingsSection extends StatelessWidget {
     );
   }
 
-  Future<bool> _showColorPickerDialog(BuildContext context, SettingsProvider settings) async {
+  Future<bool> _showColorPickerDialog(BuildContext context, ThemeSettingsProvider settings) async {
     return ColorPicker(
       color: settings.themeColor,
       onColorChanged: (Color color) => settings.themeColor = color,
@@ -320,7 +322,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if ((snapshot.data?.version.sdkInt ?? 0) < 34) {
           return const SizedBox.shrink();
         }
-        return Consumer<SettingsProvider>(
+        return Consumer<ThemeSettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile.adaptive(
               secondary: const Icon(Icons.font_download_outlined),

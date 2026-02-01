@@ -1,3 +1,8 @@
+### xxxxxxx - refactor: partially split SettingsProvider (Theme)
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Extracted theme-related settings into a new `ThemeSettingsProvider`. Centralized enums into `lib/models/settings_enums.dart`. Reduced `SettingsProvider` from ~1200 to ~690 lines.
+
 ### xxxxxxx - feat: implement offline mode with operation queue
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI

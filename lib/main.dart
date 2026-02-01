@@ -26,6 +26,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/router.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -174,6 +175,7 @@ void main() async {
         providers: [
           ChangeNotifierProvider(create: (context) => AppsProvider()),
           ChangeNotifierProvider(create: (context) => SettingsProvider()),
+          ChangeNotifierProvider(create: (context) => ThemeSettingsProvider()),
           Provider(create: (context) => np),
           Provider(create: (context) => LogsProvider()),
         ],
@@ -468,6 +470,7 @@ class _ObtainiumState extends State<Obtainium> {
   @override
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    ThemeSettingsProvider themeProvider = context.watch<ThemeSettingsProvider>();
     AppsProvider appsProvider = context.read<AppsProvider>();
     LogsProvider logs = context.read<LogsProvider>();
     NotificationsProvider notifs = context.read<NotificationsProvider>();
@@ -540,8 +543,8 @@ class _ObtainiumState extends State<Obtainium> {
           ColorScheme darkColorScheme;
           if (lightDynamic != null &&
               darkDynamic != null &&
-              settingsProvider.useMaterialYou) {
-            if (settingsProvider.matchSystemMaterialStyle) {
+              themeProvider.useMaterialYou) {
+            if (themeProvider.matchSystemMaterialStyle) {
               // Match system's complete Material You theme (colors + style)
               lightColorScheme = lightDynamic.harmonized();
               darkColorScheme = darkDynamic.harmonized();
@@ -549,29 +552,29 @@ class _ObtainiumState extends State<Obtainium> {
               // Use system color as seed but apply custom selected variant
               lightColorScheme = ColorScheme.fromSeed(
                 seedColor: lightDynamic.primary,
-                dynamicSchemeVariant: settingsProvider.themeVariant,
+                dynamicSchemeVariant: themeProvider.themeVariant,
               ).harmonized();
               darkColorScheme = ColorScheme.fromSeed(
                 seedColor: darkDynamic.primary,
                 brightness: Brightness.dark,
-                dynamicSchemeVariant: settingsProvider.themeVariant,
+                dynamicSchemeVariant: themeProvider.themeVariant,
               ).harmonized();
             }
           } else {
             // Use custom color with selected variant
             lightColorScheme = ColorScheme.fromSeed(
-              seedColor: settingsProvider.themeColor,
-              dynamicSchemeVariant: settingsProvider.themeVariant,
+              seedColor: themeProvider.themeColor,
+              dynamicSchemeVariant: themeProvider.themeVariant,
             );
             darkColorScheme = ColorScheme.fromSeed(
-              seedColor: settingsProvider.themeColor,
+              seedColor: themeProvider.themeColor,
               brightness: Brightness.dark,
-              dynamicSchemeVariant: settingsProvider.themeVariant,
+              dynamicSchemeVariant: themeProvider.themeVariant,
             );
           }
 
           // set the background and surface colors to pure black in the amoled theme
-          if (settingsProvider.useBlackTheme) {
+          if (themeProvider.useBlackTheme) {
             darkColorScheme = darkColorScheme
                 .copyWith(
                   surface: Colors.black,
@@ -582,7 +585,7 @@ class _ObtainiumState extends State<Obtainium> {
                 .harmonized();
           }
 
-          if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();
+          if (themeProvider.useSystemFont) NativeFeatures.loadSystemFont();
 
           return MaterialApp.router(
             title: 'Obtainium',
@@ -592,16 +595,16 @@ class _ObtainiumState extends State<Obtainium> {
             routerConfig: router,
             debugShowCheckedModeBanner: false,
             theme: ThemeBuilder.buildTheme(
-              colorScheme: settingsProvider.theme == ThemeSettings.dark
+              colorScheme: themeProvider.theme == ThemeSettings.dark
                   ? darkColorScheme
                   : lightColorScheme,
-              useSystemFont: settingsProvider.useSystemFont,
+              useSystemFont: themeProvider.useSystemFont,
             ),
             darkTheme: ThemeBuilder.buildTheme(
-              colorScheme: settingsProvider.theme == ThemeSettings.light
+              colorScheme: themeProvider.theme == ThemeSettings.light
                   ? lightColorScheme
                   : darkColorScheme,
-              useSystemFont: settingsProvider.useSystemFont,
+              useSystemFont: themeProvider.useSystemFont,
             ),
           );
         },
