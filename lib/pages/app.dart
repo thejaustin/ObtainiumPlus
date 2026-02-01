@@ -371,10 +371,16 @@ Widget buildRepoRenameWarning({
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
             child: Column(
               children: [
-                buildRepoRenameWarning(
-                  app: app,
-                  appsProvider: appsProvider,
-                  onUpdate: (id) => getUpdate(id),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                  child: buildRepoRenameWarning(
+                    app: app,
+                    appsProvider: appsProvider,
+                    onUpdate: (id) => getUpdate(id),
+                  ),
                 ),
                 const SizedBox(height: 32),
                 Text(
