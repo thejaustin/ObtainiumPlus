@@ -1,3 +1,8 @@
+### xxxxxxx - feat: add statistics dashboard
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Added a new Statistics page in Settings > Troubleshooting. Shows app tracking metrics, recent installation history, and allows exporting data as JSON.
+
 ### xxxxxxx - refactor: further modularize apps page
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI
