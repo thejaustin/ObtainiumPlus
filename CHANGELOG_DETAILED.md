@@ -1,3 +1,8 @@
+### xxxxxxx - feat: implement offline mode with operation queue
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Added `OfflineService` to detect network status and queue manual update checks when offline. The queue is automatically processed when connection is restored.
+
 ### xxxxxxx - feat: add statistics dashboard
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI
