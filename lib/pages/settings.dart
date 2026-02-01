@@ -16,7 +16,6 @@ import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
-import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -29,13 +28,6 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/app_constants.dart'; // Import AppConstants
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-
-import 'package:obtainium/pages/onboarding.dart'; // Import OnboardingPage
-
-import 'package:obtainium/pages/legacy_settings.dart';
 
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
@@ -46,13 +38,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    // If Modern Settings is enabled (default), show ModernSettingsPage
-    if (settings.plusEnableModernSettings) {
-      return ModernSettingsPage(initialTab: initialTab);
-    }
-    // Otherwise show LegacySettingsPage
-    return const LegacySettingsPage();
+    // ModernSettingsPage is now the default. LegacySettingsPage is no longer directly accessible.
+    return ModernSettingsPage(initialTab: initialTab);
   }
 }
 
@@ -376,8 +363,6 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                           searchQuery: _searchQuery,
                         ),
                         const SizedBox(height: 24),
-                        PlusFeaturesSection(searchQuery: _searchQuery),
-                        const SizedBox(height: 24),
                         AdvancedSettingsSection(searchQuery: _searchQuery),
                         const SizedBox(height: 24),
                         SettingsGroup(
@@ -502,17 +487,6 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                                   orderDropdown: orderDropdown,
                                   localeDropdown: localeDropdown,
                                 ),
-                              ),
-                            ),
-                            _buildSubMenuTile(
-                              context,
-                              icon: Icons.auto_awesome,
-                              title: tr('obtainiumPlusFeatures') ?? 'Plus Features',
-                              subtitle: tr('plusFeaturesSubtitle') ?? 'Enhanced features & UI',
-                              pageId: 'plusFeatures',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: PlusFeaturesSection(),
                               ),
                             ),
                             _buildSubMenuTile(
