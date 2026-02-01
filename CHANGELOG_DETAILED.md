@@ -3,6 +3,11 @@
 - **Author**: Gemini CLI
 - **Details**: Refactored `AddAppPage` to combine URL input, Discover, and Import/Export functionalities into a single, scrollable view, replacing the tab-based interface for a more streamlined user experience.
 
+### xxxxxxx - fix: settings page initialization
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Resolved `obtainiumThemeColor` undefined error by moving its definition to `AppConstants.dart`, ensuring proper initialization of `ModernSettingsPage`.
+
 ### xxxxxxx - fix: settings page crash and feat: add sub-menu transitions
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI
