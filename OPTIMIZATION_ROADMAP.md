@@ -195,79 +195,51 @@ class BehaviorSettingsProvider extends ChangeNotifier {
 - AppInMemory model → `lib/models/app_in_memory.dart`
 
 #### ✅ apps.dart (COMPLETED)
-**Status**: ✅ Completed - reduced from 2000+ to 559 lines
+**Status**: ✅ Completed - reduced from 2000+ to ~930 lines (Modularized)
 **Sections Extracted**:
 - Grid view → `lib/components/apps/app_grid_view.dart`
 - List view → `lib/components/apps/app_list_view.dart`
 - Category sections → `lib/components/apps/category_sections.dart`
 - App dialogs → `lib/components/apps/app_dialogs.dart`
+- App changelog → `lib/components/apps/app_changelog.dart`
+- Apps filter model → `lib/models/apps_filter.dart`
 
 
 **Strategy**: Extract logical sections into separate files, maintain public API
 
 ---
 
-### 3. Animation Controller Optimization (LOW) [Issue #32]
+### 3. Animation Controller Optimization (COMPLETED v1.2.9-p51)
 
-**Problem**: Every grid tile creates its own AnimationController
+**Status**: ✅ Completed - Extracted pulsing badge into `UpdateBadge` widget
 
-**Current State**:
-```dart
-// app_grid_tile.dart:26-41
-class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+**Problem**: Every grid tile created its own `AnimationController` and `Ticker` in `initState`, even if no update was available (95%+ of cases), causing unnecessary memory and CPU overhead.
 
-  @override
-  void initState() {
-    _pulseController = AnimationController(
-      duration: Duration(milliseconds: AppConstants.mediumAnimationMs),
-      vsync: this,
-    )..repeat(reverse: true);
-    // Each tile creates a controller
-  }
-}
-```
+**Solution**:
+- Created `lib/components/update_badge.dart` to encapsulate the pulsing animation logic.
+- Refactored `AppGridTile` to remove `SingleTickerProviderStateMixin` and `AnimationController`.
+- `UpdateBadge` is only instantiated when `widget.hasUpdate` is true.
 
-**Recommended Solution**: Consider using `AnimatedContainer` for simple cases
-
-**Alternative**: Share animation controllers across tiles (more complex)
-
-**Estimated Impact**: 10-20% reduction in animation overhead on large lists
+**Files Modified**:
+- `lib/components/app_grid_tile.dart`
+- `lib/components/update_badge.dart`
 
 ---
 
-### 4. Image Memory Management (MEDIUM) [Issue #31]
+### 4. Image Memory Management (COMPLETED v1.2.9-p51)
 
-**Problem**: `Image.memory()` with `gaplessPlayback: true` may consume excessive memory on large app lists
+**Status**: ✅ Completed - Implemented LRU eviction callback to clear memory
 
-**Current State**:
-```dart
-Image.memory(
-  widget.appInMemory.icon!,
-  fit: BoxFit.cover,
-  gaplessPlayback: true,
-)
-```
+**Problem**: `Image.memory()` with `gaplessPlayback: true` may consume excessive memory on large app lists as `AppInMemory` objects held full icon byte arrays even when not displayed.
 
-**Recommended Solution**: Implement image caching with size limits
+**Solution**: 
+- Enhanced `IconLRUCache` in `AppIconService` to support eviction callbacks
+- Registered handler in `AppsProvider` to clear `icon` data from `AppInMemory` when evicted from cache
+- Ensures only ~50 icons are kept in memory at any time
 
-**Strategy**:
-```dart
-// Use cached_network_image pattern or custom cache
-class IconCache {
-  static final Map<String, Uint8List> _cache = {};
-  static const int maxCacheSize = 100;
-
-  static Uint8List? get(String appId);
-  static void put(String appId, Uint8List data);
-  static void evict();
-}
-```
-
-**Files to Modify**:
-- `lib/components/app_grid_tile.dart`
-- `lib/components/app_list_tile.dart` (if exists)
+**Files Modified**:
+- `lib/services/app_icon_service.dart`
+- `lib/providers/apps_provider.dart`
 
 ---
 
