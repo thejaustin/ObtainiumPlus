@@ -74,24 +74,15 @@ This document outlines the strategy for ongoing performance and code quality imp
 
 ## Pending High-Priority Optimizations
 
-### 1. SettingsProvider Split (MEDIUM - DEFERRED) [Issue #33]
+### 1. SettingsProvider Split (MEDIUM) [Issue #33]
 
-**Status**: Deferred - Current Consumer pattern provides sufficient optimization
+**Status**: ✅ Partially Completed - Extracted ThemeSettingsProvider and cleaned up SettingsProvider. Reduced original from ~1200 lines to ~690 lines.
 
 **Original Problem**: God class anti-pattern - 737 lines, 50+ getters/setters
 
 **Current Structure**:
 ```dart
 class SettingsProvider {
-  // Theme settings
-  ThemeSettings get theme;
-  Color get themeColor;
-  DynamicSchemeVariant get themeVariant;
-  bool get useMaterialYou;
-  bool get matchSystemMaterialStyle;
-  bool get useBlackTheme;
-  bool get useSystemFont;
-
   // Update settings
   int get updateInterval;
   bool get checkOnStart;
@@ -100,75 +91,28 @@ class SettingsProvider {
   // View settings
   SortColumn get sortColumn;
   SortOrder get sortOrder;
-  ViewMode get globalViewMode;
-  GridCategoryMode get gridCategoryMode;
-  int get gridColumnCount;
+  ViewMode get globalViewMode; // To be moved
+  GridCategoryMode get gridCategoryMode; // To be moved
+  int get gridColumnCount; // To be moved
 
-  // ... 40+ more settings
+  // ... remaining 20-30+ settings
 }
 ```
 
 **Recommended Solution**: Split into domain-specific providers
 
 **Strategy**:
-```dart
-// lib/providers/theme_settings_provider.dart
-class ThemeSettingsProvider extends ChangeNotifier {
-  ThemeSettings get theme;
-  Color get themeColor;
-  DynamicSchemeVariant get themeVariant;
-  bool get useMaterialYou;
-  bool get matchSystemMaterialStyle;
-  bool get useBlackTheme;
-  bool get useSystemFont;
-  // ~150 lines
-}
-
-// lib/providers/update_settings_provider.dart
-class UpdateSettingsProvider extends ChangeNotifier {
-  int get updateInterval;
-  bool get checkOnStart;
-  bool get useForegroundService;
-  // ~100 lines
-}
-
-// lib/providers/view_settings_provider.dart
-class ViewSettingsProvider extends ChangeNotifier {
-  SortColumn get sortColumn;
-  SortOrder get sortOrder;
-  ViewMode get globalViewMode;
-  GridCategoryMode get gridCategoryMode;
-  int get gridColumnCount;
-  CategoryIconPosition get categoryIconPosition;
-  // ~150 lines
-}
-
-// lib/providers/behavior_settings_provider.dart
-class BehaviorSettingsProvider extends ChangeNotifier {
-  bool get disablePageTransitions;
-  bool get reversePageTransitions;
-  bool get highlightTouchTargets;
-  bool get hideAppScreenshots;
-  bool get pinUpdatesToTop;
-  // ~100 lines
-}
-```
-
-**Migration Strategy**:
-1. Create new provider files
-2. Move getters/setters to appropriate provider
-3. Update SharedPreferences keys to be domain-scoped
-4. Update widgets to use specific providers
-5. Add MultiProvider in main.dart
-6. Deprecate old SettingsProvider gradually
+- Created `lib/providers/theme_settings_provider.dart` and moved all theme-related properties and logic.
+- Centralized enums into `lib/models/settings_enums.dart`.
+- Cleaned up `SettingsProvider` by removing duplicated and moved properties.
 
 **Files to Create**:
-- `lib/providers/theme_settings_provider.dart`
-- `lib/providers/update_settings_provider.dart`
-- `lib/providers/view_settings_provider.dart`
-- `lib/providers/behavior_settings_provider.dart`
+- `lib/providers/theme_settings_provider.dart` (COMPLETED)
+- `lib/providers/update_settings_provider.dart` (PENDING)
+- `lib/providers/view_settings_provider.dart` (PENDING)
+- `lib/providers/behavior_settings_provider.dart` (PENDING)
 
-**Estimated Effort**: 2-3 days
+**Estimated Effort**: 2-3 days (overall, 1 day completed)
 
 **Benefits**:
 - Easier to test (smaller units)
