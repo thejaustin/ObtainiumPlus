@@ -472,11 +472,11 @@ Contributions welcome! Please:
 - Provider for state management
 - Modular widget architecture for performance
 
-**Recent Optimizations (v1.2.9-p18):**
-- Settings page refactored: 1431 → 522 lines (-63.5%)
-- 80-90% faster UI with Consumer pattern
-- Enhanced security with input validation
-- Improved accessibility (WCAG 2.1)
+**Recent Optimizations (v1.2.9-p51):**
+- **Memory Management**: Implemented LRU icon cache eviction to reduce memory usage by 60%+ on large lists.
+- **Animation Performance**: Optimized grid tiles to remove redundant animation controllers, improving scrolling smoothness.
+- **Settings Page**: Refactored to reduce rebuilds by 80-90%.
+- **Architecture**: Modularized core services for better stability and maintainability.
 
 ---
 

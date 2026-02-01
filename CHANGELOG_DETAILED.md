@@ -1,3 +1,18 @@
+### xxxxxxx - refactor: further modularize apps page
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Extracted `AppsFilter` model and changelog logic from `apps.dart` into specialized files to improve maintainability and reduce file size.
+
+### xxxxxxx - perf: optimize grid tile animations
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Refactored `AppGridTile` to remove unnecessary `AnimationController` instantiation. Created `UpdateBadge` widget to isolate animation logic, ensuring tickers are only created when an update is actually available.
+
+### xxxxxxx - perf: implement memory management for app icons
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Added eviction handler to IconLRUCache and AppsProvider to ensure icons are cleared from memory when evicted from cache.
+
 ### 71f749e - feat: add toggle for including forks in GitHub search
 - **Date**: 2026-01-29
 - **Author**: Qwen AI Assistant

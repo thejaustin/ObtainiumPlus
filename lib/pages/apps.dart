@@ -12,6 +12,8 @@ import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/apps/app_changelog.dart';
+import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/apps/app_list_view.dart';
@@ -33,7 +35,6 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:markdown/markdown.dart' as md;
 
 class AppsPage extends StatefulWidget {
   const AppsPage({super.key, this.initialFilter});
@@ -42,108 +43,6 @@ class AppsPage extends StatefulWidget {
 
   @override
   State<AppsPage> createState() => AppsPageState();
-}
-
-void showChangeLogDialog(
-  BuildContext context,
-  App app,
-  String? changesUrl,
-  AppSource appSource,
-  String changeLog,
-) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return GeneratedFormModal(
-        title: tr('changes'),
-        items: const [],
-        message: app.latestVersion,
-        additionalWidgets: [
-          changesUrl != null
-              ? GestureDetector(
-                  child: Text(
-                    changesUrl,
-                    style: const TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  onTap: () {
-                    launchUrlString(
-                      changesUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
-                )
-              : const SizedBox.shrink(),
-          changesUrl != null
-              ? const SizedBox(height: 16)
-              : const SizedBox.shrink(),
-          appSource.changeLogIfAnyIsMarkDown
-              ? SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height - 350,
-                  child: Markdown(
-                    styleSheet: MarkdownStyleSheet(
-                      blockquoteDecoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                      ),
-                    ),
-                    data: changeLog,
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrlString(
-                          href.startsWith('http://') ||
-                                  href.startsWith('https://')
-                              ? href
-                              : '${Uri.parse(app.url).origin}/$href',
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    extensionSet: md.ExtensionSet(
-                      md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                      [
-                        md.EmojiSyntax(),
-                        ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                      ],
-                    ),
-                  ),
-                )
-              : Text(changeLog),
-        ],
-        singleNullReturnButton: tr('ok'),
-      );
-    },
-  );
-}
-
-Null Function()? getChangeLogFn(BuildContext context, App app) {
-  AppSource appSource = SourceProvider().getSource(
-    app.url,
-    overrideSource: app.overrideSource,
-  );
-  String? changesUrl = appSource.changeLogPageFromStandardUrl(app.url);
-  String? changeLog = app.changeLog;
-  if (changeLog?.split('\n').length == 1) {
-    if (RegExp(
-      '(http|ftp|https)://([\w_-]+(?:(?:\\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?',
-    ).hasMatch(changeLog!)) {
-      if (changesUrl == null) {
-        changesUrl = changeLog;
-        changeLog = null;
-      }
-    }
-  }
-  return (changeLog == null && changesUrl == null)
-      ? null
-      : () {
-          if (changeLog != null) {
-            showChangeLogDialog(context, app, changesUrl, appSource, changeLog);
-          } else {
-            launchUrlString(changesUrl!, mode: LaunchMode.externalApplication);
-          }
-        };
 }
 
 class AppsPageState extends State<AppsPage> {
@@ -1032,33 +931,4 @@ class AppsPageState extends State<AppsPage> {
       ),
     );
   }
-}
-
-class AppsFilter {
-  String nameFilter = '';
-  String authorFilter = '';
-  String idFilter = '';
-  bool includeUptodate = true;
-  bool includeNonInstalled = true;
-  Set<String> categoryFilter = {};
-  Set<String> statusFilter = {};
-  String sourceFilter = '';
-
-  AppsFilter();
-
-  Map<String, dynamic> toFormValuesMap() => {
-    'appName': nameFilter, 'author': authorFilter, 'appId': idFilter,
-    'upToDateApps': includeUptodate, 'nonInstalledApps': includeNonInstalled, 'sourceFilter': sourceFilter,
-  };
-
-  void setFormValuesFromMap(Map<String, dynamic> values) {
-    nameFilter = values['appName']!; authorFilter = values['author']!; idFilter = values['appId']!;
-    includeUptodate = values['upToDateApps']; includeNonInstalled = values['nonInstalledApps']; sourceFilter = values['sourceFilter'];
-  }
-
-  bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
-      authorFilter == other.authorFilter && nameFilter == other.nameFilter && idFilter == other.idFilter &&
-      includeUptodate == other.includeUptodate && includeNonInstalled == other.includeNonInstalled &&
-      settingsProvider.setEqual(categoryFilter, other.categoryFilter) && sourceFilter == other.sourceFilter &&
-      settingsProvider.setEqual(statusFilter, other.statusFilter);
 }

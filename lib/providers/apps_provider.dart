@@ -109,6 +109,21 @@ class AppsProvider with ChangeNotifier {
   /// Initializes the AppsProvider by loading settings and apps from storage.
   /// This method is called automatically in the constructor for foreground instances.
   Future<void> initialize() async {
+    // Register eviction handler to clear icons from memory when they leave the LRU cache
+    AppIconService.setEvictionHandler((appId) {
+      if (apps.containsKey(appId) && apps[appId]?.icon != null) {
+        apps.update(
+          appId,
+          (value) => AppInMemory(
+            value.app,
+            value.downloadProgress,
+            value.installedInfo,
+            null,
+          ),
+        );
+      }
+    });
+
     await settingsProvider.initializeSettings();
     var cacheDirs = await getExternalCacheDirectories();
     if (cacheDirs?.isNotEmpty ?? false) {

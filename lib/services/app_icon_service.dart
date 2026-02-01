@@ -10,8 +10,9 @@ class IconLRUCache {
   final int maxSize;
   final Map<String, Uint8List> _cache = {};
   final List<String> _accessOrder = [];
+  final void Function(String)? onEvict;
 
-  IconLRUCache({this.maxSize = 50});
+  IconLRUCache({this.maxSize = 50, this.onEvict});
 
   Uint8List? get(String appId) {
     if (_cache.containsKey(appId)) {
@@ -30,17 +31,27 @@ class IconLRUCache {
       // Evict least recently used
       final lru = _accessOrder.removeAt(0);
       _cache.remove(lru);
+      onEvict?.call(lru);
     }
     _cache[appId] = icon;
     _accessOrder.add(appId);
   }
 
   void remove(String appId) {
-    _cache.remove(appId);
-    _accessOrder.remove(appId);
+    if (_cache.containsKey(appId)) {
+      _cache.remove(appId);
+      _accessOrder.remove(appId);
+      onEvict?.call(appId);
+    }
   }
 
   void clear() {
+    // Notify about all evictions before clearing
+    if (onEvict != null) {
+      for (var appId in _cache.keys) {
+        onEvict!(appId);
+      }
+    }
     _cache.clear();
     _accessOrder.clear();
   }
@@ -51,7 +62,16 @@ class IconLRUCache {
 class AppIconService {
   AppIconService._();
 
-  static final IconLRUCache _iconCache = IconLRUCache(maxSize: 50);
+  static void Function(String)? _evictionHandler;
+
+  static void setEvictionHandler(void Function(String) handler) {
+    _evictionHandler = handler;
+  }
+
+  static final IconLRUCache _iconCache = IconLRUCache(
+    maxSize: 50, 
+    onEvict: (appId) => _evictionHandler?.call(appId),
+  );
   static final Set<String> _iconsLoading = {};
 
   static Future<void> updateAppIcon({
