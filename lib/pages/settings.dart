@@ -63,7 +63,7 @@ class ModernSettingsPage extends StatefulWidget {
   State<ModernSettingsPage> createState() => _ModernSettingsPageState();
 }
 
-class _ModernSettingsPageState extends State<ModernSettingsPage> with TickerProviderStateMixin {
+class _ModernSettingsPageState extends State<ModernSettingsPage> {
   bool showIntervalLabel = true;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -625,7 +625,18 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> with TickerProv
           trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => _SubMenuPage(title: title, pageId: pageId, child: child)),
+              PageRouteBuilder(
+                transitionDuration: const Duration(milliseconds: 300),
+                pageBuilder: (context, animation, secondaryAnimation) => _SubMenuPage(title: title, pageId: pageId, child: child),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return SharedAxisTransition(
+                    animation: animation,
+                    secondaryAnimation: secondaryAnimation,
+                    transitionType: SharedAxisTransitionType.horizontal,
+                    child: child,
+                  );
+                },
+              ),
             );
           },
         );
@@ -641,27 +652,11 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> with TickerProv
 
         @override
         Widget build(BuildContext context) {
-          final settings = context.watch<SettingsProvider>();
-          final style = settings.getAppBarStyleForPage(pageId);
-
-          if (style == AppBarStyle.large) {
-            // Use CustomScrollView with sliver app bar for large style
-            return Scaffold(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              body: CustomScrollView(
-                slivers: [
-                  CustomSliverAppBar(title: title),
-                  SliverToBoxAdapter(child: child),
-                ],
-              ),
-            );
-          } else {
-            // Use standard scaffold with compact app bar
-            return Scaffold(
-              appBar: CustomAppBar(title: title),
-              body: child,
-            );
-          }
+          // Default to compact app bar for sub-menu pages
+          return Scaffold(
+            appBar: CustomAppBar(title: title),
+            body: child,
+          );
         }
       }    
     class SettingsGroup extends StatelessWidget {
