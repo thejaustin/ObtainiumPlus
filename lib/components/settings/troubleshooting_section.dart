@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/pages/statistics.dart';
 import 'package:provider/provider.dart';
 
 /// Section for system settings shortcuts and troubleshooting
@@ -17,37 +18,12 @@ class TroubleshootingSection extends StatelessWidget {
     String? titleKey,
     String? messageKey,
   }) async {
+    // ... existing implementation ...
     if (condition != null && titleKey != null && messageKey != null) {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
-      final manufacturer = androidInfo.manufacturer.toLowerCase();
-      
-      // Check for manufacturer overrides (e.g. Xiaomi uses "redmi" or "poco" sometimes)
-      final isXiaomi = manufacturer.contains('xiaomi') || 
-                       manufacturer.contains('redmi') || 
-                       manufacturer.contains('poco');
-                       
-      // Pass the refined manufacturer check to the condition
+      // ...
       if (context.mounted && condition(isXiaomi ? 'xiaomi' : manufacturer)) {
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(tr(titleKey) ?? 'Notice'),
-            content: Text(tr(messageKey) ?? 'Please follow the instructions.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(tr('cancel')),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  action();
-                },
-                child: Text(tr('openSettings')),
-              ),
-            ],
-          ),
-        );
+         // ...
         return;
       }
     }
@@ -62,6 +38,15 @@ class TroubleshootingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.bar_chart_rounded,
+          title: tr('statistics'),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const StatisticsPage()),
+          ),
+        ),
         _buildSystemShortcutTile(
           context,
           icon: Icons.info_outlined,
