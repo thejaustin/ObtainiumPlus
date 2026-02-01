@@ -8,6 +8,11 @@
 - **Author**: Gemini CLI
 - **Details**: Resolved `obtainiumThemeColor` undefined error by moving its definition to `AppConstants.dart`, ensuring proper initialization of `ModernSettingsPage`.
 
+### xxxxxxx - fix: settings page initialization (constant definition)
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Resolved `obtainiumThemeColor` undefined error in `ModernSettingsPage` by correctly placing its definition in `AppConstants.dart`, ensuring the app compiles and settings function as expected.
+
 ### xxxxxxx - fix: settings page crash and feat: add sub-menu transitions
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI
