@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/update_badge.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -23,42 +24,8 @@ class AppGridTile extends StatefulWidget {
   State<AppGridTile> createState() => _AppGridTileState();
 }
 
-class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+class _AppGridTileState extends State<AppGridTile> {
   bool _isPressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-    if (widget.hasUpdate) {
-      _pulseController.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void didUpdateWidget(AppGridTile oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.hasUpdate && !oldWidget.hasUpdate) {
-      _pulseController.repeat(reverse: true);
-    } else if (!widget.hasUpdate && oldWidget.hasUpdate) {
-      _pulseController.stop();
-      _pulseController.reset();
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -178,33 +145,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                         Positioned(
                           right: 0,
                           top: 0,
-                          child: AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _pulseAnimation.value,
-                                child: Container(
-                                  width: badgeSize,
-                                  height: badgeSize,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Theme.of(context).colorScheme.surface,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                                        blurRadius: 4 * _pulseAnimation.value,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                          child: UpdateBadge(size: badgeSize),
                         ),
                     ],
                   ),
