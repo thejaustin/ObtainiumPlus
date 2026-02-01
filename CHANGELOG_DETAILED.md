@@ -3,6 +3,11 @@
 - **Author**: Gemini CLI
 - **Details**: Refactored `AddAppPage` to combine URL input, Discover, and Import/Export functionalities into a single, scrollable view, replacing the tab-based interface for a more streamlined user experience.
 
+### xxxxxxx - fix: settings page crash and feat: add sub-menu transitions
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Fixed app freezing/crashing when toggling settings by simplifying _SubMenuPage and removing redundant TickerProviderStateMixin. Implemented SharedAxisTransition for smooth navigation to sub-menu settings pages.
+
 ### xxxxxxx - refactor: partially split SettingsProvider (Theme)
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI
