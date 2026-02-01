@@ -8,6 +8,11 @@
 - **Author**: Gemini CLI
 - **Details**: Resolved `obtainiumThemeColor` undefined error by moving its definition to `AppConstants.dart`, ensuring proper initialization of `ModernSettingsPage`.
 
+### xxxxxxx - fix: remove broken PlusFeaturesSection
+- **Date**: 2026-01-31
+- **Author**: Gemini CLI
+- **Details**: Temporarily removed `PlusFeaturesSection` from `SettingsPage` to resolve runtime errors caused by accessing non-existent properties after `SettingsProvider` refactoring. A dedicated `PlusFeaturesProvider` will be implemented later.
+
 ### xxxxxxx - fix: settings page initialization (constant definition)
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI
