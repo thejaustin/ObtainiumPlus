@@ -966,6 +966,16 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Offline Queue persistence
+  List<String> get offlineQueue {
+    return prefs?.getStringList('offlineQueue') ?? [];
+  }
+
+  set offlineQueue(List<String> queue) {
+    prefs?.setStringList('offlineQueue', queue);
+    notifyListeners();
+  }
+
   bool get enableDeepLogging {
     return prefs?.getBool('enableDeepLogging') ?? false;
   }

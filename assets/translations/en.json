@@ -651,5 +651,7 @@
     "noRecentActivity": "No recent activity found",
     "statsError": "Error loading statistics",
     "statsOverview": "Overview",
-    "statsActivity": "Activity"
+    "statsActivity": "Activity",
+    "addedToOfflineQueue": "Offline: Added {} to update queue",
+    "processingOfflineQueue": "Online: Processing {} queued updates"
 }
