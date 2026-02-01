@@ -14,6 +14,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -107,6 +108,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
   @override
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    ThemeSettingsProvider themeProvider = context.watch<ThemeSettingsProvider>();
     SourceProvider sourceProvider = SourceProvider();
     if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
     initUpdateIntervalInterpolator();
@@ -219,9 +221,9 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                 children: [
                   Flexible(child: Text(tr('useMaterialYou'))),
                   Switch(
-                    value: settingsProvider.useMaterialYou,
+                    value: themeProvider.useMaterialYou,
                     onChanged: (value) {
-                      settingsProvider.useMaterialYou = value;
+                      themeProvider.useMaterialYou = value;
                     },
                   ),
                 ],
@@ -726,7 +728,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                         ),
                         DropdownButtonFormField(
                           decoration: InputDecoration(labelText: tr('theme')),
-                          value: settingsProvider.theme,
+                          value: themeProvider.theme,
                           items: [
                             DropdownMenuItem(
                               value: ThemeSettings.system,
@@ -743,23 +745,23 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                           ],
                           onChanged: (value) {
                             if (value != null) {
-                              settingsProvider.theme = value;
+                              themeProvider.theme = value;
                             }
                           },
                         ),
                         height8,
-                        if (settingsProvider.theme == ThemeSettings.system)
+                        if (themeProvider.theme == ThemeSettings.system)
                           followSystemThemeExplanation,
                         height16,
-                        if (settingsProvider.theme != ThemeSettings.light)
+                        if (themeProvider.theme != ThemeSettings.light)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Flexible(child: Text(tr('useBlackTheme'))),
                               Switch(
-                                value: settingsProvider.useBlackTheme,
+                                value: themeProvider.useBlackTheme,
                                 onChanged: (value) {
-                                  settingsProvider.useBlackTheme = value;
+                                  themeProvider.useBlackTheme = value;
                                 },
                               ),
                             ],
@@ -795,17 +797,17 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                                           ),
                                           Switch(
                                             value:
-                                                settingsProvider.useSystemFont,
+                                                themeProvider.useSystemFont,
                                             onChanged: (useSystemFont) {
                                               if (useSystemFont) {
                                                 NativeFeatures.loadSystemFont()
                                                     .then((val) {
-                                                      settingsProvider
+                                                      themeProvider
                                                               .useSystemFont =
                                                           true;
                                                     });
                                               } else {
-                                                settingsProvider.useSystemFont =
+                                                themeProvider.useSystemFont =
                                                     false;
                                               }
                                             },
