@@ -690,5 +690,119 @@ String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
     prefs?.setBool('enableDeepLogging', val);
     notifyListeners();
   }
-}
+
+  // Obtainium+ Features
+  bool get enableAllPlusFeatures => prefs?.getBool('enableAllPlusFeatures') ?? true;
+  set enableAllPlusFeatures(bool val) {
+    prefs?.setBool('enableAllPlusFeatures', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableGridView => prefs?.getBool('plusEnableGridView') ?? true;
+  set plusEnableGridView(bool val) {
+    prefs?.setBool('plusEnableGridView', val);
+    notifyListeners();
+  }
+
+  ViewMode get globalViewMode => ViewMode.values[prefs?.getInt('globalViewMode') ?? ViewMode.list.index];
+  set globalViewMode(ViewMode mode) {
+    prefs?.setInt('globalViewMode', mode.index);
+    notifyListeners();
+  }
+  
+  bool get plusEnableQuickFilters => prefs?.getBool('plusEnableQuickFilters') ?? true;
+  set plusEnableQuickFilters(bool val) {
+    prefs?.setBool('plusEnableQuickFilters', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableDiscover => prefs?.getBool('plusEnableDiscover') ?? true;
+  set plusEnableDiscover(bool val) {
+    prefs?.setBool('plusEnableDiscover', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableIconCaching => prefs?.getBool('plusEnableIconCaching') ?? true;
+  set plusEnableIconCaching(bool val) {
+    prefs?.setBool('plusEnableIconCaching', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableAdvancedSorting => prefs?.getBool('plusEnableAdvancedSorting') ?? true;
+  set plusEnableAdvancedSorting(bool val) {
+    prefs?.setBool('plusEnableAdvancedSorting', val);
+    notifyListeners();
+  }
+  
+  int get gridColumnCount => prefs?.getInt('gridColumnCount') ?? 0;
+  set gridColumnCount(int val) {
+    prefs?.setInt('gridColumnCount', val);
+    notifyListeners();
+  }
+  
+  bool get displayShowAppCount => prefs?.getBool('displayShowAppCount') ?? true;
+  set displayShowAppCount(bool val) {
+    prefs?.setBool('displayShowAppCount', val);
+    notifyListeners();
+  }
+  
+  bool get enableContextualTips => prefs?.getBool('enableContextualTips') ?? true;
+  set enableContextualTips(bool val) {
+    prefs?.setBool('enableContextualTips', val);
+    notifyListeners();
+  }
+  
+  bool get displayShowFilterChips => prefs?.getBool('displayShowFilterChips') ?? true;
+  set displayShowFilterChips(bool val) {
+    prefs?.setBool('displayShowFilterChips', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableUICustomization => prefs?.getBool('plusEnableUICustomization') ?? true;
+  set plusEnableUICustomization(bool val) {
+    prefs?.setBool('plusEnableUICustomization', val);
+    notifyListeners();
+  }
+
+  bool get displayShowAuthor => prefs?.getBool('displayShowAuthor') ?? false;
+  set displayShowAuthor(bool val) {
+    prefs?.setBool('displayShowAuthor', val);
+    notifyListeners();
+  }
+
+  bool get displayShowVersion => prefs?.getBool('displayShowVersion') ?? true;
+  set displayShowVersion(bool val) {
+    prefs?.setBool('displayShowVersion', val);
+    notifyListeners();
+  }
+
+  bool get displayShowDate => prefs?.getBool('displayShowDate') ?? false;
+  set displayShowDate(bool val) {
+    prefs?.setBool('displayShowDate', val);
+    notifyListeners();
+  }
+
+  CategoryIconPosition get categoryIconPosition => CategoryIconPosition.values[prefs?.getInt('categoryIconPosition') ?? CategoryIconPosition.leading.index];
+  set categoryIconPosition(CategoryIconPosition val) {
+    prefs?.setInt('categoryIconPosition', val.index);
+    notifyListeners();
+  }
+
+  int get categoryIconCount => prefs?.getInt('categoryIconCount') ?? 0;
+  set categoryIconCount(int val) {
+    prefs?.setInt('categoryIconCount', val);
+    notifyListeners();
+  }
+
+  AppListDensity get appListDensity => AppListDensity.values[prefs?.getInt('appListDensity') ?? AppListDensity.comfortable.index];
+  set appListDensity(AppListDensity val) {
+    prefs?.setInt('appListDensity', val.index);
+    notifyListeners();
+  }
+
+  GridCategoryMode get gridCategoryMode => GridCategoryMode.values[prefs?.getInt('gridCategoryMode') ?? GridCategoryMode.sections.index];
+  set gridCategoryMode(GridCategoryMode val) {
+    prefs?.setInt('gridCategoryMode', val.index);
+    notifyListeners();
+  }
 }
