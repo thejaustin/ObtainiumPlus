@@ -805,4 +805,16 @@ String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
     prefs?.setInt('gridCategoryMode', val.index);
     notifyListeners();
   }
+
+  bool get plusEnableModernAppPage => prefs?.getBool('plusEnableModernAppPage') ?? true;
+  set plusEnableModernAppPage(bool val) {
+    prefs?.setBool('plusEnableModernAppPage', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableResponsiveAppLayout => prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
+  set plusEnableResponsiveAppLayout(bool val) {
+    prefs?.setBool('plusEnableResponsiveAppLayout', val);
+    notifyListeners();
+  }
 }
