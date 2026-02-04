@@ -15,9 +15,3 @@ enum AppSwipeAction { none, update, togglePin, share, launch, delete }
 enum AppListDensity { comfortable, compact }
 
 enum AppBarStyle { compact, large }
-
-enum NavigationDestinationLabelBehavior {
-  alwaysShow,
-  onlyShowSelected,
-  alwaysHide,
-}
