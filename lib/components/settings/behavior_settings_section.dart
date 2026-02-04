@@ -31,13 +31,8 @@ class BehaviorSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
-    // Language & Region group
-    List<Widget> languageChildren = [
+    List<Widget> children = [
       if (_matches(tr('language'))) _buildLocaleDropdown(context),
-    ];
-
-    // App List Behavior group
-    List<Widget> appListChildren = [
       if (_matches(tr('appSortBy')))
         ListTile(
           leading: const Icon(Icons.sort_outlined),
@@ -49,7 +44,7 @@ class BehaviorSettingsSection extends StatelessWidget {
         ),
       if (_matches(tr('appSortOrder')))
         ListTile(
-          leading: const Icon(Icons.swap_vert_outlined),
+          leading: const Icon(Icons.import_export_outlined),
           title: Text(tr('appSortOrder'), style: Theme.of(context).textTheme.bodyLarge),
           trailing: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
@@ -62,27 +57,17 @@ class BehaviorSettingsSection extends StatelessWidget {
       if (_matches(tr('checkUpdateOnDetailPage'))) _buildCheckUpdateOnDetailPageToggle(context),
     ];
 
-    // Swipe Actions group
-    List<Widget> swipeChildren = [];
-    final settings = Provider.of<SettingsProvider>(context);
-    if (settings.plusEnableSwipeActions) {
-      swipeChildren = [
-        if (_matches(tr('swipeRightAction'))) _buildSwipeRightDropdown(context),
-        if (_matches(tr('swipeLeftAction'))) _buildSwipeLeftDropdown(context),
-      ];
-    }
+    List<Widget> swipeChildren = [
+      if (_matches(tr('swipeRightAction'))) _buildSwipeRightDropdown(context),
+      if (_matches(tr('swipeLeftAction'))) _buildSwipeLeftDropdown(context),
+    ];
 
     return Column(
       children: [
-        if (languageChildren.any((w) => w is! SizedBox))
+        if (children.any((w) => w is! SizedBox))
           SettingsGroup(
-            title: isSearching ? null : tr('languageAndRegion') ?? 'Language & Region',
-            children: languageChildren,
-          ),
-        if (appListChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('appListBehavior') ?? 'App List Behavior',
-            children: appListChildren,
+            title: isSearching ? null : tr('general'),
+            children: children,
           ),
         if (swipeChildren.any((w) => w is! SizedBox))
           SettingsGroup(
@@ -121,7 +106,7 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.public_outlined),
+          secondary: const Icon(Icons.open_in_browser_outlined),
           title: Text(tr('showWebInAppView'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.showAppWebpage,
           onChanged: (value) => settings.showAppWebpage = value,
@@ -160,7 +145,7 @@ class BehaviorSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.refresh_outlined),
+          secondary: const Icon(Icons.sync_outlined),
           title: Text(tr('checkUpdateOnDetailPage'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.checkUpdateOnDetailPage,
           onChanged: (value) => settings.checkUpdateOnDetailPage = value,

@@ -5,9 +5,6 @@ import 'package:flutter/physics.dart';
 class AppConstants {
   AppConstants._();
 
-  // Obtainium+ Theme Color (for default/fallback)
-  static const Color obtainiumThemeColor = Color(0xFF6438B5);
-
   // Foreground Service Configuration
   /// Unique identifier for the foreground service
   static const int foregroundServiceId = 666;
