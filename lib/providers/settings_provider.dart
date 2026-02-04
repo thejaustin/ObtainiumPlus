@@ -1045,9 +1045,9 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Navigation label behavior
+  // Navigation label behavior (uses Flutter's built-in enum)
   NavigationDestinationLabelBehavior get navigationLabelBehavior =>
-      NavigationDestinationLabelBehavior.values[prefs?.getInt('navigationLabelBehavior') ?? NavigationDestinationLabelBehavior.alwaysShow.index];
+      NavigationDestinationLabelBehavior.values[prefs?.getInt('navigationLabelBehavior') ?? 0];
   set navigationLabelBehavior(NavigationDestinationLabelBehavior val) {
     prefs?.setInt('navigationLabelBehavior', val.index);
     notifyListeners();
