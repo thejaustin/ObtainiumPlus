@@ -32,6 +32,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
+import 'package:obtainium/pages/legacy_settings.dart';
+
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
 
@@ -92,6 +94,10 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    if (!settingsProvider.plusEnableModernSettings) {
+      return const LegacySettingsPage();
+    }
+    
     SourceProvider sourceProvider = SourceProvider();
     if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
 
