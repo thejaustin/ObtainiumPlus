@@ -22,6 +22,184 @@ import 'package:obtainium/models/settings_enums.dart';
 String obtainiumTempId = 'thejaustin_obtainiumplus_${GitHub().hosts[0]}';
 String obtainiumId = 'app.obtainiumplus';
 String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
+Color obtainiumThemeColor = const Color(0xFF6438B5);
+
+enum ThemeSettings { system, light, dark }
+
+class SettingsProvider with ChangeNotifier {
+  SharedPreferences? prefs;
+  String? defaultAppDir;
+  bool justStarted = true;
+
+  String sourceUrl = 'https://github.com/thejaustin/ObtainiumPlus';
+
+  List<int> updateIntervalNodes = [
+    15,
+    30,
+    60,
+    120,
+    180,
+    360,
+    720,
+    1440,
+    4320,
+    10080,
+    20160,
+    43200,
+  ];
+  late SplineInterpolation updateIntervalInterpolator;
+  String updateIntervalLabel = '';
+
+  // Not done in constructor as we want to be able to await it
+  Future<void> initializeSettings() async {
+    prefs = await SharedPreferences.getInstance();
+    defaultAppDir = (await AppFileService.getAppStorageDir()).path;
+    initUpdateIntervalInterpolator();
+    // Initialize label based on current slider value
+    processIntervalSliderValue(updateIntervalSliderVal, notify: false);
+    notifyListeners();
+  }
+
+  void initUpdateIntervalInterpolator() {
+    List<InterpolationNode> nodes = [];
+    for (final (index, element) in updateIntervalNodes.indexed) {
+      nodes.add(
+        InterpolationNode(x: index.toDouble() + 1, y: element.toDouble()),
+      );
+    }
+    updateIntervalInterpolator = SplineInterpolation(nodes: nodes);
+  }
+
+  void processIntervalSliderValue(double val, {bool notify = true}) {
+    if (val < 0.5) {
+      updateInterval = 0;
+      updateIntervalLabel = tr('neverManualOnly');
+      if (notify) notifyListeners();
+      return;
+    }
+    int valInterpolated = 0;
+    if (val < 1) {
+      valInterpolated = 15;
+    } else {
+      valInterpolated = updateIntervalInterpolator.compute(val).round();
+    }
+    if (valInterpolated < 60) {
+      updateInterval = valInterpolated;
+      updateIntervalLabel = plural('minute', valInterpolated);
+    } else if (valInterpolated < 8 * 60) {
+      int valRounded = (valInterpolated / 15).floor() * 15;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('hour', valRounded ~/ 60);
+      int mins = valRounded % 60;
+      if (mins != 0) updateIntervalLabel += " ${plural('minute', mins)}";
+    } else if (valInterpolated < 24 * 60) {
+      int valRounded = (valInterpolated / 30).floor() * 30;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('hour', valRounded / 60);
+    } else if (valInterpolated < 7 * 24 * 60) {
+      int valRounded = (valInterpolated / (12 * 60)).floor() * 12 * 60;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('day', valRounded / (24 * 60));
+    } else {
+      int valRounded = (valInterpolated / (24 * 60)).floor() * 24 * 60;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
+    }
+    if (notify) notifyListeners();
+  }
+
+  bool get useSystemFont {
+    return prefs?.getBool('useSystemFont') ?? false;
+  }
+
+  set useSystemFont(bool useSystemFont) {
+    prefs?.setBool('useSystemFont', useSystemFont);
+    notifyListeners();
+  }
+
+  bool get useShizuku {
+    return prefs?.getBool('useShizuku') ?? false;
+  }
+
+  set useShizuku(bool useShizuku) {
+    prefs?.setBool('useShizuku', useShizuku);
+    notifyListeners();
+  }
+
+  ThemeSettings get theme {
+    return ThemeSettings.values[prefs?.getInt('theme') ??
+        ThemeSettings.system.index];
+  }
+
+  set theme(ThemeSettings t) {
+    prefs?.setInt('theme', t.index);
+    notifyListeners();
+  }
+
+  DynamicSchemeVariant get themeVariant {
+    return DynamicSchemeVariant.values[prefs?.getInt('themeVariant') ??
+        DynamicSchemeVariant.expressive.index];
+  }
+
+  set themeVariant(DynamicSchemeVariant t) {
+    prefs?.setInt('themeVariant', t.index);
+    notifyListeners();
+  }
+
+  Color get themeColor {
+    int? colorCode = prefs?.getInt('themeColor');
+    return (colorCode != null) ? Color(colorCode) : obtainiumThemeColor;
+  }
+
+  set themeColor(Color themeColor) {
+    prefs?.setInt('themeColor', themeColor.value);
+    notifyListeners();
+  }
+
+  bool get useMaterialYou {
+    return prefs?.getBool('useMaterialYou') ?? false;
+  }
+
+  set useMaterialYou(bool useMaterialYou) {
+    prefs?.setBool('useMaterialYou', useMaterialYou);
+    notifyListeners();
+  }
+
+  bool get matchSystemMaterialStyle {
+    return prefs?.getBool('matchSystemMaterialStyle') ?? false;
+  }
+
+  set matchSystemMaterialStyle(bool matchSystemMaterialStyle) {
+    prefs?.setBool('matchSystemMaterialStyle', matchSystemMaterialStyle);
+    notifyListeners();
+  }
+
+  bool get useBlackTheme {
+    return prefs?.getBool('useBlackTheme') ?? false;
+  }
+
+  set useBlackTheme(bool useBlackTheme) {
+    prefs?.setBool('useBlackTheme', useBlackTheme);
+    notifyListeners();
+  }
+
+  int get updateInterval {
+    return prefs?.getInt('updateInterval') ?? 360;
+  }
+
+  set updateInterval(int min) {
+    prefs?.setInt('updateInterval', min);
+    notifyListeners();
+  }
+
+  double get updateIntervalSliderVal {
+    return prefs?.getDouble('updateIntervalSliderVal') ?? 6.0;
+  }
+
+  set updateIntervalSliderVal(double val) {
+    prefs?.setDouble('updateIntervalSliderVal', val);
+    notifyListeners();
+  }
 
   bool get checkOnStart {
     return prefs?.getBool('checkOnStart') ?? false;
@@ -709,7 +887,7 @@ String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
     prefs?.setInt('globalViewMode', mode.index);
     notifyListeners();
   }
-  
+
   bool get plusEnableQuickFilters => prefs?.getBool('plusEnableQuickFilters') ?? true;
   set plusEnableQuickFilters(bool val) {
     prefs?.setBool('plusEnableQuickFilters', val);
@@ -733,34 +911,82 @@ String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
     prefs?.setBool('plusEnableAdvancedSorting', val);
     notifyListeners();
   }
-  
-  int get gridColumnCount => prefs?.getInt('gridColumnCount') ?? 0;
-  set gridColumnCount(int val) {
-    prefs?.setInt('gridColumnCount', val);
+
+  bool get plusEnableSwipeActions => prefs?.getBool('plusEnableSwipeActions') ?? true;
+  set plusEnableSwipeActions(bool val) {
+    prefs?.setBool('plusEnableSwipeActions', val);
     notifyListeners();
   }
-  
-  bool get displayShowAppCount => prefs?.getBool('displayShowAppCount') ?? true;
-  set displayShowAppCount(bool val) {
-    prefs?.setBool('displayShowAppCount', val);
+
+  bool get plusEnableCategoryReorder => prefs?.getBool('plusEnableCategoryReorder') ?? true;
+  set plusEnableCategoryReorder(bool val) {
+    prefs?.setBool('plusEnableCategoryReorder', val);
     notifyListeners();
   }
-  
-  bool get enableContextualTips => prefs?.getBool('enableContextualTips') ?? true;
-  set enableContextualTips(bool val) {
-    prefs?.setBool('enableContextualTips', val);
+
+  bool get plusEnableUpdateSchedule => prefs?.getBool('plusEnableUpdateSchedule') ?? true;
+  set plusEnableUpdateSchedule(bool val) {
+    prefs?.setBool('plusEnableUpdateSchedule', val);
     notifyListeners();
   }
-  
-  bool get displayShowFilterChips => prefs?.getBool('displayShowFilterChips') ?? true;
-  set displayShowFilterChips(bool val) {
-    prefs?.setBool('displayShowFilterChips', val);
+
+  bool get plusEnableEnhancedAnimations => prefs?.getBool('plusEnableEnhancedAnimations') ?? true;
+  set plusEnableEnhancedAnimations(bool val) {
+    prefs?.setBool('plusEnableEnhancedAnimations', val);
     notifyListeners();
   }
 
   bool get plusEnableUICustomization => prefs?.getBool('plusEnableUICustomization') ?? true;
   set plusEnableUICustomization(bool val) {
     prefs?.setBool('plusEnableUICustomization', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableHapticFeedback => prefs?.getBool('plusEnableHapticFeedback') ?? true;
+  set plusEnableHapticFeedback(bool val) {
+    prefs?.setBool('plusEnableHapticFeedback', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableModernSettings => prefs?.getBool('plusEnableModernSettings') ?? true;
+  set plusEnableModernSettings(bool val) {
+    prefs?.setBool('plusEnableModernSettings', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableModernAppPage => prefs?.getBool('plusEnableModernAppPage') ?? true;
+  set plusEnableModernAppPage(bool val) {
+    prefs?.setBool('plusEnableModernAppPage', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableResponsiveAppLayout => prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
+  set plusEnableResponsiveAppLayout(bool val) {
+    prefs?.setBool('plusEnableResponsiveAppLayout', val);
+    notifyListeners();
+  }
+
+  int get gridColumnCount => prefs?.getInt('gridColumnCount') ?? 0;
+  set gridColumnCount(int val) {
+    prefs?.setInt('gridColumnCount', val);
+    notifyListeners();
+  }
+
+  bool get displayShowAppCount => prefs?.getBool('displayShowAppCount') ?? true;
+  set displayShowAppCount(bool val) {
+    prefs?.setBool('displayShowAppCount', val);
+    notifyListeners();
+  }
+
+  bool get enableContextualTips => prefs?.getBool('enableContextualTips') ?? true;
+  set enableContextualTips(bool val) {
+    prefs?.setBool('enableContextualTips', val);
+    notifyListeners();
+  }
+
+  bool get displayShowFilterChips => prefs?.getBool('displayShowFilterChips') ?? true;
+  set displayShowFilterChips(bool val) {
+    prefs?.setBool('displayShowFilterChips', val);
     notifyListeners();
   }
 
@@ -803,18 +1029,6 @@ String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
   GridCategoryMode get gridCategoryMode => GridCategoryMode.values[prefs?.getInt('gridCategoryMode') ?? GridCategoryMode.sections.index];
   set gridCategoryMode(GridCategoryMode val) {
     prefs?.setInt('gridCategoryMode', val.index);
-    notifyListeners();
-  }
-
-  bool get plusEnableModernAppPage => prefs?.getBool('plusEnableModernAppPage') ?? true;
-  set plusEnableModernAppPage(bool val) {
-    prefs?.setBool('plusEnableModernAppPage', val);
-    notifyListeners();
-  }
-
-  bool get plusEnableResponsiveAppLayout => prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
-  set plusEnableResponsiveAppLayout(bool val) {
-    prefs?.setBool('plusEnableResponsiveAppLayout', val);
     notifyListeners();
   }
 }
