@@ -1031,4 +1031,25 @@ class SettingsProvider with ChangeNotifier {
     prefs?.setInt('gridCategoryMode', val.index);
     notifyListeners();
   }
+
+  // Swipe actions
+  AppSwipeAction get swipeRightAction => AppSwipeAction.values[prefs?.getInt('swipeRightAction') ?? AppSwipeAction.update.index];
+  set swipeRightAction(AppSwipeAction val) {
+    prefs?.setInt('swipeRightAction', val.index);
+    notifyListeners();
+  }
+
+  AppSwipeAction get swipeLeftAction => AppSwipeAction.values[prefs?.getInt('swipeLeftAction') ?? AppSwipeAction.togglePin.index];
+  set swipeLeftAction(AppSwipeAction val) {
+    prefs?.setInt('swipeLeftAction', val.index);
+    notifyListeners();
+  }
+
+  // Navigation label behavior
+  NavigationDestinationLabelBehavior get navigationLabelBehavior =>
+      NavigationDestinationLabelBehavior.values[prefs?.getInt('navigationLabelBehavior') ?? NavigationDestinationLabelBehavior.alwaysShow.index];
+  set navigationLabelBehavior(NavigationDestinationLabelBehavior val) {
+    prefs?.setInt('navigationLabelBehavior', val.index);
+    notifyListeners();
+  }
 }
