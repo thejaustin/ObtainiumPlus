@@ -15,6 +15,7 @@ import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
 import 'package:obtainium/pages/onboarding.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/updates.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -61,13 +62,7 @@ class HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     appsPage = AppsPage(key: GlobalKey<AppsPageState>());
-    // Create an AppsFilter for updates
-    var updatesFilter = AppsFilter();
-    updatesFilter.statusFilter = {'updates'};
-    updatesPage = AppsPage(
-      key: GlobalKey<AppsPageState>(),
-      initialFilter: updatesFilter,
-    );
+    updatesPage = const UpdatesPage();
     logsPage = const LogsPage();
     addAppPage = AddAppPage(key: GlobalKey<AddAppPageState>());
     settingsPage = const SettingsPage();
@@ -425,14 +420,6 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  void showCustomizeTabsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => CustomizeTabsDialog(
-        allPages: allPages,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -450,35 +437,13 @@ class HomePageState extends State<HomePage> {
       'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
     };
 
-    List<String> tabIds = settingsProvider.bottomTabs;
-    List<NavigationPageItem> activePages = [];
-    for (var id in tabIds) {
-      if (allPages.containsKey(id)) {
-        activePages.add(allPages[id]!);
-      }
-    }
-    
-    // Ensure at least one tab (Apps) if something goes wrong or list is empty
-    if (activePages.isEmpty) {
-      activePages.add(allPages['apps']!);
-      if (tabIds.isEmpty) {
-        // Fix settings if empty
-        settingsProvider.bottomTabs = ['apps'];
-      }
-    }
-
-    if (!prevIsLoading &&
-        prevAppCount >= 0 &&
-        appsProvider.apps.length > prevAppCount &&
-        !isLinkActivity) {
-          // If a new app was added, try to switch to Apps tab
-          int appsIndex = activePages.indexWhere((p) => p.widget == appsPage);
-          if (appsIndex != -1 && (selectedIndexHistory.isEmpty || selectedIndexHistory.last != appsIndex)) {
-            switchToPage(appsIndex);
-          }
-    }
-    prevAppCount = appsProvider.apps.length;
-    prevIsLoading = appsProvider.loadingApps;
+    // Fixed 3-tab structure as per ObtainiumPlus UX Spec
+    // Apps, Updates, Settings
+    activePages = [
+      allPages['apps']!,
+      allPages['updates']!,
+      allPages['settings']!,
+    ];
 
     // Determine current index
     int currentIndex = selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
@@ -486,6 +451,10 @@ class HomePageState extends State<HomePage> {
       currentIndex = 0;
       selectedIndexHistory = [0];
     }
+    
+    // Logic to handle "Add App" deep links or actions
+    // Since Add is no longer a tab, we need to push it as a route
+    // This is handled by `goToAddApp` logic, which needs updating.
 
     // Determine if we can pop
     bool canPopNow() {
@@ -571,20 +540,8 @@ class HomePageState extends State<HomePage> {
               .map(
                 (e) =>
                     NavigationDestination(
-                      icon: GestureDetector(
-                        onLongPress: () {
-                          HapticFeedback.heavyImpact();
-                          showCustomizeTabsDialog();
-                        },
-                        child: Icon(e.icon),
-                      ),
-                      selectedIcon: GestureDetector(
-                        onLongPress: () {
-                          HapticFeedback.heavyImpact();
-                          showCustomizeTabsDialog();
-                        },
-                        child: Icon(e.selectedIcon),
-                      ),
+                      icon: Icon(e.icon),
+                      selectedIcon: Icon(e.selectedIcon),
                       label: e.title,
                     ),
               )
@@ -614,119 +571,5 @@ class HomePageState extends State<HomePage> {
   void dispose() {
     super.dispose();
     _linkSubscription?.cancel();
-  }
-}
-
-class CustomizeTabsDialog extends StatefulWidget {
-  final Map<String, NavigationPageItem> allPages;
-
-  const CustomizeTabsDialog({super.key, required this.allPages});
-
-  @override
-  State<CustomizeTabsDialog> createState() => _CustomizeTabsDialogState();
-}
-
-class _CustomizeTabsDialogState extends State<CustomizeTabsDialog> {
-  late List<String> currentTabs;
-  late List<String> availableHiddenTabs;
-
-  @override
-  void initState() {
-    super.initState();
-    var sp = context.read<SettingsProvider>();
-    currentTabs = List.from(sp.bottomTabs);
-    
-    availableHiddenTabs = widget.allPages.keys
-        .where((id) => !currentTabs.contains(id))
-        .toList();
-  }
-
-  void _save() {
-    context.read<SettingsProvider>().bottomTabs = currentTabs;
-    Navigator.of(context).pop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(tr('customizeTabs') /* Use a key if available or generic text */),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(tr('activeTabs'), style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Container(
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: ReorderableListView(
-                shrinkWrap: true,
-                onReorder: (oldIndex, newIndex) {
-                  setState(() {
-                    if (oldIndex < newIndex) {
-                      newIndex -= 1;
-                    }
-                    final String item = currentTabs.removeAt(oldIndex);
-                    currentTabs.insert(newIndex, item);
-                  });
-                },
-                children: [
-                  for (final id in currentTabs)
-                    ListTile(
-                      key: ValueKey(id),
-                      leading: Icon(widget.allPages[id]?.selectedIcon ?? Icons.error),
-                      title: Text(widget.allPages[id]?.title ?? id),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: () {
-                          if (currentTabs.length <= 1) {
-                            // Don't allow removing last tab
-                            return;
-                          }
-                          setState(() {
-                            currentTabs.remove(id);
-                            availableHiddenTabs.add(id);
-                          });
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (availableHiddenTabs.isNotEmpty) ...[
-              const Divider(),
-              Text(tr('availableTabs'), style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: availableHiddenTabs.map((id) {
-                  return ActionChip(
-                    avatar: Icon(widget.allPages[id]?.selectedIcon, size: 16),
-                    label: Text(widget.allPages[id]?.title ?? id),
-                    onPressed: () {
-                      setState(() {
-                        availableHiddenTabs.remove(id);
-                        currentTabs.add(id);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(tr('cancel')),
-        ),
-        TextButton(
-          onPressed: _save,
-          child: Text(tr('save')),
-        ),
-      ],
-    );
   }
 }

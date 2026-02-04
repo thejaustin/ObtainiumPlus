@@ -412,89 +412,45 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ),
                         const SizedBox(height: 24),
 
-                        // 2. Navigation Categories
+                        // 2. Navigation Categories (Refactored for ObtainiumPlus Spec)
                         SettingsGroup(
                           children: [
                             _buildSubMenuTile(
                               context,
-                              icon: Icons.palette_outlined,
-                              title: tr('appearance') ?? 'Appearance',
+                              icon: Icons.sync_outlined,
+                              title: tr('updatesAndAutomation'),
                               destination: _SubMenuPage(
-                                title: tr('appearance') ?? 'Appearance',
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: ThemeSettingsSection(
-                                      androidInfoFuture: _androidInfoFuture,
-                                      colorsNameMap: colorsNameMap,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            _buildSubMenuTile(
-                              context,
-                              icon: Icons.system_update_outlined,
-                              title: tr('updates'),
-                              destination: _SubMenuPage(
-                                title: tr('updates'),
+                                title: tr('updatesAndAutomation'),
                                 child: SingleChildScrollView(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
                                     child: UpdateSettingsSection(
                                       showIntervalLabel: showIntervalLabel,
-                                      onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
+                                      onIntervalLabelChange: (val) => setState(() => showIntervalLabel = val),
                                       androidInfoFuture: _androidInfoFuture,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            if (sourceSpecificFields.isNotEmpty)
-                              _buildSubMenuTile(
-                                context,
-                                icon: Icons.storage_outlined,
-                                title: tr('sourceSpecific'),
-                                destination: _SubMenuPage(
-                                  title: tr('sourceSpecific'),
-                                  child: SingleChildScrollView(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: SettingsGroup(
-                                        title: tr('sourceSpecific'),
-                                        children: sourceSpecificFields.toList(),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
                             _buildSubMenuTile(
                               context,
-                              icon: Icons.view_quilt_outlined,
-                              title: tr('viewOptions'), // "Apps & View"
+                              icon: Icons.notifications_active_outlined,
+                              title: tr('notifications'),
                               destination: _SubMenuPage(
-                                title: tr('viewOptions'),
+                                title: tr('notifications'),
                                 child: SingleChildScrollView(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: AppsViewSettingsSection(onSetState: setState),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            _buildSubMenuTile(
-                              context,
-                              icon: Icons.tune_outlined,
-                              title: tr('general'), // Behavior
-                              destination: _SubMenuPage(
-                                title: tr('general'),
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: BehaviorSettingsSection(
-                                      sortDropdown: sortDropdown,
-                                      orderDropdown: orderDropdown,
-                                      localeDropdown: localeDropdown,
+                                    child: SettingsGroup(
+                                      children: [
+                                        ListTile(
+                                          leading: const Icon(Icons.settings_suggest_outlined),
+                                          title: Text(tr('notificationSettings'), style: Theme.of(context).textTheme.bodyLarge),
+                                          subtitle: Text(tr('notificationSettingsDescription')),
+                                          onTap: () => AppInstallService.openNotificationSettings(obtainiumId),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -502,28 +458,62 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                             ),
                             _buildSubMenuTile(
                               context,
-                              icon: Icons.build_outlined,
-                              title: tr('advanced'),
+                              icon: Icons.palette_outlined,
+                              title: tr('appearance'),
                               destination: _SubMenuPage(
-                                title: tr('advanced'),
+                                title: tr('appearance'),
                                 child: SingleChildScrollView(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: AdvancedSettingsSection(),
+                                    child: Column(
+                                      children: [
+                                        ThemeSettingsSection(
+                                          androidInfoFuture: _androidInfoFuture,
+                                          colorsNameMap: colorsNameMap,
+                                        ),
+                                        const SizedBox(height: 24),
+                                        AppsViewSettingsSection(onSetState: setState),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                             _buildSubMenuTile(
+                            _buildSubMenuTile(
                               context,
-                              icon: Icons.help_outline,
-                              title: tr('troubleshootingAndSystem') ?? 'Troubleshooting',
+                              icon: Icons.import_export_outlined,
+                              title: tr('backupAndImportExport'),
+                              destination: const ImportExportPage(),
+                            ),
+                            _buildSubMenuTile(
+                              context,
+                              icon: Icons.bug_report_outlined,
+                              title: tr('advancedAndTroubleshooting'),
                               destination: _SubMenuPage(
-                                title: tr('troubleshootingAndSystem') ?? 'Troubleshooting',
+                                title: tr('advancedAndTroubleshooting'),
                                 child: SingleChildScrollView(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: SettingsGroup(children: [const TroubleshootingSection()]),
+                                    child: Column(
+                                      children: [
+                                        if (sourceSpecificFields.isNotEmpty) ...[
+                                          SettingsGroup(
+                                            title: tr('sourceSpecific'),
+                                            children: sourceSpecificFields.toList(),
+                                          ),
+                                          const SizedBox(height: 24),
+                                        ],
+                                        BehaviorSettingsSection(
+                                          sortDropdown: sortDropdown,
+                                          orderDropdown: orderDropdown,
+                                          localeDropdown: localeDropdown,
+                                        ),
+                                        const SizedBox(height: 24),
+                                        AdvancedSettingsSection(),
+                                        const SizedBox(height: 24),
+                                        const TroubleshootingSection(),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
