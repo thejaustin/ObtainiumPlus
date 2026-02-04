@@ -20,6 +20,7 @@ import 'package:obtainium/components/apps/app_dialogs.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/components/search/command_center.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
@@ -154,14 +155,6 @@ class AppsPageState extends State<AppsPage> {
   Set<String> selectedAppIds = {};
   DateTime? refreshingSince;
 
-  // Memoization for sorting
-  List<AppInMemory>? _cachedSortedApps;
-  AppSortMethod? _lastSortMethod;
-  SortColumnSettings? _lastSortColumn;
-  SortOrderSettings? _lastSortOrder;
-  int? _lastAppsHashCode;
-  int? _lastFilterHashCode;
-
   final Map<int, Color> _categoryColorCache = {};
 
   Color _getCachedCategoryColor(int colorInt) {
@@ -242,7 +235,15 @@ class AppsPageState extends State<AppsPage> {
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
-    var listedApps = appsProvider.getAppValues().toList();
+    var listedApps = appsProvider.getFilteredSortedApps(
+      filter: filter,
+      sortMethod: settingsProvider.appSortMethod,
+      sortColumn: settingsProvider.sortColumn,
+      sortOrder: settingsProvider.sortOrder,
+      pinUpdates: settingsProvider.pinUpdates,
+      groupByCategory: settingsProvider.groupByCategory,
+      buryNonInstalled: settingsProvider.buryNonInstalled,
+    );
 
     refresh() {
       HapticFeedback.lightImpact();
@@ -284,135 +285,7 @@ class AppsPageState extends State<AppsPage> {
       });
     }
 
-    listedApps = listedApps.where((app) {
-      if (filter.statusFilter.isNotEmpty) {
-        bool hasUpdate = app.app.installedVersion != null && app.app.installedVersion != app.app.latestVersion;
-        bool notInstalled = app.app.installedVersion == null;
-
-        bool matches = false;
-        if (filter.statusFilter.contains('updates') && hasUpdate) matches = true;
-        if (filter.statusFilter.contains('installed') && !notInstalled) matches = true;
-        if (filter.statusFilter.contains('trackonly') && app.app.additionalSettings['trackOnly'] == true) matches = true;
-        
-        // Legacy support
-        if (filter.statusFilter.contains('uptodate') && app.app.installedVersion != null && !hasUpdate) matches = true;
-        if (filter.statusFilter.contains('notinstalled') && notInstalled) matches = true;
-
-        if (!matches) return false;
-      }
-
-      if (app.app.installedVersion == app.app.latestVersion &&
-          !(filter.includeUptodate)) {
-        return false;
-      }
-      if (app.app.installedVersion == null && !(filter.includeNonInstalled)) {
-        return false;
-      }
-      if (filter.nameFilter.isNotEmpty || filter.authorFilter.isNotEmpty) {
-        List<String> nameTokens = filter.nameFilter.split(' ').where((e) => e.trim().isNotEmpty).toList();
-        List<String> authorTokens = filter.authorFilter.split(' ').where((e) => e.trim().isNotEmpty).toList();
-
-        for (var t in nameTokens) {
-          if (!app.name.toLowerCase().contains(t.toLowerCase())) return false;
-        }
-        for (var t in authorTokens) {
-          if (!app.author.toLowerCase().contains(t.toLowerCase())) return false;
-        }
-      }
-      if (filter.idFilter.isNotEmpty && !app.app.id.contains(filter.idFilter)) {
-        return false;
-      }
-      if (filter.categoryFilter.isNotEmpty &&
-          filter.categoryFilter.intersection(app.app.categories.toSet()).isEmpty) {
-        return false;
-      }
-      if (filter.sourceFilter.isNotEmpty &&
-          sourceProvider.getSource(app.app.url, overrideSource: app.app.overrideSource).runtimeType.toString() != filter.sourceFilter) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    // Calculate hashes for memoization
-    int filterHash = Object.hash(
-      filter.nameFilter,
-      filter.authorFilter,
-      filter.idFilter,
-      filter.includeUptodate,
-      filter.includeNonInstalled,
-      filter.sourceFilter,
-      Object.hashAll(filter.categoryFilter),
-      Object.hashAll(filter.statusFilter),
-    );
-    int appsHash = Object.hashAll(listedApps.map((e) => e.app.id));
-
-    bool cacheValid = _cachedSortedApps != null &&
-        _lastSortMethod == settingsProvider.appSortMethod &&
-        _lastSortColumn == settingsProvider.sortColumn &&
-        _lastSortOrder == settingsProvider.sortOrder &&
-        _lastAppsHashCode == appsHash &&
-        _lastFilterHashCode == filterHash;
-
-    if (cacheValid) {
-      listedApps = _cachedSortedApps!;
-    } else {
-      // Sorting logic
-      if (settingsProvider.appSortMethod == AppSortMethod.latestUpdates) {
-        listedApps.sort((a, b) {
-          final aDate = a.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(a.installedInfo!.lastUpdateTime!) : null;
-          final bDate = b.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(b.installedInfo!.lastUpdateTime!) : null;
-          if (aDate == null && bDate == null) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-          if (aDate == null) return 1;
-          if (bDate == null) return -1;
-          return bDate.compareTo(aDate);
-        });
-      } else if (settingsProvider.appSortMethod == AppSortMethod.nameAZ) {
-        listedApps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      } else if (settingsProvider.appSortMethod == AppSortMethod.nameZA) {
-        listedApps.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
-      } else if (settingsProvider.appSortMethod == AppSortMethod.recentlyAdded) {
-        listedApps.sort((a, b) => b.app.id.toLowerCase().compareTo(a.app.id.toLowerCase()));
-      } else if (settingsProvider.appSortMethod == AppSortMethod.installStatus) {
-        listedApps.sort((a, b) {
-          if ((a.installedInfo != null) == (b.installedInfo != null)) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-          return a.installedInfo != null ? -1 : 1;
-        });
-      } else {
-        listedApps.sort((a, b) {
-          int result = 0;
-          if (settingsProvider.sortColumn == SortColumnSettings.authorName) {
-            result = ((a.author + a.name).toLowerCase()).compareTo((b.author + b.name).toLowerCase());
-          } else if (settingsProvider.sortColumn == SortColumnSettings.nameAuthor) {
-            result = ((a.name + a.author).toLowerCase()).compareTo((b.name + b.author).toLowerCase());
-          } else if (settingsProvider.sortColumn == SortColumnSettings.releaseDate) {
-            final aDate = a.app.releaseDate;
-            final bDate = b.app.releaseDate;
-            if (aDate == null && bDate == null) {
-              result = ((a.name + a.author).toLowerCase()).compareTo((b.name + b.author).toLowerCase());
-            } else if (aDate == null) { result = 1; } else if (bDate == null) { result = -1; } else {
-              result = aDate.compareTo(bDate);
-            }
-          }
-          return result;
-        });
-        if (settingsProvider.sortOrder == SortOrderSettings.descending) listedApps = listedApps.reversed.toList();
-      }
-
-      // Update cache
-      _cachedSortedApps = List.from(listedApps);
-      _lastSortMethod = settingsProvider.appSortMethod;
-      _lastSortColumn = settingsProvider.sortColumn;
-      _lastSortOrder = settingsProvider.sortOrder;
-      _lastAppsHashCode = appsHash;
-      _lastFilterHashCode = filterHash;
-    }
-
     var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
-    // Counts for chips
-    int updatesCount = appsProvider.getAppValues().where((a) => a.app.installedVersion != null && a.app.installedVersion != a.app.latestVersion).length;
-    int uptodateCount = appsProvider.getAppValues().where((a) => a.app.installedVersion != null && a.app.installedVersion == a.app.latestVersion).length;
-    int notInstalledCount = appsProvider.getAppValues().where((a) => a.app.installedVersion == null).length;
-
     var existingUpdateIds = existingUpdates.where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
     var newInstallIds = appsProvider.findExistingUpdates(nonInstalledOnly: true).where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
 
@@ -424,16 +297,6 @@ class AppsPageState extends State<AppsPage> {
       }
       return true;
     }).toList();
-
-    if (settingsProvider.pinUpdates) {
-      var temp = listedApps.where((sa) => existingUpdates.contains(sa.app.id)).toList();
-      listedApps.removeWhere((sa) => existingUpdates.contains(sa.app.id));
-      listedApps = [...temp, ...listedApps];
-    }
-
-    var tempPinned = listedApps.where((a) => a.app.pinned).toList();
-    var tempNotPinned = listedApps.where((a) => !a.app.pinned).toList();
-    listedApps = [...tempPinned, ...tempNotPinned];
 
     List<String?> listedCategories = listedApps.map((e) => e.app.categories.isNotEmpty ? e.app.categories : [null]).expand((e) => e).toSet().toList();
     var customOrder = settingsProvider.categoryOrder;
@@ -632,6 +495,11 @@ class AppsPageState extends State<AppsPage> {
       appBar: AppBar(
         title: Text(tr('appsString')),
         actions: [
+          IconButton(
+            onPressed: () => CommandCenter.show(context),
+            icon: const Icon(Icons.search),
+            tooltip: tr('searchOrPasteUrl'),
+          ),
           // Move Import/Export to AppBar as requested
           IconButton(
             onPressed: () {
@@ -776,13 +644,10 @@ class AppsPageState extends State<AppsPage> {
         ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddAppPage()),
-          );
+          CommandCenter.show(context);
         },
-        child: const Icon(Icons.add),
-        tooltip: tr('addApp'),
+        child: const Icon(Icons.search),
+        tooltip: tr('searchOrPasteUrl'),
       ),
       bottomNavigationBar: appsProvider.apps.isEmpty
           ? null
@@ -853,17 +718,12 @@ class AppsPageState extends State<AppsPage> {
                 child: GestureDetector(
                   onLongPress: () {
                     HapticFeedback.heavyImpact();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(initialTab: 1),
-                      ),
-                    );
+                    showFilterDialog();
                   },
                   child: IconButton(
                     onPressed: () {
                       if (isFilterOff) {
-                        showFilterDialog();
+                        CommandCenter.show(context);
                       } else {
                         setState(() => filter = AppsFilter());
                       }
