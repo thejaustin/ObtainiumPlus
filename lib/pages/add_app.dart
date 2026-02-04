@@ -27,8 +27,9 @@ enum AddAppMode { add, edit }
 class AddAppPage extends StatefulWidget {
   final AddAppMode mode;
   final String? appId;
+  final String? initialUrl;
   final int initialTab;
-  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialTab = 0});
+  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialUrl, this.initialTab = 0});
 
   @override
   State<AddAppPage> createState() => AddAppPageState();
@@ -61,6 +62,10 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         if (app != null) {
           changeUserInput(app.url, true, false, updateUrlInput: true);
         }
+      });
+    } else if (widget.initialUrl != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        changeUserInput(widget.initialUrl!, true, false, updateUrlInput: true);
       });
     }
   }
