@@ -287,13 +287,17 @@ class AppsPageState extends State<AppsPage> {
     listedApps = listedApps.where((app) {
       if (filter.statusFilter.isNotEmpty) {
         bool hasUpdate = app.app.installedVersion != null && app.app.installedVersion != app.app.latestVersion;
-        bool upToDate = app.app.installedVersion != null && app.app.installedVersion == app.app.latestVersion;
         bool notInstalled = app.app.installedVersion == null;
 
         bool matches = false;
         if (filter.statusFilter.contains('updates') && hasUpdate) matches = true;
-        if (filter.statusFilter.contains('uptodate') && upToDate) matches = true;
+        if (filter.statusFilter.contains('installed') && !notInstalled) matches = true;
+        if (filter.statusFilter.contains('trackonly') && app.app.additionalSettings['trackOnly'] == true) matches = true;
+        
+        // Legacy support
+        if (filter.statusFilter.contains('uptodate') && app.app.installedVersion != null && !hasUpdate) matches = true;
         if (filter.statusFilter.contains('notinstalled') && notInstalled) matches = true;
+
         if (!matches) return false;
       }
 
@@ -449,64 +453,40 @@ class AppsPageState extends State<AppsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              GestureDetector(
-                onLongPress: () {
-                  HapticFeedback.heavyImpact();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 2),
-                    ),
-                  );
-                },
-                child: FilterChip(
-                  label: Text('${tr('updatesAvailable')} ($updatesCount)'),
-                  selected: filter.statusFilter.contains('updates'),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(tr('all')),
+                  selected: filter.statusFilter.isEmpty,
                   onSelected: (val) {
                     setState(() {
-                      val ? filter.statusFilter.add('updates') : filter.statusFilter.remove('updates');
+                      filter.statusFilter.clear();
                     });
                   },
                 ),
               ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onLongPress: () {
-                  HapticFeedback.heavyImpact();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 2),
-                    ),
-                  );
-                },
-                child: FilterChip(
-                  label: Text('${tr('upToDateApps')} ($uptodateCount)'),
-                  selected: filter.statusFilter.contains('uptodate'),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(tr('installed')),
+                  selected: filter.statusFilter.contains('installed'),
                   onSelected: (val) {
                     setState(() {
-                      val ? filter.statusFilter.add('uptodate') : filter.statusFilter.remove('uptodate');
+                      filter.statusFilter.clear();
+                      if (val) filter.statusFilter.add('installed');
                     });
                   },
                 ),
               ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onLongPress: () {
-                  HapticFeedback.heavyImpact();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 2),
-                    ),
-                  );
-                },
-                child: FilterChip(
-                  label: Text('${tr('notInstalled')} ($notInstalledCount)'),
-                  selected: filter.statusFilter.contains('notinstalled'),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(tr('trackOnly')),
+                  selected: filter.statusFilter.contains('trackonly'),
                   onSelected: (val) {
                     setState(() {
-                      val ? filter.statusFilter.add('notinstalled') : filter.statusFilter.remove('notinstalled');
+                      filter.statusFilter.clear();
+                      if (val) filter.statusFilter.add('trackonly');
                     });
                   },
                 ),
@@ -794,6 +774,16 @@ class AppsPageState extends State<AppsPage> {
             ),
           ),
         ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddAppPage()),
+          );
+        },
+        child: const Icon(Icons.add),
+        tooltip: tr('addApp'),
+      ),
       bottomNavigationBar: appsProvider.apps.isEmpty
           ? null
           : _buildBottomNavigationBar(
