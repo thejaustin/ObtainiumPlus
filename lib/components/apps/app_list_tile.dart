@@ -74,14 +74,10 @@ class AppListTile extends StatelessWidget {
       return GestureDetector(
         child: Hero(
           tag: 'app_icon_${appInMemory.app.id}',
-            child: appInMemory.icon != null
+          child: appInMemory.icon != null
               ? Image.memory(
                   appInMemory.icon!,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  cacheWidth: (40 * MediaQuery.of(context).devicePixelRatio).round(),
                   opacity: AlwaysStoppedAnimation(
                     appInMemory.installedInfo == null ? 0.6 : 1,
                   ),
@@ -270,15 +266,17 @@ class AppListTile extends StatelessWidget {
               trailing: appInMemory.downloadProgress != null
                   ? SizedBox(
                       child: Text(
-                        (appInMemory.downloadProgress ?? -1) >= 0
+                        appInMemory.downloadProgress! >= 0
                             ? tr(
                                 'percentProgress',
                                 args: [
-                                  (appInMemory.downloadProgress ?? 0).toInt().toString(),
+                                  appInMemory.downloadProgress!
+                                      .toInt()
+                                      .toString(),
                                 ],
                               )
                             : tr('installing'),
-                        textAlign: ((appInMemory.downloadProgress ?? -1) >= 0)
+                        textAlign: (appInMemory.downloadProgress! >= 0)
                             ? TextAlign.start
                             : TextAlign.end,
                       ),

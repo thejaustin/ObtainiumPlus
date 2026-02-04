@@ -1,34 +1,13 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
-import 'package:obtainium/pages/statistics.dart';
 import 'package:provider/provider.dart';
 
 /// Section for system settings shortcuts and troubleshooting
 class TroubleshootingSection extends StatelessWidget {
   const TroubleshootingSection({super.key});
-
-  Future<void> _openWithGuidance(
-    BuildContext context, {
-    required VoidCallback action,
-    bool Function(String manufacturer)? condition,
-    String? titleKey,
-    String? messageKey,
-  }) async {
-    // ... existing implementation ...
-    if (condition != null && titleKey != null && messageKey != null) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      // ...
-      if (context.mounted && condition(isXiaomi ? 'xiaomi' : manufacturer)) {
-         // ...
-        return;
-      }
-    }
-    action();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,15 +17,6 @@ class TroubleshootingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSystemShortcutTile(
-          context,
-          icon: Icons.bar_chart_rounded,
-          title: tr('statistics'),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const StatisticsPage()),
-          ),
-        ),
         _buildSystemShortcutTile(
           context,
           icon: Icons.info_outlined,
@@ -63,13 +33,7 @@ class TroubleshootingSection extends StatelessWidget {
           context,
           icon: Icons.battery_saver_outlined,
           title: tr('batteryOptimizationSettings'),
-          onTap: () => _openWithGuidance(
-            context,
-            action: () => AppInstallService.openBatteryOptimizationSettings(),
-            condition: (m) => m == 'xiaomi',
-            titleKey: 'xiaomiTroubleshootingTitle',
-            messageKey: 'xiaomiTroubleshootingDescription',
-          ),
+          onTap: () => AppInstallService.openBatteryOptimizationSettings(),
         ),
         _buildSystemShortcutTile(
           context,
@@ -87,13 +51,7 @@ class TroubleshootingSection extends StatelessWidget {
           context,
           icon: Icons.insights_outlined,
           title: tr('usageAccessSettings'),
-          onTap: () => _openWithGuidance(
-            context,
-            action: () => AppInstallService.openUsageAccessSettings(),
-            condition: (m) => m.contains('samsung'),
-            titleKey: 'samsungUsageAccessTitle',
-            messageKey: 'samsungUsageAccessMessage',
-          ),
+          onTap: () => AppInstallService.openUsageAccessSettings(),
         ),
       ],
     );

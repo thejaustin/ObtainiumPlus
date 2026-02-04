@@ -24,14 +24,12 @@ class AppsViewSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final settingsProvider = settings;
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category')) CategoryEditorSelector(showLabelWhenNotEmpty: false),
       if (_matches(tr('groupByCategory'))) _buildGroupByCategoryToggle(context),
-      if (settings.plusEnableUICustomization && _matches(tr('collapseCategoriesByDefault'))) _buildCollapseCategoriesToggle(context),
+      if (_matches(tr('collapseCategoriesByDefault'))) _buildCollapseCategoriesToggle(context),
     ];
 
     List<Widget> iconWidgets = [
@@ -41,22 +39,19 @@ class AppsViewSettingsSection extends StatelessWidget {
 
     List<Widget> viewWidgets = [
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
-      if (settings.plusEnableUICustomization && _matches(tr('listDensity'))) _buildDensityDropdown(context),
+      if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       _buildGridSettings(context),
     ];
 
-    List<Widget> displayWidgets = [];
-    if (settings.plusEnableUICustomization) {
-      displayWidgets = [
-        if (_matches(tr('showAuthor'))) _buildShowAuthorToggle(context),
-        if (_matches(tr('showVersion'))) _buildShowVersionToggle(context),
-        if (_matches(tr('showDate'))) _buildShowDateToggle(context),
-      ];
-    }
+    List<Widget> displayWidgets = [
+      if (_matches(tr('showAuthor'))) _buildShowAuthorToggle(context),
+      if (_matches(tr('showVersion'))) _buildShowVersionToggle(context),
+      if (_matches(tr('showDate'))) _buildShowDateToggle(context),
+    ];
 
     List<Widget> headerWidgets = [
-      if (settingsProvider.plusEnableQuickFilters && _matches(tr('showFilterChips'))) _buildShowFilterChipsToggle(context),
-      if (settingsProvider.plusEnableUICustomization && _matches(tr('showAppCount'))) _buildShowAppCountToggle(context),
+      if (_matches(tr('showFilterChips'))) _buildShowFilterChipsToggle(context),
+      if (_matches(tr('showAppCount'))) _buildShowAppCountToggle(context),
     ];
 
     return Column(
@@ -107,7 +102,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.numbers_outlined),
+          secondary: const Icon(Icons.code),
           title: Text(tr('showVersion'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.displayShowVersion,
           onChanged: (value) => settings.displayShowVersion = value,
@@ -146,7 +141,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.tag_outlined),
+          secondary: const Icon(Icons.summarize_outlined),
           title: Text(tr('showAppCount'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.displayShowAppCount,
           onChanged: (value) => settings.displayShowAppCount = value,
@@ -215,7 +210,7 @@ class AppsViewSettingsSection extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.numbers_outlined),
               title: Text(tr('iconCount'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text("${settings.categoryIconCount}px"),
+              subtitle: Text(settings.categoryIconCount.toString()),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -246,8 +241,7 @@ class AppsViewSettingsSection extends StatelessWidget {
             value: settings.globalViewMode,
             items: [
               DropdownMenuItem(value: ViewMode.list, child: Text(tr('listView'))),
-              if (settings.plusEnableGridView)
-                DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
+              DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
             ],
             onChanged: (value) {
               if (value != null) {
