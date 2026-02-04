@@ -1,3 +1,4 @@
+import 'package:obtainium/app_sources/git_source.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/source_utils.dart';
@@ -5,42 +6,24 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
-class Codeberg extends AppSource {
-  GitHub gh = GitHub(hostChanged: true);
+class Codeberg extends GitSource {
   Codeberg() {
     name = 'Forgejo (Codeberg)';
     hosts = ['codeberg.org'];
 
     additionalSourceAppSpecificSettingFormItems =
-        gh.additionalSourceAppSpecificSettingFormItems;
+        GitHub(hostChanged: true).additionalSourceAppSpecificSettingFormItems;
 
     canSearch = true;
-    searchQuerySettingFormItems = gh.searchQuerySettingFormItems;
+    searchQuerySettingFormItems = GitHub(hostChanged: true).searchQuerySettingFormItems;
   }
-
-  @override
-  String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
-    RegExp standardUrlRegEx = RegExp(
-      '^https?://(www\\.)?${getSourceRegex(hosts)}/[^/]+/[^/]+',
-      caseSensitive: false,
-    );
-    RegExpMatch? match = standardUrlRegEx.firstMatch(url);
-    if (match == null) {
-      throw InvalidURLError(name);
-    }
-    return match.group(0)!;
-  }
-
-  @override
-  String? changeLogPageFromStandardUrl(String standardUrl) =>
-      '$standardUrl/releases';
 
   @override
   Future<APKDetails> getLatestAPKDetails(
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    return await gh.getLatestAPKDetailsCommon2(standardUrl, additionalSettings, (
+    return await GitHub(hostChanged: true).getLatestAPKDetailsCommon2(standardUrl, additionalSettings, (
       bool useTagUrl,
     ) async {
       return 'https://${hosts[0]}/api/v1/repos${standardUrl.substring('https://${hosts[0]}'.length)}/${useTagUrl ? 'tags' : 'releases'}?per_page=100';
@@ -58,7 +41,7 @@ class Codeberg extends AppSource {
     String query, {
     Map<String, dynamic> querySettings = const {},
   }) async {
-    return gh.searchCommon(
+    return GitHub(hostChanged: true).searchCommon(
       query,
       'https://${hosts[0]}/api/v1/repos/search?q=${Uri.encodeQueryComponent(query)}&limit=100',
       'data',

@@ -14,12 +14,13 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-class GitLab extends AppSource {
-  GitLab({bool hostChanged = false}) {
+import 'package:obtainium/app_sources/git_source.dart';
+
+class GitLab extends GitSource {
+  GitLab({bool hostChanged = false}) : super(hostChanged: hostChanged) {
     hosts = ['gitlab.com'];
     canSearch = true;
     showReleaseDateAsVersionToggle = true;
-    this.hostChanged = hostChanged;
 
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
