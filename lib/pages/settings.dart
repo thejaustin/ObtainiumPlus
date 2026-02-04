@@ -15,7 +15,7 @@ import 'package:obtainium/components/settings/behavior_settings_section.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
-import 'package:obtainium/components/settings/plus_features_section.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -25,40 +25,31 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/app_constants.dart'; // Import AppConstants
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
 
-class SettingsPage extends StatelessWidget {
-  final int initialTab;
+class SettingsPage extends StatefulWidget {
+  final int initialTab; // Kept for backward compatibility, though tabs are removed
   const SettingsPage({super.key, this.initialTab = 0});
 
   @override
-  Widget build(BuildContext context) {
-    // ModernSettingsPage is now the default. LegacySettingsPage is no longer directly accessible.
-    return ModernSettingsPage(initialTab: initialTab);
-  }
+  State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class ModernSettingsPage extends StatefulWidget {
-  final int initialTab; // Kept for backward compatibility, though tabs are removed
-  const ModernSettingsPage({super.key, this.initialTab = 0});
-
-  @override
-  State<ModernSettingsPage> createState() => _ModernSettingsPageState();
-}
-
-class _ModernSettingsPageState extends State<ModernSettingsPage> {
+class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
   bool showIntervalLabel = true;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
   final Map<ColorSwatch<Object>, String> colorsNameMap =
       <ColorSwatch<Object>, String>{
-        ColorTools.createPrimarySwatch(AppConstants.obtainiumThemeColor): 'Obtainium',
+        ColorTools.createPrimarySwatch(obtainiumThemeColor): 'Obtainium',
       };
 
   // PERFORMANCE: Cache DeviceInfoPlugin result to avoid redundant async calls
@@ -253,15 +244,19 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: CustomScrollView(
             slivers: [
-                                  // 1. Header with Title (Adaptive based on user preference)
-                                  if (!isSearching)
-                                    AdaptiveSliverAppBar(
-                                      title: tr('settings'),
-                                      pageId: 'settings',
-                                      automaticallyImplyLeading: false,
-                                    )
-                                  else
-                                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                                  // 1. Header with Title (Chrome Style)
+                                  SliverAppBar.large(
+                                    backgroundColor: Theme.of(context).colorScheme.surface,
+                                    surfaceTintColor: Colors.transparent,
+                                    title: isSearching 
+                                      ? null 
+                                      : Text(
+                                          tr('settings'),
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                  ),
                         
                                   // 2. Search Pill (Persistent below title)
                                   SliverToBoxAdapter(
@@ -311,7 +306,7 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                           children: [
                             if (_matches(tr('backgroundUpdates')))
                               SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.cloud_sync_outlined),
+                                secondary: const Icon(Icons.sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
@@ -320,7 +315,7 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                               ),
                             if (_matches(tr('batteryOpt')))
                               SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.battery_charging_full_outlined),
+                                secondary: const Icon(Icons.battery_saver_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
                                 subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
                                 value: _isIgnoringBatteryOptimizations,
@@ -377,7 +372,7 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                           title: tr('basics'),
                           children: [
                              SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.cloud_sync_outlined),
+                                secondary: const Icon(Icons.sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
@@ -385,7 +380,7 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                                 },
                               ),
                              SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.battery_charging_full_outlined),
+                                secondary: const Icon(Icons.battery_saver_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
                                 subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
                                 value: _isIgnoringBatteryOptimizations,
@@ -402,8 +397,8 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                                          showDialog(
                                            context: context,
                                            builder: (context) => UpdateSettingsSection(
-                                             showIntervalLabel: true,
-                                             onIntervalLabelChange: (_) {},
+                                             showIntervalLabel: true, 
+                                             onIntervalLabelChange: (_) {}, 
                                              androidInfoFuture: Future.value(_cachedAndroidInfo)
                                            ).buildXiaomiTroubleshootingDialog(context),
                                          );
@@ -423,13 +418,16 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                               context,
                               icon: Icons.palette_outlined,
                               title: tr('appearance') ?? 'Appearance',
-                              subtitle: tr('appearanceSubtitle') ?? 'Theme, colors, animations',
-                              pageId: 'appearance',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: ThemeSettingsSection(
-                                  androidInfoFuture: _androidInfoFuture,
-                                  colorsNameMap: colorsNameMap,
+                              destination: _SubMenuPage(
+                                title: tr('appearance') ?? 'Appearance',
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: ThemeSettingsSection(
+                                      androidInfoFuture: _androidInfoFuture,
+                                      colorsNameMap: colorsNameMap,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -437,14 +435,17 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                               context,
                               icon: Icons.system_update_outlined,
                               title: tr('updates'),
-                              subtitle: tr('updatesSubtitle') ?? 'Background checks, intervals',
-                              pageId: 'updates',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: UpdateSettingsSection(
-                                  showIntervalLabel: showIntervalLabel,
-                                  onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
-                                  androidInfoFuture: _androidInfoFuture,
+                              destination: _SubMenuPage(
+                                title: tr('updates'),
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: UpdateSettingsSection(
+                                      showIntervalLabel: showIntervalLabel,
+                                      onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
+                                      androidInfoFuture: _androidInfoFuture,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -453,39 +454,48 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                                 context,
                                 icon: Icons.storage_outlined,
                                 title: tr('sourceSpecific'),
-                                subtitle: tr('sourceSpecificSubtitle') ?? 'Source-specific options',
-                                pageId: 'sourceSpecific',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: SettingsGroup(
-                                    title: tr('sourceSpecific'),
-                                    children: sourceSpecificFields.toList(),
+                                destination: _SubMenuPage(
+                                  title: tr('sourceSpecific'),
+                                  child: SingleChildScrollView(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: SettingsGroup(
+                                        title: tr('sourceSpecific'),
+                                        children: sourceSpecificFields.toList(),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.view_quilt_outlined,
-                              title: tr('viewOptions'),
-                              subtitle: tr('viewOptionsSubtitle') ?? 'List, grid, categories',
-                              pageId: 'viewOptions',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: AppsViewSettingsSection(onSetState: setState),
+                              title: tr('viewOptions'), // "Apps & View"
+                              destination: _SubMenuPage(
+                                title: tr('viewOptions'),
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: AppsViewSettingsSection(onSetState: setState),
+                                  ),
+                                ),
                               ),
                             ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.tune_outlined,
-                              title: tr('general'),
-                              subtitle: tr('generalSubtitle') ?? 'Language, sorting, behavior',
-                              pageId: 'general',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: BehaviorSettingsSection(
-                                  sortDropdown: sortDropdown,
-                                  orderDropdown: orderDropdown,
-                                  localeDropdown: localeDropdown,
+                              title: tr('general'), // Behavior
+                              destination: _SubMenuPage(
+                                title: tr('general'),
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: BehaviorSettingsSection(
+                                      sortDropdown: sortDropdown,
+                                      orderDropdown: orderDropdown,
+                                      localeDropdown: localeDropdown,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -493,22 +503,28 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                               context,
                               icon: Icons.build_outlined,
                               title: tr('advanced'),
-                              subtitle: tr('advancedSubtitle') ?? 'Installation, warnings, debugging',
-                              pageId: 'advanced',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: AdvancedSettingsSection(),
+                              destination: _SubMenuPage(
+                                title: tr('advanced'),
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: AdvancedSettingsSection(),
+                                  ),
+                                ),
                               ),
                             ),
                              _buildSubMenuTile(
                               context,
                               icon: Icons.help_outline,
                               title: tr('troubleshootingAndSystem') ?? 'Troubleshooting',
-                              subtitle: tr('troubleshootingSubtitle') ?? 'Help, logs, support',
-                              pageId: 'troubleshooting',
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: SettingsGroup(children: [const TroubleshootingSection()]),
+                              destination: _SubMenuPage(
+                                title: tr('troubleshootingAndSystem') ?? 'Troubleshooting',
+                                child: SingleChildScrollView(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: SettingsGroup(children: [const TroubleshootingSection()]),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -521,37 +537,18 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
                       title: isSearching ? null : tr('about'),
                       children: [
                         ListTile(
-                          leading: const Icon(Icons.rocket_launch_outlined),
-                          title: Text(tr('welcome'), style: Theme.of(context).textTheme.bodyLarge),
-                          trailing: Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => OnboardingPage(
-                                  onDone: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        ListTile(
                           leading: const Icon(Icons.code_outlined),
                           title: Text(tr('appSource'), style: Theme.of(context).textTheme.bodyLarge),
-                          trailing: Icon(Icons.open_in_new, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication),
                         ),
                         ListTile(
                           leading: const Icon(Icons.help_outline_rounded),
                           title: Text(tr('wiki'), style: Theme.of(context).textTheme.bodyLarge),
-                          trailing: Icon(Icons.open_in_new, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
                         ),
                         ListTile(
                           leading: const Icon(Icons.apps_rounded),
                           title: Text(tr('crowdsourcedConfigsLabel'), style: Theme.of(context).textTheme.bodyLarge),
-                          trailing: Icon(Icons.open_in_new, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
                           onTap: () => launchUrlString('https://apps.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
                         ),
                         ListTile(
@@ -584,34 +581,14 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
         );
       }
 
-      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required String pageId, required Widget child}) {
+      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget destination}) {
         return ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
+          leading: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)) : null,
-          trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () {
             Navigator.of(context).push(
-              PageRouteBuilder(
-                transitionDuration: const Duration(milliseconds: 300),
-                pageBuilder: (context, animation, secondaryAnimation) => _SubMenuPage(title: title, pageId: pageId, child: child),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return SharedAxisTransition(
-                    animation: animation,
-                    secondaryAnimation: secondaryAnimation,
-                    transitionType: SharedAxisTransitionType.horizontal,
-                    child: child,
-                  );
-                },
-              ),
+              MaterialPageRoute(builder: (context) => destination),
             );
           },
         );
@@ -620,14 +597,12 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
 
     class _SubMenuPage extends StatelessWidget {
       final String title;
-      final String pageId;
       final Widget child;
 
-      const _SubMenuPage({required this.title, required this.pageId, required this.child});
+      const _SubMenuPage({required this.title, required this.child});
 
         @override
         Widget build(BuildContext context) {
-          // Default to compact app bar for sub-menu pages
           return Scaffold(
             appBar: CustomAppBar(title: title),
             body: child,
@@ -635,65 +610,122 @@ class _ModernSettingsPageState extends State<ModernSettingsPage> {
         }
       }    
     class SettingsGroup extends StatelessWidget {
-  final String? title;
-  final List<Widget> children;
-
-  const SettingsGroup({super.key, this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    // Robustly filter out hidden/empty widgets
-    final visibleChildren = children.where((child) {
-      if (child is SizedBox && child.child == null) return false;
-      if (child is Visibility && !child.visible) return false;
-      return true;
-    }).toList();
-
-    if (visibleChildren.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (title != null)
-          Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
-            child: Text(
-              title!,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+    
+      final String? title;
+    
+      final List<Widget> children;
+    
+    
+    
+      const SettingsGroup({super.key, this.title, required this.children});
+    
+    
+    
+      @override
+    
+      Widget build(BuildContext context) {
+    
+        // Robustly filter out hidden/empty widgets
+    
+        final visibleChildren = children.where((child) {
+    
+          if (child is SizedBox && child.child == null) return false;
+    
+          if (child is Visibility && !child.visible) return false;
+    
+          return true;
+    
+        }).toList();
+    
+    
+    
+        if (visibleChildren.isEmpty) return const SizedBox.shrink();
+    
+    
+    
+        return Column(
+    
+          crossAxisAlignment: CrossAxisAlignment.start,
+    
+          children: [
+    
+            if (title != null)
+    
+              Padding(
+    
+                padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
+    
+                child: Text(
+    
+                  title!,
+    
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+    
+                        color: Theme.of(context).colorScheme.primary,
+    
+                        fontWeight: FontWeight.bold,
+    
+                      ),
+    
+                ),
+    
+              ),
+    
+            Container(
+    
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+    
+              decoration: BoxDecoration(
+    
+                color: Theme.of(context).colorScheme.surfaceContainerHigh, // Changed to surfaceContainerHigh
+    
+                borderRadius: BorderRadius.circular(28.0),
+    
+              ),
+    
+              clipBehavior: Clip.antiAlias,
+    
+              child: Column(
+    
+                children: List.generate(visibleChildren.length, (index) {
+    
+                  return Column(
+    
+                    children: [
+    
+                      visibleChildren[index],
+    
+                      if (index < visibleChildren.length - 1)
+    
+                        Divider(
+    
+                          height: 1,
+    
+                          indent: 64, // Standard M3 indent for icons
+    
+                          endIndent: 20,
+    
+                          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+    
+                        ),
+    
+                    ],
+    
+                  );
+    
+                }),
+    
+              ),
+    
             ),
-          ),
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 4.0),
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: List.generate(visibleChildren.length, (index) {
-              return Column(
-                children: [
-                  visibleChildren[index],
-                  if (index < visibleChildren.length - 1)
-                    Divider(
-                      height: 1,
-                      indent: 64,
-                      endIndent: 20,
-                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
-                    ),
-                ],
-              );
-            }),
-          ),
-        ),
-      ],
-    );
-  }
-}
+    
+          ],
+    
+        );
+    
+      }
+    
+    }
     
     
     

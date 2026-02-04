@@ -37,7 +37,7 @@ class PlusFeaturesSection extends StatelessWidget {
             ),
 
           if (settings.enableAllPlusFeatures) ...[
-            const SizedBox(height: 8),
+            const Divider(),
 
             // UI Features
             if (_matches(tr('plusGridView')))
@@ -126,72 +126,6 @@ class PlusFeaturesSection extends StatelessWidget {
                 subtitle: tr('plusUpdateScheduleDescription'),
                 value: settings.plusEnableUpdateSchedule,
                 onChanged: (val) => settings.plusEnableUpdateSchedule = val,
-              ),
-
-            if (_matches(tr('plusUICustomization')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.palette_outlined,
-                title: tr('plusUICustomization'),
-                subtitle: tr('plusUICustomizationDescription'),
-                value: settings.plusEnableUICustomization,
-                onChanged: (val) => settings.plusEnableUICustomization = val,
-              ),
-
-            if (_matches(tr('plusHapticFeedback')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.vibration,
-                title: tr('plusHapticFeedback'),
-                subtitle: tr('plusHapticFeedbackDescription'),
-                value: settings.plusEnableHapticFeedback,
-                onChanged: (val) => settings.plusEnableHapticFeedback = val,
-              ),
-
-            if (_matches(tr('plusIconCaching')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.image_outlined,
-                title: tr('plusIconCaching'),
-                subtitle: tr('plusIconCachingDescription'),
-                value: settings.plusEnableIconCaching,
-                onChanged: (val) => settings.plusEnableIconCaching = val,
-              ),
-
-            if (_matches(tr('plusModernSettings')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.settings_suggest_outlined,
-                title: tr('plusModernSettings'),
-                subtitle: tr('plusModernSettingsDescription'),
-                value: settings.plusEnableModernSettings,
-                onChanged: (val) => settings.plusEnableModernSettings = val,
-              ),
-
-            if (_matches(tr('plusModernAppPage')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.smartphone,
-                title: tr('plusModernAppPage'),
-                subtitle: tr('plusModernAppPageDescription'),
-                value: settings.plusEnableModernAppPage,
-                onChanged: (val) => settings.plusEnableModernAppPage = val,
-              ),
-
-            if (_matches(tr('plusResponsiveAppLayout')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.devices,
-                title: tr('plusResponsiveAppLayout'),
-                subtitle: tr('plusResponsiveAppLayoutDescription'),
-                value: settings.plusEnableResponsiveAppLayout,
-                onChanged: (val) => settings.plusEnableResponsiveAppLayout = val,
               ),
           ],
         ];

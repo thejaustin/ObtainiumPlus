@@ -34,16 +34,27 @@ class AddAppPage extends StatefulWidget {
   State<AddAppPage> createState() => AddAppPageState();
 }
 
-class AddAppPageState extends State<AddAppPage> {
+class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   bool gettingAppInfo = false;
   // bool searching = false; // Moved to DiscoverPage
 
   String userInput = '';
-  // ... (other fields)
+  // String searchQuery = ''; // Moved to DiscoverPage
+  String? pickedSourceOverride;
+  String? previousPickedSourceOverride;
+  AppSource? pickedSource;
+  Map<String, dynamic> additionalSettings = {};
+  bool additionalSettingsValid = true;
+  bool inferAppIdIfOptional = true;
+  List<String> pickedCategories = [];
+  int urlInputKey = 0;
+  SourceProvider sourceProvider = SourceProvider();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab);
     if (widget.appId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         var app = context.read<AppsProvider>().apps[widget.appId]?.app;
@@ -54,7 +65,17 @@ class AddAppPageState extends State<AddAppPage> {
     }
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   void linkFn(String input) {
+    // If input comes from DiscoverPage, we might need to switch to URL tab
+    if (_tabController.index != 0) {
+      _tabController.animateTo(0);
+    }
     try {
       if (input.isEmpty) {
         throw UnsupportedURLError();
@@ -567,59 +588,56 @@ class AddAppPageState extends State<AddAppPage> {
       ),
     );
 
-
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(title: tr('addApp')),
-      bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. URL Input and Options Section
-              getUrlInputRow(),
-              const SizedBox(height: 16),
-              if (pickedSource != null) getHTMLSourceOverrideDropdown(),
-              if (pickedSource != null)
-                FutureBuilder(
-                  builder: (ctx, val) {
-                    return val.data != null && val.data!.isNotEmpty
-                        ? Text(
-                            val.data!,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          )
-                        : const SizedBox();
-                  },
-                  future: pickedSource?.getSourceNote(),
+      appBar: AppBar(
+        title: Text(tr('addApp')),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: tr('appSourceURL')),
+            Tab(text: tr('discover')),
+          ],
+        ),
+      ),
+      bottomNavigationBar: pickedSource == null && _tabController.index == 0 ? getSourcesListWidget() : null, // Only show sources list on URL tab
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          CustomScrollView(
+            shrinkWrap: true,
+            slivers: <Widget>[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      getUrlInputRow(),
+                      const SizedBox(height: 16),
+                      if (pickedSource != null) getHTMLSourceOverrideDropdown(),
+                      if (pickedSource != null)
+                        FutureBuilder(
+                          builder: (ctx, val) {
+                            return val.data != null && val.data!.isNotEmpty
+                                ? Text(
+                                    val.data!,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  )
+                                : const SizedBox();
+                          },
+                          future: pickedSource?.getSourceNote(),
+                        ),
+                      if (pickedSource != null) getAdditionalOptsCol(),
+                    ],
+                  ),
                 ),
-              if (pickedSource != null) getAdditionalOptsCol(),
-              const SizedBox(height: 32),
-
-              // 2. Discover Section
-              Text(
-                tr('discover'),
-                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 16),
-              // Embed DiscoverPage, it should not have its own AppBar
-              const DiscoverPage(showAppBar: false),
-              const SizedBox(height: 32),
-
-              // 3. Import/Export Section
-              Text(
-                tr('importExport'),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              // Embed ImportExportPage, it should not have its own AppBar
-              const ImportExportPage(showAppBar: false),
             ],
           ),
-        ),
+          const DiscoverPage(showAppBar: false),
+        ],
       ),
     );
   }

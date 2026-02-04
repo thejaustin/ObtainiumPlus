@@ -12,14 +12,11 @@ import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
-import 'package:obtainium/components/apps/app_changelog.dart';
-import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
-import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
@@ -35,6 +32,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:markdown/markdown.dart' as md;
 
 class AppsPage extends StatefulWidget {
   const AppsPage({super.key, this.initialFilter});
@@ -43,6 +41,108 @@ class AppsPage extends StatefulWidget {
 
   @override
   State<AppsPage> createState() => AppsPageState();
+}
+
+void showChangeLogDialog(
+  BuildContext context,
+  App app,
+  String? changesUrl,
+  AppSource appSource,
+  String changeLog,
+) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return GeneratedFormModal(
+        title: tr('changes'),
+        items: const [],
+        message: app.latestVersion,
+        additionalWidgets: [
+          changesUrl != null
+              ? GestureDetector(
+                  child: Text(
+                    changesUrl,
+                    style: const TextStyle(
+                      decoration: TextDecoration.underline,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  onTap: () {
+                    launchUrlString(
+                      changesUrl,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                )
+              : const SizedBox.shrink(),
+          changesUrl != null
+              ? const SizedBox(height: 16)
+              : const SizedBox.shrink(),
+          appSource.changeLogIfAnyIsMarkDown
+              ? SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height - 350,
+                  child: Markdown(
+                    styleSheet: MarkdownStyleSheet(
+                      blockquoteDecoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                      ),
+                    ),
+                    data: changeLog,
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrlString(
+                          href.startsWith('http://') ||
+                                  href.startsWith('https://')
+                              ? href
+                              : '${Uri.parse(app.url).origin}/$href',
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                    extensionSet: md.ExtensionSet(
+                      md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                      [
+                        md.EmojiSyntax(),
+                        ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+                      ],
+                    ),
+                  ),
+                )
+              : Text(changeLog),
+        ],
+        singleNullReturnButton: tr('ok'),
+      );
+    },
+  );
+}
+
+Null Function()? getChangeLogFn(BuildContext context, App app) {
+  AppSource appSource = SourceProvider().getSource(
+    app.url,
+    overrideSource: app.overrideSource,
+  );
+  String? changesUrl = appSource.changeLogPageFromStandardUrl(app.url);
+  String? changeLog = app.changeLog;
+  if (changeLog?.split('\n').length == 1) {
+    if (RegExp(
+      '(http|ftp|https)://([\w_-]+(?:(?:\\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?',
+    ).hasMatch(changeLog!)) {
+      if (changesUrl == null) {
+        changesUrl = changeLog;
+        changeLog = null;
+      }
+    }
+  }
+  return (changeLog == null && changesUrl == null)
+      ? null
+      : () {
+          if (changeLog != null) {
+            showChangeLogDialog(context, app, changesUrl, appSource, changeLog);
+          } else {
+            launchUrlString(changesUrl!, mode: LaunchMode.externalApplication);
+          }
+        };
 }
 
 class AppsPageState extends State<AppsPage> {
@@ -132,9 +232,7 @@ class AppsPageState extends State<AppsPage> {
         .map((app) => app.app.id)
         .toList();
 
-    if (context.read<SettingsProvider>().plusEnableIconCaching) {
-      appsProvider.precacheIcons(appIdsToCache);
-    }
+    appsProvider.precacheIcons(appIdsToCache);
   }
 
   @override
@@ -417,39 +515,18 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getLoadingWidgets() {
-      final isGrid = !settingsProvider.groupByCategory && 
-                     settingsProvider.plusEnableGridView && 
-                     settingsProvider.globalViewMode == ViewMode.grid;
-
       return [
         if (listedApps.isEmpty)
-          appsProvider.loadingApps
-              ? isGrid
-                  ? SliverPadding(
-                      padding: const EdgeInsets.all(12),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: settingsProvider.gridColumnCount > 0
-                              ? settingsProvider.gridColumnCount
-                              : (MediaQuery.of(context).size.width / 120).floor().clamp(2, 6),
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => const AppTileSkeleton(isGrid: true),
-                          childCount: 12,
-                        ),
-                      ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => const AppTileSkeleton(isGrid: false),
-                        childCount: 10,
-                      ),
-                    )
-              : SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: EmptyStateWidget(
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: appsProvider.loadingApps
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      semanticsLabel: 'Loading apps',
+                      strokeWidth: 3,
+                    ),
+                  )
+                : EmptyStateWidget(
                     title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
                     subtitle: appsProvider.apps.isEmpty
                         ? tr('startByAddingFirstApp')
@@ -467,9 +544,8 @@ class AppsPageState extends State<AppsPage> {
                             );
                           }
                         : null,
-                    // Only show Discover link if Plus Feature is enabled
-                    secondaryActionLabel: appsProvider.apps.isEmpty && settingsProvider.plusEnableDiscover ? tr('discover') : null,
-                    onSecondaryActionPressed: appsProvider.apps.isEmpty && settingsProvider.plusEnableDiscover
+                    secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
+                    onSecondaryActionPressed: appsProvider.apps.isEmpty
                         ? () {
                             HapticFeedback.lightImpact();
                             Navigator.push(
@@ -481,8 +557,8 @@ class AppsPageState extends State<AppsPage> {
                           }
                         : null,
                   ),
-                ),
-        if (refreshingSince != null || (appsProvider.loadingApps && listedApps.isNotEmpty))
+          ),
+        if (refreshingSince != null || appsProvider.loadingApps)
           SliverToBoxAdapter(
             child: LinearProgressIndicator(
               value: appsProvider.loadingApps ? null : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
@@ -571,32 +647,21 @@ class AppsPageState extends State<AppsPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: GestureDetector(
-          onLongPress: () {
-            HapticFeedback.heavyImpact();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SettingsPage(initialTab: 0),
-              ),
-            );
-          },
-          child: Text(tr('appsString')),
-        ),
+        title: Text(tr('appsString')),
         actions: [
-          if (settingsProvider.displayShowAppCount)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Text(
-                  '${listedApps.length}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+          // Move Import/Export to AppBar as requested
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (context) => const ImportExportPage(),
+              );
+            },
+            icon: const Icon(Icons.import_export),
+            tooltip: tr('importExport'),
+          ),
           // Conditionally show help icon based on settings
           if (settingsProvider.enableContextualTips)
             IconButton(
@@ -613,6 +678,8 @@ class AppsPageState extends State<AppsPage> {
                           Text(tr('appManagementTips')),
                           const SizedBox(height: 16),
                           Text(tr('swipeActionsTip')),
+                          const SizedBox(height: 16),
+                          Text(tr('longPressSelectionTip')),
                         ],
                       ),
                       actions: [
@@ -651,9 +718,40 @@ class AppsPageState extends State<AppsPage> {
                 Widget scrollView = CustomScrollView(
                   controller: scrollController,
                   slivers: <Widget>[
+                    // Standard M3 Large App Bar
+                    SliverAppBar.large(
+                      title: GestureDetector(
+                        onLongPress: () {
+                          HapticFeedback.heavyImpact();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsPage(initialTab: 0),
+                            ),
+                          );
+                        },
+                        child: Text(tr('appsString')),
+                      ),
+                      automaticallyImplyLeading: false,
+                      actions: [
+                        if (settingsProvider.displayShowAppCount)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: Text(
+                                '${listedApps.length}',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+
                     // Filter Chips & App Count Context (Moved to body to prevent overlap)
-                    // Only show quick filters if Plus Feature is enabled
-                    if (appsProvider.apps.isNotEmpty && settingsProvider.displayShowFilterChips && settingsProvider.plusEnableQuickFilters)
+                    if (settingsProvider.displayShowFilterChips)
                       getFilterChips(),
                     ...getLoadingWidgets(),
                     // These widgets return slivers (SliverList/SliverGrid), so they go directly in slivers list
@@ -666,8 +764,7 @@ class AppsPageState extends State<AppsPage> {
                         getChangeLogFn: getChangeLogFn,
                         getCachedCategoryColor: _getCachedCategoryColor,
                       )
-                    // Only show grid view if Plus Feature is enabled
-                    else if (settingsProvider.plusEnableGridView && settingsProvider.globalViewMode == ViewMode.grid)
+                    else if (settingsProvider.globalViewMode == ViewMode.grid)
                       AppGridView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected)
                     else
                       AppListView(apps: listedApps, selectedAppIds: selectedAppIds, toggleAppSelected: toggleAppSelected, getChangeLogFn: getChangeLogFn),
@@ -802,13 +899,6 @@ class AppsPageState extends State<AppsPage> {
                   },
                   child: IconButton(
                     onPressed: () {
-                      // Determine available sort methods based on Plus Feature
-                      final basicSortMethods = [AppSortMethod.nameAZ, AppSortMethod.nameZA, AppSortMethod.defaultSort];
-                      final advancedSortMethods = [AppSortMethod.latestUpdates, AppSortMethod.recentlyAdded, AppSortMethod.installStatus];
-                      final availableMethods = settingsProvider.plusEnableAdvancedSorting
-                          ? AppSortMethod.values
-                          : basicSortMethods;
-
                       showDialog(
                         context: context,
                         builder: (context) {
@@ -819,10 +909,8 @@ class AppsPageState extends State<AppsPage> {
                                 GeneratedFormDropdown(
                                   'sortMethod',
                                   label: tr('sortMethod'),
-                                  defaultValue: availableMethods.contains(settingsProvider.appSortMethod)
-                                      ? settingsProvider.appSortMethod.toString()
-                                      : AppSortMethod.nameAZ.toString(),
-                                  availableMethods.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
+                                  defaultValue: settingsProvider.appSortMethod.toString(),
+                                  AppSortMethod.values.map((e) => MapEntry(e.toString(), tr(e.toString().split('.').last))).toList(),
                                 )
                               ],
                             ],
@@ -872,34 +960,33 @@ class AppsPageState extends State<AppsPage> {
                 ),
               ),
 
-              // View Toggle button - only show if Grid View Plus Feature is enabled
-              if (settingsProvider.plusEnableGridView)
-                Semantics(
-                  button: true,
-                  label: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
-                  child: GestureDetector(
-                    onLongPress: () {
-                      HapticFeedback.heavyImpact();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsPage(initialTab: 2),
-                        ),
-                      );
+              // View Toggle button
+              Semantics(
+                button: true,
+                label: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                child: GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 2),
+                      ),
+                    );
+                  },
+                  child: IconButton(
+                    onPressed: () {
+                      settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
+                          ? ViewMode.grid
+                          : ViewMode.list;
                     },
-                    child: IconButton(
-                      onPressed: () {
-                        settingsProvider.globalViewMode = settingsProvider.globalViewMode == ViewMode.list
-                            ? ViewMode.grid
-                            : ViewMode.list;
-                      },
-                      icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
-                      tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
-                      padding: const EdgeInsets.all(12),
-                      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-                    ),
+                    icon: Icon(settingsProvider.globalViewMode == ViewMode.list ? Icons.grid_view : Icons.view_list),
+                    tooltip: settingsProvider.globalViewMode == ViewMode.list ? tr('gridView') : tr('listView'),
+                    padding: const EdgeInsets.all(12),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
                   ),
                 ),
+              ),
 
               // Mass Obtain button (Download/Update)
               if (getMassObtainFunction() != null)
@@ -931,4 +1018,33 @@ class AppsPageState extends State<AppsPage> {
       ),
     );
   }
+}
+
+class AppsFilter {
+  String nameFilter = '';
+  String authorFilter = '';
+  String idFilter = '';
+  bool includeUptodate = true;
+  bool includeNonInstalled = true;
+  Set<String> categoryFilter = {};
+  Set<String> statusFilter = {};
+  String sourceFilter = '';
+
+  AppsFilter();
+
+  Map<String, dynamic> toFormValuesMap() => {
+    'appName': nameFilter, 'author': authorFilter, 'appId': idFilter,
+    'upToDateApps': includeUptodate, 'nonInstalledApps': includeNonInstalled, 'sourceFilter': sourceFilter,
+  };
+
+  void setFormValuesFromMap(Map<String, dynamic> values) {
+    nameFilter = values['appName']!; authorFilter = values['author']!; idFilter = values['appId']!;
+    includeUptodate = values['upToDateApps']; includeNonInstalled = values['nonInstalledApps']; sourceFilter = values['sourceFilter'];
+  }
+
+  bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
+      authorFilter == other.authorFilter && nameFilter == other.nameFilter && idFilter == other.idFilter &&
+      includeUptodate == other.includeUptodate && includeNonInstalled == other.includeNonInstalled &&
+      settingsProvider.setEqual(categoryFilter, other.categoryFilter) && sourceFilter == other.sourceFilter &&
+      settingsProvider.setEqual(statusFilter, other.statusFilter);
 }
