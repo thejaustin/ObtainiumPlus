@@ -171,133 +171,51 @@ class _OnboardingPageState extends State<OnboardingPage> {
       autoScrollDuration: null, // Disable auto scroll for interaction
       
       pages: [
-        // 1. Welcome
+        // 1. What it does
         PageViewModel(
-          title: tr('welcome'),
-          body: "Obtainium allows you to install and update apps directly from their releases pages.",
+          title: "Obtainium+",
+          body: "Install and update Android apps directly from their source releases (GitHub, GitLab, F-Droid, etc.) without an app store.",
           image: Icon(Icons.download_for_offline, size: 100, color: Theme.of(context).colorScheme.primary),
           decoration: pageDecoration,
         ),
 
-        // 2. Experience Selection
+        // 2. How to add
         PageViewModel(
-          title: "Choose Your Experience",
-          body: "Obtainium+ includes enhanced features like Grid View, Animations, and more. You can toggle these anytime in Settings.",
-          image: Icon(Icons.auto_awesome, size: 100, color: Theme.of(context).colorScheme.tertiary),
+          title: "Add Apps",
+          body: "Simply paste an app's release page URL (like a GitHub repo) or use the search feature to start tracking updates.",
+          image: Icon(Icons.add_circle_outline, size: 100, color: Theme.of(context).colorScheme.secondary),
+          decoration: pageDecoration,
+        ),
+
+        // 3. Smart Settings
+        PageViewModel(
+          title: "Stay Updated",
+          body: "Enable background checks and notifications to ensure your apps are always up to date.",
+          image: Icon(Icons.sync_lock, size: 100, color: Theme.of(context).colorScheme.tertiary),
           decoration: pageDecoration,
           footer: Consumer<SettingsProvider>(
             builder: (context, settings, _) {
               return Column(
                 children: [
                   SwitchListTile.adaptive(
-                    title: const Text("Enable Obtainium+ Enhancements", style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Text("Recommended for most users"),
-                    value: settings.enableAllPlusFeatures,
-                    onChanged: (val) => settings.enableAllPlusFeatures = val,
-                    secondary: const Icon(Icons.stars),
+                    title: const Text("Automatic Background Checks"),
+                    subtitle: const Text("Check for updates while the app is closed"),
+                    value: settings.updateInterval > 0,
+                    onChanged: (val) {
+                      settings.updateInterval = val ? 360 : 0;
+                      setState(() {});
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    settings.enableAllPlusFeatures 
-                      ? "Enhanced Experience Enabled" 
-                      : "Standard Obtainium Experience",
-                    style: TextStyle(
-                      color: settings.enableAllPlusFeatures ? Colors.green : Colors.grey,
-                      fontWeight: FontWeight.bold
-                    ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: _requestNotificationPermission,
+                    icon: const Icon(Icons.notifications),
+                    label: const Text("Allow Notifications"),
                   ),
                 ],
               );
             }
           ),
-        ),
-
-        // 3. Quick Start (New)
-        PageViewModel(
-          title: "Quick Start",
-          body: "Add Obtainium+ to your library to keep it updated automatically.",
-          image: Icon(Icons.rocket_launch, size: 100, color: Theme.of(context).colorScheme.primaryContainer),
-          decoration: pageDecoration,
-          footer: Column(
-            children: [
-              CheckboxListTile(
-                value: _addObtainiumPlus,
-                onChanged: (val) => setState(() => _addObtainiumPlus = val ?? true),
-                title: const Text("Add Obtainium+"),
-                subtitle: const Text("Self-update from GitHub"),
-                secondary: const Icon(Icons.add_to_home_screen),
-                contentPadding: EdgeInsets.zero,
-              ),
-              if (_addObtainiumPlus)
-                CheckboxListTile(
-                  value: _pinObtainiumPlus,
-                  onChanged: (val) => setState(() => _pinObtainiumPlus = val ?? false),
-                  title: const Text("Pin to top"),
-                  subtitle: const Text("Keep it accessible"),
-                  secondary: const Icon(Icons.push_pin),
-                  contentPadding: const EdgeInsets.only(left: 16.0),
-                  dense: true,
-                ),
-            ],
-          ),
-        ),
-
-        // 4. Permissions (Notifications & Install)
-        PageViewModel(
-          title: "Permissions",
-          body: "Obtainium needs permissions to notify you about updates and to install apps.",
-          image: Icon(Icons.security, size: 100, color: Theme.of(context).colorScheme.secondary),
-          decoration: pageDecoration,
-          footer: Column(
-            children: [
-              ElevatedButton.icon(
-                onPressed: _requestNotificationPermission,
-                icon: const Icon(Icons.notifications),
-                label: const Text("Allow Notifications"),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _requestInstallPermission,
-                icon: const Icon(Icons.install_mobile),
-                label: Text(tr('installUnknownApps')),
-              ),
-            ],
-          ),
-        ),
-
-        // 5. Device Specific (Samsung/Xiaomi)
-        if (_isSamsung || _isXiaomi)
-          PageViewModel(
-            title: tr('troubleshootingAndSystem'),
-            body: _isSamsung 
-                ? tr('samsungUsageAccessMessage') 
-                : tr('xiaomiTroubleshootingDescription'),
-            image: Icon(Icons.build, size: 100, color: Theme.of(context).colorScheme.tertiary),
-            decoration: pageDecoration,
-            footer: Column(
-              children: [
-                if (_isSamsung)
-                  ElevatedButton.icon(
-                    onPressed: _openUsageAccess,
-                    icon: const Icon(Icons.insights),
-                    label: Text(tr('usageAccessSettings')),
-                  ),
-                if (_isXiaomi)
-                  ElevatedButton.icon(
-                    onPressed: _openBatteryOptimization,
-                    icon: const Icon(Icons.battery_saver),
-                    label: Text(tr('batteryOptimizationSettings')),
-                  ),
-              ],
-            ),
-          ),
-
-        // 6. Ready
-        PageViewModel(
-          title: "You're All Set!",
-          body: "You can change these settings later in the 'Troubleshooting' section.",
-          image: Icon(Icons.check_circle, size: 100, color: Colors.green),
-          decoration: pageDecoration,
         ),
       ],
       onDone: _finishOnboarding,
