@@ -17,12 +17,13 @@ import 'package:obtainium/utils/version_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-class GitHub extends AppSource {
-  GitHub({hostChanged = false}) {
+import 'package:obtainium/app_sources/git_source.dart';
+
+class GitHub extends GitSource {
+  GitHub({bool hostChanged = false}) : super(hostChanged: hostChanged) {
     hosts = ['github.com'];
     appIdInferIsOptional = true;
     showReleaseDateAsVersionToggle = true;
-    this.hostChanged = hostChanged;
     allowIncludeZips = true;
 
     sourceConfigSettingFormItems = [
@@ -269,19 +270,6 @@ class GitHub extends AppSource {
   }
 
   @override
-  String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
-    RegExp standardUrlRegEx = RegExp(
-      '^https?://(www\\.)?${getSourceRegex(hosts)}/[^/]+/[^/]+',
-      caseSensitive: false,
-    );
-    RegExpMatch? match = standardUrlRegEx.firstMatch(url);
-    if (match == null) {
-      throw InvalidURLError(name);
-    }
-    return match.group(0)!;
-  }
-
-  @override
   Future<Map<String, String>?> getRequestHeaders(
     Map<String, dynamic> additionalSettings,
     String url, {
@@ -370,10 +358,6 @@ class GitHub extends AppSource {
 
     return '${await getAPIHost(additionalSettings)}/repos$userRepoPath';
   }
-
-  @override
-  String? changeLogPageFromStandardUrl(String standardUrl) =>
-      '$standardUrl/releases';
 
   Future<APKDetails> getLatestAPKDetailsCommon(
     String requestUrl,

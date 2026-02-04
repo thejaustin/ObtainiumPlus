@@ -24,7 +24,7 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 import 'package:easy_localization/src/localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/services/app_update_service.dart';
-import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/background_service.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -65,86 +65,8 @@ var fdroid = false;
 
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 
-Future<void> loadTranslations() async {
-  // See easy_localization/issues/210
-  await EasyLocalizationController.initEasyLocation();
-  var s = SettingsProvider();
-  await s.initializeSettings();
-  var forceLocale = s.forcedLocale;
-  final controller = EasyLocalizationController(
-    saveLocale: true,
-    forceLocale: forceLocale,
-    fallbackLocale: fallbackLocale,
-    supportedLocales: supportedLocales.map((e) => e.key).toList(),
-    assetLoader: const RootBundleAssetLoader(),
-    useOnlyLangCode: false,
-    useFallbackTranslations: true,
-    path: localeDir,
-    onLoadError: (FlutterError e) {
-      throw e;
-    },
-  );
-  await controller.loadTranslations();
-  Localization.load(
-    controller.locale,
-    translations: controller.translations,
-    fallbackTranslations: controller.fallbackTranslations,
-  );
-}
-
-@pragma('vm:entry-point')
-void backgroundFetchHeadlessTask(HeadlessTask task) async {
-  String taskId = task.taskId;
-  bool isTimeout = task.timeout;
-  if (isTimeout) {
-    print('BG update task timed out.');
-    BackgroundFetch.finish(taskId);
-    return;
-  }
-  await bgUpdateCheck(taskId, null);
-  BackgroundFetch.finish(taskId);
-}
-
-@pragma('vm:entry-point')
-void startCallback() {
-  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
-}
-
-class MyTaskHandler extends TaskHandler {
-  static const String incrementCountCommand = 'incrementCount';
-
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    print('onStart(starter: ${starter.name})');
-    bgUpdateCheck('bg_check', null);
-  }
-
-  @override
-  void onRepeatEvent(DateTime timestamp) {
-    bgUpdateCheck('bg_check', null);
-  }
-
-  @override
-  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
-    print('Foreground service onDestroy(isTimeout: $isTimeout)');
-  }
-
-  @override
-  void onReceiveData(Object data) {}
-}
-
-String? _startupError;
-String? _startupStackTrace;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Global error handler to catch uncaught errors
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    _startupError = details.exceptionAsString();
-    _startupStackTrace = details.stack?.toString();
-  };
 
   try {
     ByteData data = await PlatformAssetBundle().load(
@@ -185,13 +107,13 @@ void main() async {
         ),
       ),
     );
-    BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+    BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
   } catch (e, stackTrace) {
-    _startupError = e.toString();
-    _startupStackTrace = stackTrace.toString();
     runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
   }
 }
+
+Future<void> loadTranslations() async {
 
 /// Error display app shown when startup fails
 class ErrorApp extends StatelessWidget {
@@ -376,66 +298,8 @@ class _ObtainiumState extends State<Obtainium> {
     }
   }
 
-  void initForegroundService() {
-    // ignore: invalid_use_of_visible_for_testing_member
-    if (!FlutterForegroundTask.isInitialized) {
-      FlutterForegroundTask.init(
-        androidNotificationOptions: AndroidNotificationOptions(
-          channelId: 'bg_update',
-          channelName: tr('foregroundService'),
-          channelDescription: tr('foregroundService'),
-          onlyAlertOnce: true,
-        ),
-        iosNotificationOptions: const IOSNotificationOptions(
-          showNotification: false,
-          playSound: false,
-        ),
-        foregroundTaskOptions: ForegroundTaskOptions(
-          eventAction: ForegroundTaskEventAction.repeat(AppConstants.defaultUpdateIntervalMs),
-          autoRunOnBoot: true,
-          autoRunOnMyPackageReplaced: true,
-          allowWakeLock: true,
-          allowWifiLock: true,
-        ),
-      );
-    }
-  }
-
-  Future<ServiceRequestResult?> startForegroundService(bool restart) async {
-    initForegroundService();
-    if (await FlutterForegroundTask.isRunningService) {
-      if (restart) {
-        return FlutterForegroundTask.restartService();
-      }
-    } else {
-      return FlutterForegroundTask.startService(
-        serviceTypes: [ForegroundServiceTypes.specialUse],
-        serviceId: AppConstants.foregroundServiceId,
-        notificationTitle: tr('foregroundService'),
-        notificationText: tr('fgServiceNotice'),
-        notificationIcon: NotificationIcon(
-          metaDataName: 'app.obtainiumplus.service.NOTIFICATION_ICON',
-        ),
-        callback: startCallback,
-      );
-    }
-    return null;
-  }
-
-  stopForegroundService() async {
-    if (await FlutterForegroundTask.isRunningService) {
-      return FlutterForegroundTask.stopService();
-    }
-  }
-
-  // void onReceiveForegroundServiceData(Object data) {
-  //   print('onReceiveTaskData: $data');
-  // }
-
   @override
   void dispose() {
-    // Remove a callback to receive data sent from the TaskHandler.
-    // FlutterForegroundTask.removeTaskDataCallback(onReceiveForegroundServiceData);
     super.dispose();
   }
 
@@ -471,14 +335,14 @@ class _ObtainiumState extends State<Obtainium> {
     LogsProvider logs = context.read<LogsProvider>();
     NotificationsProvider notifs = context.read<NotificationsProvider>();
     if (settingsProvider.updateInterval == 0) {
-      stopForegroundService();
+      BackgroundService.stopForegroundService();
       BackgroundFetch.stop();
     } else {
       if (settingsProvider.useFGService) {
         BackgroundFetch.stop();
-        startForegroundService(false);
+        BackgroundService.startForegroundService(false);
       } else {
-        stopForegroundService();
+        BackgroundService.stopForegroundService();
         BackgroundFetch.start();
       }
     }
