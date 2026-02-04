@@ -25,8 +25,6 @@ import 'package:easy_localization/src/localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
-import 'package:obtainium/utils/router.dart';
-import 'package:obtainium/providers/theme_settings_provider.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -65,7 +63,7 @@ const fallbackLocale = Locale('en');
 const localeDir = 'assets/translations';
 var fdroid = false;
 
-final globalNavigatorKey = rootNavigatorKey;
+final globalNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> loadTranslations() async {
   // See easy_localization/issues/210
@@ -175,7 +173,6 @@ void main() async {
         providers: [
           ChangeNotifierProvider(create: (context) => AppsProvider()),
           ChangeNotifierProvider(create: (context) => SettingsProvider()),
-          ChangeNotifierProvider(create: (context) => ThemeSettingsProvider()),
           Provider(create: (context) => np),
           Provider(create: (context) => LogsProvider()),
         ],
@@ -470,7 +467,6 @@ class _ObtainiumState extends State<Obtainium> {
   @override
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
-    ThemeSettingsProvider themeProvider = context.watch<ThemeSettingsProvider>();
     AppsProvider appsProvider = context.read<AppsProvider>();
     LogsProvider logs = context.read<LogsProvider>();
     NotificationsProvider notifs = context.read<NotificationsProvider>();
@@ -493,8 +489,7 @@ class _ObtainiumState extends State<Obtainium> {
       if (isFirstRun) {
         logs.add('This is the first ever run of Obtainium.');
         // If this is the first run, add Obtainium to the Apps list
-        // MOVED TO ONBOARDING PAGE
-        /*if (!fdroid) {
+        if (!fdroid) {
           AppInstallService.getInstalledInfo(obtainiumId)
               .then((value) {
                 if (value?.versionName != null) {
@@ -522,7 +517,7 @@ class _ObtainiumState extends State<Obtainium> {
               .catchError((err) {
                 print(err);
               });
-        }*/
+        }
       }
       if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
           (settingsProvider.forcedLocale == null &&
@@ -543,8 +538,8 @@ class _ObtainiumState extends State<Obtainium> {
           ColorScheme darkColorScheme;
           if (lightDynamic != null &&
               darkDynamic != null &&
-              themeProvider.useMaterialYou) {
-            if (themeProvider.matchSystemMaterialStyle) {
+              settingsProvider.useMaterialYou) {
+            if (settingsProvider.matchSystemMaterialStyle) {
               // Match system's complete Material You theme (colors + style)
               lightColorScheme = lightDynamic.harmonized();
               darkColorScheme = darkDynamic.harmonized();
@@ -552,29 +547,29 @@ class _ObtainiumState extends State<Obtainium> {
               // Use system color as seed but apply custom selected variant
               lightColorScheme = ColorScheme.fromSeed(
                 seedColor: lightDynamic.primary,
-                dynamicSchemeVariant: themeProvider.themeVariant,
+                dynamicSchemeVariant: settingsProvider.themeVariant,
               ).harmonized();
               darkColorScheme = ColorScheme.fromSeed(
                 seedColor: darkDynamic.primary,
                 brightness: Brightness.dark,
-                dynamicSchemeVariant: themeProvider.themeVariant,
+                dynamicSchemeVariant: settingsProvider.themeVariant,
               ).harmonized();
             }
           } else {
             // Use custom color with selected variant
             lightColorScheme = ColorScheme.fromSeed(
-              seedColor: themeProvider.themeColor,
-              dynamicSchemeVariant: themeProvider.themeVariant,
+              seedColor: settingsProvider.themeColor,
+              dynamicSchemeVariant: settingsProvider.themeVariant,
             );
             darkColorScheme = ColorScheme.fromSeed(
-              seedColor: themeProvider.themeColor,
+              seedColor: settingsProvider.themeColor,
               brightness: Brightness.dark,
-              dynamicSchemeVariant: themeProvider.themeVariant,
+              dynamicSchemeVariant: settingsProvider.themeVariant,
             );
           }
 
           // set the background and surface colors to pure black in the amoled theme
-          if (themeProvider.useBlackTheme) {
+          if (settingsProvider.useBlackTheme) {
             darkColorScheme = darkColorScheme
                 .copyWith(
                   surface: Colors.black,
@@ -585,27 +580,34 @@ class _ObtainiumState extends State<Obtainium> {
                 .harmonized();
           }
 
-          if (themeProvider.useSystemFont) NativeFeatures.loadSystemFont();
+          if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();
 
-          return MaterialApp.router(
+          return MaterialApp(
             title: 'Obtainium',
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            routerConfig: router,
+            navigatorKey: globalNavigatorKey,
             debugShowCheckedModeBanner: false,
             theme: ThemeBuilder.buildTheme(
-              colorScheme: themeProvider.theme == ThemeSettings.dark
+              colorScheme: settingsProvider.theme == ThemeSettings.dark
                   ? darkColorScheme
                   : lightColorScheme,
-              useSystemFont: themeProvider.useSystemFont,
+              useSystemFont: settingsProvider.useSystemFont,
             ),
             darkTheme: ThemeBuilder.buildTheme(
-              colorScheme: themeProvider.theme == ThemeSettings.light
+              colorScheme: settingsProvider.theme == ThemeSettings.light
                   ? lightColorScheme
                   : darkColorScheme,
-              useSystemFont: themeProvider.useSystemFont,
+              useSystemFont: settingsProvider.useSystemFont,
             ),
+            home: Shortcuts(
+                shortcuts: <LogicalKeySet, Intent>{
+                  LogicalKeySet(LogicalKeyboardKey.select):
+                      const ActivateIntent(),
+                },
+                child: const HomePage(),
+              ),
           );
         },
       ),

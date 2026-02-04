@@ -27,56 +27,25 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
-    // Installation group
-    List<Widget> installationChildren = [
+    List<Widget> children = [
+      if (_matches(tr('removeOnExternalUninstall'))) _buildRemoveOnExternalUninstallToggle(context),
+      if (_matches(tr('beforeNewInstallsShareToAppVerifier'))) _buildAppVerifierToggle(context),
       if (_matches(tr('useShizuku'))) _buildUseShizukuToggle(context),
       if (_matches(tr('shizukuPretendToBeGooglePlay'))) _buildShizukuPretendToBeGooglePlayToggle(context),
-      if (_matches(tr('beforeNewInstallsShareToAppVerifier'))) _buildAppVerifierToggle(context),
-      if (_matches(tr('removeOnExternalUninstall'))) _buildRemoveOnExternalUninstallToggle(context),
-    ];
-
-    // Warnings group
-    List<Widget> warningsChildren = [
       if (_matches(tr('dontShowTrackOnlyWarnings'))) _buildHideTrackOnlyWarningToggle(context),
       if (_matches(tr('dontShowAPKOriginWarnings'))) _buildHideAPKOriginWarningToggle(context),
-    ];
-
-    // Interaction group
-    List<Widget> interactionChildren = [
+      if (_matches(tr('enableDeepLogging'))) _buildDeepLoggingToggle(context),
       if (_matches(tr('enableSwipeGestures'))) _buildEnableSwipeGesturesToggle(context),
       if (_matches(tr('enableUndoForAppRemoval'))) _buildEnableUndoForAppRemovalToggle(context),
       if (_matches(tr('enableContextualTips'))) _buildEnableContextualTipsToggle(context),
-      if (Provider.of<SettingsProvider>(context).plusEnableHapticFeedback && _matches(tr('enableHapticFeedback'))) _buildEnableHapticFeedbackToggle(context),
+      if (_matches(tr('enableHapticFeedback'))) _buildEnableHapticFeedbackToggle(context),
     ];
 
-    // Debugging group
-    List<Widget> debuggingChildren = [
-      if (_matches(tr('enableDeepLogging'))) _buildDeepLoggingToggle(context),
-    ];
+    if (children.every((w) => w is SizedBox && w.child == null)) return const SizedBox.shrink();
 
-    return Column(
-      children: [
-        if (installationChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('installation') ?? 'Installation',
-            children: installationChildren,
-          ),
-        if (warningsChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('warnings') ?? 'Warnings',
-            children: warningsChildren,
-          ),
-        if (interactionChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('interaction') ?? 'Interaction',
-            children: interactionChildren,
-          ),
-        if (debuggingChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('debugging') ?? 'Debugging',
-            children: debuggingChildren,
-          ),
-      ],
+    return SettingsGroup(
+      title: isSearching ? null : tr('advanced'),
+      children: children,
     );
   }
 
@@ -98,7 +67,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.auto_delete_outlined),
+          secondary: const Icon(Icons.delete_sweep_outlined),
           title: Text(tr('removeOnExternalUninstall'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.removeOnExternalUninstall,
           onChanged: (value) => settings.removeOnExternalUninstall = value,
@@ -111,7 +80,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.shield_outlined),
+          secondary: const Icon(Icons.verified_user_outlined),
           title: Text(tr('beforeNewInstallsShareToAppVerifier'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.beforeNewInstallsShareToAppVerifier,
           onChanged: (value) => settings.beforeNewInstallsShareToAppVerifier = value,
@@ -159,7 +128,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.visibility_off_outlined),
+          secondary: const Icon(Icons.report_off_outlined),
           title: Text(tr('dontShowTrackOnlyWarnings'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.hideTrackOnlyWarning,
           onChanged: (value) => settings.hideTrackOnlyWarning = value,
@@ -172,7 +141,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.gpp_maybe_outlined),
+          secondary: const Icon(Icons.security_outlined),
           title: Text(tr('dontShowAPKOriginWarnings'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.hideAPKOriginWarning,
           onChanged: (value) => settings.hideAPKOriginWarning = value,
@@ -224,7 +193,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.edgesensor_high_outlined),
+          secondary: const Icon(Icons.vibration_outlined),
           title: Text(tr('enableHapticFeedback'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.enableHapticFeedback,
           onChanged: (value) => settings.enableHapticFeedback = value,

@@ -679,7 +679,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                                     as Map<
                                                       String,
                                                       MapEntry<int, bool>
-                                                    >)[e2.key]?.key ?? 0,
+                                                    >)[e2.key]!
+                                                .key,
                                             value,
                                           );
                                           if ((widget.items[r][e]
@@ -703,8 +704,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                                           as Map<
                                                             String,
                                                             MapEntry<int, bool>
-                                                          >)[key]?.key ?? 0,
-                                                      false,
+                                                          >)[key]!
+                                                      .key,
+                                                  false,
                                                 );
                                               }
                                             }
