@@ -34,6 +34,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
 
+import 'package:obtainium/models/apps_filter.dart';
+import 'package:obtainium/models/settings_enums.dart';
+
 class AppsPage extends StatefulWidget {
   const AppsPage({super.key, this.initialFilter});
 
@@ -1020,31 +1023,4 @@ class AppsPageState extends State<AppsPage> {
   }
 }
 
-class AppsFilter {
-  String nameFilter = '';
-  String authorFilter = '';
-  String idFilter = '';
-  bool includeUptodate = true;
-  bool includeNonInstalled = true;
-  Set<String> categoryFilter = {};
-  Set<String> statusFilter = {};
-  String sourceFilter = '';
 
-  AppsFilter();
-
-  Map<String, dynamic> toFormValuesMap() => {
-    'appName': nameFilter, 'author': authorFilter, 'appId': idFilter,
-    'upToDateApps': includeUptodate, 'nonInstalledApps': includeNonInstalled, 'sourceFilter': sourceFilter,
-  };
-
-  void setFormValuesFromMap(Map<String, dynamic> values) {
-    nameFilter = values['appName']!; authorFilter = values['author']!; idFilter = values['appId']!;
-    includeUptodate = values['upToDateApps']; includeNonInstalled = values['nonInstalledApps']; sourceFilter = values['sourceFilter'];
-  }
-
-  bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
-      authorFilter == other.authorFilter && nameFilter == other.nameFilter && idFilter == other.idFilter &&
-      includeUptodate == other.includeUptodate && includeNonInstalled == other.includeNonInstalled &&
-      settingsProvider.setEqual(categoryFilter, other.categoryFilter) && sourceFilter == other.sourceFilter &&
-      settingsProvider.setEqual(statusFilter, other.statusFilter);
-}

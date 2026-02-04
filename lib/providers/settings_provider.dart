@@ -126,6 +126,25 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  List<String> get bottomTabs {
+    return prefs?.getStringList('bottomTabs') ?? ['apps', 'add', 'updates', 'settings'];
+  }
+
+  set bottomTabs(List<String> bottomTabs) {
+    prefs?.setStringList('bottomTabs', bottomTabs);
+    notifyListeners();
+  }
+
+  AppBarStyle getAppBarStyleForPage(String? pageId) {
+    if (pageId != null) {
+        int? styleIndex = prefs?.getInt('appBarStyle_$pageId');
+        if (styleIndex != null && styleIndex >= 0 && styleIndex < AppBarStyle.values.length) {
+            return AppBarStyle.values[styleIndex];
+        }
+    }
+    return AppBarStyle.large;
+  }
+
   ThemeSettings get theme {
     return ThemeSettings.values[prefs?.getInt('theme') ??
         ThemeSettings.system.index];
