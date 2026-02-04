@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
