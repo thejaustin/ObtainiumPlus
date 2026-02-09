@@ -546,17 +546,6 @@ class AppsPageState extends State<AppsPage> {
               icon: const Icon(Icons.help_outline),
               tooltip: tr('help'),
             ),
-          // Add settings icon as well
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
-            },
-            icon: const Icon(Icons.settings),
-            tooltip: tr('settings'),
-          ),
         ],
       ),
       body: RefreshIndicator(
@@ -622,33 +611,11 @@ class AppsPageState extends State<AppsPage> {
                   ],
                 );
 
-                // Conditionally wrap with GestureDetector based on settings
-                if (settingsProvider.enableSwipeGestures) {
-                  return GestureDetector(
-                    onPanUpdate: (details) {
-                      // Handle swipe gestures for additional functionality
-                      if (details.delta.dx > 10) { // Swipe right
-                        // Could implement pull-out menu or other functionality
-                      } else if (details.delta.dx < -10) { // Swipe left
-                        // Could implement quick actions menu
-                      }
-                    },
-                    child: scrollView,
-                  );
-                } else {
-                  return scrollView;
-                }
+                return scrollView;
               },
             ),
           ),
         ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          CommandCenter.show(context);
-        },
-        child: const Icon(Icons.search),
-        tooltip: tr('searchOrPasteUrl'),
-      ),
       bottomNavigationBar: appsProvider.apps.isEmpty
           ? null
           : _buildBottomNavigationBar(

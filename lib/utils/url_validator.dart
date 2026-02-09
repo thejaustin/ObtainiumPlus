@@ -1,8 +1,11 @@
 import 'dart:core';
+import 'package:obtainium/providers/logs_provider.dart';
 
 /// Security utility for validating and sanitizing URLs
 class URLValidator {
   URLValidator._();
+
+  static final LogsProvider _logs = LogsProvider();
 
   /// List of allowed deep link hosts for Obtainium
   static const List<String> _allowedDeepLinkHosts = [
@@ -25,13 +28,13 @@ class URLValidator {
   static bool isValidDeepLink(Uri uri) {
     // Check scheme
     if (uri.scheme.toLowerCase() != _deepLinkScheme) {
-      print('⚠️ SECURITY: Invalid deep link scheme: ${uri.scheme}');
+      _logs.add('SECURITY: Invalid deep link scheme: ${uri.scheme}');
       return false;
     }
 
     // Check host is whitelisted
     if (!_allowedDeepLinkHosts.contains(uri.host.toLowerCase())) {
-      print('⚠️ SECURITY: Unauthorized deep link host: ${uri.host}');
+      _logs.add('SECURITY: Unauthorized deep link host: ${uri.host}');
       return false;
     }
 
@@ -46,19 +49,19 @@ class URLValidator {
 
       // Check scheme is allowed
       if (!_allowedSourceSchemes.contains(uri.scheme.toLowerCase())) {
-        print('⚠️ SECURITY: Disallowed URL scheme: ${uri.scheme}');
+        _logs.add('SECURITY: Disallowed URL scheme: ${uri.scheme}');
         return false;
       }
 
       // Check for obvious malicious patterns
       if (_containsSuspiciousPatterns(url)) {
-        print('⚠️ SECURITY: URL contains suspicious patterns');
+        _logs.add('SECURITY: URL contains suspicious patterns');
         return false;
       }
 
       return true;
     } catch (e) {
-      print('⚠️ SECURITY: Invalid URL format: $e');
+      _logs.add('SECURITY: Invalid URL format: $e');
       return false;
     }
   }
@@ -106,7 +109,7 @@ class URLValidator {
     // Check length (prevent DoS via huge JSON)
     if (jsonString.length > 1000000) {
       // 1MB limit
-      print('⚠️ SECURITY: JSON input exceeds size limit');
+      _logs.add('SECURITY: JSON input exceeds size limit');
       return false;
     }
 
