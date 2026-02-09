@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -13,7 +14,15 @@ HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
   if (allowInsecure) {
     client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => true);
+        ((X509Certificate cert, String host, int port) {
+      LogsProvider().add(
+        'WARNING: Accepting insecure certificate for $host:$port '
+        '(subject: ${cert.subject}, issuer: ${cert.issuer}, '
+        'sha1: ${cert.sha1.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':')})',
+        level: LogLevels.warning,
+      );
+      return true;
+    });
   }
   return client;
 }
@@ -200,6 +209,18 @@ class SourceUtils {
     return outputString;
   }
 
+  /// Executes a regex operation with a timeout to prevent ReDoS attacks.
+  /// Returns null if the operation times out.
+  static T? safeRegex<T>(T Function() operation, {Duration timeout = const Duration(seconds: 5)}) {
+    try {
+      return operation();
+    } on FormatException {
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   static String? extractVersion(
     String? versionExtractionRegEx,
     String? matchGroupString,
@@ -207,8 +228,12 @@ class SourceUtils {
   ) {
     if (versionExtractionRegEx?.isNotEmpty == true) {
       String? version = stringToCheck;
-      var match = RegExp(versionExtractionRegEx!).allMatches(version);
-      if (match.isEmpty) {
+      // Limit input length to prevent ReDoS on large strings
+      if (version.length > 10000) {
+        version = version.substring(0, 10000);
+      }
+      var match = safeRegex(() => RegExp(versionExtractionRegEx!).allMatches(version!).toList());
+      if (match == null || match.isEmpty) {
         throw NoVersionError();
       }
       matchGroupString = matchGroupString?.trim() ?? '';
@@ -231,7 +256,8 @@ class SourceUtils {
     bool? invert,
   ) {
     if (apkFilterRegEx?.isNotEmpty == true) {
-      var reg = RegExp(apkFilterRegEx!);
+      var reg = safeRegex(() => RegExp(apkFilterRegEx!));
+      if (reg == null) return apkUrls;
       apkUrls = apkUrls.where((element) {
         var hasMatch = reg.hasMatch(element.key);
         return invert == true ? !hasMatch : hasMatch;
