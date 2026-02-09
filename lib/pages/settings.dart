@@ -33,6 +33,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
 import 'package:obtainium/pages/legacy_settings.dart';
+import 'package:obtainium/pages/statistics.dart';
 
 // Global variable for cached device info
 AndroidDeviceInfo? _cachedDeviceInfo;
@@ -490,6 +491,12 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               icon: Icons.import_export_outlined,
                               title: tr('backupAndImportExport'),
                               destination: const ImportExportPage(),
+                            ),
+                            _buildSubMenuTile(
+                              context,
+                              icon: Icons.bar_chart_outlined,
+                              title: tr('statistics'),
+                              destination: const StatisticsPage(),
                             ),
                             _buildSubMenuTile(
                               context,

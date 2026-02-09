@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:animations/animations.dart';
 import 'package:app_links/app_links.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:obtainium/utils/device_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,6 +57,7 @@ class HomePageState extends State<HomePage> {
   late Widget settingsPage;
   late Widget importExportPage;
   late Map<String, NavigationPageItem> allPages;
+  late List<NavigationPageItem> activePages;
 
   @override
   void initState() {
@@ -138,12 +139,7 @@ class HomePageState extends State<HomePage> {
 
   Future<void> _showXiaomiSetupDialogIfNeeded(BuildContext context, SettingsProvider sp) async {
     try {
-      final info = await DeviceInfoPlugin().androidInfo;
-      final manufacturer = info.manufacturer?.toLowerCase() ?? '';
-      final brand = info.brand?.toLowerCase() ?? '';
-      final isXiaomi = ['xiaomi', 'redmi', 'poco'].any(
-        (x) => manufacturer.contains(x) || brand.contains(x),
-      );
+      final isXiaomi = await DeviceUtils.isXiaomiDevice();
 
       if (!isXiaomi) return;
       if (!context.mounted) return;
@@ -437,13 +433,18 @@ class HomePageState extends State<HomePage> {
       'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
     };
 
-    // Fixed 3-tab structure as per ObtainiumPlus UX Spec
-    // Apps, Updates, Settings
-    activePages = [
-      allPages['apps']!,
-      allPages['updates']!,
-      allPages['settings']!,
-    ];
+    // Build active pages from user's configured tab order
+    activePages = settingsProvider.bottomTabs
+        .where((id) => allPages.containsKey(id))
+        .map((id) => allPages[id]!)
+        .toList();
+    // Ensure at least apps and settings are always present
+    if (!activePages.any((p) => p.id == 'apps')) {
+      activePages.insert(0, allPages['apps']!);
+    }
+    if (!activePages.any((p) => p.id == 'settings')) {
+      activePages.add(allPages['settings']!);
+    }
 
     // Determine current index
     int currentIndex = selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;

@@ -12,6 +12,7 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -114,6 +115,9 @@ void main() async {
 }
 
 Future<void> loadTranslations() async {
+  // Ensure localization is initialized - called during startup
+  await EasyLocalization.ensureInitialized();
+}
 
 /// Error display app shown when startup fails
 class ErrorApp extends StatelessWidget {
@@ -259,19 +263,6 @@ class _ObtainiumState extends State<Obtainium> {
     );
   }
 
-  Future<bool> _isXiaomiDevice() async {
-    try {
-      final info = await DeviceInfoPlugin().androidInfo;
-      final manufacturer = info.manufacturer?.toLowerCase() ?? '';
-      final brand = info.brand?.toLowerCase() ?? '';
-      return ['xiaomi', 'redmi', 'poco'].any(
-        (x) => manufacturer.contains(x) || brand.contains(x),
-      );
-    } catch (e) {
-      return false;
-    }
-  }
-
   Future<void> requestNonOptionalPermissions() async {
     final NotificationPermission notificationPermission =
         await FlutterForegroundTask.checkNotificationPermission();
@@ -279,8 +270,8 @@ class _ObtainiumState extends State<Obtainium> {
       await FlutterForegroundTask.requestNotificationPermission();
     }
 
-    // Check if this is a Xiaomi device
-    final isXiaomi = await _isXiaomiDevice();
+    // Check if this is a Xiaomi device (uses shared DeviceUtils)
+    final isXiaomi = await DeviceUtils.isXiaomiDevice();
 
     if (isXiaomi) {
       // Skip standard battery optimization on Xiaomi - it causes issues
