@@ -91,13 +91,7 @@ class AppsProvider with ChangeNotifier {
   late Directory iconsCacheDir;
   late SettingsProvider settingsProvider = SettingsProvider();
 
-  import 'package:obtainium/utils/comparable_utils.dart';
-import 'package:obtainium/models/apps_filter.dart';
-import 'package:obtainium/models/settings_enums.dart';
-
-// ... (other imports)
-
-// Optimized: Return values directly unless deep copy is explicitly needed
+  // Optimized: Return values directly unless deep copy is explicitly needed
   Iterable<AppInMemory> getAppValues({bool deepCopy = true}) => 
       deepCopy ? apps.values.map((a) => a.deepCopy()) : apps.values;
 
@@ -770,9 +764,9 @@ import 'package:obtainium/models/settings_enums.dart';
       notifyListeners();
       export(isAuto: true);
 
-      // Start timer to clean up old removed apps after 30 seconds
+      // Start timer to clean up old removed apps after 60 seconds
       _cleanupTimer?.cancel();
-      _cleanupTimer = Timer(const Duration(seconds: 30), () {
+      _cleanupTimer = Timer(const Duration(seconds: 60), () {
         _cleanupOldRemovedApps();
       });
     }
@@ -782,7 +776,7 @@ import 'package:obtainium/models/settings_enums.dart';
   void _cleanupOldRemovedApps() {
     final now = DateTime.now();
     _recentlyRemovedApps.removeWhere((removedApp) {
-      return now.difference(removedApp.removalTime).inSeconds > 30;
+      return now.difference(removedApp.removalTime).inSeconds > 60;
     });
   }
 
