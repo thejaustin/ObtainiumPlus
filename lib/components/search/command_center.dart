@@ -237,9 +237,14 @@ class _CommandCenterState extends State<CommandCenter> {
       trailing: const Icon(Icons.chevron_right, size: 16),
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => AppPage(appId: app.app.id)),
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (context) => AppPage(
+            appId: app.app.id,
+            isModal: true,
+          ),
         );
       },
     );
