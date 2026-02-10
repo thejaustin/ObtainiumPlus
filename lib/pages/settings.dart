@@ -590,10 +590,17 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         return ListTile(
           leading: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          trailing: const Icon(Icons.chevron_right, size: 20),
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => destination),
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              builder: (context) => destination,
             );
           },
         );
@@ -609,7 +616,28 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         @override
         Widget build(BuildContext context) {
           return Scaffold(
-            appBar: CustomAppBar(title: title),
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              title: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 8, bottom: 12),
+                    width: 32,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Text(title),
+                ],
+              ),
+              centerTitle: true,
+              toolbarHeight: 80,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            ),
             body: child,
           );
         }
@@ -677,48 +705,33 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
               ),
     
             Container(
-    
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-    
+              margin: const EdgeInsets.symmetric(vertical: 8.0),
               decoration: BoxDecoration(
-    
-                color: Theme.of(context).colorScheme.surfaceContainerHigh, // Changed to surfaceContainerHigh
-    
-                borderRadius: BorderRadius.circular(28.0),
-    
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(32.0),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-    
               clipBehavior: Clip.antiAlias,
-    
               child: Column(
-    
                 children: List.generate(visibleChildren.length, (index) {
-    
                   return Column(
-    
                     children: [
-    
                       visibleChildren[index],
-    
                       if (index < visibleChildren.length - 1)
-    
                         Divider(
-    
                           height: 1,
-    
-                          indent: 64, // Standard M3 indent for icons
-    
-                          endIndent: 20,
-    
+                          indent: 16,
+                          endIndent: 16,
                           color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
-    
                         ),
-    
                     ],
-    
                   );
-    
                 }),
+              ),
+            ),
     
               ),
     
