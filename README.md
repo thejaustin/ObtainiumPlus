@@ -441,6 +441,10 @@ You can also mix and match! Keep the **Grid View** but disable **Haptic Feedback
 
 ### Building from Source
 
+This project uses GitHub Actions for all builds. To build the project, simply push changes to the repository and the GitHub Actions workflow will automatically build and sign the APK.
+
+For local development, you can run the app in development mode:
+
 ```bash
 # Clone the repository
 git clone https://github.com/thejaustin/ObtainiumPlus.git
@@ -452,8 +456,6 @@ flutter pub get
 # Run in development
 flutter run
 
-# Build release APK
-flutter build apk --flavor normal
 ```
 
 ### Contributing

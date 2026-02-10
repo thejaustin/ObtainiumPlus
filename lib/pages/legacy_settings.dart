@@ -13,9 +13,8 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/providers/settings_provider.dart' hide ThemeSettings;
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -109,7 +108,6 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
   @override
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
-    ThemeSettingsProvider themeProvider = context.watch<ThemeSettingsProvider>();
     SourceProvider sourceProvider = SourceProvider();
     if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
     initUpdateIntervalInterpolator();
@@ -219,17 +217,16 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
         return ((val.data?.version.sdkInt ?? 0) >= 31)
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(child: Text(tr('useMaterialYou'))),
-                  Switch(
-                    value: themeProvider.useMaterialYou,
-                    onChanged: (value) {
-                      themeProvider.useMaterialYou = value;
-                    },
-                  ),
-                ],
-              )
-            : const SizedBox.shrink();
+                          children: [
+                            Flexible(child: Text(tr('useMaterialYou'))),
+                            Switch(
+                              value: settingsProvider.useMaterialYou,
+                              onChanged: (value) {
+                                settingsProvider.useMaterialYou = value;
+                              },
+                            ),
+                          ],
+                        )            : const SizedBox.shrink();
       },
       future: DeviceInfoPlugin().androidInfo,
     );
@@ -727,47 +724,46 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        DropdownButtonFormField(
-                          decoration: InputDecoration(labelText: tr('theme')),
-                          value: themeProvider.theme,
-                          items: [
-                            DropdownMenuItem(
-                              value: ThemeSettings.system,
-                              child: Text(tr('followSystem')),
-                            ),
-                            DropdownMenuItem(
-                              value: ThemeSettings.light,
-                              child: Text(tr('light')),
-                            ),
-                            DropdownMenuItem(
-                              value: ThemeSettings.dark,
-                              child: Text(tr('dark')),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              themeProvider.theme = value;
-                            }
-                          },
-                        ),
-                        height8,
-                        if (themeProvider.theme == ThemeSettings.system)
-                          followSystemThemeExplanation,
-                        height16,
-                        if (themeProvider.theme != ThemeSettings.light)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Flexible(child: Text(tr('useBlackTheme'))),
-                              Switch(
-                                value: themeProvider.useBlackTheme,
-                                onChanged: (value) {
-                                  themeProvider.useBlackTheme = value;
-                                },
-                              ),
-                            ],
-                          ),
-                        height8,
+                                          DropdownButtonFormField(
+                                            decoration: InputDecoration(labelText: tr('theme')),
+                                            value: settingsProvider.theme,
+                                            items: [
+                                              DropdownMenuItem(
+                                                value: ThemeSettings.system,
+                                                child: Text(tr('followSystem')),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: ThemeSettings.light,
+                                                child: Text(tr('light')),
+                                              ),
+                                              DropdownMenuItem(
+                                                value: ThemeSettings.dark,
+                                                child: Text(tr('dark')),
+                                              ),
+                                            ],
+                                            onChanged: (value) {
+                                              if (value != null) {
+                                                settingsProvider.theme = value;
+                                              }
+                                            },
+                                          ),
+                                          height8,
+                                          if (settingsProvider.theme == ThemeSettings.system)
+                                            followSystemThemeExplanation,
+                                          height16,
+                                          if (settingsProvider.theme != ThemeSettings.light)
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Flexible(child: Text(tr('useBlackTheme'))),
+                                                Switch(
+                                                  value: settingsProvider.useBlackTheme,
+                                                  onChanged: (value) {
+                                                    settingsProvider.useBlackTheme = value;
+                                                  },
+                                                ),
+                                              ],
+                                            ),                        height8,
                         useMaterialThemeSwitch,
                         if (!settingsProvider.useMaterialYou) colorPicker,
                         Row(
@@ -798,17 +794,17 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                                           ),
                                           Switch(
                                             value:
-                                                themeProvider.useSystemFont,
+                                                settingsProvider.useSystemFont,
                                             onChanged: (useSystemFont) {
                                               if (useSystemFont) {
                                                 NativeFeatures.loadSystemFont()
                                                     .then((val) {
-                                                      themeProvider
+                                                      settingsProvider
                                                               .useSystemFont =
                                                           true;
                                                     });
                                               } else {
-                                                themeProvider.useSystemFont =
+                                                settingsProvider.useSystemFont =
                                                     false;
                                               }
                                             },
