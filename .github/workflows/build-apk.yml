@@ -86,6 +86,18 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Validate Secrets
+        run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ]; then
+            echo "ERROR: Required secrets are missing for signing APK."
+            echo "Please configure the following secrets in your repository:"
+            echo "- KEYSTORE_BASE64"
+            echo "- KEYSTORE_PASSWORD"
+            echo "- KEY_PASSWORD"
+            echo "- KEY_ALIAS"
+            exit 1
+          fi
+
       - name: Setup Keystore
         run: |
           echo "Creating keystore from secret..."
@@ -93,12 +105,12 @@ jobs:
           echo "Keystore created successfully"
 
           echo "Creating key.properties file..."
-          cat > android/key.properties << EOF
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=release-keystore.jks
-          EOF
+          cat > android/key.properties <<EOF
+storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+keyPassword=${{ secrets.KEY_PASSWORD }}
+keyAlias=${{ secrets.KEY_ALIAS }}
+storeFile=release-keystore.jks
+EOF
           echo "key.properties created successfully"
 
       - name: Build APK
@@ -113,10 +125,20 @@ jobs:
             fi
           done
 
+          echo "Building split APKs by ABI (Obtainium Plus)..."
+          flutter build apk --split-per-abi --flavor normal
+
+          echo "Renaming split APKs to remove flavor suffix..."
+          for file in build/app/outputs/flutter-apk/app-*normal*-*.apk; do
+            if [ -f "$file" ]; then
+              mv "$file" "${file//-normal/}"
+            fi
+          done
+
           echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
 
-          echo "Built APK:"
+          echo "Built APKs:"
           ls -lh ./build/app/outputs/flutter-apk/
 
       - name: Generate Changelog
