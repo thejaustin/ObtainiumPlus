@@ -496,7 +496,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.bar_chart_outlined,
                               title: tr('statistics'),
-                              destination: const StatisticsPage(),
+                              destination: StatisticsPage(),
                             ),
                             _buildSubMenuTile(
                               context,
