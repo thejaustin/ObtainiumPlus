@@ -267,9 +267,14 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
           await appsProvider.saveApps([app], onlyIfExists: false);
         }
         if (app != null) {
-          Navigator.push(
-            globalNavigatorKey.currentContext ?? context,
-            MaterialPageRoute(builder: (context) => AppPage(appId: app!.id)),
+          showModalBottomSheet(
+            context: globalNavigatorKey.currentContext ?? context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            builder: (context) => AppPage(
+              appId: app!.id,
+              isModal: true,
+            ),
           );
         }
       } catch (e) {
