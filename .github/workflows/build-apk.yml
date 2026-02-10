@@ -105,12 +105,11 @@ jobs:
           echo "Keystore created successfully"
 
           echo "Creating key.properties file..."
-          cat > android/key.properties <<EOF
-storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-keyPassword=${{ secrets.KEY_PASSWORD }}
-keyAlias=${{ secrets.KEY_ALIAS }}
-storeFile=release-keystore.jks
-EOF
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release-keystore.jks\n' \
+            '${{ secrets.KEYSTORE_PASSWORD }}' \
+            '${{ secrets.KEY_PASSWORD }}' \
+            '${{ secrets.KEY_ALIAS }}' \
+            > android/key.properties
           echo "key.properties created successfully"
 
       - name: Build APK
