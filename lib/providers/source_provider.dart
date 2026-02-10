@@ -536,6 +536,9 @@ class SourceProvider {
       }
     }
     if (source == null) {
+      if (url.contains("play.google.com") || url.contains("market.android.com")) {
+        throw ObtainiumError(tr('googlePlayNotSupported'));
+      }
       throw UnsupportedURLError();
     }
     return source;
