@@ -32,6 +32,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
+import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/legacy_settings.dart';
 import 'package:obtainium/pages/statistics.dart';
 
