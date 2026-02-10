@@ -490,7 +490,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.import_export_outlined,
                               title: tr('backupAndImportExport'),
-                              destination: const ImportExportPage(),
+                              destination: ImportExportPage(),
                             ),
                             _buildSubMenuTile(
                               context,
