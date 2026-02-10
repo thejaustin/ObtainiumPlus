@@ -152,7 +152,15 @@ class CategorySections extends StatelessWidget {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
                   } else {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => AppPage(appId: app.app.id)));
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) => AppPage(
+                        appId: app.app.id,
+                        isModal: true,
+                      ),
+                    );
                   }
                 },
                 onLongPress: () => toggleAppSelected(app.app),
@@ -241,7 +249,15 @@ class CategorySections extends StatelessWidget {
             if (selectedAppIds.isNotEmpty) {
               toggleAppSelected(app.app);
             } else {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => AppPage(appId: app.app.id)));
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (context) => AppPage(
+                  appId: app.app.id,
+                  isModal: true,
+                ),
+              );
             }
           },
           onLongPress: () => toggleAppSelected(app.app),

@@ -26,10 +26,12 @@ class AppPage extends StatefulWidget {
     super.key,
     required this.appId,
     this.showOppositeOfPreferredView = false,
+    this.isModal = false,
   });
 
   final String appId;
   final bool showOppositeOfPreferredView;
+  final bool isModal;
 
   @override
   State<AppPage> createState() => _AppPageState();
@@ -872,20 +874,37 @@ class _AppPageState extends State<AppPage> {
     );
 
     return Scaffold(
-      appBar: showAppWebpageFinal ? AppBar() : null,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: showAppWebpageFinal ? (widget.isModal ? null : AppBar()) : null,
+      backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
       body: RefreshIndicator(
         child: showAppWebpageFinal
             ? getAppWebView()
             : CustomScrollView(
                 slivers: [
-                  SliverAppBar.large(
-                    leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                  if (widget.isModal)
+                    SliverToBoxAdapter(
+                      child: Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 12),
+                          width: 32,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
                     ),
+                  SliverAppBar.large(
+                    automaticallyImplyLeading: !widget.isModal,
+                    leading: widget.isModal
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
                     title: Text(app?.name ?? tr('app')),
                     surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
                     actions: [
