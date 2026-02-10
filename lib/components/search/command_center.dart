@@ -7,6 +7,11 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/pages/home.dart';
+import 'package:obtainium/pages/import_export.dart';
+import 'package:obtainium/pages/logs_page.dart';
+import 'package:obtainium/main.dart';
 import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
 
@@ -70,7 +75,7 @@ class _CommandCenterState extends State<CommandCenter> {
     });
 
     // Check if it's a URL
-    if (URLValidator.isValidURL(value)) return;
+    if (URLValidator.isValidSourceURL(value)) return;
 
     // Handle as Discovery Search
     await _runDiscoverSearch(value);
@@ -115,7 +120,7 @@ class _CommandCenterState extends State<CommandCenter> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isUrl = URLValidator.isValidURL(_query);
+    final isUrl = URLValidator.isValidSourceURL(_query);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
