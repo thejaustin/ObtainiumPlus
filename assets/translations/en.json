@@ -664,5 +664,6 @@
     "statsActivity": "Activity",
     "addedToOfflineQueue": "Offline: Added {} to update queue",
     "processingOfflineQueue": "Online: Processing {} queued updates",
-    "googlePlayNotSupported": "Direct downloads from Google Play are not supported. Please use Aurora Store or a mirror source like APKPure."
+    "googlePlayNotSupported": "Direct downloads from Google Play are not supported. Please use Aurora Store or a mirror source like APKPure.",
+    "clear": "Clear"
 }

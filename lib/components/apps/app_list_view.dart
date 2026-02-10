@@ -118,53 +118,30 @@ class AppListView extends StatelessWidget {
               }
             },
             child: RepaintBoundary(
-              child: settings.plusEnableEnhancedAnimations
-                  ? OpenContainer(
-                      tappable: false,
-                      transitionType: ContainerTransitionType.fadeThrough,
-                      openBuilder: (BuildContext context, VoidCallback _) {
-                        return AppPage(appId: app.app.id);
-                      },
-                      closedElevation: 0,
-                      closedColor: Colors.transparent,
-                      closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                        return AppListTile(
-                          appInMemory: app,
-                          isSelected: selectedAppIds.contains(app.app.id),
-                          hasUpdate: hasUpdate,
-                          onTap: () {
-                            if (selectedAppIds.isNotEmpty) {
-                              toggleAppSelected(app.app);
-                            } else {
-                              openContainer();
-                            }
-                          },
-                          onLongPress: () {
-                            toggleAppSelected(app.app);
-                          },
-                          onShowChanges: getChangeLogFn(context, app.app),
-                        );
-                      },
-                    )
-                  : AppListTile(
-                      appInMemory: app,
-                      isSelected: selectedAppIds.contains(app.app.id),
-                      hasUpdate: hasUpdate,
-                      onTap: () {
-                        if (selectedAppIds.isNotEmpty) {
-                          toggleAppSelected(app.app);
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AppPage(appId: app.app.id)),
-                          );
-                        }
-                      },
-                      onLongPress: () {
-                        toggleAppSelected(app.app);
-                      },
-                      onShowChanges: getChangeLogFn(context, app.app),
-                    ),
+              child: AppListTile(
+                appInMemory: app,
+                isSelected: selectedAppIds.contains(app.app.id),
+                hasUpdate: hasUpdate,
+                onTap: () {
+                  if (selectedAppIds.isNotEmpty) {
+                    toggleAppSelected(app.app);
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) => AppPage(
+                        appId: app.app.id,
+                        isModal: true,
+                      ),
+                    );
+                  }
+                },
+                onLongPress: () {
+                  toggleAppSelected(app.app);
+                },
+                onShowChanges: getChangeLogFn(context, app.app),
+              ),
             ),
           );
         },

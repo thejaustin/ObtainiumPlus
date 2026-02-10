@@ -56,54 +56,29 @@ class AppGridView extends StatelessWidget {
                 app.app.installedVersion != app.app.latestVersion;
 
             return RepaintBoundary(
-              child: settingsProvider.plusEnableEnhancedAnimations
-                  ? OpenContainer(
-                      tappable: false,
-                      transitionType: ContainerTransitionType.fadeThrough,
-                      openBuilder: (BuildContext context, VoidCallback _) {
-                        return AppPage(appId: app.app.id);
-                      },
-                      closedElevation: 0,
-                      closedColor: Colors.transparent,
-                      closedShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+              child: AppGridTile(
+                appInMemory: app,
+                isSelected: selectedAppIds.contains(app.app.id),
+                hasUpdate: hasUpdate,
+                onTap: () {
+                  if (selectedAppIds.isNotEmpty) {
+                    toggleAppSelected(app.app);
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) => AppPage(
+                        appId: app.app.id,
+                        isModal: true,
                       ),
-                      closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                        return AppGridTile(
-                          appInMemory: app,
-                          isSelected: selectedAppIds.contains(app.app.id),
-                          hasUpdate: hasUpdate,
-                          onTap: () {
-                            if (selectedAppIds.isNotEmpty) {
-                              toggleAppSelected(app.app);
-                            } else {
-                              openContainer();
-                            }
-                          },
-                          onLongPress: () {
-                            toggleAppSelected(app.app);
-                          },
-                        );
-                      },
-                    )
-                  : AppGridTile(
-                      appInMemory: app,
-                      isSelected: selectedAppIds.contains(app.app.id),
-                      hasUpdate: hasUpdate,
-                      onTap: () {
-                        if (selectedAppIds.isNotEmpty) {
-                          toggleAppSelected(app.app);
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AppPage(appId: app.app.id)),
-                          );
-                        }
-                      },
-                      onLongPress: () {
-                        toggleAppSelected(app.app);
-                      },
-                    ),
+                    );
+                  }
+                },
+                onLongPress: () {
+                  toggleAppSelected(app.app);
+                },
+              ),
             );
           },
           childCount: apps.length,
