@@ -501,6 +501,51 @@ class HomePageState extends State<HomePage> {
         },
         child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
+        floatingActionButton: activePages[currentIndex].id == 'apps'
+            ? FloatingActionButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) => SafeArea(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.link),
+                            title: Text(tr('appSourceURL')),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AddAppPage(initialTab: 0),
+                                ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.explore_outlined),
+                            title: Text(tr('discover')),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AddAppPage(initialTab: 1),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.add),
+              )
+            : null,
         body: PageTransitionSwitcher(
           duration: Duration(
             milliseconds: settingsProvider.disablePageTransitions
