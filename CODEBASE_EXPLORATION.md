@@ -8,9 +8,9 @@ This document contains detailed information about the Obtainium codebase structu
 
 **ALWAYS build through GitHub Actions - no local Android SDK available!**
 
-The repository has a GitHub Actions workflow at `.github/workflows/release.yml` that builds APKs:
+The repository has a GitHub Actions workflow at `.github/workflows/build-apk.yml` that builds APKs:
 - Trigger: Manual workflow dispatch (Actions tab in GitHub)
-- Builds both normal and F-Droid flavors
+- Builds normal flavor only
 - Outputs: Universal APK and split APKs (per-ABI)
 - Artifacts are uploaded and saved as draft releases
 
