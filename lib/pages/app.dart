@@ -406,7 +406,7 @@ class _AppPageState extends State<AppPage> {
       children: [
         SizedBox(height: small ? 5 : 20),
         FutureBuilder(
-          future: appsProvider.updateAppIcon(app?.app.id, ignoreCache: true),
+          future: appsProvider.updateAppIcon(app?.app.id),
           builder: (ctx, val) {
             return app?.icon != null
                 ? Row(
