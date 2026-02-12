@@ -27,12 +27,20 @@ class DiscoverPageState extends State<DiscoverPage> {
   Map<String, MapEntry<String, List<String>>> results = {};
   SourceProvider sourceProvider = SourceProvider();
   final TextEditingController _searchController = TextEditingController();
+  Map<String, Map<String, dynamic>> sourceQuerySettings = {};
 
   @override
   void initState() {
     super.initState();
     searchQuery = widget.initialQuery;
     _searchController.text = widget.initialQuery;
+    
+    // Initialize default query settings for searchable sources
+    for (var source in searchableSources) {
+      sourceQuerySettings[source.name] = getDefaultValuesFromFormItems(
+        [source.searchQuerySettingFormItems],
+      );
+    }
   }
 
   @override
@@ -59,7 +67,10 @@ class DiscoverPageState extends State<DiscoverPage> {
         searchableSources.map((source) async {
           if (settingsProvider.searchDeselected.contains(source.name)) return null;
           try {
-            final res = await source.search(searchQuery);
+            final res = await source.search(
+              searchQuery,
+              querySettings: sourceQuerySettings[source.name] ?? {},
+            );
             return MapEntry(source.name, res);
           } catch (e) {
             return null;
@@ -88,6 +99,63 @@ class DiscoverPageState extends State<DiscoverPage> {
     }
   }
 
+  void _showSearchOptions() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              title: Text(tr('searchOptions')),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: searchableSources.where((s) => s.searchQuerySettingFormItems.isNotEmpty).map((source) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            source.name,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        GeneratedForm(
+                          items: source.searchQuerySettingFormItems.map((e) {
+                            // Sync with current settings
+                            if (sourceQuerySettings[source.name]?.containsKey(e.key) ?? false) {
+                              e.defaultValue = sourceQuerySettings[source.name]![e.key];
+                            }
+                            return [e];
+                          }).toList(),
+                          onValueChanges: (values, valid, isBuilding) {
+                            if (!isBuilding) {
+                              sourceQuerySettings[source.name] = values;
+                            }
+                          },
+                        ),
+                        const Divider(),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(tr('ok')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,6 +172,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: tr('searchSomeSourcesLabel'),
+                      prefixIcon: IconButton(
+                        icon: const Icon(Icons.tune),
+                        onPressed: _showSearchOptions,
+                        tooltip: tr('searchOptions'),
+                      ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.search),
                         onPressed: runSearch,
@@ -173,13 +246,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
                         onTap: () {
-                          final homeState = context.findAncestorStateOfType<HomePageState>();
-                          if (homeState != null) {
-                            homeState.switchToPage(2);
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              final addAppKey = homeState.addAppPage.key as GlobalKey<AddAppPageState>?;
-                              addAppKey?.currentState?.linkFn(url);
-                            });
+                          final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                          if (addAppState != null) {
+                            addAppState.linkFn(url);
                           }
                         },
                         child: Padding(
@@ -227,13 +296,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                               const SizedBox(height: 8),
                               FilledButton.tonal(
                                 onPressed: () {
-                                  final homeState = context.findAncestorStateOfType<HomePageState>();
-                                  if (homeState != null) {
-                                    homeState.switchToPage(2);
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                                      final addAppKey = homeState.addAppPage.key as GlobalKey<AddAppPageState>?;
-                                      addAppKey?.currentState?.linkFn(url);
-                                    });
+                                  final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                                  if (addAppState != null) {
+                                    addAppState.linkFn(url);
                                   }
                                 },
                                 style: FilledButton.styleFrom(
