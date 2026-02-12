@@ -217,9 +217,12 @@ class HomePageState extends State<HomePage> {
 
       if (index != -1) {
         switchToPage(index);
-        // Wait for frame/state
-        while ((addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState == null) {
+        // Wait for frame/state with timeout to prevent infinite loop
+        int attempts = 0;
+        while ((addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState == null && attempts < 300) {
           await Future.delayed(const Duration(milliseconds: 10));
+          attempts++;
+          if (!mounted) return;
         }
         (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(data);
       } else {
@@ -578,7 +581,7 @@ class HomePageState extends State<HomePage> {
           elevation: 3,
           surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
           backgroundColor: Theme.of(context).colorScheme.surface,
-          shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+          shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
           indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
           animationDuration: const Duration(milliseconds: 300),
           labelBehavior: settingsProvider.navigationLabelBehavior,
@@ -615,7 +618,7 @@ class HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    super.dispose();
     _linkSubscription?.cancel();
+    super.dispose();
   }
 }
