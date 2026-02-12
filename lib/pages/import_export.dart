@@ -17,6 +17,7 @@ import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerC
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
