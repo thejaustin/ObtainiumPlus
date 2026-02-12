@@ -86,6 +86,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
         // Placeholder icon size: proportional to icon size
         double placeholderIconSize = (iconSize * 0.57).clamp(24.0, 48.0);
 
+        if (widget.appInMemory.icon == null) {
+          context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
+        }
+
         return AnimatedScale(
           scale: _isPressed ? 0.95 : 1.0,
           duration: const Duration(milliseconds: 100),

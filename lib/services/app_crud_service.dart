@@ -184,7 +184,7 @@ class AppCRUDService {
                 ),
                 ifAbsent: () => AppInMemory(app!, null, null, null),
               );
-              notifyListeners();
+              if (singleId != null) notifyListeners();
               try {
                 sp.getSource(app.url, overrideSource: app.overrideSource);
                 // Find installed info for this app (null if not installed)
@@ -216,7 +216,7 @@ class AppCRUDService {
                   ),
                   ifAbsent: () => AppInMemory(app!, null, installedInfo, null),
                 );
-                notifyListeners();
+                if (singleId != null) notifyListeners();
               } catch (e) {
                 errors.add([app!.id, app.finalName, e.toString()]);
               }
