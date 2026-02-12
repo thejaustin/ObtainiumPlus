@@ -71,6 +71,13 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       return info;
     });
     _checkBatteryStatus();
+    // Initialize settings if not already done (must NOT be called in build())
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sp = context.read<SettingsProvider>();
+      if (sp.prefs == null) {
+        sp.initializeSettings();
+      }
+    });
   }
 
   Future<void> _checkBatteryStatus() async {
@@ -101,7 +108,11 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     }
     
     SourceProvider sourceProvider = SourceProvider();
-    if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
+    if (settingsProvider.prefs == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     final bool isSearching = _searchQuery.isNotEmpty;
 
@@ -246,9 +257,6 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       }
     });
 
-        const height16 = SizedBox(height: 16);
-        const height24 = SizedBox(height: 24);
-    
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: CustomScrollView(
@@ -275,11 +283,11 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                         controller: _searchController,
                                         hintText: tr('searchSettings'),
                                         leading: const Icon(Icons.search),
-                                        elevation: MaterialStateProperty.all(0),
-                                        backgroundColor: MaterialStateProperty.all(
+                                        elevation: WidgetStateProperty.all(0),
+                                        backgroundColor: WidgetStateProperty.all(
                                           Theme.of(context).colorScheme.surfaceContainerHigh,
                                         ),
-                                        shape: MaterialStateProperty.all(
+                                        shape: WidgetStateProperty.all(
                                           const StadiumBorder(),
                                         ),
                                         onChanged: (value) {
@@ -679,7 +687,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
             color: Theme.of(context).colorScheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(32.0),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -694,7 +702,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                       height: 1,
                       indent: 16,
                       endIndent: 16,
-                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
                     ),
                 ],
               );
