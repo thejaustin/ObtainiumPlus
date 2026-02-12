@@ -120,9 +120,11 @@ class _AppPageState extends State<AppPage> {
             widget.showOppositeOfPreferredView);
     getUpdate(String id, {bool resetVersion = false}) async {
       try {
-        setState(() {
-          updating = true;
-        });
+        if (mounted) {
+          setState(() {
+            updating = true;
+          });
+        }
         await appsProvider.checkUpdate(id);
         if (resetVersion) {
           appsProvider.apps[id]?.app.additionalSettings['versionDetection'] =
@@ -134,12 +136,15 @@ class _AppPageState extends State<AppPage> {
           appsProvider.saveApps([appsProvider.apps[id]!.app]);
         }
       } catch (err) {
-        // ignore: use_build_context_synchronously
-        showError(err, context);
+        if (mounted) {
+          showError(err, context);
+        }
       } finally {
-        setState(() {
-          updating = false;
-        });
+        if (mounted) {
+          setState(() {
+            updating = false;
+          });
+        }
       }
     }
 

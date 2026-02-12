@@ -81,75 +81,50 @@ class _OnboardingPageState extends State<OnboardingPage> {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    final appsProvider = context.read<AppsProvider>();
-    List<App> appsToAdd = [];
+    try {
+      final appsProvider = context.read<AppsProvider>();
+      List<App> appsToAdd = [];
 
-    // 1. Add Obtainium+ if selected
-    if (_addObtainiumPlus) {
-      try {
-        var info = await AppInstallService.getInstalledInfo(obtainiumId);
-        if (info?.versionName != null) {
-          appsToAdd.add(
-            App(
-              obtainiumId,
-              obtainiumUrl,
-              'thejaustin',
-              'Obtainium+',
-              info!.versionName,
-              info.versionName!,
-              [],
-              0,
-              {
-                'versionDetection': true,
-                'apkFilterRegEx': 'fdroid',
-                'invertAPKFilter': true,
-              },
-              null,
-              _pinObtainiumPlus,
-            ),
-          );
+      // 1. Add Obtainium+ if selected
+      if (_addObtainiumPlus) {
+        try {
+          var info = await AppInstallService.getInstalledInfo(obtainiumId);
+          if (info?.versionName != null) {
+            appsToAdd.add(
+              App(
+                obtainiumId,
+                obtainiumUrl,
+                'thejaustin',
+                'Obtainium+',
+                info!.versionName,
+                info.versionName!,
+                [],
+                0,
+                {
+                  'versionDetection': true,
+                  'apkFilterRegEx': 'fdroid',
+                  'invertAPKFilter': true,
+                },
+                null,
+                _pinObtainiumPlus,
+              ),
+            );
+          }
+        } catch (e) {
+          debugPrint('Error adding Obtainium+: $e');
         }
-      } catch (e) {
-        debugPrint('Error adding Obtainium+: $e');
       }
-    }
 
-    // 2. Add Recommended Apps
-    // Note: Since we don't have full metadata (author, version, etc.) for these,
-    // we'll add them with minimal info and let Obtainium fetch details later if possible,
-    // or rely on the user to refresh.
-    // However, App constructor requires many fields.
-    // For "Quick Start", we might strictly need full App objects, which is hard without fetching.
-    // AppsProvider.addApp() usually takes an App object.
-    // IF we want to just "Add by URL", we usually go through AddAppPage logic which fetches metadata.
-    // Since we can't easily fetch metadata here without UI feedback/errors, maybe we skip recommended for now
-    // OR just use placeholders.
-    // Let's stick to just Obtainium+ for now as that's the critical request,
-    // and maybe just provide the *URLs* to the AddAppPage if we could?
-    // Actually, the user asked to "select from a list of discover".
-    // If we can't robustly add generic apps without fetching metadata (which is async and error-prone),
-    // maybe we just focus on Obtainium+ which we have info for (installed info).
-    
-    // BUT, I'll attempt to add them if they are selected, using placeholder data?
-    // No, that's bad.
-    // Let's iterate and fetch for recommended apps?
-    // It might take time.
-    // Given the constraints, I will only fully implement Obtainium+ addition.
-    // For the others, I'll just skip them to ensure stability, or if I had a "Link" method.
-    // Wait, AppsProvider has `addApp`.
-    // Let's just do Obtainium+ to be safe and satisfy the main requirement.
-    // The "select from discover" part is tricky without the search engine.
-    // I'll leave the recommended list in UI but maybe disable functionality or just log it for now
-    // unless I can call the SourceProvider to fetch details.
-    // actually, I can just use `appsProvider.saveApps(appsToAdd)`.
-    
-    if (appsToAdd.isNotEmpty) {
-      await appsProvider.saveApps(appsToAdd, onlyIfExists: false);
-    }
-
-    if (mounted) {
-      Navigator.pop(context); // Close loading
-      widget.onDone();
+      if (appsToAdd.isNotEmpty) {
+        await appsProvider.saveApps(appsToAdd, onlyIfExists: false);
+      }
+    } catch (e) {
+      debugPrint('Error during onboarding finish: $e');
+    } finally {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        widget.onDone();
+      }
     }
   }
 
