@@ -49,7 +49,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
   bool showIntervalLabel = true;
-  String _searchQuery = '';
+  final ValueNotifier<String> _searchQueryNotifier = ValueNotifier<String>('');
   final TextEditingController _searchController = TextEditingController();
 
   final Map<ColorSwatch<Object>, String> colorsNameMap =
@@ -78,36 +78,34 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     _checkBatteryStatus();
 
     // PERFORMANCE: Cache source specific fields once
-    _sourceSpecificFields = _sourceProvider.sources.map((e) {
-      if (e.sourceConfigSettingFormItems.isNotEmpty) {
-        return GeneratedForm(
-          items: e.sourceConfigSettingFormItems.map((item) {
-            if (item is GeneratedFormSwitch) {
-              item.defaultValue = context.read<SettingsProvider>().getSettingBool(item.key);
-            } else {
-              item.defaultValue = context.read<SettingsProvider>().getSettingString(item.key);
-            }
-            return [item];
-          }).toList(),
-          onValueChanges: (values, valid, isBuilding) {
-            if (valid && !isBuilding) {
-              final settingsProvider = context.read<SettingsProvider>();
-              values.forEach((key, value) {
-                var formItem = e.sourceConfigSettingFormItems
-                    .where((i) => i.key == key)
-                    .firstOrNull;
-                if (formItem is GeneratedFormSwitch) {
-                  settingsProvider.setSettingBool(key, value == true);
-                } else {
-                  settingsProvider.setSettingString(key, value ?? '');
-                }
-              });
-            }
-          },
-        );
-      } else {
-        return const SizedBox.shrink();
-      }
+    _sourceSpecificFields = _sourceProvider.sources
+        .where((e) => e.sourceConfigSettingFormItems.isNotEmpty)
+        .map((e) {
+          return GeneratedForm(
+            items: e.sourceConfigSettingFormItems.map((item) {
+              if (item is GeneratedFormSwitch) {
+                item.defaultValue = context.read<SettingsProvider>().getSettingBool(item.key);
+              } else {
+                item.defaultValue = context.read<SettingsProvider>().getSettingString(item.key);
+              }
+              return [item];
+            }).toList(),
+            onValueChanges: (values, valid, isBuilding) {
+              if (valid && !isBuilding) {
+                final settingsProvider = context.read<SettingsProvider>();
+                values.forEach((key, value) {
+                  var formItem = e.sourceConfigSettingFormItems
+                      .where((i) => i.key == key)
+                      .firstOrNull;
+                  if (formItem is GeneratedFormSwitch) {
+                    settingsProvider.setSettingBool(key, value == true);
+                  } else {
+                    settingsProvider.setSettingString(key, value ?? '');
+                  }
+                });
+              }
+            },
+          );
     }).toList();
 
     // Initialize settings if not already done (must NOT be called in build())
@@ -131,31 +129,37 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   @override
   void dispose() {
     _searchController.dispose();
+    _searchQueryNotifier.dispose();
     super.dispose();
   }
 
-  bool _matches(String text) {
-    if (_searchQuery.isEmpty) return true;
-    return text.toLowerCase().contains(_searchQuery.toLowerCase());
+  bool _matches(String text, String query) {
+    if (query.isEmpty) return true;
+    return text.toLowerCase().contains(query.toLowerCase());
   }
 
   @override
   Widget build(BuildContext context) {
-    SettingsProvider settingsProvider = context.watch<SettingsProvider>();
-    if (!settingsProvider.plusEnableModernSettings) {
-      return const LegacySettingsPage();
-    }
-    
-    final sourceProvider = _sourceProvider;
-    if (settingsProvider.prefs == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    return Selector<SettingsProvider, (bool, bool)>(
+      selector: (_, sp) => (sp.plusEnableModernSettings, sp.prefs == null),
+      builder: (context, data, _) {
+        final (plusEnableModernSettings, prefsIsNull) = data;
+        if (!plusEnableModernSettings) {
+          return const LegacySettingsPage();
+        }
+        if (prefsIsNull) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    final bool isSearching = _searchQuery.isNotEmpty;
+        return ValueListenableBuilder<String>(
+          valueListenable: _searchQueryNotifier,
+          builder: (context, searchQuery, _) {
+            final bool isSearching = searchQuery.isNotEmpty;
+            final settingsProvider = context.read<SettingsProvider>();
 
-    // --- Dropdowns for Behavior Settings ---
+            // --- Dropdowns for Behavior Settings ---
     var sortDropdown = DropdownButtonFormField(
       isExpanded: true,
       decoration: InputDecoration(labelText: tr('appSortBy')),
@@ -299,19 +303,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                           const StadiumBorder(),
                                         ),
                                         onChanged: (value) {
-                                          setState(() {
-                                            _searchQuery = value;
-                                          });
+                                          _searchQueryNotifier.value = value;
                                         },
                                         trailing: [
-                                          if (_searchQuery.isNotEmpty)
+                                          if (searchQuery.isNotEmpty)
                                             IconButton(
                                               icon: const Icon(Icons.clear),
                                               onPressed: () {
-                                                setState(() {
-                                                  _searchQuery = '';
-                                                  _searchController.clear();
-                                                });
+                                                _searchQueryNotifier.value = '';
+                                                _searchController.clear();
                                               },
                                             )
                                         ],
@@ -329,7 +329,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         SettingsGroup(
                           title: tr('basics'),
                           children: [
-                            if (_matches(tr('backgroundUpdates')))
+                            if (_matches(tr('backgroundUpdates'), searchQuery))
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
@@ -338,7 +338,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                   settingsProvider.updateInterval = value ? 60 : 0;
                                 },
                               ),
-                            if (_matches(tr('batteryOpt')))
+                            if (_matches(tr('batteryOpt'), searchQuery))
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.battery_saver_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
@@ -357,14 +357,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ThemeSettingsSection(
                           androidInfoFuture: _androidInfoFuture,
                           colorsNameMap: colorsNameMap,
-                          searchQuery: _searchQuery,
+                          searchQuery: searchQuery,
                         ),
                         const SizedBox(height: 24),
                         UpdateSettingsSection(
                           showIntervalLabel: showIntervalLabel,
                           onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
                           androidInfoFuture: _androidInfoFuture,
-                          searchQuery: _searchQuery,
+                          searchQuery: searchQuery,
                         ),
                         if (sourceSpecificFields.isNotEmpty) ...[
                           const SizedBox(height: 24),
@@ -374,16 +374,16 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           ),
                         ],
                         const SizedBox(height: 24),
-                        AppsViewSettingsSection(onSetState: setState, searchQuery: _searchQuery),
+                        AppsViewSettingsSection(onSetState: setState, searchQuery: searchQuery),
                         const SizedBox(height: 24),
                         BehaviorSettingsSection(
                           sortDropdown: sortDropdown,
                           orderDropdown: orderDropdown,
                           localeDropdown: localeDropdown,
-                          searchQuery: _searchQuery,
+                          searchQuery: searchQuery,
                         ),
                         const SizedBox(height: 24),
-                        AdvancedSettingsSection(searchQuery: _searchQuery),
+                        AdvancedSettingsSection(searchQuery: searchQuery),
                         const SizedBox(height: 24),
                         SettingsGroup(
                           title: tr('troubleshootingAndSystem'),
@@ -443,7 +443,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.sync_outlined,
                               title: tr('updatesAndAutomation'),
-                              destination: _SubMenuPage(
+                              builder: (context) => _SubMenuPage(
                                 title: tr('updatesAndAutomation'),
                                 child: SingleChildScrollView(
                                   child: Padding(
@@ -461,7 +461,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.notifications_active_outlined,
                               title: tr('notifications'),
-                              destination: _SubMenuPage(
+                              builder: (context) => _SubMenuPage(
                                 title: tr('notifications'),
                                 child: SingleChildScrollView(
                                   child: Padding(
@@ -484,7 +484,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.palette_outlined,
                               title: tr('appearance'),
-                              destination: _SubMenuPage(
+                              builder: (context) => _SubMenuPage(
                                 title: tr('appearance'),
                                 child: SingleChildScrollView(
                                   child: Padding(
@@ -507,19 +507,19 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               context,
                               icon: Icons.import_export_outlined,
                               title: tr('backupAndImportExport'),
-                              destination: ImportExportPage(),
+                              builder: (context) => ImportExportPage(),
                             ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.bar_chart_outlined,
                               title: tr('statistics'),
-                              destination: StatisticsPage(),
+                              builder: (context) => StatisticsPage(),
                             ),
                             _buildSubMenuTile(
                               context,
                               icon: Icons.bug_report_outlined,
                               title: tr('advancedAndTroubleshooting'),
-                              destination: _SubMenuPage(
+                              builder: (context) => _SubMenuPage(
                                 title: tr('advancedAndTroubleshooting'),
                                 child: SingleChildScrollView(
                                   child: Padding(
@@ -602,7 +602,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         );
       }
 
-      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget destination}) {
+      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget Function(BuildContext) builder}) {
         return ListTile(
           leading: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
@@ -616,7 +616,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
-              builder: (context) => destination,
+              builder: builder,
             );
           },
         );

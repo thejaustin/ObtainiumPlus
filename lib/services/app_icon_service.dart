@@ -73,6 +73,7 @@ class AppIconService {
     onEvict: (appId) => _evictionHandler?.call(appId),
   );
   static final Set<String> _iconsLoading = {};
+  static final Set<String> _iconsFailed = {};
 
   static Future<void> updateAppIcon({
     required String? appId,
@@ -85,6 +86,9 @@ class AppIconService {
 
     // Check if already loading this icon
     if (_iconsLoading.contains(appId)) return;
+
+    // Check if previous load failed
+    if (_iconsFailed.contains(appId) && !ignoreCache) return;
 
     // Check LRU cache first
     final cachedInMemory = _iconCache.get(appId);
@@ -120,6 +124,7 @@ class AppIconService {
       }
       
       if (icon != null) {
+        _iconsFailed.remove(appId);
         // Add to LRU cache
         _iconCache.put(appId, icon);
         apps.update(
@@ -138,6 +143,8 @@ class AppIconService {
           ),
         );
         notifyListeners();
+      } else {
+        _iconsFailed.add(appId);
       }
     } finally {
       _iconsLoading.remove(appId);
