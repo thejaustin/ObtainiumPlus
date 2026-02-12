@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -11,9 +12,9 @@ import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
+import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/main.dart';
 import 'package:provider/provider.dart';
-import 'package:animations/animations.dart';
 
 class CommandCenter extends StatefulWidget {
   const CommandCenter({super.key});
@@ -37,7 +38,8 @@ class _CommandCenterState extends State<CommandCenter> {
   bool _isSearching = false;
   String _query = '';
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
-  SourceProvider _sourceProvider = SourceProvider();
+  final SourceProvider _sourceProvider = SourceProvider();
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -47,6 +49,7 @@ class _CommandCenterState extends State<CommandCenter> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -54,14 +57,22 @@ class _CommandCenterState extends State<CommandCenter> {
 
   List<AppInMemory> _localResults = [];
 
-  Future<void> _handleSearch(String value) async {
+  void _onSearchChanged(String value) {
     setState(() {
       _query = value;
-      _discoverResults = {};
     });
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      _handleSearch(value);
+    });
+  }
 
+  Future<void> _handleSearch(String value) async {
     if (value.isEmpty) {
-      setState(() => _localResults = []);
+      setState(() {
+        _localResults = [];
+        _discoverResults = {};
+      });
       return;
     }
 
@@ -75,13 +86,17 @@ class _CommandCenterState extends State<CommandCenter> {
     });
 
     // Check if it's a URL
-    if (URLValidator.isValidSourceURL(value)) return;
+    if (URLValidator.isValidSourceURL(value)) {
+      setState(() => _discoverResults = {});
+      return;
+    }
 
     // Handle as Discovery Search
     await _runDiscoverSearch(value);
   }
 
   Future<void> _runDiscoverSearch(String query) async {
+    if (!mounted) return;
     setState(() => _isSearching = true);
     try {
       final settings = context.read<SettingsProvider>();
@@ -158,7 +173,7 @@ class _CommandCenterState extends State<CommandCenter> {
                       icon: const Icon(Icons.clear),
                       onPressed: () {
                         _controller.clear();
-                        _handleSearch('');
+                        _onSearchChanged('');
                       },
                     )
                   : null,
@@ -170,7 +185,7 @@ class _CommandCenterState extends State<CommandCenter> {
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onChanged: _handleSearch,
+              onChanged: _onSearchChanged,
             ),
           ),
 
@@ -229,7 +244,10 @@ class _CommandCenterState extends State<CommandCenter> {
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
         child: app.icon != null 
-          ? Image.memory(app.icon!) 
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(app.icon!, fit: BoxFit.cover),
+            )
           : const Icon(Icons.apps),
       ),
       title: Text(app.name),
@@ -270,6 +288,7 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildSearchResultsList() {
+    final theme = Theme.of(context);
     if (_isSearching && _discoverResults.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
@@ -285,24 +304,60 @@ class _CommandCenterState extends State<CommandCenter> {
     }
 
     return Column(
-      children: _discoverResults.entries.map((entry) {
-        final url = entry.key;
-        final result = entry.value;
-        final name = result.value.isNotEmpty ? result.value[0] : 'Unknown';
-        final source = result.key;
-
-        return ListTile(
-          leading: CircleAvatar(
-            radius: 20,
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            child: Text(name.isNotEmpty ? name[0].toUpperCase() : '?'),
+      children: [
+        if (_isSearching) 
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8.0),
+            child: LinearProgressIndicator(),
           ),
-          title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(source),
-          trailing: const Icon(Icons.add_circle_outline),
-          onTap: () => _openAddApp(url),
-        );
-      }).toList(),
+        ..._discoverResults.entries.map((entry) {
+          final url = entry.key;
+          final result = entry.value;
+          final name = result.value.isNotEmpty ? result.value[0] : 'Unknown';
+          final source = result.key;
+
+          return ListTile(
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+              ),
+            ),
+            title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyLarge),
+            subtitle: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    source,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSecondaryContainer,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    url,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+            trailing: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
+            onTap: () => _openAddApp(url),
+          );
+        }),
+      ],
     );
   }
 
@@ -322,20 +377,30 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildInitialState() {
+    final appsProvider = context.read<AppsProvider>();
+    final recentlyAdded = appsProvider.getAppValues().toList().reversed.take(5).toList();
+
     return SingleChildScrollView(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 48),
-          Icon(Icons.rocket_launch_rounded, size: 80, color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
-          const SizedBox(height: 24),
-          Text(tr('commandCenterPrompt'), style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
-            child: Text(tr('commandCenterSubtitle'), textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          ),
-          const SizedBox(height: 48),
+          if (recentlyAdded.isNotEmpty) ...[
+            _buildSectionHeader(tr('recentlyAdded')),
+            ...recentlyAdded.map(_buildLocalResult),
+            const SizedBox(height: 24),
+          ],
           _buildQuickActions(),
+          const SizedBox(height: 48),
+          Center(
+            child: Column(
+              children: [
+                Icon(Icons.rocket_launch_rounded, size: 64, color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
+                const SizedBox(height: 16),
+                Text(tr('commandCenterPrompt'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -350,35 +415,38 @@ class _CommandCenterState extends State<CommandCenter> {
           _buildSectionHeader(tr('quickActions')),
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
-              ActionChip(
-                avatar: const Icon(Icons.sync, size: 16),
-                label: Text(tr('checkUpdates')),
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.read<AppsProvider>().checkUpdates(ignoreCache: true);
-                },
-              ),
-              ActionChip(
-                avatar: const Icon(Icons.import_export, size: 16),
-                label: Text(tr('importExport')),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ImportExportPage()));
-                },
-              ),
-              ActionChip(
-                avatar: const Icon(Icons.bug_report_outlined, size: 16),
-                label: Text(tr('logs')),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const LogsPage()));
-                },
-              ),
+              _buildActionChip(Icons.sync, tr('checkUpdates'), () {
+                Navigator.pop(context);
+                context.read<AppsProvider>().checkUpdates(ignoreCache: true);
+              }),
+              _buildActionChip(Icons.import_export, tr('importExport'), () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ImportExportPage()));
+              }),
+              _buildActionChip(Icons.bug_report_outlined, tr('logs'), () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const LogsPage()));
+              }),
+              _buildActionChip(Icons.settings_outlined, tr('settings'), () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+              }),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionChip(IconData icon, String label, VoidCallback onPressed) {
+    return ActionChip(
+      avatar: Icon(icon, size: 16),
+      label: Text(label),
+      onPressed: onPressed,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }
