@@ -17,7 +17,7 @@ import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerC
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class ImportExportPage extends StatefulWidget {
@@ -496,7 +496,25 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       );
                     },
                   ),
-                  if (importInProgress)
+                  const SizedBox(height: 32),
+                  Text(
+                    tr('githubStarredRepos'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: importInProgress
+                        ? null
+                        : () {
+                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubStars().runtimeType));
+                          },
+                    child: Text(tr('importGithubStarredRepos')),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
                     const Column(
                       children: [
                         SizedBox(height: 14),
