@@ -1,0 +1,65 @@
+import 'package:flutter/material.dart';
+
+class SettingsGroup extends StatelessWidget {
+  final String? title;
+  final List<Widget> children;
+
+  const SettingsGroup({super.key, this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    // Robustly filter out hidden/empty widgets
+    final visibleChildren = children.where((child) {
+      if (child is SizedBox && child.child == null) return false;
+      if (child is Visibility && !child.visible) return false;
+      return true;
+    }).toList();
+
+    if (visibleChildren.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
+            child: Text(
+              title!,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(32.0),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: List.generate(visibleChildren.length, (index) {
+              return Column(
+                children: [
+                  visibleChildren[index],
+                  if (index < visibleChildren.length - 1)
+                    Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    ),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+}

@@ -32,6 +32,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
+import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/legacy_settings.dart';
 import 'package:obtainium/pages/statistics.dart';
@@ -49,7 +50,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
   bool showIntervalLabel = true;
-  final ValueNotifier<String> _searchQueryNotifier = ValueNotifier<String>('');
+  String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
   final Map<ColorSwatch<Object>, String> colorsNameMap =
@@ -65,7 +66,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   Future<AndroidDeviceInfo>? _androidInfoFuture;
   bool _isIgnoringBatteryOptimizations = false;
 
-  late List<Widget> _sourceSpecificFields;
+  List<Widget>? _sourceSpecificFields;
 
   @override
   void initState() {
@@ -77,16 +78,29 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     });
     _checkBatteryStatus();
 
-    // PERFORMANCE: Cache source specific fields once
+    // Initialize settings if not already done (must NOT be called in build())
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sp = context.read<SettingsProvider>();
+      if (sp.prefs == null) {
+        sp.initializeSettings();
+      }
+    });
+  }
+
+  void _initSourceSpecificFields() {
+    if (_sourceSpecificFields != null) return;
+    final sp = context.read<SettingsProvider>();
+    if (sp.prefs == null) return;
+
     _sourceSpecificFields = _sourceProvider.sources
         .where((e) => e.sourceConfigSettingFormItems.isNotEmpty)
         .map((e) {
           return GeneratedForm(
             items: e.sourceConfigSettingFormItems.map((item) {
               if (item is GeneratedFormSwitch) {
-                item.defaultValue = context.read<SettingsProvider>().getSettingBool(item.key);
+                item.defaultValue = sp.getSettingBool(item.key);
               } else {
-                item.defaultValue = context.read<SettingsProvider>().getSettingString(item.key);
+                item.defaultValue = sp.getSettingString(item.key);
               }
               return [item];
             }).toList(),
@@ -107,14 +121,6 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
             },
           );
     }).toList();
-
-    // Initialize settings if not already done (must NOT be called in build())
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final sp = context.read<SettingsProvider>();
-      if (sp.prefs == null) {
-        sp.initializeSettings();
-      }
-    });
   }
 
   Future<void> _checkBatteryStatus() async {
@@ -129,37 +135,31 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   @override
   void dispose() {
     _searchController.dispose();
-    _searchQueryNotifier.dispose();
     super.dispose();
   }
 
-  bool _matches(String text, String query) {
-    if (query.isEmpty) return true;
-    return text.toLowerCase().contains(query.toLowerCase());
+  bool _matches(String text) {
+    if (_searchQuery.isEmpty) return true;
+    return text.toLowerCase().contains(_searchQuery.toLowerCase());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Selector<SettingsProvider, (bool, bool)>(
-      selector: (_, sp) => (sp.plusEnableModernSettings, sp.prefs == null),
-      builder: (context, data, _) {
-        final (plusEnableModernSettings, prefsIsNull) = data;
-        if (!plusEnableModernSettings) {
-          return const LegacySettingsPage();
-        }
-        if (prefsIsNull) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    final settingsProvider = context.watch<SettingsProvider>();
+    if (!settingsProvider.plusEnableModernSettings) {
+      return const LegacySettingsPage();
+    }
+    
+    if (settingsProvider.prefs == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        return ValueListenableBuilder<String>(
-          valueListenable: _searchQueryNotifier,
-          builder: (context, searchQuery, _) {
-            final bool isSearching = searchQuery.isNotEmpty;
-            final settingsProvider = context.read<SettingsProvider>();
+    _initSourceSpecificFields();
+    final bool isSearching = _searchQuery.isNotEmpty;
 
-            // --- Dropdowns for Behavior Settings ---
+    // --- Dropdowns for Behavior Settings ---
     var sortDropdown = DropdownButtonFormField(
       isExpanded: true,
       decoration: InputDecoration(labelText: tr('appSortBy')),
@@ -267,7 +267,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     );
     // ----------------------------------------
 
-    final sourceSpecificFields = _sourceSpecificFields;
+    final sourceSpecificFields = _sourceSpecificFields ?? [];
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
@@ -303,15 +303,19 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                           const StadiumBorder(),
                                         ),
                                         onChanged: (value) {
-                                          _searchQueryNotifier.value = value;
+                                          setState(() {
+                                            _searchQuery = value;
+                                          });
                                         },
                                         trailing: [
-                                          if (searchQuery.isNotEmpty)
+                                          if (isSearching)
                                             IconButton(
                                               icon: const Icon(Icons.clear),
                                               onPressed: () {
-                                                _searchQueryNotifier.value = '';
-                                                _searchController.clear();
+                                                setState(() {
+                                                  _searchQuery = '';
+                                                  _searchController.clear();
+                                                });
                                               },
                                             )
                                         ],
@@ -329,7 +333,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         SettingsGroup(
                           title: tr('basics'),
                           children: [
-                            if (_matches(tr('backgroundUpdates'), searchQuery))
+                            if (_matches(tr('backgroundUpdates')))
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
@@ -338,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                   settingsProvider.updateInterval = value ? 60 : 0;
                                 },
                               ),
-                            if (_matches(tr('batteryOpt'), searchQuery))
+                            if (_matches(tr('batteryOpt')))
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.battery_saver_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
@@ -357,14 +361,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ThemeSettingsSection(
                           androidInfoFuture: _androidInfoFuture,
                           colorsNameMap: colorsNameMap,
-                          searchQuery: searchQuery,
+                          searchQuery: _searchQuery,
                         ),
                         const SizedBox(height: 24),
                         UpdateSettingsSection(
                           showIntervalLabel: showIntervalLabel,
                           onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
                           androidInfoFuture: _androidInfoFuture,
-                          searchQuery: searchQuery,
+                          searchQuery: _searchQuery,
                         ),
                         if (sourceSpecificFields.isNotEmpty) ...[
                           const SizedBox(height: 24),
@@ -374,16 +378,16 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           ),
                         ],
                         const SizedBox(height: 24),
-                        AppsViewSettingsSection(onSetState: setState, searchQuery: searchQuery),
+                        AppsViewSettingsSection(onSetState: setState, searchQuery: _searchQuery),
                         const SizedBox(height: 24),
                         BehaviorSettingsSection(
                           sortDropdown: sortDropdown,
                           orderDropdown: orderDropdown,
                           localeDropdown: localeDropdown,
-                          searchQuery: searchQuery,
+                          searchQuery: _searchQuery,
                         ),
                         const SizedBox(height: 24),
-                        AdvancedSettingsSection(searchQuery: searchQuery),
+                        AdvancedSettingsSection(searchQuery: _searchQuery),
                         const SizedBox(height: 24),
                         SettingsGroup(
                           title: tr('troubleshootingAndSystem'),
@@ -600,10 +604,6 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
             ],
           ),
         );
-          },
-        );
-      },
-    );
   }
 
   Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget Function(BuildContext) builder}) {
@@ -662,72 +662,6 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
           );
         }
       }    
-    class SettingsGroup extends StatelessWidget {
-  final String? title;
-  final List<Widget> children;
-
-  const SettingsGroup({super.key, this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    // Robustly filter out hidden/empty widgets
-    final visibleChildren = children.where((child) {
-      if (child is SizedBox && child.child == null) return false;
-      if (child is Visibility && !child.visible) return false;
-      return true;
-    }).toList();
-
-    if (visibleChildren.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (title != null)
-          Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
-            child: Text(
-              title!,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(32.0),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: List.generate(visibleChildren.length, (index) {
-              return Column(
-                children: [
-                  visibleChildren[index],
-                  if (index < visibleChildren.length - 1)
-                    Divider(
-                      height: 1,
-                      indent: 16,
-                      endIndent: 16,
-                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
-                    ),
-                ],
-              );
-            }),
-          ),
-        ),
-      ],
-    );
-  }
-}
-    
-    
-    
 class LogsDialog extends StatefulWidget {
   const LogsDialog({super.key});
 
