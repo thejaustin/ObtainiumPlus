@@ -109,7 +109,13 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
     SourceProvider sourceProvider = SourceProvider();
-    if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
+    
+    if (settingsProvider.prefs == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     initUpdateIntervalInterpolator();
     processIntervalSliderValue(settingsProvider.updateIntervalSliderVal);
 
