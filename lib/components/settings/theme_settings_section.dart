@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/pages/settings.dart'; // To access SettingsGroup if needed or use Column
+import 'package:obtainium/components/settings/settings_group.dart'; // To access SettingsGroup if needed or use Column
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';

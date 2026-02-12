@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/main.dart' show supportedLocales;
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
