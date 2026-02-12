@@ -57,10 +57,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         ColorTools.createPrimarySwatch(obtainiumThemeColor): 'Obtainium',
       };
 
+  // PERFORMANCE: Cache SourceProvider to avoid recreating 24 source objects on every build
+  late final SourceProvider _sourceProvider = SourceProvider();
+
   // PERFORMANCE: Cache DeviceInfoPlugin result to avoid redundant async calls
   AndroidDeviceInfo? _cachedAndroidInfo;
   Future<AndroidDeviceInfo>? _androidInfoFuture;
   bool _isIgnoringBatteryOptimizations = false;
+
+  late List<Widget> _sourceSpecificFields;
 
   @override
   void initState() {
@@ -71,6 +76,40 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       return info;
     });
     _checkBatteryStatus();
+
+    // PERFORMANCE: Cache source specific fields once
+    _sourceSpecificFields = _sourceProvider.sources.map((e) {
+      if (e.sourceConfigSettingFormItems.isNotEmpty) {
+        return GeneratedForm(
+          items: e.sourceConfigSettingFormItems.map((item) {
+            if (item is GeneratedFormSwitch) {
+              item.defaultValue = context.read<SettingsProvider>().getSettingBool(item.key);
+            } else {
+              item.defaultValue = context.read<SettingsProvider>().getSettingString(item.key);
+            }
+            return [item];
+          }).toList(),
+          onValueChanges: (values, valid, isBuilding) {
+            if (valid && !isBuilding) {
+              final settingsProvider = context.read<SettingsProvider>();
+              values.forEach((key, value) {
+                var formItem = e.sourceConfigSettingFormItems
+                    .where((i) => i.key == key)
+                    .firstOrNull;
+                if (formItem is GeneratedFormSwitch) {
+                  settingsProvider.setSettingBool(key, value == true);
+                } else {
+                  settingsProvider.setSettingString(key, value ?? '');
+                }
+              });
+            }
+          },
+        );
+      } else {
+        return const SizedBox.shrink();
+      }
+    }).toList();
+
     // Initialize settings if not already done (must NOT be called in build())
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sp = context.read<SettingsProvider>();
@@ -107,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       return const LegacySettingsPage();
     }
     
-    SourceProvider sourceProvider = SourceProvider();
+    final sourceProvider = _sourceProvider;
     if (settingsProvider.prefs == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -224,38 +263,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     );
     // ----------------------------------------
 
-    var sourceSpecificFields = sourceProvider.sources.map((e) {
-      if (e.sourceConfigSettingFormItems.isNotEmpty) {
-        // We filter these based on source name if needed, but for now show them all
-        // or filter by items inside. GeneratedForm is complex, so we just wrap it.
-        return GeneratedForm(
-          items: e.sourceConfigSettingFormItems.map((e) {
-            if (e is GeneratedFormSwitch) {
-              e.defaultValue = settingsProvider.getSettingBool(e.key);
-            } else {
-              e.defaultValue = settingsProvider.getSettingString(e.key);
-            }
-            return [e];
-          }).toList(),
-          onValueChanges: (values, valid, isBuilding) {
-            if (valid && !isBuilding) {
-              values.forEach((key, value) {
-                var formItem = e.sourceConfigSettingFormItems
-                    .where((i) => i.key == key)
-                    .firstOrNull;
-                if (formItem is GeneratedFormSwitch) {
-                  settingsProvider.setSettingBool(key, value == true);
-                } else {
-                  settingsProvider.setSettingString(key, value ?? '');
-                }
-              });
-            }
-          },
-        );
-      } else {
-        return Container();
-      }
-    });
+    final sourceSpecificFields = _sourceSpecificFields;
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
