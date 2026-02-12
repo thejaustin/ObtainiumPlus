@@ -665,5 +665,11 @@
     "addedToOfflineQueue": "Offline: Added {} to update queue",
     "processingOfflineQueue": "Online: Processing {} queued updates",
     "googlePlayNotSupported": "Direct downloads from Google Play are not supported. Please use Aurora Store or a mirror source like APKPure.",
+    "addAppOptions": "Add App Options",
+    "githubImportNotice": "Looking for GitHub starred repos import? Check the Import/Export menu.",
+    "importGithubStarredRepos": "Import GitHub Starred Repos",
+    "githubUsername": "GitHub Username",
+    "searchOrURL": "Search or paste URL",
+    "includeForks": "Include forks",
     "clear": "Clear"
 }

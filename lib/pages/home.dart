@@ -509,21 +509,38 @@ class HomePageState extends State<HomePage> {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
                     builder: (context) => SafeArea(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 8, bottom: 8),
+                            width: 32,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.outlineVariant,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              tr('addAppOptions'),
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
                           ListTile(
                             leading: const Icon(Icons.link),
                             title: Text(tr('appSourceURL')),
                             onTap: () {
                               Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AddAppPage(initialTab: 0),
-                                ),
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                useSafeArea: true,
+                                builder: (context) => const AddAppPage(initialTab: 0),
                               );
                             },
                           ),
@@ -532,14 +549,38 @@ class HomePageState extends State<HomePage> {
                             title: Text(tr('discover')),
                             onTap: () {
                               Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AddAppPage(initialTab: 1),
-                                ),
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                useSafeArea: true,
+                                builder: (context) => const AddAppPage(initialTab: 1),
                               );
                             },
+                          ),
+                          const Divider(),
+                          ListTile(
+                            leading: const Icon(Icons.import_export),
+                            title: Text(tr('importExport')),
+                            onTap: () {
+                              Navigator.pop(context);
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                useSafeArea: true,
+                                builder: (context) => const ImportExportPage(),
+                              );
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              tr('githubImportNotice'),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ],
                       ),
