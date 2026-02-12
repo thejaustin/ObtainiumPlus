@@ -600,9 +600,13 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
             ],
           ),
         );
-      }
+          },
+        );
+      },
+    );
+  }
 
-      Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget Function(BuildContext) builder}) {
+  Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget Function(BuildContext) builder}) {
         return ListTile(
           leading: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
