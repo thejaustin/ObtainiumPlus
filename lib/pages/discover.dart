@@ -14,7 +14,8 @@ import 'package:provider/provider.dart';
 
 class DiscoverPage extends StatefulWidget {
   final bool showAppBar;
-  const DiscoverPage({super.key, this.showAppBar = true});
+  final String initialQuery;
+  const DiscoverPage({super.key, this.showAppBar = true, this.initialQuery = ''});
 
   @override
   State<DiscoverPage> createState() => DiscoverPageState();
@@ -25,6 +26,20 @@ class DiscoverPageState extends State<DiscoverPage> {
   String searchQuery = '';
   Map<String, MapEntry<String, List<String>>> results = {};
   SourceProvider sourceProvider = SourceProvider();
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    searchQuery = widget.initialQuery;
+    _searchController.text = widget.initialQuery;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<AppSource> get searchableSources =>
       sourceProvider.sources.where((e) => e.canSearch).toList();
@@ -86,6 +101,7 @@ class DiscoverPageState extends State<DiscoverPage> {
               child: Column(
                 children: [
                   TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
                       hintText: tr('searchSomeSourcesLabel'),
                       suffixIcon: IconButton(

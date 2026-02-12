@@ -289,319 +289,113 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
       }
     }
 
-    Widget getUrlInputRow() => Row(
-      children: [
-        Expanded(
-          child: GeneratedForm(
-            key: Key(urlInputKey.toString()),
-            items: [
-              [
-                GeneratedFormTextField(
-                  'appSourceURL',
-                  label: tr('appSourceURL'),
-                  defaultValue: userInput,
-                  additionalValidators: [
-                    (value) {
-                      try {
-                        sourceProvider
-                            .getSource(
-                              value ?? '',
-                              overrideSource: pickedSourceOverride,
-                            )
-                            .standardizeUrl(value ?? '');
-                      } catch (e) {
-                        return e is String
-                            ? e
-                            : e is ObtainiumError
-                            ? e.toString()
-                            : tr('error');
-                      }
-                      return null;
-                    },
-                  ],
-                ),
-              ],
-            ],
-            onValueChanges: (values, valid, isBuilding) {
-              changeUserInput(values['appSourceURL']!, valid, isBuilding);
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        gettingAppInfo
-            ? const CircularProgressIndicator()
-            : GestureDetector(
-                onLongPress: () {
-                  HapticFeedback.heavyImpact();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 1),
-                    ),
-                  );
-                },
-                child: ElevatedButton(
-                  onPressed:
-                      doingSomething ||
-                          pickedSource == null ||
-                          (pickedSource!
-                                  .combinedAppSpecificSettingFormItems
-                                  .isNotEmpty &&
-                              !additionalSettingsValid)
-                      ? null
-                      : () {
-                          HapticFeedback.selectionClick();
-                          addApp();
-                        },
-                  child: Text(tr('add')),
-                ),
-              ),
-      ],
-    );
-
-    // runSearch removed as it's replaced by DiscoverPage
-
-    Widget getHTMLSourceOverrideDropdown() => Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: GeneratedForm(
-                items: [
-                  [
-                    GeneratedFormDropdown(
-                      'overrideSource',
-                      defaultValue: pickedSourceOverride ?? '',
-                      [
-                        MapEntry('', tr('none')),
-                        ...sourceProvider.sources
-                            .where(
-                              (s) =>
-                                  s.allowOverride ||
-                                  (pickedSource != null &&
-                                      pickedSource.runtimeType ==
-                                          s.runtimeType),
-                            )
-                            .map(
-                              (s) => MapEntry(s.runtimeType.toString(), s.name),
-                            ),
-                      ],
-                      label: tr('overrideSource'),
-                    ),
-                  ],
+    Widget getUrlInputRow() {
+      bool isUrl = userInput.trim().startsWith('http');
+      
+      return Row(
+        children: [
+          Expanded(
+            child: GeneratedForm(
+              key: Key(urlInputKey.toString()),
+              items: [
+                [
+                  GeneratedFormTextField(
+                    'appSourceURL',
+                    label: tr('searchOrURL'),
+                    defaultValue: userInput,
+                    additionalValidators: [
+                      (value) {
+                        if (value == null || value.trim().isEmpty) return null;
+                        if (!value.trim().startsWith('http')) return null; // Treat as search query
+                        try {
+                          sourceProvider
+                              .getSource(
+                                value,
+                                overrideSource: pickedSourceOverride,
+                              )
+                              .standardizeUrl(value);
+                        } catch (e) {
+                          return e is String
+                              ? e
+                              : e is ObtainiumError
+                              ? e.toString()
+                              : tr('error');
+                        }
+                        return null;
+                      },
+                    ],
+                  ),
                 ],
-                onValueChanges: (values, valid, isBuilding) {
-                  fn() {
-                    pickedSourceOverride =
-                        (values['overrideSource'] == null ||
-                            values['overrideSource'] == '')
-                        ? null
-                        : values['overrideSource'];
-                  }
-
-                  if (!isBuilding) {
-                    setState(() {
-                      fn();
-                    });
-                  } else {
-                    fn();
-                  }
-                  changeUserInput(userInput, valid, isBuilding);
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-
-    Widget getAdditionalOptsCol() => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 16),
-        Text(
-          tr('additionalOptsFor', args: [pickedSource?.name ?? tr('source')]),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GeneratedForm(
-          key: Key(
-            '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
-          ),
-          items: [
-            ...pickedSource!.combinedAppSpecificSettingFormItems,
-            ...(pickedSourceOverride != null
-                ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
-                : []),
-          ],
-          onValueChanges: (values, valid, isBuilding) {
-            if (!isBuilding) {
-              setState(() {
-                additionalSettings = values;
-                additionalSettingsValid = valid;
-              });
-            }
-          },
-        ),
-        Column(
-          children: [
-            const SizedBox(height: 16),
-            CategoryEditorSelector(
-              alignment: WrapAlignment.start,
-              onSelected: (categories) {
-                pickedCategories = categories;
+              ],
+              onValueChanges: (values, valid, isBuilding) {
+                changeUserInput(values['appSourceURL']!, valid, isBuilding);
               },
             ),
-          ],
-        ),
-        if (pickedSource != null && pickedSource!.appIdInferIsOptional)
-          GeneratedForm(
-            key: const Key('inferAppIdIfOptional'),
-            items: [
-              [
-                GeneratedFormSwitch(
-                  'inferAppIdIfOptional',
-                  label: tr('tryInferAppIdFromCode'),
-                  defaultValue: inferAppIdIfOptional,
-                ),
-              ],
-            ],
-            onValueChanges: (values, valid, isBuilding) {
-              if (!isBuilding) {
-                setState(() {
-                  inferAppIdIfOptional = values['inferAppIdIfOptional'];
-                });
-              }
-            },
           ),
-        if (pickedSource != null && pickedSource!.enforceTrackOnly)
-          GeneratedForm(
-            key: Key(
-              '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}-appId',
-            ),
-            items: [
-              [
-                GeneratedFormTextField(
-                  'appId',
-                  label: '${tr('appId')} - ${tr('custom')}',
-                  required: false,
-                  additionalValidators: [
-                    (value) {
-                      if (value == null || value.isEmpty) {
-                        return null;
-                      }
-                      final isValid = RegExp(
-                        r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$',
-                      ).hasMatch(value);
-                      if (!isValid) {
-                        return tr('invalidInput');
-                      }
-                      return null;
-                    },
-                  ],
-                ),
-              ],
-            ],
-            onValueChanges: (values, valid, isBuilding) {
-              if (!isBuilding) {
-                setState(() {
-                  additionalSettings['appId'] = values['appId'];
-                });
-              }
-            },
-          ),
-      ],
-    );
-
-    Widget getSourcesListWidget() => Padding(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        direction: Axis.horizontal,
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 12,
-        children: [
-          GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return GeneratedFormModal(
-                    singleNullReturnButton: tr('ok'),
-                    title: tr('supportedSources'),
-                    items: const [],
-                    additionalWidgets: [
-                      ...sourceProvider.sources.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: GestureDetector(
-                            onTap: e.hosts.isNotEmpty
-                                ? () {
-                                    launchUrlString(
-                                      'https://${e.hosts[0]}',
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  }
-                                : null,
-                            child: Text(
-                              '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
-                              style: TextStyle(
-                                decoration: e.hosts.isNotEmpty
-                                    ? TextDecoration.underline
-                                    : TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        ),
+          const SizedBox(width: 16),
+          gettingAppInfo
+              ? const CircularProgressIndicator()
+              : GestureDetector(
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsPage(initialTab: 1),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${tr('note')}:',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(tr('selfHostedNote', args: [tr('overrideSource')])),
-                    ],
-                  );
-                },
-              );
-            },
-            child: Text(
-              tr('supportedSources'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              launchUrlString(
-                'https://apps.obtainium.imranr.dev/',
-                mode: LaunchMode.externalApplication,
-              );
-            },
-            child: Text(
-              tr('crowdsourcedConfigsShort'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
+                    );
+                  },
+                  child: ElevatedButton(
+                    onPressed:
+                        doingSomething ||
+                            (isUrl && (pickedSource == null ||
+                            (pickedSource!
+                                    .combinedAppSpecificSettingFormItems
+                                    .isNotEmpty &&
+                                !additionalSettingsValid)))
+                        ? null
+                        : () {
+                            HapticFeedback.selectionClick();
+                            if (isUrl) {
+                              addApp();
+                            } else {
+                              // Switch to Discover tab and run search
+                              _tabController.animateTo(1);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                final discoverKey = context.read<GlobalKey<DiscoverPageState>>();
+                                if (discoverKey.currentState != null) {
+                                  discoverKey.currentState!.searchQuery = userInput;
+                                  discoverKey.currentState!.runSearch();
+                                }
+                              });
+                            }
+                          },
+                    child: Text(isUrl ? tr('add') : tr('search')),
+                  ),
+                ),
         ],
-      ),
-    );
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text(tr('addApp')),
+        automaticallyImplyLeading: false, // For modal
+        title: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 8),
+              width: 32,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text(tr('addApp')),
+          ],
+        ),
+        centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -646,7 +440,7 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
               ),
             ],
           ),
-          const DiscoverPage(showAppBar: false),
+          DiscoverPage(showAppBar: false, initialQuery: userInput),
         ],
       ),
     );
