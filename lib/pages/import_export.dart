@@ -29,10 +29,12 @@ class ImportExportPage extends StatefulWidget {
 
 class _ImportExportPageState extends State<ImportExportPage> {
   bool importInProgress = false;
+  // PERFORMANCE: Cache SourceProvider to avoid recreating 24 source objects on every build
+  late final SourceProvider _sourceProvider = SourceProvider();
 
   @override
   Widget build(BuildContext context) {
-    SourceProvider sourceProvider = SourceProvider();
+    final sourceProvider = _sourceProvider;
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -150,25 +151,13 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                                   borderRadius: BorderRadius.circular(iconBorderRadius),
                                   child: Image.memory(
                                     widget.appInMemory.icon!,
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.contain,
                                     gaplessPlayback: true,
-                                    opacity: AlwaysStoppedAnimation(
-                                      widget.appInMemory.installedInfo == null ? 0.6 : 1,
-                                    ),
                                   ),
                                 )
-                              : Container(
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(iconBorderRadius),
-                                  ),
-                                  child: Icon(
-                                    Icons.apps,
-                                    size: placeholderIconSize,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
+                              : AppIconShimmer(
+                                  size: iconSize,
+                                  borderRadius: iconBorderRadius,
                                 ),
                         ),
                       ),
