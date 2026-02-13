@@ -459,8 +459,8 @@ class App {
 }
 
 class SourceProvider {
-  // Add more source classes here so they are available via the service
-  List<AppSource> get sources => [
+  // PERFORMANCE: Cache sources to avoid re-instantiating ~24 classes on every access
+  static final List<AppSource> _cachedSources = [
     GitHub(),
     GitLab(),
     Codeberg(),
@@ -486,6 +486,8 @@ class SourceProvider {
     DirectAPKLink(),
     HTML(), // This should ALWAYS be the last option as they are tried in order
   ];
+
+  List<AppSource> get sources => _cachedSources;
 
   // Add more mass url source classes here so they are available via the service
   List<MassAppUrlSource> massUrlSources = [GitHubStars()];
