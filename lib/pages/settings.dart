@@ -84,6 +84,11 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       if (sp.prefs == null) {
         sp.initializeSettings();
       }
+      // Defer source fields to prevent navigation freeze
+      if (_sourceSpecificFields == null) {
+        _initSourceSpecificFields();
+        if (mounted) setState(() {});
+      }
     });
   }
 
@@ -156,7 +161,6 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       );
     }
 
-    _initSourceSpecificFields();
     final bool isSearching = _searchQuery.isNotEmpty;
 
     // --- Dropdowns for Behavior Settings ---
