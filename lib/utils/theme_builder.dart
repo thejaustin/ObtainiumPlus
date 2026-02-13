@@ -29,6 +29,11 @@ class ThemeBuilder {
       chipTheme: _buildChipTheme(colorScheme),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(colorScheme),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 
