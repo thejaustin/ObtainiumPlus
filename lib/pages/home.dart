@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:animations/animations.dart';
 import 'package:app_links/app_links.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -49,6 +48,7 @@ class HomePageState extends State<HomePage> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   bool isLinkActivity = false;
+  late PageController _pageController;
 
   late Widget appsPage;
   late Widget updatesPage;
@@ -62,6 +62,7 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     appsPage = AppsPage(key: GlobalKey<AppsPageState>());
     updatesPage = const UpdatesPage();
     logsPage = const LogsPage();
@@ -416,6 +417,19 @@ class HomePageState extends State<HomePage> {
         }
         selectedIndexHistory.add(index);
       });
+
+      if (_pageController.hasClients) {
+        final settingsProvider = context.read<SettingsProvider>();
+        if (settingsProvider.disablePageTransitions) {
+          _pageController.jumpToPage(index);
+        } else {
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: AppConstants.expressiveStandard,
+          );
+        }
+      }
     }
   }
 
@@ -492,14 +506,20 @@ class HomePageState extends State<HomePage> {
 
           // Handle navigation history
           if (selectedIndexHistory.isNotEmpty) {
-            setIsReversing(
-              selectedIndexHistory.length >= 2
+            final targetIndex = selectedIndexHistory.length >= 2
                   ? selectedIndexHistory.reversed.toList()[1]
-                  : 0,
-            );
+                  : 0;
+            setIsReversing(targetIndex);
             setState(() {
               selectedIndexHistory.removeLast();
             });
+            if (_pageController.hasClients) {
+              _pageController.animateToPage(
+                targetIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: AppConstants.expressiveStandard,
+              );
+            }
           }
         },
         child: Scaffold(
@@ -590,33 +610,10 @@ class HomePageState extends State<HomePage> {
                 child: const Icon(Icons.add),
               )
             : null,
-        body: PageTransitionSwitcher(
-          duration: Duration(
-            milliseconds: settingsProvider.disablePageTransitions
-                ? 0
-                : AppConstants.expressiveAnimationMs,
-          ),
-          reverse: settingsProvider.reversePageTransitions
-              ? !isReversing
-              : isReversing,
-          transitionBuilder:
-              (
-                Widget child,
-                Animation<double> animation,
-                Animation<double> secondaryAnimation,
-              ) {
-                final curvedAnimation = CurvedAnimation(
-                  parent: animation,
-                  curve: AppConstants.expressiveStandard,
-                );
-                return SharedAxisTransition(
-                  animation: curvedAnimation,
-                  secondaryAnimation: secondaryAnimation,
-                  transitionType: SharedAxisTransitionType.horizontal,
-                  child: child,
-                );
-              },
-          child: activePages[currentIndex].widget,
+        body: PageView(
+          controller: _pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: activePages.map((p) => p.widget).toList(),
         ),
         bottomNavigationBar: NavigationBar(
           elevation: 3,
@@ -660,6 +657,7 @@ class HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _linkSubscription?.cancel();
+    _pageController.dispose();
     super.dispose();
   }
 }
