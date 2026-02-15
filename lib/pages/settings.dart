@@ -14,6 +14,7 @@ import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/components/settings/behavior_settings_section.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
+import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
