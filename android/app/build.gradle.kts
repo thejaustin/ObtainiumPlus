@@ -13,7 +13,7 @@ plugins {
 
 sentry {
     includeProguardMapping.set(true)
-    autoUploadProguardMapping.set(true)
+    autoUploadProguardMapping.set(false)
     uploadNativeSymbols.set(false)
     includeNativeSources.set(false)
 }
