@@ -115,7 +115,7 @@ jobs:
       - name: Build APK
         run: |
           echo "Building universal APK (Obtainium Plus)..."
-          flutter build apk --flavor normal
+          flutter build apk --flavor normal --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
           echo "Renaming APK to remove flavor suffix..."
           for file in build/app/outputs/flutter-apk/app-*normal*.apk; do
@@ -125,7 +125,7 @@ jobs:
           done
 
           echo "Building split APKs by ABI (Obtainium Plus)..."
-          flutter build apk --split-per-abi --flavor normal
+          flutter build apk --split-per-abi --flavor normal --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
           echo "Renaming split APKs to remove flavor suffix..."
           for file in build/app/outputs/flutter-apk/app-*normal*-*.apk; do
@@ -139,6 +139,16 @@ jobs:
 
           echo "Built APKs:"
           ls -lh ./build/app/outputs/flutter-apk/
+
+      - name: Upload Sentry Debug Symbols
+        if: secrets.SENTRY_AUTH_TOKEN != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli upload-proguard build/app/outputs/flutter-apk/app-release-mapping.txt --auto-platform
 
       - name: Generate Changelog
         id: build_changelog

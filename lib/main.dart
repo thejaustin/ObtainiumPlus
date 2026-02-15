@@ -27,6 +27,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/background_service.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -68,51 +69,72 @@ var fdroid = false;
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.tracesSampleRate = 1.0;
+      options.attachStacktrace = true;
+      options.addIntegration(LoggingIntegration());
+    },
+    appRunner: () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    ByteData data = await PlatformAssetBundle().load(
-      'assets/ca/lets-encrypt-r3.pem',
-    );
-    SecurityContext.defaultContext.setTrustedCertificatesBytes(
-      data.buffer.asUint8List(),
-    );
-  } catch (e) {
-    // Already added, do nothing (see #375)
-  }
+      try {
+        ByteData data = await PlatformAssetBundle().load(
+          'assets/ca/lets-encrypt-r3.pem',
+        );
+        SecurityContext.defaultContext.setTrustedCertificatesBytes(
+          data.buffer.asUint8List(),
+        );
+      } catch (e) {
+        // Already added, do nothing (see #375)
+      }
 
-  try {
-    await EasyLocalization.ensureInitialized();
-    if ((await DeviceInfoPlugin().androidInfo).version.sdkInt >= 29) {
-      SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
-      );
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
-    final np = NotificationsProvider();
-    await np.initialize();
-    FlutterForegroundTask.initCommunicationPort();
-    runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => AppsProvider()),
-          ChangeNotifierProvider(create: (context) => SettingsProvider()),
-          Provider(create: (context) => np),
-          Provider(create: (context) => LogsProvider()),
-        ],
-        child: EasyLocalization(
-          supportedLocales: supportedLocales.map((e) => e.key).toList(),
-          path: localeDir,
-          fallbackLocale: fallbackLocale,
-          useOnlyLangCode: false,
-          child: const Obtainium(),
-        ),
-      ),
-    );
-    BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
-  } catch (e, stackTrace) {
-    runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
-  }
+      try {
+        await EasyLocalization.ensureInitialized();
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        Sentry.setTag('android_sdk', androidInfo.version.sdkInt.toString());
+        Sentry.setTag('device', androidInfo.model);
+        Sentry.setContexts('android_device', {
+          'model': androidInfo.model,
+          'brand': androidInfo.brand,
+          'version': androidInfo.version.release,
+          'sdk': androidInfo.version.sdkInt,
+        });
+
+        if (androidInfo.version.sdkInt >= 29) {
+          SystemChrome.setSystemUIOverlayStyle(
+            const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
+          );
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        }
+        final np = NotificationsProvider();
+        await np.initialize();
+        FlutterForegroundTask.initCommunicationPort();
+        runApp(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (context) => AppsProvider()),
+              ChangeNotifierProvider(create: (context) => SettingsProvider()),
+              Provider(create: (context) => np),
+              Provider(create: (context) => LogsProvider()),
+            ],
+            child: EasyLocalization(
+              supportedLocales: supportedLocales.map((e) => e.key).toList(),
+              path: localeDir,
+              fallbackLocale: fallbackLocale,
+              useOnlyLangCode: false,
+              child: const Obtainium(),
+            ),
+          ),
+        );
+        BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
+      } catch (e, stackTrace) {
+        await Sentry.captureException(e, stackTrace: stackTrace);
+        runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
+      }
+    },
+  );
 }
 
 Future<void> loadTranslations() async {
@@ -120,12 +142,25 @@ Future<void> loadTranslations() async {
   await EasyLocalization.ensureInitialized();
 }
 
-/// Error display app shown when startup fails
 class ErrorApp extends StatelessWidget {
   final String error;
   final String stackTrace;
 
   const ErrorApp({super.key, required this.error, required this.stackTrace});
+
+  Future<void> _reportToGitHub() async {
+    // Show Sentry Feedback Dialog first
+    await Sentry.showFeedbackDialog(
+      context: globalNavigatorKey.currentContext!,
+    );
+
+    final Uri url = Uri.parse(
+      'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
+    );
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,13 +173,23 @@ class ErrorApp extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Obtainium+ Startup Error',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Obtainium+ Startup Error',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.bug_report, color: Colors.white),
+                      onPressed: _reportToGitHub,
+                      tooltip: 'Report to GitHub',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -164,6 +209,18 @@ class ErrorApp extends StatelessWidget {
                       color: Colors.yellowAccent,
                       fontSize: 12,
                       fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: _reportToGitHub,
+                    icon: const Icon(Icons.launch),
+                    label: const Text('Report on GitHub'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.red.shade900,
                     ),
                   ),
                 ),
@@ -200,7 +257,6 @@ class ErrorApp extends StatelessWidget {
     );
   }
 }
-
 class Obtainium extends StatefulWidget {
   const Obtainium({super.key});
 
@@ -220,6 +276,7 @@ class _ObtainiumState extends State<Obtainium> {
     ErrorWidget.builder = (FlutterErrorDetails details) {
       _buildError = details.exceptionAsString();
       _buildStackTrace = details.stack?.toString();
+      Sentry.captureException(details.exception, stackTrace: details.stack);
       return _buildErrorWidget(details.exceptionAsString(), details.stack?.toString() ?? '');
     };
     initPlatformState();
@@ -237,9 +294,28 @@ class _ObtainiumState extends State<Obtainium> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Obtainium+ Build Error',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Obtainium+ Build Error',
+                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.bug_report, color: Colors.white),
+                    onPressed: () async {
+                      await Sentry.showFeedbackDialog(
+                        context: globalNavigatorKey.currentContext!,
+                      );
+                      final Uri url = Uri.parse(
+                        'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
+                      );
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Container(
@@ -445,6 +521,9 @@ class _ObtainiumState extends State<Obtainium> {
             locale: context.locale,
             navigatorKey: globalNavigatorKey,
             debugShowCheckedModeBanner: false,
+            navigatorObservers: [
+              SentryNavigatorObserver(),
+            ],
             theme: ThemeBuilder.buildTheme(
               colorScheme: settingsProvider.theme == ThemeSettings.dark
                   ? darkColorScheme
