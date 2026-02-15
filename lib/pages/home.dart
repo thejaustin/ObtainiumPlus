@@ -10,6 +10,7 @@ import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
+import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
 import 'package:obtainium/pages/onboarding.dart';
@@ -475,7 +476,7 @@ class HomePageState extends State<HomePage> {
                             leading: const Icon(Icons.drag_handle),
                             title: Text(item?.title ?? id),
                             trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.error),
+                              icon: Icon(Icons.remove_circle_outline, color: Theme.of(context).colorScheme.error),
                               onPressed: currentTabs.length > 2 ? () {
                                 currentTabs.remove(id);
                                 sp.bottomTabs = currentTabs;
