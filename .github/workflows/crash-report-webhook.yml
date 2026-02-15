@@ -1,0 +1,44 @@
+name: External Crash Report Handler
+
+on:
+  repository_dispatch:
+    types: [crash_report]
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create Issue from Crash Report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const payload = context.payload.client_payload;
+            const title = `[AUTOMATED CRASH]: ${payload.error || 'Unknown Error'}`;
+            const body = `
+            ## Crash Report (Automated)
+            
+            **Error:** ${payload.error}
+            **Version:** ${payload.version || 'Unknown'}
+            **Device:** ${payload.device || 'Unknown'}
+            
+            ### Stack Trace
+            ```
+            ${payload.stackTrace || 'No stack trace provided'}
+            ```
+            
+            ### Additional Info
+            ${JSON.stringify(payload.extra || {}, null, 2)}
+            
+            ---
+            *Reported via Webhook*
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'crash', 'automated']
+            });
