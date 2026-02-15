@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Apps, Categories, and View settings section widget
@@ -87,7 +87,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShowAuthorToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.person_outline),
@@ -100,7 +100,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShowVersionToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.code),
@@ -113,7 +113,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShowDateToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.calendar_today_outlined),
@@ -126,7 +126,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShowFilterChipsToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.filter_list_outlined),
@@ -139,7 +139,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShowAppCountToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.summarize_outlined),
@@ -152,7 +152,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildGroupByCategoryToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.category_outlined),
@@ -165,7 +165,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildCollapseCategoriesToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.unfold_less_outlined),
@@ -178,7 +178,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildCategoryIconPositionDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.branding_watermark_outlined),
@@ -204,7 +204,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildCategoryIconCountSlider(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return Column(
           children: [
@@ -232,7 +232,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildViewModeDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.view_quilt_outlined),
@@ -256,7 +256,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildDensityDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.globalViewMode != ViewMode.list) return const SizedBox.shrink();
         return ListTile(
@@ -278,7 +278,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildGridSettings(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.globalViewMode != ViewMode.grid) return const SizedBox.shrink();
 

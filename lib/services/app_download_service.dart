@@ -1,20 +1,19 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:android_package_manager/android_package_manager.dart';
+import 'package:obtainium/app_sources/directAPKLink.dart';
+import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/models/app_in_memory.dart';
-import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
-import 'package:android_package_manager/android_package_manager.dart';
-import 'package:obtainium/custom_errors.dart';
-import 'package:provider/provider.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/utils/version_utils.dart';
+import 'package:flutter/foundation.dart' as foundation; // Alias to avoid conflict
 
 class AppDownloadService {
   AppDownloadService._();
@@ -69,7 +68,6 @@ class AppDownloadService {
     MultiAppMultiError errors = MultiAppMultiError();
     List<String> installedIds = [];
 
-    // Prioritize Obtainium updates last
     appsToInstall = moveStrToEnd(
       appsToInstall,
       'app.obtainiumplus',
@@ -143,7 +141,7 @@ class AppDownloadService {
     return installedIds;
   }
 
-  static Future<Object> downloadApp({
+  static Future<Map<String, dynamic>> downloadApp({
     required App app,
     required Map<String, AppInMemory> apps,
     required SettingsProvider settingsProvider,

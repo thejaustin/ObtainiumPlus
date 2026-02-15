@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -50,7 +51,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildDeepLoggingToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.bug_report_outlined),
@@ -64,7 +65,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildRemoveOnExternalUninstallToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.delete_sweep_outlined),
@@ -77,7 +78,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildAppVerifierToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.verified_user_outlined),
@@ -90,7 +91,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildUseShizukuToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.terminal_outlined),
@@ -111,7 +112,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShizukuPretendToBeGooglePlayToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         if (!settings.useShizuku) return const SizedBox.shrink();
         return SwitchListTile.adaptive(
@@ -151,7 +152,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildEnableSwipeGesturesToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.gesture_outlined),
@@ -164,7 +165,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildEnableUndoForAppRemovalToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.undo_outlined),
@@ -190,7 +191,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildEnableHapticFeedbackToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.vibration_outlined),

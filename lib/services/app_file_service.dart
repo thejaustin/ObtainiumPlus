@@ -54,6 +54,49 @@ class AppFileService {
     );
   }
 
+  static Future<Map<String, Directory>> initAppDirectories() async {
+    Directory APKDir;
+    Directory iconsCacheDir;
+    
+    var cacheDirs = await getExternalCacheDirectories();
+    if (cacheDirs?.isNotEmpty ?? false) {
+      APKDir = cacheDirs!.first;
+      iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
+      if (!iconsCacheDir.existsSync()) {
+        iconsCacheDir.createSync();
+      }
+    } else {
+      APKDir = Directory('${(await getAppStorageDir()).path}/apks');
+      if (!APKDir.existsSync()) {
+        APKDir.createSync();
+      }
+      iconsCacheDir = Directory('${(await getAppStorageDir()).path}/icons');
+      if (!iconsCacheDir.existsSync()) {
+        iconsCacheDir.createSync();
+      }
+    }
+
+    return {
+      'APKDir': APKDir,
+      'iconsCacheDir': iconsCacheDir,
+    };
+  }
+
+  static void cleanupPartialApks(Directory APKDir, bool areDownloadsRunning) {
+    var cutoff = DateTime.now().subtract(const Duration(days: 7));
+    try {
+      APKDir.listSync()
+          .where((element) => element.statSync().modified.isBefore(cutoff))
+          .forEach((partialApk) {
+            if (!areDownloadsRunning) {
+              partialApk.delete(recursive: true);
+            }
+          });
+    } catch (e) {
+      // Ignore errors listing/deleting directory
+    }
+  }
+
   static String hashListOfLists(List<List<int>> data) {
     var bytes = utf8.encode(jsonEncode(data));
     var digest = sha256.convert(bytes);
