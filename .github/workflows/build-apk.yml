@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     # Skip if commit was from auto-bump to prevent infinite loop
-    if: "!contains(github.event.head_commit.message, 'Auto-bump version')"
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'Auto-bump version') }}
     permissions:
       contents: write
 
@@ -115,7 +115,7 @@ jobs:
       - name: Build APK
         run: |
           echo "Building universal APK (Obtainium Plus)..."
-          flutter build apk --flavor normal --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          flutter build apk --flavor normal --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
 
           echo "Renaming APK to remove flavor suffix..."
           for file in build/app/outputs/flutter-apk/app-*normal*.apk; do
@@ -125,7 +125,7 @@ jobs:
           done
 
           echo "Building split APKs by ABI (Obtainium Plus)..."
-          flutter build apk --split-per-abi --flavor normal --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          flutter build apk --split-per-abi --flavor normal --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
 
           echo "Renaming split APKs to remove flavor suffix..."
           for file in build/app/outputs/flutter-apk/app-*normal*-*.apk; do
@@ -140,8 +140,17 @@ jobs:
           echo "Built APKs:"
           ls -lh ./build/app/outputs/flutter-apk/
 
+      - name: Check Sentry Token
+        id: check_sentry
+        run: |
+          if [ -n "${{ secrets.SENTRY_AUTH_TOKEN }}" ]; then
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_token=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload Sentry Debug Symbols
-        if: secrets.SENTRY_AUTH_TOKEN != ''
+        if: steps.check_sentry.outputs.has_token == 'true'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
