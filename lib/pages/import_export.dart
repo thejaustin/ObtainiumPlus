@@ -143,72 +143,101 @@ class _ImportExportPageState extends State<ImportExportPage> {
           });
     }
 
-    runObtainiumImport() {
+    runObtainiumImport() async {
       HapticFeedback.selectionClick();
-      FilePicker.platform
-          .pickFiles()
-          .then((result) {
-            setState(() {
-              importInProgress = true;
-            });
-            if (result != null && result.files.length == 1 && result.files.first.path != null) {
-              String data = File(result.files.first.path!).readAsStringSync();
-              try {
-                jsonDecode(data);
-              } catch (e) {
-                throw ObtainiumError(tr('invalidInput'));
-              }
-              appsProvider.import(data).then((value) {
-                var cats = settingsProvider.categories;
-                appsProvider.apps.forEach((key, value) {
-                  for (var c in value.app.categories) {
-                    if (!cats.containsKey(c)) {
-                      cats[c] = generateRandomLightColor().value;
-                    }
-                  }
-                });
-                appsProvider.addMissingCategories(settingsProvider);
-                showMessage(
-                  '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
-                  context,
-                );
-              });
-            } else {
-              // User canceled the picker
-            }
-          })
-          .catchError((e) {
-            showError(e, context);
-          })
-          .whenComplete(() {
-            setState(() {
-              importInProgress = false;
-            });
+      try {
+        final result = await FilePicker.platform.pickFiles();
+        if (result != null && result.files.length == 1 && result.files.first.path != null) {
+          setState(() {
+            importInProgress = true;
           });
+          
+          // Read file asynchronously
+          final file = File(result.files.first.path!);
+          final data = await file.readAsString();
+          
+          // Decode JSON in a background isolate if it's large, but here we can just await
+          // Actually, let's use compute for jsonDecode to be safe
+          try {
+            await compute(jsonDecode, data);
+          } catch (e) {
+            throw ObtainiumError(tr('invalidInput'));
+          }
+
+          final value = await appsProvider.import(data);
+          var cats = settingsProvider.categories;
+          for (var entry in value.key) {
+            for (var c in entry.categories) {
+              if (!cats.containsKey(c)) {
+                cats[c] = generateRandomLightColor().value;
+              }
+            }
+          }
+          appsProvider.addMissingCategories(settingsProvider);
+          if (mounted) {
+            showMessage(
+              '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
+              context,
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) showError(e, context);
+      } finally {
+        if (mounted) {
+          setState(() {
+            importInProgress = false;
+          });
+        }
+      }
     }
 
-    runUrlImport() {
-      FilePicker.platform.pickFiles().then((result) {
+    runUrlImport() async {
+      try {
+        final result = await FilePicker.platform.pickFiles();
         if (result != null && result.files.length == 1 && result.files.first.path != null) {
-          urlListImport(
-            overrideInitValid: true,
-            initValue: RegExp('https?://[^"]+')
-                .allMatches(File(result.files.first.path!).readAsStringSync())
+          setState(() {
+            importInProgress = true;
+          });
+          
+          final file = File(result.files.first.path!);
+          final content = await file.readAsString();
+          
+          // Process URLs in background to avoid freezing UI if file is huge
+          final urls = await compute((String text) {
+            return RegExp('https?://[^"]+')
+                .allMatches(text)
                 .map((e) => e.input.substring(e.start, e.end))
                 .toSet()
-                .toList()
-                .where((url) {
-                  try {
-                    sourceProvider.getSource(url);
-                    return true;
-                  } catch (e) {
-                    return false;
-                  }
-                })
-                .join('\n'),
-          );
+                .toList();
+          }, content);
+
+          // Filter valid sources - this might also be heavy
+          final validUrls = urls.where((url) {
+            try {
+              sourceProvider.getSource(url);
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }).join('\n');
+
+          if (mounted) {
+            urlListImport(
+              overrideInitValid: true,
+              initValue: validUrls,
+            );
+          }
         }
-      });
+      } catch (e) {
+        if (mounted) showError(e, context);
+      } finally {
+        if (mounted) {
+          setState(() {
+            importInProgress = false;
+          });
+        }
+      }
     }
 
     runSourceSearch(AppSource source) {

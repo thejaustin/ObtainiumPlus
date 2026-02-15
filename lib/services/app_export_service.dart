@@ -120,7 +120,8 @@ class AppExportService {
     required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
     required void Function() notifyListeners,
   }) async {
-    var decodedJSON = jsonDecode(appsJSON);
+    // Decode JSON in a background isolate to prevent UI freeze
+    final decodedJSON = await compute(jsonDecode, appsJSON);
     var newFormat = decodedJSON is! List;
     List<App> importedApps =
         ((newFormat ? decodedJSON['apps'] : decodedJSON) as List<dynamic>)
