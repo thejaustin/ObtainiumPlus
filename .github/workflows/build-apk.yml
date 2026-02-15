@@ -157,7 +157,13 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
           curl -sL https://sentry.io/get-cli/ | bash
-          sentry-cli upload-proguard build/app/outputs/flutter-apk/app-release-mapping.txt --auto-platform
+          MAPPING_FILE="build/app/outputs/flutter-apk/app-release-mapping.txt"
+          if [ -f "$MAPPING_FILE" ]; then
+            sentry-cli upload-proguard "$MAPPING_FILE"
+          else
+            echo "⚠️ Sentry mapping file not found at $MAPPING_FILE - skipping upload."
+            ls -R build/app/outputs/ || true
+          fi
 
       - name: Generate Changelog
         id: build_changelog
