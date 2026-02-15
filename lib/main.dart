@@ -28,6 +28,7 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/background_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -74,7 +75,6 @@ void main() async {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
       options.tracesSampleRate = 1.0;
       options.attachStacktrace = true;
-      options.addIntegration(LoggingIntegration());
     },
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();
@@ -93,13 +93,16 @@ void main() async {
       try {
         await EasyLocalization.ensureInitialized();
         final androidInfo = await DeviceInfoPlugin().androidInfo;
-        Sentry.setTag('android_sdk', androidInfo.version.sdkInt.toString());
-        Sentry.setTag('device', androidInfo.model);
-        Sentry.setContexts('android_device', {
-          'model': androidInfo.model,
-          'brand': androidInfo.brand,
-          'version': androidInfo.version.release,
-          'sdk': androidInfo.version.sdkInt,
+        
+        Sentry.configureScope((scope) {
+          scope.setTag('android_sdk', androidInfo.version.sdkInt.toString());
+          scope.setTag('device', androidInfo.model);
+          scope.setContexts('android_device', {
+            'model': androidInfo.model,
+            'brand': androidInfo.brand,
+            'version': androidInfo.version.release,
+            'sdk': androidInfo.version.sdkInt,
+          });
         });
 
         if (androidInfo.version.sdkInt >= 29) {
@@ -150,9 +153,7 @@ class ErrorApp extends StatelessWidget {
 
   Future<void> _reportToGitHub() async {
     // Show Sentry Feedback Dialog first
-    await Sentry.showFeedbackDialog(
-      context: globalNavigatorKey.currentContext!,
-    );
+    await Sentry.captureMessage('User Feedback Triggered');
 
     final Uri url = Uri.parse(
       'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
@@ -304,9 +305,7 @@ class _ObtainiumState extends State<Obtainium> {
                   IconButton(
                     icon: const Icon(Icons.bug_report, color: Colors.white),
                     onPressed: () async {
-                      await Sentry.showFeedbackDialog(
-                        context: globalNavigatorKey.currentContext!,
-                      );
+                      await Sentry.captureMessage('User Feedback Triggered (Build Error)');
                       final Uri url = Uri.parse(
                         'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
                       );

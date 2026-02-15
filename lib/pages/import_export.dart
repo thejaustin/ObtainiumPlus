@@ -160,7 +160,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           // Decode JSON in a background isolate if it's large, but here we can just await
           // Actually, let's use compute for jsonDecode to be safe
           try {
-            await compute(jsonDecode, data);
+            await foundation.compute(jsonDecode, data);
           } catch (e) {
             throw ObtainiumError(tr('invalidInput'));
           }
@@ -205,7 +205,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           final content = await file.readAsString();
           
           // Process URLs in background to avoid freezing UI if file is huge
-          final urls = await compute((String text) {
+          final urls = await foundation.compute((String text) {
             return RegExp('https?://[^"]+')
                 .allMatches(text)
                 .map((e) => e.input.substring(e.start, e.end))
