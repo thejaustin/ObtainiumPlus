@@ -452,5 +452,184 @@ class SettingsProvider with ChangeNotifier {
     prefs?.setBool('enableContextualTips', val);
     notifyListeners();
   }
-}
+
+  // ======================================================================
+  // Forwarding getters/setters to sub-providers
+  // These allow consumers to keep using settingsProvider.X syntax
+  // ======================================================================
+
+  // --- UpdateSettingsProvider ---
+  int get updateInterval => updateSettings.updateInterval;
+  set updateInterval(int val) => updateSettings.updateInterval = val;
+
+  double get updateIntervalSliderVal => updateSettings.updateIntervalSliderVal;
+  set updateIntervalSliderVal(double val) => updateSettings.updateIntervalSliderVal = val;
+
+  String get updateIntervalLabel => updateSettings.updateIntervalLabel;
+  List<int> get updateIntervalNodes => updateSettings.updateIntervalNodes;
+
+  bool get checkOnStart => updateSettings.checkOnStart;
+  set checkOnStart(bool val) => updateSettings.checkOnStart = val;
+
+  bool get checkUpdateOnDetailPage => updateSettings.checkUpdateOnDetailPage;
+  set checkUpdateOnDetailPage(bool val) => updateSettings.checkUpdateOnDetailPage = val;
+
+  bool get enableBackgroundUpdates => updateSettings.enableBackgroundUpdates;
+  set enableBackgroundUpdates(bool val) => updateSettings.enableBackgroundUpdates = val;
+
+  bool get bgUpdatesOnWiFiOnly => updateSettings.bgUpdatesOnWiFiOnly;
+  set bgUpdatesOnWiFiOnly(bool val) => updateSettings.bgUpdatesOnWiFiOnly = val;
+
+  bool get bgUpdatesWhileChargingOnly => updateSettings.bgUpdatesWhileChargingOnly;
+  set bgUpdatesWhileChargingOnly(bool val) => updateSettings.bgUpdatesWhileChargingOnly = val;
+
+  bool get useUpdateSchedule => updateSettings.useUpdateSchedule;
+  set useUpdateSchedule(bool val) => updateSettings.useUpdateSchedule = val;
+
+  int get updateScheduleStartHour => updateSettings.updateScheduleStartHour;
+  set updateScheduleStartHour(int val) => updateSettings.updateScheduleStartHour = val;
+
+  int get updateScheduleEndHour => updateSettings.updateScheduleEndHour;
+  set updateScheduleEndHour(int val) => updateSettings.updateScheduleEndHour = val;
+
+  List<int> get updateScheduleDays => updateSettings.updateScheduleDays;
+  set updateScheduleDays(List<int> val) => updateSettings.updateScheduleDays = val;
+
+  bool isWithinUpdateSchedule() => updateSettings.isWithinUpdateSchedule();
+  String getScheduleDescription() => updateSettings.getScheduleDescription();
+
+  DateTime get lastCompletedBGCheckTime => updateSettings.lastCompletedBGCheckTime;
+  set lastCompletedBGCheckTime(DateTime val) => updateSettings.lastCompletedBGCheckTime = val;
+
+  bool get useFGService => updateSettings.useFGService;
+  set useFGService(bool val) => updateSettings.useFGService = val;
+
+  String get obtainiumReleaseChannel => updateSettings.obtainiumReleaseChannel;
+  set obtainiumReleaseChannel(String val) => updateSettings.obtainiumReleaseChannel = val;
+
+  void processIntervalSliderValue(double val, {bool notify = true}) =>
+      updateSettings.processIntervalSliderValue(val, notify: notify);
+
+  // --- ViewSettingsProvider ---
+  List<String> get bottomTabs => viewSettings.bottomTabs;
+  set bottomTabs(List<String> val) => viewSettings.bottomTabs = val;
+
+  SortColumnSettings get sortColumn => viewSettings.sortColumn;
+  set sortColumn(SortColumnSettings val) => viewSettings.sortColumn = val;
+
+  SortOrderSettings get sortOrder => viewSettings.sortOrder;
+  set sortOrder(SortOrderSettings val) => viewSettings.sortOrder = val;
+
+  bool get showAppWebpage => viewSettings.showAppWebpage;
+  set showAppWebpage(bool val) => viewSettings.showAppWebpage = val;
+
+  bool get pinUpdates => viewSettings.pinUpdates;
+  set pinUpdates(bool val) => viewSettings.pinUpdates = val;
+
+  bool get buryNonInstalled => viewSettings.buryNonInstalled;
+  set buryNonInstalled(bool val) => viewSettings.buryNonInstalled = val;
+
+  bool get groupByCategory => viewSettings.groupByCategory;
+  set groupByCategory(bool val) => viewSettings.groupByCategory = val;
+
+  bool get categoriesCollapsedByDefault => viewSettings.categoriesCollapsedByDefault;
+  set categoriesCollapsedByDefault(bool val) => viewSettings.categoriesCollapsedByDefault = val;
+
+  Map<String, int> get categories => viewSettings.categories;
+  void setCategories(Map<String, int> cats, {AppsProvider? appsProvider}) =>
+      viewSettings.setCategories(cats, appsProvider: appsProvider);
+
+  List<String> get categoryOrder => viewSettings.categoryOrder;
+  set categoryOrder(List<String> val) => viewSettings.categoryOrder = val;
+
+  AppSortMethod get appSortMethod => viewSettings.appSortMethod;
+  set appSortMethod(AppSortMethod val) => viewSettings.appSortMethod = val;
+
+  ViewMode get globalViewMode => viewSettings.globalViewMode;
+  set globalViewMode(ViewMode val) => viewSettings.globalViewMode = val;
+
+  int get gridColumnCount => viewSettings.gridColumnCount;
+  set gridColumnCount(int val) => viewSettings.gridColumnCount = val;
+
+  bool get displayShowAppCount => viewSettings.displayShowAppCount;
+  set displayShowAppCount(bool val) => viewSettings.displayShowAppCount = val;
+
+  bool get displayShowFilterChips => viewSettings.displayShowFilterChips;
+  set displayShowFilterChips(bool val) => viewSettings.displayShowFilterChips = val;
+
+  bool get displayShowAuthor => viewSettings.displayShowAuthor;
+  set displayShowAuthor(bool val) => viewSettings.displayShowAuthor = val;
+
+  bool get displayShowVersion => viewSettings.displayShowVersion;
+  set displayShowVersion(bool val) => viewSettings.displayShowVersion = val;
+
+  bool get displayShowDate => viewSettings.displayShowDate;
+  set displayShowDate(bool val) => viewSettings.displayShowDate = val;
+
+  CategoryIconPosition get categoryIconPosition => viewSettings.categoryIconPosition;
+  set categoryIconPosition(CategoryIconPosition val) => viewSettings.categoryIconPosition = val;
+
+  int get categoryIconCount => viewSettings.categoryIconCount;
+  set categoryIconCount(int val) => viewSettings.categoryIconCount = val;
+
+  AppListDensity get appListDensity => viewSettings.appListDensity;
+  set appListDensity(AppListDensity val) => viewSettings.appListDensity = val;
+
+  GridCategoryMode get gridCategoryMode => viewSettings.gridCategoryMode;
+  set gridCategoryMode(GridCategoryMode val) => viewSettings.gridCategoryMode = val;
+
+  NavigationDestinationLabelBehavior get navigationLabelBehavior => viewSettings.navigationLabelBehavior;
+  set navigationLabelBehavior(NavigationDestinationLabelBehavior val) => viewSettings.navigationLabelBehavior = val;
+
+  // --- BehaviorSettingsProvider ---
+  bool get useShizuku => behaviorSettings.useShizuku;
+  set useShizuku(bool val) => behaviorSettings.useShizuku = val;
+
+  Future<bool> getInstallPermission({bool enforce = false}) =>
+      behaviorSettings.getInstallPermission(enforce: enforce);
+
+  bool get removeOnExternalUninstall => behaviorSettings.removeOnExternalUninstall;
+  set removeOnExternalUninstall(bool val) => behaviorSettings.removeOnExternalUninstall = val;
+
+  bool get disablePageTransitions => behaviorSettings.disablePageTransitions;
+  set disablePageTransitions(bool val) => behaviorSettings.disablePageTransitions = val;
+
+  bool get reversePageTransitions => behaviorSettings.reversePageTransitions;
+  set reversePageTransitions(bool val) => behaviorSettings.reversePageTransitions = val;
+
+  Future<Uri?> getExportDir() => behaviorSettings.getExportDir();
+  Future<void> pickExportDir({bool remove = false}) => behaviorSettings.pickExportDir(remove: remove);
+
+  bool get autoExportOnChanges => behaviorSettings.autoExportOnChanges;
+  set autoExportOnChanges(bool val) => behaviorSettings.autoExportOnChanges = val;
+
+  int get exportSettings => behaviorSettings.exportSettings;
+  set exportSettings(int val) => behaviorSettings.exportSettings = val;
+
+  bool get parallelDownloads => behaviorSettings.parallelDownloads;
+  set parallelDownloads(bool val) => behaviorSettings.parallelDownloads = val;
+
+  bool get beforeNewInstallsShareToAppVerifier => behaviorSettings.beforeNewInstallsShareToAppVerifier;
+  set beforeNewInstallsShareToAppVerifier(bool val) => behaviorSettings.beforeNewInstallsShareToAppVerifier = val;
+
+  bool get shizukuPretendToBeGooglePlay => behaviorSettings.shizukuPretendToBeGooglePlay;
+  set shizukuPretendToBeGooglePlay(bool val) => behaviorSettings.shizukuPretendToBeGooglePlay = val;
+
+  double get animationSpeedMultiplier => behaviorSettings.animationSpeedMultiplier;
+  set animationSpeedMultiplier(double val) => behaviorSettings.animationSpeedMultiplier = val;
+
+  bool get enableHapticFeedback => behaviorSettings.enableHapticFeedback;
+  set enableHapticFeedback(bool val) => behaviorSettings.enableHapticFeedback = val;
+
+  bool get enableSwipeGestures => behaviorSettings.enableSwipeGestures;
+  set enableSwipeGestures(bool val) => behaviorSettings.enableSwipeGestures = val;
+
+  bool get enableUndoForAppRemoval => behaviorSettings.enableUndoForAppRemoval;
+  set enableUndoForAppRemoval(bool val) => behaviorSettings.enableUndoForAppRemoval = val;
+
+  AppSwipeAction get swipeRightAction => behaviorSettings.swipeRightAction;
+  set swipeRightAction(AppSwipeAction val) => behaviorSettings.swipeRightAction = val;
+
+  AppSwipeAction get swipeLeftAction => behaviorSettings.swipeLeftAction;
+  set swipeLeftAction(AppSwipeAction val) => behaviorSettings.swipeLeftAction = val;
 }
