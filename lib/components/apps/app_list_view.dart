@@ -93,6 +93,72 @@ class AppListView extends StatelessWidget {
           final swipeEnabled = settings.plusEnableSwipeActions &&
               !(settings.swipeRightAction == AppSwipeAction.none && settings.swipeLeftAction == AppSwipeAction.none);
 
+          void _showAppShortcuts() {
+            HapticFeedback.heavyImpact();
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              builder: (context) => SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 8, bottom: 8),
+                      width: 32,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.settings_outlined),
+                      title: Text(tr('editAppSettings')),
+                      onTap: () {
+                        Navigator.pop(context);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          useSafeArea: true,
+                          builder: (context) => AppPage(
+                            appId: app.app.id,
+                            isModal: true,
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.refresh_outlined),
+                      title: Text(tr('forceUpdate')),
+                      onTap: () {
+                        Navigator.pop(context);
+                        appsProvider.downloadAndInstallLatestApps([app.app.id], context, useExisting: false);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.share_outlined),
+                      title: Text(tr('share')),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Share.share(app.app.url);
+                      },
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.select_all_outlined),
+                      title: Text(tr('select')),
+                      onTap: () {
+                        Navigator.pop(context);
+                        toggleAppSelected(app.app);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           return Dismissible(
             key: Key('dismiss_${app.app.id}'),
             direction: !swipeEnabled
@@ -138,7 +204,11 @@ class AppListView extends StatelessWidget {
                   }
                 },
                 onLongPress: () {
-                  toggleAppSelected(app.app);
+                  if (selectedAppIds.isEmpty) {
+                    _showAppShortcuts();
+                  } else {
+                    toggleAppSelected(app.app);
+                  }
                 },
                 onShowChanges: getChangeLogFn(context, app.app),
               ),
