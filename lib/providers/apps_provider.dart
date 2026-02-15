@@ -914,6 +914,16 @@ class AppsProvider with ChangeNotifier {
     return AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
   }
 
+  Future<App?> checkObtainiumUpdate({bool ignoreCache = false}) async {
+    if (apps[obtainiumId] == null) return null;
+    App obt = apps[obtainiumId]!.app;
+    // Apply release channel setting
+    obt.additionalSettings['includePrereleases'] = settingsProvider.obtainiumReleaseChannel == 'dev';
+    obt.additionalSettings['apkFilterRegEx'] = 'fdroid';
+    obt.additionalSettings['invertAPKFilter'] = true;
+    return checkUpdate(obtainiumId, ignoreCache: ignoreCache);
+  }
+
   List<String> getAppsSortedByUpdateCheckTime({
     DateTime? ignoreAppsCheckedAfter,
     bool onlyCheckInstalledOrTrackOnlyApps = false,

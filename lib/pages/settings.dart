@@ -6,6 +6,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -568,6 +569,48 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                       title: isSearching ? null : tr('about'),
                       children: [
                         ListTile(
+                          leading: const Icon(Icons.sync_outlined),
+                          title: Text(tr('checkForUpdates'), style: Theme.of(context).textTheme.bodyLarge),
+                          trailing: ElevatedButton(
+                            onPressed: () async {
+                              final appsProvider = context.read<AppsProvider>();
+                              App? update = await appsProvider.checkObtainiumUpdate(ignoreCache: true);
+                              if (update != null && mounted) {
+                                showMessage(tr('xHasAnUpdate', args: ['Obtainium+']), context);
+                              } else if (mounted) {
+                                showMessage(tr('noNewUpdates'), context);
+                              }
+                            },
+                            child: Text(tr('checkUpdates')),
+                          ),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.history_outlined),
+                          title: Text(tr('releaseChannel'), style: Theme.of(context).textTheme.bodyLarge),
+                          subtitle: Text(tr('obtainiumReleaseChannelDescription')),
+                          trailing: DropdownButton<String>(
+                            value: settingsProvider.obtainiumReleaseChannel,
+                            onChanged: (String? newValue) {
+                              if (newValue != null) {
+                                settingsProvider.obtainiumReleaseChannel = newValue;
+                              }
+                            },
+                            items: [
+                              DropdownMenuItem(value: 'latest', child: Text(tr('latest'))),
+                              DropdownMenuItem(value: 'dev', child: Text(tr('dev'))),
+                            ],
+                          ),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.article_outlined),
+                          title: Text(tr('viewChangelog'), style: Theme.of(context).textTheme.bodyLarge),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const ChangelogPage()),
+                            );
+                          },
+                        ),
+                        ListTile(
                           leading: const Icon(Icons.code_outlined),
                           title: Text(tr('appSource'), style: Theme.of(context).textTheme.bodyLarge),
                           onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication),
@@ -610,6 +653,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
             ],
           ),
         );
+  }
+
+  void showMessage(dynamic message, BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message is ObtainiumError ? message.message : message.toString()),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Widget _buildHubCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Widget Function(BuildContext) builder}) {
@@ -687,46 +739,46 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
               ),
               builder: builder,
             );
-          },
-        );
-      }
-    }
+    );
+  }
+}
 
-    class _SubMenuPage extends StatelessWidget {
-      final String title;
-      final Widget child;
+class _SubMenuPage extends StatelessWidget {
+  final String title;
+  final Widget child;
 
-      const _SubMenuPage({required this.title, required this.child});
+  const _SubMenuPage({required this.title, required this.child});
 
-        @override
-        Widget build(BuildContext context) {
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              title: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 8, bottom: 12),
-                    width: 32,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Text(title),
-                ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 12),
+              width: 32,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
               ),
-              centerTitle: true,
-              toolbarHeight: 80,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
             ),
-            body: child,
-          );
-        }
-      }    
+            Text(title),
+          ],
+        ),
+        centerTitle: true,
+        toolbarHeight: 80,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: child,
+    );
+  }
+}
+
 class LogsDialog extends StatefulWidget {
   const LogsDialog({super.key});
 
@@ -825,5 +877,49 @@ $logs''';
         ),
       ],
     );
+  }
+}
+
+class ChangelogPage extends StatelessWidget {
+  const ChangelogPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(tr('viewChangelog')),
+      ),
+      body: FutureBuilder<String>(
+        future: _fetchChangelog(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('${tr('error')}: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text(tr('noLogs')));
+          }
+
+          return Markdown(
+            data: snapshot.data!,
+            onTapLink: (text, href, title) {
+              if (href != null) {
+                launchUrlString(href, mode: LaunchMode.externalApplication);
+              }
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<String> _fetchChangelog() async {
+    final response = await get(Uri.parse(
+        'https://raw.githubusercontent.com/thejaustin/ObtainiumPlus/main/CHANGELOG_DETAILED.md'));
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to load changelog');
+    }
   }
 }

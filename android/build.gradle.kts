@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("io.sentry:sentry-android-gradle-plugin:4.14.1")
+    }
+}
+
 allprojects {
     repositories {
         google()
