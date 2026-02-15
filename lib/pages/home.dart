@@ -69,7 +69,7 @@ class HomePageState extends State<HomePage> {
     updatesPage = const UpdatesPage();
     logsPage = const LogsPage();
     addAppPage = AddAppPage(key: GlobalKey<AddAppPageState>());
-    discoverPage = const DiscoverPage();
+    discoverPage = DiscoverPage();
     settingsPage = const SettingsPage();
     importExportPage = const ImportExportPage();
 
