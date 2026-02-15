@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 const String logTable = 'logs';
 const String idColumn = '_id';
@@ -72,6 +73,29 @@ create table if not exists $logTable (
   Future<Log> add(String message, {LogLevels level = LogLevels.info}) async {
     Log l = Log(message, level);
     l.id = await (await getDB()).insert(logTable, l.toMap());
+    
+    // Add Sentry breadcrumb
+    SentryLevel sentryLevel;
+    switch (level) {
+      case LogLevels.debug:
+        sentryLevel = SentryLevel.debug;
+        break;
+      case LogLevels.info:
+        sentryLevel = SentryLevel.info;
+        break;
+      case LogLevels.warning:
+        sentryLevel = SentryLevel.warning;
+        break;
+      case LogLevels.error:
+        sentryLevel = SentryLevel.error;
+        break;
+    }
+    Sentry.addBreadcrumb(Breadcrumb(
+      message: message,
+      level: sentryLevel,
+      timestamp: l.timestamp,
+    ));
+
     if (kDebugMode) {
       print(l);
     }

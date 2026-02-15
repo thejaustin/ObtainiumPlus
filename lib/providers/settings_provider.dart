@@ -1071,4 +1071,13 @@ class SettingsProvider with ChangeNotifier {
     prefs?.setInt('navigationLabelBehavior', val.index);
     notifyListeners();
   }
+
+  String get obtainiumReleaseChannel {
+    return prefs?.getString('obtainiumReleaseChannel') ?? 'latest';
+  }
+
+  set obtainiumReleaseChannel(String channel) {
+    prefs?.setString('obtainiumReleaseChannel', channel);
+    notifyListeners();
+  }
 }

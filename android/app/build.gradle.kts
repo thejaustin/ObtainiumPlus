@@ -8,6 +8,14 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("io.sentry.android.gradle")
+}
+
+sentry {
+    includeProguardMapping.set(true)
+    autoUploadProguardMapping.set(true)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
 }
 
 val localProperties = Properties()
