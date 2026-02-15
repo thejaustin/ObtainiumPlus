@@ -54,6 +54,7 @@ class HomePageState extends State<HomePage> {
   late Widget updatesPage;
   late Widget logsPage;
   late Widget addAppPage;
+  late Widget discoverPage;
   late Widget settingsPage;
   late Widget importExportPage;
   late Map<String, NavigationPageItem> allPages;
@@ -67,6 +68,7 @@ class HomePageState extends State<HomePage> {
     updatesPage = const UpdatesPage();
     logsPage = const LogsPage();
     addAppPage = AddAppPage(key: GlobalKey<AddAppPageState>());
+    discoverPage = const DiscoverPage();
     settingsPage = const SettingsPage();
     importExportPage = const ImportExportPage();
 
@@ -434,6 +436,95 @@ class HomePageState extends State<HomePage> {
   }
 
 
+  void _showTabCustomizationDialog() {
+    final sp = context.read<SettingsProvider>();
+    final allPageIds = ['apps', 'updates', 'add', 'settings', 'import_export', 'logs'];
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final currentTabs = List<String>.from(sp.bottomTabs);
+            return AlertDialog(
+              title: Text(tr('customizeTabs')),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      tr('dragToReorder'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: ReorderableListView(
+                        shrinkWrap: true,
+                        onReorder: (oldIndex, newIndex) {
+                          if (newIndex > oldIndex) newIndex--;
+                          final item = currentTabs.removeAt(oldIndex);
+                          currentTabs.insert(newIndex, item);
+                          sp.bottomTabs = currentTabs;
+                          setDialogState(() {});
+                        },
+                        children: currentTabs.map((id) {
+                          final item = allPages[id];
+                          return ListTile(
+                            key: ValueKey(id),
+                            leading: const Icon(Icons.drag_handle),
+                            title: Text(item?.title ?? id),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.remove_circle_outline, color: Colors.error),
+                              onPressed: currentTabs.length > 2 ? () {
+                                currentTabs.remove(id);
+                                sp.bottomTabs = currentTabs;
+                                setDialogState(() {});
+                              } : null,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Text(
+                      tr('addMoreTabs'),
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: allPageIds
+                          .where((id) => !currentTabs.contains(id))
+                          .map((id) {
+                        final item = allPages[id];
+                        return ActionChip(
+                          avatar: Icon(item?.icon, size: 16),
+                          label: Text(item?.title ?? id),
+                          onPressed: () {
+                            currentTabs.add(id);
+                            sp.bottomTabs = currentTabs;
+                            setDialogState(() {});
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(tr('done')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     AppsProvider appsProvider = context.watch<AppsProvider>();
@@ -445,6 +536,7 @@ class HomePageState extends State<HomePage> {
       'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
       'updates': NavigationPageItem('updates', tr('updates'), Icons.update_outlined, Icons.update, updatesPage),
       'add': NavigationPageItem('add', tr('addApp'), Icons.add_circle_outline, Icons.add_circle, addAppPage),
+      'discover': NavigationPageItem('discover', tr('discover'), Icons.explore_outlined, Icons.explore, discoverPage),
       'settings': NavigationPageItem('settings', tr('settings'), Icons.settings_outlined, Icons.settings, settingsPage),
       'import_export': NavigationPageItem('import_export', tr('importExport'), Icons.swap_vert_outlined, Icons.swap_vert, importExportPage),
       'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
@@ -527,84 +619,12 @@ class HomePageState extends State<HomePage> {
         floatingActionButton: activePages[currentIndex].id == 'apps'
             ? FloatingActionButton(
                 onPressed: () {
+                  HapticFeedback.selectionClick();
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
                     useSafeArea: true,
-                    builder: (context) => SafeArea(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 8, bottom: 8),
-                            width: 32,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.outlineVariant,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              tr('addAppOptions'),
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ),
-                          ListTile(
-                            leading: const Icon(Icons.link),
-                            title: Text(tr('appSourceURL')),
-                            onTap: () {
-                              Navigator.pop(context);
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (context) => const AddAppPage(initialTab: 0),
-                              );
-                            },
-                          ),
-                          ListTile(
-                            leading: const Icon(Icons.explore_outlined),
-                            title: Text(tr('discover')),
-                            onTap: () {
-                              Navigator.pop(context);
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (context) => const AddAppPage(initialTab: 1),
-                              );
-                            },
-                          ),
-                          const Divider(),
-                          ListTile(
-                            leading: const Icon(Icons.import_export),
-                            title: Text(tr('importExport')),
-                            onTap: () {
-                              Navigator.pop(context);
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (context) => const ImportExportPage(),
-                              );
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              tr('githubImportNotice'),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontStyle: FontStyle.italic,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    builder: (context) => const AddAppPage(),
                   );
                 },
                 child: const Icon(Icons.add),
@@ -615,39 +635,46 @@ class HomePageState extends State<HomePage> {
           physics: const NeverScrollableScrollPhysics(),
           children: activePages.map((p) => p.widget).toList(),
         ),
-        bottomNavigationBar: NavigationBar(
-          elevation: 3,
-          surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-          indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
-          animationDuration: const Duration(milliseconds: 300),
-          labelBehavior: settingsProvider.navigationLabelBehavior,
-          destinations: activePages
-              .map(
-                (e) =>
-                    NavigationDestination(
-                      icon: Icon(e.icon),
-                      selectedIcon: Icon(e.selectedIcon),
-                      label: e.title,
-                    ),
-              )
-              .toList(),
-          onDestinationSelected: (int index) async {
-            HapticFeedback.selectionClick();
-            // Check if user tapped the already active tab
-            if (index == currentIndex) {
-               // Optional: Reset logic (scroll to top, etc.)
-               // For AppsPage:
-               if (activePages[index].widget == appsPage) {
-                 (appsPage.key as GlobalKey<AppsPageState>?)?.currentState?.scrollController.animateTo(
-                   0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-               }
-            } else {
-              switchToPage(index);
-            }
+        bottomNavigationBar: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showTabCustomizationDialog();
           },
-          selectedIndex: currentIndex,
+          child: NavigationBar(
+            elevation: 3,
+            surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+            indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
+            animationDuration: const Duration(milliseconds: 300),
+            labelBehavior: settingsProvider.navigationLabelBehavior,
+            destinations: activePages
+                .map(
+                  (e) =>
+                      NavigationDestination(
+                        icon: Icon(e.icon),
+                        selectedIcon: Icon(e.selectedIcon),
+                        label: e.title,
+                      ),
+                )
+                .toList(),
+            onDestinationSelected: (int index) async {
+              HapticFeedback.selectionClick();
+              // Check if user tapped the already active tab
+              if (index == currentIndex) {
+                 // Optional: Reset logic (scroll to top, etc.)
+                 // For AppsPage:
+                 if (activePages[index].widget == appsPage) {
+                   (appsPage.key as GlobalKey<AppsPageState>?)?.currentState?.scrollController.animateTo(
+                     0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                 }
+              } else {
+                switchToPage(index);
+              }
+            },
+            selectedIndex: currentIndex,
+          ),
         ),
       ),
     ),
