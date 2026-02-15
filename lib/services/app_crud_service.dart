@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:android_package_manager/android_package_manager.dart';
@@ -14,7 +15,59 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/version_utils.dart';
 
+// Data class to store removed apps for undo functionality
+class RemovedAppData {
+  final App app;
+  final List<File> apkFiles;
+  final DateTime removalTime;
+
+  RemovedAppData(this.app, this.apkFiles, this.removalTime);
+}
+
 class AppCRUDService {
+  AppCRUDService._();
+
+  static final List<RemovedAppData> _recentlyRemovedApps = [];
+  static Timer? _cleanupTimer;
+
+  static void addRemovedApp(RemovedAppData data) {
+    _recentlyRemovedApps.add(data);
+    _startCleanupTimer();
+  }
+
+  static RemovedAppData? popLastRemovedApp() {
+    if (_recentlyRemovedApps.isNotEmpty) {
+      return _recentlyRemovedApps.removeLast();
+    }
+    return null;
+  }
+
+  static void _startCleanupTimer() {
+    _cleanupTimer?.cancel();
+    _cleanupTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+      _cleanupOldRemovedApps();
+      if (_recentlyRemovedApps.isEmpty) {
+        timer.cancel();
+      }
+    });
+  }
+
+  static void _cleanupOldRemovedApps() {
+    final cutoff = DateTime.now().subtract(const Duration(minutes: 10));
+    _recentlyRemovedApps.removeWhere((data) {
+      if (data.removalTime.isBefore(cutoff)) {
+        // Delete associated APK files
+        for (var file in data.apkFiles) {
+          if (file.existsSync()) {
+            AppFileService.deleteFile(file);
+          }
+        }
+        return true;
+      }
+      return false;
+    });
+  }
+
   static bool isVersionDetectionPossible(AppInMemory? app) {
     if (app?.app == null) {
       return false;

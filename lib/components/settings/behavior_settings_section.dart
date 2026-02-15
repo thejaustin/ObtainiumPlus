@@ -4,7 +4,10 @@ import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/main.dart' show supportedLocales;
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// General behavior settings section widget
@@ -104,7 +107,7 @@ class BehaviorSettingsSection extends StatelessWidget {
   }
 
   Widget _buildShowWebInAppViewToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.open_in_browser_outlined),
@@ -117,7 +120,7 @@ class BehaviorSettingsSection extends StatelessWidget {
   }
 
   Widget _buildPinUpdatesToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.push_pin_outlined),
@@ -130,7 +133,7 @@ class BehaviorSettingsSection extends StatelessWidget {
   }
 
   Widget _buildBuryNonInstalledToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.vertical_align_bottom_outlined),
@@ -143,7 +146,7 @@ class BehaviorSettingsSection extends StatelessWidget {
   }
 
   Widget _buildCheckUpdateOnDetailPageToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<UpdateSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.sync_outlined),
@@ -156,7 +159,7 @@ class BehaviorSettingsSection extends StatelessWidget {
   }
 
   Widget _buildSwipeRightDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.swipe_right_outlined),
@@ -175,7 +178,7 @@ class BehaviorSettingsSection extends StatelessWidget {
   }
 
   Widget _buildSwipeLeftDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.swipe_left_outlined),

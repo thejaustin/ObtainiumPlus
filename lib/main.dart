@@ -119,6 +119,9 @@ void main() async {
             providers: [
               ChangeNotifierProvider(create: (context) => AppsProvider()),
               ChangeNotifierProvider(create: (context) => SettingsProvider()),
+              ChangeNotifierProvider(create: (context) => context.read<SettingsProvider>().updateSettings),
+              ChangeNotifierProvider(create: (context) => context.read<SettingsProvider>().viewSettings),
+              ChangeNotifierProvider(create: (context) => context.read<SettingsProvider>().behaviorSettings),
               Provider(create: (context) => np),
               Provider(create: (context) => LogsProvider()),
             ],
