@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -126,6 +128,21 @@ class PlusFeaturesSection extends StatelessWidget {
                 subtitle: tr('plusUpdateScheduleDescription'),
                 value: settings.plusEnableUpdateSchedule,
                 onChanged: (val) => settings.plusEnableUpdateSchedule = val,
+              ),
+
+            const Divider(),
+
+            // Customize tabs action
+            if (_matches(tr('customizeTabs')))
+              ListTile(
+                leading: const Icon(Icons.tab_outlined),
+                title: Text(tr('customizeTabs'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(tr('dragToReorderTabs')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  showTabCustomization(context);
+                },
               ),
           ],
         ];
