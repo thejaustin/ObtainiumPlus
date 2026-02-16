@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
-import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -23,7 +22,6 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/components/search/command_center.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
-import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -37,6 +35,7 @@ import 'package:markdown/markdown.dart' as md;
 
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/components/sort_filter_panel.dart';
 
 class AppsPage extends StatefulWidget {
   const AppsPage({super.key, this.initialFilter});
@@ -309,57 +308,6 @@ class AppsPageState extends State<AppsPage> {
       return a != null && b != null ? a.toLowerCase().compareTo(b.toLowerCase()) : (a == null ? 1 : -1);
     });
 
-    getFilterChips() {
-      return SliverToBoxAdapter(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: ChoiceChip(
-                  label: Text(tr('all')),
-                  selected: filter.statusFilter.isEmpty,
-                  onSelected: (val) {
-                    setState(() {
-                      filter.statusFilter.clear();
-                    });
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: ChoiceChip(
-                  label: Text(tr('installed')),
-                  selected: filter.statusFilter.contains('installed'),
-                  onSelected: (val) {
-                    setState(() {
-                      filter.statusFilter.clear();
-                      if (val) filter.statusFilter.add('installed');
-                    });
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: ChoiceChip(
-                  label: Text(tr('trackOnly')),
-                  selected: filter.statusFilter.contains('trackonly'),
-                  onSelected: (val) {
-                    setState(() {
-                      filter.statusFilter.clear();
-                      if (val) filter.statusFilter.add('trackonly');
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     getLoadingWidgets() {
       return [
         if (listedApps.isEmpty)
@@ -450,125 +398,6 @@ class AppsPageState extends State<AppsPage> {
           }
         });
       };
-    }
-
-    showFilterDialog() async {
-      var values = await showDialog<Map<String, dynamic>?>(
-        context: context,
-        builder: (BuildContext ctx) {
-          var vals = filter.toFormValuesMap();
-          return GeneratedFormModal(
-            initValid: true,
-            title: tr('filterApps'),
-            items: [
-              [
-                GeneratedFormTextField('appName',
-                    label: tr('appName'),
-                    required: false,
-                    defaultValue: vals['appName']),
-                GeneratedFormTextField('author',
-                    label: tr('author'),
-                    required: false,
-                    defaultValue: vals['author']),
-              ],
-              [
-                GeneratedFormTextField('appId',
-                    label: tr('appId'),
-                    required: false,
-                    defaultValue: vals['appId'])
-              ],
-              [
-                GeneratedFormSwitch('upToDateApps',
-                    label: tr('upToDateApps'), defaultValue: vals['upToDateApps'])
-              ],
-              [
-                GeneratedFormSwitch('nonInstalledApps',
-                    label: tr('nonInstalledApps'),
-                    defaultValue: vals['nonInstalledApps'])
-              ],
-              [
-                GeneratedFormDropdown(
-                  'sourceFilter',
-                  label: tr('appSource'),
-                  defaultValue: filter.sourceFilter,
-                  [
-                    MapEntry('', tr('none')),
-                    ...sourceProvider.sources.map(
-                        (e) => MapEntry(e.runtimeType.toString(), e.name))
-                  ],
-                ),
-              ],
-            ],
-            additionalWidgets: [
-              const SizedBox(height: 16),
-              CategoryEditorSelector(
-                preselected: filter.categoryFilter,
-                onSelected: (categories) =>
-                    filter.categoryFilter = categories.toSet(),
-              ),
-            ],
-          );
-        },
-      );
-      if (values != null) setState(() => filter.setFormValuesFromMap(values));
-    }
-
-    showSortDialog() async {
-      var value = await showDialog<Map<String, dynamic>?>(
-        context: context,
-        builder: (context) {
-          return GeneratedFormModal(
-            title: tr('sortOptions'),
-            items: [
-              [
-                GeneratedFormDropdown(
-                  'sortMethod',
-                  label: tr('sortMethod'),
-                  defaultValue: settingsProvider.appSortMethod.toString(),
-                  AppSortMethod.values
-                      .map((e) => MapEntry(e.toString(),
-                          tr(e.toString().split('.').last)))
-                      .toList(),
-                )
-              ],
-            ],
-          );
-        },
-      );
-      if (value != null) {
-        settingsProvider.appSortMethod =
-          AppSortMethod.values.firstWhere(
-            (e) => e.toString() == value['sortMethod'],
-          );
-      }
-    }
-
-    showTipsDialog() {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(tr('tips')),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(tr('appManagementTips')),
-                const SizedBox(height: 16),
-                Text(tr('swipeActionsTip')),
-                const SizedBox(height: 16),
-                Text(tr('longPressSelectionTip')),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(tr('ok')),
-              ),
-            ],
-          );
-        },
-      );
     }
 
     markSelectedAppsUpdated() async {
@@ -720,11 +549,17 @@ class AppsPageState extends State<AppsPage> {
                           alignment: Alignment.center,
                           children: [
                             IconButton(
-                              icon: Icon(isFilterOff
-                                  ? Icons.filter_alt_outlined
-                                  : Icons.filter_alt),
-                              onPressed: showFilterDialog,
-                              tooltip: tr('filter'),
+                              icon: const Icon(Icons.tune),
+                              onPressed: () {
+                                HapticFeedback.selectionClick();
+                                SortFilterPanel.show(
+                                  context,
+                                  filter: filter,
+                                  onFilterChanged: () => setState(() {}),
+                                  categories: settingsProvider.categories,
+                                );
+                              },
+                              tooltip: tr('sortOptions'),
                             ),
                             if (!isFilterOff)
                               Positioned(
@@ -737,75 +572,6 @@ class AppsPageState extends State<AppsPage> {
                                     color: Theme.of(context).colorScheme.error,
                                     shape: BoxShape.circle,
                                   ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert),
-                          onSelected: (value) async {
-                            switch (value) {
-                              case 'sort':
-                                showSortDialog();
-                                break;
-                              case 'view':
-                                settingsProvider.globalViewMode =
-                                    settingsProvider.globalViewMode == ViewMode.list
-                                        ? ViewMode.grid
-                                        : ViewMode.list;
-                                break;
-                              case 'import':
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  useSafeArea: true,
-                                  builder: (context) => const ImportExportPage(),
-                                );
-                                break;
-                              case 'help':
-                                showTipsDialog();
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'sort',
-                              child: ListTile(
-                                leading: const Icon(Icons.sort),
-                                title: Text(tr('sortMethod')),
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'view',
-                              child: ListTile(
-                                leading: Icon(
-                                    settingsProvider.globalViewMode == ViewMode.list
-                                        ? Icons.grid_view
-                                        : Icons.view_list),
-                                title: Text(
-                                    settingsProvider.globalViewMode == ViewMode.list
-                                        ? tr('gridView')
-                                        : tr('listView')),
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'import',
-                              child: ListTile(
-                                leading: const Icon(Icons.import_export),
-                                title: Text(tr('importExport')),
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                            ),
-                            if (settingsProvider.enableContextualTips)
-                              PopupMenuItem(
-                                value: 'help',
-                                child: ListTile(
-                                  leading: const Icon(Icons.help_outline),
-                                  title: Text(tr('help')),
-                                  contentPadding: EdgeInsets.zero,
                                 ),
                               ),
                           ],
@@ -827,10 +593,6 @@ class AppsPageState extends State<AppsPage> {
                         ),
                     ],
                   ),
-
-                  // Filter Chips
-                  if (settingsProvider.displayShowFilterChips && selectedAppIds.isEmpty)
-                    getFilterChips(),
 
                   ...getLoadingWidgets(),
 
