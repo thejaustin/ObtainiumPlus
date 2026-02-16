@@ -42,7 +42,7 @@ class UpdateSettingsProvider with ChangeNotifier {
 
   void processIntervalSliderValue(double val, {bool notify = true}) {
     if (val < 0.5) {
-      updateInterval = 0;
+      prefs?.setInt('updateInterval', 0);
       updateIntervalLabel = tr('neverManualOnly');
       if (notify) notifyListeners();
       return;
@@ -54,25 +54,25 @@ class UpdateSettingsProvider with ChangeNotifier {
       valInterpolated = updateIntervalInterpolator.compute(val).round();
     }
     if (valInterpolated < 60) {
-      updateInterval = valInterpolated;
+      prefs?.setInt('updateInterval', valInterpolated);
       updateIntervalLabel = plural('minute', valInterpolated);
     } else if (valInterpolated < 8 * 60) {
       int valRounded = (valInterpolated / 15).floor() * 15;
-      updateInterval = valRounded;
+      prefs?.setInt('updateInterval', valRounded);
       updateIntervalLabel = plural('hour', valRounded ~/ 60);
       int mins = valRounded % 60;
       if (mins != 0) updateIntervalLabel += " ${plural('minute', mins)}";
     } else if (valInterpolated < 24 * 60) {
       int valRounded = (valInterpolated / 30).floor() * 30;
-      updateInterval = valRounded;
+      prefs?.setInt('updateInterval', valRounded);
       updateIntervalLabel = plural('hour', valRounded / 60);
     } else if (valInterpolated < 7 * 24 * 60) {
       int valRounded = (valInterpolated / (12 * 60)).floor() * 12 * 60;
-      updateInterval = valRounded;
+      prefs?.setInt('updateInterval', valRounded);
       updateIntervalLabel = plural('day', valRounded / (24 * 60));
     } else {
       int valRounded = (valInterpolated / (24 * 60)).floor() * 24 * 60;
-      updateInterval = valRounded;
+      prefs?.setInt('updateInterval', valRounded);
       updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
     }
     if (notify) notifyListeners();
