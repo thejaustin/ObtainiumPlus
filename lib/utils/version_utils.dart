@@ -3,13 +3,13 @@ import 'package:obtainium/utils/app_constants.dart';
 List<String> generateStandardVersionRegExStrings() {
   var basics = [
     '[0-9]+',
-    '[0-9]+\.[0-9]+',
-    '[0-9]+\.[0-9]+\.[0-9]+',
-    '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+',
+    '[0-9]+\\.[0-9]+',
+    '[0-9]+\\.[0-9]+\\.[0-9]+',
+    '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+',
   ];
-  var preSuffixes = ['-', '\+'];
+  var preSuffixes = ['-', '\\+'];
   var suffixes = ['alpha', 'beta', 'ose', '[0-9]+'];
-  var finals = ['\+[0-9]+', '[0-9]+'];
+  var finals = ['\\+[0-9]+', '[0-9]+'];
   List<String> results = [];
   for (var b in basics) {
     results.add(b);
