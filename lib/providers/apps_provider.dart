@@ -765,12 +765,8 @@ class AppsProvider with ChangeNotifier {
     RemovedAppData lastRemoved = _recentlyRemovedApps.removeLast();
 
     try {
-      // Restore the app to the apps list
-      apps[lastRemoved.app.id] = AppInMemory(lastRemoved.app, null, null, null);
-
-      // Notify listeners about the change
-      notifyListeners();
-      export(isAuto: true);
+      // Restore the app to the apps list and persist to disk
+      await saveApps([lastRemoved.app], onlyIfExists: false);
 
       return true;
     } catch (e, stack) {
@@ -978,6 +974,7 @@ class AppsProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    _cleanupTimer?.cancel();
     foregroundSubscription?.cancel();
     super.dispose();
   }
