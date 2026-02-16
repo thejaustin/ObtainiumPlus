@@ -532,16 +532,10 @@ class AppDownloadService {
             notificationsProvider: notificationsProvider,
             useExisting: useExisting,
           );
-      if (downloadedArtifact is Map) {
-         if (downloadedArtifact['isAPK'] == true) {
-           downloadedFile = DownloadedApk(id, downloadedArtifact['downloadedFile'] as File);
-         } else {
-           downloadedDir = DownloadedDir(id, downloadedArtifact['downloadedFile'] as File, downloadedArtifact['apkDir'] as Directory, downloadedArtifact['isXAPK'] ? DownloadedDirType.XAPK : DownloadedDirType.ZIP);
-         }
-      } else if (downloadedArtifact is DownloadedApk) {
-         downloadedFile = downloadedArtifact;
-      } else if (downloadedArtifact is DownloadedDir) {
-         downloadedDir = downloadedArtifact;
+      if (downloadedArtifact['isAPK'] == true) {
+        downloadedFile = DownloadedApk(id, downloadedArtifact['downloadedFile'] as File);
+      } else {
+        downloadedDir = DownloadedDir(id, downloadedArtifact['downloadedFile'] as File, downloadedArtifact['apkDir'] as Directory, downloadedArtifact['isXAPK'] ? DownloadedDirType.XAPK : DownloadedDirType.ZIP);
       }
 
       willBeSilent = await canInstallSilently(apps[id]!.app);
