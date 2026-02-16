@@ -536,11 +536,10 @@ class AppsPageState extends State<AppsPage> {
         },
       );
       if (value != null) {
-        settingsProvider.setAppSortMethod(
+        settingsProvider.appSortMethod =
           AppSortMethod.values.firstWhere(
             (e) => e.toString() == value['sortMethod'],
-          ),
-        );
+          );
       }
     }
 

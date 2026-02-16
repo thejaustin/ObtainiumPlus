@@ -51,7 +51,7 @@ class AdvancedSettingsSection extends StatelessWidget {
   }
 
   Widget _buildDeepLoggingToggle(BuildContext context) {
-    return Consumer<BehaviorSettingsProvider>(
+    return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.bug_report_outlined),

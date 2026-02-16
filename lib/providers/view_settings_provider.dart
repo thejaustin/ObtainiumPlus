@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 
