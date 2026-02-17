@@ -523,7 +523,7 @@ Future<List<MapEntry<String, String>>> filterApksByArch(
     var abis = (await DeviceInfoPlugin().androidInfo).supportedAbis;
     for (var abi in abis) {
       var urls2 = apkUrls
-          .where((element) => RegExp('.*$abi.*').hasMatch(element.key))
+          .where((element) => RegExp('.*$abi.*', caseSensitive: false).hasMatch(element.key))
           .toList();
       if (urls2.isNotEmpty && urls2.length < apkUrls.length) {
         apkUrls = urls2;
