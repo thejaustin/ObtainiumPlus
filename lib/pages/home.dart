@@ -5,6 +5,7 @@ import 'package:obtainium/utils/device_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/editable_navigation_bar.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
@@ -220,6 +221,7 @@ class HomePageState extends State<HomePage> {
   StreamSubscription<Uri>? _linkSubscription;
   bool isLinkActivity = false;
   late PageController _pageController;
+  bool _isEditMode = false;
 
   late Widget appsPage;
   late Widget updatesPage;
@@ -555,10 +557,6 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  void _showTabCustomizationDialog() {
-    showTabCustomization(context, allPages);
-  }
-
   @override
   Widget build(BuildContext context) {
     AppsProvider appsProvider = context.watch<AppsProvider>();
@@ -654,46 +652,57 @@ class HomePageState extends State<HomePage> {
             physics: const NeverScrollableScrollPhysics(),
             children: activePages.map((p) => p.widget).toList(),
           ),
-          bottomNavigationBar: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onLongPress: () {
-              HapticFeedback.heavyImpact();
-              _showTabCustomizationDialog();
+          bottomNavigationBar: EditableNavigationBar(
+            activePages: activePages,
+            allPages: allPages,
+            selectedIndex: currentIndex,
+            isEditMode: _isEditMode,
+            onEditModeChanged: (editing) {
+              setState(() => _isEditMode = editing);
             },
-            child: NavigationBar(
-              elevation: 3,
-              surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-              indicatorColor: Theme.of(context).colorScheme.secondaryContainer,
-              animationDuration: const Duration(milliseconds: 300),
-              labelBehavior: settingsProvider.navigationLabelBehavior,
-              destinations: activePages
-                  .map(
-                    (e) => NavigationDestination(
-                      icon: Icon(e.icon),
-                      selectedIcon: Icon(e.selectedIcon),
-                      label: e.title,
-                    ),
-                  )
-                  .toList(),
-              onDestinationSelected: (int index) async {
-                HapticFeedback.selectionClick();
-                if (index == currentIndex) {
-                  if (activePages[index].widget == appsPage) {
-                    (appsPage.key as GlobalKey<AppsPageState>?)
-                        ?.currentState
-                        ?.scrollController
-                        .animateTo(0,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOut);
-                  }
-                } else {
-                  switchToPage(index);
+            onDestinationSelected: (int index) {
+              HapticFeedback.selectionClick();
+              if (index == currentIndex) {
+                if (activePages[index].widget == appsPage) {
+                  (appsPage.key as GlobalKey<AppsPageState>?)
+                      ?.currentState
+                      ?.scrollController
+                      .animateTo(0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut);
                 }
-              },
-              selectedIndex: currentIndex,
-            ),
+              } else {
+                switchToPage(index);
+              }
+            },
+            onReorder: (oldIndex, newIndex) {
+              final tabs = List<String>.from(settingsProvider.bottomTabs);
+              // Map from activePages indices to tab IDs
+              final movedId = activePages[oldIndex].id;
+              final targetId = activePages[newIndex].id;
+              final fromIdx = tabs.indexOf(movedId);
+              final toIdx = tabs.indexOf(targetId);
+              if (fromIdx != -1 && toIdx != -1) {
+                tabs.removeAt(fromIdx);
+                tabs.insert(toIdx, movedId);
+                settingsProvider.bottomTabs = tabs;
+              }
+            },
+            onRemoveTab: (String id) {
+              final tabs = List<String>.from(settingsProvider.bottomTabs);
+              tabs.remove(id);
+              settingsProvider.bottomTabs = tabs;
+              // Adjust selected index if needed
+              if (currentIndex >= tabs.length) {
+                switchToPage(tabs.length - 1);
+              }
+            },
+            onAddTab: (String id) {
+              final tabs = List<String>.from(settingsProvider.bottomTabs);
+              tabs.add(id);
+              settingsProvider.bottomTabs = tabs;
+            },
+            labelBehavior: settingsProvider.navigationLabelBehavior,
           ),
         ),
       ),
