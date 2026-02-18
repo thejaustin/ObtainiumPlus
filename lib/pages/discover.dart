@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/home.dart';
@@ -213,16 +215,27 @@ class DiscoverPageState extends State<DiscoverPage> {
                       );
                     },
                   ),
-                  if (searching)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: CircularProgressIndicator(),
-                    ),
                 ],
               ),
             ),
           ),
-          if (results.isNotEmpty)
+          if (searching)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.8,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => const AppTileSkeleton(isGrid: true),
+                  childCount: 6,
+                ),
+              ),
+            )
+          else if (results.isNotEmpty)
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverGrid(
@@ -317,8 +330,12 @@ class DiscoverPageState extends State<DiscoverPage> {
               ),
             )
           else if (!searching && searchQuery.isNotEmpty)
-            const SliverFillRemaining(
-              child: Center(child: Text('No results found')),
+            SliverFillRemaining(
+              child: EmptyStateWidget(
+                icon: Icons.search_off_rounded,
+                title: tr('noResults'),
+                subtitle: tr('tryAdjustingFilters'),
+              ),
             ),
         ],
       ),
