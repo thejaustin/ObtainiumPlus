@@ -80,3 +80,30 @@ class AppConstants {
   /// Vertical padding for input fields
   static const double inputVerticalPadding = 16.0;
 }
+
+/// Centralised opacity values used across the app.
+/// Always prefer these over inline literals.
+class AppOpacity {
+  AppOpacity._();
+
+  /// Very subtle tint — overlays, shadows (0.1)
+  static const double subtle = 0.1;
+
+  /// Low-key fill or tint (0.2)
+  static const double low = 0.2;
+
+  /// Medium fill for containers (0.3)
+  static const double medium = 0.3;
+
+  /// Moderate fill — selected states (0.4)
+  static const double moderate = 0.4;
+
+  /// Half opacity — pulsing badges, placeholders (0.5)
+  static const double half = 0.5;
+
+  /// Material ripple / state-layer (0.12)
+  static const double hint = 0.12;
+
+  /// Muted secondary text (0.65)
+  static const double muted = 0.65;
+}

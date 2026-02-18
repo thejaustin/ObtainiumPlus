@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:provider/provider.dart';
@@ -86,8 +87,16 @@ class _StatisticsPageState extends State<StatisticsPage> {
             return Center(child: Text('Error loading stats: ${snapshot.error}'));
           }
 
+          if (totalApps == 0) {
+            return EmptyStateWidget(
+              icon: Icons.bar_chart_outlined,
+              title: tr('noApps'),
+              subtitle: tr('addAppFromUrl'),
+            );
+          }
+
           final logs = snapshot.data ?? [];
-          
+
           // Parse logs for history
           // Look for 'EVENT: InstallCompleted | ... success=true'
           final installEvents = logs.where((l) => 
@@ -201,11 +210,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
             final item = items[index];
             return Card(
               elevation: 0,
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
               ),
               child: Padding(
@@ -260,7 +269,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListView.separated(
         shrinkWrap: true,
@@ -278,7 +287,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.green.withOpacity(0.1),
+              backgroundColor: Colors.green.withValues(alpha: 0.1),
               child: const Icon(Icons.download_done, color: Colors.green, size: 20),
             ),
             title: Text(appId),
