@@ -33,10 +33,15 @@ Set<String> findStandardFormatsForVersion(String version, bool strict) {
   // If !strict, even a substring match is valid
   Set<String> results = {};
   for (var pattern in standardVersionRegExStrings) {
-    if (RegExp(
-      '${strict ? '^' : ''}$pattern${strict ? '\$' : ''}',
-    ).hasMatch(version)) {
-      results.add(pattern);
+    try {
+      if (RegExp(
+        '${strict ? '^' : ''}$pattern${strict ? '\$' : ''}',
+      ).hasMatch(version)) {
+        results.add(pattern);
+      }
+    } catch (_) {
+      // Skip patterns that fail to compile (e.g. adjacent quantifiers from
+      // certain basic+suffix+final combinations). Fixes OBTAINIUMPLUS-1.
     }
   }
   return results;
