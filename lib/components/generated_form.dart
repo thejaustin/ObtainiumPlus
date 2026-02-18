@@ -550,7 +550,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                   child: DefaultTextStyle(
                                     style: Theme.of(context).textTheme.bodySmall!.copyWith( // Smaller, lighter text
                                       fontSize: 13,
-                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
                                     ),
                                     child: w,
                                   ),
