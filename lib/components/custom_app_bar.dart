@@ -68,7 +68,7 @@ class CustomSliverAppBar extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
       actions: actions,
       title: Text(
         title,
@@ -111,7 +111,7 @@ class CustomSliverAppBarCompact extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
+      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
       actions: actions,
       title: Text(
         title,

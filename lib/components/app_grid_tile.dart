@@ -100,10 +100,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
             curve: Curves.easeOutCubic,
             child: Card(
               elevation: widget.isSelected ? 8 : 1,
-              shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.3) : null,
+              shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3) : null,
               surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
               color: widget.isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
+                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4)
                   : null,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(cardBorderRadius),
@@ -188,7 +188,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                                         blurRadius: 4 * _pulseAnimation.value,
                                         spreadRadius: 1,
                                       ),
