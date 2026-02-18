@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -102,7 +103,11 @@ $logs''';
                   if (snapshot.hasData) {
                     final logs = snapshot.data!;
                     if (logs.isEmpty) {
-                       return Center(child: Text(tr('noLogs'))); 
+                      return EmptyStateWidget(
+                        icon: Icons.receipt_long_outlined,
+                        title: tr('noLogs'),
+                        subtitle: tr('noRecentActivity'),
+                      );
                     }
                     logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
                     return SelectableText(logString ?? '');
