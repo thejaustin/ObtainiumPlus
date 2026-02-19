@@ -1,13 +1,11 @@
 import 'dart:io';
 
-import 'package:http/http.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -31,17 +29,16 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
+import 'package:obtainium/components/logs_dialog.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/legacy_settings.dart';
 import 'package:obtainium/pages/statistics.dart';
 
-// Global variable for cached device info
-AndroidDeviceInfo? _cachedDeviceInfo;
 
 class SettingsPage extends StatefulWidget {
   final int initialTab; // Kept for backward compatibility, though tabs are removed
@@ -461,7 +458,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                                                                 icon: Icons.auto_awesome_outlined,
                                                                                 title: tr('obtainiumPlusFeatures'),
                                                                                 subtitle: tr('plusFeaturesDescription'),
-                                                                                builder: (context) => _SubMenuPage(
+                                                                                builder: (context) => _SettingsSubMenuPage(
                                                                                   title: tr('obtainiumPlusFeatures'),
                                                                                   child: const SingleChildScrollView(
                                                                                     child: Padding(
@@ -476,7 +473,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                                                                 icon: Icons.sync_outlined,
                                                                                 title: tr('updatesAndAutomation'),
                                                                                 subtitle: tr('updatesDescription'),
-                                                                                builder: (context) => _SubMenuPage(
+                                                                                builder: (context) => _SettingsSubMenuPage(
                                                                                   title: tr('updatesAndAutomation'),
                                                                                   child: SingleChildScrollView(
                                                                                     child: Padding(
@@ -495,7 +492,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                                                                 icon: Icons.palette_outlined,
                                                                                 title: tr('appearance'),
                                                                                 subtitle: tr('appearanceDescription'),
-                                                                                builder: (context) => _SubMenuPage(
+                                                                                builder: (context) => _SettingsSubMenuPage(
                                                                                   title: tr('appearance'),
                                                                                   child: SingleChildScrollView(
                                                                                     child: Padding(
@@ -533,7 +530,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                                                                 icon: Icons.bug_report_outlined,
                                                                                 title: tr('advanced'),
                                                                                 subtitle: tr('advancedDescription'),
-                                                                                builder: (context) => _SubMenuPage(
+                                                                                builder: (context) => _SettingsSubMenuPage(
                                                                                   title: tr('advancedAndTroubleshooting'),
                                                                                   child: SingleChildScrollView(
                                                                                     child: Padding(
@@ -745,11 +742,11 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   }
 }
 
-class _SubMenuPage extends StatelessWidget {
+class _SettingsSubMenuPage extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _SubMenuPage({required this.title, required this.child});
+  const _SettingsSubMenuPage({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -781,147 +778,3 @@ class _SubMenuPage extends StatelessWidget {
   }
 }
 
-class LogsDialog extends StatefulWidget {
-  const LogsDialog({super.key});
-
-  @override
-  State<LogsDialog> createState() => _LogsDialogState();
-}
-
-class _LogsDialogState extends State<LogsDialog> {
-  String? logString;
-  List<int> days = [7, 5, 4, 3, 2, 1];
-  final Future<AndroidDeviceInfo> _androidInfoFuture = DeviceInfoPlugin().androidInfo;
-
-  Future<void> _reportIssue() async {
-    var logs = logString ?? '';
-    if (logs.length > 2000) {
-      logs = logs.substring(logs.length - 2000);
-    }
-
-    var appInfo = await AppInstallService.getInstalledInfo(obtainiumId);
-    var deviceInfo = _cachedDeviceInfo;
-    var androidInfo = await _androidInfoFuture;
-
-    var body = '''${tr('reportIssue')}
-    
-App: $appInfo
-Device: $deviceInfo
-Android: $androidInfo
-
-$logs''';
-
-    var url = Uri.parse(
-      'https://github.com/thejaustin/ObtainiumPlus/issues/new?body=${Uri.encodeComponent(body)}',
-    );
-    if (await canLaunchUrl(url)) {
-      await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
-      );
-    } else {
-      Clipboard.setData(ClipboardData(text: url.toString()));
-      showMessage(tr('copiedToClipboard'), context);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(tr('appLogs')),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 400),
-        child: logString != null
-            ? Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  child: Text(logString!),
-                ),
-              )
-            : FutureBuilder<List<Log>>(
-                future: context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7))),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final logs = snapshot.data!;
-                    logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
-                    return Scrollbar(
-                      thumbVisibility: true,
-                      child: SingleChildScrollView(
-                        child: Text(logString ?? ''),
-                      ),
-                    );
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
-              ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('close')),
-        ),
-        TextButton(
-          onPressed: () {
-            context.read<LogsProvider>().clear();
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('clearCache')),
-        ),
-        TextButton(
-          onPressed: () {
-            _reportIssue();
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('reportIssue')),
-        ),
-      ],
-    );
-  }
-}
-
-class ChangelogPage extends StatelessWidget {
-  const ChangelogPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(tr('viewChangelog')),
-      ),
-      body: FutureBuilder<String>(
-        future: _fetchChangelog(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('${tr('error')}: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text(tr('noLogs')));
-          }
-
-          return Markdown(
-            data: snapshot.data!,
-            onTapLink: (text, href, title) {
-              if (href != null) {
-                launchUrlString(href, mode: LaunchMode.externalApplication);
-              }
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Future<String> _fetchChangelog() async {
-    final response = await get(Uri.parse(
-        'https://raw.githubusercontent.com/thejaustin/ObtainiumPlus/main/CHANGELOG_DETAILED.md'));
-    if (response.statusCode == 200) {
-      return response.body;
-    } else {
-      throw Exception('Failed to load changelog');
-    }
-  }
-}
