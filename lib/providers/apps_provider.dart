@@ -89,7 +89,7 @@ class AppsProvider with ChangeNotifier {
   late StreamSubscription<FGBGType>? foregroundSubscription;
   late Directory APKDir;
   late Directory iconsCacheDir;
-  late SettingsProvider settingsProvider = SettingsProvider();
+  late SettingsProvider settingsProvider;
 
   // Optimized: Return values directly unless deep copy is explicitly needed
   Iterable<AppInMemory> getAppValues({bool deepCopy = true}) => 
@@ -208,7 +208,8 @@ class AppsProvider with ChangeNotifier {
     return listedApps;
   }
 
-  AppsProvider({isBg = false}) {
+  AppsProvider({isBg = false, SettingsProvider? settings}) {
+    settingsProvider = settings ?? SettingsProvider();
     // Always load SharedPreferences so settings reads return user values, not
     // hard-coded defaults — important for background instances that skip initialize().
     settingsProvider.initializeSettings();

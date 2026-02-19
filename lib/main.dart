@@ -117,8 +117,11 @@ void main() async {
         runApp(
           MultiProvider(
             providers: [
-              ChangeNotifierProvider(create: (context) => AppsProvider()),
               ChangeNotifierProvider(create: (context) => SettingsProvider()),
+              ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
+                create: (ctx) => AppsProvider(settings: ctx.read<SettingsProvider>()),
+                update: (ctx, settings, apps) => apps!..settingsProvider = settings,
+              ),
               ChangeNotifierProvider(create: (context) => context.read<SettingsProvider>().updateSettings),
               ChangeNotifierProvider(create: (context) => context.read<SettingsProvider>().viewSettings),
               ChangeNotifierProvider(create: (context) => context.read<SettingsProvider>().behaviorSettings),
