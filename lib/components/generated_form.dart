@@ -980,9 +980,16 @@ class _GeneratedFormState extends State<GeneratedForm> {
       rows.add(rowItems);
     });
 
+    final bool hasRequiredFields = widget.items.any(
+      (row) => row.any(
+        (item) => item is GeneratedFormTextField && item.required,
+      ),
+    );
+
     return Form(
       key: _formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...rows.map(
             (row) => Row(
@@ -991,6 +998,15 @@ class _GeneratedFormState extends State<GeneratedForm> {
               children: [...row.map((e) => e)],
             ),
           ),
+          if (hasRequiredFields) ...[
+            const SizedBox(height: 8),
+            Text(
+              '* ${tr('requiredInBrackets')}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
         ],
       ),
     );
