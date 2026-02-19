@@ -7,6 +7,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -30,7 +31,10 @@ class AppListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final plusEnableSwipeActions = context.select<SettingsProvider, bool>(
+      (sp) => sp.plusEnableSwipeActions,
+    );
     final appsProvider = context.read<AppsProvider>();
     final width = MediaQuery.of(context).size.width;
     final horizontalPadding = width > 800 ? (width - 800) / 2 : 0.0;
@@ -91,8 +95,8 @@ class AppListView extends StatelessWidget {
           }
 
           // Check if swipe actions are enabled via Plus Features
-          final swipeEnabled = settings.plusEnableSwipeActions &&
-              !(settings.swipeRightAction == AppSwipeAction.none && settings.swipeLeftAction == AppSwipeAction.none);
+          final swipeEnabled = plusEnableSwipeActions &&
+              !(behaviorSettings.swipeRightAction == AppSwipeAction.none && behaviorSettings.swipeLeftAction == AppSwipeAction.none);
 
           void _showAppShortcuts() {
             HapticFeedback.heavyImpact();
@@ -164,24 +168,24 @@ class AppListView extends StatelessWidget {
             key: Key('dismiss_${app.app.id}'),
             direction: !swipeEnabled
                 ? DismissDirection.none
-                : (settings.swipeRightAction == AppSwipeAction.none ? DismissDirection.endToStart : (settings.swipeLeftAction == AppSwipeAction.none ? DismissDirection.startToEnd : DismissDirection.horizontal)),
+                : (behaviorSettings.swipeRightAction == AppSwipeAction.none ? DismissDirection.endToStart : (behaviorSettings.swipeLeftAction == AppSwipeAction.none ? DismissDirection.startToEnd : DismissDirection.horizontal)),
             background: Container(
-              color: getActionColor(settings.swipeRightAction),
+              color: getActionColor(behaviorSettings.swipeRightAction),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.only(left: 20.0),
-              child: getActionIcon(settings.swipeRightAction),
+              child: getActionIcon(behaviorSettings.swipeRightAction),
             ),
             secondaryBackground: Container(
-              color: getActionColor(settings.swipeLeftAction),
+              color: getActionColor(behaviorSettings.swipeLeftAction),
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 20.0),
-              child: getActionIcon(settings.swipeLeftAction),
+              child: getActionIcon(behaviorSettings.swipeLeftAction),
             ),
             confirmDismiss: (direction) {
               if (direction == DismissDirection.startToEnd) {
-                return handleSwipe(settings.swipeRightAction);
+                return handleSwipe(behaviorSettings.swipeRightAction);
               } else {
-                return handleSwipe(settings.swipeLeftAction);
+                return handleSwipe(behaviorSettings.swipeLeftAction);
               }
             },
             child: RepaintBoundary(

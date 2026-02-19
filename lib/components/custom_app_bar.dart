@@ -149,8 +149,9 @@ class AdaptiveSliverAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final style = settings.getAppBarStyleForPage(pageId);
+    final style = context.select<SettingsProvider, AppBarStyle>(
+      (sp) => sp.getAppBarStyleForPage(pageId),
+    );
 
     if (style == AppBarStyle.large) {
       return CustomSliverAppBar(

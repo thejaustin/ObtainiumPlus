@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class CategoryEditorSelector extends StatefulWidget {
@@ -29,9 +29,9 @@ class _CategoryEditorSelectorState extends State<CategoryEditorSelector> {
 
   @override
   Widget build(BuildContext context) {
-    var settingsProvider = context.watch<SettingsProvider>();
+    var viewSettings = context.watch<ViewSettingsProvider>();
     var appsProvider = context.watch<AppsProvider>();
-    storedValues = settingsProvider.categories.map(
+    storedValues = viewSettings.categories.map(
       (key, value) => MapEntry(
         key,
         MapEntry(
@@ -62,7 +62,7 @@ class _CategoryEditorSelectorState extends State<CategoryEditorSelector> {
         if (!isBuilding) {
           storedValues =
               values['categories'] as Map<String, MapEntry<int, bool>>;
-          settingsProvider.setCategories(
+          viewSettings.setCategories(
             storedValues.map((key, value) => MapEntry(key, value.key)),
             appsProvider: appsProvider,
           );

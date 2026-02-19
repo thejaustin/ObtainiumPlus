@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -76,7 +76,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final settingsProvider = context.watch<SettingsProvider>();
+    final settingsProvider = context.watch<ViewSettingsProvider>();
     final sourceProvider = SourceProvider();
 
     return Container(
@@ -124,7 +124,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                     ],
 
                     // Advanced filters section
-                    _buildAnimatedSection(4, _buildAdvancedSection(settingsProvider, sourceProvider, theme)),
+                    _buildAnimatedSection(4, _buildAdvancedSection(sourceProvider, theme)),
                   ],
                 ),
               ),
@@ -163,7 +163,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     );
   }
 
-  Widget _buildSortSection(SettingsProvider sp, ThemeData theme) {
+  Widget _buildSortSection(ViewSettingsProvider sp, ThemeData theme) {
     final currentSort = sp.appSortMethod;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +190,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     );
   }
 
-  Widget _buildViewModeSection(SettingsProvider sp, ThemeData theme) {
+  Widget _buildViewModeSection(ViewSettingsProvider sp, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -323,7 +323,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   }
 
   Widget _buildAdvancedSection(
-      SettingsProvider sp, SourceProvider sourceProvider, ThemeData theme) {
+      SourceProvider sourceProvider, ThemeData theme) {
     final hasAdvancedFilters = widget.filter.nameFilter.isNotEmpty ||
         widget.filter.authorFilter.isNotEmpty ||
         widget.filter.idFilter.isNotEmpty ||
