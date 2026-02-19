@@ -8,6 +8,7 @@ import 'package:obtainium/components/apps/app_list_tile.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -43,23 +44,26 @@ class CategorySections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
-    final isGridView = settingsProvider.globalViewMode == ViewMode.grid;
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final plusEnableCategoryReorder = context.select<SettingsProvider, bool>(
+      (sp) => sp.plusEnableCategoryReorder,
+    );
+    final isGridView = viewSettings.globalViewMode == ViewMode.grid;
 
     if (isGridView) {
       return SliverList(
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
-            return _buildCategoryGridSection(context, index, settingsProvider);
+            return _buildCategoryGridSection(context, index, viewSettings);
           },
           childCount: listedCategories.length,
         ),
       );
-    } else if (settingsProvider.plusEnableCategoryReorder) {
+    } else if (plusEnableCategoryReorder) {
       // Enable drag-to-reorder when Plus Feature is enabled
       return SliverReorderableList(
         itemBuilder: (BuildContext context, int index) {
-          return _buildCategoryCollapsibleTile(context, index, settingsProvider, enableReorder: true);
+          return _buildCategoryCollapsibleTile(context, index, viewSettings, enableReorder: true);
         },
         itemCount: listedCategories.length,
         onReorder: (int oldIndex, int newIndex) {
@@ -68,7 +72,7 @@ class CategorySections extends StatelessWidget {
           }
           final item = listedCategories.removeAt(oldIndex);
           listedCategories.insert(newIndex, item);
-          settingsProvider.categoryOrder = listedCategories
+          viewSettings.categoryOrder = listedCategories
               .where((c) => c != null)
               .map((c) => c!)
               .toList();
@@ -79,7 +83,7 @@ class CategorySections extends StatelessWidget {
       return SliverList(
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
-            return _buildCategoryCollapsibleTile(context, index, settingsProvider, enableReorder: false);
+            return _buildCategoryCollapsibleTile(context, index, viewSettings, enableReorder: false);
           },
           childCount: listedCategories.length,
         ),
@@ -87,7 +91,7 @@ class CategorySections extends StatelessWidget {
     }
   }
 
-  Widget _buildCategoryGridSection(BuildContext context, int index, SettingsProvider settingsProvider) {
+  Widget _buildCategoryGridSection(BuildContext context, int index, ViewSettingsProvider settingsProvider) {
     final String? categoryName = listedCategories[index];
     final int? categoryColorInt = categoryName != null ? settingsProvider.categories[categoryName] : null;
     final Color? categoryColor = categoryColorInt != null ? getCachedCategoryColor(categoryColorInt) : null;
@@ -173,7 +177,7 @@ class CategorySections extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCollapsibleTile(BuildContext context, int index, SettingsProvider settingsProvider, {bool enableReorder = true}) {
+  Widget _buildCategoryCollapsibleTile(BuildContext context, int index, ViewSettingsProvider settingsProvider, {bool enableReorder = true}) {
     final String? categoryName = listedCategories[index];
     final categoryColorInt = categoryName != null ? settingsProvider.categories[categoryName] : null;
     final categoryColor = categoryColorInt != null ? getCachedCategoryColor(categoryColorInt) : null;
