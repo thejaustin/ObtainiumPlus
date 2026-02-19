@@ -25,6 +25,10 @@ import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -233,15 +237,16 @@ class AppsPageState extends State<AppsPage> {
   @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
-    var settingsProvider = context.watch<SettingsProvider>();
+    var viewSettings = context.watch<ViewSettingsProvider>();
+    final updateSettings = context.watch<UpdateSettingsProvider>();
     var listedApps = appsProvider.getFilteredSortedApps(
       filter: filter,
-      sortMethod: settingsProvider.appSortMethod,
-      sortColumn: settingsProvider.sortColumn,
-      sortOrder: settingsProvider.sortOrder,
-      pinUpdates: settingsProvider.pinUpdates,
-      groupByCategory: settingsProvider.groupByCategory,
-      buryNonInstalled: settingsProvider.buryNonInstalled,
+      sortMethod: viewSettings.appSortMethod,
+      sortColumn: viewSettings.sortColumn,
+      sortOrder: viewSettings.sortOrder,
+      pinUpdates: viewSettings.pinUpdates,
+      groupByCategory: viewSettings.groupByCategory,
+      buryNonInstalled: viewSettings.buryNonInstalled,
     );
 
     refresh() {
@@ -265,8 +270,8 @@ class AppsPageState extends State<AppsPage> {
 
     if (!appsProvider.loadingApps &&
         appsProvider.apps.isNotEmpty &&
-        settingsProvider.checkJustStarted() &&
-        settingsProvider.checkOnStart) {
+        context.read<SettingsProvider>().checkJustStarted() &&
+        updateSettings.checkOnStart) {
       _refreshIndicatorKey.currentState?.show();
     }
 
@@ -298,7 +303,7 @@ class AppsPageState extends State<AppsPage> {
     }).toList();
 
     List<String?> listedCategories = listedApps.map((e) => e.app.categories.isNotEmpty ? e.app.categories : [null]).expand((e) => e).toSet().toList();
-    var customOrder = settingsProvider.categoryOrder;
+    var customOrder = viewSettings.categoryOrder;
     listedCategories.sort((a, b) {
       var aIndex = a != null ? customOrder.indexOf(a) : -1;
       var bIndex = b != null ? customOrder.indexOf(b) : -1;
@@ -434,7 +439,7 @@ class AppsPageState extends State<AppsPage> {
       }
     }
 
-    var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
+    var isFilterOff = filter.isIdenticalTo(neutralFilter, context.read<SettingsProvider>());
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -443,8 +448,8 @@ class AppsPageState extends State<AppsPage> {
         onRefresh: refresh,
         child: Scrollbar(
           controller: scrollController,
-          child: Consumer<SettingsProvider>(
-            builder: (context, settingsProvider, _) {
+          child: Consumer<ViewSettingsProvider>(
+            builder: (context, viewSettings, _) {
               return CustomScrollView(
                 controller: scrollController,
                 slivers: <Widget>[
@@ -556,7 +561,7 @@ class AppsPageState extends State<AppsPage> {
                                   context,
                                   filter: filter,
                                   onFilterChanged: () => setState(() {}),
-                                  categories: settingsProvider.categories,
+                                  categories: viewSettings.categories,
                                 );
                               },
                               tooltip: tr('sortOptions'),
@@ -577,7 +582,7 @@ class AppsPageState extends State<AppsPage> {
                           ],
                         ),
                       ],
-                      if (settingsProvider.displayShowAppCount &&
+                      if (viewSettings.displayShowAppCount &&
                           selectedAppIds.isEmpty)
                         Center(
                           child: Padding(
@@ -597,7 +602,7 @@ class AppsPageState extends State<AppsPage> {
                   ...getLoadingWidgets(),
 
                   // Content
-                  if (settingsProvider.groupByCategory)
+                  if (viewSettings.groupByCategory)
                     CategorySections(
                       listedApps: listedApps,
                       listedCategories: listedCategories,
@@ -606,7 +611,7 @@ class AppsPageState extends State<AppsPage> {
                       getChangeLogFn: getChangeLogFn,
                       getCachedCategoryColor: _getCachedCategoryColor,
                     )
-                  else if (settingsProvider.globalViewMode == ViewMode.grid)
+                  else if (viewSettings.globalViewMode == ViewMode.grid)
                     AppGridView(
                         apps: listedApps,
                         selectedAppIds: selectedAppIds,

@@ -18,6 +18,8 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/pages/updates.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/url_validator.dart';
@@ -559,8 +561,8 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    AppsProvider appsProvider = context.watch<AppsProvider>();
-    SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    context.select<AppsProvider, int>((a) => a.apps.length);
+    final viewSettings = context.watch<ViewSettingsProvider>();
 
     allPages = {
       'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
@@ -572,7 +574,7 @@ class HomePageState extends State<HomePage> {
       'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
     };
 
-    activePages = settingsProvider.bottomTabs
+    activePages = viewSettings.bottomTabs
         .where((id) => allPages.containsKey(id))
         .map((id) => allPages[id]!)
         .toList();
@@ -676,7 +678,7 @@ class HomePageState extends State<HomePage> {
               }
             },
             onReorder: (oldIndex, newIndex) {
-              final tabs = List<String>.from(settingsProvider.bottomTabs);
+              final tabs = List<String>.from(viewSettings.bottomTabs);
               // Map from activePages indices to tab IDs
               final movedId = activePages[oldIndex].id;
               final targetId = activePages[newIndex].id;
@@ -685,24 +687,24 @@ class HomePageState extends State<HomePage> {
               if (fromIdx != -1 && toIdx != -1) {
                 tabs.removeAt(fromIdx);
                 tabs.insert(toIdx, movedId);
-                settingsProvider.bottomTabs = tabs;
+                viewSettings.bottomTabs = tabs;
               }
             },
             onRemoveTab: (String id) {
-              final tabs = List<String>.from(settingsProvider.bottomTabs);
+              final tabs = List<String>.from(viewSettings.bottomTabs);
               tabs.remove(id);
-              settingsProvider.bottomTabs = tabs;
+              viewSettings.bottomTabs = tabs;
               // Adjust selected index if needed
               if (currentIndex >= tabs.length) {
                 switchToPage(tabs.length - 1);
               }
             },
             onAddTab: (String id) {
-              final tabs = List<String>.from(settingsProvider.bottomTabs);
+              final tabs = List<String>.from(viewSettings.bottomTabs);
               tabs.add(id);
-              settingsProvider.bottomTabs = tabs;
+              viewSettings.bottomTabs = tabs;
             },
-            labelBehavior: settingsProvider.navigationLabelBehavior,
+            labelBehavior: viewSettings.navigationLabelBehavior,
           ),
         ),
       ),
