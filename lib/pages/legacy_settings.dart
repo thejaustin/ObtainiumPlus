@@ -590,6 +590,19 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Flexible(child: Text(tr('enableUndoForAppRemoval'))),
+                            Switch(
+                              value: settingsProvider.enableUndoForAppRemoval,
+                              onChanged: (value) {
+                                settingsProvider.enableUndoForAppRemoval = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                             Flexible(child: Text(tr('parallelDownloads'))),
                             Switch(
                               value: settingsProvider.parallelDownloads,
@@ -949,6 +962,64 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                             ),
                           ],
                         ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('enableHapticFeedback'))),
+                            Switch(
+                              value: settingsProvider.enableHapticFeedback,
+                              onChanged: (value) {
+                                settingsProvider.enableHapticFeedback = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('enableSwipeGestures'))),
+                            Switch(
+                              value: settingsProvider.enableSwipeGestures,
+                              onChanged: (value) {
+                                settingsProvider.enableSwipeGestures = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        if (settingsProvider.enableSwipeGestures) ...[
+                          height16,
+                          DropdownButtonFormField<AppSwipeAction>(
+                            isExpanded: true,
+                            decoration: InputDecoration(labelText: tr('swipeRightAction')),
+                            value: settingsProvider.swipeRightAction,
+                            items: AppSwipeAction.values
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(tr('action_${e.name}')),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) settingsProvider.swipeRightAction = value;
+                            },
+                          ),
+                          height16,
+                          DropdownButtonFormField<AppSwipeAction>(
+                            isExpanded: true,
+                            decoration: InputDecoration(labelText: tr('swipeLeftAction')),
+                            value: settingsProvider.swipeLeftAction,
+                            items: AppSwipeAction.values
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(tr('action_${e.name}')),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) settingsProvider.swipeLeftAction = value;
+                            },
+                          ),
+                        ],
                         height32,
                         Text(
                           tr('categories'),
