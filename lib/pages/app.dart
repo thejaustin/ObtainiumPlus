@@ -38,8 +38,6 @@ class AppPage extends StatefulWidget {
 }
 
 class _AppPageState extends State<AppPage> {
-  late final WebViewController _webViewController;
-  bool _wasWebViewOpened = false;
   AppInMemory? prevApp;
   bool updating = false;
 
@@ -76,48 +74,17 @@ class _AppPageState extends State<AppPage> {
   @override
   void initState() {
     super.initState();
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onWebResourceError: (WebResourceError error) {
-            if (error.isForMainFrame == true) {
-              showError(
-                ObtainiumError(error.description, unexpected: true),
-                context,
-              );
-            }
-          },
-          onNavigationRequest: (NavigationRequest request) =>
-              !(request.url.startsWith("http://") ||
-                  request.url.startsWith("https://") ||
-                  request.url.startsWith("ftp://") ||
-                  request.url.startsWith("ftps://"))
-              ? NavigationDecision.prevent
-              : NavigationDecision.navigate,
-        ),
-      );
-  }
-
-  @override
-  void dispose() {
-    // WebViewController doesn't have a dispose method but we should
-    // clear any pending operations to avoid memory leaks
-    if (_wasWebViewOpened) {
-      _webViewController.loadRequest(Uri.parse('about:blank'));
-    }
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
-    var settingsProvider = context.watch<SettingsProvider>();
+    final showAppWebpage = context.select<SettingsProvider, bool>((sp) => sp.showAppWebpage);
+    final checkUpdateOnDetailPage = context.select<SettingsProvider, bool>((sp) => sp.checkUpdateOnDetailPage);
+    final highlightTouchTargets = context.select<SettingsProvider, bool>((sp) => sp.highlightTouchTargets);
     var showAppWebpageFinal =
-        (settingsProvider.showAppWebpage &&
-            !widget.showOppositeOfPreferredView) ||
-        (!settingsProvider.showAppWebpage &&
-            widget.showOppositeOfPreferredView);
+        (showAppWebpage && !widget.showOppositeOfPreferredView) ||
+        (!showAppWebpage && widget.showOppositeOfPreferredView);
     getUpdate(String id, {bool resetVersion = false}) async {
       try {
         if (mounted) {
@@ -161,7 +128,7 @@ class _AppPageState extends State<AppPage> {
     if (!areDownloadsRunning &&
         prevApp == null &&
         app != null &&
-        settingsProvider.checkUpdateOnDetailPage) {
+        checkUpdateOnDetailPage) {
       prevApp = app;
       getUpdate(app.app.id);
     }
@@ -173,11 +140,6 @@ class _AppPageState extends State<AppPage> {
     bool installedVersionIsEstimate = app?.app != null
         ? SourceUtils.isVersionPseudo(app!.app)
         : false;
-
-    if (app != null && !_wasWebViewOpened) {
-      _wasWebViewOpened = true;
-      _webViewController.loadRequest(Uri.parse(app.app.url));
-    }
 
     getInfoColumn() {
       String versionLines = '';
@@ -303,7 +265,7 @@ class _AppPageState extends State<AppPage> {
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      color: settingsProvider.highlightTouchTargets
+                      color: highlightTouchTargets
                           ? (Theme.of(context).brightness == Brightness.light
                                     ? Theme.of(context).primaryColor
                                     : Theme.of(context).primaryColorLight)
@@ -315,7 +277,7 @@ class _AppPageState extends State<AppPage> {
                                 )
                           : null,
                     ),
-                    padding: settingsProvider.highlightTouchTargets
+                    padding: highlightTouchTargets
                         ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
                         : const EdgeInsetsDirectional.fromSTEB(0, 6, 0, 6),
                     margin: const EdgeInsetsDirectional.fromSTEB(0, 6, 0, 0),
@@ -591,14 +553,6 @@ class _AppPageState extends State<AppPage> {
       ],
     );
 
-    getAppWebView() => app != null
-        ? WebViewWidget(
-            key: ObjectKey(_webViewController),
-            controller: _webViewController
-              ..setBackgroundColor(Theme.of(context).colorScheme.surface),
-          )
-        : Container();
-
     showMarkUpdatedDialog() {
       return showDialog(
         context: context,
@@ -695,195 +649,17 @@ class _AppPageState extends State<AppPage> {
       }
     }
 
-    getInstallOrUpdateButton() => FilledButton(
-      onPressed:
-          !updating &&
-              (app?.app.installedVersion == null ||
-                  app?.app.installedVersion != app?.app.latestVersion) &&
-              !areDownloadsRunning
-          ? () async {
-              try {
-                var successMessage = app?.app.installedVersion == null
-                    ? tr('installed')
-                    : tr('appsUpdated');
-                HapticFeedback.heavyImpact();
-                var res = await appsProvider.downloadAndInstallLatestApps(
-                  app?.app.id != null ? [app!.app.id] : [],
-                  globalNavigatorKey.currentContext,
-                );
-                if (res.isNotEmpty && !trackOnly) {
-                  // ignore: use_build_context_synchronously
-                  showMessage(successMessage, context);
-                }
-                if (res.isNotEmpty && mounted) {
-                  Navigator.of(context).pop();
-                }
-              } catch (e) {
-                // ignore: use_build_context_synchronously
-                showError(e, context);
-              }
-            }
-          : null,
-      child: Text(
-        app?.app.installedVersion == null
-            ? !trackOnly
-                  ? tr('install')
-                  : tr('markInstalled')
-            : !trackOnly
-            ? tr('update')
-            : tr('markUpdated'),
-      ),
-    );
-
-    getBottomSheetMenu() => Padding(
-      padding: EdgeInsets.fromLTRB(
-        0,
-        0,
-        0,
-        MediaQuery.of(context).padding.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Row(
-              children: [
-                // Scrollable action buttons for narrow screens
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (source != null &&
-                            source.combinedAppSpecificSettingFormItems.isNotEmpty)
-                          IconButton(
-                            onPressed: app?.downloadProgress != null || updating
-                                ? null
-                                : () async {
-                                    var values = await showAdditionalOptionsDialog();
-                                    handleAdditionalOptionChanges(values);
-                                  },
-                            tooltip: tr('additionalOptions'),
-                            icon: const Icon(Icons.edit),
-                          ),
-                        if (app != null && app.installedInfo != null)
-                          IconButton(
-                            onPressed: () {
-                              appsProvider.openAppSettings(app.app.id);
-                            },
-                            icon: const Icon(Icons.settings),
-                            tooltip: tr('settings'),
-                          ),
-                        if (app != null && showAppWebpageFinal)
-                          IconButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext ctx) {
-                                  return AlertDialog(
-                                    scrollable: true,
-                                    content: getFullInfoColumn(small: true),
-                                    title: Text(app.name),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Text(tr('continue')),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            icon: const Icon(Icons.more_horiz),
-                            tooltip: tr('more'),
-                          ),
-                        if (app?.app.installedVersion != null &&
-                            app?.app.installedVersion != app?.app.latestVersion &&
-                            !isVersionDetectionStandard &&
-                            !trackOnly)
-                          IconButton(
-                            onPressed: app?.downloadProgress != null || updating
-                                ? null
-                                : showMarkUpdatedDialog,
-                            tooltip: tr('markUpdated'),
-                            icon: const Icon(Icons.done),
-                          ),
-                        if ((!isVersionDetectionStandard || trackOnly) &&
-                            app?.app.installedVersion != null &&
-                            app?.app.installedVersion == app?.app.latestVersion)
-                          IconButton(
-                            onPressed: app?.app == null || updating
-                                ? null
-                                : () {
-                                    app!.app.installedVersion = null;
-                                    appsProvider.saveApps([app.app]);
-                                  },
-                            icon: const Icon(Icons.restore_rounded),
-                            tooltip: tr('resetInstallStatus'),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8.0),
-                Flexible(
-                  flex: 2,
-                  child: getInstallOrUpdateButton(),
-                ),
-                const SizedBox(width: 8.0),
-                IconButton(
-                  onPressed: app?.downloadProgress != null || updating
-                      ? null
-                      : () {
-                          appsProvider
-                              .removeAppsWithModal(
-                                context,
-                                app != null ? [app.app] : [],
-                              )
-                              .then((value) {
-                                if (value == true) {
-                                  Navigator.of(context).pop();
-                                }
-                              });
-                        },
-                  tooltip: tr('remove'),
-                  icon: const Icon(Icons.delete_outline),
-                ),
-              ],
-            ),
-          ),
-          if (app?.downloadProgress != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-              child: LinearProgressIndicator(
-                value: app!.downloadProgress! >= 0
-                    ? app.downloadProgress! / 100
-                    : null,
-              ),
-            ),
-        ],
-      ),
-    );
-
-    appScreenAppBar() => AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
-    );
-
     return Scaffold(
       appBar: showAppWebpageFinal ? (widget.isModal ? null : AppBar()) : null,
       backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
       body: RefreshIndicator(
         child: showAppWebpageFinal
-            ? getAppWebView()
+            ? (app != null
+                ? _AppWebView(
+                    url: app.app.url,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                  )
+                : const SizedBox.shrink())
             : CustomScrollView(
                 slivers: [
                   if (widget.isModal)
@@ -912,23 +688,6 @@ class _AppPageState extends State<AppPage> {
                           ),
                     title: Text(app?.name ?? tr('app')),
                     surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-                    actions: [
-                      if (app?.app.url != null)
-                        IconButton(
-                          icon: const Icon(Icons.open_in_browser),
-                          tooltip: tr('showWebInAppView'),
-                          onPressed: () {
-                            if (settingsProvider.showAppWebpage) {
-                              // If global setting is ON, this button should probably open in external browser or toggle view mode locally?
-                              // The logic `showAppWebpageFinal` handles the toggle if we reload the widget with new param?
-                              // But here we are inside the widget.
-                              // Actually, the original appScreenAppBar didn't have actions.
-                              // Let's keep it simple and just have the back button and title for now to match M3 style.
-                              // If user wants to open web, they can click the link in the body or use the 'more' menu.
-                            }
-                          },
-                        )
-                    ],
                   ),
                   SliverToBoxAdapter(
                     child: Column(children: [getFullInfoColumn()]),
@@ -941,7 +700,276 @@ class _AppPageState extends State<AppPage> {
           }
         },
       ),
-      bottomSheet: getBottomSheetMenu(),
+      bottomSheet: _AppBottomBar(
+        app: app,
+        source: source,
+        trackOnly: trackOnly,
+        isVersionDetectionStandard: isVersionDetectionStandard,
+        showAppWebpageFinal: showAppWebpageFinal,
+        updating: updating,
+        onInstallUpdate: () async {
+          try {
+            var successMessage = app?.app.installedVersion == null
+                ? tr('installed')
+                : tr('appsUpdated');
+            HapticFeedback.heavyImpact();
+            var res = await appsProvider.downloadAndInstallLatestApps(
+              app?.app.id != null ? [app!.app.id] : [],
+              globalNavigatorKey.currentContext,
+            );
+            if (res.isNotEmpty && !trackOnly) {
+              // ignore: use_build_context_synchronously
+              showMessage(successMessage, context);
+            }
+            if (res.isNotEmpty && mounted) {
+              // ignore: use_build_context_synchronously
+              Navigator.of(context).pop();
+            }
+          } catch (e) {
+            // ignore: use_build_context_synchronously
+            showError(e, context);
+          }
+        },
+        onAdditionalOptions: () async {
+          var values = await showAdditionalOptionsDialog();
+          handleAdditionalOptionChanges(values);
+        },
+        onMarkUpdated: showMarkUpdatedDialog,
+        onResetInstallStatus: () {
+          app!.app.installedVersion = null;
+          appsProvider.saveApps([app.app]);
+        },
+        onRemove: () {
+          appsProvider
+              .removeAppsWithModal(context, app != null ? [app.app] : [])
+              .then((value) {
+                if (value == true && mounted) {
+                  Navigator.of(context).pop();
+                }
+              });
+        },
+        onMore: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext ctx) {
+              return AlertDialog(
+                scrollable: true,
+                content: getFullInfoColumn(small: true),
+                title: Text(app!.name),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(tr('continue')),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AppWebView extends StatefulWidget {
+  const _AppWebView({required this.url, required this.backgroundColor});
+
+  final String url;
+  final Color backgroundColor;
+
+  @override
+  State<_AppWebView> createState() => _AppWebViewState();
+}
+
+class _AppWebViewState extends State<_AppWebView> {
+  late final WebViewController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(widget.backgroundColor)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onWebResourceError: (WebResourceError error) {
+            if (error.isForMainFrame == true && mounted) {
+              showError(
+                ObtainiumError(error.description, unexpected: true),
+                context,
+              );
+            }
+          },
+          onNavigationRequest: (NavigationRequest request) =>
+              !(request.url.startsWith('http://') ||
+                  request.url.startsWith('https://') ||
+                  request.url.startsWith('ftp://') ||
+                  request.url.startsWith('ftps://'))
+              ? NavigationDecision.prevent
+              : NavigationDecision.navigate,
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  void dispose() {
+    _controller.loadRequest(Uri.parse('about:blank'));
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WebViewWidget(key: ObjectKey(_controller), controller: _controller);
+  }
+}
+
+class _AppBottomBar extends StatelessWidget {
+  const _AppBottomBar({
+    required this.app,
+    required this.source,
+    required this.trackOnly,
+    required this.isVersionDetectionStandard,
+    required this.showAppWebpageFinal,
+    required this.updating,
+    required this.onInstallUpdate,
+    required this.onAdditionalOptions,
+    required this.onMarkUpdated,
+    required this.onResetInstallStatus,
+    required this.onRemove,
+    required this.onMore,
+  });
+
+  final AppInMemory? app;
+  final AppSource? source;
+  final bool trackOnly;
+  final bool isVersionDetectionStandard;
+  final bool showAppWebpageFinal;
+  final bool updating;
+  final VoidCallback onInstallUpdate;
+  final VoidCallback onAdditionalOptions;
+  final VoidCallback onMarkUpdated;
+  final VoidCallback onResetInstallStatus;
+  final VoidCallback onRemove;
+  final VoidCallback onMore;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppsProvider>(
+      builder: (context, appsProvider, _) {
+        final currentApp = app != null ? appsProvider.apps[app!.app.id] : null;
+        final busy = currentApp?.downloadProgress != null || updating;
+        final areDownloadsRunning = appsProvider.areDownloadsRunning();
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            0,
+            0,
+            0,
+            MediaQuery.of(context).padding.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (source != null &&
+                                source!
+                                    .combinedAppSpecificSettingFormItems
+                                    .isNotEmpty)
+                              IconButton(
+                                onPressed: busy ? null : onAdditionalOptions,
+                                tooltip: tr('additionalOptions'),
+                                icon: const Icon(Icons.edit),
+                              ),
+                            if (app != null &&
+                                currentApp?.installedInfo != null)
+                              IconButton(
+                                onPressed: () =>
+                                    appsProvider.openAppSettings(app!.app.id),
+                                icon: const Icon(Icons.settings),
+                                tooltip: tr('settings'),
+                              ),
+                            if (app != null && showAppWebpageFinal)
+                              IconButton(
+                                onPressed: onMore,
+                                icon: const Icon(Icons.more_horiz),
+                                tooltip: tr('more'),
+                              ),
+                            if (app?.app.installedVersion != null &&
+                                app?.app.installedVersion !=
+                                    app?.app.latestVersion &&
+                                !isVersionDetectionStandard &&
+                                !trackOnly)
+                              IconButton(
+                                onPressed: busy ? null : onMarkUpdated,
+                                tooltip: tr('markUpdated'),
+                                icon: const Icon(Icons.done),
+                              ),
+                            if ((!isVersionDetectionStandard || trackOnly) &&
+                                app?.app.installedVersion != null &&
+                                app?.app.installedVersion ==
+                                    app?.app.latestVersion)
+                              IconButton(
+                                onPressed: busy ? null : onResetInstallStatus,
+                                icon: const Icon(Icons.restore_rounded),
+                                tooltip: tr('resetInstallStatus'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    Flexible(
+                      flex: 2,
+                      child: FilledButton(
+                        onPressed: !updating &&
+                                (app?.app.installedVersion == null ||
+                                    app?.app.installedVersion !=
+                                        app?.app.latestVersion) &&
+                                !areDownloadsRunning
+                            ? onInstallUpdate
+                            : null,
+                        child: Text(
+                          app?.app.installedVersion == null
+                              ? !trackOnly
+                                    ? tr('install')
+                                    : tr('markInstalled')
+                              : !trackOnly
+                              ? tr('update')
+                              : tr('markUpdated'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    IconButton(
+                      onPressed: busy ? null : onRemove,
+                      tooltip: tr('remove'),
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                  ],
+                ),
+              ),
+              if (currentApp?.downloadProgress != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                  child: LinearProgressIndicator(
+                    value: currentApp!.downloadProgress! >= 0
+                        ? currentApp.downloadProgress! / 100
+                        : null,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
