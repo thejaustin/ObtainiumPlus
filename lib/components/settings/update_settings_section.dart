@@ -235,13 +235,13 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildParallelDownloadsToggle(BuildContext context) {
-    return Consumer<UpdateSettingsProvider>(
-      builder: (context, updateSettings, child) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settingsProvider, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.file_download_outlined),
           title: Text(tr('parallelDownloads'), style: Theme.of(context).textTheme.bodyLarge),
-          value: false, // UpdateSettingsProvider currently missing parallelDownloads, using false for now
-          onChanged: (value) {}, // TODO: Move parallelDownloads to Behavior or Update provider
+          value: settingsProvider.parallelDownloads,
+          onChanged: (value) => settingsProvider.parallelDownloads = value,
         );
       },
     );

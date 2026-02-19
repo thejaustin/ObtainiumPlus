@@ -53,6 +53,7 @@ import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_export_service.dart';
 import 'package:obtainium/services/app_icon_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/dialog_utils.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
@@ -208,6 +209,9 @@ class AppsProvider with ChangeNotifier {
   }
 
   AppsProvider({isBg = false}) {
+    // Always load SharedPreferences so settings reads return user values, not
+    // hard-coded defaults — important for background instances that skip initialize().
+    settingsProvider.initializeSettings();
     // Subscribe to changes in the app foreground status
     foregroundStream = FGBGEvents.instance.stream.asBroadcastStream();
     foregroundSubscription = foregroundStream?.listen((event) async {
@@ -412,7 +416,7 @@ class AppsProvider with ChangeNotifier {
 
     if ((urlsToSelectFrom.length > 1 || evenIfSingleChoice) &&
         context != null) {
-      appFileUrl = await showDialog(
+      appFileUrl = await showAnimatedDialog(
         context: context,
         builder: (BuildContext ctx) {
           return AppFilePicker(
@@ -439,7 +443,7 @@ class AppsProvider with ChangeNotifier {
         ].contains(getHost(appFileUrl.value)) &&
         context != null) {
       if (!(settingsProvider.hideAPKOriginWarning) &&
-          await showDialog(
+          await showAnimatedDialog(
                 context: context,
                 builder: (BuildContext ctx) {
                   return APKOriginWarningDialog(
