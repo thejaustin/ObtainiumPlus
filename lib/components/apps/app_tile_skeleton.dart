@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class AppTileSkeleton extends StatelessWidget {
@@ -11,7 +11,7 @@ class AppTileSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
+    final settingsProvider = context.watch<ViewSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final baseColor = colorScheme.surfaceContainerHighest;
     final highlightColor = colorScheme.surfaceContainer;

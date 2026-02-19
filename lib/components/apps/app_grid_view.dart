@@ -7,7 +7,7 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:share_plus/share_plus.dart';
@@ -35,10 +35,10 @@ class AppGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
-    final columnCount = settingsProvider.gridColumnCount == 0
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final columnCount = viewSettings.gridColumnCount == 0
         ? _calculateAdaptiveColumns(context)
-        : settingsProvider.gridColumnCount;
+        : viewSettings.gridColumnCount;
 
     return SliverPadding(
       padding: const EdgeInsets.all(8),
