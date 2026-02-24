@@ -55,19 +55,15 @@ import 'package:obtainium/services/app_icon_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/dialog_utils.dart';
 import 'package:obtainium/components/apps/app_dialogs.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 
 export 'package:obtainium/models/app_in_memory.dart';
+export 'package:obtainium/models/app.dart';
 
-// Data class to store removed apps for undo functionality
-class RemovedAppData {
-  final App app;
-  final List<File> apkFiles;
-  final DateTime removalTime;
-
-  RemovedAppData(this.app, this.apkFiles, this.removalTime);
-}
+import 'package:obtainium/services/app_filter_service.dart';
+import 'package:obtainium/services/app_removal_service.dart';
 
 class AppsProvider with ChangeNotifier {
   // In memory App state (should always be kept in sync with local storage versions)
@@ -75,10 +71,6 @@ class AppsProvider with ChangeNotifier {
   bool loadingApps = false;
   bool gettingUpdates = false;
   LogsProvider logs = LogsProvider();
-
-  // Undo functionality - store recently removed apps
-  final List<RemovedAppData> _recentlyRemovedApps = [];
-  Timer? _cleanupTimer;
 
   // Completer for proper async synchronization of loadApps
   Completer<void>? _loadAppsCompleter;
@@ -104,108 +96,17 @@ class AppsProvider with ChangeNotifier {
     required bool groupByCategory,
     required bool buryNonInstalled,
   }) {
-    var listedApps = getAppValues(deepCopy: false).where((app) {
-      if (filter.statusFilter.isNotEmpty) {
-        bool hasUpdate = app.app.installedVersion != null && app.app.installedVersion != app.app.latestVersion;
-        bool notInstalled = app.app.installedVersion == null;
-
-        bool matches = false;
-        if (filter.statusFilter.contains('updates') && hasUpdate) matches = true;
-        if (filter.statusFilter.contains('installed') && !notInstalled) matches = true;
-        if (filter.statusFilter.contains('trackonly') && app.app.additionalSettings['trackOnly'] == true) matches = true;
-        if (filter.statusFilter.contains('uptodate') && app.app.installedVersion != null && !hasUpdate) matches = true;
-        if (filter.statusFilter.contains('notinstalled') && notInstalled) matches = true;
-
-        if (!matches) return false;
-      }
-
-      if (app.app.installedVersion == app.app.latestVersion && !filter.includeUptodate) return false;
-      if (app.app.installedVersion == null && !filter.includeNonInstalled) return false;
-
-      if (filter.nameFilter.isNotEmpty || filter.authorFilter.isNotEmpty) {
-        List<String> nameTokens = filter.nameFilter.split(' ').where((e) => e.trim().isNotEmpty).toList();
-        List<String> authorTokens = filter.authorFilter.split(' ').where((e) => e.trim().isNotEmpty).toList();
-
-        for (var t in nameTokens) {
-          if (!app.name.toLowerCase().contains(t.toLowerCase())) return false;
-        }
-        for (var t in authorTokens) {
-          if (!app.author.toLowerCase().contains(t.toLowerCase())) return false;
-        }
-      }
-      if (filter.idFilter.isNotEmpty && !app.app.id.contains(filter.idFilter)) return false;
-      if (filter.categoryFilter.isNotEmpty && filter.categoryFilter.intersection(app.app.categories.toSet()).isEmpty) return false;
-      if (filter.sourceFilter.isNotEmpty && SourceProvider().getSource(app.app.url, overrideSource: app.app.overrideSource).runtimeType.toString() != filter.sourceFilter) return false;
-      
-      return true;
-    }).toList();
-
-    // Sorting
-    if (sortMethod == AppSortMethod.latestUpdates) {
-      listedApps.sort((a, b) {
-        final aDate = a.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(a.installedInfo!.lastUpdateTime!) : null;
-        final bDate = b.installedInfo?.lastUpdateTime != null ? DateTime.fromMillisecondsSinceEpoch(b.installedInfo!.lastUpdateTime!) : null;
-        if (aDate == null && bDate == null) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        if (aDate == null) return 1;
-        if (bDate == null) return -1;
-        return bDate.compareTo(aDate);
-      });
-    } else if (sortMethod == AppSortMethod.nameAZ) {
-      listedApps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    } else if (sortMethod == AppSortMethod.nameZA) {
-      listedApps.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
-    } else if (sortMethod == AppSortMethod.recentlyAdded) {
-      listedApps.sort((a, b) => b.app.id.toLowerCase().compareTo(a.app.id.toLowerCase()));
-    } else if (sortMethod == AppSortMethod.installStatus) {
-      listedApps.sort((a, b) {
-        if ((a.installedInfo != null) == (b.installedInfo != null)) return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        return a.installedInfo != null ? -1 : 1;
-      });
-    } else if (sortMethod == AppSortMethod.defaultSort) {
-      listedApps.sort((a, b) {
-        dynamic aVal;
-        dynamic bVal;
-        switch (sortColumn) {
-          case SortColumnSettings.added: aVal = a.app.id; bVal = b.app.id; break;
-          case SortColumnSettings.nameAuthor: aVal = a.name; bVal = b.name; break;
-          case SortColumnSettings.authorName: aVal = a.author; bVal = b.author; break;
-          case SortColumnSettings.releaseDate: aVal = a.app.releaseDate; bVal = b.app.releaseDate; break;
-          case SortColumnSettings.lastUpdated: aVal = a.app.lastUpdateCheck; bVal = b.app.lastUpdateCheck; break;
-          case SortColumnSettings.source: aVal = a.app.url; bVal = b.app.url; break;
-          case SortColumnSettings.installDate: aVal = a.installedInfo?.firstInstallTime; bVal = b.installedInfo?.firstInstallTime; break;
-          case SortColumnSettings.lastCheckDate: aVal = a.app.lastUpdateCheck; bVal = b.app.lastUpdateCheck; break;
-        }
-        int res = 0;
-        if (aVal == null && bVal == null) res = 0;
-        else if (aVal == null) res = 1;
-        else if (bVal == null) res = -1;
-        else if (aVal is String) res = aVal.toLowerCase().compareTo(bVal.toString().toLowerCase());
-        else if (aVal is DateTime) res = aVal.compareTo(bVal as DateTime);
-        else if (aVal is num) res = aVal.compareTo(bVal as num);
-        
-        if (res == 0) res = a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        return sortOrder == SortOrderSettings.ascending ? res : -res;
-      });
-    }
-
-    if (pinUpdates) {
-      final existingUpdates = findExistingUpdates(installedOnly: true);
-      var temp = listedApps.where((sa) => existingUpdates.contains(sa.app.id)).toList();
-      listedApps.removeWhere((sa) => existingUpdates.contains(sa.app.id));
-      listedApps = [...temp, ...listedApps];
-    }
-
-    if (buryNonInstalled) {
-      var temp = listedApps.where((a) => a.installedInfo == null).toList();
-      listedApps.removeWhere((a) => a.installedInfo == null);
-      listedApps = [...listedApps, ...temp];
-    }
-
-    var tempPinned = listedApps.where((a) => a.app.pinned).toList();
-    var tempNotPinned = listedApps.where((a) => !a.app.pinned).toList();
-    listedApps = [...tempPinned, ...tempNotPinned];
-
-    return listedApps;
+    return AppFilterService.getFilteredSortedApps(
+      apps: getAppValues(deepCopy: false),
+      filter: filter,
+      sortMethod: sortMethod,
+      sortColumn: sortColumn,
+      sortOrder: sortOrder,
+      pinUpdates: pinUpdates,
+      groupByCategory: groupByCategory,
+      buryNonInstalled: buryNonInstalled,
+      existingUpdates: findExistingUpdates(installedOnly: true),
+    );
   }
 
   AppsProvider({isBg = false, SettingsProvider? settings}) {
@@ -240,34 +141,6 @@ class AppsProvider with ChangeNotifier {
     AppFileService.cleanupPartialApks(APKDir, areDownloadsRunning());
   }
 
-  Future<File> handleAPKIDChange(
-    App app,
-    PackageInfo newInfo,
-    File downloadedFile,
-    String downloadUrl,
-  ) async {
-    var isTempIdBool = SourceUtils.isTempId(app);
-    if (app.id != newInfo.packageName) {
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
-        throw IDChangedError(newInfo.packageName!);
-      }
-      var idChangeWasAllowed = app.allowIdChange;
-      app.allowIdChange = false;
-      var originalAppId = app.id;
-      app.id = newInfo.packageName!;
-      downloadedFile = downloadedFile.renameSync(
-        '${downloadedFile.parent.path}/${app.id}-${downloadUrl.hashCode}.${downloadedFile.path.split('.').last}',
-      );
-      if (apps[originalAppId] != null) {
-        await removeApps([originalAppId]);
-        await saveApps([
-          app,
-        ], onlyIfExists: !isTempIdBool && !idChangeWasAllowed);
-      }
-    }
-    return downloadedFile;
-  }
-
   /// Downloads the latest version of the app.
   /// Returns a [DownloadedApk] or [DownloadedDir] object.
   Future<Object> downloadApp(
@@ -283,36 +156,18 @@ class AppsProvider with ChangeNotifier {
       logs: logs,
       APKDir: APKDir,
       notifyListeners: notifyListeners,
+      removeApps: removeApps,
+      saveApps: (apps, {bool onlyIfExists = true}) => saveApps(apps, onlyIfExists: onlyIfExists),
       context: context,
       notificationsProvider: notificationsProvider,
       useExisting: useExisting,
-    ) as Map<String, dynamic>;
+    );
 
-    PackageInfo? newInfo = res['newInfo'];
-    File downloadedFile = res['downloadedFile'];
-    String downloadUrl = res['downloadUrl'];
     bool isAPK = res['isAPK'];
+    File downloadedFile = res['downloadedFile'];
     Directory? apkDir = res['apkDir'];
     bool isXAPK = res['isXAPK'];
 
-    if (newInfo == null) {
-      downloadedFile.delete();
-      throw ObtainiumError('Could not get ID from APK');
-    }
-    downloadedFile = await handleAPKIDChange(
-      app,
-      newInfo,
-      downloadedFile,
-      downloadUrl,
-    );
-    for (var file in downloadedFile.parent.listSync()) {
-      var fn = file.path.split('/').last;
-      if (fn.startsWith('${app.id}-') &&
-          FileSystemEntity.isFileSync(file.path) &&
-          file.path != downloadedFile.path) {
-        file.delete(recursive: true);
-      }
-    }
     if (isAPK) {
       return DownloadedApk(app.id, downloadedFile);
     } else {
@@ -475,6 +330,7 @@ class AppsProvider with ChangeNotifier {
       APKDir: APKDir,
       notifyListeners: notifyListeners,
       saveApps: saveApps,
+      removeApps: removeApps,
       checkUpdate: checkUpdate,
       confirmAppFileUrl: confirmAppFileUrl,
       canInstallSilently: canInstallSilently,
@@ -491,114 +347,18 @@ class AppsProvider with ChangeNotifier {
     BuildContext context, {
     bool forceParallelDownloads = false,
   }) async {
-    NotificationsProvider notificationsProvider = context
-        .read<NotificationsProvider>();
-    List<MapEntry<MapEntry<String, String>, App>> filesToDownload = [];
-    for (var id in appIds) {
-      if (apps[id] == null) {
-        throw ObtainiumError(tr('appNotFound'));
-      }
-      MapEntry<String, String>? fileUrl;
-      var refreshBeforeDownload =
-          apps[id]!.app.additionalSettings['refreshBeforeDownload'] == true ||
-          apps[id]!.app.apkUrls.isNotEmpty &&
-              apps[id]!.app.apkUrls.first.value == 'placeholder';
-      if (refreshBeforeDownload) {
-        await checkUpdate(apps[id]!.app.id);
-      }
-      if (apps[id]!.app.apkUrls.isNotEmpty ||
-          apps[id]!.app.otherAssetUrls.isNotEmpty) {
-        MapEntry<String, String>? tempFileUrl = await confirmAppFileUrl(
-          apps[id]!.app,
-          context,
-          true,
-          evenIfSingleChoice: true,
-        );
-        if (tempFileUrl != null) {
-          var s = SourceProvider().getSource(
-            apps[id]!.app.url,
-            overrideSource: apps[id]!.app.overrideSource,
-          );
-          var additionalSettingsPlusSourceConfig = {
-            ...apps[id]!.app.additionalSettings,
-            ...(await s.getSourceConfigValues(
-              apps[id]!.app.additionalSettings,
-              settingsProvider,
-            )),
-          };
-          fileUrl = MapEntry(
-            tempFileUrl.key,
-            await s.assetUrlPrefetchModifier(
-              await s.generalReqPrefetchModifier(
-                tempFileUrl.value,
-                additionalSettingsPlusSourceConfig,
-              ),
-              apps[id]!.app.url,
-              additionalSettingsPlusSourceConfig,
-            ),
-          );
-        }
-      }
-      if (fileUrl != null) {
-        filesToDownload.add(MapEntry(fileUrl, apps[id]!.app));
-      }
-    }
-
-    MultiAppMultiError errors = MultiAppMultiError();
-    List<String> downloadedIds = [];
-
-    Future<void> downloadFn(MapEntry<String, String> fileUrl, App app) async {
-      try {
-        String downloadPath = '${await AppInstallService.getStorageRootPath()}/Download';
-        await AppFileService.downloadFile(
-          fileUrl.value,
-          fileUrl.key,
-          true,
-          (double? progress) {
-            notificationsProvider.notify(
-              DownloadNotification(fileUrl.key, progress?.ceil() ?? 0),
-            );
-          },
-          downloadPath,
-          headers: await SourceProvider()
-              .getSource(app.url, overrideSource: app.overrideSource)
-              .getRequestHeaders(
-                app.additionalSettings,
-                fileUrl.value,
-                forAPKDownload: fileUrl.key.endsWith('.apk') ? true : false,
-              ),
-          useExisting: false,
-          allowInsecure: app.additionalSettings['allowInsecure'] == true,
-          logs: logs,
-        );
-        notificationsProvider.notify(
-          DownloadedNotification(fileUrl.key, fileUrl.value),
-        );
-      } catch (e) {
-        errors.add(fileUrl.key, e);
-      } finally {
-        notificationsProvider.cancel(DownloadNotification(fileUrl.key, 0).id);
-      }
-    }
-
-    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
-      for (var urlWithApp in filesToDownload) {
-        await downloadFn(urlWithApp.key, urlWithApp.value);
-      }
-    } else {
-      await Future.wait(
-        filesToDownload.map(
-          (urlWithApp) => downloadFn(urlWithApp.key, urlWithApp.value),
-        ),
-      );
-    }
-    if (errors.idsByErrorString.isNotEmpty) {
-      throw errors;
-    }
-    return downloadedIds;
+    return AppDownloadService.downloadAppAssets(
+      appIds: appIds,
+      apps: apps,
+      settingsProvider: settingsProvider,
+      logs: logs,
+      notifyListeners: notifyListeners,
+      confirmAppFileUrl: confirmAppFileUrl,
+      checkUpdate: checkUpdate,
+      context: context,
+      forceParallelDownloads: forceParallelDownloads,
+    );
   }
-
-
 
   /// Loads apps from storage into memory.
   /// If [singleId] is provided, only that app is reloaded.
@@ -649,239 +409,74 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> saveApps(
-    List<App> apps, {
+    List<App> appsToSave, {
     bool attemptToCorrectInstallStatus = true,
     bool onlyIfExists = true,
   }) async {
-    await Future.wait(
-      apps.map((a) async {
-        var app = a.deepCopy();
-        PackageInfo? info = await AppInstallService.getInstalledInfo(app.id);
-        var icon = await info?.applicationInfo?.getAppIcon();
-        app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
-        if (attemptToCorrectInstallStatus) {
-          app = AppCRUDService.getCorrectedInstallStatusAppIfPossible(app, info, logs) ?? app;
-        }
-        if (!onlyIfExists || this.apps.containsKey(app.id)) {
-          await AppCRUDService.saveAppToDisk(app);
-        }
-        try {
-          this.apps.update(
-            app.id,
-            (value) => AppInMemory(app, value.downloadProgress, info, icon),
-            ifAbsent: onlyIfExists
-                ? null
-                : () => AppInMemory(app, null, info, icon),
-          );
-        } catch (e) {
-          if (e is! ArgumentError || e.name != 'key') {
-            rethrow;
-          }
-        }
-      }),
+    await AppCRUDService.saveApps(
+      appsToSave: appsToSave,
+      apps: apps,
+      logs: logs,
+      settingsProvider: settingsProvider,
+      notifyListeners: notifyListeners,
+      export: ({bool isAuto = false}) => export(isAuto: isAuto),
+      attemptToCorrectInstallStatus: attemptToCorrectInstallStatus,
+      onlyIfExists: onlyIfExists,
     );
-    notifyListeners();
-    export(isAuto: true);
-
-    // Update app count for smart defaults in settings
-    settingsProvider.prefs?.setInt('trackedAppCount', this.apps.length);
   }
 
   Future<void> removeApps(List<String> appIds) async {
-    var apkFiles = APKDir.listSync();
-
-    // Store removed apps for potential undo
-    for (String appId in appIds) {
-      if (apps.containsKey(appId)) {
-        try {
-          // Find associated APK files for this app
-          List<File> appApkFiles = apkFiles
-              .where((element) => element.path.split('/').last.startsWith('$appId-'))
-              .cast<File>()
-              .toList();
-
-          // Store the app data for potential undo
-          _recentlyRemovedApps.add(RemovedAppData(
-            apps[appId]!.app, // Store the original app object
-            appApkFiles,      // Store associated APK files
-            DateTime.now(),   // Timestamp for cleanup later
-          ));
-        } catch (e, stack) {
-          logs.add('Error preparing app $appId for removal: $e\n$stack');
-        }
-      }
-    }
-
-    try {
-      await Future.wait(
-        appIds.map((appId) async {
-          try {
-            await AppCRUDService.deleteAppFile(appId);
-            apkFiles
-                .where(
-                  (element) => element.path.split('/').last.startsWith('$appId-'),
-                )
-                .forEach((element) {
-                  try {
-                    element.delete(recursive: true);
-                  } catch (e) {
-                    logs.add('Error deleting APK file ${element.path}: $e');
-                  }
-                });
-            if (apps.containsKey(appId)) {
-              apps.remove(appId);
-            }
-          } catch (e, stack) {
-            logs.add('Error removing app $appId: $e\n$stack');
-          }
-        }),
-      );
-    } catch (e, stack) {
-      logs.add('Error in bulk app removal: $e\n$stack');
-    }
-
-    if (appIds.isNotEmpty) {
-      notifyListeners();
-      export(isAuto: true);
-
-      // Start timer to clean up old removed apps after 60 seconds
-      _cleanupTimer?.cancel();
-      _cleanupTimer = Timer(const Duration(seconds: 60), () {
-        _cleanupOldRemovedApps();
-      });
-    }
-  }
-
-  // Helper method to clean up old removed apps
-  void _cleanupOldRemovedApps() {
-    final now = DateTime.now();
-    _recentlyRemovedApps.removeWhere((removedApp) {
-      return now.difference(removedApp.removalTime).inSeconds > 60;
-    });
+    await AppCRUDService.removeApps(
+      appIds: appIds,
+      apps: apps,
+      logs: logs,
+      settingsProvider: settingsProvider,
+      APKDir: APKDir,
+      notifyListeners: notifyListeners,
+      export: ({bool isAuto = false}) => export(isAuto: isAuto),
+    );
   }
 
   // Method to undo the last app removal
   Future<bool> undoLastRemoval() async {
-    if (_recentlyRemovedApps.isEmpty) {
+    RemovedAppData? lastRemoved = AppCRUDService.popLastRemovedApp();
+    if (lastRemoved == null) {
       return false; // Nothing to undo
     }
-
-    // Get the most recently removed app
-    RemovedAppData lastRemoved = _recentlyRemovedApps.removeLast();
 
     try {
       // Restore the app to the apps list and persist to disk
       await saveApps([lastRemoved.app], onlyIfExists: false);
-
       return true;
     } catch (e, stack) {
       // If restoration fails, add it back to the list
-      _recentlyRemovedApps.add(lastRemoved);
+      AppCRUDService.addRemovedApp(lastRemoved);
       logs.add('Error restoring app ${lastRemoved.app.id}: $e\n$stack');
       return false;
     }
   }
 
   Future<bool> removeAppsWithModal(BuildContext context, List<App> apps) async {
-    var showUninstallOption = apps
-        .where(
-          (a) =>
-              a.installedVersion != null &&
-              a.additionalSettings['trackOnly'] != true,
-        )
-        .isNotEmpty;
-    var values = await showDialog(
-      context: context,
-      builder: (BuildContext ctx) {
-        return GeneratedFormModal(
-          primaryActionColour: Theme.of(context).colorScheme.error,
-          title: plural('removeAppQuestion', apps.length),
-          items: !showUninstallOption
-              ? []
-              : [
-                  [
-                    GeneratedFormSwitch(
-                      'rmAppEntry',
-                      label: tr('removeFromObtainium'),
-                      defaultValue: true,
-                    ),
-                  ],
-                  [
-                    GeneratedFormSwitch(
-                      'uninstallApp',
-                      label: tr('uninstallFromDevice'),
-                    ),
-                  ],
-                ],
-          initValid: true,
-        );
-      },
+    return AppRemovalService.removeAppsWithModal(
+      context,
+      apps,
+      removeApps,
+      (apps, {bool attemptToCorrectInstallStatus = true}) => saveApps(apps, attemptToCorrectInstallStatus: attemptToCorrectInstallStatus),
+      undoLastRemoval,
+      settingsProvider.enableUndoForAppRemoval,
     );
-    if (values != null) {
-      bool uninstall = values['uninstallApp'] == true && showUninstallOption;
-      bool remove = values['rmAppEntry'] == true || !showUninstallOption;
-      if (uninstall) {
-        for (var i = 0; i < apps.length; i++) {
-          if (apps[i].installedVersion != null) {
-            AppInstallService.uninstallApp(apps[i].id);
-            apps[i].installedVersion = null;
-          }
-        }
-        await saveApps(apps, attemptToCorrectInstallStatus: false);
-      }
-      if (remove) {
-        List<String> appIdsToRemove = apps.map((e) => e.id).toList();
-        await removeApps(appIdsToRemove);
-
-        // Show snackbar with undo option if enabled in settings
-        if (context.mounted && settingsProvider.enableUndoForAppRemoval) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(plural('appsRemoved', apps.length)),
-              action: SnackBarAction(
-                label: tr('undo'),
-                onPressed: () async {
-                  bool success = await undoLastRemoval();
-                  if (success && context.mounted) {
-                    showMessage(tr('appsRestored'), context);
-                  }
-                },
-              ),
-              duration: const Duration(seconds: 5),
-            ),
-          );
-        }
-      }
-      return uninstall || remove;
-    }
-    return false;
   }
 
   void clearAppCache(String appId) {
-    var apkFiles = APKDir.listSync();
-    apkFiles
-        .where(
-          (element) => element.path.split('/').last.startsWith('$appId-'),
-        )
-        .forEach((element) {
-          try {
-            element.deleteSync(recursive: true);
-          } catch (e) {
-            // Ignore
-          }
-        });
+    AppFileService.clearAppCache(appId, APKDir);
   }
 
   void addMissingCategories(SettingsProvider settingsProvider) {
-    var cats = settingsProvider.categories;
-    apps.forEach((key, value) {
-      for (var c in value.app.categories) {
-        if (!cats.containsKey(c)) {
-          cats[c] = generateRandomLightColor().value;
-        }
-      }
-    });
-    settingsProvider.setCategories(cats, appsProvider: this);
+    AppCRUDService.addMissingCategories(
+      settingsProvider: settingsProvider,
+      apps: apps,
+      appsProvider: this,
+    );
   }
 
   /// Checks for updates for a single app.
@@ -891,13 +486,12 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<App?> checkObtainiumUpdate({bool ignoreCache = false}) async {
-    if (apps[obtainiumId] == null) return null;
-    App obt = apps[obtainiumId]!.app;
-    // Apply release channel setting
-    obt.additionalSettings['includePrereleases'] = settingsProvider.obtainiumReleaseChannel == 'dev';
-    obt.additionalSettings['apkFilterRegEx'] = 'fdroid';
-    obt.additionalSettings['invertAPKFilter'] = true;
-    return checkUpdate(obtainiumId, ignoreCache: ignoreCache);
+    return AppUpdateService.checkObtainiumUpdate(
+      apps: apps,
+      settingsProvider: settingsProvider,
+      checkUpdateFn: (id, {bool ignoreCache = false}) => checkUpdate(id, ignoreCache: ignoreCache),
+      ignoreCache: ignoreCache,
+    );
   }
 
   List<String> getAppsSortedByUpdateCheckTime({
@@ -979,32 +573,20 @@ class AppsProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    _cleanupTimer?.cancel();
     foregroundSubscription?.cancel();
     super.dispose();
   }
 
-  Future<List<List<String>>> addAppsByURL(
-    List<String> urls, {
-    AppSource? sourceOverride,
-  }) async {
-    List<dynamic> results = await SourceProvider().getAppsByURLNaive(
-      urls,
-      alreadyAddedUrls: apps.values.map((e) => e.app.url).toList(),
-      sourceOverride: sourceOverride,
-    );
-    List<App> pps = results[0];
-    Map<String, dynamic> errorsMap = results[1];
-    for (var app in pps) {
-      if (apps.containsKey(app.id)) {
-        errorsMap.addAll({app.id: tr('appAlreadyAdded')});
-      } else {
-        await saveApps([app], onlyIfExists: false);
-      }
+    Future<List<List<String>>> addAppsByURL(
+      List<String> urls, {
+      AppSource? sourceOverride,
+    }) async {
+      return AppCRUDService.addAppsByURL(
+        urls: urls,
+        apps: apps,
+        saveApps: (apps, {bool onlyIfExists = true}) => saveApps(apps, onlyIfExists: onlyIfExists),
+        sourceOverride: sourceOverride,
+      );
     }
-    List<List<String>> errors = errorsMap.keys
-        .map((e) => [e, errorsMap[e].toString()])
-        .toList();
-    return errors;
   }
-}
+  

@@ -91,13 +91,18 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
           context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
         }
 
+        final settingsProvider = context.watch<SettingsProvider>();
+        final curve = settingsProvider.plusEnableEnhancedAnimations 
+            ? AppConstants.expressiveStandard 
+            : Curves.easeInOut;
+
         return AnimatedScale(
           scale: _isPressed ? 0.95 : 1.0,
           duration: const Duration(milliseconds: 100),
-          curve: AppConstants.expressiveStandard,
+          curve: curve,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: AppConstants.shortAnimationMs),
-            curve: Curves.easeOutCubic,
+            duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? AppConstants.shortAnimationMs : 200),
+            curve: settingsProvider.plusEnableEnhancedAnimations ? Curves.easeOutCubic : Curves.easeInOut,
             child: Card(
               elevation: widget.isSelected ? 8 : 1,
               shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3) : null,

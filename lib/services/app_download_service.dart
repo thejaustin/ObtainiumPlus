@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/providers/logs_provider.dart';
@@ -20,6 +21,9 @@ import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:flutter/foundation.dart' as foundation; // Alias to avoid conflict
+
+import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/services/app_crud_service.dart';
 
 class AppDownloadService {
   AppDownloadService._();
@@ -39,6 +43,37 @@ class AppDownloadService {
     return list;
   }
 
+  static Future<File> _handleAPKIDChange({
+    required App app,
+    required PackageInfo newInfo,
+    required File downloadedFile,
+    required String downloadUrl,
+    required Map<String, AppInMemory> apps,
+    required Future<void> Function(List<String>) removeApps,
+    required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
+  }) async {
+    var isTempIdBool = SourceUtils.isTempId(app);
+    if (app.id != newInfo.packageName) {
+      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
+        throw IDChangedError(newInfo.packageName!);
+      }
+      var idChangeWasAllowed = app.allowIdChange;
+      app.allowIdChange = false;
+      var originalAppId = app.id;
+      app.id = newInfo.packageName!;
+      downloadedFile = downloadedFile.renameSync(
+        '${downloadedFile.parent.path}/${app.id}-${downloadUrl.hashCode}.${downloadedFile.path.split('.').last}',
+      );
+      if (apps[originalAppId] != null) {
+        await removeApps([originalAppId]);
+        await saveApps([
+          app,
+        ], onlyIfExists: !isTempIdBool && !idChangeWasAllowed);
+      }
+    }
+    return downloadedFile;
+  }
+
   static Future<List<String>> downloadAndInstallLatestApps({
     required List<String> appIds,
     required Map<String, AppInMemory> apps,
@@ -46,9 +81,10 @@ class AppDownloadService {
     required LogsProvider logs,
     required Directory APKDir,
     required Function() notifyListeners,
-    required Function(List<App>) saveApps,
+    required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
+    required Future<void> Function(List<String>) removeApps,
     required Function(String, {bool ignoreCache}) checkUpdate,
-    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool) confirmAppFileUrl,
+    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool, {bool evenIfSingleChoice}) confirmAppFileUrl,
     required Future<bool> Function(App) canInstallSilently,
     required Future<void> Function(BuildContext) waitForUserToReturnToForeground,
     BuildContext? context,
@@ -62,7 +98,7 @@ class AppDownloadService {
     var preparationResult = await _prepareAppsForInstall(
       appIds: appIds,
       apps: apps,
-      saveApps: saveApps,
+      saveApps: (apps) => saveApps(apps, onlyIfExists: true),
       checkUpdate: checkUpdate,
       confirmAppFileUrl: confirmAppFileUrl,
       canInstallSilently: canInstallSilently,
@@ -93,6 +129,8 @@ class AppDownloadService {
           notifyListeners: notifyListeners,
           canInstallSilently: canInstallSilently,
           waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+          removeApps: removeApps,
+          saveApps: saveApps,
           errors: errors,
           context: context,
           notificationsProvider: notificationsProvider,
@@ -110,6 +148,8 @@ class AppDownloadService {
           notifyListeners: notifyListeners,
           canInstallSilently: canInstallSilently,
           waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+          removeApps: removeApps,
+          saveApps: saveApps,
           errors: errors,
           context: context,
           notificationsProvider: notificationsProvider,
@@ -154,6 +194,8 @@ class AppDownloadService {
     required LogsProvider logs,
     required Directory APKDir,
     required Function() notifyListeners,
+    required Future<void> Function(List<String>) removeApps,
+    required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
     BuildContext? context,
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
@@ -256,6 +298,30 @@ class AppDownloadService {
         apkDir = res['apkDir'];
       }
       
+      if (newInfo == null) {
+        downloadedFile.delete();
+        throw ObtainiumError('Could not get ID from APK');
+      }
+
+      downloadedFile = await _handleAPKIDChange(
+        app: app,
+        newInfo: newInfo,
+        downloadedFile: downloadedFile,
+        downloadUrl: downloadUrl,
+        apps: apps,
+        removeApps: removeApps,
+        saveApps: saveApps,
+      );
+
+      for (var file in downloadedFile.parent.listSync()) {
+        var fn = file.path.split('/').last;
+        if (fn.startsWith('${app.id}-') &&
+            FileSystemEntity.isFileSync(file.path) &&
+            file.path != downloadedFile.path) {
+          file.delete(recursive: true);
+        }
+      }
+
       return {
         'newInfo': newInfo,
         'downloadedFile': downloadedFile,
@@ -273,84 +339,121 @@ class AppDownloadService {
     }
   }
 
-  static Future<Map<String, dynamic>> _processDownloadedArchive(
-    File downloadedFile,
-    String appId,
-    String? zippedApkFilterRegEx,
-  ) async {
-    String apkDirPath = '${downloadedFile.path}-dir';
-    await AppFileService.unzipFile(downloadedFile.path, apkDirPath);
-    var apkDir = Directory(apkDirPath);
-    var apks = apkDir
-        .listSync()
-        .where((e) => e.path.toLowerCase().endsWith('.apk'))
-        .toList();
-
-    FileSystemEntity? temp;
-    apks.removeWhere((element) {
-      bool res = element.uri.pathSegments.last.startsWith(appId);
-      if (res) {
-        temp = element;
+  static Future<List<String>> downloadAppAssets({
+    required List<String> appIds,
+    required Map<String, AppInMemory> apps,
+    required SettingsProvider settingsProvider,
+    required LogsProvider logs,
+    required Function() notifyListeners,
+    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool, {bool evenIfSingleChoice}) confirmAppFileUrl,
+    required Function(String, {bool ignoreCache}) checkUpdate,
+    required BuildContext context,
+    bool forceParallelDownloads = false,
+  }) async {
+    NotificationsProvider notificationsProvider = context.read<NotificationsProvider>();
+    List<MapEntry<MapEntry<String, String>, App>> filesToDownload = [];
+    for (var id in appIds) {
+      if (apps[id] == null) {
+        throw ObtainiumError(tr('appNotFound'));
       }
-      return res;
-    });
-    if (temp != null) {
-      apks = [temp!, ...apks];
-    }
-
-    if (zippedApkFilterRegEx?.isNotEmpty == true) {
-      var reg = RegExp(zippedApkFilterRegEx!);
-      apks.removeWhere((apk) {
-        var shouldDelete = !reg.hasMatch(apk.uri.pathSegments.last);
-        if (shouldDelete) {
-          apk.delete();
-        }
-        return shouldDelete;
-      });
-    }
-
-    if (apks.isEmpty) {
-      throw NoAPKError();
-    }
-
-    PackageInfo? newInfo;
-    for (var i = 0; i < apks.length; i++) {
-      try {
-        newInfo = await pm.getPackageArchiveInfo(
-          archiveFilePath: apks[i].path,
+      MapEntry<String, String>? fileUrl;
+      var refreshBeforeDownload =
+          apps[id]!.app.additionalSettings['refreshBeforeDownload'] == true ||
+          apps[id]!.app.apkUrls.isNotEmpty &&
+              apps[id]!.app.apkUrls.first.value == 'placeholder';
+      if (refreshBeforeDownload) {
+        await checkUpdate(apps[id]!.app.id, ignoreCache: true);
+      }
+      if (apps[id]!.app.apkUrls.isNotEmpty ||
+          apps[id]!.app.otherAssetUrls.isNotEmpty) {
+        MapEntry<String, String>? tempFileUrl = await confirmAppFileUrl(
+          apps[id]!.app,
+          context,
+          true,
+          evenIfSingleChoice: true,
         );
-        if (newInfo != null) {
-          break;
-        }
-      } catch (e) {
-        if (i == apks.length - 1) {
-          rethrow;
+        if (tempFileUrl != null) {
+          var s = SourceProvider().getSource(
+            apps[id]!.app.url,
+            overrideSource: apps[id]!.app.overrideSource,
+          );
+          var additionalSettingsPlusSourceConfig = {
+            ...apps[id]!.app.additionalSettings,
+            ...(await s.getSourceConfigValues(
+              apps[id]!.app.additionalSettings,
+              settingsProvider,
+            )),
+          };
+          fileUrl = MapEntry(
+            tempFileUrl.key,
+            await s.assetUrlPrefetchModifier(
+              await s.generalReqPrefetchModifier(
+                tempFileUrl.value,
+                additionalSettingsPlusSourceConfig,
+              ),
+              apps[id]!.app.url,
+              additionalSettingsPlusSourceConfig,
+            ),
+          );
         }
       }
+      if (fileUrl != null) {
+        filesToDownload.add(MapEntry(fileUrl, apps[id]!.app));
+      }
     }
-    return {'newInfo': newInfo, 'apkDir': apkDir};
-  }
 
-  static Future<void> _checkInstallPermissions(
-    SettingsProvider settingsProvider,
-    bool willBeSilent,
-  ) async {
-    if (!settingsProvider.useShizuku) {
-      if (!(await settingsProvider.getInstallPermission(enforce: false))) {
-        throw ObtainiumError(tr('cancelled'));
+    MultiAppMultiError errors = MultiAppMultiError();
+    List<String> downloadedIds = [];
+
+    Future<void> downloadFn(MapEntry<String, String> fileUrl, App app) async {
+      try {
+        String downloadPath = '${await AppInstallService.getStorageRootPath()}/Download';
+        await AppFileService.downloadFile(
+          fileUrl.value,
+          fileUrl.key,
+          true,
+          (double? progress) {
+            notificationsProvider.notify(
+              DownloadNotification(fileUrl.key, progress?.ceil() ?? 0),
+            );
+          },
+          downloadPath,
+          headers: await SourceProvider()
+              .getSource(app.url, overrideSource: app.overrideSource)
+              .getRequestHeaders(
+                app.additionalSettings,
+                fileUrl.value,
+                forAPKDownload: fileUrl.key.endsWith('.apk') ? true : false,
+              ),
+          useExisting: false,
+          allowInsecure: app.additionalSettings['allowInsecure'] == true,
+          logs: logs,
+        );
+        notificationsProvider.notify(
+          DownloadedNotification(fileUrl.key, fileUrl.value),
+        );
+      } catch (e) {
+        errors.add(fileUrl.key, e);
+      } finally {
+        notificationsProvider.cancel(DownloadNotification(fileUrl.key, 0).id);
+      }
+    }
+
+    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
+      for (var urlWithApp in filesToDownload) {
+        await downloadFn(urlWithApp.key, urlWithApp.value);
       }
     } else {
-      switch ((await ShizukuApkInstaller.checkPermission())!) {
-        case 'binder_not_found':
-          throw ObtainiumError(tr('shizukuBinderNotFound'));
-        case 'old_shizuku':
-          throw ObtainiumError(tr('shizukuOld'));
-        case 'old_android_with_adb':
-          throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
-        case 'denied':
-          throw ObtainiumError(tr('cancelled'));
-      }
+      await Future.wait(
+        filesToDownload.map(
+          (urlWithApp) => downloadFn(urlWithApp.key, urlWithApp.value),
+        ),
+      );
     }
+    if (errors.idsByErrorString.isNotEmpty) {
+      throw errors;
+    }
+    return downloadedIds;
   }
 
   static Future<Map<String, dynamic>> _prepareAppsForInstall({
@@ -358,7 +461,7 @@ class AppDownloadService {
     required Map<String, AppInMemory> apps,
     required Function(List<App>) saveApps,
     required Function(String, {bool ignoreCache}) checkUpdate,
-    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool) confirmAppFileUrl,
+    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool, {bool evenIfSingleChoice}) confirmAppFileUrl,
     required Future<bool> Function(App) canInstallSilently,
     BuildContext? context,
   }) async {
@@ -409,98 +512,6 @@ class AppDownloadService {
     };
   }
 
-  static Future<bool> _installApp({
-    required String id,
-    required bool willBeSilent,
-    required DownloadedApk? downloadedFile,
-    required DownloadedDir? downloadedDir,
-    required Map<String, AppInMemory> apps,
-    required SettingsProvider settingsProvider,
-    required LogsProvider logs,
-    required Function() notifyListeners,
-    NotificationsProvider? notificationsProvider,
-    BuildContext? context,
-  }) async {
-    apps[id]?.downloadProgress = -1;
-    notifyListeners();
-    try {
-      bool sayInstalled = true;
-      var contextIfNewInstall = apps[id]?.installedInfo == null ? context : null;
-      bool needBGWorkaround = willBeSilent && context == null && !settingsProvider.useShizuku;
-      bool shizukuPretendToBeGooglePlay = settingsProvider.shizukuPretendToBeGooglePlay ||
-          apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] == true;
-      
-      logs.logEvent('InstallStarted', {
-        'appId': id,
-        'shizuku': settingsProvider.useShizuku,
-        'bgWorkaround': needBGWorkaround,
-      });
-
-      if (downloadedFile != null) {
-        if (needBGWorkaround) {
-          await AppInstallService.installApk(
-            downloadedFile,
-            contextIfNewInstall,
-            settingsProvider,
-            logs,
-            apps,
-            needsBGWorkaround: true,
-            shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-          );
-        } else {
-          sayInstalled = await AppInstallService.installApk(
-            downloadedFile,
-            contextIfNewInstall,
-            settingsProvider,
-            logs,
-            apps,
-            shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-          );
-        }
-      } else if (downloadedDir != null) {
-        if (needBGWorkaround) {
-          await AppInstallService.installApkDir(
-            downloadedDir,
-            contextIfNewInstall,
-            settingsProvider,
-            logs,
-            apps,
-            needsBGWorkaround: true,
-            shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-          );
-        } else {
-          sayInstalled = await AppInstallService.installApkDir(
-            downloadedDir,
-            contextIfNewInstall,
-            settingsProvider,
-            logs,
-            apps,
-            shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-          );
-        }
-      }
-      if (willBeSilent && context == null) {
-        if (!settingsProvider.useShizuku) {
-          notificationsProvider?.notify(
-            SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
-          );
-        } else {
-          notificationsProvider?.notify(
-            SilentUpdateNotification([apps[id]!.app], sayInstalled, id: id.hashCode),
-          );
-        }
-      }
-      if (sayInstalled) {
-        notificationsProvider?.cancel(UpdateNotification([]).id);
-      }
-      logs.logEvent('InstallCompleted', {'appId': id, 'success': sayInstalled});
-      return sayInstalled;
-    } finally {
-      apps[id]?.downloadProgress = null;
-      notifyListeners();
-    }
-  }
-
   static Future<Map<String, dynamic>> _downloadAppWrapper({
     required String id,
     required Map<String, AppInMemory> apps,
@@ -510,6 +521,8 @@ class AppDownloadService {
     required Function() notifyListeners,
     required Future<bool> Function(App) canInstallSilently,
     required Future<void> Function(BuildContext) waitForUserToReturnToForeground,
+    required Future<void> Function(List<String>) removeApps,
+    required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
     required MultiAppMultiError errors,
     BuildContext? context,
     NotificationsProvider? notificationsProvider,
@@ -528,6 +541,8 @@ class AppDownloadService {
             logs: logs,
             APKDir: APKDir,
             notifyListeners: notifyListeners,
+            removeApps: removeApps,
+            saveApps: saveApps,
             context: context,
             notificationsProvider: notificationsProvider,
             useExisting: useExisting,
@@ -555,3 +570,4 @@ class AppDownloadService {
     };
   }
 }
+

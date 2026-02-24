@@ -1,3 +1,4 @@
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
