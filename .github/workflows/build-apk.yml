@@ -268,3 +268,10 @@ jobs:
             📥 **[Download Latest](https://github.com/${{ github.repository }}/releases/latest)** | 📝 **[All Releases](https://github.com/${{ github.repository }}/releases)**
 
             🤖 *Built with [Claude Code](https://claude.com/claude-code) and GitHub Actions*
+
+  sync-sentry-issues:
+    needs: build
+    uses: ./.github/workflows/sentry-sync.yml
+    secrets: inherit
+    permissions:
+      issues: write
