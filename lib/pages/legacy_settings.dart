@@ -1088,6 +1088,19 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
                           }
                         });
                       },
+                      onLongPress: () {
+                        settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
+                        HapticFeedback.heavyImpact();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              settingsProvider.plusDeveloperMode 
+                                ? 'Developer Mode Enabled' 
+                                : 'Developer Mode Disabled'
+                            )
+                          )
+                        );
+                      },
                       icon: const Icon(Icons.bug_report_outlined),
                       tooltip: tr('appLogs'),
                     ),

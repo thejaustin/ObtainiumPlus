@@ -490,23 +490,32 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                                                               _buildHubCard(
                                                                                 context,
                                                                                 icon: Icons.palette_outlined,
-                                                                                title: tr('appearance'),
-                                                                                subtitle: tr('appearanceDescription'),
+                                                                                title: tr('theming'),
+                                                                                subtitle: tr('themingDescription'),
                                                                                 builder: (context) => _SettingsSubMenuPage(
-                                                                                  title: tr('appearance'),
+                                                                                  title: tr('theming'),
                                                                                   child: SingleChildScrollView(
                                                                                     child: Padding(
                                                                                       padding: const EdgeInsets.all(16.0),
-                                                                                      child: Column(
-                                                                                        children: [
-                                                                                          ThemeSettingsSection(
-                                                                                            androidInfoFuture: _androidInfoFuture,
-                                                                                            colorsNameMap: colorsNameMap,
-                                                                                          ),
-                                                                                          const SizedBox(height: 24),
-                                                                                          AppsViewSettingsSection(onSetState: setState),
-                                                                                        ],
+                                                                                      child: ThemeSettingsSection(
+                                                                                        androidInfoFuture: _androidInfoFuture,
+                                                                                        colorsNameMap: colorsNameMap,
                                                                                       ),
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              ),
+                                                                              _buildHubCard(
+                                                                                context,
+                                                                                icon: Icons.grid_view_outlined,
+                                                                                title: tr('layout'),
+                                                                                subtitle: tr('layoutDescription'),
+                                                                                builder: (context) => _SettingsSubMenuPage(
+                                                                                  title: tr('layout'),
+                                                                                  child: SingleChildScrollView(
+                                                                                    child: Padding(
+                                                                                      padding: const EdgeInsets.all(16.0),
+                                                                                      child: AppsViewSettingsSection(onSetState: setState),
                                                                                     ),
                                                                                   ),
                                                                                 ),
@@ -626,6 +635,16 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ListTile(
                           leading: const Icon(Icons.bug_report_outlined),
                           title: Text(tr('appLogs'), style: Theme.of(context).textTheme.bodyLarge),
+                          onLongPress: () {
+                            settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
+                            HapticFeedback.heavyImpact();
+                            showMessage(
+                              settingsProvider.plusDeveloperMode 
+                                ? 'Developer Mode Enabled' 
+                                : 'Developer Mode Disabled', 
+                              context
+                            );
+                          },
                           onTap: () {
                             context.read<LogsProvider>().get().then((logs) {
                               if (logs.isEmpty) {

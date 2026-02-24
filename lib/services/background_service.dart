@@ -2,7 +2,7 @@ import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
 class BackgroundService {
@@ -20,7 +20,7 @@ class BackgroundService {
       BackgroundFetch.finish(taskId);
       return;
     }
-    await bgUpdateCheck(taskId, null);
+    await BackgroundUpdateService.bgUpdateCheck(taskId, null);
     BackgroundFetch.finish(taskId);
   }
 
@@ -86,12 +86,12 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     print('onStart(starter: ${starter.name})');
-    bgUpdateCheck('bg_check', null);
+    BackgroundUpdateService.bgUpdateCheck('bg_check', null);
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    bgUpdateCheck('bg_check', null);
+    BackgroundUpdateService.bgUpdateCheck('bg_check', null);
   }
 
   @override
