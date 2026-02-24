@@ -82,6 +82,21 @@ class AppFileService {
     };
   }
 
+  static void clearAppCache(String appId, Directory APKDir) {
+    var apkFiles = APKDir.listSync();
+    apkFiles
+        .where(
+          (element) => element.path.split('/').last.startsWith('$appId-'),
+        )
+        .forEach((element) {
+          try {
+            element.deleteSync(recursive: true);
+          } catch (e) {
+            // Ignore
+          }
+        });
+  }
+
   static void cleanupPartialApks(Directory APKDir, bool areDownloadsRunning) {
     var cutoff = DateTime.now().subtract(const Duration(days: 7));
     try {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +27,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final settingsProvider = context.watch<SettingsProvider>();
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category')) CategoryEditorSelector(showLabelWhenNotEmpty: false),
@@ -41,6 +43,15 @@ class AppsViewSettingsSection extends StatelessWidget {
     List<Widget> viewWidgets = [
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
+      if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
+      if (_matches(tr('plusModernAppPage')))
+        SwitchListTile.adaptive(
+          secondary: const Icon(Icons.pages_outlined),
+          title: Text(tr('plusModernAppPage'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('plusModernAppPageDescription')),
+          value: settingsProvider.plusEnableModernAppPage,
+          onChanged: (val) => settingsProvider.plusEnableModernAppPage = val,
+        ),
       _buildGridSettings(context),
     ];
 
@@ -48,6 +59,14 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (_matches(tr('showAuthor'))) _buildShowAuthorToggle(context),
       if (_matches(tr('showVersion'))) _buildShowVersionToggle(context),
       if (_matches(tr('showDate'))) _buildShowDateToggle(context),
+      if (_matches(tr('plusModernAppListTile')))
+        SwitchListTile.adaptive(
+          secondary: const Icon(Icons.view_list_rounded),
+          title: Text(tr('plusModernAppListTile'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('plusModernAppListTileDescription')),
+          value: settingsProvider.plusEnableModernAppListTile,
+          onChanged: (val) => settingsProvider.plusEnableModernAppListTile = val,
+        ),
     ];
 
     List<Widget> headerWidgets = [
@@ -252,6 +271,30 @@ class AppsViewSettingsSection extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAppBarStyleDropdown(BuildContext context) {
+    final settingsProvider = context.read<SettingsProvider>();
+    return ListTile(
+      leading: const Icon(Icons.vertical_align_top_rounded),
+      title: Text(tr('appBarStyle'), style: Theme.of(context).textTheme.bodyLarge),
+      trailing: DropdownButton<AppBarStyle>(
+        underline: const SizedBox(),
+        value: settingsProvider.getAppBarStyleForPage('apps'),
+        items: AppBarStyle.values.map((e) => DropdownMenuItem(
+          value: e, 
+          child: Text(e.name.substring(0, 1).toUpperCase() + e.name.substring(1))
+        )).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            onSetState(() {
+              settingsProvider.prefs?.setInt('appBarStyle_apps', value.index);
+              settingsProvider.notifyListeners();
+            });
+          }
+        },
+      ),
     );
   }
 

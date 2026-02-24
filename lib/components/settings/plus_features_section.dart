@@ -40,28 +40,18 @@ class PlusFeaturesSection extends StatelessWidget {
 
           if (settings.enableAllPlusFeatures) ...[
             const Divider(),
-
-            // UI Features
-            if (_matches(tr('plusGridView')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.grid_view_rounded,
-                title: tr('plusGridView'),
-                subtitle: tr('plusGridViewDescription'),
-                value: settings.plusEnableGridView,
-                onChanged: (val) => settings.plusEnableGridView = val,
-              ),
-
-            if (_matches(tr('plusQuickFilters')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.filter_alt_outlined,
-                title: tr('plusQuickFilters'),
-                subtitle: tr('plusQuickFiltersDescription'),
-                value: settings.plusEnableQuickFilters,
-                onChanged: (val) => settings.plusEnableQuickFilters = val,
+            
+            // --- CORE FEATURES ---
+            if (!isSearching)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                child: Text(
+                  tr('coreFeatures').toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
 
             if (_matches(tr('plusDiscover')))
@@ -75,26 +65,41 @@ class PlusFeaturesSection extends StatelessWidget {
                 onChanged: (val) => settings.plusEnableDiscover = val,
               ),
 
-            if (_matches(tr('plusEnhancedAnimations')))
+            if (_matches(tr('plusUpdateSchedule')))
               _buildFeatureToggle(
                 context,
                 settings,
-                icon: Icons.animation_outlined,
-                title: tr('plusEnhancedAnimations'),
-                subtitle: tr('plusEnhancedAnimationsDescription'),
-                value: settings.plusEnableEnhancedAnimations,
-                onChanged: (val) => settings.plusEnableEnhancedAnimations = val,
+                icon: Icons.schedule_outlined,
+                title: tr('plusUpdateSchedule'),
+                subtitle: tr('plusUpdateScheduleDescription'),
+                value: settings.plusEnableUpdateSchedule,
+                onChanged: (val) => settings.plusEnableUpdateSchedule = val,
               ),
 
-            if (_matches(tr('plusAdvancedSorting')))
+            if (_matches(tr('plusSystemUpdateScanner')))
               _buildFeatureToggle(
                 context,
                 settings,
-                icon: Icons.sort_rounded,
-                title: tr('plusAdvancedSorting'),
-                subtitle: tr('plusAdvancedSortingDescription'),
-                value: settings.plusEnableAdvancedSorting,
-                onChanged: (val) => settings.plusEnableAdvancedSorting = val,
+                icon: Icons.system_update_alt_rounded,
+                title: tr('plusSystemUpdateScanner'),
+                subtitle: tr('plusSystemUpdateScannerDescription'),
+                value: settings.plusEnableSystemUpdateScanner,
+                onChanged: (val) => settings.plusEnableSystemUpdateScanner = val,
+              ),
+
+            if (_matches(tr('importInstalledApps')))
+              ListTile(
+                leading: const Icon(Icons.install_mobile_rounded),
+                title: Text(tr('importInstalledApps'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(tr('importInstalledAppsDescription')),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SystemAppSelector()),
+                  );
+                },
               ),
 
             if (_matches(tr('plusSwipeActions')))
@@ -108,6 +113,163 @@ class PlusFeaturesSection extends StatelessWidget {
                 onChanged: (val) => settings.plusEnableSwipeActions = val,
               ),
 
+            if (_matches(tr('plusHapticFeedback')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.vibration_rounded,
+                title: tr('plusHapticFeedback'),
+                subtitle: tr('plusHapticFeedbackDescription'),
+                value: settings.plusEnableHapticFeedback,
+                onChanged: (val) => settings.plusEnableHapticFeedback = val,
+              ),
+
+            // --- VISUAL FEATURES ---
+            if (!isSearching)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 24, bottom: 8),
+                child: Text(
+                  tr('visualEnhancements').toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+            if (_matches(tr('plusModernSettings')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.settings_suggest_outlined,
+                title: tr('plusModernSettings'),
+                subtitle: tr('plusModernSettingsDescription'),
+                value: settings.plusEnableModernSettings,
+                onChanged: (val) => settings.plusEnableModernSettings = val,
+              ),
+
+            if (_matches(tr('plusModernAppListTile')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.view_list_rounded,
+                title: tr('plusModernAppListTile'),
+                subtitle: tr('plusModernAppListTileDescription'),
+                value: settings.plusEnableModernAppListTile,
+                onChanged: (val) => settings.plusEnableModernAppListTile = val,
+              ),
+
+            if (_matches(tr('plusModernAppPage')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.pages_outlined,
+                title: tr('plusModernAppPage'),
+                subtitle: tr('plusModernAppPageDescription'),
+                value: settings.plusEnableModernAppPage,
+                onChanged: (val) => settings.plusEnableModernAppPage = val,
+              ),
+
+            if (_matches(tr('plusModernAddAppPage')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.add_to_home_screen_rounded,
+                title: tr('plusModernAddAppPage'),
+                subtitle: tr('plusModernAddAppPageDescription'),
+                value: settings.plusEnableModernAddAppPage,
+                onChanged: (val) => settings.plusEnableModernAddAppPage = val,
+              ),
+
+            if (_matches(tr('plusGridView')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.grid_view_rounded,
+                title: tr('plusGridView'),
+                subtitle: tr('plusGridViewDescription'),
+                value: settings.plusEnableGridView,
+                onChanged: (val) => settings.plusEnableGridView = val,
+              ),
+
+            if (_matches(tr('plusResponsiveAppLayout')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.responsive_layout_rounded,
+                title: tr('plusResponsiveAppLayout'),
+                subtitle: tr('plusResponsiveAppLayoutDescription'),
+                value: settings.plusEnableResponsiveAppLayout,
+                onChanged: (val) => settings.plusEnableResponsiveAppLayout = val,
+              ),
+
+            if (_matches(tr('plusEnhancedAnimations')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.animation_outlined,
+                title: tr('plusEnhancedAnimations'),
+                subtitle: tr('plusEnhancedAnimationsDescription'),
+                value: settings.plusEnableEnhancedAnimations,
+                onChanged: (val) => settings.plusEnableEnhancedAnimations = val,
+              ),
+
+            if (_matches(tr('plusUICustomization')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.dashboard_customize_outlined,
+                title: tr('plusUICustomization'),
+                subtitle: tr('plusUICustomizationDescription'),
+                value: settings.plusEnableUICustomization,
+                onChanged: (val) => settings.plusEnableUICustomization = val,
+              ),
+
+            if (!isSearching)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 24, bottom: 8),
+                child: Text(
+                  tr('organization').toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+            if (_matches(tr('plusIconCaching')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.cached_rounded,
+                title: tr('plusIconCaching'),
+                subtitle: tr('plusIconCachingDescription'),
+                value: settings.plusEnableIconCaching,
+                onChanged: (val) => settings.plusEnableIconCaching = val,
+              ),
+
+            if (_matches(tr('plusQuickFilters')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.filter_alt_outlined,
+                title: tr('plusQuickFilters'),
+                subtitle: tr('plusQuickFiltersDescription'),
+                value: settings.plusEnableQuickFilters,
+                onChanged: (val) => settings.plusEnableQuickFilters = val,
+              ),
+
+            if (_matches(tr('plusAdvancedSorting')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.sort_rounded,
+                title: tr('plusAdvancedSorting'),
+                subtitle: tr('plusAdvancedSortingDescription'),
+                value: settings.plusEnableAdvancedSorting,
+                onChanged: (val) => settings.plusEnableAdvancedSorting = val,
+              ),
+
             if (_matches(tr('plusCategoryReorder')))
               _buildFeatureToggle(
                 context,
@@ -117,17 +279,6 @@ class PlusFeaturesSection extends StatelessWidget {
                 subtitle: tr('plusCategoryReorderDescription'),
                 value: settings.plusEnableCategoryReorder,
                 onChanged: (val) => settings.plusEnableCategoryReorder = val,
-              ),
-
-            if (_matches(tr('plusUpdateSchedule')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.schedule_outlined,
-                title: tr('plusUpdateSchedule'),
-                subtitle: tr('plusUpdateScheduleDescription'),
-                value: settings.plusEnableUpdateSchedule,
-                onChanged: (val) => settings.plusEnableUpdateSchedule = val,
               ),
 
             const Divider(),
@@ -144,6 +295,31 @@ class PlusFeaturesSection extends StatelessWidget {
                   showTabCustomization(context);
                 },
               ),
+
+            // --- DEVELOPER OPTIONS ---
+            if (_matches(tr('developerOptions')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.developer_mode_rounded,
+                title: tr('developerOptions'),
+                subtitle: tr('developerOptionsDescription'),
+                value: settings.plusDeveloperMode,
+                onChanged: (val) => settings.plusDeveloperMode = val,
+              ),
+
+            if (settings.plusDeveloperMode) ...[
+              if (_matches(tr('plusShowLegacyUIComparison')))
+                _buildFeatureToggle(
+                  context,
+                  settings,
+                  icon: Icons.compare_outlined,
+                  title: tr('plusShowLegacyUIComparison'),
+                  subtitle: tr('plusShowLegacyUIComparisonDescription'),
+                  value: settings.plusShowLegacyUIComparison,
+                  onChanged: (val) => settings.plusShowLegacyUIComparison = val,
+                ),
+            ],
           ],
         ];
 

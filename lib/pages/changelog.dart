@@ -4,8 +4,21 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-class ChangelogPage extends StatelessWidget {
+class ChangelogPage extends StatefulWidget {
   const ChangelogPage({super.key});
+
+  @override
+  State<ChangelogPage> createState() => _ChangelogPageState();
+}
+
+class _ChangelogPageState extends State<ChangelogPage> {
+  late Future<String> _changelogFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _changelogFuture = _fetchChangelog();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +27,7 @@ class ChangelogPage extends StatelessWidget {
         title: Text(tr('viewChangelog')),
       ),
       body: FutureBuilder<String>(
-        future: _fetchChangelog(),
+        future: _changelogFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

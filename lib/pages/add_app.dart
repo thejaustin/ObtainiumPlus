@@ -10,6 +10,7 @@ import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -598,8 +599,26 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = context.watch<SettingsProvider>();
+    final isModern = settingsProvider.plusEnableModernAddAppPage;
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      floatingActionButton: settingsProvider.plusShowLegacyUIComparison
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: FloatingActionButton.small(
+                heroTag: 'add_app_ui_comparison_toggle',
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  settingsProvider.plusEnableModernAddAppPage = !settingsProvider.plusEnableModernAddAppPage;
+                },
+                child: Icon(settingsProvider.plusEnableModernAddAppPage 
+                    ? Icons.visibility_outlined 
+                    : Icons.visibility_off_outlined),
+              ),
+            )
+          : null,
       appBar: AppBar(
         automaticallyImplyLeading: false, // For modal
         title: Column(
@@ -616,6 +635,21 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
             Text(tr('addApp')),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.install_mobile_rounded),
+            onPressed: () async {
+              final result = await Navigator.push<String>(
+                context,
+                MaterialPageRoute(builder: (context) => const SystemAppSelector()),
+              );
+              if (result != null) {
+                _changeUserInput(result, true, false, updateUrlInput: true);
+              }
+            },
+            tooltip: tr('importInstalledApps'),
+          ),
+        ],
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -629,41 +663,207 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
       body: TabBarView(
         controller: _tabController,
         children: [
-          CustomScrollView(
-            shrinkWrap: true,
-            slivers: <Widget>[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _getUrlInputRow(),
-                      const SizedBox(height: 16),
-                      if (pickedSource != null) _getHTMLSourceOverrideDropdown(),
-                      if (pickedSource != null)
-                        FutureBuilder(
-                          builder: (ctx, val) {
-                            return val.data != null && val.data!.isNotEmpty
-                                ? Text(
-                                    val.data!,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  )
-                                : const SizedBox();
-                          },
-                          future: pickedSource?.getSourceNote(),
-                        ),
-                      if (pickedSource != null) _getAdditionalOptsCol(),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+          isModern ? _buildModernUrlTab(context) : _buildLegacyUrlTab(context),
           DiscoverPage(key: _discoverPageKey, showAppBar: false, initialQuery: userInput),
         ],
       ),
     );
   }
-}
+
+  Widget _buildLegacyUrlTab(BuildContext context) {
+    return CustomScrollView(
+      shrinkWrap: true,
+      slivers: <Widget>[
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _getUrlInputRow(),
+                const SizedBox(height: 16),
+                if (pickedSource != null) _getHTMLSourceOverrideDropdown(),
+                if (pickedSource != null)
+                  FutureBuilder(
+                    builder: (ctx, val) {
+                      return val.data != null && val.data!.isNotEmpty
+                          ? Text(
+                              val.data!,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            )
+                          : const SizedBox();
+                    },
+                    future: pickedSource?.getSourceNote(),
+                  ),
+                if (pickedSource != null) _getAdditionalOptsCol(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernUrlTab(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _buildModernUrlInputSection(context),
+              if (pickedSource != null) ...[
+                const SizedBox(height: 24),
+                _buildModernSourceNoteSection(context),
+                const SizedBox(height: 24),
+                _buildModernOptionsSection(context),
+                const SizedBox(height: 24),
+                _buildModernCategoriesSection(context),
+                const SizedBox(height: 100), // Extra space
+              ],
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernUrlInputSection(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tr('basics'), style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
+            const SizedBox(height: 16),
+            _getUrlInputRow(),
+            if (pickedSource != null) ...[
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              _getHTMLSourceOverrideDropdown(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernSourceNoteSection(BuildContext context) {
+    return FutureBuilder(
+      future: pickedSource?.getSourceNote(),
+      builder: (ctx, val) {
+        if (val.data == null || val.data!.isEmpty) return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 20, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(child: Text(val.data!, style: Theme.of(context).textTheme.bodySmall)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildModernOptionsSection(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tr('additionalOptions'), 
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)
+            ),
+            const SizedBox(height: 16),
+            GeneratedForm(
+              key: Key(
+                'modern-${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+              ),
+              items: [
+                ...pickedSource!.combinedAppSpecificSettingFormItems,
+                ...(pickedSourceOverride != null
+                    ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
+                    : []),
+              ],
+              onValueChanges: (values, valid, isBuilding) {
+                if (!isBuilding) {
+                  setState(() {
+                    additionalSettings = values;
+                    additionalSettingsValid = valid;
+                  });
+                }
+              },
+            ),
+            if (pickedSource != null && pickedSource!.appIdInferIsOptional) ...[
+              const Divider(),
+              _buildInferAppIdToggle(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInferAppIdToggle() {
+    return GeneratedForm(
+      key: const Key('inferAppIdIfOptional-modern'),
+      items: [
+        [
+          GeneratedFormSwitch(
+            'inferAppIdIfOptional',
+            label: tr('tryInferAppIdFromCode'),
+            defaultValue: inferAppIdIfOptional,
+          ),
+        ],
+      ],
+      onValueChanges: (values, valid, isBuilding) {
+        if (!isBuilding) {
+          setState(() {
+            inferAppIdIfOptional = values['inferAppIdIfOptional'];
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildModernCategoriesSection(BuildContext context) {
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tr('categories'), style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
+            const SizedBox(height: 12),
+            CategoryEditorSelector(
+              alignment: WrapAlignment.start,
+              onSelected: (categories) {
+                pickedCategories = categories;
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }

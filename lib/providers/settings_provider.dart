@@ -450,9 +450,40 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableModernAddAppPage => prefs?.getBool('plusEnableModernAddAppPage') ?? true;
+  set plusEnableModernAddAppPage(bool val) {
+    prefs?.setBool('plusEnableModernAddAppPage', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableModernAppListTile => prefs?.getBool('plusEnableModernAppListTile') ?? true;
+  set plusEnableModernAppListTile(bool val) {
+    prefs?.setBool('plusEnableModernAppListTile', val);
+    notifyListeners();
+  }
+
   bool get plusEnableResponsiveAppLayout => prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
   set plusEnableResponsiveAppLayout(bool val) {
     prefs?.setBool('plusEnableResponsiveAppLayout', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableSystemUpdateScanner => prefs?.getBool('plusEnableSystemUpdateScanner') ?? false;
+  set plusEnableSystemUpdateScanner(bool val) {
+    prefs?.setBool('plusEnableSystemUpdateScanner', val);
+    notifyListeners();
+  }
+
+  // Developer Mode & UI Comparison
+  bool get plusDeveloperMode => prefs?.getBool('plusDeveloperMode') ?? false;
+  set plusDeveloperMode(bool val) {
+    prefs?.setBool('plusDeveloperMode', val);
+    notifyListeners();
+  }
+
+  bool get plusShowLegacyUIComparison => prefs?.getBool('plusShowLegacyUIComparison') ?? false;
+  set plusShowLegacyUIComparison(bool val) {
+    prefs?.setBool('plusShowLegacyUIComparison', val);
     notifyListeners();
   }
 
