@@ -19,7 +19,7 @@ import 'package:obtainium/pages/updates.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
-import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/deep_link_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:provider/provider.dart';
@@ -404,103 +404,13 @@ class HomePageState extends State<HomePage> {
     }
 
     interpretLink(Uri uri) async {
-      if (!URLValidator.isValidDeepLink(uri)) {
-        showDialog(
-          context: context,
-          builder: (BuildContext ctx) {
-            return AlertDialog(
-              title: Text(tr('error')),
-              content: Text('Invalid or unauthorized deep link.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(tr('ok')),
-                ),
-              ],
-            );
-          },
-        );
-        return;
-      }
-
       isLinkActivity = true;
-      var action = uri.host;
-      var data = uri.path.length > 1 ? uri.path.substring(1) : "";
-      data = URLValidator.sanitizeInput(data);
-
-      try {
-        if (action == 'add') {
-          await goToAddApp(data);
-        } else if (action == 'app' || action == 'apps') {
-          var dataStr = Uri.decodeComponent(data);
-
-          if (!URLValidator.isValidJSONInput(dataStr)) {
-            showDialog(
-              context: context,
-              builder: (BuildContext ctx) {
-                return AlertDialog(
-                  title: Text(tr('error')),
-                  content: Text('Invalid or potentially malicious JSON data.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(tr('ok')),
-                    ),
-                  ],
-                );
-              },
-            );
-            return;
-          }
-
-          if (await showDialog(
-                context: context,
-                builder: (BuildContext ctx) {
-                  return GeneratedFormModal(
-                    title: tr(
-                      'importX',
-                      args: [
-                        (action == 'app' ? tr('app') : tr('appsString'))
-                            .toLowerCase(),
-                      ],
-                    ),
-                    items: const [],
-                    additionalWidgets: [
-                      ExpansionTile(
-                        title: const Text('Raw JSON'),
-                        children: [
-                          Text(
-                            dataStr,
-                            style: const TextStyle(fontFamily: 'monospace'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              ) !=
-              null) {
-            var appsProvider = context.read<AppsProvider>();
-            var result = await appsProvider.import(
-              action == 'app'
-                  ? '{ "apps": [$dataStr] }'
-                  : '{ "apps": $dataStr }',
-            );
-            if (!mounted) return;
-            showMessage(
-              tr(
-                'importedX',
-                args: [plural('apps', result.key.length).toLowerCase()],
-              ),
-              context,
-            );
-          }
-        } else {
-          throw ObtainiumError(tr('unknown'));
-        }
-      } catch (e) {
-        showError(e, context);
-      }
+      await DeepLinkService.interpretLink(
+        uri: uri,
+        context: context,
+        goToAddApp: goToAddApp,
+        appsProvider: context.read<AppsProvider>(),
+      );
     }
 
     final appLink = await _appLinks.getInitialLink();

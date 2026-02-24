@@ -141,418 +141,6 @@ class _AppPageState extends State<AppPage> {
         ? SourceUtils.isVersionPseudo(app!.app)
         : false;
 
-    getInfoColumn() {
-      String versionLines = '';
-      bool installed = app?.app.installedVersion != null;
-      bool upToDate = app?.app.installedVersion == app?.app.latestVersion;
-      if (installed) {
-        versionLines = '${app?.app.installedVersion} ${tr('installed')}';
-        if (upToDate) {
-          versionLines += '/${tr('latest')}';
-        }
-      } else {
-        versionLines = tr('notInstalled');
-      }
-      if (!upToDate) {
-        versionLines += '\n${app?.app.latestVersion} ${tr('latest')}';
-      }
-      String infoLines = tr(
-        'lastUpdateCheckX',
-        args: [
-          app?.app.lastUpdateCheck == null
-              ? tr('never')
-              : '${app?.app.lastUpdateCheck?.toLocal()}',
-        ],
-      );
-      if (trackOnly) {
-        infoLines = '${tr('xIsTrackOnly', args: [tr('app')])}\n$infoLines';
-      }
-      if (installedVersionIsEstimate) {
-        infoLines = '${tr('pseudoVersionInUse')}\n$infoLines';
-      }
-      if ((app?.app.apkUrls.length ?? 0) > 0) {
-        infoLines =
-            '$infoLines\n${app?.app.apkUrls.length == 1 ? app?.app.apkUrls[0].key : plural('apk', app?.app.apkUrls.length ?? 0)}';
-      }
-      var changeLogFn = app != null ? getChangeLogFn(context, app.app) : null;
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
-            child: Column(
-              children: [
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onLongPress: () {
-                    HapticFeedback.heavyImpact();
-                    _showContextMenu(
-                      title: tr('versionOptions'),
-                      actions: [
-                        MapEntry(
-                          tr('update'),
-                          () => getUpdate(app!.app.id),
-                        ),
-                        MapEntry(
-                          tr('appManagement'),
-                          () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SettingsPage(initialTab: 2),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                  child: Text(
-                    versionLines,
-                    textAlign: TextAlign.start,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                changeLogFn != null || app?.app.releaseDate != null
-                    ? GestureDetector(
-                        onTap: changeLogFn,
-                        child: Text(
-                          app?.app.releaseDate == null
-                              ? tr('changes')
-                              : app!.app.releaseDate!.toLocal().toString(),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall!
-                              .copyWith(
-                                decoration: changeLogFn != null
-                                    ? TextDecoration.underline
-                                    : null,
-                                fontStyle: changeLogFn != null
-                                    ? FontStyle.italic
-                                    : null,
-                              ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-          Text(
-            infoLines,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
-          ),
-          if (app?.app.apkUrls.isNotEmpty == true ||
-              app?.app.otherAssetUrls.isNotEmpty == true)
-            GestureDetector(
-              onTap: app?.app == null || updating
-                  ? null
-                  : () async {
-                      try {
-                        await appsProvider.downloadAppAssets([
-                          app!.app.id,
-                        ], context);
-                      } catch (e) {
-                        showError(e, context);
-                      }
-                    },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: highlightTouchTargets
-                          ? (Theme.of(context).brightness == Brightness.light
-                                    ? Theme.of(context).primaryColor
-                                    : Theme.of(context).primaryColorLight)
-                                .withAlpha(
-                                  Theme.of(context).brightness ==
-                                          Brightness.light
-                                      ? 20
-                                      : 40,
-                                )
-                          : null,
-                    ),
-                    padding: highlightTouchTargets
-                        ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
-                        : const EdgeInsetsDirectional.fromSTEB(0, 6, 0, 6),
-                    margin: const EdgeInsetsDirectional.fromSTEB(0, 6, 0, 0),
-                    child: Text(
-                      tr(
-                        'downloadX',
-                        args: [lowerCaseIfEnglish(tr('releaseAsset'))],
-                      ),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                        decoration: TextDecoration.underline,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 48),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: CategoryEditorSelector(
-              alignment: WrapAlignment.center,
-              preselected: app?.app.categories != null
-                  ? app!.app.categories.toSet()
-                  : {},
-              onSelected: (categories) {
-                if (app != null) {
-                  app.app.categories = categories;
-                  appsProvider.saveApps([app.app]);
-                }
-              },
-            ),
-          ),
-          if (app?.app.additionalSettings['about'] is String &&
-              app?.app.additionalSettings['about'].isNotEmpty)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 48),
-                GestureDetector(
-                  onLongPress: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: app?.app.additionalSettings['about'] ?? '',
-                      ),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(tr('copiedToClipboard'))),
-                    );
-                  },
-                  child: Markdown(
-                    physics: NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    styleSheet: MarkdownStyleSheet(
-                      blockquoteDecoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                      ),
-                      textAlign: WrapAlignment.center,
-                    ),
-                    data: app?.app.additionalSettings['about'],
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrlString(
-                          href,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    extensionSet: md.ExtensionSet(
-                      md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                      [
-                        md.EmojiSyntax(),
-                        ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      );
-    }
-
-    getFullInfoColumn({bool small = false}) => Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(height: small ? 5 : 20),
-        FutureBuilder(
-          future: appsProvider.updateAppIcon(app?.app.id),
-          builder: (ctx, val) {
-            return app?.icon != null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: app == null
-                            ? null
-                            : () => AppInstallService.openApp(app.app.id),
-                        onLongPress: () {
-                          HapticFeedback.heavyImpact();
-                          _showContextMenu(
-                            title: tr('appearance'),
-                            actions: [
-                              if (app?.installedInfo != null)
-                                MapEntry(
-                                  tr('openAppInfo'),
-                                  () => AppInstallService.openAppSettings(app!.app.id),
-                                ),
-                              MapEntry(
-                                tr('appearance'),
-                                () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const SettingsPage(initialTab: 0),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                        child: Hero(
-                          tag: 'app_icon_${widget.appId}',
-                          child: Image.memory(
-                            app!.icon!,
-                            height: small ? 70 : 150,
-                            gaplessPlayback: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Container();
-          },
-        ),
-        SizedBox(height: small ? 10 : 25),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            app?.name ?? tr('app'),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: small
-                ? Theme.of(context).textTheme.displaySmall
-                : Theme.of(context).textTheme.displayLarge,
-          ),
-        ),
-        GestureDetector(
-          onLongPress: () {
-            HapticFeedback.heavyImpact();
-            _showContextMenu(
-              title: tr('author'),
-              actions: [
-                MapEntry(tr('copy'), () {
-                  Clipboard.setData(ClipboardData(text: app?.author ?? ''));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(tr('copiedToClipboard'))),
-                  );
-                }),
-                MapEntry(tr('appearance'), () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 0),
-                    ),
-                  );
-                }),
-              ],
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              tr('byX', args: [app?.author ?? tr('unknown')]),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: small
-                  ? Theme.of(context).textTheme.headlineSmall
-                  : Theme.of(context).textTheme.headlineMedium,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        GestureDetector(
-          onTap: () {
-            if (app?.app.url != null) {
-              launchUrlString(
-                app?.app.url ?? '',
-                mode: LaunchMode.externalApplication,
-              );
-            }
-          },
-          onLongPress: () {
-            HapticFeedback.heavyImpact();
-            _showContextMenu(
-              title: tr('sourceOptions'),
-              actions: [
-                MapEntry(tr('copy'), () {
-                  Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(tr('copiedToClipboard'))),
-                  );
-                }),
-                MapEntry(tr('updatesSources'), () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 1),
-                    ),
-                  );
-                }),
-              ],
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              app?.app.url ?? '',
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          onLongPress: () {
-            HapticFeedback.heavyImpact();
-            _showContextMenu(
-              title: tr('appId'),
-              actions: [
-                MapEntry(tr('copy'), () {
-                  Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(tr('copiedToClipboard'))),
-                  );
-                }),
-                if (app?.installedInfo != null)
-                  MapEntry(
-                    tr('openAppInfo'),
-                    () => AppInstallService.openAppSettings(app!.app.id),
-                  ),
-                MapEntry(
-                  tr('appManagement'),
-                  () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsPage(initialTab: 2),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            );
-          },
-          child: Text(
-            app?.app.id ?? '',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ),
-        getInfoColumn(),
-        const SizedBox(height: 150),
-      ],
-    );
-
     showMarkUpdatedDialog() {
       return showDialog(
         context: context,
@@ -652,7 +240,27 @@ class _AppPageState extends State<AppPage> {
     return Scaffold(
       appBar: showAppWebpageFinal ? (widget.isModal ? null : AppBar()) : null,
       backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
+      floatingActionButton: appsProvider.settingsProvider.plusShowLegacyUIComparison
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 80.0), // Above bottom bar
+              child: FloatingActionButton.small(
+                heroTag: 'app_page_ui_comparison_toggle',
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  appsProvider.settingsProvider.plusEnableModernAppPage = !appsProvider.settingsProvider.plusEnableModernAppPage;
+                },
+                child: Icon(appsProvider.settingsProvider.plusEnableModernAppPage 
+                    ? Icons.visibility_outlined 
+                    : Icons.visibility_off_outlined),
+              ),
+            )
+          : null,
       body: RefreshIndicator(
+        onRefresh: () async {
+          if (app != null) {
+            getUpdate(app.app.id);
+          }
+        },
         child: showAppWebpageFinal
             ? (app != null
                 ? _AppWebView(
@@ -660,45 +268,35 @@ class _AppPageState extends State<AppPage> {
                     backgroundColor: Theme.of(context).colorScheme.surface,
                   )
                 : const SizedBox.shrink())
-            : CustomScrollView(
-                slivers: [
-                  if (widget.isModal)
-                    SliverToBoxAdapter(
-                      child: Center(
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 12),
-                          width: 32,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.outlineVariant,
-                            borderRadius: BorderRadius.circular(2),
+            : (appsProvider.settingsProvider.plusEnableModernAppPage
+                ? CustomScrollView(
+                    slivers: [
+                      if (widget.isModal) _buildModalHandle(context),
+                      _buildSliverAppBar(context, app),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            children: [
+                              _buildMainInfo(context, app, appsProvider),
+                              const SizedBox(height: 24),
+                              _buildStatsSection(context, app, updating, highlightTouchTargets, appsProvider),
+                              const SizedBox(height: 32),
+                              _buildCategorySection(context, app, appsProvider),
+                              const SizedBox(height: 32),
+                              _buildAboutSection(context, app),
+                              const SizedBox(height: 150), // Spacing for bottom bar
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                  SliverAppBar.large(
-                    automaticallyImplyLeading: !widget.isModal,
-                    leading: widget.isModal
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                          ),
-                    title: Text(app?.name ?? tr('app')),
-                    surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-                  ),
-                  SliverToBoxAdapter(
-                    child: Column(children: [getFullInfoColumn()]),
-                  ),
-                ],
-              ),
-        onRefresh: () async {
-          if (app != null) {
-            getUpdate(app.app.id);
-          }
-        },
+                    ],
+                  )
+                : ListView(
+                    children: [
+                      _buildLegacyFullInfoColumn(context, app, appsProvider, highlightTouchTargets, updating),
+                    ],
+                  )),
       ),
       bottomSheet: _AppBottomBar(
         app: app,
@@ -718,15 +316,12 @@ class _AppPageState extends State<AppPage> {
               globalNavigatorKey.currentContext,
             );
             if (res.isNotEmpty && !trackOnly) {
-              // ignore: use_build_context_synchronously
               showMessage(successMessage, context);
             }
             if (res.isNotEmpty && mounted) {
-              // ignore: use_build_context_synchronously
               Navigator.of(context).pop();
             }
           } catch (e) {
-            // ignore: use_build_context_synchronously
             showError(e, context);
           }
         },
@@ -749,24 +344,687 @@ class _AppPageState extends State<AppPage> {
               });
         },
         onMore: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext ctx) {
-              return AlertDialog(
-                scrollable: true,
-                content: getFullInfoColumn(small: true),
-                title: Text(app!.name),
+          _showAppDetailsDialog(context, app, appsProvider);
+        },
+      ),
+    );
+  }
+
+  Widget _buildModalHandle(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 12),
+          width: 32,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar(BuildContext context, AppInMemory? app) {
+    return SliverAppBar.large(
+      automaticallyImplyLeading: !widget.isModal,
+      leading: widget.isModal
+          ? null
+          : IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+      title: Text(app?.name ?? tr('app')),
+      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+    );
+  }
+
+  Widget _buildMainInfo(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        if (app?.icon != null)
+          GestureDetector(
+            onTap: () => AppInstallService.openApp(app!.app.id),
+            onLongPress: () {
+              HapticFeedback.heavyImpact();
+              _showContextMenu(
+                title: tr('appearance'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(tr('continue')),
-                  ),
+                  if (app?.installedInfo != null)
+                    MapEntry(tr('openAppInfo'), () => AppInstallService.openAppSettings(app!.app.id)),
+                  MapEntry(tr('appearance'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage(initialTab: 0)))),
                 ],
               );
             },
-          );
-        },
+            child: Hero(
+              tag: 'app_icon_${widget.appId}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.memory(app!.icon!, height: 120, width: 120, gaplessPlayback: true),
+              ),
+            ),
+          ),
+        const SizedBox(height: 24),
+        Text(
+          app?.name ?? tr('app'),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('author'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.author ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                }),
+              ],
+            );
+          },
+          child: Text(
+            tr('byX', args: [app?.author ?? tr('unknown')]),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (source != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              source.name,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+        _buildUrlAndId(context, app),
+      ],
+    );
+  }
+
+  Widget _buildUrlAndId(BuildContext context, AppInMemory? app) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => app?.app.url != null ? launchUrlString(app!.app.url, mode: LaunchMode.externalApplication) : null,
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('sourceOptions'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                }),
+              ],
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Text(
+              app?.app.url ?? '',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('appId'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                }),
+              ],
+            );
+          },
+          child: Text(
+            app?.app.id ?? '',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsSection(BuildContext context, AppInMemory? app, bool updating, bool highlightTouchTargets, AppsProvider appsProvider) {
+    bool installed = app?.app.installedVersion != null;
+    bool upToDate = app?.app.installedVersion == app?.app.latestVersion;
+    var changeLogFn = app != null ? getChangeLogFn(context, app.app) : null;
+
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildStatRow(
+              context,
+              icon: Icons.install_mobile_rounded,
+              label: tr('installed'),
+              value: app?.app.installedVersion ?? tr('notInstalled'),
+              isBold: true,
+            ),
+            const Divider(height: 24),
+            _buildStatRow(
+              context,
+              icon: Icons.new_releases_rounded,
+              label: tr('latest'),
+              value: app?.app.latestVersion ?? tr('unknown'),
+              valueColor: upToDate ? null : Theme.of(context).colorScheme.primary,
+            ),
+            const Divider(height: 24),
+            _buildStatRow(
+              context,
+              icon: Icons.update_rounded,
+              label: tr('lastChecked'),
+              value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
+            ),
+            if (changeLogFn != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: changeLogFn,
+                icon: const Icon(Icons.history_rounded, size: 18),
+                label: Text(tr('viewChanges')),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildStatRow(BuildContext context, {required IconData icon, required String label, required String value, Color? valueColor, bool isBold = false}) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        const SizedBox(width: 12),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        const Spacer(),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: valueColor,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategorySection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Text(tr('categories'), style: Theme.of(context).textTheme.titleSmall),
+        ),
+        CategoryEditorSelector(
+          alignment: WrapAlignment.start,
+          preselected: app?.app.categories != null ? app!.app.categories.toSet() : {},
+          onSelected: (categories) {
+            if (app != null) {
+              app.app.categories = categories;
+              appsProvider.saveApps([app.app]);
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAboutSection(BuildContext context, AppInMemory? app) {
+    final about = app?.app.additionalSettings['about'];
+    if (about == null || about.toString().isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Text(tr('about'), style: Theme.of(context).textTheme.titleSmall),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: MarkdownBody(
+            data: about.toString(),
+            onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
+            extensionSet: md.ExtensionSet(
+              md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+              [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAppDetailsDialog(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          scrollable: true,
+          content: Column(
+            children: [
+              if (app?.icon != null) Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
+              const SizedBox(height: 16),
+              Text(app?.app.id ?? '', style: Theme.of(context).textTheme.labelSmall),
+            ],
+          ),
+          title: Text(app?.name ?? ''),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ok'))),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLegacyFullInfoColumn(
+    BuildContext context, 
+    AppInMemory? app, 
+    AppsProvider appsProvider,
+    bool highlightTouchTargets,
+    bool updating,
+  ) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 20),
+        FutureBuilder(
+          future: appsProvider.updateAppIcon(app?.app.id),
+          builder: (ctx, val) {
+            return app?.icon != null
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: app == null
+                            ? null
+                            : () => AppInstallService.openApp(app.app.id),
+                        onLongPress: () {
+                          HapticFeedback.heavyImpact();
+                          _showContextMenu(
+                            title: tr('appearance'),
+                            actions: [
+                              if (app?.installedInfo != null)
+                                MapEntry(
+                                  tr('openAppInfo'),
+                                  () => AppInstallService.openAppSettings(app!.app.id),
+                                ),
+                              MapEntry(
+                                tr('appearance'),
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SettingsPage(initialTab: 0),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                        child: Hero(
+                          tag: 'app_icon_${widget.appId}',
+                          child: Image.memory(
+                            app!.icon!,
+                            height: 150,
+                            gaplessPlayback: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Container();
+          },
+        ),
+        const SizedBox(height: 25),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            app?.name ?? tr('app'),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.displayLarge,
+          ),
+        ),
+        GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('author'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.author ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                }),
+              ],
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              tr('byX', args: [app?.author ?? tr('unknown')]),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        GestureDetector(
+          onTap: () {
+            if (app?.app.url != null) {
+              launchUrlString(
+                app?.app.url ?? '',
+                mode: LaunchMode.externalApplication,
+              );
+            }
+          },
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('sourceOptions'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                }),
+              ],
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              app?.app.url ?? '',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                decoration: TextDecoration.underline,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+        GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showContextMenu(
+              title: tr('appId'),
+              actions: [
+                MapEntry(tr('copy'), () {
+                  Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                }),
+              ],
+            );
+          },
+          child: Text(
+            app?.app.id ?? '',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ),
+        _buildLegacyInfoColumn(context, app, appsProvider, highlightTouchTargets, updating),
+        const SizedBox(height: 150),
+      ],
+    );
+  }
+
+  Widget _buildLegacyInfoColumn(
+    BuildContext context, 
+    AppInMemory? app, 
+    AppsProvider appsProvider,
+    bool highlightTouchTargets,
+    bool updating,
+  ) {
+    String versionLines = '';
+    bool installed = app?.app.installedVersion != null;
+    bool upToDate = app?.app.installedVersion == app?.app.latestVersion;
+    if (installed) {
+      versionLines = '${app?.app.installedVersion} ${tr('installed')}';
+      if (upToDate) {
+        versionLines += '/${tr('latest')}';
+      }
+    } else {
+      versionLines = tr('notInstalled');
+    }
+    if (!upToDate) {
+      versionLines += '\n${app?.app.latestVersion} ${tr('latest')}';
+    }
+    String infoLines = tr(
+      'lastUpdateCheckX',
+      args: [
+        app?.app.lastUpdateCheck == null
+            ? tr('never')
+            : '${app?.app.lastUpdateCheck?.toLocal()}',
+      ],
+    );
+    if (app?.app.additionalSettings['trackOnly'] == true) {
+      infoLines = '${tr('xIsTrackOnly', args: [tr('app')])}\n$infoLines';
+    }
+    if (app?.app != null && SourceUtils.isVersionPseudo(app!.app)) {
+      infoLines = '${tr('pseudoVersionInUse')}\n$infoLines';
+    }
+    if ((app?.app.apkUrls.length ?? 0) > 0) {
+      infoLines =
+          '$infoLines\n${app?.app.apkUrls.length == 1 ? app?.app.apkUrls[0].key : plural('apk', app?.app.apkUrls.length ?? 0)}';
+    }
+    var changeLogFn = app != null ? getChangeLogFn(context, app.app) : null;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              GestureDetector(
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  _showContextMenu(
+                    title: tr('versionOptions'),
+                    actions: [
+                      MapEntry(
+                        tr('update'),
+                        () => appsProvider.checkUpdate(app!.app.id),
+                      ),
+                    ],
+                  );
+                },
+                child: Text(
+                  versionLines,
+                  textAlign: TextAlign.start,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              changeLogFn != null || app?.app.releaseDate != null
+                  ? GestureDetector(
+                      onTap: changeLogFn,
+                      child: Text(
+                        app?.app.releaseDate == null
+                            ? tr('changes')
+                            : app!.app.releaseDate!.toLocal().toString(),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelSmall!
+                            .copyWith(
+                              decoration: changeLogFn != null
+                                  ? TextDecoration.underline
+                                  : null,
+                              fontStyle: changeLogFn != null
+                                  ? FontStyle.italic
+                                  : null,
+                            ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        Text(
+          infoLines,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
+        ),
+        if (app?.app.apkUrls.isNotEmpty == true ||
+            app?.app.otherAssetUrls.isNotEmpty == true)
+          GestureDetector(
+            onTap: app?.app == null || updating
+                ? null
+                : () async {
+                    try {
+                      await appsProvider.downloadAppAssets([
+                        app!.app.id,
+                      ], context);
+                    } catch (e) {
+                      showError(e, context);
+                    }
+                  },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: highlightTouchTargets
+                        ? (Theme.of(context).brightness == Brightness.light
+                                  ? Theme.of(context).primaryColor
+                                  : Theme.of(context).primaryColorLight)
+                              .withAlpha(
+                                Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? 20
+                                    : 40,
+                              )
+                        : null,
+                  ),
+                  padding: highlightTouchTargets
+                      ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
+                      : const EdgeInsetsDirectional.fromSTEB(0, 6, 0, 6),
+                  margin: const EdgeInsetsDirectional.fromSTEB(0, 6, 0, 0),
+                  child: Text(
+                    tr(
+                      'downloadX',
+                      args: [lowerCaseIfEnglish(tr('releaseAsset'))],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                      decoration: TextDecoration.underline,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 48),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: CategoryEditorSelector(
+            alignment: WrapAlignment.center,
+            preselected: app?.app.categories != null
+                ? app!.app.categories.toSet()
+                : {},
+            onSelected: (categories) {
+              if (app != null) {
+                app.app.categories = categories;
+                appsProvider.saveApps([app.app]);
+              }
+            },
+          ),
+        ),
+        if (app?.app.additionalSettings['about'] is String &&
+            app?.app.additionalSettings['about'].isNotEmpty)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 48),
+              GestureDetector(
+                onLongPress: () {
+                  Clipboard.setData(
+                    ClipboardData(
+                      text: app?.app.additionalSettings['about'] ?? '',
+                    ),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
+                },
+                child: MarkdownBody(
+                  data: app?.app.additionalSettings['about'],
+                  onTapLink: (text, href, title) {
+                    if (href != null) {
+                      launchUrlString(
+                        href,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
+                  },
+                  extensionSet: md.ExtensionSet(
+                    md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                    [
+                      md.EmojiSyntax(),
+                      ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

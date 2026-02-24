@@ -22,11 +22,13 @@ class _LogsPageState extends State<LogsPage> {
   final Future<AndroidDeviceInfo> _androidInfoFuture = DeviceInfoPlugin().androidInfo;
   // Use a variable to store cached device info if needed, similar to settings page
   AndroidDeviceInfo? _cachedDeviceInfo;
+  late Future<List<Log>> _logsFuture;
 
   @override
   void initState() {
     super.initState();
     _androidInfoFuture.then((info) => _cachedDeviceInfo = info);
+    _logsFuture = context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7)));
   }
 
   Future<void> _reportIssue() async {
@@ -83,6 +85,7 @@ $logs''';
                   context.read<LogsProvider>().clear();
                   setState(() {
                     logString = null;
+                    _logsFuture = context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7)));
                   });
                 },
               ),
@@ -98,7 +101,7 @@ $logs''';
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: FutureBuilder<List<Log>>(
-                future: context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7))),
+                future: _logsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final logs = snapshot.data!;

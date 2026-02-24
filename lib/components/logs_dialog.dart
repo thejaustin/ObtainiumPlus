@@ -22,6 +22,13 @@ class _LogsDialogState extends State<LogsDialog> {
   String? logString;
   List<int> days = [7, 5, 4, 3, 2, 1];
   final Future<AndroidDeviceInfo> _androidInfoFuture = DeviceInfoPlugin().androidInfo;
+  late Future<List<Log>> _logsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _logsFuture = context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7)));
+  }
 
   Future<void> _reportIssue() async {
     var logs = logString ?? '';
@@ -69,7 +76,7 @@ $logs''';
                 ),
               )
             : FutureBuilder<List<Log>>(
-                future: context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7))),
+                future: _logsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final logs = snapshot.data!;

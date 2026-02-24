@@ -50,6 +50,18 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> animationWidgets = [
+       if (_matches(tr('plusEnhancedAnimations')))
+        Consumer<SettingsProvider>(
+          builder: (context, settings, child) {
+            return SwitchListTile.adaptive(
+              secondary: const Icon(Icons.auto_awesome_motion_rounded),
+              title: Text(tr('plusEnhancedAnimations'), style: Theme.of(context).textTheme.bodyLarge),
+              subtitle: Text(tr('plusEnhancedAnimationsDescription')),
+              value: settings.plusEnableEnhancedAnimations,
+              onChanged: (value) => settings.plusEnableEnhancedAnimations = value,
+            );
+          },
+        ),
        if (_matches(tr('disablePageTransitions'))) _buildPageTransitionsToggle(context),
        if (_matches(tr('reversePageTransitions'))) _buildReverseTransitionsToggle(context),
        if (_matches(tr('highlightTouchTargets'))) _buildHighlightTouchTargetsToggle(context),

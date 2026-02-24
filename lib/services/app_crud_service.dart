@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
 import 'package:obtainium/app_sources/html.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -14,6 +15,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/version_utils.dart';
+import 'package:obtainium/utils/app_utils.dart';
 
 // Data class to store removed apps for undo functionality
 class RemovedAppData {
@@ -29,6 +31,160 @@ class AppCRUDService {
 
   static final List<RemovedAppData> _recentlyRemovedApps = [];
   static Timer? _cleanupTimer;
+
+  static void addMissingCategories({
+    required SettingsProvider settingsProvider,
+    required Map<String, AppInMemory> apps,
+    required dynamic appsProvider,
+  }) {
+    var cats = settingsProvider.categories;
+    apps.forEach((key, value) {
+      for (var c in value.app.categories) {
+        if (!cats.containsKey(c)) {
+          cats[c] = generateRandomLightColor().value;
+        }
+      }
+    });
+    settingsProvider.setCategories(cats, appsProvider: appsProvider);
+  }
+
+  static Future<void> saveApps({
+    required List<App> appsToSave,
+    required Map<String, AppInMemory> apps,
+    required LogsProvider logs,
+    required SettingsProvider settingsProvider,
+    required Function() notifyListeners,
+    required Future<String?> Function({bool isAuto}) export,
+    bool attemptToCorrectInstallStatus = true,
+    bool onlyIfExists = true,
+  }) async {
+    await Future.wait(
+      appsToSave.map((a) async {
+        var app = a.deepCopy();
+        PackageInfo? info = await AppInstallService.getInstalledInfo(app.id);
+        var icon = await info?.applicationInfo?.getAppIcon();
+        app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
+        if (attemptToCorrectInstallStatus) {
+          app = AppCRUDService.getCorrectedInstallStatusAppIfPossible(app, info, logs) ?? app;
+        }
+        if (!onlyIfExists || apps.containsKey(app.id)) {
+          await AppCRUDService.saveAppToDisk(app);
+        }
+        try {
+          apps.update(
+            app.id,
+            (value) => AppInMemory(app, value.downloadProgress, info, icon),
+            ifAbsent: onlyIfExists
+                ? null
+                : () => AppInMemory(app, null, info, icon),
+          );
+        } catch (e) {
+          if (e is! ArgumentError || e.name != 'key') {
+            rethrow;
+          }
+        }
+      }),
+    );
+    notifyListeners();
+    export(isAuto: true);
+
+    // Update app count for smart defaults in settings
+    settingsProvider.prefs?.setInt('trackedAppCount', apps.length);
+  }
+
+  static Future<void> removeApps({
+    required List<String> appIds,
+    required Map<String, AppInMemory> apps,
+    required LogsProvider logs,
+    required SettingsProvider settingsProvider,
+    required Directory APKDir,
+    required Function() notifyListeners,
+    required Future<String?> Function({bool isAuto}) export,
+  }) async {
+    var apkFiles = APKDir.listSync();
+
+    // Store removed apps for potential undo
+    for (String appId in appIds) {
+      if (apps.containsKey(appId)) {
+        try {
+          // Find associated APK files for this app
+          List<File> appApkFiles = apkFiles
+              .where((element) => element.path.split('/').last.startsWith('$appId-'))
+              .cast<File>()
+              .toList();
+
+          // Store the app data for potential undo via CRUD service
+          AppCRUDService.addRemovedApp(RemovedAppData(
+            apps[appId]!.app, // Store the original app object
+            appApkFiles,      // Store associated APK files
+            DateTime.now(),   // Timestamp for cleanup later
+          ));
+        } catch (e, stack) {
+          logs.add('Error preparing app $appId for removal: $e\n$stack');
+        }
+      }
+    }
+
+    try {
+      await Future.wait(
+        appIds.map((appId) async {
+          try {
+            await AppCRUDService.deleteAppFile(appId);
+            apkFiles
+                .where(
+                  (element) => element.path.split('/').last.startsWith('$appId-'),
+                )
+                .forEach((element) {
+                  try {
+                    element.delete(recursive: true);
+                  } catch (e) {
+                    logs.add('Error deleting APK file ${element.path}: $e');
+                  }
+                });
+            if (apps.containsKey(appId)) {
+              apps.remove(appId);
+            }
+          } catch (e, stack) {
+            logs.add('Error removing app $appId: $e\n$stack');
+          }
+        }),
+      );
+    } catch (e, stack) {
+      logs.add('Error in bulk app removal: $e\n$stack');
+    }
+
+    if (appIds.isNotEmpty) {
+      notifyListeners();
+      export(isAuto: true);
+      settingsProvider.prefs?.setInt('trackedAppCount', apps.length);
+    }
+  }
+
+  static Future<List<List<String>>> addAppsByURL({
+    required List<String> urls,
+    required Map<String, AppInMemory> apps,
+    required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
+    AppSource? sourceOverride,
+  }) async {
+    List<dynamic> results = await SourceProvider().getAppsByURLNaive(
+      urls,
+      alreadyAddedUrls: apps.values.map((e) => e.app.url).toList(),
+      sourceOverride: sourceOverride,
+    );
+    List<App> pps = results[0];
+    Map<String, dynamic> errorsMap = results[1];
+    for (var app in pps) {
+      if (apps.containsKey(app.id)) {
+        errorsMap.addAll({app.id: tr('appAlreadyAdded')});
+      } else {
+        await saveApps([app], onlyIfExists: false);
+      }
+    }
+    List<List<String>> errors = errorsMap.keys
+        .map((e) => [e, errorsMap[e].toString()])
+        .toList();
+    return errors;
+  }
 
   static void addRemovedApp(RemovedAppData data) {
     _recentlyRemovedApps.add(data);

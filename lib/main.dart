@@ -27,6 +27,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/background_service.dart';
+import 'package:obtainium/services/background_update_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -390,7 +391,7 @@ class _ObtainiumState extends State<Obtainium> {
         requiredNetworkType: NetworkType.ANY,
       ),
       (String taskId) async {
-        await bgUpdateCheck(taskId, null);
+        await BackgroundUpdateService.bgUpdateCheck(taskId, null);
         BackgroundFetch.finish(taskId);
       },
       (String taskId) async {
