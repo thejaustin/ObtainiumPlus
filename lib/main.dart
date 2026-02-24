@@ -30,6 +30,7 @@ import 'package:obtainium/services/background_service.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:obtainium/utils/crash_tracker.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -140,7 +141,8 @@ void main() async {
         );
         BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
       } catch (e, stackTrace) {
-        await Sentry.captureException(e, stackTrace: stackTrace);
+        final sentryId = await Sentry.captureException(e, stackTrace: stackTrace);
+        await CrashTracker.recordCrash(sentryId.toString());
         runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
       }
     },
@@ -159,12 +161,17 @@ class ErrorApp extends StatelessWidget {
   const ErrorApp({super.key, required this.error, required this.stackTrace});
 
   Future<void> _reportToGitHub() async {
-    // Show Sentry Feedback Dialog first
     await Sentry.captureMessage('User Feedback Triggered');
-
     final Uri url = Uri.parse(
       'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
     );
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _followIssue() async {
+    final Uri url = Uri.parse(CrashTracker.issueTrackerUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -221,16 +228,28 @@ class ErrorApp extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: _reportToGitHub,
-                    icon: const Icon(Icons.launch),
-                    label: const Text('Report on GitHub'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.red.shade900,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _reportToGitHub,
+                      icon: const Icon(Icons.launch),
+                      label: const Text('Report on GitHub'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.red.shade900,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: _followIssue,
+                      icon: const Icon(Icons.notifications_active_outlined, color: Colors.white70),
+                      label: const Text('Follow Issue', style: TextStyle(color: Colors.white70)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white54),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -284,7 +303,9 @@ class _ObtainiumState extends State<Obtainium> {
     ErrorWidget.builder = (FlutterErrorDetails details) {
       _buildError = details.exceptionAsString();
       _buildStackTrace = details.stack?.toString();
-      Sentry.captureException(details.exception, stackTrace: details.stack);
+      Sentry.captureException(details.exception, stackTrace: details.stack).then((id) {
+        CrashTracker.recordCrash(id.toString());
+      });
       return _buildErrorWidget(details.exceptionAsString(), details.stack?.toString() ?? '');
     };
     initPlatformState();
@@ -309,17 +330,32 @@ class _ObtainiumState extends State<Obtainium> {
                     'Obtainium+ Build Error',
                     style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.bug_report, color: Colors.white),
-                    onPressed: () async {
-                      await Sentry.captureMessage('User Feedback Triggered (Build Error)');
-                      final Uri url = Uri.parse(
-                        'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
-                      );
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
-                    },
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_active_outlined, color: Colors.white70),
+                        tooltip: 'Follow Issue on GitHub',
+                        onPressed: () async {
+                          final Uri url = Uri.parse(CrashTracker.issueTrackerUrl);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.bug_report, color: Colors.white),
+                        tooltip: 'Report on GitHub',
+                        onPressed: () async {
+                          await Sentry.captureMessage('User Feedback Triggered (Build Error)');
+                          final Uri url = Uri.parse(
+                            'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error\n\n$stackTrace')}',
+                          );
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
