@@ -40,5 +40,5 @@ jobs:
               repo: context.repo.repo,
               title: title,
               body: body,
-              labels: ['bug', 'crash', 'automated']
+              labels: ['bug', 'crash', 'sentry-crash', 'automated']
             });
