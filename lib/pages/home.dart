@@ -24,6 +24,10 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/utils/crash_tracker.dart';
+import 'package:obtainium/services/known_issues_service.dart';
+import 'package:obtainium/components/critical_issue_dialog.dart';
+import 'package:obtainium/services/app_install_service.dart';
 
 /// Shows the tab customization bottom sheet.
 /// [allPages] can be provided when called from HomePageState (which has the map).
@@ -308,6 +312,63 @@ class HomePageState extends State<HomePage> {
       }
       if (!sp.xiaomiSetupShown) {
         await _showXiaomiSetupDialogIfNeeded(context, sp);
+      }
+      // Show follow-issue banner if a crash was recorded in the last session.
+      if (await CrashTracker.hasPendingCrash() && mounted) {
+        await CrashTracker.clearPendingCrash();
+        ScaffoldMessenger.of(context).showMaterialBanner(
+          MaterialBanner(
+            leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            content: const Text(
+              'A crash was detected in your last session. Follow the issue on GitHub to be notified when it\'s fixed.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+                child: const Text('Dismiss'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                  try {
+                    await launchUrlString(
+                      CrashTracker.issueTrackerUrl,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } catch (_) {}
+                },
+                child: const Text('Follow Issue'),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // Show critical issue dialogs for the running version.
+      if (mounted) {
+        final appInfo = await AppInstallService.getInstalledInfo(obtainiumId);
+        if (appInfo != null && mounted) {
+          final activeIssues = await KnownIssuesService.getActiveIssues(
+            appInfo.versionName ?? '',
+            appInfo.versionCode ?? 0,
+          );
+          for (final issue in activeIssues) {
+            if (!mounted) break;
+            await showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => CriticalIssueDialog(
+                issue: issue,
+                onCheckForUpdates: () {
+                  Navigator.of(context).pop();
+                  final idx = activePages.indexWhere((p) => p.id == 'updates');
+                  if (idx != -1) switchToPage(idx);
+                },
+              ),
+            );
+          }
+        }
       }
     });
   }
