@@ -779,5 +779,7 @@
     "plusPopupSlider": "Popup description slider",
     "plusPopupSliderDescription": "Floating description panel with smooth gestures",
     "glassmorphismUI": "Glassmorphism effects",
-    "glassmorphismUIDescription": "Enable transparent, blurred UI elements"
+    "glassmorphismUIDescription": "Enable transparent, blurred UI elements",
+    "plusMaterialExpressive": "Material 3 Expressive",
+    "plusMaterialExpressiveDescription": "Enable tactile, bouncy animations and feedback",
 }
