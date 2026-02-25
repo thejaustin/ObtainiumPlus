@@ -196,7 +196,7 @@ class PlusFeaturesSection extends StatelessWidget {
               _buildFeatureToggle(
                 context,
                 settings,
-                icon: Icons.responsive_layout_rounded,
+                icon: Icons.view_quilt_rounded,
                 title: tr('plusResponsiveAppLayout'),
                 subtitle: tr('plusResponsiveAppLayoutDescription'),
                 value: settings.plusEnableResponsiveAppLayout,
