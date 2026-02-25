@@ -35,8 +35,9 @@ class ThemeSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> themeWidgets = [
-      if (_matches(tr('theme'))) _buildThemeDropdown(context),
+      if (_matches(tr('theme'))) _buildThemeSegmented(context),
       if (_matches(tr('followSystemThemeExplanation'))) _buildFollowSystemExplanation(context),
+      if (_matches(tr('themePresets'))) _buildThemePresets(context),
       _buildFeatureToggle(
         context,
         icon: Icons.dark_mode_outlined,
@@ -49,7 +50,7 @@ class ThemeSettingsSection extends StatelessWidget {
       _buildMaterialYouToggle(context),
       _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
-      if (_matches(tr('navigationLabels'))) _buildNavigationLabelDropdown(context),
+      if (_matches(tr('navigationLabels'))) _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
     ];
 
@@ -117,27 +118,119 @@ class ThemeSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildThemeDropdown(BuildContext context) {
+  Widget _buildThemeSegmented(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.palette_outlined),
-          title: Text(tr('theme'), style: Theme.of(context).textTheme.bodyLarge),
-          trailing: DropdownButton<ThemeSettings>(
-            underline: const SizedBox(),
-            value: settings.theme,
-            items: [
-              DropdownMenuItem(value: ThemeSettings.system, child: Text(tr('followSystem'))),
-              DropdownMenuItem(value: ThemeSettings.light, child: Text(tr('light'))),
-              DropdownMenuItem(value: ThemeSettings.dark, child: Text(tr('dark'))),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                HapticFeedback.selectionClick();
-                settings.theme = value;
-              }
-            },
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: Text(tr('theme'), style: Theme.of(context).textTheme.bodyLarge),
+              subtitle: Text(tr('themeDescription')),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SegmentedButton<ThemeSettings>(
+                segments: [
+                  ButtonSegment(value: ThemeSettings.system, label: Text(tr('followSystem')), icon: const Icon(Icons.settings_suggest_outlined)),
+                  ButtonSegment(value: ThemeSettings.light, label: Text(tr('light')), icon: const Icon(Icons.light_mode_outlined)),
+                  ButtonSegment(value: ThemeSettings.dark, label: Text(tr('dark')), icon: const Icon(Icons.dark_mode_outlined)),
+                ],
+                selected: {settings.theme},
+                onSelectionChanged: (Set<ThemeSettings> newSelection) {
+                  HapticFeedback.selectionClick();
+                  settings.theme = newSelection.first;
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildThemePresets(BuildContext context) {
+    final presets = [
+      ('Obtainium', const Color(0xFF6438B5)),
+      ('Material', Colors.blue),
+      ('Emerald', Colors.teal),
+      ('Ruby', Colors.red),
+      ('Amber', Colors.orange),
+      ('Midnight', Colors.indigo),
+    ];
+
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        if (settings.useMaterialYou) return const SizedBox.shrink();
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.color_lens_outlined),
+              title: Text(tr('themePresets'), style: Theme.of(context).textTheme.bodyLarge),
+              subtitle: Text(tr('themePresetsDescription')),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: presets.map((preset) {
+                  final name = preset.$1;
+                  final color = preset.$2;
+                  final isSelected = settings.themeColor.value == color.value;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      label: Text(name),
+                      avatar: CircleAvatar(backgroundColor: color, radius: 10),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          HapticFeedback.selectionClick();
+                          settings.themeColor = color;
+                        }
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNavigationLabelSegmented(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.label_important_outlined),
+              title: Text(tr('navigationLabels'), style: Theme.of(context).textTheme.bodyLarge),
+              subtitle: Text(tr('navigationLabelsDescription')),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SegmentedButton<NavigationDestinationLabelBehavior>(
+                segments: [
+                  ButtonSegment(value: NavigationDestinationLabelBehavior.alwaysShow, label: Text(tr('alwaysShow'))),
+                  ButtonSegment(value: NavigationDestinationLabelBehavior.onlyShowSelected, label: Text(tr('onlyShowSelected'))),
+                  ButtonSegment(value: NavigationDestinationLabelBehavior.alwaysHide, label: Text(tr('neverShow'))),
+                ],
+                selected: {settings.navigationLabelBehavior},
+                onSelectionChanged: (Set<NavigationDestinationLabelBehavior> newSelection) {
+                  HapticFeedback.selectionClick();
+                  settings.navigationLabelBehavior = newSelection.first;
+                },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -252,32 +345,6 @@ class ThemeSettingsSection extends StatelessWidget {
               if (value != null) {
                 HapticFeedback.selectionClick();
                 settings.themeVariant = value;
-              }
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildNavigationLabelDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.label_important_outlined),
-          title: Text(tr('navigationLabels'), style: Theme.of(context).textTheme.bodyLarge),
-          trailing: DropdownButton<NavigationDestinationLabelBehavior>(
-            underline: const SizedBox(),
-            value: settings.navigationLabelBehavior,
-            items: [
-              DropdownMenuItem(value: NavigationDestinationLabelBehavior.alwaysShow, child: Text(tr('alwaysShow'))),
-              DropdownMenuItem(value: NavigationDestinationLabelBehavior.onlyShowSelected, child: Text(tr('onlyShowSelected'))),
-              DropdownMenuItem(value: NavigationDestinationLabelBehavior.alwaysHide, child: Text(tr('neverShow'))),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                HapticFeedback.selectionClick();
-                settings.navigationLabelBehavior = value;
               }
             },
           ),
