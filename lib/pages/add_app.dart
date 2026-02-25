@@ -111,12 +111,15 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         var prevHost = pickedSource?.hosts.isNotEmpty == true
             ? pickedSource?.hosts[0]
             : null;
-        var source = valid
-            ? sourceProvider.getSource(
-                userInput,
-                overrideSource: pickedSourceOverride,
-              )
-            : null;
+        AppSource? source;
+        if (valid) {
+          try {
+            source = sourceProvider.getSource(
+              userInput,
+              overrideSource: pickedSourceOverride,
+            );
+          } catch (_) {}
+        }
         if (pickedSource.runtimeType != source.runtimeType ||
             overrideChanged ||
             (prevHost != null && prevHost != source?.hosts[0])) {
@@ -867,3 +870,5 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
       ),
     );
   }
+
+}

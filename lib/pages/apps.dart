@@ -138,6 +138,7 @@ class AppsPageState extends State<AppsPage> {
     var appsProvider = context.watch<AppsProvider>();
     var viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
+    var settingsProvider = context.watch<SettingsProvider>();
     var listedApps = appsProvider.getFilteredSortedApps(
       filter: filter,
       sortMethod: viewSettings.appSortMethod,
@@ -156,12 +157,12 @@ class AppsPageState extends State<AppsPage> {
       return appsProvider
           .checkUpdates(ignoreCache: true)
           .catchError((e) {
-            showError(e is Map ? e['errors'] : e, context);
+            if (mounted) showError(e is Map ? e['errors'] : e, context);
             return <App>[];
           })
           .whenComplete(() {
             HapticFeedback.lightImpact();
-            setState(() {
+            if (mounted) setState(() {
               refreshingSince = null;
             });
           });
@@ -297,7 +298,9 @@ class AppsPageState extends State<AppsPage> {
             if (values['installs'] == true) toInstall.addAll(newInstallIds);
             if (values['trackonlies'] == true) toInstall.addAll(trackOnlyUpdateIds);
             appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then((value) {
-              if (value.isNotEmpty && values!['updates'] == true) showMessage(tr('appsUpdated'), context);
+              if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
+            }).catchError((e) {
+              if (mounted) showError(e, context);
             });
           }
         });
@@ -674,7 +677,9 @@ class AppsPageState extends State<AppsPage> {
           if (values['installs'] == true) toInstall.addAll(newInstallIds);
           if (values['trackonlies'] == true) toInstall.addAll(trackOnlyUpdateIds);
           appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then((value) {
-            if (value.isNotEmpty && values!['updates'] == true) showMessage(tr('appsUpdated'), context);
+            if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
+          }).catchError((e) {
+            if (mounted) showError(e, context);
           });
         }
       });
@@ -711,5 +716,5 @@ class AppsPageState extends State<AppsPage> {
       showMessage(tr('appsUpdated'), context);
     }
   }
-
+}
 
