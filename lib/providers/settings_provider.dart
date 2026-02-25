@@ -427,6 +427,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableMaterialExpressive => plusSettings.plusEnableMaterialExpressive;
+  set plusEnableMaterialExpressive(bool val) {
+    plusSettings.plusEnableMaterialExpressive = val;
+    notifyListeners();
+  }
+
   bool get plusEnableUICustomization => plusSettings.plusEnableUICustomization;
   set plusEnableUICustomization(bool val) {
     plusSettings.plusEnableUICustomization = val;

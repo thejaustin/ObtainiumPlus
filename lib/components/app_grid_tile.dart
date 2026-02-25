@@ -94,7 +94,9 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
 
         final settingsProvider = context.watch<SettingsProvider>();
         final curve = settingsProvider.plusEnableEnhancedAnimations 
-            ? AppConstants.expressiveStandard 
+            ? (settingsProvider.plusEnableMaterialExpressive 
+                ? AppConstants.expressiveStandard 
+                : AppConstants.standardStandard)
             : Curves.easeInOut;
 
         return AnimatedScale(
