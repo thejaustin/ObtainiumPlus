@@ -513,6 +513,86 @@ class AppDownloadService {
     };
   }
 
+  static Future<Map<String, dynamic>> _processDownloadedArchive(
+    File downloadedFile,
+    String appId,
+    String? zippedApkFilterRegEx,
+  ) async {
+    String apkDirPath = '${downloadedFile.path}-dir';
+    await AppFileService.unzipFile(downloadedFile.path, apkDirPath);
+    var apkDir = Directory(apkDirPath);
+    var apks = apkDir
+        .listSync()
+        .where((e) => e.path.toLowerCase().endsWith('.apk'))
+        .toList();
+
+    FileSystemEntity? temp;
+    apks.removeWhere((element) {
+      bool res = element.uri.pathSegments.last.startsWith(appId);
+      if (res) {
+        temp = element;
+      }
+      return res;
+    });
+    if (temp != null) {
+      apks = [temp!, ...apks];
+    }
+
+    if (zippedApkFilterRegEx?.isNotEmpty == true) {
+      var reg = RegExp(zippedApkFilterRegEx!);
+      apks.removeWhere((apk) {
+        var shouldDelete = !reg.hasMatch(apk.uri.pathSegments.last);
+        if (shouldDelete) {
+          apk.delete();
+        }
+        return shouldDelete;
+      });
+    }
+
+    if (apks.isEmpty) {
+      throw NoAPKError();
+    }
+
+    PackageInfo? newInfo;
+    for (var i = 0; i < apks.length; i++) {
+      try {
+        newInfo = await pm.getPackageArchiveInfo(
+          archiveFilePath: apks[i].path,
+        );
+        if (newInfo != null) {
+          break;
+        }
+      } catch (e) {
+        if (i == apks.length - 1) {
+          rethrow;
+        }
+      }
+    }
+    return {'newInfo': newInfo, 'apkDir': apkDir};
+  }
+
+  static Future<void> _checkInstallPermissions(
+    SettingsProvider settingsProvider,
+    bool willBeSilent,
+  ) async {
+    if (!settingsProvider.useShizuku) {
+      if (!(await settingsProvider.getInstallPermission(enforce: false))) {
+        throw ObtainiumError(tr('cancelled'));
+      }
+    } else {
+      switch ((await ShizukuApkInstaller.checkPermission())!) {
+        case 'binder_not_found':
+          throw ObtainiumError(tr('shizukuBinderNotFound'));
+        case 'old_shizuku':
+          throw ObtainiumError(tr('shizukuOld'));
+        case 'old_android_with_adb':
+          throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
+        case 'denied':
+          throw ObtainiumError(tr('cancelled'));
+      }
+    }
+  }
+
   static Future<bool> _installApp({
     required String id,
     required bool willBeSilent,
