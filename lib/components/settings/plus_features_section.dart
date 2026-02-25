@@ -226,6 +226,17 @@ class PlusFeaturesSection extends StatelessWidget {
                 onChanged: (val) => settings.plusEnableUICustomization = val,
               ),
 
+            if (_matches(tr('plusEnableExperimentalCustomization')))
+              _buildFeatureToggle(
+                context,
+                settings,
+                icon: Icons.science_outlined,
+                title: tr('plusEnableExperimentalCustomization'),
+                subtitle: tr('plusEnableExperimentalCustomizationDescription'),
+                value: settings.plusEnableExperimentalCustomization,
+                onChanged: (val) => settings.plusEnableExperimentalCustomization = val,
+              ),
+
             if (!isSearching)
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 24, bottom: 8),
