@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
 import 'package:obtainium/app_sources/html.dart';
