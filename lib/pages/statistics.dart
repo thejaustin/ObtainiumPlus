@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:obtainium/pages/add_app.dart';
 import 'package:intl/intl.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/apps_provider.dart';

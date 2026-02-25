@@ -134,6 +134,18 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableSwipeActions => _prefs?.getBool('plusEnableSwipeActions') ?? true;
+  set plusEnableSwipeActions(bool val) {
+    _prefs?.setBool('plusEnableSwipeActions', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableHapticFeedback => _prefs?.getBool('plusEnableHapticFeedback') ?? true;
+  set plusEnableHapticFeedback(bool val) {
+    _prefs?.setBool('plusEnableHapticFeedback', val);
+    notifyListeners();
+  }
+
   // Developer Mode & UI Comparison
   bool get plusDeveloperMode => _prefs?.getBool('plusDeveloperMode') ?? false;
   set plusDeveloperMode(bool val) {

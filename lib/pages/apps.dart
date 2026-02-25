@@ -355,7 +355,7 @@ class AppsPageState extends State<AppsPage> {
             // Master View (App List)
             SizedBox(
               width: 350,
-              child: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff),
+              child: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
             ),
             const VerticalDivider(width: 1),
             // Detail View
@@ -386,16 +386,16 @@ class AppsPageState extends State<AppsPage> {
               ),
             )
           : null,
-      body: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff),
+      body: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
     );
   }
 
-  Widget _buildMainContent(AppsProvider appsProvider, List<AppInMemory> listedApps, List<String?> listedCategories, bool isFilterOff) {
+  Widget _buildMainContent(AppsProvider appsProvider, List<AppInMemory> listedApps, List<String?> listedCategories, bool isFilterOff, Future<void> Function() onRefresh) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, viewSettings, _) {
         return RefreshIndicator(
           key: _refreshIndicatorKey,
-          onRefresh: refresh,
+          onRefresh: onRefresh,
           child: Scrollbar(
             controller: scrollController,
             child: CustomScrollView(
