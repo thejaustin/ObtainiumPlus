@@ -41,6 +41,12 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableMaterialExpressive => _prefs?.getBool('plusEnableMaterialExpressive') ?? true;
+  set plusEnableMaterialExpressive(bool val) {
+    _prefs?.setBool('plusEnableMaterialExpressive', val);
+    notifyListeners();
+  }
+
   bool get plusEnableUICustomization => _prefs?.getBool('plusEnableUICustomization') ?? true;
   set plusEnableUICustomization(bool val) {
     _prefs?.setBool('plusEnableUICustomization', val);

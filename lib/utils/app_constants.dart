@@ -26,21 +26,20 @@ class AppConstants {
   /// Expressive duration for Material You animations (Reduced for tactile feel)
   static const int expressiveAnimationMs = 200;
 
-  // Snappy & Tactile Curves
-  /// Standard responsive easing curve (More immediate response)
-  static const Curve expressiveStandard = Curves.easeOut; // Changed from easeOutCubic
+  // Material 3 Motion Curves
+  /// Standard M3 curves (for regular mode)
+  static const Curve standardStandard = Curves.easeInOutCubic;
+  static const Curve standardDecelerate = Curves.easeOutCubic;
+  static const Curve standardAccelerate = Curves.easeInCubic;
+  static const Curve standardEmphasized = Curves.easeInOutQuart;
+  static const Curve standardSmooth = Curves.easeInOut;
 
-  /// Decelerate curve for enter animations (Snappier)
-  static const Curve expressiveDecelerate = Curves.easeOut; // Changed from easeOutQuint
-
-  /// Accelerate curve for exit animations (Snappier)
-  static const Curve expressiveAccelerate = Curves.easeIn; // Changed from easeInQuint
-
-  /// Emphasized curve for important transitions (More direct)
-  static const Curve expressiveEmphasized = Cubic(0.3, 0.0, 0.7, 1.0); // More linear
-
-  /// Smooth curve for micro-interactions (Snappier)
-  static const Curve expressiveSmooth = Curves.linear; // Changed from easeInOutCubicEmphasized
+  /// Expressive M3 curves (for tactile/bouncy mode)
+  static const Curve expressiveStandard = Curves.easeOut; 
+  static const Curve expressiveDecelerate = Curves.easeOut;
+  static const Curve expressiveAccelerate = Curves.easeIn;
+  static const Curve expressiveEmphasized = Cubic(0.3, 0.0, 0.7, 1.0);
+  static const Curve expressiveSmooth = Curves.linear;
 
   // Spring Physics for Micro-interactions
   /// Spring physics for press animations
