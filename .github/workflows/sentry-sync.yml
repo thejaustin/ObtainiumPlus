@@ -51,6 +51,14 @@ jobs:
               core.info(`Authenticated as: ${authData.user ? authData.user.email : 'Bot/Integration'}`);
             }
 
+            const orgsRes = await fetch(`${SENTRY_API}/organizations/`, { headers: SENTRY_HEADERS });
+            if (orgsRes.ok) {
+              const orgs = await orgsRes.json();
+              core.info(`Accessible organizations: ${orgs.map(o => o.slug).join(', ')}`);
+            } else {
+              core.warning(`Could not list organizations: ${orgsRes.status}`);
+            }
+
             const projectsRes = await fetch(`${SENTRY_API}/projects/`, { headers: SENTRY_HEADERS });
             if (projectsRes.ok) {
               const projects = await projectsRes.json();
