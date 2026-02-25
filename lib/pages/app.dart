@@ -315,14 +315,14 @@ class _AppPageState extends State<AppPage> {
               app?.app.id != null ? [app!.app.id] : [],
               globalNavigatorKey.currentContext,
             );
-            if (res.isNotEmpty && !trackOnly) {
+            if (res.isNotEmpty && !trackOnly && mounted) {
               showMessage(successMessage, context);
             }
             if (res.isNotEmpty && mounted) {
               Navigator.of(context).pop();
             }
           } catch (e) {
-            showError(e, context);
+            if (mounted) showError(e, context);
           }
         },
         onAdditionalOptions: () async {
