@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/pages/home.dart';
+import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
