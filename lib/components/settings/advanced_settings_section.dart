@@ -280,9 +280,9 @@ class AdvancedSettingsSection extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
-    required dynamic Function(dynamic) value,
-    required void Function(dynamic, bool) onChanged,
-    required bool Function(dynamic) visible,
+    required Function value,
+    required Function onChanged,
+    required Function visible,
   }) {
     // Determine which provider to use based on the title
     // This is a bit of a hack since we're using different providers

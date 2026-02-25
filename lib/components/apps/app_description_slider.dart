@@ -161,8 +161,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                                         ),
                                         if (!_isExpanded)
                                           Text(
-                                            about.split('
-').first,
+                                            about.split('\n').first,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
