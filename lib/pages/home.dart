@@ -523,7 +523,9 @@ class HomePageState extends State<HomePage> {
         _pageController.animateToPage(
           index,
           duration: const Duration(milliseconds: 300),
-          curve: AppConstants.expressiveStandard,
+          curve: settingsProvider.plusEnableMaterialExpressive 
+              ? AppConstants.expressiveStandard 
+              : AppConstants.standardStandard,
         );
       }
     }
@@ -598,7 +600,9 @@ class HomePageState extends State<HomePage> {
               _pageController.animateToPage(
                 targetIndex,
                 duration: const Duration(milliseconds: 300),
-                curve: AppConstants.expressiveStandard,
+                curve: settingsProvider.plusEnableMaterialExpressive 
+                    ? AppConstants.expressiveStandard 
+                    : AppConstants.standardStandard,
               );
             }
           }
