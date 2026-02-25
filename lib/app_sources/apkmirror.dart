@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_utils.dart';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';

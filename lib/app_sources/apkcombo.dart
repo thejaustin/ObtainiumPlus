@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
