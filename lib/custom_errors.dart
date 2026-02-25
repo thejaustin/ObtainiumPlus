@@ -202,7 +202,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
             // We use standard intent as permission_handler request sometimes flakely redirects
              const AndroidIntent intent = AndroidIntent(
                 action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
-                data: 'package:app.obtainiumplus', 
+                data: 'package:app.obtainiumplus', // obtainiumId
               );
               intent.launch();
           })
