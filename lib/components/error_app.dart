@@ -13,9 +13,7 @@ class ErrorApp extends StatelessWidget {
   Future<void> _reportToGitHub() async {
     await Sentry.captureMessage('User Feedback Triggered');
     final Uri url = Uri.parse(
-      'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error
-
-$stackTrace')}',
+      'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent("$error\n\n$stackTrace")}',
     );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -178,9 +176,7 @@ class BuildErrorWidget extends StatelessWidget {
                         onPressed: () async {
                           await Sentry.captureMessage('User Feedback Triggered (Build Error)');
                           final Uri url = Uri.parse(
-                            'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent('$error
-
-$stackTrace')}',
+                            'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent("$error\n\n$stackTrace")}',
                           );
                           if (await canLaunchUrl(url)) {
                             await launchUrl(url, mode: LaunchMode.externalApplication);
