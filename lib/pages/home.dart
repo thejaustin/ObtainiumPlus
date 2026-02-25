@@ -534,6 +534,7 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
 
     allPages = {
       'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),

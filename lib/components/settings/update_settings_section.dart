@@ -82,6 +82,20 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
+  Widget _buildForegroundServiceSection(BuildContext context) {
+    if (!_matches(tr('foregroundServiceExplanation'))) return const SizedBox.shrink();
+    return Consumer<UpdateSettingsProvider>(
+      builder: (context, settings, child) {
+        return SwitchListTile.adaptive(
+          secondary: const Icon(Icons.run_circle_outlined),
+          title: Text(tr('foregroundServiceExplanation'), style: Theme.of(context).textTheme.bodyLarge),
+          value: settings.useFGService,
+          onChanged: (value) => settings.useFGService = value,
+        );
+      },
+    );
+  }
+
   Widget _buildXiaomiTroubleshooting(BuildContext context) {
     return FutureBuilder<AndroidDeviceInfo>(
       future: androidInfoFuture,
@@ -222,7 +236,6 @@ class UpdateSettingsSection extends StatelessWidget {
     }
     return const SizedBox.shrink();
   }
-}
 
   Widget _buildAdditionalUpdateSettings(BuildContext context) {
     return Consumer<UpdateSettingsProvider>(
