@@ -44,29 +44,6 @@ jobs:
 
             core.info(`Syncing Sentry issues for ${SENTRY_ORG}/${SENTRY_PROJECT}...`);
 
-            // ── Verify Token & List Projects ────────────────────────────────
-            const authRes = await fetch(`${SENTRY_API}/`, { headers: SENTRY_HEADERS });
-            if (authRes.ok) {
-              const authData = await authRes.json();
-              core.info(`Authenticated as: ${authData.user ? authData.user.email : 'Bot/Integration'}`);
-            }
-
-            const orgsRes = await fetch(`${SENTRY_API}/organizations/`, { headers: SENTRY_HEADERS });
-            if (orgsRes.ok) {
-              const orgs = await orgsRes.json();
-              core.info(`Accessible organizations: ${orgs.map(o => o.slug).join(', ')}`);
-            } else {
-              core.warning(`Could not list organizations: ${orgsRes.status}`);
-            }
-
-            const projectsRes = await fetch(`${SENTRY_API}/projects/`, { headers: SENTRY_HEADERS });
-            if (projectsRes.ok) {
-              const projects = await projectsRes.json();
-              core.info(`Accessible projects: ${projects.map(p => `${p.organization.slug}/${p.slug}`).join(', ')}`);
-            } else {
-              core.warning(`Could not list projects: ${projectsRes.status}`);
-            }
-
             // ── Ensure the sentry-crash label exists ─────────────────────────
             try {
               await github.rest.issues.getLabel({ owner, repo, name: 'sentry-crash' });
@@ -82,12 +59,14 @@ jobs:
 
             // ── Fetch unresolved Sentry issues ────────────────────────────────
             const issuesUrl = `${SENTRY_API}/projects/${SENTRY_ORG}/${SENTRY_PROJECT}/issues/?query=is:unresolved&limit=25&sort=date`;
-            core.info(`Fetching unresolved issues from: ${issuesUrl}`);
-            
             const sentryRes = await fetch(issuesUrl, { headers: SENTRY_HEADERS });
             if (!sentryRes.ok) {
               const errorText = await sentryRes.text();
-              core.setFailed(`Sentry API error (${sentryRes.status}): ${errorText}`);
+              if (sentryRes.status === 403) {
+                core.setFailed(`Sentry API error (403 Forbidden): The SENTRY_AUTH_TOKEN lacks required permissions. Ensure it has "project:read" and "issue:read" scopes for the "${SENTRY_ORG}" organization.`);
+              } else {
+                core.setFailed(`Sentry API error (${sentryRes.status}): ${errorText}`);
+              }
               return;
             }
             const sentryIssues = await sentryRes.json();
