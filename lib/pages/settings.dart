@@ -341,6 +341,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
+                                subtitle: Text(tr('backgroundUpdatesDescription')),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
                                   settingsProvider.updateInterval = value ? 60 : 0;
@@ -350,7 +351,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.battery_saver_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
-                                subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
+                                subtitle: Text("${tr('batteryOptDescription')} (${_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')})"),
                                 value: _isIgnoringBatteryOptimizations,
                                 onChanged: (value) async {
                                   if (!_isIgnoringBatteryOptimizations) {
@@ -407,6 +408,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                              SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.sync_outlined),
                                 title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
+                                subtitle: Text(tr('backgroundUpdatesDescription')),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
                                   settingsProvider.updateInterval = value ? 60 : 0;
@@ -415,7 +417,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                              SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.battery_saver_outlined),
                                 title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
-                                subtitle: Text(_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')),
+                                subtitle: Text("${tr('batteryOptDescription')} (${_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')})"),
                                 value: _isIgnoringBatteryOptimizations,
                                 onChanged: (value) async {
                                   if (!_isIgnoringBatteryOptimizations) {
