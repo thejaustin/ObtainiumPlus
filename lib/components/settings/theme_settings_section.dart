@@ -92,7 +92,34 @@ class ThemeSettingsSection extends StatelessWidget {
             leading: const Icon(Icons.science_outlined),
             title: Text(tr('advancedTheming'), style: Theme.of(context).textTheme.bodyLarge),
             subtitle: Text(tr('advancedThemingDescription')),
-            children: advancedWidgets,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, size: 20, color: Theme.of(context).colorScheme.error),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          tr('experimentalModeInfo'),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ...advancedWidgets,
+            ],
           ),
         ),
     ];
