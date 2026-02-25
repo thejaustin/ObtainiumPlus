@@ -82,8 +82,8 @@ class ThemeSettingsSection extends StatelessWidget {
         icon: Icons.animation_outlined,
         title: tr('plusMaterialExpressive'),
         subtitle: tr('plusMaterialExpressiveDescription'),
-        value: (SettingsProvider s) => s.plusEnableEnhancedAnimations,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableEnhancedAnimations = v,
+        value: (SettingsProvider s) => s.plusEnableMaterialExpressive,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableMaterialExpressive = v,
         visible: (SettingsProvider s) => _matches(tr('plusMaterialExpressive')),
       ),
       _buildFeatureToggle(
