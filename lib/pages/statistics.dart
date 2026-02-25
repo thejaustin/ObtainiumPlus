@@ -93,7 +93,17 @@ class _StatisticsPageState extends State<StatisticsPage> {
             return EmptyStateWidget(
               icon: Icons.bar_chart_outlined,
               title: tr('noApps'),
-              subtitle: tr('addAppFromUrl'),
+              subtitle: tr('startByAddingFirstApp'),
+              actionLabel: tr('addApp'),
+              onActionPressed: () {
+                HapticFeedback.lightImpact();
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (context) => const AddAppPage(),
+                );
+              },
             );
           }
 
