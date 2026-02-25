@@ -24,16 +24,25 @@ jobs:
         uses: actions/github-script@v7
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'af-developments' }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || 'obtainiumplus' }}
         with:
           script: |
-            const SENTRY_ORG = 'af-developments';
-            const SENTRY_PROJECT = 'obtainiumplus';
+            if (!process.env.SENTRY_AUTH_TOKEN) {
+              core.info('SENTRY_AUTH_TOKEN not found - skipping sync.');
+              return;
+            }
+
+            const SENTRY_ORG = process.env.SENTRY_ORG;
+            const SENTRY_PROJECT = process.env.SENTRY_PROJECT;
             const SENTRY_API = 'https://sentry.io/api/0';
             const SENTRY_HEADERS = {
               'Authorization': `Bearer ${process.env.SENTRY_AUTH_TOKEN}`,
               'Content-Type': 'application/json',
             };
             const { owner, repo } = context.repo;
+
+            core.info(`Syncing Sentry issues for ${SENTRY_ORG}/${SENTRY_PROJECT}...`);
 
             // ── Ensure the sentry-crash label exists ─────────────────────────
             try {
@@ -49,17 +58,18 @@ jobs:
             }
 
             // ── Fetch unresolved Sentry issues ────────────────────────────────
-            const sentryRes = await fetch(
-              `${SENTRY_API}/projects/${SENTRY_ORG}/${SENTRY_PROJECT}/issues/?query=is:unresolved&limit=25&sort=date`,
-              { headers: SENTRY_HEADERS },
-            );
+            const issuesUrl = `${SENTRY_API}/projects/${SENTRY_ORG}/${SENTRY_PROJECT}/issues/?query=is:unresolved&limit=25&sort=date`;
+            core.info(`Fetching unresolved issues from: ${issuesUrl}`);
+            
+            const sentryRes = await fetch(issuesUrl, { headers: SENTRY_HEADERS });
             if (!sentryRes.ok) {
-              core.setFailed(`Sentry API error: ${sentryRes.status} ${await sentryRes.text()}`);
+              const errorText = await sentryRes.text();
+              core.setFailed(`Sentry API error (${sentryRes.status}): ${errorText}`);
               return;
             }
             const sentryIssues = await sentryRes.json();
             if (!Array.isArray(sentryIssues)) {
-              core.setFailed(`Unexpected Sentry response: ${JSON.stringify(sentryIssues)}`);
+              core.setFailed(`Unexpected Sentry response (expected array): ${JSON.stringify(sentryIssues)}`);
               return;
             }
             core.info(`Fetched ${sentryIssues.length} unresolved Sentry issues`);
