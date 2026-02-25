@@ -53,6 +53,7 @@ class AppsPageState extends State<AppsPage> {
   AppsFilter filter = AppsFilter();
   final AppsFilter neutralFilter = AppsFilter();
   Set<String> selectedAppIds = {};
+  String? activeAppId;
   DateTime? refreshingSince;
 
   final Map<int, Color> _categoryColorCache = {};
@@ -343,6 +344,30 @@ class AppsPageState extends State<AppsPage> {
     }
 
     var isFilterOff = filter.isIdenticalTo(neutralFilter, context.read<SettingsProvider>());
+    final screenWidth = MediaQuery.of(context).size.width;
+    final useResponsive = settingsProvider.plusEnableResponsiveAppLayout && screenWidth > 800;
+
+    if (useResponsive) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: Row(
+          children: [
+            // Master View (App List)
+            SizedBox(
+              width: 350,
+              child: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff),
+            ),
+            const VerticalDivider(width: 1),
+            // Detail View
+            Expanded(
+              child: activeAppId != null
+                  ? AppPage(appId: activeAppId!, key: ValueKey(activeAppId))
+                  : _buildDetailPlaceholder(context),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -361,25 +386,51 @@ class AppsPageState extends State<AppsPage> {
               ),
             )
           : null,
-      body: RefreshIndicator(
-        key: _refreshIndicatorKey,
-        onRefresh: refresh,
-        child: Scrollbar(
-          controller: scrollController,
-          child: Consumer<ViewSettingsProvider>(
-            builder: (context, viewSettings, _) {
-              return CustomScrollView(
-                controller: scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: <Widget>[
-                  _buildAppBar(context, viewSettings, listedApps, isFilterOff),
-                  ..._buildLoadingOverlay(appsProvider),
-                  _buildContent(context, viewSettings, listedApps, listedCategories),
-                ],
-              );
-            },
+      body: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff),
+    );
+  }
+
+  Widget _buildMainContent(AppsProvider appsProvider, List<AppInMemory> listedApps, List<String?> listedCategories, bool isFilterOff) {
+    return Consumer<ViewSettingsProvider>(
+      builder: (context, viewSettings, _) {
+        return RefreshIndicator(
+          key: _refreshIndicatorKey,
+          onRefresh: refresh,
+          child: Scrollbar(
+            controller: scrollController,
+            child: CustomScrollView(
+              controller: scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: <Widget>[
+                _buildAppBar(context, viewSettings, listedApps, isFilterOff),
+                ..._buildLoadingOverlay(appsProvider),
+                _buildContent(context, viewSettings, listedApps, listedCategories),
+              ],
+            ),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailPlaceholder(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.apps_rounded,
+            size: 64,
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            tr('selectURL'), // Using an existing key, though a better one would be "Select an app to view details"
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -623,7 +674,9 @@ class AppsPageState extends State<AppsPage> {
         listedApps: listedApps,
         listedCategories: listedCategories,
         selectedAppIds: selectedAppIds,
+        activeAppId: activeAppId,
         toggleAppSelected: _toggleAppSelected,
+        onAppTap: _handleAppTap,
         getChangeLogFn: getChangeLogFn,
         getCachedCategoryColor: _getCachedCategoryColor,
       );
@@ -631,13 +684,39 @@ class AppsPageState extends State<AppsPage> {
       return AppGridView(
           apps: listedApps,
           selectedAppIds: selectedAppIds,
-          toggleAppSelected: _toggleAppSelected);
+          activeAppId: activeAppId,
+          toggleAppSelected: _toggleAppSelected,
+          onAppTap: _handleAppTap);
     } else {
       return AppListView(
           apps: listedApps,
           selectedAppIds: selectedAppIds,
+          activeAppId: activeAppId,
           toggleAppSelected: _toggleAppSelected,
+          onAppTap: _handleAppTap,
           getChangeLogFn: getChangeLogFn);
+    }
+  }
+
+  void _handleAppTap(App app) {
+    final settingsProvider = context.read<SettingsProvider>();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final useResponsive = settingsProvider.plusEnableResponsiveAppLayout && screenWidth > 800;
+
+    if (useResponsive) {
+      setState(() {
+        activeAppId = app.id;
+      });
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (context) => AppPage(
+          appId: app.id,
+          isModal: true,
+        ),
+      );
     }
   }
 
