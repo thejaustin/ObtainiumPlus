@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
@@ -77,27 +79,45 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settingsProvider = context.watch<ViewSettingsProvider>();
+    final settings = context.watch<SettingsProvider>();
     final sourceProvider = SourceProvider();
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
+          sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: (isDark 
+                ? theme.colorScheme.surfaceContainerHigh 
+                : theme.colorScheme.surface)
+              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1
               ),
+              width: 1,
             ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
 
             Flexible(
               child: SingleChildScrollView(
