@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
 class OfflineService {
@@ -70,6 +72,48 @@ class OfflineService {
     if (queue.contains(appId)) {
       queue.remove(appId);
       settingsProvider.offlineQueue = queue;
+    }
+  }
+
+  // --- Retry Queue Logic ---
+
+  void addAppToRetryQueue(String appId, SettingsProvider settingsProvider, {String? reason}) {
+    final queue = settingsProvider.retryQueue;
+    int currentPersistentAttempts = queue[appId]?['attempts'] ?? 0;
+    
+    // Exponential backoff: 15min * 2^attempts
+    int nextBackoffMinutes = (15 * pow(2, min(currentPersistentAttempts, 6))).toInt();
+    int nextRetryTime = DateTime.now().add(Duration(minutes: nextBackoffMinutes)).millisecondsSinceEpoch;
+    
+    queue[appId] = {
+      'attempts': currentPersistentAttempts + 1,
+      'nextRetry': nextRetryTime,
+      'reason': reason ?? 'Unknown error',
+      'lastAttempt': DateTime.now().millisecondsSinceEpoch,
+    };
+    
+    settingsProvider.retryQueue = queue;
+  }
+
+  List<String> getDueRetries(SettingsProvider settingsProvider) {
+    final queue = settingsProvider.retryQueue;
+    int now = DateTime.now().millisecondsSinceEpoch;
+    List<String> dueRetries = [];
+    
+    queue.forEach((appId, data) {
+      if ((data['nextRetry'] ?? 0) <= now) {
+        dueRetries.add(appId);
+      }
+    });
+    
+    return dueRetries;
+  }
+
+  void clearAppFromRetryQueue(String appId, SettingsProvider settingsProvider) {
+    final queue = settingsProvider.retryQueue;
+    if (queue.containsKey(appId)) {
+      queue.remove(appId);
+      settingsProvider.retryQueue = queue;
     }
   }
 

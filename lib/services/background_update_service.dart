@@ -13,6 +13,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/services/offline_service.dart';
 
 class BackgroundUpdateService {
   BackgroundUpdateService._();
@@ -47,15 +48,9 @@ class BackgroundUpdateService {
         ).compareTo(appsProvider.settingsProvider.lastCompletedBGCheckTime) ==
         0;
 
-    // Load Retry Queue and add due items
-    var retryQueue = appsProvider.settingsProvider.retryQueue;
-    int now = DateTime.now().millisecondsSinceEpoch;
-    List<String> dueRetries = [];
-    retryQueue.forEach((appId, data) {
-      if (data['nextRetry'] <= now) {
-        dueRetries.add(appId);
-      }
-    });
+    // Load Retry Queue and add due items using OfflineService
+    final offlineService = OfflineService();
+    List<String> dueRetries = offlineService.getDueRetries(appsProvider.settingsProvider);
 
     List<MapEntry<String, int>> toCheck = <MapEntry<String, int>>[
       ...(params['toCheck']
@@ -170,39 +165,28 @@ class BackgroundUpdateService {
           sp: appsProvider.settingsProvider,
         );
         
-        // Clear successful updates from retry queue
-        var queue = appsProvider.settingsProvider.retryQueue;
+        // Clear successful updates and non-errors from retry queue using OfflineService
         for (var update in updates) {
-          if (queue.containsKey(update.id)) {
-            queue.remove(update.id);
-          }
+          offlineService.clearAppFromRetryQueue(update.id, appsProvider.settingsProvider);
         }
-        // Also clear checked apps that didn't have updates but didn't error
         for (var entry in toCheck) {
           if (!updates.any((u) => u.id == entry.key) && 
               (errors == null || !errors.idsByErrorString.containsKey(entry.key))) {
-             if (queue.containsKey(entry.key)) {
-               queue.remove(entry.key);
-             }
+             offlineService.clearAppFromRetryQueue(entry.key, appsProvider.settingsProvider);
           }
         }
-        appsProvider.settingsProvider.retryQueue = queue;
 
       } catch (e) {
         if (e is Map) {
           updates = e['updates'];
           errors = e['errors'];
           
-          // Clear successful/non-error ones from retry queue
-          var queue = appsProvider.settingsProvider.retryQueue;
-          
           for (var entry in errors!.rawErrors.entries) {
             var key = entry.key;
             var err = entry.value;
-                      logs.add(
-                        'BG update task: Got error on checking for $key "${err.toString()}"'
-                      );
-                        var toCheckAppMatch = toCheck.where((element) => element.key == key);
+            logs.add('BG update task: Got error on checking for $key "${err.toString()}"');
+            
+            var toCheckAppMatch = toCheck.where((element) => element.key == key);
             if (toCheckAppMatch.isEmpty) continue;
             var toCheckApp = toCheckAppMatch.first;
             
@@ -221,36 +205,26 @@ class BackgroundUpdateService {
                 retryAfterXSeconds = minRetryIntervalForThisApp;
               }
             } else {
-              // Persistent Retry Logic
+              // Persistent Retry Logic using OfflineService
               if (err is! RateLimitError) {
-                 int currentPersistentAttempts = queue[key]?['attempts'] ?? 0;
-                 // Exponential backoff: 15min * 2^attempts
-                 int nextBackoffMinutes = (15 * pow(2, min(currentPersistentAttempts, 6))).toInt(); // Cap backoff multiplier
-                 int nextRetryTime = DateTime.now().add(Duration(minutes: nextBackoffMinutes)).millisecondsSinceEpoch;
-                 
-                 queue[key] = {
-                   'attempts': currentPersistentAttempts + 1,
-                   'nextRetry': nextRetryTime
-                 };
-                 logs.add('BG update task: Queued $key for persistent retry in $nextBackoffMinutes mins (Persistent Attempt ${currentPersistentAttempts + 1})');
+                 offlineService.addAppToRetryQueue(key, appsProvider.settingsProvider, reason: err.toString());
+                 logs.add('BG update task: Queued $key for persistent retry using OfflineService');
               } else {
                  toThrow.add(key, err, appName: errors?.appIdNames[key]);
               }
             }
           }
           
-          // Clean up successes from queue in partial failure case
+          // Clean up successes and non-errors from queue in partial failure case
           for (var update in updates) {
-            if (queue.containsKey(update.id)) queue.remove(update.id);
+            offlineService.clearAppFromRetryQueue(update.id, appsProvider.settingsProvider);
           }
-          // And non-errors
           for (var entry in toCheck) {
              if (!updates.any((u) => u.id == entry.key) && 
                  !errors.idsByErrorString.containsKey(entry.key)) {
-                if (queue.containsKey(entry.key)) queue.remove(entry.key);
+                offlineService.clearAppFromRetryQueue(entry.key, appsProvider.settingsProvider);
              }
           }
-          appsProvider.settingsProvider.retryQueue = queue;
 
         } else {
           logs.add('Fatal error in BG update task: ${e.toString()}');
