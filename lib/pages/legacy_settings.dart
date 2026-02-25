@@ -11,6 +11,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart'; // Added
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
