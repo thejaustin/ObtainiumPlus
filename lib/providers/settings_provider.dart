@@ -439,6 +439,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableExperimentalCustomization => plusSettings.plusEnableExperimentalCustomization;
+  set plusEnableExperimentalCustomization(bool val) {
+    plusSettings.plusEnableExperimentalCustomization = val;
+    notifyListeners();
+  }
+
   bool get plusEnableHapticFeedback => plusSettings.plusEnableHapticFeedback;
   set plusEnableHapticFeedback(bool val) {
     plusSettings.plusEnableHapticFeedback = val;
