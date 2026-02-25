@@ -19,7 +19,9 @@ class CategorySections extends StatelessWidget {
   final List<AppInMemory> listedApps;
   final List<String?> listedCategories;
   final Set<String> selectedAppIds;
+  final String? activeAppId;
   final Function(App) toggleAppSelected;
+  final Function(App) onAppTap;
   final Function(BuildContext, App) getChangeLogFn;
   final Color Function(int) getCachedCategoryColor;
 
@@ -28,7 +30,9 @@ class CategorySections extends StatelessWidget {
     required this.listedApps,
     required this.listedCategories,
     required this.selectedAppIds,
+    this.activeAppId,
     required this.toggleAppSelected,
+    required this.onAppTap,
     required this.getChangeLogFn,
     required this.getCachedCategoryColor,
   });
@@ -150,21 +154,13 @@ class CategorySections extends StatelessWidget {
               final app = appsInCategory[appIndex];
               return AppGridTile(
                 appInMemory: app,
-                isSelected: selectedAppIds.contains(app.app.id),
+                isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
                 hasUpdate: app.app.installedVersion != app.app.latestVersion,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
                   } else {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) => AppPage(
-                        appId: app.app.id,
-                        isModal: true,
-                      ),
-                    );
+                    onAppTap(app.app);
                   }
                 },
                 onLongPress: () => toggleAppSelected(app.app),
@@ -247,21 +243,13 @@ class CategorySections extends StatelessWidget {
         ),
         children: appsInCategory.map((app) => AppListTile(
           appInMemory: app,
-          isSelected: selectedAppIds.contains(app.app.id),
+          isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
           hasUpdate: app.app.installedVersion != app.app.latestVersion,
           onTap: () {
             if (selectedAppIds.isNotEmpty) {
               toggleAppSelected(app.app);
             } else {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                builder: (context) => AppPage(
-                  appId: app.app.id,
-                  isModal: true,
-                ),
-              );
+              onAppTap(app.app);
             }
           },
           onLongPress: () => toggleAppSelected(app.app),

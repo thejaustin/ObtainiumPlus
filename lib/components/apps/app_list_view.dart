@@ -18,14 +18,18 @@ import 'package:easy_localization/easy_localization.dart';
 class AppListView extends StatelessWidget {
   final List<AppInMemory> apps;
   final Set<String> selectedAppIds;
+  final String? activeAppId;
   final Function(App) toggleAppSelected;
+  final Function(App) onAppTap;
   final Function(BuildContext, App) getChangeLogFn;
 
   const AppListView({
     super.key,
     required this.apps,
     required this.selectedAppIds,
+    this.activeAppId,
     required this.toggleAppSelected,
+    required this.onAppTap,
     required this.getChangeLogFn,
   });
 
@@ -191,21 +195,13 @@ class AppListView extends StatelessWidget {
             child: RepaintBoundary(
               child: AppListTile(
                 appInMemory: app,
-                isSelected: selectedAppIds.contains(app.app.id),
+                isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
                 hasUpdate: hasUpdate,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
                   } else {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) => AppPage(
-                        appId: app.app.id,
-                        isModal: true,
-                      ),
-                    );
+                    onAppTap(app.app);
                   }
                 },
                 onLongPress: () {

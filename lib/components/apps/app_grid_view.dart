@@ -15,13 +15,17 @@ import 'package:share_plus/share_plus.dart';
 class AppGridView extends StatelessWidget {
   final List<AppInMemory> apps;
   final Set<String> selectedAppIds;
+  final String? activeAppId;
   final Function(App) toggleAppSelected;
+  final Function(App) onAppTap;
 
   const AppGridView({
     super.key,
     required this.apps,
     required this.selectedAppIds,
+    this.activeAppId,
     required this.toggleAppSelected,
+    required this.onAppTap,
   });
 
   int _calculateAdaptiveColumns(BuildContext context) {
@@ -124,21 +128,13 @@ class AppGridView extends StatelessWidget {
             return RepaintBoundary(
               child: AppGridTile(
                 appInMemory: app,
-                isSelected: selectedAppIds.contains(app.app.id),
+                isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
                 hasUpdate: hasUpdate,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
                   } else {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) => AppPage(
-                        appId: app.app.id,
-                        isModal: true,
-                      ),
-                    );
+                    onAppTap(app.app);
                   }
                 },
                 onLongPress: () {
