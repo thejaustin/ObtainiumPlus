@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -252,74 +253,97 @@ class DiscoverPageState extends State<DiscoverPage> {
                     final name = result.value.isNotEmpty ? result.value[0] : '';
                     final description = result.value.length > 1 ? result.value[1] : '';
                     final sourceName = result.key;
+                    final settings = context.watch<SettingsProvider>();
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-                    return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () {
-                          final addAppState = context.findAncestorStateOfType<AddAppPageState>();
-                          if (addAppState != null) {
-                            addAppState.linkFn(url);
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Container(
-                                    width: 64,
-                                    height: 64,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primaryContainer,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(
+                          sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
+                          sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
+                        ),
+                        child: Card(
+                          elevation: settings.plusEnableGlassmorphism ? 0 : 2,
+                          margin: EdgeInsets.zero,
+                          color: (isDark 
+                              ? Theme.of(context).colorScheme.surfaceContainerHighest 
+                              : Theme.of(context).colorScheme.surface)
+                            .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                              ),
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                              if (addAppState != null) {
+                                addAppState.linkFn(url);
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: Center(
+                                      child: Container(
+                                        width: 64,
+                                        height: 64,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                          style: TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    sourceName,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Theme.of(context).colorScheme.secondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FilledButton.tonal(
+                                    onPressed: () {
+                                      final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                                      if (addAppState != null) {
+                                        addAppState.linkFn(url);
+                                      }
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    child: Text(tr('add')),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                sourceName,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Theme.of(context).colorScheme.secondary,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              FilledButton.tonal(
-                                onPressed: () {
-                                  final addAppState = context.findAncestorStateOfType<AddAppPageState>();
-                                  if (addAppState != null) {
-                                    addAppState.linkFn(url);
-                                  }
-                                },
-                                style: FilledButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                child: Text(tr('add')),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
