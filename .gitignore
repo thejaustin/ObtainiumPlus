@@ -66,3 +66,4 @@ sentry.properties
 # Local generated directories
 wiki_temp
 flutter_sdk.tar.xz
+flutter/
