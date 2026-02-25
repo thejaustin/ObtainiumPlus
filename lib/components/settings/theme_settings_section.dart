@@ -37,9 +37,17 @@ class ThemeSettingsSection extends StatelessWidget {
     List<Widget> themeWidgets = [
       if (_matches(tr('theme'))) _buildThemeDropdown(context),
       if (_matches(tr('followSystemThemeExplanation'))) _buildFollowSystemExplanation(context),
-      if (_matches(tr('useBlackTheme'))) _buildBlackThemeToggle(context),
-      if (_matches(tr('useMaterialYou'))) _buildMaterialYouToggle(context),
-      if (_matches(tr('matchSystemMaterialStyle'))) _buildMatchSystemMaterialStyleToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.dark_mode_outlined,
+        title: tr('useBlackTheme'),
+        subtitle: tr('useBlackThemeDescription'),
+        value: (SettingsProvider s) => s.useBlackTheme,
+        onChanged: (SettingsProvider s, bool v) => s.useBlackTheme = v,
+        visible: (SettingsProvider s) => _matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light,
+      ),
+      _buildMaterialYouToggle(context),
+      _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
       if (_matches(tr('navigationLabels'))) _buildNavigationLabelDropdown(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
@@ -50,21 +58,42 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> animationWidgets = [
-       if (_matches(tr('plusEnhancedAnimations')))
-        Consumer<SettingsProvider>(
-          builder: (context, settings, child) {
-            return SwitchListTile.adaptive(
-              secondary: const Icon(Icons.auto_awesome_motion_rounded),
-              title: Text(tr('plusEnhancedAnimations'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text(tr('plusEnhancedAnimationsDescription')),
-              value: settings.plusEnableEnhancedAnimations,
-              onChanged: (value) => settings.plusEnableEnhancedAnimations = value,
-            );
-          },
-        ),
-       if (_matches(tr('disablePageTransitions'))) _buildPageTransitionsToggle(context),
-       if (_matches(tr('reversePageTransitions'))) _buildReverseTransitionsToggle(context),
-       if (_matches(tr('highlightTouchTargets'))) _buildHighlightTouchTargetsToggle(context),
+       _buildFeatureToggle(
+        context,
+        icon: Icons.auto_awesome_motion_rounded,
+        title: tr('plusEnhancedAnimations'),
+        subtitle: tr('plusEnhancedAnimationsDescription'),
+        value: (SettingsProvider s) => s.plusEnableEnhancedAnimations,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableEnhancedAnimations = v,
+        visible: (SettingsProvider s) => _matches(tr('plusEnhancedAnimations')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.animation_outlined,
+        title: tr('disablePageTransitions'),
+        subtitle: tr('disablePageTransitionsDescription'),
+        value: (SettingsProvider s) => s.disablePageTransitions,
+        onChanged: (SettingsProvider s, bool v) => s.disablePageTransitions = v,
+        visible: (SettingsProvider s) => _matches(tr('disablePageTransitions')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.swap_horizontal_circle_outlined,
+        title: tr('reversePageTransitions'),
+        subtitle: tr('reversePageTransitionsDescription'),
+        value: (SettingsProvider s) => s.reversePageTransitions,
+        onChanged: (SettingsProvider s, bool v) => s.reversePageTransitions = v,
+        visible: (SettingsProvider s) => _matches(tr('reversePageTransitions')) && !s.disablePageTransitions,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.touch_app_outlined,
+        title: tr('highlightTouchTargets'),
+        subtitle: tr('highlightTouchTargetsDescription'),
+        value: (SettingsProvider s) => s.highlightTouchTargets,
+        onChanged: (SettingsProvider s, bool v) => s.highlightTouchTargets = v,
+        visible: (SettingsProvider s) => _matches(tr('highlightTouchTargets')),
+      ),
     ];
 
     return Column(
@@ -386,6 +415,29 @@ class ThemeSettingsSection extends StatelessWidget {
           onChanged: (value) {
             settings.highlightTouchTargets = value;
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool Function(SettingsProvider) value,
+    required void Function(SettingsProvider, bool) onChanged,
+    required bool Function(SettingsProvider) visible,
+  }) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        if (!visible(settings)) return const SizedBox.shrink();
+        return SwitchListTile.adaptive(
+          secondary: Icon(icon),
+          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(subtitle),
+          value: value(settings),
+          onChanged: (v) => onChanged(settings, v),
         );
       },
     );

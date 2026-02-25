@@ -31,8 +31,24 @@ class AppsViewSettingsSection extends StatelessWidget {
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category')) CategoryEditorSelector(showLabelWhenNotEmpty: false),
-      if (_matches(tr('groupByCategory'))) _buildGroupByCategoryToggle(context),
-      if (_matches(tr('collapseCategoriesByDefault'))) _buildCollapseCategoriesToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.category_outlined,
+        title: tr('groupByCategory'),
+        subtitle: tr('groupByCategoryDescription'),
+        value: (SettingsProvider s) => s.groupByCategory,
+        onChanged: (SettingsProvider s, bool v) => s.groupByCategory = v,
+        visible: (SettingsProvider s) => _matches(tr('groupByCategory')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.unfold_less_outlined,
+        title: tr('collapseCategoriesByDefault'),
+        subtitle: tr('collapseCategoriesByDefaultDescription'),
+        value: (SettingsProvider s) => s.categoriesCollapsedByDefault,
+        onChanged: (SettingsProvider s, bool v) => s.categoriesCollapsedByDefault = v,
+        visible: (SettingsProvider s) => _matches(tr('collapseCategoriesByDefault')),
+      ),
     ];
 
     List<Widget> iconWidgets = [
@@ -44,34 +60,76 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
-      if (_matches(tr('plusModernAppPage')))
-        SwitchListTile.adaptive(
-          secondary: const Icon(Icons.pages_outlined),
-          title: Text(tr('plusModernAppPage'), style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(tr('plusModernAppPageDescription')),
-          value: settingsProvider.plusEnableModernAppPage,
-          onChanged: (val) => settingsProvider.plusEnableModernAppPage = val,
-        ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.pages_outlined,
+        title: tr('plusModernAppPage'),
+        subtitle: tr('plusModernAppPageDescription'),
+        value: (SettingsProvider s) => s.plusEnableModernAppPage,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableModernAppPage = v,
+        visible: (SettingsProvider s) => _matches(tr('plusModernAppPage')),
+      ),
       _buildGridSettings(context),
     ];
 
     List<Widget> displayWidgets = [
-      if (_matches(tr('showAuthor'))) _buildShowAuthorToggle(context),
-      if (_matches(tr('showVersion'))) _buildShowVersionToggle(context),
-      if (_matches(tr('showDate'))) _buildShowDateToggle(context),
-      if (_matches(tr('plusModernAppListTile')))
-        SwitchListTile.adaptive(
-          secondary: const Icon(Icons.view_list_rounded),
-          title: Text(tr('plusModernAppListTile'), style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(tr('plusModernAppListTileDescription')),
-          value: settingsProvider.plusEnableModernAppListTile,
-          onChanged: (val) => settingsProvider.plusEnableModernAppListTile = val,
-        ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.person_outline,
+        title: tr('showAuthor'),
+        subtitle: tr('showAuthorDescription'),
+        value: (SettingsProvider s) => s.displayShowAuthor,
+        onChanged: (SettingsProvider s, bool v) => s.displayShowAuthor = v,
+        visible: (SettingsProvider s) => _matches(tr('showAuthor')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.code,
+        title: tr('showVersion'),
+        subtitle: tr('showVersionDescription'),
+        value: (SettingsProvider s) => s.displayShowVersion,
+        onChanged: (SettingsProvider s, bool v) => s.displayShowVersion = v,
+        visible: (SettingsProvider s) => _matches(tr('showVersion')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.calendar_today_outlined,
+        title: tr('showDate'),
+        subtitle: tr('showDateDescription'),
+        value: (SettingsProvider s) => s.displayShowDate,
+        onChanged: (SettingsProvider s, bool v) => s.displayShowDate = v,
+        visible: (SettingsProvider s) => _matches(tr('showDate')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.view_list_rounded,
+        title: tr('plusModernAppListTile'),
+        subtitle: tr('plusModernAppListTileDescription'),
+        value: (SettingsProvider s) => s.plusEnableModernAppListTile,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableModernAppListTile = v,
+        visible: (SettingsProvider s) => _matches(tr('plusModernAppListTile')),
+      ),
     ];
 
     List<Widget> headerWidgets = [
-      if (_matches(tr('showFilterChips'))) _buildShowFilterChipsToggle(context),
-      if (_matches(tr('showAppCount'))) _buildShowAppCountToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.filter_list_outlined,
+        title: tr('showFilterChips'),
+        subtitle: tr('showFilterChipsDescription'),
+        value: (SettingsProvider s) => s.displayShowFilterChips,
+        onChanged: (SettingsProvider s, bool v) => s.displayShowFilterChips = v,
+        visible: (SettingsProvider s) => _matches(tr('showFilterChips')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.summarize_outlined,
+        title: tr('showAppCount'),
+        subtitle: tr('showAppCountDescription'),
+        value: (SettingsProvider s) => s.displayShowAppCount,
+        onChanged: (SettingsProvider s, bool v) => s.displayShowAppCount = v,
+        visible: (SettingsProvider s) => _matches(tr('showAppCount')),
+      ),
     ];
 
     return Column(
@@ -102,221 +160,6 @@ class AppsViewSettingsSection extends StatelessWidget {
             children: headerWidgets,
           ),
       ],
-    );
-  }
-
-  Widget _buildShowAuthorToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.person_outline),
-          title: Text(tr('showAuthor'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.displayShowAuthor,
-          onChanged: (value) => settings.displayShowAuthor = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildShowVersionToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.code),
-          title: Text(tr('showVersion'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.displayShowVersion,
-          onChanged: (value) => settings.displayShowVersion = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildShowDateToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.calendar_today_outlined),
-          title: Text(tr('showDate'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.displayShowDate,
-          onChanged: (value) => settings.displayShowDate = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildShowFilterChipsToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.filter_list_outlined),
-          title: Text(tr('showFilterChips'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.displayShowFilterChips,
-          onChanged: (value) => settings.displayShowFilterChips = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildShowAppCountToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.summarize_outlined),
-          title: Text(tr('showAppCount'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.displayShowAppCount,
-          onChanged: (value) => settings.displayShowAppCount = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildGroupByCategoryToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.category_outlined),
-          title: Text(tr('groupByCategory'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.groupByCategory,
-          onChanged: (value) => settings.groupByCategory = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildCollapseCategoriesToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.unfold_less_outlined),
-          title: Text(tr('collapseCategoriesByDefault'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.categoriesCollapsedByDefault,
-          onChanged: (value) => settings.categoriesCollapsedByDefault = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoryIconPositionDropdown(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.branding_watermark_outlined),
-          title: Text(tr('iconPosition'), style: Theme.of(context).textTheme.bodyLarge),
-          trailing: DropdownButton<CategoryIconPosition>(
-            underline: const SizedBox(),
-            value: settings.categoryIconPosition,
-            items: [
-              DropdownMenuItem(value: CategoryIconPosition.disabled, child: Text(tr('disabled'))),
-              DropdownMenuItem(value: CategoryIconPosition.leading, child: Text(tr('leading'))),
-              DropdownMenuItem(value: CategoryIconPosition.trailing, child: Text(tr('trailing'))),
-              DropdownMenuItem(value: CategoryIconPosition.below, child: Text(tr('belowName'))),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                onSetState(() => settings.categoryIconPosition = value);
-              }
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoryIconCountSlider(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return Column(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.numbers_outlined),
-              title: Text(tr('iconCount'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text(settings.categoryIconCount.toString()),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Slider(
-                value: settings.categoryIconCount.toDouble(),
-                min: 0,
-                max: 20,
-                divisions: 20,
-                onChanged: settings.categoryIconPosition == CategoryIconPosition.disabled
-                    ? null
-                    : (value) => onSetState(() => settings.categoryIconCount = value.toInt()),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildViewModeDropdown(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.view_quilt_outlined),
-          title: Text(tr('defaultViewMode'), style: Theme.of(context).textTheme.bodyLarge),
-          trailing: DropdownButton<ViewMode>(
-            underline: const SizedBox(),
-            value: settings.globalViewMode,
-            items: [
-              DropdownMenuItem(value: ViewMode.list, child: Text(tr('listView'))),
-              DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                onSetState(() => settings.globalViewMode = value);
-              }
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAppBarStyleDropdown(BuildContext context) {
-    final settingsProvider = context.read<SettingsProvider>();
-    return ListTile(
-      leading: const Icon(Icons.vertical_align_top_rounded),
-      title: Text(tr('appBarStyle'), style: Theme.of(context).textTheme.bodyLarge),
-      trailing: DropdownButton<AppBarStyle>(
-        underline: const SizedBox(),
-        value: settingsProvider.getAppBarStyleForPage('apps'),
-        items: AppBarStyle.values.map((e) => DropdownMenuItem(
-          value: e, 
-          child: Text(e.name.substring(0, 1).toUpperCase() + e.name.substring(1))
-        )).toList(),
-        onChanged: (value) {
-          if (value != null) {
-            onSetState(() {
-              settingsProvider.prefs?.setInt('appBarStyle_apps', value.index);
-              settingsProvider.notifyListeners();
-            });
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildDensityDropdown(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        if (settings.globalViewMode != ViewMode.list) return const SizedBox.shrink();
-        return ListTile(
-          leading: const Icon(Icons.density_medium_outlined),
-          title: Text(tr('listDensity'), style: Theme.of(context).textTheme.bodyLarge),
-          trailing: DropdownButton<AppListDensity>(
-            underline: const SizedBox(),
-            value: settings.appListDensity,
-            items: AppListDensity.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('density_${e.name}')))).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                onSetState(() => settings.appListDensity = value);
-              }
-            },
-          ),
-        );
-      },
     );
   }
 
@@ -364,6 +207,29 @@ class AppsViewSettingsSection extends StatelessWidget {
               ),
             ]
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool Function(SettingsProvider) value,
+    required void Function(SettingsProvider, bool) onChanged,
+    required bool Function(SettingsProvider) visible,
+  }) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        if (!visible(settings)) return const SizedBox.shrink();
+        return SwitchListTile.adaptive(
+          secondary: Icon(icon),
+          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(subtitle),
+          value: value(settings),
+          onChanged: (v) => onChanged(settings, v),
         );
       },
     );

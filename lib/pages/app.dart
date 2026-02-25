@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
+import 'package:obtainium/components/apps/app_description_slider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -256,48 +257,54 @@ class _AppPageState extends State<AppPage> {
               ),
             )
           : null,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          if (app != null) {
-            getUpdate(app.app.id);
-          }
-        },
-        child: showAppWebpageFinal
-            ? (app != null
-                ? _AppWebView(
-                    url: app.app.url,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                  )
-                : const SizedBox.shrink())
-            : (appsProvider.settingsProvider.plusEnableModernAppPage
-                ? CustomScrollView(
-                    slivers: [
-                      if (widget.isModal) _buildModalHandle(context),
-                      _buildSliverAppBar(context, app),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            children: [
-                              _buildMainInfo(context, app, appsProvider),
-                              const SizedBox(height: 24),
-                              _buildStatsSection(context, app, updating, highlightTouchTargets, appsProvider),
-                              const SizedBox(height: 32),
-                              _buildCategorySection(context, app, appsProvider),
-                              const SizedBox(height: 32),
-                              _buildAboutSection(context, app),
-                              const SizedBox(height: 150), // Spacing for bottom bar
-                            ],
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () async {
+              if (app != null) {
+                getUpdate(app.app.id);
+              }
+            },
+            child: showAppWebpageFinal
+                ? (app != null
+                    ? _AppWebView(
+                        url: app.app.url,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                      )
+                    : const SizedBox.shrink())
+                : (appsProvider.settingsProvider.plusEnableModernAppPage
+                    ? CustomScrollView(
+                        slivers: [
+                          if (widget.isModal) _buildModalHandle(context),
+                          _buildSliverAppBar(context, app),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Column(
+                                children: [
+                                  _buildMainInfo(context, app, appsProvider),
+                                  const SizedBox(height: 24),
+                                  _buildStatsSection(context, app, updating, highlightTouchTargets, appsProvider),
+                                  const SizedBox(height: 32),
+                                  _buildCategorySection(context, app, appsProvider),
+                                  const SizedBox(height: 32),
+                                  _buildAboutSection(context, app, appsProvider),
+                                  const SizedBox(height: 150), // Spacing for bottom bar
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView(
-                    children: [
-                      _buildLegacyFullInfoColumn(context, app, appsProvider, highlightTouchTargets, updating),
-                    ],
-                  )),
+                        ],
+                      )
+                    : ListView(
+                        children: [
+                          _buildLegacyFullInfoColumn(context, app, appsProvider, highlightTouchTargets, updating),
+                        ],
+                      )),
+          ),
+          if (app != null && !showAppWebpageFinal && appsProvider.settingsProvider.plusEnableModernAppPage)
+            AppDescriptionSlider(app: app),
+        ],
       ),
       bottomSheet: _AppBottomBar(
         app: app,
@@ -606,9 +613,9 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  Widget _buildAboutSection(BuildContext context, AppInMemory? app) {
+  Widget _buildAboutSection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
     final about = app?.app.additionalSettings['about'];
-    if (about == null || about.toString().isEmpty) return const SizedBox.shrink();
+    if (about == null || about.toString().isEmpty || appsProvider.settingsProvider.plusEnablePopupSlider) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
