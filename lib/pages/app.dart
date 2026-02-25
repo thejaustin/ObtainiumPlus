@@ -381,6 +381,7 @@ class _AppPageState extends State<AppPage> {
   }
 
   Widget _buildMainInfo(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+    var source = app != null ? SourceProvider().getSource(app.app.url, overrideSource: app.app.overrideSource) : null;
     return Column(
       children: [
         const SizedBox(height: 20),
