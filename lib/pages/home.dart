@@ -533,7 +533,6 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    context.select<AppsProvider, int>((a) => a.apps.length);
     final viewSettings = context.watch<ViewSettingsProvider>();
 
     allPages = {
