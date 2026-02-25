@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/app_sources/fdroid.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/source_utils.dart';

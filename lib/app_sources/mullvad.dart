@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/app_sources/github.dart';
