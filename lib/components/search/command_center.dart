@@ -235,7 +235,9 @@ class _CommandCenterState extends State<CommandCenter> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildSectionHeader(String title) {

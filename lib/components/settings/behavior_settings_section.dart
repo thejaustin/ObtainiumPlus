@@ -144,6 +144,26 @@ class BehaviorSettingsSection extends StatelessWidget {
     );
   }
 
+  Widget _buildSwipeRightDropdown(BuildContext context) {
+    return Consumer<BehaviorSettingsProvider>(
+      builder: (context, settings, child) {
+        return ListTile(
+          leading: const Icon(Icons.swipe_right_outlined),
+          title: Text(tr('swipeRightAction'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('swipeRightActionDescription')),
+          trailing: DropdownButton<AppSwipeAction>(
+            underline: const SizedBox(),
+            value: settings.swipeRightAction,
+            items: AppSwipeAction.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('action_${e.name}')))).toList(),
+            onChanged: (value) {
+              if (value != null) settings.swipeRightAction = value;
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSwipeLeftDropdown(BuildContext context) {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {

@@ -152,7 +152,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildAnimatedSection(int index, Widget child) {
