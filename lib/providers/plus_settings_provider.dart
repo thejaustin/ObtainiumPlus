@@ -53,6 +53,12 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableExperimentalCustomization => _prefs?.getBool('plusEnableExperimentalCustomization') ?? false;
+  set plusEnableExperimentalCustomization(bool val) {
+    _prefs?.setBool('plusEnableExperimentalCustomization', val);
+    notifyListeners();
+  }
+
   bool get plusEnableGlassmorphism => _prefs?.getBool('plusEnableGlassmorphism') ?? true;
   set plusEnableGlassmorphism(bool val) {
     _prefs?.setBool('plusEnableGlassmorphism', val);

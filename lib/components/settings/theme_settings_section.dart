@@ -33,6 +33,37 @@ class ThemeSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final settings = context.watch<SettingsProvider>();
+
+    List<Widget> advancedWidgets = [
+      _buildFeatureToggle(
+        context,
+        icon: Icons.blur_on_rounded,
+        title: tr('glassmorphismUI'),
+        subtitle: tr('glassmorphismUIDescription'),
+        value: (SettingsProvider s) => s.plusEnableGlassmorphism,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableGlassmorphism = v,
+        visible: (SettingsProvider s) => _matches(tr('glassmorphismUI')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.unfold_more_rounded,
+        title: tr('plusPopupSlider'),
+        subtitle: tr('plusPopupSliderDescription'),
+        value: (SettingsProvider s) => s.plusEnablePopupSlider,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnablePopupSlider = v,
+        visible: (SettingsProvider s) => _matches(tr('plusPopupSlider')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.animation_outlined,
+        title: tr('plusMaterialExpressive'),
+        subtitle: tr('plusMaterialExpressiveDescription'),
+        value: (SettingsProvider s) => s.plusEnableMaterialExpressive,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableMaterialExpressive = v,
+        visible: (SettingsProvider s) => _matches(tr('plusMaterialExpressive')),
+      ),
+    ];
 
     List<Widget> themeWidgets = [
       if (_matches(tr('theme'))) _buildThemeSegmented(context),
@@ -52,15 +83,18 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
       if (_matches(tr('navigationLabels'))) _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.blur_on_rounded,
-        title: tr('glassmorphismUI'),
-        subtitle: tr('glassmorphismUIDescription'),
-        value: (SettingsProvider s) => s.plusEnableGlassmorphism,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableGlassmorphism = v,
-        visible: (SettingsProvider s) => _matches(tr('glassmorphismUI')),
-      ),
+      
+      // Advanced/Experimental Section
+      if (settings.plusEnableExperimentalCustomization && advancedWidgets.any((w) => w is! SizedBox))
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: ExpansionTile(
+            leading: const Icon(Icons.science_outlined),
+            title: Text(tr('advancedTheming'), style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(tr('advancedThemingDescription')),
+            children: advancedWidgets,
+          ),
+        ),
     ];
 
     List<Widget> typographyWidgets = [
@@ -76,24 +110,6 @@ class ThemeSettingsSection extends StatelessWidget {
         value: (SettingsProvider s) => s.plusEnableEnhancedAnimations,
         onChanged: (SettingsProvider s, bool v) => s.plusEnableEnhancedAnimations = v,
         visible: (SettingsProvider s) => _matches(tr('plusEnhancedAnimations')),
-      ),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.animation_outlined,
-        title: tr('plusMaterialExpressive'),
-        subtitle: tr('plusMaterialExpressiveDescription'),
-        value: (SettingsProvider s) => s.plusEnableMaterialExpressive,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableMaterialExpressive = v,
-        visible: (SettingsProvider s) => _matches(tr('plusMaterialExpressive')),
-      ),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.unfold_more_rounded,
-        title: tr('plusPopupSlider'),
-        subtitle: tr('plusPopupSliderDescription'),
-        value: (SettingsProvider s) => s.plusEnablePopupSlider,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnablePopupSlider = v,
-        visible: (SettingsProvider s) => _matches(tr('plusPopupSlider')),
       ),
       _buildFeatureToggle(
         context,
