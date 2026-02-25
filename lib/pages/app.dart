@@ -521,49 +521,67 @@ class _AppPageState extends State<AppPage> {
     bool installed = app?.app.installedVersion != null;
     bool upToDate = app?.app.installedVersion == app?.app.latestVersion;
     var changeLogFn = app != null ? getChangeLogFn(context, app.app) : null;
+    final settings = appsProvider.settingsProvider;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildStatRow(
-              context,
-              icon: Icons.install_mobile_rounded,
-              label: tr('installed'),
-              value: app?.app.installedVersion ?? tr('notInstalled'),
-              isBold: true,
-            ),
-            const Divider(height: 24),
-            _buildStatRow(
-              context,
-              icon: Icons.new_releases_rounded,
-              label: tr('latest'),
-              value: app?.app.latestVersion ?? tr('unknown'),
-              valueColor: upToDate ? null : Theme.of(context).colorScheme.primary,
-            ),
-            const Divider(height: 24),
-            _buildStatRow(
-              context,
-              icon: Icons.update_rounded,
-              label: tr('lastChecked'),
-              value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
-            ),
-            if (changeLogFn != null) ...[
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: changeLogFn,
-                icon: const Icon(Icons.history_rounded, size: 18),
-                label: Text(tr('viewChanges')),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
+          sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: (isDark 
+                ? Theme.of(context).colorScheme.surfaceContainerLow 
+                : Theme.of(context).colorScheme.surface)
+              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
               ),
+            ),
+          ),
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              _buildStatRow(
+                context,
+                icon: Icons.install_mobile_rounded,
+                label: tr('installed'),
+                value: app?.app.installedVersion ?? tr('notInstalled'),
+                isBold: true,
+              ),
+              const Divider(height: 24),
+              _buildStatRow(
+                context,
+                icon: Icons.new_releases_rounded,
+                label: tr('latest'),
+                value: app?.app.latestVersion ?? tr('unknown'),
+                valueColor: upToDate ? null : Theme.of(context).colorScheme.primary,
+              ),
+              const Divider(height: 24),
+              _buildStatRow(
+                context,
+                icon: Icons.update_rounded,
+                label: tr('lastChecked'),
+                value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
+              ),
+              if (changeLogFn != null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: changeLogFn,
+                  icon: const Icon(Icons.history_rounded, size: 18),
+                  label: Text(tr('viewChanges')),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -616,6 +634,8 @@ class _AppPageState extends State<AppPage> {
   Widget _buildAboutSection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
     final about = app?.app.additionalSettings['about'];
     if (about == null || about.toString().isEmpty || appsProvider.settingsProvider.plusEnablePopupSlider) return const SizedBox.shrink();
+    final settings = appsProvider.settingsProvider;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,19 +644,41 @@ class _AppPageState extends State<AppPage> {
           padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(tr('about'), style: Theme.of(context).textTheme.titleSmall),
         ),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: MarkdownBody(
-            data: about.toString(),
-            onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
-            extensionSet: md.ExtensionSet(
-              md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-              [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
+              sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: (isDark 
+                    ? Theme.of(context).colorScheme.surfaceContainerLow 
+                    : Theme.of(context).colorScheme.surface)
+                  .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                  ),
+                ),
+              ),
+              child: MarkdownBody(
+                data: about.toString(),
+                onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
+                extensionSet: md.ExtensionSet(
+                  md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                  [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
+                ),
+                styleSheet: MarkdownStyleSheet(
+                  p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9),
+                  ),
+                ),
+              ),
             ),
           ),
         ),

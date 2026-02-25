@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/main.dart';
@@ -76,9 +78,28 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       return true;
     }).toList();
 
+    final settings = context.watch<SettingsProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(tr('importInstalledApps')),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        flexibleSpace: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
+              sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+            ),
+            child: Container(
+              color: Theme.of(context).colorScheme.surface.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+              ),
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: Icon(_showSystemApps ? Icons.system_update_rounded : Icons.person_outline_rounded),
@@ -95,50 +116,106 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               leading: const Icon(Icons.search),
               onChanged: (val) => setState(() => _searchQuery = val),
               elevation: WidgetStateProperty.all(0),
-              backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.surfaceContainerHigh),
+              backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.surfaceContainerHigh.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.5 : 1.0,
+              )),
             ),
           ),
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : filteredApps.isEmpty
-              ? EmptyStateWidget(
-                  icon: Icons.apps_rounded,
-                  title: tr('noMatchingApps'),
-                  subtitle: tr('tryAdjustingFilters'),
-                )
-              : ListView.builder(
-                  itemCount: filteredApps.length,
-                  itemBuilder: (context, index) {
-                    final pkg = filteredApps[index];
-                    return _buildAppTile(pkg, appsProvider);
-                  },
-                ),
+          : Padding(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight + 64),
+              child: filteredApps.isEmpty
+                  ? EmptyStateWidget(
+                      icon: Icons.apps_rounded,
+                      title: tr('noMatchingApps'),
+                      subtitle: tr('tryAdjustingFilters'),
+                    )
+                  : ListView.builder(
+                      itemCount: filteredApps.length,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemBuilder: (context, index) {
+                        final pkg = filteredApps[index];
+                        return _buildAppTile(pkg, appsProvider);
+                      },
+                    ),
+            ),
     );
   }
 
   Widget _buildAppTile(PackageInfo pkg, AppsProvider appsProvider) {
-    return ListTile(
-      leading: FutureBuilder(
-        future: pkg.applicationInfo?.getAppIcon(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData && snapshot.data != null) {
-            return Image.memory(snapshot.data!, width: 40, height: 40);
-          }
-          return const AppIconShimmer(size: 40);
-        },
-      ),
-      title: FutureBuilder(
-        future: pkg.applicationInfo?.getAppLabel(),
-        builder: (context, snapshot) {
-          return Text(snapshot.data ?? pkg.packageName!, style: const TextStyle(fontWeight: FontWeight.bold));
-        },
-      ),
-      subtitle: Text(pkg.packageName!, style: Theme.of(context).textTheme.labelSmall),
-      trailing: ElevatedButton(
-        onPressed: () => _handleTrackApp(pkg, appsProvider),
-        child: Text(tr('trackInObtainium')),
+    final settings = context.read<SettingsProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
+            sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
+          ),
+          child: Card(
+            elevation: 0,
+            margin: EdgeInsets.zero,
+            color: (isDark 
+                ? Theme.of(context).colorScheme.surfaceContainerHighest 
+                : Theme.of(context).colorScheme.surface)
+              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 0.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                  alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                ),
+              ),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              leading: FutureBuilder(
+                future: pkg.applicationInfo?.getAppIcon(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data != null) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.memory(snapshot.data!, width: 44, height: 44),
+                    );
+                  }
+                  return const AppIconShimmer(size: 44);
+                },
+              ),
+              title: FutureBuilder(
+                future: pkg.applicationInfo?.getAppLabel(),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.data ?? pkg.packageName!, 
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
+              ),
+              subtitle: Text(
+                pkg.packageName!, 
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: FilledButton.tonal(
+                onPressed: () => _handleTrackApp(pkg, appsProvider),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: Text(tr('add')),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
