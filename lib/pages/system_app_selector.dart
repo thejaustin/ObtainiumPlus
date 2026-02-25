@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/empty_state.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/apps_provider.dart';

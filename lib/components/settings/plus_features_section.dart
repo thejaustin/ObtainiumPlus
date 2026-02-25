@@ -97,7 +97,7 @@ class PlusFeaturesSection extends StatelessWidget {
                   HapticFeedback.selectionClick();
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SystemAppSelector()),
+                    MaterialPageRoute(builder: (context) => SystemAppSelector()),
                   );
                 },
               ),
