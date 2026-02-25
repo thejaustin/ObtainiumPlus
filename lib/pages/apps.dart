@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -389,10 +390,29 @@ class AppsPageState extends State<AppsPage> {
     List<AppInMemory> listedApps,
     bool isFilterOff,
   ) {
+    final settings = context.watch<SettingsProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SliverAppBar.large(
       pinned: true,
       floating: true,
       snap: false,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      flexibleSpace: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
+            sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+          ),
+          child: Container(
+            color: (isDark 
+                ? Theme.of(context).colorScheme.surface 
+                : Theme.of(context).colorScheme.surface)
+              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+          ),
+        ),
+      ),
       leading: selectedAppIds.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),
