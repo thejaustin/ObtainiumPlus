@@ -77,14 +77,14 @@ class _AppFilePickerState extends State<AppFilePicker> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(null);
+            Navigator.maybeOf(context)?.pop(null);
           },
           child: Text(tr('cancel')),
         ),
         TextButton(
           onPressed: () {
             HapticFeedback.selectionClick();
-            Navigator.of(context).pop(fileUrl);
+            Navigator.maybeOf(context)?.pop(fileUrl);
           },
           child: Text(tr('continue')),
         ),
@@ -125,14 +125,14 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(null);
+            Navigator.maybeOf(context)?.pop(null);
           },
           child: Text(tr('cancel')),
         ),
         TextButton(
           onPressed: () {
             HapticFeedback.selectionClick();
-            Navigator.of(context).pop(true);
+            Navigator.maybeOf(context)?.pop(true);
           },
           child: Text(tr('continue')),
         ),
