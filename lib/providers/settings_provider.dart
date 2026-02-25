@@ -462,6 +462,18 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableGlassmorphism => prefs?.getBool('plusEnableGlassmorphism') ?? true;
+  set plusEnableGlassmorphism(bool val) {
+    prefs?.setBool('plusEnableGlassmorphism', val);
+    notifyListeners();
+  }
+
+  bool get plusEnablePopupSlider => prefs?.getBool('plusEnablePopupSlider') ?? true;
+  set plusEnablePopupSlider(bool val) {
+    prefs?.setBool('plusEnablePopupSlider', val);
+    notifyListeners();
+  }
+
   bool get plusEnableResponsiveAppLayout => prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
   set plusEnableResponsiveAppLayout(bool val) {
     prefs?.setBool('plusEnableResponsiveAppLayout', val);

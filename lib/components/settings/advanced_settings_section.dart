@@ -29,17 +29,89 @@ class AdvancedSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> children = [
-      if (_matches(tr('removeOnExternalUninstall'))) _buildRemoveOnExternalUninstallToggle(context),
-      if (_matches(tr('beforeNewInstallsShareToAppVerifier'))) _buildAppVerifierToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.delete_sweep_outlined,
+        title: tr('removeOnExternalUninstall'),
+        subtitle: tr('removeOnExternalUninstallDescription'),
+        value: (SettingsProvider s) => s.removeOnExternalUninstall,
+        onChanged: (SettingsProvider s, bool v) => s.removeOnExternalUninstall = v,
+        visible: (SettingsProvider s) => _matches(tr('removeOnExternalUninstall')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.verified_user_outlined,
+        title: tr('beforeNewInstallsShareToAppVerifier'),
+        subtitle: tr('beforeNewInstallsShareToAppVerifierDescription'),
+        value: (SettingsProvider s) => s.beforeNewInstallsShareToAppVerifier,
+        onChanged: (SettingsProvider s, bool v) => s.beforeNewInstallsShareToAppVerifier = v,
+        visible: (SettingsProvider s) => _matches(tr('beforeNewInstallsShareToAppVerifier')),
+      ),
       if (_matches(tr('useShizuku'))) _buildUseShizukuToggle(context),
       if (_matches(tr('shizukuPretendToBeGooglePlay'))) _buildShizukuPretendToBeGooglePlayToggle(context),
-      if (_matches(tr('dontShowTrackOnlyWarnings'))) _buildHideTrackOnlyWarningToggle(context),
-      if (_matches(tr('dontShowAPKOriginWarnings'))) _buildHideAPKOriginWarningToggle(context),
-      if (_matches(tr('enableDeepLogging'))) _buildDeepLoggingToggle(context),
-      if (_matches(tr('enableSwipeGestures'))) _buildEnableSwipeGesturesToggle(context),
-      if (_matches(tr('enableUndoForAppRemoval'))) _buildEnableUndoForAppRemovalToggle(context),
-      if (_matches(tr('enableContextualTips'))) _buildEnableContextualTipsToggle(context),
-      if (_matches(tr('enableHapticFeedback'))) _buildEnableHapticFeedbackToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.report_off_outlined,
+        title: tr('dontShowTrackOnlyWarnings'),
+        subtitle: tr('dontShowTrackOnlyWarningsDescription'),
+        value: (SettingsProvider s) => s.hideTrackOnlyWarning,
+        onChanged: (SettingsProvider s, bool v) => s.hideTrackOnlyWarning = v,
+        visible: (SettingsProvider s) => _matches(tr('dontShowTrackOnlyWarnings')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.security_outlined,
+        title: tr('dontShowAPKOriginWarnings'),
+        subtitle: tr('dontShowAPKOriginWarningsDescription'),
+        value: (SettingsProvider s) => s.hideAPKOriginWarning,
+        onChanged: (SettingsProvider s, bool v) => s.hideAPKOriginWarning = v,
+        visible: (SettingsProvider s) => _matches(tr('dontShowAPKOriginWarnings')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.bug_report_outlined,
+        title: tr('enableDeepLogging'),
+        subtitle: tr('enableDeepLoggingDescription'),
+        value: (SettingsProvider s) => s.enableDeepLogging,
+        onChanged: (SettingsProvider s, bool v) => s.enableDeepLogging = v,
+        visible: (SettingsProvider s) => _matches(tr('enableDeepLogging')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.gesture_outlined,
+        title: tr('enableSwipeGestures'),
+        subtitle: tr('enableSwipeGesturesDescription'),
+        value: (SettingsProvider s) => s.enableSwipeGestures,
+        onChanged: (SettingsProvider s, bool v) => s.enableSwipeGestures = v,
+        visible: (SettingsProvider s) => _matches(tr('enableSwipeGestures')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.undo_outlined,
+        title: tr('enableUndoForAppRemoval'),
+        subtitle: tr('enableUndoForAppRemovalDescription'),
+        value: (SettingsProvider s) => s.enableUndoForAppRemoval,
+        onChanged: (SettingsProvider s, bool v) => s.enableUndoForAppRemoval = v,
+        visible: (SettingsProvider s) => _matches(tr('enableUndoForAppRemoval')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.lightbulb_outline,
+        title: tr('enableContextualTips'),
+        subtitle: tr('enableContextualTipsDescription'),
+        value: (SettingsProvider s) => s.enableContextualTips,
+        onChanged: (SettingsProvider s, bool v) => s.enableContextualTips = v,
+        visible: (SettingsProvider s) => _matches(tr('enableContextualTips')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.vibration_outlined,
+        title: tr('enableHapticFeedback'),
+        subtitle: tr('enableHapticFeedbackDescription'),
+        value: (SettingsProvider s) => s.enableHapticFeedback,
+        onChanged: (SettingsProvider s, bool v) => s.enableHapticFeedback = v,
+        visible: (SettingsProvider s) => _matches(tr('enableHapticFeedback')),
+      ),
     ];
 
     if (children.every((w) => w is SizedBox && w.child == null)) return const SizedBox.shrink();
@@ -198,6 +270,52 @@ class AdvancedSettingsSection extends StatelessWidget {
           title: Text(tr('enableHapticFeedback'), style: Theme.of(context).textTheme.bodyLarge),
           value: settings.enableHapticFeedback,
           onChanged: (value) => settings.enableHapticFeedback = value,
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required dynamic Function(dynamic) value,
+    required void Function(dynamic, bool) onChanged,
+    required bool Function(dynamic) visible,
+  }) {
+    // Determine which provider to use based on the title
+    // This is a bit of a hack since we're using different providers
+    bool isBehavior = title == tr('removeOnExternalUninstall') || 
+                     title == tr('beforeNewInstallsShareToAppVerifier') ||
+                     title == tr('enableSwipeGestures') ||
+                     title == tr('enableUndoForAppRemoval') ||
+                     title == tr('enableHapticFeedback');
+
+    if (isBehavior) {
+      return Consumer<BehaviorSettingsProvider>(
+        builder: (context, settings, child) {
+          if (!visible(settings)) return const SizedBox.shrink();
+          return SwitchListTile.adaptive(
+            secondary: Icon(icon),
+            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(subtitle),
+            value: value(settings),
+            onChanged: (v) => onChanged(settings, v),
+          );
+        },
+      );
+    }
+
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        if (!visible(settings)) return const SizedBox.shrink();
+        return SwitchListTile.adaptive(
+          secondary: Icon(icon),
+          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(subtitle),
+          value: value(settings),
+          onChanged: (v) => onChanged(settings, v),
         );
       },
     );
