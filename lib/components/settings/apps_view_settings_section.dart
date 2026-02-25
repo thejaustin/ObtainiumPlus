@@ -177,6 +177,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.grid_view_outlined),
                 title: Text(tr('gridCategoryDisplay'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(tr('gridCategoryDisplayDescription')),
                 trailing: DropdownButton<GridCategoryMode>(
                   underline: const SizedBox(),
                   value: settings.gridCategoryMode,
@@ -193,7 +194,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.view_column_outlined),
                 title: Text(tr('gridColumns'), style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text(settings.gridColumnCount == 0 ? tr('auto') : settings.gridColumnCount.toString()),
+                subtitle: Text("${tr('gridColumnsDescription')} (${settings.gridColumnCount == 0 ? tr('auto') : settings.gridColumnCount.toString()})"),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -207,6 +208,134 @@ class AppsViewSettingsSection extends StatelessWidget {
               ),
             ]
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryIconPositionDropdown(BuildContext context) {
+    return Consumer<ViewSettingsProvider>(
+      builder: (context, settings, child) {
+        return ListTile(
+          leading: const Icon(Icons.branding_watermark_outlined),
+          title: Text(tr('iconPosition'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('iconPositionDescription')),
+          trailing: DropdownButton<CategoryIconPosition>(
+            underline: const SizedBox(),
+            value: settings.categoryIconPosition,
+            items: [
+              DropdownMenuItem(value: CategoryIconPosition.disabled, child: Text(tr('disabled'))),
+              DropdownMenuItem(value: CategoryIconPosition.leading, child: Text(tr('leading'))),
+              DropdownMenuItem(value: CategoryIconPosition.trailing, child: Text(tr('trailing'))),
+              DropdownMenuItem(value: CategoryIconPosition.below, child: Text(tr('belowName'))),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                onSetState(() => settings.categoryIconPosition = value);
+              }
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryIconCountSlider(BuildContext context) {
+    return Consumer<ViewSettingsProvider>(
+      builder: (context, settings, child) {
+        return Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.numbers_outlined),
+              title: Text(tr('iconCount'), style: Theme.of(context).textTheme.bodyLarge),
+              subtitle: Text("${tr('iconCountDescription')} (${settings.categoryIconCount})"),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Slider(
+                value: settings.categoryIconCount.toDouble(),
+                min: 0,
+                max: 20,
+                divisions: 20,
+                onChanged: settings.categoryIconPosition == CategoryIconPosition.disabled
+                    ? null
+                    : (value) => onSetState(() => settings.categoryIconCount = value.toInt()),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildViewModeDropdown(BuildContext context) {
+    return Consumer<ViewSettingsProvider>(
+      builder: (context, settings, child) {
+        return ListTile(
+          leading: const Icon(Icons.view_quilt_outlined),
+          title: Text(tr('defaultViewMode'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('viewModeDescription')),
+          trailing: DropdownButton<ViewMode>(
+            underline: const SizedBox(),
+            value: settings.globalViewMode,
+            items: [
+              DropdownMenuItem(value: ViewMode.list, child: Text(tr('listView'))),
+              DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                onSetState(() => settings.globalViewMode = value);
+              }
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppBarStyleDropdown(BuildContext context) {
+    final settingsProvider = context.read<SettingsProvider>();
+    return ListTile(
+      leading: const Icon(Icons.vertical_align_top_rounded),
+      title: Text(tr('appBarStyle'), style: Theme.of(context).textTheme.bodyLarge),
+      subtitle: Text(tr('appBarStyleDescription')),
+      trailing: DropdownButton<AppBarStyle>(
+        underline: const SizedBox(),
+        value: settingsProvider.getAppBarStyleForPage('apps'),
+        items: AppBarStyle.values.map((e) => DropdownMenuItem(
+          value: e, 
+          child: Text(e.name.substring(0, 1).toUpperCase() + e.name.substring(1))
+        )).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            onSetState(() {
+              settingsProvider.prefs?.setInt('appBarStyle_apps', value.index);
+              settingsProvider.notifyListeners();
+            });
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildDensityDropdown(BuildContext context) {
+    return Consumer<ViewSettingsProvider>(
+      builder: (context, settings, child) {
+        if (settings.globalViewMode != ViewMode.list) return const SizedBox.shrink();
+        return ListTile(
+          leading: const Icon(Icons.density_medium_outlined),
+          title: Text(tr('listDensity'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('listDensityDescription')),
+          trailing: DropdownButton<AppListDensity>(
+            underline: const SizedBox(),
+            value: settings.appListDensity,
+            items: AppListDensity.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('density_${e.name}')))).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                onSetState(() => settings.appListDensity = value);
+              }
+            },
+          ),
         );
       },
     );
