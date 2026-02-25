@@ -14,6 +14,7 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
@@ -38,6 +39,7 @@ class SettingsProvider with ChangeNotifier {
   final UpdateSettingsProvider updateSettings = UpdateSettingsProvider();
   final ViewSettingsProvider viewSettings = ViewSettingsProvider();
   final BehaviorSettingsProvider behaviorSettings = BehaviorSettingsProvider();
+  final PlusSettingsProvider plusSettings = PlusSettingsProvider();
 
   String sourceUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 
@@ -56,6 +58,7 @@ class SettingsProvider with ChangeNotifier {
     await updateSettings.initializeSettings(prefs!);
     await viewSettings.initializeSettings(prefs!);
     await behaviorSettings.initializeSettings(prefs!);
+    await plusSettings.initializeSettings(prefs!);
 
     notifyListeners();
     _initCompleter!.complete();
@@ -365,137 +368,136 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Obtainium+ Features
-  bool get enableAllPlusFeatures => prefs?.getBool('enableAllPlusFeatures') ?? true;
+  // Obtainium+ Features (Delegated to PlusSettingsProvider)
+  bool get enableAllPlusFeatures => plusSettings.enableAllPlusFeatures;
   set enableAllPlusFeatures(bool val) {
-    prefs?.setBool('enableAllPlusFeatures', val);
+    plusSettings.enableAllPlusFeatures = val;
     notifyListeners();
   }
 
-  bool get plusEnableGridView => prefs?.getBool('plusEnableGridView') ?? true;
+  bool get plusEnableGridView => plusSettings.plusEnableGridView;
   set plusEnableGridView(bool val) {
-    prefs?.setBool('plusEnableGridView', val);
+    plusSettings.plusEnableGridView = val;
     notifyListeners();
   }
 
-  bool get plusEnableQuickFilters => prefs?.getBool('plusEnableQuickFilters') ?? true;
+  bool get plusEnableQuickFilters => plusSettings.plusEnableQuickFilters;
   set plusEnableQuickFilters(bool val) {
-    prefs?.setBool('plusEnableQuickFilters', val);
+    plusSettings.plusEnableQuickFilters = val;
     notifyListeners();
   }
 
-  bool get plusEnableDiscover => prefs?.getBool('plusEnableDiscover') ?? true;
+  bool get plusEnableDiscover => plusSettings.plusEnableDiscover;
   set plusEnableDiscover(bool val) {
-    prefs?.setBool('plusEnableDiscover', val);
+    plusSettings.plusEnableDiscover = val;
     notifyListeners();
   }
 
-  bool get plusEnableIconCaching => prefs?.getBool('plusEnableIconCaching') ?? true;
+  bool get plusEnableIconCaching => plusSettings.plusEnableIconCaching;
   set plusEnableIconCaching(bool val) {
-    prefs?.setBool('plusEnableIconCaching', val);
+    plusSettings.plusEnableIconCaching = val;
     notifyListeners();
   }
 
-  bool get plusEnableAdvancedSorting => prefs?.getBool('plusEnableAdvancedSorting') ?? true;
+  bool get plusEnableAdvancedSorting => plusSettings.plusEnableAdvancedSorting;
   set plusEnableAdvancedSorting(bool val) {
-    prefs?.setBool('plusEnableAdvancedSorting', val);
+    plusSettings.plusEnableAdvancedSorting = val;
     notifyListeners();
   }
 
-  bool get plusEnableSwipeActions => prefs?.getBool('plusEnableSwipeActions') ?? true;
+  bool get plusEnableSwipeActions => plusSettings.plusEnableSwipeActions;
   set plusEnableSwipeActions(bool val) {
-    prefs?.setBool('plusEnableSwipeActions', val);
+    plusSettings.plusEnableSwipeActions = val;
     notifyListeners();
   }
 
-  bool get plusEnableCategoryReorder => prefs?.getBool('plusEnableCategoryReorder') ?? true;
+  bool get plusEnableCategoryReorder => plusSettings.plusEnableCategoryReorder;
   set plusEnableCategoryReorder(bool val) {
-    prefs?.setBool('plusEnableCategoryReorder', val);
+    plusSettings.plusEnableCategoryReorder = val;
     notifyListeners();
   }
 
-  bool get plusEnableUpdateSchedule => prefs?.getBool('plusEnableUpdateSchedule') ?? true;
+  bool get plusEnableUpdateSchedule => plusSettings.plusEnableUpdateSchedule;
   set plusEnableUpdateSchedule(bool val) {
-    prefs?.setBool('plusEnableUpdateSchedule', val);
+    plusSettings.plusEnableUpdateSchedule = val;
     notifyListeners();
   }
 
-  bool get plusEnableEnhancedAnimations => prefs?.getBool('plusEnableEnhancedAnimations') ?? true;
+  bool get plusEnableEnhancedAnimations => plusSettings.plusEnableEnhancedAnimations;
   set plusEnableEnhancedAnimations(bool val) {
-    prefs?.setBool('plusEnableEnhancedAnimations', val);
+    plusSettings.plusEnableEnhancedAnimations = val;
     notifyListeners();
   }
 
-  bool get plusEnableUICustomization => prefs?.getBool('plusEnableUICustomization') ?? true;
+  bool get plusEnableUICustomization => plusSettings.plusEnableUICustomization;
   set plusEnableUICustomization(bool val) {
-    prefs?.setBool('plusEnableUICustomization', val);
+    plusSettings.plusEnableUICustomization = val;
     notifyListeners();
   }
 
-  bool get plusEnableHapticFeedback => prefs?.getBool('plusEnableHapticFeedback') ?? true;
+  bool get plusEnableHapticFeedback => plusSettings.plusEnableHapticFeedback;
   set plusEnableHapticFeedback(bool val) {
-    prefs?.setBool('plusEnableHapticFeedback', val);
+    plusSettings.plusEnableHapticFeedback = val;
     notifyListeners();
   }
 
-  bool get plusEnableModernSettings => prefs?.getBool('plusEnableModernSettings') ?? true;
-  set plusEnableModernSettings(bool val) {
-    prefs?.setBool('plusEnableModernSettings', val);
-    notifyListeners();
-  }
-
-  bool get plusEnableModernAppPage => prefs?.getBool('plusEnableModernAppPage') ?? true;
-  set plusEnableModernAppPage(bool val) {
-    prefs?.setBool('plusEnableModernAppPage', val);
-    notifyListeners();
-  }
-
-  bool get plusEnableModernAddAppPage => prefs?.getBool('plusEnableModernAddAppPage') ?? true;
-  set plusEnableModernAddAppPage(bool val) {
-    prefs?.setBool('plusEnableModernAddAppPage', val);
-    notifyListeners();
-  }
-
-  bool get plusEnableModernAppListTile => prefs?.getBool('plusEnableModernAppListTile') ?? true;
-  set plusEnableModernAppListTile(bool val) {
-    prefs?.setBool('plusEnableModernAppListTile', val);
-    notifyListeners();
-  }
-
-  bool get plusEnableGlassmorphism => prefs?.getBool('plusEnableGlassmorphism') ?? true;
+  bool get plusEnableGlassmorphism => plusSettings.plusEnableGlassmorphism;
   set plusEnableGlassmorphism(bool val) {
-    prefs?.setBool('plusEnableGlassmorphism', val);
+    plusSettings.plusEnableGlassmorphism = val;
     notifyListeners();
   }
 
-  bool get plusEnablePopupSlider => prefs?.getBool('plusEnablePopupSlider') ?? true;
+  bool get plusEnablePopupSlider => plusSettings.plusEnablePopupSlider;
   set plusEnablePopupSlider(bool val) {
-    prefs?.setBool('plusEnablePopupSlider', val);
+    plusSettings.plusEnablePopupSlider = val;
     notifyListeners();
   }
 
-  bool get plusEnableResponsiveAppLayout => prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
+  bool get plusEnableModernSettings => plusSettings.plusEnableModernSettings;
+  set plusEnableModernSettings(bool val) {
+    plusSettings.plusEnableModernSettings = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableModernAppPage => plusSettings.plusEnableModernAppPage;
+  set plusEnableModernAppPage(bool val) {
+    plusSettings.plusEnableModernAppPage = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableModernAddAppPage => plusSettings.plusEnableModernAddAppPage;
+  set plusEnableModernAddAppPage(bool val) {
+    plusSettings.plusEnableModernAddAppPage = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableModernAppListTile => plusSettings.plusEnableModernAppListTile;
+  set plusEnableModernAppListTile(bool val) {
+    plusSettings.plusEnableModernAppListTile = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableResponsiveAppLayout => plusSettings.plusEnableResponsiveAppLayout;
   set plusEnableResponsiveAppLayout(bool val) {
-    prefs?.setBool('plusEnableResponsiveAppLayout', val);
+    plusSettings.plusEnableResponsiveAppLayout = val;
     notifyListeners();
   }
 
-  bool get plusEnableSystemUpdateScanner => prefs?.getBool('plusEnableSystemUpdateScanner') ?? false;
+  bool get plusEnableSystemUpdateScanner => plusSettings.plusEnableSystemUpdateScanner;
   set plusEnableSystemUpdateScanner(bool val) {
-    prefs?.setBool('plusEnableSystemUpdateScanner', val);
+    plusSettings.plusEnableSystemUpdateScanner = val;
     notifyListeners();
   }
 
-  // Developer Mode & UI Comparison
-  bool get plusDeveloperMode => prefs?.getBool('plusDeveloperMode') ?? false;
+  bool get plusDeveloperMode => plusSettings.plusDeveloperMode;
   set plusDeveloperMode(bool val) {
-    prefs?.setBool('plusDeveloperMode', val);
+    plusSettings.plusDeveloperMode = val;
     notifyListeners();
   }
 
-  bool get plusShowLegacyUIComparison => prefs?.getBool('plusShowLegacyUIComparison') ?? false;
+  bool get plusShowLegacyUIComparison => plusSettings.plusShowLegacyUIComparison;
   set plusShowLegacyUIComparison(bool val) {
-    prefs?.setBool('plusShowLegacyUIComparison', val);
+    plusSettings.plusShowLegacyUIComparison = val;
     notifyListeners();
   }
 
