@@ -226,28 +226,6 @@ class PlusFeaturesSection extends StatelessWidget {
                 onChanged: (val) => settings.plusEnableUICustomization = val,
               ),
 
-            if (_matches(tr('glassmorphismUI')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.blur_on_rounded,
-                title: tr('glassmorphismUI'),
-                subtitle: tr('glassmorphismUIDescription'),
-                value: settings.plusEnableGlassmorphism,
-                onChanged: (val) => settings.plusEnableGlassmorphism = val,
-              ),
-
-            if (_matches(tr('plusPopupSlider')))
-              _buildFeatureToggle(
-                context,
-                settings,
-                icon: Icons.unfold_more_rounded,
-                title: tr('plusPopupSlider'),
-                subtitle: tr('plusPopupSliderDescription'),
-                value: settings.plusEnablePopupSlider,
-                onChanged: (val) => settings.plusEnablePopupSlider = val,
-              ),
-
             if (!isSearching)
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 24, bottom: 8),
