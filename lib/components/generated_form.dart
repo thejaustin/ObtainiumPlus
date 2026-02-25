@@ -1,8 +1,10 @@
 import 'dart:math';
-
+ 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hsluv/hsluv.dart';
+
 import 'package:obtainium/utils/app_utils.dart';
 
 abstract class GeneratedFormItem {
