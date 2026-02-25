@@ -583,7 +583,23 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               final appsProvider = context.read<AppsProvider>();
                               App? update = await appsProvider.checkObtainiumUpdate(ignoreCache: true);
                               if (update != null && mounted) {
-                                showMessage(tr('xHasAnUpdate', args: ['Obtainium+']), context);
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(tr('xHasAnUpdate', args: ['Obtainium+'])),
+                                    content: Text('${tr('latestVersion')}: ${update.latestVersion}'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('cancel'))),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          appsProvider.downloadAndInstallLatestApps([update.id], context);
+                                        },
+                                        child: Text(tr('update')),
+                                      ),
+                                    ],
+                                  ),
+                                );
                               } else if (mounted) {
                                 showMessage(tr('noNewUpdates'), context);
                               }
