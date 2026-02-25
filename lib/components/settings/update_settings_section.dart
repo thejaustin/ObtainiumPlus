@@ -41,9 +41,36 @@ class UpdateSettingsSection extends StatelessWidget {
       ],
       _buildForegroundServiceSection(context),
       if (_matches(tr('xiaomiBatteryTroubleshooting'))) _buildXiaomiTroubleshooting(context),
-      if (_matches(tr('checkOnStart'))) _buildCheckOnStartToggle(context),
-      if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps'))) _buildOnlyCheckInstalledToggle(context),
-      if (_matches(tr('parallelDownloads'))) _buildParallelDownloadsToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.power_settings_new_outlined,
+        title: tr('checkOnStart'),
+        subtitle: tr('checkOnStartDescription'),
+        value: (dynamic s) => (s as UpdateSettingsProvider).checkOnStart,
+        onChanged: (dynamic s, bool v) => (s as UpdateSettingsProvider).checkOnStart = v,
+        visible: (dynamic s) => _matches(tr('checkOnStart')),
+        providerType: UpdateSettingsProvider,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.check_circle_outline,
+        title: tr('onlyCheckInstalledOrTrackOnlyApps'),
+        subtitle: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
+        value: (dynamic s) => (s as SettingsProvider).onlyCheckInstalledOrTrackOnlyApps,
+        onChanged: (dynamic s, bool v) => (s as SettingsProvider).onlyCheckInstalledOrTrackOnlyApps = v,
+        visible: (dynamic s) => _matches(tr('onlyCheckInstalledOrTrackOnlyApps')),
+        providerType: SettingsProvider,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.file_download_outlined,
+        title: tr('parallelDownloads'),
+        subtitle: tr('parallelDownloadsDescription'),
+        value: (dynamic s) => (s as SettingsProvider).parallelDownloads,
+        onChanged: (dynamic s, bool v) => (s as SettingsProvider).parallelDownloads = v,
+        visible: (dynamic s) => _matches(tr('parallelDownloads')),
+        providerType: SettingsProvider,
+      ),
       _buildAdditionalUpdateSettings(context),
     ];
 
@@ -156,96 +183,46 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildForegroundServiceSection(BuildContext context) {
-    return FutureBuilder<AndroidDeviceInfo>(
-      future: androidInfoFuture,
-      builder: (ctx, snapshot) {
-        return Consumer2<SettingsProvider, UpdateSettingsProvider>(
-          builder: (context, settings, updateSettings, child) {
-            if (updateSettings.updateInterval <= 0) return const SizedBox.shrink();
-
-            bool canShowForeground = ((snapshot.data?.version.sdkInt ?? 0) >= 30) || settings.behaviorSettings.useShizuku;
-            if (!canShowForeground) return const SizedBox.shrink();
-
-            List<Widget> fgWidgets = [
-              if (_matches(tr('foregroundService')))
-                SwitchListTile.adaptive(
-                  secondary: const Icon(Icons.notifications_active_outlined),
-                  title: Text(tr('foregroundService'), style: Theme.of(context).textTheme.bodyLarge),
-                  subtitle: Text(tr('foregroundServiceExplanation')),
-                  value: updateSettings.useFGService,
-                  onChanged: (value) => updateSettings.useFGService = value,
-                ),
-              if (_matches(tr('enableBackgroundUpdates')))
-                SwitchListTile.adaptive(
-                  secondary: const Icon(Icons.sync_outlined),
-                  title: Text(tr('enableBackgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
-                  value: updateSettings.enableBackgroundUpdates,
-                  onChanged: (value) => updateSettings.enableBackgroundUpdates = value,
-                ),
-              if (updateSettings.enableBackgroundUpdates) ...[
-                if (_matches(tr('bgUpdatesOnWiFiOnly')))
-                  SwitchListTile.adaptive(
-                    secondary: const Icon(Icons.wifi_outlined),
-                    title: Text(tr('bgUpdatesOnWiFiOnly'), style: Theme.of(context).textTheme.bodyLarge),
-                    value: updateSettings.bgUpdatesOnWiFiOnly,
-                    onChanged: (value) => updateSettings.bgUpdatesOnWiFiOnly = value,
-                  ),
-                if (_matches(tr('bgUpdatesWhileChargingOnly')))
-                  SwitchListTile.adaptive(
-                    secondary: const Icon(Icons.battery_charging_full_outlined),
-                    title: Text(tr('bgUpdatesWhileChargingOnly'), style: Theme.of(context).textTheme.bodyLarge),
-                    value: updateSettings.bgUpdatesWhileChargingOnly,
-                    onChanged: (value) => updateSettings.bgUpdatesWhileChargingOnly = value,
-                  ),
-              ]
-            ];
-
-            return Column(children: fgWidgets);
-          },
-        );
-      },
-    );
+  Widget _buildFeatureToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required dynamic Function(dynamic) value,
+    required void Function(dynamic, bool) onChanged,
+    required bool Function(dynamic) visible,
+    required Type providerType,
+  }) {
+    if (providerType == SettingsProvider) {
+      return Consumer<SettingsProvider>(
+        builder: (context, settings, child) {
+          if (!visible(settings)) return const SizedBox.shrink();
+          return SwitchListTile.adaptive(
+            secondary: Icon(icon),
+            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(subtitle),
+            value: value(settings),
+            onChanged: (v) => onChanged(settings, v),
+          );
+        },
+      );
+    } else if (providerType == UpdateSettingsProvider) {
+      return Consumer<UpdateSettingsProvider>(
+        builder: (context, settings, child) {
+          if (!visible(settings)) return const SizedBox.shrink();
+          return SwitchListTile.adaptive(
+            secondary: Icon(icon),
+            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(subtitle),
+            value: value(settings),
+            onChanged: (v) => onChanged(settings, v),
+          );
+        },
+      );
+    }
+    return const SizedBox.shrink();
   }
-
-  Widget _buildCheckOnStartToggle(BuildContext context) {
-    return Consumer<UpdateSettingsProvider>(
-      builder: (context, updateSettings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.power_settings_new_outlined),
-          title: Text(tr('checkOnStart'), style: Theme.of(context).textTheme.bodyLarge),
-          value: updateSettings.checkOnStart,
-          onChanged: (value) => updateSettings.checkOnStart = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildOnlyCheckInstalledToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.check_circle_outline),
-          title: Text(tr('onlyCheckInstalledOrTrackOnlyApps'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.onlyCheckInstalledOrTrackOnlyApps,
-          onChanged: (value) => settings.onlyCheckInstalledOrTrackOnlyApps = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildParallelDownloadsToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settingsProvider, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.file_download_outlined),
-          title: Text(tr('parallelDownloads'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settingsProvider.parallelDownloads,
-          onChanged: (value) => settingsProvider.parallelDownloads = value,
-        );
-      },
-    );
-  }
+}
 
   Widget _buildAdditionalUpdateSettings(BuildContext context) {
     return Consumer<UpdateSettingsProvider>(
