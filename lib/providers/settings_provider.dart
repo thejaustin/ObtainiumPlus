@@ -15,6 +15,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/source_config_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
@@ -40,6 +41,7 @@ class SettingsProvider with ChangeNotifier {
   final ViewSettingsProvider viewSettings = ViewSettingsProvider();
   final BehaviorSettingsProvider behaviorSettings = BehaviorSettingsProvider();
   final PlusSettingsProvider plusSettings = PlusSettingsProvider();
+  final SourceConfigProvider sourceConfig = SourceConfigProvider();
 
   String sourceUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 
@@ -59,6 +61,7 @@ class SettingsProvider with ChangeNotifier {
     await viewSettings.initializeSettings(prefs!);
     await behaviorSettings.initializeSettings(prefs!);
     await plusSettings.initializeSettings(prefs!);
+    await sourceConfig.initializeSettings(prefs!);
 
     notifyListeners();
     _initCompleter!.complete();
@@ -204,22 +207,17 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? getSettingString(String settingId) {
-    String? str = prefs?.getString(settingId);
-    return str?.isNotEmpty == true ? str : null;
-  }
+  String? getSettingString(String settingId) => sourceConfig.getSettingString(settingId);
 
   void setSettingString(String settingId, String value) {
-    prefs?.setString(settingId, value);
+    sourceConfig.setSettingString(settingId, value);
     notifyListeners();
   }
 
-  bool? getSettingBool(String settingId) {
-    return prefs?.getBool(settingId) ?? false;
-  }
+  bool getSettingBool(String settingId) => sourceConfig.getSettingBool(settingId);
 
   void setSettingBool(String settingId, bool value) {
-    prefs?.setBool(settingId, value);
+    sourceConfig.setSettingBool(settingId, value);
     notifyListeners();
   }
 
