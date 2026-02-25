@@ -86,6 +86,24 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Validate locale JSON files
+        run: |
+          echo "Checking all translation JSON files for syntax errors..."
+          failed=0
+          for f in assets/translations/*.json; do
+            if ! python3 -c "import json,sys; json.load(open('$f'))" 2>/dev/null; then
+              echo "❌ Invalid JSON: $f"
+              python3 -c "import json,sys; json.load(open('$f'))" 2>&1 || true
+              failed=1
+            else
+              echo "✅ $f"
+            fi
+          done
+          if [ $failed -ne 0 ]; then
+            echo "ERROR: One or more locale JSON files are invalid. Fix before building."
+            exit 1
+          fi
+
       - name: Validate Secrets
         run: |
           if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ]; then
