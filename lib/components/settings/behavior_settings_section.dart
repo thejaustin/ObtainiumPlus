@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
-import 'package:obtainium/main.dart' show supportedLocales;
+import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
