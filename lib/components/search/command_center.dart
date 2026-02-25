@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -136,27 +137,44 @@ class _CommandCenterState extends State<CommandCenter> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isUrl = URLValidator.isValidSourceURL(_query);
+    final settings = context.watch<SettingsProvider>();
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        children: [
-          // Drag Handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
+          sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+        ),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: (isDark 
+                ? theme.colorScheme.surfaceContainerHighest 
+                : theme.colorScheme.surface)
+              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
               ),
             ),
           ),
+          child: Column(
+            children: [
+              // Drag Handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 32,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
           
           // Search Input
           Padding(
