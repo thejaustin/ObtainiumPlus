@@ -161,7 +161,7 @@ class AppDownloadService {
     for (var res in downloadResults) {
       if (!errors.appIdNames.containsKey(res['id'])) {
         try {
-          await _installApp(
+          var installed = await _installApp(
             id: res['id'] as String,
             willBeSilent: res['willBeSilent'] as bool,
             downloadedFile: res['downloadedFile'] as DownloadedApk?,
@@ -173,6 +173,7 @@ class AppDownloadService {
             notificationsProvider: notificationsProvider,
             context: context,
           );
+          if (installed) installedIds.add(res['id'] as String);
         } catch (e) {
           var id = res['id'] as String;
           errors.add(id, e, appName: apps[id]?.name);
@@ -512,6 +513,76 @@ class AppDownloadService {
     };
   }
 
+  static Future<bool> _installApp({
+    required String id,
+    required bool willBeSilent,
+    required DownloadedApk? downloadedFile,
+    required DownloadedDir? downloadedDir,
+    required Map<String, AppInMemory> apps,
+    required SettingsProvider settingsProvider,
+    required LogsProvider logs,
+    required Function() notifyListeners,
+    NotificationsProvider? notificationsProvider,
+    BuildContext? context,
+  }) async {
+    apps[id]?.downloadProgress = -1;
+    notifyListeners();
+    try {
+      bool sayInstalled = true;
+      var contextIfNewInstall = apps[id]?.installedInfo == null ? context : null;
+      bool needBGWorkaround = willBeSilent && context == null && !settingsProvider.useShizuku;
+      bool shizukuPretendToBeGooglePlay = settingsProvider.shizukuPretendToBeGooglePlay ||
+          apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] == true;
+
+      logs.logEvent('InstallStarted', {
+        'appId': id,
+        'shizuku': settingsProvider.useShizuku,
+        'bgWorkaround': needBGWorkaround,
+      });
+
+      if (downloadedFile != null) {
+        sayInstalled = await AppInstallService.installApk(
+          downloadedFile,
+          contextIfNewInstall,
+          settingsProvider,
+          logs,
+          apps,
+          needsBGWorkaround: needBGWorkaround,
+          shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+        );
+      } else if (downloadedDir != null) {
+        sayInstalled = await AppInstallService.installApkDir(
+          downloadedDir,
+          contextIfNewInstall,
+          settingsProvider,
+          logs,
+          apps,
+          needsBGWorkaround: needBGWorkaround,
+          shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+        );
+      }
+      if (willBeSilent && context == null) {
+        if (!settingsProvider.useShizuku) {
+          notificationsProvider?.notify(
+            SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
+          );
+        } else {
+          notificationsProvider?.notify(
+            SilentUpdateNotification([apps[id]!.app], sayInstalled, id: id.hashCode),
+          );
+        }
+      }
+      if (sayInstalled) {
+        notificationsProvider?.cancel(UpdateNotification([]).id);
+      }
+      logs.logEvent('InstallCompleted', {'appId': id, 'success': sayInstalled});
+      return sayInstalled;
+    } finally {
+      apps[id]?.downloadProgress = null;
+      notifyListeners();
+    }
+  }
+
   static Future<Map<String, dynamic>> _downloadAppWrapper({
     required String id,
     required Map<String, AppInMemory> apps,
@@ -533,6 +604,9 @@ class AppDownloadService {
     DownloadedApk? downloadedFile;
     DownloadedDir? downloadedDir;
     try {
+      if (apps[id] == null) {
+        throw ObtainiumError(tr('appNotFound'));
+      }
       var downloadedArtifact =
           await downloadApp(
             app: apps[id]!.app,

@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:obtainium/components/logs_dialog.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -330,7 +332,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
       },
     );
 
-    var sourceSpecificFields = sourceProvider.sources.map((e) {
+    var sourceSpecificFields = sourceProvider.sources.map<Widget>((e) {
       if (e.sourceConfigSettingFormItems.isNotEmpty) {
         return GeneratedForm(
           items: e.sourceConfigSettingFormItems.map((e) {
