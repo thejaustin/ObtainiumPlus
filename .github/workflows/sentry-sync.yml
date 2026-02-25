@@ -44,6 +44,18 @@ jobs:
 
             core.info(`Syncing Sentry issues for ${SENTRY_ORG}/${SENTRY_PROJECT}...`);
 
+            // ── Verify Token ─────────────────────────────────────────────────
+            const authRes = await fetch(`${SENTRY_API}/`, { headers: SENTRY_HEADERS });
+            if (authRes.ok) {
+              const authData = await authRes.json();
+              core.info(`Authenticated as: ${authData.user ? authData.user.email : 'Bot/Integration'}`);
+              if (authData.scopes) {
+                core.info(`Token scopes: ${authData.scopes.join(', ')}`);
+              }
+            } else {
+              core.warning(`Could not verify token: ${authRes.status}`);
+            }
+
             // ── Ensure the sentry-crash label exists ─────────────────────────
             try {
               await github.rest.issues.getLabel({ owner, repo, name: 'sentry-crash' });
