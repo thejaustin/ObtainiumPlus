@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
