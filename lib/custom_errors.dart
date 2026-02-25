@@ -257,7 +257,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
       fix: FixAction(tr('clearCache'), () {
         var appsProvider = Provider.of<AppsProvider>(context, listen: false);
         appsProvider.clearAppCache(e.appId!);
-        Navigator.of(context).pop();
+        Navigator.maybeOf(context)?.pop();
         showMessage(tr('cacheCleared'), context);
       })
     );
@@ -394,14 +394,14 @@ Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false,
             if (resolution?.fix != null)
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(null);
+                  Navigator.maybeOf(context)?.pop(null);
                   resolution!.fix!.action();
                 },
                 child: Text(resolution!.fix!.label),
               ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(null);
+                Navigator.maybeOf(context)?.pop(null);
               },
               child: Text(tr('ok')),
             ),
