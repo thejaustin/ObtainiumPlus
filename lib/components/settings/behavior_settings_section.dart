@@ -41,6 +41,7 @@ class BehaviorSettingsSection extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.sort_outlined),
           title: Text(tr('appSortBy'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('appSortByDescription')),
           trailing: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
             child: sortDropdown,
@@ -50,15 +51,52 @@ class BehaviorSettingsSection extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.import_export_outlined),
           title: Text(tr('appSortOrder'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('appSortOrderDescription')),
           trailing: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
             child: orderDropdown,
           ),
         ),
-      if (_matches(tr('showWebInAppView'))) _buildShowWebInAppViewToggle(context),
-      if (_matches(tr('pinUpdates'))) _buildPinUpdatesToggle(context),
-      if (_matches(tr('moveNonInstalledAppsToBottom'))) _buildBuryNonInstalledToggle(context),
-      if (_matches(tr('checkUpdateOnDetailPage'))) _buildCheckUpdateOnDetailPageToggle(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.open_in_browser_outlined,
+        title: tr('showWebInAppView'),
+        subtitle: tr('showWebInAppViewDescription'),
+        value: (dynamic s) => (s as ViewSettingsProvider).showAppWebpage,
+        onChanged: (dynamic s, bool v) => (s as ViewSettingsProvider).showAppWebpage = v,
+        visible: (dynamic s) => _matches(tr('showWebInAppView')),
+        providerType: ViewSettingsProvider,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.push_pin_outlined,
+        title: tr('pinUpdates'),
+        subtitle: tr('pinUpdatesDescription'),
+        value: (dynamic s) => (s as ViewSettingsProvider).pinUpdates,
+        onChanged: (dynamic s, bool v) => (s as ViewSettingsProvider).pinUpdates = v,
+        visible: (dynamic s) => _matches(tr('pinUpdates')),
+        providerType: ViewSettingsProvider,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.vertical_align_bottom_outlined,
+        title: tr('moveNonInstalledAppsToBottom'),
+        subtitle: tr('moveNonInstalledAppsToBottomDescription'),
+        value: (dynamic s) => (s as ViewSettingsProvider).buryNonInstalled,
+        onChanged: (dynamic s, bool v) => (s as ViewSettingsProvider).buryNonInstalled = v,
+        visible: (dynamic s) => _matches(tr('moveNonInstalledAppsToBottom')),
+        providerType: ViewSettingsProvider,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.sync_outlined,
+        title: tr('checkUpdateOnDetailPage'),
+        subtitle: tr('checkUpdateOnDetailPageDescription'),
+        value: (dynamic s) => (s as UpdateSettingsProvider).checkUpdateOnDetailPage,
+        onChanged: (dynamic s, bool v) => (s as UpdateSettingsProvider).checkUpdateOnDetailPage = v,
+        visible: (dynamic s) => _matches(tr('checkUpdateOnDetailPage')),
+        providerType: UpdateSettingsProvider,
+      ),
     ];
 
     List<Widget> swipeChildren = [
@@ -106,83 +144,13 @@ class BehaviorSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildShowWebInAppViewToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.open_in_browser_outlined),
-          title: Text(tr('showWebInAppView'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.showAppWebpage,
-          onChanged: (value) => settings.showAppWebpage = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildPinUpdatesToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.push_pin_outlined),
-          title: Text(tr('pinUpdates'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.pinUpdates,
-          onChanged: (value) => settings.pinUpdates = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildBuryNonInstalledToggle(BuildContext context) {
-    return Consumer<ViewSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.vertical_align_bottom_outlined),
-          title: Text(tr('moveNonInstalledAppsToBottom'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.buryNonInstalled,
-          onChanged: (value) => settings.buryNonInstalled = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildCheckUpdateOnDetailPageToggle(BuildContext context) {
-    return Consumer<UpdateSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.sync_outlined),
-          title: Text(tr('checkUpdateOnDetailPage'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.checkUpdateOnDetailPage,
-          onChanged: (value) => settings.checkUpdateOnDetailPage = value,
-        );
-      },
-    );
-  }
-
-  Widget _buildSwipeRightDropdown(BuildContext context) {
-    return Consumer<BehaviorSettingsProvider>(
-      builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.swipe_right_outlined),
-          title: Text(tr('swipeRightAction'), style: Theme.of(context).textTheme.bodyLarge),
-          trailing: DropdownButton<AppSwipeAction>(
-            underline: const SizedBox(),
-            value: settings.swipeRightAction,
-            items: AppSwipeAction.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('action_${e.name}')))).toList(),
-            onChanged: (value) {
-              if (value != null) settings.swipeRightAction = value;
-            },
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildSwipeLeftDropdown(BuildContext context) {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.swipe_left_outlined),
           title: Text(tr('swipeLeftAction'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('swipeLeftActionDescription')),
           trailing: DropdownButton<AppSwipeAction>(
             underline: const SizedBox(),
             value: settings.swipeLeftAction,
@@ -194,5 +162,45 @@ class BehaviorSettingsSection extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _buildFeatureToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required dynamic Function(dynamic) value,
+    required void Function(dynamic, bool) onChanged,
+    required bool Function(dynamic) visible,
+    required Type providerType,
+  }) {
+    if (providerType == ViewSettingsProvider) {
+      return Consumer<ViewSettingsProvider>(
+        builder: (context, settings, child) {
+          if (!visible(settings)) return const SizedBox.shrink();
+          return SwitchListTile.adaptive(
+            secondary: Icon(icon),
+            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(subtitle),
+            value: value(settings),
+            onChanged: (v) => onChanged(settings, v),
+          );
+        },
+      );
+    } else if (providerType == UpdateSettingsProvider) {
+      return Consumer<UpdateSettingsProvider>(
+        builder: (context, settings, child) {
+          if (!visible(settings)) return const SizedBox.shrink();
+          return SwitchListTile.adaptive(
+            secondary: Icon(icon),
+            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(subtitle),
+            value: value(settings),
+            onChanged: (v) => onChanged(settings, v),
+          );
+        },
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
