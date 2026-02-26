@@ -17,8 +17,9 @@ import 'package:provider/provider.dart';
 
 class DiscoverPage extends StatefulWidget {
   final bool showAppBar;
+  final bool showSearchBar;
   final String initialQuery;
-  const DiscoverPage({super.key, this.showAppBar = true, this.initialQuery = ''});
+  const DiscoverPage({super.key, this.showAppBar = true, this.showSearchBar = true, this.initialQuery = ''});
 
   @override
   State<DiscoverPage> createState() => DiscoverPageState();
@@ -102,7 +103,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     }
   }
 
-  void _showSearchOptions() {
+  void showSearchOptions() {
     showDialog(
       context: context,
       builder: (context) {
@@ -166,60 +167,61 @@ class DiscoverPageState extends State<DiscoverPage> {
       body: CustomScrollView(
         slivers: [
           if (widget.showAppBar) CustomAppBar(title: tr('discover')),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: tr('searchSomeSourcesLabel'),
-                      prefixIcon: IconButton(
-                        icon: const Icon(Icons.tune),
-                        onPressed: _showSearchOptions,
-                        tooltip: tr('searchOptions'),
+          if (widget.showSearchBar)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: tr('searchSomeSourcesLabel'),
+                        prefixIcon: IconButton(
+                          icon: const Icon(Icons.tune),
+                          onPressed: showSearchOptions,
+                          tooltip: tr('searchOptions'),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: runSearch,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: runSearch,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      onChanged: (value) => searchQuery = value,
+                      onSubmitted: (_) => runSearch(),
                     ),
-                    onChanged: (value) => searchQuery = value,
-                    onSubmitted: (_) => runSearch(),
-                  ),
-                  const SizedBox(height: 12),
-                  Consumer<SettingsProvider>(
-                    builder: (context, settingsProvider, child) {
-                      return Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: searchableSources.map((source) {
-                          final isSelected = !settingsProvider.searchDeselected.contains(source.name);
-                          return FilterChip(
-                            label: Text(source.name),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              final currentDeselected = List<String>.from(settingsProvider.searchDeselected);
-                              if (selected) {
-                                currentDeselected.remove(source.name);
-                              } else {
-                                currentDeselected.add(source.name);
-                              }
-                              settingsProvider.searchDeselected = currentDeselected;
-                            },
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Consumer<SettingsProvider>(
+                      builder: (context, settingsProvider, child) {
+                        return Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: searchableSources.map((source) {
+                            final isSelected = !settingsProvider.searchDeselected.contains(source.name);
+                            return FilterChip(
+                              label: Text(source.name),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                final currentDeselected = List<String>.from(settingsProvider.searchDeselected);
+                                if (selected) {
+                                  currentDeselected.remove(source.name);
+                                } else {
+                                  currentDeselected.add(source.name);
+                                }
+                                settingsProvider.searchDeselected = currentDeselected;
+                              },
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           if (searching)
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
