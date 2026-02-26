@@ -388,7 +388,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                     // --- SEARCH RESULTS (FLATTENED) ---
                     if (isSearching) ...[
                         SettingsGroup(
-                          title: tr('basics'),
+                          title: tr('suggested'),
                           children: [
                             if (_matches(tr('enableBackgroundUpdates')))
                               SwitchListTile.adaptive(
@@ -447,10 +447,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         const SizedBox(height: 24),
                         AdvancedSettingsSection(searchQuery: _searchQuery),
                         const SizedBox(height: 24),
-                        SettingsGroup(
-                          title: tr('troubleshootingAndSystem'),
-                          children: [const TroubleshootingSection()],
-                        ),
+                        TroubleshootingSection(searchQuery: _searchQuery),
                     ] else ...[
                         // --- MENU MODE ---
                         if (_useGridView)
