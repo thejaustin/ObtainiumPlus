@@ -14,7 +14,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   List<String> get bottomTabs {
-    return prefs?.getStringList('bottomTabs') ?? ['apps', 'add', 'updates', 'settings'];
+    return prefs?.getStringList('bottomTabs') ?? ['apps', 'updates', 'settings'];
   }
 
   set bottomTabs(List<String> bottomTabs) {

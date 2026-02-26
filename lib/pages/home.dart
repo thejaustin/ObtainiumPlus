@@ -453,14 +453,13 @@ class HomePageState extends State<HomePage> {
         }
         (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(data);
       } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => addAppPage),
-        ).then((_) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(data);
-          });
-        });
+        if (!mounted) return;
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (context) => AddAppPage(initialUrl: data),
+        );
       }
     }
 
@@ -609,7 +608,8 @@ class HomePageState extends State<HomePage> {
         },
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          floatingActionButton: activePages[currentIndex].id == 'apps'
+          floatingActionButton: (activePages[currentIndex].id == 'apps' ||
+                  activePages[currentIndex].id == 'updates')
               ? FloatingActionButton(
                   onPressed: () {
                     HapticFeedback.selectionClick();
