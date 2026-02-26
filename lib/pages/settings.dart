@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -52,6 +53,9 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMixin {
   bool showIntervalLabel = true;
+  bool _useGridView = true;
+  int _aboutTapCount = 0;
+  Timer? _aboutTapTimer;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -142,6 +146,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   @override
   void dispose() {
     _searchController.dispose();
+    _aboutTapTimer?.cancel();
     super.dispose();
   }
 
@@ -275,6 +280,45 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
 
     final sourceSpecificFields = _sourceSpecificFields ?? [];
 
+    // Hub item builders — defined once, shared by grid and list rendering
+    Widget Function(BuildContext) _hubBuilderPlus = (_) => _SettingsSubMenuPage(
+      title: tr('obtainiumPlusFeatures'),
+      child: const SingleChildScrollView(child: Padding(padding: EdgeInsets.all(16), child: PlusFeaturesSection())),
+    );
+    Widget Function(BuildContext) _hubBuilderUpdates = (_) => _SettingsSubMenuPage(
+      title: tr('updatesAndAutomation'),
+      child: SingleChildScrollView(child: Padding(padding: const EdgeInsets.all(16), child: UpdateSettingsSection(showIntervalLabel: showIntervalLabel, onIntervalLabelChange: (v) => setState(() => showIntervalLabel = v), androidInfoFuture: _androidInfoFuture))),
+    );
+    Widget Function(BuildContext) _hubBuilderTheming = (_) => _SettingsSubMenuPage(
+      title: tr('theming'),
+      child: SingleChildScrollView(child: Padding(padding: const EdgeInsets.all(16), child: ThemeSettingsSection(androidInfoFuture: _androidInfoFuture, colorsNameMap: colorsNameMap))),
+    );
+    Widget Function(BuildContext) _hubBuilderLayout = (_) => _SettingsSubMenuPage(
+      title: tr('layout'),
+      child: SingleChildScrollView(child: Padding(padding: const EdgeInsets.all(16), child: AppsViewSettingsSection(onSetState: setState))),
+    );
+    Widget Function(BuildContext) _hubBuilderBackup = (_) => ImportExportPage();
+    Widget Function(BuildContext) _hubBuilderStats = (_) => StatisticsPage();
+    Widget Function(BuildContext) _hubBuilderAdvanced = (_) => _SettingsSubMenuPage(
+      title: tr('advancedAndTroubleshooting'),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(children: [
+            if (sourceSpecificFields.isNotEmpty) ...[
+              SettingsGroup(title: tr('sourceSpecific'), children: sourceSpecificFields.toList()),
+              const SizedBox(height: 24),
+            ],
+            BehaviorSettingsSection(sortDropdown: sortDropdown, orderDropdown: orderDropdown, localeDropdown: localeDropdown),
+            const SizedBox(height: 24),
+            AdvancedSettingsSection(),
+            const SizedBox(height: 24),
+            const TroubleshootingSection(),
+          ]),
+        ),
+      ),
+    );
+
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: CustomScrollView(
@@ -283,14 +327,21 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                   SliverAppBar.large(
                                     backgroundColor: Theme.of(context).colorScheme.surface,
                                     surfaceTintColor: Colors.transparent,
-                                    title: isSearching 
-                                      ? null 
+                                    title: isSearching
+                                      ? null
                                       : Text(
                                           tr('settings'),
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.onSurface,
                                           ),
                                         ),
+                                    actions: isSearching ? null : [
+                                      IconButton(
+                                        icon: Icon(_useGridView ? Icons.view_list_outlined : Icons.grid_view_outlined),
+                                        tooltip: _useGridView ? 'List view' : 'Grid view',
+                                        onPressed: () => setState(() => _useGridView = !_useGridView),
+                                      ),
+                                    ],
                                   ),
                         
                                   // 2. Search Pill (Persistent below title)
@@ -339,10 +390,10 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         SettingsGroup(
                           title: tr('basics'),
                           children: [
-                            if (_matches(tr('backgroundUpdates')))
+                            if (_matches(tr('enableBackgroundUpdates')))
                               SwitchListTile.adaptive(
                                 secondary: const Icon(Icons.sync_outlined),
-                                title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
+                                title: Text(tr('enableBackgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
                                 subtitle: Text(tr('backgroundUpdatesDescription')),
                                 value: settingsProvider.updateInterval > 0,
                                 onChanged: (value) {
@@ -401,284 +452,135 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           children: [const TroubleshootingSection()],
                         ),
                     ] else ...[
-                        // --- MENU MODE (CATEGORIES) ---
-                        
-                        // 1. Basics (Quick Toggles)
-                        SettingsGroup(
-                          title: tr('basics'),
-                          children: [
-                             SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.sync_outlined),
-                                title: Text(tr('backgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
-                                subtitle: Text(tr('backgroundUpdatesDescription')),
-                                value: settingsProvider.updateInterval > 0,
-                                onChanged: (value) {
-                                  settingsProvider.updateInterval = value ? 60 : 0;
-                                },
-                              ),
-                             SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.battery_saver_outlined),
-                                title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
-                                subtitle: Text("${tr('batteryOptDescription')} (${_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')})"),
-                                value: _isIgnoringBatteryOptimizations,
-                                onChanged: (value) async {
-                                  if (!_isIgnoringBatteryOptimizations) {
-                                    await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-                                    _checkBatteryStatus();
-                                  } else if (_cachedAndroidInfo != null) {
-                                     // Xiaomi Check
-                                     var isXiaomi = ['xiaomi', 'poco', 'redmi'].contains(_cachedAndroidInfo!.manufacturer.toLowerCase()) ||
-                                                    ['xiaomi', 'poco', 'redmi'].contains(_cachedAndroidInfo!.brand.toLowerCase());
-                                     if (isXiaomi) {
-                                       if (mounted) {
-                                         showDialog(
-                                           context: context,
-                                           builder: (context) => UpdateSettingsSection(
-                                             showIntervalLabel: true, 
-                                             onIntervalLabelChange: (_) {}, 
-                                             androidInfoFuture: Future.value(_cachedAndroidInfo)
-                                           ).buildXiaomiTroubleshootingDialog(context),
-                                         );
-                                       }
-                                     }
-                                  }
-                                },
-                              ),
-                          ],
-                        ),
-                                                                        const SizedBox(height: 24),
-                                                
-                                                                        // 2. Hub and Spoke Design (Material 3 Cards)
-                                                                        GridView.count(
-                                                                          shrinkWrap: true,
-                                                                          physics: const NeverScrollableScrollPhysics(),
-                                                                          crossAxisCount: 2,
-                                                                          mainAxisSpacing: 12,
-                                                                          crossAxisSpacing: 12,
-                                                                          childAspectRatio: 1.2,
-                                                                          children: [
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.auto_awesome_outlined,
-                                                                                title: tr('obtainiumPlusFeatures'),
-                                                                                subtitle: tr('plusFeaturesDescription'),
-                                                                                builder: (context) => _SettingsSubMenuPage(
-                                                                                  title: tr('obtainiumPlusFeatures'),
-                                                                                  child: const SingleChildScrollView(
-                                                                                    child: Padding(
-                                                                                      padding: EdgeInsets.all(16.0),
-                                                                                      child: PlusFeaturesSection(),
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.sync_outlined,
-                                                                                title: tr('updatesAndAutomation'),
-                                                                                subtitle: tr('updatesDescription'),
-                                                                                builder: (context) => _SettingsSubMenuPage(
-                                                                                  title: tr('updatesAndAutomation'),
-                                                                                  child: SingleChildScrollView(
-                                                                                    child: Padding(
-                                                                                      padding: const EdgeInsets.all(16.0),
-                                                                                      child: UpdateSettingsSection(
-                                                                                        showIntervalLabel: showIntervalLabel,
-                                                                                        onIntervalLabelChange: (val) => setState(() => showIntervalLabel = val),
-                                                                                        androidInfoFuture: _androidInfoFuture,
-                                                                                      ),
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.palette_outlined,
-                                                                                title: tr('theming'),
-                                                                                subtitle: tr('themingDescription'),
-                                                                                builder: (context) => _SettingsSubMenuPage(
-                                                                                  title: tr('theming'),
-                                                                                  child: SingleChildScrollView(
-                                                                                    child: Padding(
-                                                                                      padding: const EdgeInsets.all(16.0),
-                                                                                      child: ThemeSettingsSection(
-                                                                                        androidInfoFuture: _androidInfoFuture,
-                                                                                        colorsNameMap: colorsNameMap,
-                                                                                      ),
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.grid_view_outlined,
-                                                                                title: tr('layout'),
-                                                                                subtitle: tr('layoutDescription'),
-                                                                                builder: (context) => _SettingsSubMenuPage(
-                                                                                  title: tr('layout'),
-                                                                                  child: SingleChildScrollView(
-                                                                                    child: Padding(
-                                                                                      padding: const EdgeInsets.all(16.0),
-                                                                                      child: AppsViewSettingsSection(onSetState: setState),
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.import_export_outlined,
-                                                                                title: tr('backupAndImportExport'),
-                                                                                subtitle: tr('backupDescription'),
-                                                                                builder: (context) => ImportExportPage(),
-                                                                              ),
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.bar_chart_outlined,
-                                                                                title: tr('statistics'),
-                                                                                subtitle: tr('statisticsDescription'),
-                                                                                builder: (context) => StatisticsPage(),
-                                                                              ),
-                                                                              _buildHubCard(
-                                                                                context,
-                                                                                icon: Icons.bug_report_outlined,
-                                                                                title: tr('advanced'),
-                                                                                subtitle: tr('advancedDescription'),
-                                                                                builder: (context) => _SettingsSubMenuPage(
-                                                                                  title: tr('advancedAndTroubleshooting'),
-                                                                                  child: SingleChildScrollView(
-                                                                                    child: Padding(
-                                                                                      padding: const EdgeInsets.all(16.0),
-                                                                                      child: Column(
-                                                                                        children: [
-                                                                                          if (sourceSpecificFields.isNotEmpty) ...[
-                                                                                            SettingsGroup(
-                                                                                              title: tr('sourceSpecific'),
-                                                                                              children: sourceSpecificFields.toList(),
-                                                                                            ),
-                                                                                            const SizedBox(height: 24),
-                                                                                          ],
-                                                                                          BehaviorSettingsSection(
-                                                                                            sortDropdown: sortDropdown,
-                                                                                            orderDropdown: orderDropdown,
-                                                                                            localeDropdown: localeDropdown,
-                                                                                          ),
-                                                                                          const SizedBox(height: 24),
-                                                                                          AdvancedSettingsSection(),
-                                                                                          const SizedBox(height: 24),
-                                                                                          const TroubleshootingSection(),
-                                                                                        ],
-                                                                                      ),
-                                                                                    ),
-                                                                                  ),
-                                                                                ),
-                                                                              ),
-                                                                          ],
-                                                                        ),                                            ],
-                    // --- SECTION: ABOUT (Always Visible) ---
+                        // --- MENU MODE ---
+                        if (_useGridView)
+                          GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 1.2,
+                            children: [
+                              _buildHubCard(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), subtitle: tr('plusFeaturesDescription'), builder: _hubBuilderPlus),
+                              _buildHubCard(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), subtitle: tr('updatesDescription'), builder: _hubBuilderUpdates),
+                              _buildHubCard(context, icon: Icons.palette_outlined, title: tr('theming'), subtitle: tr('themingDescription'), builder: _hubBuilderTheming),
+                              _buildHubCard(context, icon: Icons.grid_view_outlined, title: tr('layout'), subtitle: tr('layoutDescription'), builder: _hubBuilderLayout),
+                              _buildHubCard(context, icon: Icons.import_export_outlined, title: tr('backupAndImportExport'), subtitle: tr('backupDescription'), builder: _hubBuilderBackup),
+                              _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
+                              _buildHubCard(context, icon: Icons.bug_report_outlined, title: tr('advanced'), subtitle: tr('advancedDescription'), builder: _hubBuilderAdvanced),
+                            ],
+                          )
+                        else
+                          Card(
+                            elevation: 0,
+                            margin: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                            ),
+                            child: Column(children: [
+                              _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), builder: _hubBuilderPlus),
+                              _buildSubMenuTile(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), builder: _hubBuilderUpdates),
+                              _buildSubMenuTile(context, icon: Icons.palette_outlined, title: tr('theming'), builder: _hubBuilderTheming),
+                              _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: tr('layout'), builder: _hubBuilderLayout),
+                              _buildSubMenuTile(context, icon: Icons.import_export_outlined, title: tr('backupAndImportExport'), builder: _hubBuilderBackup),
+                              _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), builder: _hubBuilderStats),
+                              _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: tr('advanced'), builder: _hubBuilderAdvanced),
+                            ]),
+                          ),
+                    ],
+                    // --- SECTION: ABOUT ---
                     const SizedBox(height: 24),
                     SettingsGroup(
-                      title: isSearching ? null : tr('about'),
+                      title: null,
                       children: [
-                        ListTile(
-                          leading: const Icon(Icons.sync_outlined),
-                          title: Text(tr('checkForUpdates'), style: Theme.of(context).textTheme.bodyLarge),
-                          trailing: ElevatedButton(
-                            onPressed: () async {
-                              final appsProvider = context.read<AppsProvider>();
-                              App? update = await appsProvider.checkObtainiumUpdate(ignoreCache: true);
-                              if (update != null && mounted) {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text(tr('xHasAnUpdate', args: ['Obtainium+'])),
-                                    content: Text('${tr('latestVersion')}: ${update.latestVersion}'),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('cancel'))),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(ctx);
-                                          appsProvider.downloadAndInstallLatestApps([update.id], context);
-                                        },
-                                        child: Text(tr('update')),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              } else if (mounted) {
-                                showMessage(tr('noNewUpdates'), context);
-                              }
-                            },
-                            child: Text(tr('checkUpdates')),
+                        // Tappable title: double-tap=stable update, triple-tap=dev update, long-press=menu
+                        GestureDetector(
+                          onTap: _onAboutHeaderTap,
+                          onLongPress: _showUpdateMenu,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                            child: Text(
+                              isSearching ? '' : tr('about'),
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                        ListTile(
-                          leading: const Icon(Icons.history_outlined),
-                          title: Text(tr('releaseChannel'), style: Theme.of(context).textTheme.bodyLarge),
-                          subtitle: Text(tr('obtainiumReleaseChannelDescription')),
-                          trailing: DropdownButton<String>(
-                            value: settingsProvider.obtainiumReleaseChannel,
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                settingsProvider.obtainiumReleaseChannel = newValue;
-                              }
-                            },
-                            items: [
-                              DropdownMenuItem(value: 'latest', child: Text(tr('latest'))),
-                              DropdownMenuItem(value: 'dev', child: Text(tr('dev'))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceEvenly,
+                            spacing: 4,
+                            runSpacing: 8,
+                            children: [
+                              _buildAboutIcon(context,
+                                icon: Icons.history_outlined,
+                                label: tr('releaseChannel'),
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
+                                    title: Text(tr('releaseChannel')),
+                                    content: Column(mainAxisSize: MainAxisSize.min, children: [
+                                      RadioListTile<String>(
+                                        title: Text(tr('latest')),
+                                        value: 'latest',
+                                        groupValue: context.read<SettingsProvider>().obtainiumReleaseChannel,
+                                        onChanged: (v) { if (v != null) { context.read<SettingsProvider>().obtainiumReleaseChannel = v; setS(() {}); } },
+                                      ),
+                                      RadioListTile<String>(
+                                        title: Text(tr('dev')),
+                                        value: 'dev',
+                                        groupValue: context.read<SettingsProvider>().obtainiumReleaseChannel,
+                                        onChanged: (v) { if (v != null) { context.read<SettingsProvider>().obtainiumReleaseChannel = v; setS(() {}); } },
+                                      ),
+                                    ]),
+                                    actions: [TextButton(onPressed: () => Navigator.maybeOf(ctx)?.pop(), child: Text(tr('close')))],
+                                  )),
+                                ),
+                              ),
+                              _buildAboutIcon(context,
+                                icon: Icons.article_outlined,
+                                label: tr('viewChangelog'),
+                                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangelogPage())),
+                              ),
+                              _buildAboutIcon(context,
+                                icon: Icons.code_outlined,
+                                label: tr('appSource'),
+                                onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication),
+                              ),
+                              _buildAboutIcon(context,
+                                icon: Icons.help_outline_rounded,
+                                label: tr('wiki'),
+                                onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
+                              ),
+                              _buildAboutIcon(context,
+                                icon: Icons.apps_rounded,
+                                label: tr('crowdsourcedConfigsShort'),
+                                onTap: () => launchUrlString('https://apps.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
+                              ),
+                              _buildAboutIcon(context,
+                                icon: Icons.bug_report_outlined,
+                                label: tr('appLogs'),
+                                onTap: () => context.read<LogsProvider>().get().then((logs) {
+                                  if (!mounted) return;
+                                  if (logs.isEmpty) {
+                                    showMessage(ObtainiumError(tr('noLogs')), context);
+                                  } else {
+                                    showDialog(context: context, builder: (_) => const LogsDialog());
+                                  }
+                                }),
+                                onLongPress: () {
+                                  settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
+                                  HapticFeedback.heavyImpact();
+                                  showMessage(settingsProvider.plusDeveloperMode ? 'Developer Mode Enabled' : 'Developer Mode Disabled', context);
+                                },
+                              ),
                             ],
                           ),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.article_outlined),
-                          title: Text(tr('viewChangelog'), style: Theme.of(context).textTheme.bodyLarge),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => const ChangelogPage()),
-                            );
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.code_outlined),
-                          title: Text(tr('appSource'), style: Theme.of(context).textTheme.bodyLarge),
-                          onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.help_outline_rounded),
-                          title: Text(tr('wiki'), style: Theme.of(context).textTheme.bodyLarge),
-                          onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.apps_rounded),
-                          title: Text(tr('crowdsourcedConfigsLabel'), style: Theme.of(context).textTheme.bodyLarge),
-                          onTap: () => launchUrlString('https://apps.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.bug_report_outlined),
-                          title: Text(tr('appLogs'), style: Theme.of(context).textTheme.bodyLarge),
-                          onLongPress: () {
-                            settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
-                            HapticFeedback.heavyImpact();
-                            showMessage(
-                              settingsProvider.plusDeveloperMode 
-                                ? 'Developer Mode Enabled' 
-                                : 'Developer Mode Disabled', 
-                              context
-                            );
-                          },
-                          onTap: () {
-                            context.read<LogsProvider>().get().then((logs) {
-                              if (logs.isEmpty) {
-                                showMessage(ObtainiumError(tr('noLogs')), context);
-                              } else {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext ctx) {
-                                    return const LogsDialog();
-                                  },
-                                );
-                              }
-                            });
-                          },
                         ),
                       ],
                     ),
@@ -697,6 +599,110 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       SnackBar(
         content: Text(message is ObtainiumError ? message.message : message.toString()),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _onAboutHeaderTap() {
+    _aboutTapCount++;
+    _aboutTapTimer?.cancel();
+    _aboutTapTimer = Timer(const Duration(milliseconds: 400), () {
+      final n = _aboutTapCount;
+      _aboutTapCount = 0;
+      if (n == 2) _triggerUpdateCheck(channel: 'latest');
+      else if (n >= 3) _triggerUpdateCheck(channel: 'dev');
+    });
+  }
+
+  void _showUpdateMenu() {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Container(width: 32, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.outlineVariant, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.system_update_outlined),
+            title: const Text('Check for update (stable)'),
+            onTap: () { Navigator.maybeOf(ctx)?.pop(); _triggerUpdateCheck(channel: 'latest'); },
+          ),
+          ListTile(
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('Check for update (dev/beta)'),
+            onTap: () { Navigator.maybeOf(ctx)?.pop(); _triggerUpdateCheck(channel: 'dev'); },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _triggerUpdateCheck({required String channel}) async {
+    final sp = context.read<SettingsProvider>();
+    final orig = sp.obtainiumReleaseChannel;
+    if (sp.obtainiumReleaseChannel != channel) sp.obtainiumReleaseChannel = channel;
+    final appsProvider = context.read<AppsProvider>();
+    App? update = await appsProvider.checkObtainiumUpdate(ignoreCache: true);
+    if (!mounted) return;
+    if (sp.obtainiumReleaseChannel != orig) sp.obtainiumReleaseChannel = orig;
+    if (update != null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('xHasAnUpdate', args: ['Obtainium+'])),
+          content: Text('${tr('latestVersion')}: ${update.latestVersion}'),
+          actions: [
+            TextButton(onPressed: () => Navigator.maybeOf(ctx)?.pop(), child: Text(tr('cancel'))),
+            TextButton(
+              onPressed: () {
+                Navigator.maybeOf(ctx)?.pop();
+                appsProvider.downloadAndInstallLatestApps([update.id], context);
+              },
+              child: Text(tr('update')),
+            ),
+          ],
+        ),
+      );
+    } else {
+      showMessage(tr('noNewUpdates'), context);
+    }
+  }
+
+  Widget _buildAboutIcon(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap, VoidCallback? onLongPress}) {
+    return SizedBox(
+      width: 76,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 26),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
