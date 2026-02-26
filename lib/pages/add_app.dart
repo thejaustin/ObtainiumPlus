@@ -9,7 +9,6 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/discover.dart';
-import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -27,15 +26,14 @@ class AddAppPage extends StatefulWidget {
   final AddAppMode mode;
   final String? appId;
   final String? initialUrl;
-  final int initialTab;
-  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialUrl, this.initialTab = 0});
+  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialUrl});
 
   @override
   State<AddAppPage> createState() => AddAppPageState();
 }
 
-class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class AddAppPageState extends State<AddAppPage> {
+  final TextEditingController _inputController = TextEditingController();
   bool gettingAppInfo = false;
 
   String userInput = '';
@@ -46,14 +44,23 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
   bool additionalSettingsValid = true;
   bool inferAppIdIfOptional = true;
   List<String> pickedCategories = [];
-  int urlInputKey = 0;
+  String? _urlValidationError;
   SourceProvider sourceProvider = SourceProvider();
   final GlobalKey<DiscoverPageState> _discoverPageKey = GlobalKey<DiscoverPageState>();
+
+  bool get _isUrlMode => userInput.trim().startsWith('http');
+
+  bool get _canAddUrl =>
+      _isUrlMode &&
+      pickedSource != null &&
+      _urlValidationError == null &&
+      !(pickedSource!.combinedAppSpecificSettingFormItems.isNotEmpty &&
+          !additionalSettingsValid) &&
+      !gettingAppInfo;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab);
     if (widget.appId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         var app = context.read<AppsProvider>().apps[widget.appId]?.app;
@@ -70,14 +77,11 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _inputController.dispose();
     super.dispose();
   }
 
   void linkFn(String input) {
-    if (_tabController.index != 0) {
-      _tabController.animateTo(0);
-    }
     try {
       if (input.isEmpty) {
         throw UnsupportedURLError();
@@ -105,13 +109,16 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         bool overrideChanged =
             pickedSourceOverride != previousPickedSourceOverride;
         previousPickedSourceOverride = pickedSourceOverride;
-        if (updateUrlInput) {
-          urlInputKey++;
+        if (updateUrlInput && _inputController.text != input) {
+          _inputController.text = input;
+          _inputController.selection =
+              TextSelection.collapsed(offset: input.length);
         }
         var prevHost = pickedSource?.hosts.isNotEmpty == true
             ? pickedSource?.hosts[0]
             : null;
         AppSource? source;
+        _urlValidationError = null;
         if (valid) {
           try {
             source = sourceProvider.getSource(
@@ -119,6 +126,18 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
               overrideSource: pickedSourceOverride,
             );
           } catch (_) {}
+          // Validate URL format for http inputs
+          if (source != null && input.trim().startsWith('http')) {
+            try {
+              source.standardizeUrl(input);
+            } catch (e) {
+              _urlValidationError = e is ObtainiumError
+                  ? e.toString()
+                  : e is String
+                      ? e
+                      : tr('error');
+            }
+          }
         }
         if (pickedSource.runtimeType != source.runtimeType ||
             overrideChanged ||
@@ -143,9 +162,11 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
     bool userPickedTrackOnly, {
     bool ignoreHideSetting = false,
   }) async {
-    var useTrackOnly = userPickedTrackOnly || (pickedSource?.enforceTrackOnly ?? false);
+    var useTrackOnly =
+        userPickedTrackOnly || (pickedSource?.enforceTrackOnly ?? false);
     if (useTrackOnly &&
-        (!context.read<SettingsProvider>().hideTrackOnlyWarning || ignoreHideSetting)) {
+        (!context.read<SettingsProvider>().hideTrackOnlyWarning ||
+            ignoreHideSetting)) {
       var values = await showDialog(
         context: context,
         builder: (BuildContext ctx) {
@@ -166,7 +187,8 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         },
       );
       if (values != null) {
-        context.read<SettingsProvider>().hideTrackOnlyWarning = values['hide'] == true;
+        context.read<SettingsProvider>().hideTrackOnlyWarning =
+            values['hide'] == true;
       }
       return useTrackOnly && values != null;
     } else {
@@ -212,7 +234,8 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
           sourceIsOverriden: pickedSourceOverride != null,
           inferAppIdIfOptional: inferAppIdIfOptional,
         );
-        if (SourceUtils.isTempId(app) && app.additionalSettings['trackOnly'] != true) {
+        if (SourceUtils.isTempId(app) &&
+            app.additionalSettings['trackOnly'] != true) {
           var apkUrl = await appsProvider.confirmAppFileUrl(
             app,
             context,
@@ -271,92 +294,6 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
     }
   }
 
-  Widget _getUrlInputRow() {
-    bool isUrl = userInput.trim().startsWith('http');
-    
-    return Row(
-      children: [
-        Expanded(
-          child: GeneratedForm(
-            key: Key(urlInputKey.toString()),
-            items: [
-              [
-                GeneratedFormTextField(
-                  'appSourceURL',
-                  label: tr('searchOrURL'),
-                  defaultValue: userInput,
-                  additionalValidators: [
-                    (value) {
-                      if (value == null || value.trim().isEmpty) return null;
-                      if (!value.trim().startsWith('http')) return null; // Treat as search query
-                      try {
-                        sourceProvider
-                            .getSource(
-                              value,
-                              overrideSource: pickedSourceOverride,
-                            )
-                            .standardizeUrl(value);
-                      } catch (e) {
-                        return e is String
-                            ? e
-                            : e is ObtainiumError
-                            ? e.toString()
-                            : tr('error');
-                      }
-                      return null;
-                    },
-                  ],
-                ),
-              ],
-            ],
-            onValueChanges: (values, valid, isBuilding) {
-              _changeUserInput(values['appSourceURL']!, valid, isBuilding);
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        gettingAppInfo
-            ? const CircularProgressIndicator()
-            : GestureDetector(
-                onLongPress: () {
-                  HapticFeedback.heavyImpact();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(initialTab: 1),
-                    ),
-                  );
-                },
-                child: ElevatedButton(
-                  onPressed:
-                      gettingAppInfo ||
-                          (isUrl && (pickedSource == null ||
-                          (pickedSource!
-                                  .combinedAppSpecificSettingFormItems
-                                  .isNotEmpty &&
-                              !additionalSettingsValid)))
-                      ? null
-                      : () {
-                          HapticFeedback.selectionClick();
-                          if (isUrl) {
-                            _addApp();
-                          } else {
-                            _tabController.animateTo(1);
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (_discoverPageKey.currentState != null) {
-                                _discoverPageKey.currentState!.searchQuery = userInput;
-                                _discoverPageKey.currentState!.runSearch();
-                              }
-                            });
-                          }
-                        },
-                  child: Text(isUrl ? tr('add') : tr('search')),
-                ),
-              ),
-      ],
-    );
-  }
-
   Widget _getHTMLSourceOverrideDropdown() {
     return Column(
       children: [
@@ -391,9 +328,9 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
                   void fn() {
                     pickedSourceOverride =
                         (values['overrideSource'] == null ||
-                            values['overrideSource'] == '')
-                        ? null
-                        : values['overrideSource'];
+                                values['overrideSource'] == '')
+                            ? null
+                            : values['overrideSource'];
                   }
 
                   if (!isBuilding) {
@@ -614,16 +551,19 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
                 heroTag: 'add_app_ui_comparison_toggle',
                 onPressed: () {
                   HapticFeedback.mediumImpact();
-                  settingsProvider.plusEnableModernAddAppPage = !settingsProvider.plusEnableModernAddAppPage;
+                  settingsProvider.plusEnableModernAddAppPage =
+                      !settingsProvider.plusEnableModernAddAppPage;
                 },
-                child: Icon(settingsProvider.plusEnableModernAddAppPage 
-                    ? Icons.visibility_outlined 
-                    : Icons.visibility_off_outlined),
+                child: Icon(
+                  settingsProvider.plusEnableModernAddAppPage
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
               ),
             )
           : null,
       appBar: AppBar(
-        automaticallyImplyLeading: false, // For modal
+        automaticallyImplyLeading: false,
         title: Column(
           children: [
             Container(
@@ -644,7 +584,9 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
             onPressed: () async {
               final result = await Navigator.push<String>(
                 context,
-                MaterialPageRoute(builder: (context) => const SystemAppSelector()),
+                MaterialPageRoute(
+                  builder: (context) => const SystemAppSelector(),
+                ),
               );
               if (result != null) {
                 _changeUserInput(result, true, false, updateUrlInput: true);
@@ -654,29 +596,206 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
           ),
         ],
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: tr('appSourceURL')),
-            Tab(text: tr('discover')),
-          ],
-        ),
       ),
-      bottomNavigationBar: pickedSource == null && _tabController.index == 0 ? _getSourcesListWidget() : null, // Only show sources list on URL tab
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          isModern ? _buildModernUrlTab(context) : _buildLegacyUrlTab(context),
-          DiscoverPage(key: _discoverPageKey, showAppBar: false, initialQuery: userInput),
+          // Unified search/URL bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: SearchBar(
+              controller: _inputController,
+              hintText: tr('searchOrURL'),
+              leading: Icon(
+                _isUrlMode ? Icons.link_outlined : Icons.search_outlined,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              elevation: WidgetStateProperty.all(0),
+              backgroundColor: WidgetStateProperty.all(
+                Theme.of(context).colorScheme.surfaceContainerHigh,
+              ),
+              shape: WidgetStateProperty.all(const StadiumBorder()),
+              padding: WidgetStateProperty.all(
+                const EdgeInsets.symmetric(horizontal: 4),
+              ),
+              onChanged: (value) {
+                _changeUserInput(value, true, false);
+                if (!value.trim().startsWith('http')) {
+                  _discoverPageKey.currentState?.searchQuery = value;
+                }
+              },
+              onSubmitted: (_) {
+                if (_isUrlMode) {
+                  if (_canAddUrl) _addApp();
+                } else if (userInput.trim().isNotEmpty) {
+                  _discoverPageKey.currentState?.searchQuery = userInput;
+                  _discoverPageKey.currentState?.runSearch();
+                }
+              },
+              trailing: [
+                if (!_isUrlMode && userInput.trim().isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.tune),
+                    onPressed: () =>
+                        _discoverPageKey.currentState?.showSearchOptions(),
+                    tooltip: tr('searchOptions'),
+                  ),
+                if (userInput.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _inputController.clear();
+                      _changeUserInput('', true, false);
+                    },
+                  ),
+                if (_isUrlMode)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: gettingAppInfo
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : FilledButton.tonal(
+                            onPressed: _canAddUrl
+                                ? () {
+                                    HapticFeedback.selectionClick();
+                                    _addApp();
+                                  }
+                                : null,
+                            style: FilledButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            child: Text(tr('add')),
+                          ),
+                  )
+                else if (userInput.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilledButton.tonal(
+                      onPressed: () {
+                        _discoverPageKey.currentState?.searchQuery = userInput;
+                        _discoverPageKey.currentState?.runSearch();
+                      },
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(tr('search')),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // URL validation error
+          if (_isUrlMode && _urlValidationError != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _urlValidationError!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
+          // Source filter chips (discover mode only)
+          if (!_isUrlMode && userInput.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Consumer<SettingsProvider>(
+                builder: (context, sp, _) {
+                  final searchableSrcs =
+                      sourceProvider.sources.where((e) => e.canSearch).toList();
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: searchableSrcs.map((source) {
+                        final isSelected =
+                            !sp.searchDeselected.contains(source.name);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(source.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              final current =
+                                  List<String>.from(sp.searchDeselected);
+                              if (selected) {
+                                current.remove(source.name);
+                              } else {
+                                current.add(source.name);
+                              }
+                              sp.searchDeselected = current;
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+          // Main content
+          Expanded(
+            child: IndexedStack(
+              index: _isUrlMode ? 0 : 1,
+              children: [
+                // URL / empty mode
+                isModern
+                    ? _buildModernUrlContent(context)
+                    : _buildLegacyUrlContent(context),
+                // Discover mode
+                DiscoverPage(
+                  key: _discoverPageKey,
+                  showAppBar: false,
+                  showSearchBar: false,
+                  initialQuery: userInput,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+      bottomNavigationBar:
+          (_isUrlMode || userInput.trim().isEmpty) && pickedSource == null
+              ? _getSourcesListWidget()
+              : null,
     );
   }
 
-  Widget _buildLegacyUrlTab(BuildContext context) {
+  Widget _buildModernUrlContent(BuildContext context) {
+    if (pickedSource == null) return const SizedBox.shrink();
     return CustomScrollView(
-      shrinkWrap: true,
-      slivers: <Widget>[
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _buildModernSourceSection(context),
+              const SizedBox(height: 16),
+              _buildModernSourceNoteSection(context),
+              const SizedBox(height: 16),
+              _buildModernOptionsSection(context),
+              const SizedBox(height: 16),
+              _buildModernCategoriesSection(context),
+              const SizedBox(height: 100),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegacyUrlContent(BuildContext context) {
+    if (pickedSource == null) return const SizedBox.shrink();
+    return CustomScrollView(
+      slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -684,22 +803,19 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _getUrlInputRow(),
-                const SizedBox(height: 16),
-                if (pickedSource != null) _getHTMLSourceOverrideDropdown(),
-                if (pickedSource != null)
-                  FutureBuilder(
-                    builder: (ctx, val) {
-                      return val.data != null && val.data!.isNotEmpty
-                          ? Text(
-                              val.data!,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            )
-                          : const SizedBox();
-                    },
-                    future: pickedSource?.getSourceNote(),
-                  ),
-                if (pickedSource != null) _getAdditionalOptsCol(),
+                _getHTMLSourceOverrideDropdown(),
+                FutureBuilder(
+                  builder: (ctx, val) {
+                    return val.data != null && val.data!.isNotEmpty
+                        ? Text(
+                            val.data!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          )
+                        : const SizedBox();
+                  },
+                  future: pickedSource?.getSourceNote(),
+                ),
+                _getAdditionalOptsCol(),
               ],
             ),
           ),
@@ -708,31 +824,7 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
     );
   }
 
-  Widget _buildModernUrlTab(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              _buildModernUrlInputSection(context),
-              if (pickedSource != null) ...[
-                const SizedBox(height: 24),
-                _buildModernSourceNoteSection(context),
-                const SizedBox(height: 24),
-                _buildModernOptionsSection(context),
-                const SizedBox(height: 24),
-                _buildModernCategoriesSection(context),
-                const SizedBox(height: 100), // Extra space
-              ],
-            ]),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildModernUrlInputSection(BuildContext context) {
+  Widget _buildModernSourceSection(BuildContext context) {
     return Card(
       elevation: 0,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
@@ -742,15 +834,14 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(tr('basics'), style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
+            Text(
+              tr('basics'),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+            ),
             const SizedBox(height: 16),
-            _getUrlInputRow(),
-            if (pickedSource != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
-              _getHTMLSourceOverrideDropdown(),
-            ],
+            _getHTMLSourceOverrideDropdown(),
           ],
         ),
       ),
@@ -765,15 +856,32 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withValues(alpha: 0.2),
+            ),
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline, size: 20, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                Icons.info_outline,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 12),
-              Expanded(child: Text(val.data!, style: Theme.of(context).textTheme.bodySmall)),
+              Expanded(
+                child: Text(
+                  val.data!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
             ],
           ),
         );
@@ -792,8 +900,10 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              tr('additionalOptions'), 
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)
+              tr('additionalOptions'),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
             ),
             const SizedBox(height: 16),
             GeneratedForm(
@@ -857,7 +967,12 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(tr('categories'), style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
+            Text(
+              tr('categories'),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+            ),
             const SizedBox(height: 12),
             CategoryEditorSelector(
               alignment: WrapAlignment.start,
@@ -870,5 +985,4 @@ class AddAppPageState extends State<AddAppPage> with SingleTickerProviderStateMi
       ),
     );
   }
-
 }
