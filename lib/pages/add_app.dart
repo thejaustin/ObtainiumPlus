@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -47,6 +48,7 @@ class AddAppPageState extends State<AddAppPage> {
   String? _urlValidationError;
   SourceProvider sourceProvider = SourceProvider();
   final GlobalKey<DiscoverPageState> _discoverPageKey = GlobalKey<DiscoverPageState>();
+  Timer? _discoverSearchDebounce;
 
   bool get _isUrlMode => userInput.trim().startsWith('http');
 
@@ -77,6 +79,7 @@ class AddAppPageState extends State<AddAppPage> {
 
   @override
   void dispose() {
+    _discoverSearchDebounce?.cancel();
     _inputController.dispose();
     super.dispose();
   }
@@ -621,6 +624,12 @@ class AddAppPageState extends State<AddAppPage> {
                 _changeUserInput(value, true, false);
                 if (!value.trim().startsWith('http')) {
                   _discoverPageKey.currentState?.searchQuery = value;
+                  _discoverSearchDebounce?.cancel();
+                  _discoverSearchDebounce = Timer(const Duration(milliseconds: 800), () {
+                    if (mounted && value.trim().isNotEmpty) {
+                      _discoverPageKey.currentState?.runSearch();
+                    }
+                  });
                 }
               },
               onSubmitted: (_) {
@@ -643,6 +652,7 @@ class AddAppPageState extends State<AddAppPage> {
                   IconButton(
                     icon: const Icon(Icons.clear),
                     onPressed: () {
+                      _discoverSearchDebounce?.cancel();
                       _inputController.clear();
                       _changeUserInput('', true, false);
                     },
