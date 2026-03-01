@@ -130,11 +130,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
     runObtainiumExport({bool pickOnly = false}) async {
       HapticFeedback.selectionClick();
       try {
-        // Check if file picker is available
-        if (!pickOnly && !await FilePicker.platform.isAvailable) {
-          throw ObtainiumError('File picker is not available on this device');
-        }
-
         final result = await appsProvider.export(
           pickOnly:
               pickOnly || (await settingsProvider.getExportDir()) == null,
@@ -153,11 +148,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
     runObtainiumImport() async {
       HapticFeedback.selectionClick();
       try {
-        // Check if file picker is available
-        if (!await FilePicker.platform.isAvailable) {
-          throw ObtainiumError('File picker is not available on this device');
-        }
-
         final result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ['json'],
@@ -216,11 +206,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
     runUrlImport() async {
       try {
-        // Check if file picker is available
-        if (!await FilePicker.platform.isAvailable) {
-          throw ObtainiumError('File picker is not available on this device');
-        }
-
         final result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ['json', 'txt', 'html'],

@@ -104,10 +104,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             result = (b.size ?? 0).compareTo(a.size ?? 0);
             break;
           case SystemAppSortMethod.systemFirst:
-            result = b.isSystemApp.compareTo(a.isSystemApp);
+            result = b.isSystemApp ? -1 : 1;
             break;
           case SystemAppSortMethod.userFirst:
-            result = a.isSystemApp.compareTo(b.isSystemApp);
+            result = a.isSystemApp ? -1 : 1;
             break;
         }
         
@@ -725,12 +725,12 @@ class _EnhancedPackageInfo {
   factory _EnhancedPackageInfo.fromPackageInfo(PackageInfo pkg) {
     return _EnhancedPackageInfo(
       packageName: pkg.packageName,
-      appName: pkg.applicationInfo?.label,
-      icon: pkg.icon,
+      appName: pkg.applicationInfo?.getAppLabel() ?? pkg.packageName,
+      icon: null,
       isSystemApp: (pkg.applicationInfo?.flags ?? 0) & 1 != 0,
-      size: pkg.size,
-      firstInstallTime: pkg.firstInstallTime?.millisecondsSinceEpoch,
-      lastUpdateTime: pkg.lastUpdateTime?.millisecondsSinceEpoch,
+      size: null,
+      firstInstallTime: pkg.applicationInfo?.firstInstallTime,
+      lastUpdateTime: pkg.applicationInfo?.lastUpdateTime,
     );
   }
 }

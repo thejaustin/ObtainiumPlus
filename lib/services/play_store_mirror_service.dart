@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_package_manager/android_package_manager.dart';
+import 'package:android_package_manager/android_package_manager.dart' hide LaunchMode;
 import 'package:obtainium/app_sources/apkpure.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/apps_provider.dart';
