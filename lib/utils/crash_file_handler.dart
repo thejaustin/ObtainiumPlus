@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:obtainium/utils/logger.dart';
 
 /// File-based crash logger — Flutter equivalent of hexodus's CrashHandler.kt.
 ///
@@ -36,6 +37,14 @@ class CrashFileHandler {
             'Android: ${info.version.release} (SDK ${info.version.sdkInt})';
       } catch (_) {}
 
+      // Capture last 100 Talker logs for extra context
+      final talkerLogs = talker.history.reversed
+          .take(100)
+          .toList()
+          .reversed
+          .map((e) => '[${e.title}] ${e.message}')
+          .join('\n');
+
       final report = [
         '--- Obtainium+ Crash Report ---',
         'Timestamp: ${DateTime.now().toIso8601String()}',
@@ -44,6 +53,10 @@ class CrashFileHandler {
         'Error Type: $errorType',
         'Sentry Event ID: ${sentryEventId ?? 'N/A'}',
         '',
+        '--- Talker History ---',
+        talkerLogs,
+        '',
+        '--- Error Details ---',
         'Message:',
         message,
         '',

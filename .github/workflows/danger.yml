@@ -1,0 +1,37 @@
+name: Danger
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  danger:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run Danger
+        env:
+          DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
+        run: |
+          # Install danger_dart globally if not already available
+          flutter pub global activate danger_dart
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          
+          # Run danger-dart ci
+          danger_dart ci

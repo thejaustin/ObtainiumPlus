@@ -128,6 +128,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
+  Widget _buildFeatureCard(BuildContext context, {required IconData icon, required String title, required String subtitle}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        child: ListTile(
+          leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+          dense: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const bodyStyle = TextStyle(fontSize: 19.0);
@@ -190,6 +206,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ],
               );
             }
+          ),
+        ),
+
+        // 4. Custom Sources & Plugins
+        PageViewModel(
+          title: "Extend & Expand",
+          body: "Add support for even more apps through custom community-made plugins and source recipes.",
+          image: Icon(Icons.extension_outlined, size: 100, color: Theme.of(context).colorScheme.primary),
+          decoration: pageDecoration,
+          footer: Column(
+            children: [
+              _buildFeatureCard(
+                context,
+                icon: Icons.auto_awesome_outlined,
+                title: "Obtainium+ Features",
+                subtitle: "Unlock advanced automation and UI enhancements.",
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.extension_outlined,
+                title: "Custom Source Plugins",
+                subtitle: "Add new app sources via community-maintained JS scripts.",
+              ),
+            ],
           ),
         ),
       ],

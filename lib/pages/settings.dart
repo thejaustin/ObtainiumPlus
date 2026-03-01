@@ -33,6 +33,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
 import 'package:obtainium/components/logs_dialog.dart';
@@ -45,6 +46,107 @@ import 'package:obtainium/components/settings/app_behavior_section.dart';
 import 'package:obtainium/components/settings/app_display_section.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 
+
+class SetupAssistantSection extends StatefulWidget {
+  const SetupAssistantSection({super.key});
+
+  @override
+  State<SetupAssistantSection> createState() => _SetupAssistantSectionState();
+}
+
+class _SetupAssistantSectionState extends State<SetupAssistantSection> {
+  bool _isIgnoringBattery = true;
+  bool _hasNotificationPermission = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future<void> _checkStatus() async {
+    final battery = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+    final notifs = await Permission.notification.isGranted;
+    if (mounted) {
+      setState(() {
+        _isIgnoringBattery = battery;
+        _hasNotificationPermission = notifs;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isIgnoringBattery && _hasNotificationPermission) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_fix_high, color: Theme.of(context).colorScheme.primary, size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Quick Setup Assistant', style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (!_isIgnoringBattery)
+                _buildActionRow(
+                  context,
+                  label: 'Allow background updates',
+                  onTap: () async {
+                    await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                    _checkStatus();
+                  },
+                ),
+              if (!_hasNotificationPermission)
+                _buildActionRow(
+                  context,
+                  label: 'Enable update notifications',
+                  onTap: () async {
+                    await Permission.notification.request();
+                    _checkStatus();
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionRow(BuildContext context, {required String label, required VoidCallback onTap}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            children: [
+              Icon(Icons.add_circle_outline, size: 18, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
+              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class SettingsPage extends StatefulWidget {
   final int initialTab; // Kept for backward compatibility, though tabs are removed
@@ -302,6 +404,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     );
     Widget Function(BuildContext) _hubBuilderBackup = (_) => ImportExportPage();
     Widget Function(BuildContext) _hubBuilderStats = (_) => StatisticsPage();
+    Widget Function(BuildContext) _hubBuilderDeveloper = (_) => const DeveloperSettingsPage();
     Widget Function(BuildContext) _hubBuilderAdvanced = (_) => _SettingsSubMenuPage(
       title: tr('advancedAndTroubleshooting'),
       child: SingleChildScrollView(
@@ -350,159 +453,237 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                             color: Theme.of(context).colorScheme.onSurface,
                                           ),
                                         ),
-                                    actions: isSearching ? null : [
-                                      IconButton(
-                                        icon: Icon(_useGridView ? Icons.view_list_outlined : Icons.grid_view_outlined),
-                                        tooltip: _useGridView ? 'List view' : 'Grid view',
-                                        onPressed: () => setState(() => _useGridView = !_useGridView),
-                                      ),
-                                    ],
                                   ),
                         
                                   // 2. Search Pill (Persistent below title)
                                   SliverToBoxAdapter(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                      child: SearchBar(
-                                        controller: _searchController,
-                                        hintText: tr('searchSettings'),
-                                        leading: const Icon(Icons.search),
-                                        elevation: WidgetStateProperty.all(0),
-                                        backgroundColor: WidgetStateProperty.all(
-                                          Theme.of(context).colorScheme.surfaceContainerHigh,
+                                    child: Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                                          child: SearchBar(
+                                            controller: _searchController,
+                                            hintText: tr('searchSettings'),
+                                            leading: const Icon(Icons.search),
+                                            elevation: WidgetStateProperty.all(0),
+                                            backgroundColor: WidgetStateProperty.all(
+                                              Theme.of(context).colorScheme.surfaceContainerHigh,
+                                            ),
+                                            shape: WidgetStateProperty.all(
+                                              const StadiumBorder(),
+                                            ),
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _searchQuery = value;
+                                              });
+                                            },
+                                            trailing: [
+                                              if (isSearching)
+                                                IconButton(
+                                                  icon: const Icon(Icons.clear),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _searchQuery = '';
+                                                      _searchController.clear();
+                                                    });
+                                                  },
+                                                )
+                                            ],
+                                          ),
                                         ),
-                                        shape: WidgetStateProperty.all(
-                                          const StadiumBorder(),
-                                        ),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _searchQuery = value;
-                                          });
-                                        },
-                                        trailing: [
-                                          if (isSearching)
-                                            IconButton(
-                                              icon: const Icon(Icons.clear),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _searchQuery = '';
-                                                  _searchController.clear();
-                                                });
-                                              },
-                                            )
-                                        ],
-                                      ),
+                                        if (!isSearching) const SetupAssistantSection(),
+                                        if (!isSearching)
+                                          SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                            child: Row(
+                                              children: [
+                                                _buildQuickToggle(
+                                                  context,
+                                                  icon: Icons.sync_outlined,
+                                                  label: 'Updates',
+                                                  value: settingsProvider.updateInterval > 0,
+                                                  onChanged: (val) => settingsProvider.updateInterval = val ? 360 : 0,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                ActionChip(
+                                                  avatar: Icon(
+                                                    settingsProvider.theme == ThemeSettings.system ? Icons.brightness_auto : 
+                                                    settingsProvider.theme == ThemeSettings.light ? Icons.light_mode : Icons.dark_mode,
+                                                    size: 16,
+                                                  ),
+                                                  label: Text(
+                                                    settingsProvider.theme == ThemeSettings.system ? 'System' : 
+                                                    settingsProvider.theme == ThemeSettings.light ? 'Light' : 'Dark',
+                                                    style: const TextStyle(fontSize: 12),
+                                                  ),
+                                                  onPressed: () => _cycleTheme(settingsProvider),
+                                                  shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                _buildQuickToggle(
+                                                  context,
+                                                  icon: Icons.check_circle_outline,
+                                                  label: 'Installed',
+                                                  value: settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
+                                                  onChanged: (val) => settingsProvider.onlyCheckInstalledOrTrackOnlyApps = val,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                _buildQuickToggle(
+                                                  context,
+                                                  icon: Icons.category_outlined,
+                                                  label: 'Categories',
+                                                  value: settingsProvider.groupByCategory,
+                                                  onChanged: (val) => settingsProvider.groupByCategory = val,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                _buildQuickToggle(
+                                                  context,
+                                                  icon: Icons.bolt_outlined,
+                                                  label: 'Shizuku',
+                                                  value: settingsProvider.useShizuku,
+                                                  onChanged: (val) => settingsProvider.useShizuku = val,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
                         
-                                  // 3. Settings Content
+                                  // 3. Settings Content (Material 3 Expressive Groups)
                                   SliverPadding(
-                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     sliver: SliverList(
-                                          delegate: SliverChildListDelegate([
-                    // --- SEARCH RESULTS (FLATTENED) ---
-                    if (isSearching) ...[
-                        SettingsGroup(
-                          title: tr('suggested'),
-                          children: [
-                            if (_matches(tr('enableBackgroundUpdates')))
-                              SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.sync_outlined),
-                                title: Text(tr('enableBackgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
-                                subtitle: Text(tr('backgroundUpdatesDescription')),
-                                value: settingsProvider.updateInterval > 0,
-                                onChanged: (value) {
-                                  settingsProvider.updateInterval = value ? 60 : 0;
-                                },
-                              ),
-                            if (_matches(tr('batteryOpt')))
-                              SwitchListTile.adaptive(
-                                secondary: const Icon(Icons.battery_saver_outlined),
-                                title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
-                                subtitle: Text("${tr('batteryOptDescription')} (${_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')})"),
-                                value: _isIgnoringBatteryOptimizations,
-                                onChanged: (value) async {
-                                  if (!_isIgnoringBatteryOptimizations) {
-                                    await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-                                    _checkBatteryStatus();
-                                  }
-                                },
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        ThemeSettingsSection(
-                          androidInfoFuture: _androidInfoFuture,
-                          colorsNameMap: colorsNameMap,
-                          searchQuery: _searchQuery,
-                        ),
-                        const SizedBox(height: 24),
-                        UpdateSettingsSection(
-                          showIntervalLabel: showIntervalLabel,
-                          onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
-                          androidInfoFuture: _androidInfoFuture,
-                          searchQuery: _searchQuery,
-                        ),
-                        if (sourceSpecificFields.isNotEmpty) ...[
-                          const SizedBox(height: 24),
-                          SettingsGroup(
-                            title: tr('sourceSpecific'),
-                            children: sourceSpecificFields.toList(),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                        AppsViewSettingsSection(onSetState: setState, searchQuery: _searchQuery),
-                        const SizedBox(height: 24),
-                        BehaviorSettingsSection(
-                          sortDropdown: sortDropdown,
-                          orderDropdown: orderDropdown,
-                          localeDropdown: localeDropdown,
-                          searchQuery: _searchQuery,
-                        ),
-                        const SizedBox(height: 24),
-                        AdvancedSettingsSection(searchQuery: _searchQuery),
-                        const SizedBox(height: 24),
-                        TroubleshootingSection(searchQuery: _searchQuery),
-                    ] else ...[
-                        // --- MENU MODE ---
-                        if (_useGridView)
-                          GridView.count(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 1.2,
-                            children: [
-                              _buildHubCard(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), subtitle: tr('plusFeaturesDescription'), builder: _hubBuilderPlus),
-                              _buildHubCard(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), subtitle: tr('updatesDescription'), builder: _hubBuilderUpdates),
-                              _buildHubCard(context, icon: Icons.palette_outlined, title: tr('theming'), subtitle: tr('themingDescription'), builder: _hubBuilderTheming),
-                              _buildHubCard(context, icon: Icons.grid_view_outlined, title: tr('layout'), subtitle: tr('layoutDescription'), builder: _hubBuilderLayout),
-                              _buildHubCard(context, icon: Icons.backup_outlined, title: tr('backupAndSync'), subtitle: tr('backupAndSyncDescription'), builder: _hubBuilderBackup),
-                              _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
-                              _buildHubCard(context, icon: Icons.bug_report_outlined, title: tr('advanced'), subtitle: tr('advancedDescription'), builder: _hubBuilderAdvanced),
-                            ],
-                          )
-                        else
-                          Card(
-                            elevation: 0,
-                            margin: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
-                            ),
-                            child: Column(children: [
-                              _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), builder: _hubBuilderPlus),
-                              _buildSubMenuTile(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), builder: _hubBuilderUpdates),
-                              _buildSubMenuTile(context, icon: Icons.palette_outlined, title: tr('theming'), builder: _hubBuilderTheming),
-                              _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: tr('layout'), builder: _hubBuilderLayout),
-                              _buildSubMenuTile(context, icon: Icons.backup_outlined, title: tr('backupAndSync'), builder: _hubBuilderBackup),
-                              _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), builder: _hubBuilderStats),
-                              _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: tr('advanced'), builder: _hubBuilderAdvanced),
-                            ]),
-                          ),
-                    ],
-                    // --- SECTION: ABOUT ---
+                                      delegate: SliverChildListDelegate([
+                                        if (isSearching) ...[
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: tr('suggested'),
+                                            children: [
+                                              if (_matches(tr('enableBackgroundUpdates')))
+                                                SwitchListTile.adaptive(
+                                                  secondary: const Icon(Icons.sync_outlined),
+                                                  title: Text(tr('enableBackgroundUpdates'), style: Theme.of(context).textTheme.bodyLarge),
+                                                  subtitle: Text(tr('backgroundUpdatesDescription')),
+                                                  value: settingsProvider.updateInterval > 0,
+                                                  onChanged: (value) {
+                                                    settingsProvider.updateInterval = value ? 60 : 0;
+                                                  },
+                                                ),
+                                              if (_matches(tr('batteryOpt')))
+                                                SwitchListTile.adaptive(
+                                                  secondary: const Icon(Icons.battery_saver_outlined),
+                                                  title: Text(tr('batteryOpt'), style: Theme.of(context).textTheme.bodyLarge),
+                                                  subtitle: Text("${tr('batteryOptDescription')} (${_isIgnoringBatteryOptimizations ? tr('enabled') : tr('disabled')})"),
+                                                  value: _isIgnoringBatteryOptimizations,
+                                                  onChanged: (value) async {
+                                                    if (!_isIgnoringBatteryOptimizations) {
+                                                      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                                                      _checkBatteryStatus();
+                                                    }
+                                                  },
+                                                ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: tr('theme'),
+                                            children: [
+                                              ThemeSettingsSection(
+                                                androidInfoFuture: _androidInfoFuture,
+                                                colorsNameMap: colorsNameMap,
+                                                searchQuery: _searchQuery,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: tr('updatesAndAutomation'),
+                                            children: [
+                                              UpdateSettingsSection(
+                                                showIntervalLabel: showIntervalLabel,
+                                                onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
+                                                androidInfoFuture: _androidInfoFuture,
+                                                searchQuery: _searchQuery,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: tr('layout'),
+                                            children: [
+                                              AppsViewSettingsSection(onSetState: setState, searchQuery: _searchQuery),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: tr('appBehavior'),
+                                            children: [
+                                              BehaviorSettingsSection(
+                                                sortDropdown: sortDropdown,
+                                                orderDropdown: orderDropdown,
+                                                localeDropdown: localeDropdown,
+                                                searchQuery: _searchQuery,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: tr('advancedAndTroubleshooting'),
+                                            children: [
+                                              AdvancedSettingsSection(searchQuery: _searchQuery),
+                                              const Divider(height: 1, indent: 56, endIndent: 16),
+                                              TroubleshootingSection(searchQuery: _searchQuery),
+                                            ],
+                                          ),
+                                        ] else ...[
+                                          // Standard Menu Mode
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: 'Obtainium+ Features',
+                                            children: [
+                                              _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: 'Obtainium+ Features', builder: _hubBuilderPlus, subtitle: tr('plusFeaturesDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.sync_outlined, title: 'Updates & Automation', builder: _hubBuilderUpdates, subtitle: tr('updatesDescription')),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: 'Personalization',
+                                            children: [
+                                              _buildSubMenuTile(context, icon: Icons.palette_outlined, title: 'Appearance', builder: _hubBuilderTheming, subtitle: tr('themingDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: 'Layout', builder: _hubBuilderLayout, subtitle: tr('layoutDescription')),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: 'Data & Insights',
+                                            children: [
+                                              _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: 'Statistics', builder: _hubBuilderStats, subtitle: tr('statisticsDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.backup_outlined, title: 'Backup & Sync', builder: _hubBuilderBackup, subtitle: tr('backupAndSyncDescription')),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _buildExpressiveGroup(
+                                            context,
+                                            title: 'Advanced & Support',
+                                            children: [
+                                              _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: 'Advanced Settings', builder: _hubBuilderAdvanced, subtitle: tr('advancedDescription')),
+                                              if (settingsProvider.plusDeveloperMode)
+                                                _buildSubMenuTile(context, icon: Icons.code_rounded, title: 'Dev & Logs', builder: (ctx) => const DeveloperSettingsPage(), subtitle: 'Debug tools and logs'),
+                                            ],
+                                          ),
+                                        ],
+                                      ]),
+                                    ),
+                                  ),
                     const SizedBox(height: 24),
                     SettingsGroup(
                       title: null,
@@ -575,16 +756,31 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                 onTap: () => launchUrlString('https://apps.obtainium.imranr.dev/', mode: LaunchMode.externalApplication),
                               ),
                               _buildAboutIcon(context,
-                                icon: Icons.bug_report_outlined,
-                                label: tr('appLogs'),
-                                onTap: () => context.read<LogsProvider>().get().then((logs) {
+                                icon: Icons.info_outline_rounded,
+                                label: 'App Info',
+                                onTap: () async {
+                                  final info = await DeviceInfoPlugin().androidInfo;
                                   if (!mounted) return;
-                                  if (logs.isEmpty) {
-                                    showMessage(ObtainiumError(tr('noLogs')), context);
-                                  } else {
-                                    showDialog(context: context, builder: (_) => const LogsDialog());
-                                  }
-                                }),
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Obtainium+ Info'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Version: ${tr('version')}'), // Assuming there's a version tr
+                                          const SizedBox(height: 8),
+                                          Text('Device: ${info.model}'),
+                                          Text('Android: ${info.version.release} (API ${info.version.sdkInt})'),
+                                          const SizedBox(height: 8),
+                                          const Text('A modernized source-first app updater.'),
+                                        ],
+                                      ),
+                                      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('close')))],
+                                    ),
+                                  );
+                                },
                                 onLongPress: () {
                                   settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
                                   HapticFeedback.heavyImpact();
@@ -612,6 +808,30 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         content: Text(message is ObtainiumError ? message.message : message.toString()),
         behavior: SnackBarBehavior.floating,
       ),
+    );
+  }
+void _cycleTheme(SettingsProvider sp) {
+  final next = ThemeSettings.values[(sp.theme.index + 1) % ThemeSettings.values.length];
+  sp.theme = next;
+  HapticFeedback.mediumImpact();
+}
+
+Widget _buildQuickToggle(BuildContext context, {required IconData icon, required String label, required bool value, required Function(bool) onChanged}) {
+...
+
+    return FilterChip(
+      avatar: Icon(icon, size: 16, color: value ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant),
+      label: Text(label, style: TextStyle(fontSize: 12, color: value ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface)),
+      selected: value,
+      onSelected: (val) {
+        HapticFeedback.selectionClick();
+        onChanged(val);
+      },
+      selectedColor: Theme.of(context).colorScheme.primary,
+      checkmarkColor: Theme.of(context).colorScheme.onPrimary,
+      showCheckmark: false,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5))),
     );
   }
 
@@ -768,17 +988,23 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                 children: [
                   Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 12),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
+                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          title,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        InfoTooltip(message: subtitle, size: 14, padding: const EdgeInsets.only(left: 4)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                  ...
+
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -795,12 +1021,70 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     );
   }
 
-  Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, required Widget Function(BuildContext) builder}) {
+  Widget _buildExpressiveGroup(BuildContext context, {required String title, required List<Widget> children}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Column(
+              children: children.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final child = entry.value;
+                return Column(
+                  children: [
+                    child,
+                    if (idx < children.length - 1)
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required Widget Function(BuildContext) builder}) {
         return ListTile(
-          leading: Icon(icon),
-          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          ),
+          title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+          subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall) : null,
           trailing: const Icon(Icons.chevron_right, size: 20),
           onTap: () {
+            HapticFeedback.selectionClick();
             showModalBottomSheet(
               context: context,
               isScrollControlled: true,
