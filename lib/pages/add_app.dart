@@ -104,6 +104,7 @@ class AddAppPageState extends State<AddAppPage> {
         showUnsupportedSourceDialog(
           context: context,
           suggestedSources: supportedSources.take(8).toList(),
+          failedUrl: input, // Pass the failed URL for debugging
         );
       } else {
         showError(e, context);
