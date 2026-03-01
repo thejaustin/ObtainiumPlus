@@ -129,62 +129,82 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
     runObtainiumExport({bool pickOnly = false}) async {
       HapticFeedback.selectionClick();
-      appsProvider
-          .export(
-            pickOnly:
-                pickOnly || (await settingsProvider.getExportDir()) == null,
-            sp: settingsProvider,
-          )
-          .then((String? result) {
-            if (result != null) {
-              showMessage(tr('exportedTo', args: [result]), context);
-            }
-          })
-          .catchError((e) {
-            showError(e, context);
-          });
+      try {
+        // Check if file picker is available
+        if (!pickOnly && !await FilePicker.platform.isAvailable) {
+          throw ObtainiumError('File picker is not available on this device');
+        }
+
+        final result = await appsProvider.export(
+          pickOnly:
+              pickOnly || (await settingsProvider.getExportDir()) == null,
+          sp: settingsProvider,
+        );
+        if (result != null) {
+          showMessage(tr('exportedTo', args: [result]), context);
+        }
+      } catch (e) {
+        if (e is! PlatformException || e.toString().contains('No activity')) {
+          showError(e, context);
+        }
+      }
     }
 
     runObtainiumImport() async {
       HapticFeedback.selectionClick();
       try {
-        final result = await FilePicker.platform.pickFiles();
-        if (result != null && result.files.length == 1 && result.files.first.path != null) {
-          setState(() {
-            importInProgress = true;
-          });
-          
-          // Read file asynchronously
-          final file = File(result.files.first.path!);
-          final data = await file.readAsString();
-          
-          // Decode JSON in a background isolate if it's large, but here we can just await
-          // Actually, let's use compute for jsonDecode to be safe
-          try {
-            await foundation.compute(jsonDecode, data);
-          } catch (e) {
-            throw ObtainiumError(tr('invalidInput'));
-          }
+        // Check if file picker is available
+        if (!await FilePicker.platform.isAvailable) {
+          throw ObtainiumError('File picker is not available on this device');
+        }
 
-          final value = await appsProvider.import(data);
-          var cats = settingsProvider.categories;
-          for (var entry in value.key) {
-            for (var c in entry.categories) {
-              if (!cats.containsKey(c)) {
-                cats[c] = generateRandomLightColor().value;
-              }
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['json'],
+          allowMultiple: false,
+        );
+
+        if (result == null || result.files.isEmpty || result.files.first.path == null) {
+          // User cancelled
+          return;
+        }
+
+        setState(() {
+          importInProgress = true;
+        });
+
+        // Read file asynchronously
+        final file = File(result.files.first.path!);
+        final data = await file.readAsString();
+
+        // Decode JSON in a background isolate if it's large
+        try {
+          await foundation.compute(jsonDecode, data);
+        } catch (e) {
+          throw ObtainiumError(tr('invalidInput'));
+        }
+
+        final value = await appsProvider.import(data);
+        var cats = settingsProvider.categories;
+        for (var entry in value.key) {
+          for (var c in entry.categories) {
+            if (!cats.containsKey(c)) {
+              cats[c] = generateRandomLightColor().value;
             }
           }
-          appsProvider.addMissingCategories(settingsProvider);
-          if (mounted) {
-            showMessage(
-              '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
-              context,
-            );
-          }
+        }
+        appsProvider.addMissingCategories(settingsProvider);
+        if (mounted) {
+          showMessage(
+            '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
+            context,
+          );
         }
       } catch (e) {
-        if (mounted) showError(e, context);
+        if (e is! PlatformException || e.toString().contains('No activity')) {
+          if (mounted) showError(e, context);
+        }
+        // Silently ignore PlatformException for "No activity" - user cancelled
       } finally {
         if (mounted) {
           setState(() {
@@ -196,43 +216,58 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
     runUrlImport() async {
       try {
-        final result = await FilePicker.platform.pickFiles();
-        if (result != null && result.files.length == 1 && result.files.first.path != null) {
-          setState(() {
-            importInProgress = true;
-          });
-          
-          final file = File(result.files.first.path!);
-          final content = await file.readAsString();
-          
-          // Process URLs in background to avoid freezing UI if file is huge
-          final urls = await foundation.compute((String text) {
-            return RegExp('https?://[^"]+')
-                .allMatches(text)
-                .map((e) => e.input.substring(e.start, e.end))
-                .toSet()
-                .toList();
-          }, content);
+        // Check if file picker is available
+        if (!await FilePicker.platform.isAvailable) {
+          throw ObtainiumError('File picker is not available on this device');
+        }
 
-          // Filter valid sources - this might also be heavy
-          final validUrls = urls.where((url) {
-            try {
-              sourceProvider.getSource(url);
-              return true;
-            } catch (e) {
-              return false;
-            }
-          }).join('\n');
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['json', 'txt', 'html'],
+          allowMultiple: false,
+        );
 
-          if (mounted) {
-            urlListImport(
-              overrideInitValid: true,
-              initValue: validUrls,
-            );
+        if (result == null || result.files.isEmpty || result.files.first.path == null) {
+          // User cancelled
+          return;
+        }
+
+        setState(() {
+          importInProgress = true;
+        });
+
+        final file = File(result.files.first.path!);
+        final content = await file.readAsString();
+
+        // Process URLs in background to avoid freezing UI if file is huge
+        final urls = await foundation.compute((String text) {
+          return RegExp('https?://[^"]+')
+              .allMatches(text)
+              .map((e) => e.input.substring(e.start, e.end))
+              .toSet()
+              .toList();
+        }, content);
+
+        // Filter valid sources - this might also be heavy
+        final validUrls = urls.where((url) {
+          try {
+            sourceProvider.getSource(url);
+            return true;
+          } catch (e) {
+            return false;
           }
+        }).join('\n');
+
+        if (mounted) {
+          urlListImport(
+            overrideInitValid: true,
+            initValue: validUrls,
+          );
         }
       } catch (e) {
-        if (mounted) showError(e, context);
+        if (e is! PlatformException || e.toString().contains('No activity')) {
+          if (mounted) showError(e, context);
+        }
       } finally {
         if (mounted) {
           setState(() {
