@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/crash_analytics.dart';
 
 /// LRU Cache for app icons to manage memory usage
 class IconLRUCache {
@@ -139,6 +140,13 @@ class AppIconService {
             cachedIcon.deleteSync();
           }
         } catch (_) {}
+        
+        // Log to crash analytics for debugging
+        await CrashAnalytics.recordCrash(
+          errorType: 'IconCacheReadError',
+          errorMessage: 'Failed to read cached icon for $appId: ${e.toString()}',
+        );
+        
         icon = null;
       }
 
