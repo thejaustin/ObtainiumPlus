@@ -146,7 +146,9 @@ class AppUpdateService {
               if (e is NoReleasesError && e.appId == null) e.appId = appId;
               if (e is NoAPKError && e.appId == null) e.appId = appId;
               if (e is NoVersionError && e.appId == null) e.appId = appId;
-              errors.add(appId, e, appName: apps[appId]?.name, stackTrace: stackTrace);
+              // Safely get app name with null check
+              final appName = apps[appId]?.name;
+              errors.add(appId, e, appName: appName, stackTrace: stackTrace);
             }
             if (newApp != null) {
               updates.add(newApp);

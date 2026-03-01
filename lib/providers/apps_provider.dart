@@ -82,9 +82,9 @@ class AppsProvider with ChangeNotifier {
   
   Directory? _APKDir;
   Directory? _iconsCacheDir;
-  
-  Directory get APKDir => _APKDir!;
-  Directory get iconsCacheDir => _iconsCacheDir!;
+
+  Directory? get APKDir => _APKDir;
+  Directory? get iconsCacheDir => _iconsCacheDir;
 
   late SettingsProvider settingsProvider;
 
@@ -172,12 +172,18 @@ class AppsProvider with ChangeNotifier {
     bool useExisting = true,
   }) async {
     await initializationDone;
+    
+    // Check if directories are initialized
+    if (APKDir == null) {
+      throw ObtainiumError('Storage not initialized. Please restart the app.');
+    }
+    
     Map<String, dynamic> res = await AppDownloadService.downloadApp(
       app: app,
       apps: apps,
       settingsProvider: settingsProvider,
       logs: logs,
-      APKDir: APKDir,
+      APKDir: APKDir!,
       notifyListeners: notifyListeners,
       removeApps: removeApps,
       saveApps: (apps, {bool onlyIfExists = true}) => saveApps(apps, onlyIfExists: onlyIfExists),
@@ -414,10 +420,12 @@ class AppsProvider with ChangeNotifier {
 
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
     await initializationDone;
+    if (iconsCacheDir == null) return;
+    
     await AppIconService.updateAppIcon(
       appId: appId,
       apps: apps,
-      iconsCacheDir: iconsCacheDir,
+      iconsCacheDir: iconsCacheDir!,
       notifyListeners: notifyListeners,
       ignoreCache: ignoreCache,
     );
@@ -425,10 +433,12 @@ class AppsProvider with ChangeNotifier {
 
   Future<void> precacheIcons(List<String> appIds) async {
     await initializationDone;
+    if (iconsCacheDir == null) return;
+    
     await AppIconService.precacheIcons(
       appIds: appIds,
       apps: apps,
-      iconsCacheDir: iconsCacheDir,
+      iconsCacheDir: iconsCacheDir!,
       notifyListeners: notifyListeners,
     );
   }
