@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:intl/intl.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_description_slider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
@@ -1005,7 +1006,7 @@ class _AppPageState extends State<AppPage> {
                       child: Text(
                         app?.app.releaseDate == null
                             ? tr('changes')
-                            : app!.app.releaseDate!.toLocal().toString(),
+                            : DateFormat('MMM d, yyyy • h:mm a').format(app!.app.releaseDate!.toLocal()),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelSmall!
                             .copyWith(

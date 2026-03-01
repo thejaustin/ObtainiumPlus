@@ -439,12 +439,24 @@ class GitHub extends GitSource {
           }).toList() ??
           [];
 
-      DateTime? getPublishDateFromRelease(dynamic rel) =>
-          rel?['published_at'] != null
-          ? tryParseDateTime(rel['published_at'])
-          : rel?['commit']?['created'] != null
-          ? tryParseDateTime(rel['commit']['created'])
-          : null;
+      DateTime? getPublishDateFromRelease(dynamic rel) {
+        DateTime? date = null;
+        if (rel?['published_at'] != null) {
+          date = tryParseDateTime(rel['published_at']);
+          LogsProvider().add(
+            'GitHub API published_at: ${rel['published_at']} → Parsed: $date',
+            level: LogLevels.debug,
+          );
+        }
+        if (date == null && rel?['commit']?['created'] != null) {
+          date = tryParseDateTime(rel['commit']['created']);
+          LogsProvider().add(
+            'GitHub API commit created: ${rel['commit']['created']} → Parsed: $date',
+            level: LogLevels.debug,
+          );
+        }
+        return date;
+      }
       DateTime? getNewestAssetDateFromRelease(dynamic rel) {
         var allAssets = rel['assets'] as List<dynamic>?;
         var filteredAssets = rel['filteredAssets'] as List<dynamic>?;
@@ -638,6 +650,10 @@ class GitHub extends GitSource {
       DateTime? releaseDate = getReleaseDateFromRelease(
         targetRelease,
         useLatestAssetDateAsReleaseDate,
+      );
+      LogsProvider().add(
+        'GitHub final releaseDate for $standardUrl: $releaseDate',
+        level: LogLevels.debug,
       );
       if (version == null) {
         throw NoVersionError();
