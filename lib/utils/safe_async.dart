@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
+import 'package:obtainium/utils/logger.dart';
 
 /// Wrapper for async operations with comprehensive error handling
 class SafeAsync {
@@ -19,8 +20,12 @@ class SafeAsync {
     try {
       final result = await operation();
       onSuccess?.call(result);
+      talker.debug('Operation completed successfully: $operationName');
       return result;
     } catch (e, stack) {
+      // Log to talker
+      talker.handle(e, stack, 'Operation failed: $operationName');
+
       // Log to crash analytics
       await CrashAnalytics.recordCrash(
         errorType: e.runtimeType.toString(),
@@ -45,8 +50,11 @@ class SafeAsync {
     bool rethrow = false,
   }) {
     try {
-      return operation();
-    } catch (e) {
+      final result = operation();
+      talker.debug('Sync operation completed successfully: $operationName');
+      return result;
+    } catch (e, stack) {
+      talker.handle(e, stack, 'Sync operation failed: $operationName');
       onError?.call(e);
       if (rethrow) rethrow;
       return null;

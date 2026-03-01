@@ -9,16 +9,21 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/logger.dart';
 
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
   if (allowInsecure) {
     client.badCertificateCallback =
         ((X509Certificate cert, String host, int port) {
+      final warning = 'WARNING: Accepting insecure certificate for $host:$port '
+          '(subject: ${cert.subject}, issuer: ${cert.issuer}, '
+          'sha1: ${cert.sha1.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':')})';
+
+      talker.warning(warning);
+
       LogsProvider().add(
-        'WARNING: Accepting insecure certificate for $host:$port '
-        '(subject: ${cert.subject}, issuer: ${cert.issuer}, '
-        'sha1: ${cert.sha1.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':')})',
+        warning,
         level: LogLevels.warning,
       );
       return true;
@@ -36,9 +41,13 @@ Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>> sourceRequest
   int maxRedirects = 5,
   bool allowInsecure = false,
 }) async {
+  talker.info('HTTP $method Request: $url');
   var httpClient = createHttpClient(allowInsecure: allowInsecure);
-  var currentUrl = url;
-  for (var i = 0; i <= maxRedirects; i++) {
+...
+      var response = await request.close();
+      talker.debug('HTTP Response: ${response.statusCode} for $url');
+...
+
     var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
     request.followRedirects = false;
     headers.forEach((key, value) {

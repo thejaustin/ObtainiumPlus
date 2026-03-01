@@ -269,9 +269,13 @@ class SourceProvider {
     FDroidRepo(),
     IzzyOnDroid(),
     SourceHut(),
+import 'package:obtainium/app_sources/googleplay_native.dart';
+...
     APKPure(),
     GooglePlay(),
+    GooglePlayNative(),
     Aptoide(),
+...
     Uptodown(),
     HuaweiAppGallery(),
     Tencent(),

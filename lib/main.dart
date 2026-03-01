@@ -14,6 +14,7 @@ import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_config_provider.dart';
+import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -41,6 +42,8 @@ import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/utils/locale_constants.dart';
 import 'package:obtainium/components/error_app.dart';
+import 'package:obtainium/utils/logger.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 var fdroid = false;
 
@@ -81,6 +84,7 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
 }
 
 void main() async {
+  initLogger();
   await SentryFlutter.init(
     (options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
@@ -123,6 +127,10 @@ void main() async {
 
       try {
         await EasyLocalization.ensureInitialized();
+        final sp = await SharedPreferences.getInstance();
+        final settingsProvider = context.read<SettingsProvider>();
+        await settingsProvider.initializeSettings(sp);
+        await context.read<PluginProvider>().initialize(sp);
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         
         final manufacturer = androidInfo.manufacturer.toLowerCase();
@@ -175,6 +183,7 @@ void main() async {
                 ChangeNotifierProvider<BehaviorSettingsProvider>(create: (context) => context.read<SettingsProvider>().behaviorSettings),
                 ChangeNotifierProvider<PlusSettingsProvider>(create: (context) => context.read<SettingsProvider>().plusSettings),
                 ChangeNotifierProvider<SourceConfigProvider>(create: (context) => context.read<SettingsProvider>().sourceConfig),
+                ChangeNotifierProvider<PluginProvider>(create: (context) => PluginProvider()),
                 Provider(create: (context) => np),
                 Provider(create: (context) => LogsProvider()),
               ],
@@ -188,6 +197,7 @@ void main() async {
             ),
           ),
           (error, stack) {
+            talker.handle(error, stack, 'Unhandled Zone Error');
             Sentry.captureException(error, stackTrace: stack).then((id) {
               CrashTracker.recordCrash(id.toString());
               CrashAnalytics.recordCrash(
@@ -206,6 +216,7 @@ void main() async {
         );
         BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
       } catch (e, stackTrace) {
+        talker.handle(e, stackTrace, 'Main Catch Error');
         final sentryId = await Sentry.captureException(e, stackTrace: stackTrace);
         await CrashTracker.recordCrash(sentryId.toString());
         await CrashAnalytics.recordCrash(
@@ -247,6 +258,7 @@ class _ObtainiumState extends State<Obtainium> {
     super.initState();
     // Set custom error widget builder to catch build errors
     ErrorWidget.builder = (FlutterErrorDetails details) {
+      talker.handle(details.exception, details.stack, 'Build Error');
       _buildError = details.exceptionAsString();
       _buildStackTrace = details.stack?.toString();
       Sentry.captureException(details.exception, stackTrace: details.stack).then((id) {
@@ -454,6 +466,7 @@ class _ObtainiumState extends State<Obtainium> {
             debugShowCheckedModeBanner: false,
             navigatorObservers: [
               SentryNavigatorObserver(),
+              TalkerRouteObserver(talker),
             ],
             theme: ThemeBuilder.buildTheme(
               colorScheme: settingsProvider.theme == ThemeSettings.dark
