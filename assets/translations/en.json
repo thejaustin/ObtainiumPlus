@@ -913,5 +913,14 @@
     "scanQRCode": "Scan QR code",
     "scanQRCodeDescription": "Add apps by scanning QR codes",
     "comingSoon": "Coming soon!",
-    "validUrl": "Valid URL"
+    "validUrl": "Valid URL",
+    "editTags": "Edit Tags",
+    "newTag": "New tag...",
+    "existingTags": "Existing Tags",
+    "selectedTags": "Selected Tags",
+    "tags": "Tags",
+    "addTag": "Add tag",
+    "removeTag": "Remove tag",
+    "filterByTags": "Filter by tags",
+    "noTags": "No tags yet"
 }
