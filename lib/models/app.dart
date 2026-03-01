@@ -17,6 +17,7 @@ class App {
   late DateTime? lastUpdateCheck;
   bool pinned = false;
   List<String> categories;
+  List<String> tags;  // NEW: Tags for cross-category organization
   late DateTime? releaseDate;
   late String? changeLog;
   late String? overrideSource;
@@ -35,6 +36,7 @@ class App {
     this.lastUpdateCheck,
     this.pinned, {
     this.categories = const [],
+    this.tags = const [],  // NEW: Default empty tags
     this.releaseDate,
     this.changeLog,
     this.overrideSource,
@@ -78,6 +80,7 @@ class App {
     lastUpdateCheck,
     pinned,
     categories: categories,
+    tags: tags,  // NEW: Copy tags
     changeLog: changeLog,
     releaseDate: releaseDate,
     overrideSource: overrideSource,
@@ -114,6 +117,11 @@ class App {
           : json['category'] != null
           ? [json['category'] as String]
           : [],
+      tags: json['tags'] != null
+          ? (json['tags'] as List<dynamic>)
+                .map((e) => e.toString())
+                .toList()
+          : [],  // NEW: Load tags from JSON
       releaseDate: json['releaseDate'] == null
           ? null
           : DateTime.fromMicrosecondsSinceEpoch(json['releaseDate']),
@@ -140,6 +148,7 @@ class App {
     'lastUpdateCheck': lastUpdateCheck?.microsecondsSinceEpoch,
     'pinned': pinned,
     'categories': categories,
+    'tags': tags,  // NEW: Save tags to JSON
     'releaseDate': releaseDate?.microsecondsSinceEpoch,
     'changeLog': changeLog,
     'overrideSource': overrideSource,
