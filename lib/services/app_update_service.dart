@@ -59,6 +59,10 @@ class AppUpdateService {
     if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
       newApp.preferredApkIndex = currentApp.preferredApkIndex;
     }
+    // Ensure releaseDate is preserved from the source
+    if (newApp.releaseDate == null && currentApp.releaseDate != null) {
+      newApp.releaseDate = currentApp.releaseDate;
+    }
     await saveApps([newApp]);
 
     // Update cache
