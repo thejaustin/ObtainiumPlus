@@ -725,12 +725,12 @@ class _EnhancedPackageInfo {
   factory _EnhancedPackageInfo.fromPackageInfo(PackageInfo pkg) {
     return _EnhancedPackageInfo(
       packageName: pkg.packageName,
-      appName: pkg.applicationInfo?.getAppLabel() ?? pkg.packageName,
+      appName: pkg.applicationInfo?.getAppLabel()?.toString() ?? pkg.packageName,
       icon: null,
       isSystemApp: (pkg.applicationInfo?.flags ?? 0) & 1 != 0,
       size: null,
-      firstInstallTime: pkg.applicationInfo?.firstInstallTime,
-      lastUpdateTime: pkg.applicationInfo?.lastUpdateTime,
+      firstInstallTime: pkg.firstInstallTime,
+      lastUpdateTime: pkg.lastUpdateTime,
     );
   }
 }

@@ -144,6 +144,7 @@ class AppDisplaySection extends StatelessWidget {
       // Group by Category
       _buildDisplayToggle<ViewSettingsProvider>(
         context,
+        key: 'displayGroupByCategory',
         icon: Icons.folder_outlined,
         title: tr('groupByCategory'),
         subtitle: tr('groupByCategoryDescription'),
@@ -151,10 +152,11 @@ class AppDisplaySection extends StatelessWidget {
         onChanged: (s, v) => s.groupByCategory = v,
         visible: (s) => _matches(tr('groupByCategory')),
       ),
-      
+
       // Collapse Categories by Default
       _buildDisplayToggle<ViewSettingsProvider>(
         context,
+        key: 'displayCollapseCategoriesByDefault',
         icon: Icons.unfold_less_outlined,
         title: tr('collapseCategoriesByDefault'),
         subtitle: tr('collapseCategoriesByDefaultDescription'),

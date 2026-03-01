@@ -98,11 +98,11 @@ class AppCRUDService {
     required Map<String, AppInMemory> apps,
     required LogsProvider logs,
     required SettingsProvider settingsProvider,
-    required Directory APKDir,
+    required Directory? APKDir,
     required Function() notifyListeners,
     required Future<String?> Function({bool isAuto}) export,
   }) async {
-    var apkFiles = APKDir.listSync();
+    var apkFiles = APKDir?.listSync() ?? [];
 
     // Store removed apps for potential undo
     for (String appId in appIds) {
