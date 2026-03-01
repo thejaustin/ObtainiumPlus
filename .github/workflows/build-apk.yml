@@ -261,8 +261,8 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.bump_version.outputs.tag }}
-          name: "Obtainium+ ${{ steps.bump_version.outputs.version }}"
+          tag: ${{ steps.bump_version.outputs.tag || format('v{0}', steps.bump_version.outputs.version) || 'latest' }}
+          name: "Obtainium+ ${{ steps.bump_version.outputs.version || 'Latest Build' }}"
           commit: ${{ steps.commit_bump.outputs.sha || github.sha }}
           draft: false
           prerelease: ${{ inputs.beta || false }}
@@ -272,10 +272,10 @@ jobs:
           allowUpdates: true
           skipIfReleaseExists: false
           body: |
-            **Obtainium+ Build #${{ steps.bump_version.outputs.build_number }}**
+            **Obtainium+ Build #${{ steps.bump_version.outputs.build_number || 'Unknown' }}**
 
             ### Version Info
-            - **Version**: ${{ steps.bump_version.outputs.version }}
+            - **Version**: ${{ steps.bump_version.outputs.version || 'Latest' }}
             - **Commit**: [`${{ steps.commit_bump.outputs.sha || github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ steps.commit_bump.outputs.sha || github.sha }})
             - **Build Date**: ${{ github.event.head_commit.timestamp }}
 
