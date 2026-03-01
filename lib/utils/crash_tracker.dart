@@ -10,6 +10,18 @@ class CrashTracker {
   static const issueTrackerUrl =
       'https://github.com/thejaustin/ObtainiumPlus/issues?q=is%3Aissue+label%3Asentry-crash+sort%3Acreated-desc';
 
+  /// Returns a GitHub search URL for the specific recorded crash event ID,
+  /// or the general issue tracker URL if no event ID is found.
+  static Future<String> getSpecificIssueUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    final eventId = prefs.getString(_keyEventId);
+    if (eventId != null && eventId.isNotEmpty && eventId != 'null') {
+      // Searching for the Sentry Event ID in the repo
+      return 'https://github.com/thejaustin/ObtainiumPlus/issues?q=is%3Aissue+label%3Asentry-crash+%22Sentry+%23$eventId%22';
+    }
+    return issueTrackerUrl;
+  }
+
   /// Persists a Sentry event ID so the next app launch can show a follow banner.
   static Future<void> recordCrash(String eventId) async {
     final prefs = await SharedPreferences.getInstance();

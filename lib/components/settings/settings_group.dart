@@ -11,7 +11,8 @@ class SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    // Use listen: false to avoid type mismatch issues when nested in specialized Consumers
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Robustly filter out hidden/empty widgets

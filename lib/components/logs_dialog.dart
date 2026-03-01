@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -64,57 +65,193 @@ $logs''';
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(tr('appLogs')),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 400),
-        child: logString != null
-            ? Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  child: Text(logString!),
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
+              blurRadius: enableGlass ? 20 : 10,
+              spreadRadius: enableGlass ? 0 : -5,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: enableGlass ? 15 : 0,
+              sigmaY: enableGlass ? 15 : 0,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context, enableGlass),
+                const Divider(height: 1),
+                Flexible(
+                  child: _buildContent(context),
                 ),
-              )
-            : FutureBuilder<List<Log>>(
-                future: _logsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final logs = snapshot.data!;
-                    logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
-                    return Scrollbar(
-                      thumbVisibility: true,
-                      child: SingleChildScrollView(
-                        child: Text(logString ?? ''),
-                      ),
-                    );
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
-              ),
+                _buildActions(context),
+              ],
+            ),
+          ),
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('close')),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool enableGlass) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
+            Theme.of(context).colorScheme.primaryContainer.withValues(alpha: enableGlass ? 0.15 : 0.25),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        TextButton(
-          onPressed: () {
-            context.read<LogsProvider>().clear();
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('clearCache')),
-        ),
-        TextButton(
-          onPressed: () {
-            _reportIssue();
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('reportIssue')),
-        ),
-      ],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.bug_report_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              tr('appLogs'),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return logString != null
+        ? Container(
+            padding: const EdgeInsets.all(16),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    logString!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        : FutureBuilder<List<Log>>(
+            future: _logsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final logs = snapshot.data!;
+                logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          logString ?? '',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              } else {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(tr('close')),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<LogsProvider>().clear();
+              Navigator.of(context).pop();
+            },
+            child: Text(tr('clearCache')),
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.bug_report_outlined),
+            onPressed: () {
+              _reportIssue();
+              Navigator.of(context).pop();
+            },
+            label: Text(tr('reportIssue')),
+          ),
+        ],
+      ),
     );
   }
 }

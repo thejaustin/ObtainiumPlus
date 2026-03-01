@@ -789,5 +789,21 @@
     "glassmorphismUI": "Glassmorphism effects",
     "glassmorphismUIDescription": "Enable transparent, blurred UI elements",
     "plusMaterialExpressive": "Material 3 Expressive",
-    "plusMaterialExpressiveDescription": "Enable tactile, bouncy animations and feedback"
+    "plusMaterialExpressiveDescription": "Enable tactile, bouncy animations and feedback",
+    "preferredUpdateSource": "Preferred update source",
+    "allowThirdPartySources": "Allow third-party sources",
+    "allowThirdPartySourcesDescription": "Use mirrors and alternative sources for updates",
+    "usePlayStoreAppLinks": "Use Play Store app links",
+    "usePlayStoreAppLinksDescription": "Open Play Store using HTTPS links instead of intents",
+    "direct": "Direct download",
+    "playStore": "Google Play Store",
+    "sourceOptions": "Source options",
+    "versionOptions": "Version options",
+    "updateViaPlayStore": "Update via Play Store",
+    "editApp": "Edit App",
+    "editAppDescription": "Modify app settings and preferences",
+    "close": "Close",
+    "enterAppUrlOrSearch": "Enter an app URL or search for apps",
+    "basics": "Basics",
+    "potentialFix": "Potential fix"
 }

@@ -27,27 +27,26 @@ class AppsViewSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
-    final settingsProvider = context.watch<SettingsProvider>();
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category')) CategoryEditorSelector(showLabelWhenNotEmpty: false),
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.category_outlined,
         title: tr('groupByCategory'),
         subtitle: tr('groupByCategoryDescription'),
-        value: (SettingsProvider s) => s.groupByCategory,
-        onChanged: (SettingsProvider s, bool v) => s.groupByCategory = v,
-        visible: (SettingsProvider s) => _matches(tr('groupByCategory')),
+        value: (s) => s.groupByCategory,
+        onChanged: (s, v) => onSetState(() => s.groupByCategory = v),
+        visible: (s) => _matches(tr('groupByCategory')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.unfold_less_outlined,
         title: tr('collapseCategoriesByDefault'),
         subtitle: tr('collapseCategoriesByDefaultDescription'),
-        value: (SettingsProvider s) => s.categoriesCollapsedByDefault,
-        onChanged: (SettingsProvider s, bool v) => s.categoriesCollapsedByDefault = v,
-        visible: (SettingsProvider s) => _matches(tr('collapseCategoriesByDefault')),
+        value: (s) => s.categoriesCollapsedByDefault,
+        onChanged: (s, v) => onSetState(() => s.categoriesCollapsedByDefault = v),
+        visible: (s) => _matches(tr('collapseCategoriesByDefault')),
       ),
     ];
 
@@ -60,75 +59,75 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
-      _buildFeatureToggle(
+      _buildFeatureToggle<SettingsProvider>(
         context,
         icon: Icons.pages_outlined,
         title: tr('plusModernAppPage'),
         subtitle: tr('plusModernAppPageDescription'),
-        value: (SettingsProvider s) => s.plusEnableModernAppPage,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableModernAppPage = v,
-        visible: (SettingsProvider s) => _matches(tr('plusModernAppPage')),
+        value: (s) => s.plusEnableModernAppPage,
+        onChanged: (s, v) => onSetState(() => s.plusEnableModernAppPage = v),
+        visible: (s) => _matches(tr('plusModernAppPage')),
       ),
       _buildGridSettings(context),
     ];
 
     List<Widget> displayWidgets = [
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.person_outline,
         title: tr('showAuthor'),
         subtitle: tr('showAuthorDescription'),
-        value: (SettingsProvider s) => s.displayShowAuthor,
-        onChanged: (SettingsProvider s, bool v) => s.displayShowAuthor = v,
-        visible: (SettingsProvider s) => _matches(tr('showAuthor')),
+        value: (s) => s.displayShowAuthor,
+        onChanged: (s, v) => onSetState(() => s.displayShowAuthor = v),
+        visible: (s) => _matches(tr('showAuthor')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.code,
         title: tr('showVersion'),
         subtitle: tr('showVersionDescription'),
-        value: (SettingsProvider s) => s.displayShowVersion,
-        onChanged: (SettingsProvider s, bool v) => s.displayShowVersion = v,
-        visible: (SettingsProvider s) => _matches(tr('showVersion')),
+        value: (s) => s.displayShowVersion,
+        onChanged: (s, v) => onSetState(() => s.displayShowVersion = v),
+        visible: (s) => _matches(tr('showVersion')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.calendar_today_outlined,
         title: tr('showDate'),
         subtitle: tr('showDateDescription'),
-        value: (SettingsProvider s) => s.displayShowDate,
-        onChanged: (SettingsProvider s, bool v) => s.displayShowDate = v,
-        visible: (SettingsProvider s) => _matches(tr('showDate')),
+        value: (s) => s.displayShowDate,
+        onChanged: (s, v) => onSetState(() => s.displayShowDate = v),
+        visible: (s) => _matches(tr('showDate')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<SettingsProvider>(
         context,
         icon: Icons.view_list_rounded,
         title: tr('plusModernAppListTile'),
         subtitle: tr('plusModernAppListTileDescription'),
-        value: (SettingsProvider s) => s.plusEnableModernAppListTile,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableModernAppListTile = v,
-        visible: (SettingsProvider s) => _matches(tr('plusModernAppListTile')),
+        value: (s) => s.plusEnableModernAppListTile,
+        onChanged: (s, v) => onSetState(() => s.plusEnableModernAppListTile = v),
+        visible: (s) => _matches(tr('plusModernAppListTile')),
       ),
     ];
 
     List<Widget> headerWidgets = [
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.filter_list_outlined,
         title: tr('showFilterChips'),
         subtitle: tr('showFilterChipsDescription'),
-        value: (SettingsProvider s) => s.displayShowFilterChips,
-        onChanged: (SettingsProvider s, bool v) => s.displayShowFilterChips = v,
-        visible: (SettingsProvider s) => _matches(tr('showFilterChips')),
+        value: (s) => s.displayShowFilterChips,
+        onChanged: (s, v) => onSetState(() => s.displayShowFilterChips = v),
+        visible: (s) => _matches(tr('showFilterChips')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.summarize_outlined,
         title: tr('showAppCount'),
         subtitle: tr('showAppCountDescription'),
-        value: (SettingsProvider s) => s.displayShowAppCount,
-        onChanged: (SettingsProvider s, bool v) => s.displayShowAppCount = v,
-        visible: (SettingsProvider s) => _matches(tr('showAppCount')),
+        value: (s) => s.displayShowAppCount,
+        onChanged: (s, v) => onSetState(() => s.displayShowAppCount = v),
+        visible: (s) => _matches(tr('showAppCount')),
       ),
     ];
 
@@ -341,16 +340,16 @@ class AppsViewSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureToggle(
+  Widget _buildFeatureToggle<T extends ChangeNotifier>(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required bool Function(SettingsProvider) value,
-    required void Function(SettingsProvider, bool) onChanged,
-    required bool Function(SettingsProvider) visible,
+    required dynamic Function(T) value,
+    required void Function(T, bool) onChanged,
+    required bool Function(T) visible,
   }) {
-    return Consumer<SettingsProvider>(
+    return Consumer<T>(
       builder: (context, settings, child) {
         if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(

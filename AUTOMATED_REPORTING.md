@@ -45,7 +45,7 @@ You can trigger an automated issue creation by sending a POST request to the Git
 curl -X POST 
   -H "Accept: application/vnd.github.v3+json" 
   -H "Authorization: token YOUR_GITHUB_TOKEN" 
-  https://api.github.com/repos/OWNER/REPO/dispatches 
+  https://api.github.com/repos/thejaustin/ObtainiumPlus/dispatches 
   -d '{"event_type": "crash_report", "client_payload": {"error": "Example Error", "version": "1.0.0", "stackTrace": "..."}}'
 ```
 
@@ -58,4 +58,4 @@ Every push to `main` (that isn't an auto-bump) triggers:
 
 ## 5. Built-in Error UI
 
-Even if Sentry is not configured, the app includes a fallback Error UI (`ErrorApp` and `_buildErrorWidget`) that displays stack traces directly to the user, allowing them to manually copy and report issues using the [Crash Report Template](https://github.com/OWNER/REPO/issues/new?template=crash_report.md).
+Even if Sentry is not configured, the app includes a fallback Error UI (`ErrorApp` and `_buildErrorWidget`) that displays stack traces directly to the user, allowing them to manually copy and report issues using the [Crash Report Template](https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md).

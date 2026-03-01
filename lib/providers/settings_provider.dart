@@ -857,4 +857,22 @@ class SettingsProvider with ChangeNotifier {
       behaviorSettings.swipeLeftAction = val;
       notifyListeners();
     }
+
+  String get preferredUpdateSource => behaviorSettings.preferredUpdateSource;
+  set preferredUpdateSource(String val) {
+      behaviorSettings.preferredUpdateSource = val;
+      notifyListeners();
+    }
+
+  bool get allowThirdPartySources => behaviorSettings.allowThirdPartySources;
+  set allowThirdPartySources(bool val) {
+      behaviorSettings.allowThirdPartySources = val;
+      notifyListeners();
+    }
+
+  bool get usePlayStoreAppLinks => behaviorSettings.usePlayStoreAppLinks;
+  set usePlayStoreAppLinks(bool val) {
+      behaviorSettings.usePlayStoreAppLinks = val;
+      notifyListeners();
+    }
 }

@@ -315,34 +315,37 @@ class HomePageState extends State<HomePage> {
       }
       // Show follow-issue banner if a crash was recorded in the last session.
       if (await CrashTracker.hasPendingCrash() && mounted) {
+        final issueUrl = await CrashTracker.getSpecificIssueUrl();
         await CrashTracker.clearPendingCrash();
-        ScaffoldMessenger.of(context).showMaterialBanner(
-          MaterialBanner(
-            leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-            content: const Text(
-              'A crash was detected in your last session. Follow the issue on GitHub to be notified when it\'s fixed.',
+        if (mounted) {
+          ScaffoldMessenger.of(context).showMaterialBanner(
+            MaterialBanner(
+              leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              content: const Text(
+                'A crash was detected in your last session. Follow the issue on GitHub to be notified when it\'s fixed.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () =>
+                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+                  child: const Text('Dismiss'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                    try {
+                      await launchUrlString(
+                        issueUrl,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } catch (_) {}
+                  },
+                  child: const Text('Follow Issue'),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () =>
-                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                child: const Text('Dismiss'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-                  try {
-                    await launchUrlString(
-                      CrashTracker.issueTrackerUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  } catch (_) {}
-                },
-                child: const Text('Follow Issue'),
-              ),
-            ],
-          ),
-        );
+          );
+        }
       }
 
       // Show critical issue dialogs for the running version.
@@ -498,6 +501,7 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> switchToPage(int index) async {
+    if (index < 0 || index >= activePages.length) return;
     setIsReversing(index);
     if (index == 0) {
       setState(() {
