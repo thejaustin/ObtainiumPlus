@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -37,6 +38,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
+import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/utils/locale_constants.dart';
 import 'package:obtainium/components/error_app.dart';
 
@@ -44,12 +46,66 @@ var fdroid = false;
 
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Filters out expected Shizuku-related exceptions so they don't pollute
+/// the Sentry dashboard (mirrors hexodus's filterShizukuNoise logic).
+SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
+  final exceptions = event.exceptions;
+  if (exceptions == null || exceptions.isEmpty) return event;
+
+  for (final ex in exceptions) {
+    final type = ex.type ?? '';
+    final value = (ex.value ?? '').toLowerCase();
+
+    // Shizuku binder died — happens whenever Shizuku stops/restarts
+    if (type.contains('DeadObjectException')) return null;
+
+    // Permission denied before Shizuku grants access
+    if (type.contains('SecurityException') && value.contains('shizuku')) {
+      return null;
+    }
+
+    // Shizuku IPC failures — check for shizuku frames in the stack
+    if (type.contains('RemoteException')) {
+      final frames = ex.stackTrace?.frames ?? [];
+      final hasShizukuFrame = frames.any(
+        (f) =>
+            (f.package ?? '').toLowerCase().contains('shizuku') ||
+            (f.absPath ?? '').toLowerCase().contains('shizuku') ||
+            (f.className ?? '').toLowerCase().contains('shizuku'),
+      );
+      if (hasShizukuFrame) return null;
+    }
+  }
+
+  return event;
+}
+
 void main() async {
   await SentryFlutter.init(
     (options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
-      options.tracesSampleRate = 1.0;
+
+      // Performance — keep sample rates low to avoid overwhelming Sentry
+      options.tracesSampleRate = 0.2;
+      options.profilesSampleRate = 0.1;
+
+      // Session health tracking (mirrors hexodus isEnableAutoSessionTracking)
+      options.enableAutoSessionTracking = true;
+
+      // Always include stack traces
       options.attachStacktrace = true;
+
+      // Privacy — never send PII or screenshots (hexodus parity)
+      options.sendDefaultPii = false;
+      options.attachScreenshot = false;
+
+      // Flutter-specific breadcrumbs (mirrors hexodus lifecycle/system breadcrumbs)
+      options.enableWindowMetricBreadcrumbs = true;
+      options.enableBrightnessChangeBreadcrumbs = true;
+      options.enableTextScaleChangeBreadcrumbs = true;
+
+      // Filter out expected Shizuku exceptions (hexodus parity)
+      options.beforeSend = _filterShizukuNoise;
     },
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();
@@ -69,12 +125,25 @@ void main() async {
         await EasyLocalization.ensureInitialized();
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         
+        final manufacturer = androidInfo.manufacturer.toLowerCase();
+        final isSamsung = manufacturer == 'samsung';
+        final isFoldable =
+            androidInfo.model.toLowerCase().contains('fold') ||
+            androidInfo.model.toLowerCase().contains('flip');
+
         Sentry.configureScope((scope) {
           scope.setTag('android_sdk', androidInfo.version.sdkInt.toString());
           scope.setTag('device', androidInfo.model);
+          // Extended device tags (hexodus parity)
+          scope.setTag('manufacturer', manufacturer);
+          scope.setTag('device_model', androidInfo.model);
+          scope.setTag('android_api', androidInfo.version.sdkInt.toString());
+          scope.setTag('is_samsung', isSamsung.toString());
+          scope.setTag('is_foldable', isFoldable.toString());
           scope.setContexts('android_device', {
             'model': androidInfo.model,
             'brand': androidInfo.brand,
+            'manufacturer': androidInfo.manufacturer,
             'version': androidInfo.version.release,
             'sdk': androidInfo.version.sdkInt,
           });
@@ -89,30 +158,51 @@ void main() async {
         final np = NotificationsProvider();
         await np.initialize();
         FlutterForegroundTask.initCommunicationPort();
-        runApp(
-          MultiProvider(
-            providers: [
-              ChangeNotifierProvider(create: (context) => SettingsProvider()),
-              ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
-                create: (ctx) => AppsProvider(settings: ctx.read<SettingsProvider>()),
-                update: (ctx, settings, apps) => apps!..settingsProvider = settings,
+
+        // Zone guard catches unhandled async errors that escape the widget tree
+        // (mirrors hexodus's zone-level error boundary pattern)
+        runZonedGuarded(
+          () => runApp(
+            MultiProvider(
+              providers: [
+                ChangeNotifierProvider(create: (context) => SettingsProvider()),
+                ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
+                  create: (ctx) => AppsProvider(settings: ctx.read<SettingsProvider>()),
+                  update: (ctx, settings, apps) => apps!..settingsProvider = settings,
+                ),
+                ChangeNotifierProvider<UpdateSettingsProvider>(create: (context) => context.read<SettingsProvider>().updateSettings),
+                ChangeNotifierProvider<ViewSettingsProvider>(create: (context) => context.read<SettingsProvider>().viewSettings),
+                ChangeNotifierProvider<BehaviorSettingsProvider>(create: (context) => context.read<SettingsProvider>().behaviorSettings),
+                ChangeNotifierProvider<PlusSettingsProvider>(create: (context) => context.read<SettingsProvider>().plusSettings),
+                ChangeNotifierProvider<SourceConfigProvider>(create: (context) => context.read<SettingsProvider>().sourceConfig),
+                Provider(create: (context) => np),
+                Provider(create: (context) => LogsProvider()),
+              ],
+              child: EasyLocalization(
+                supportedLocales: supportedLocales.map((e) => e.key).toList(),
+                path: localeDir,
+                fallbackLocale: fallbackLocale,
+                useOnlyLangCode: false,
+                child: const Obtainium(),
               ),
-              ChangeNotifierProvider<UpdateSettingsProvider>(create: (context) => context.read<SettingsProvider>().updateSettings),
-              ChangeNotifierProvider<ViewSettingsProvider>(create: (context) => context.read<SettingsProvider>().viewSettings),
-              ChangeNotifierProvider<BehaviorSettingsProvider>(create: (context) => context.read<SettingsProvider>().behaviorSettings),
-              ChangeNotifierProvider<PlusSettingsProvider>(create: (context) => context.read<SettingsProvider>().plusSettings),
-              ChangeNotifierProvider<SourceConfigProvider>(create: (context) => context.read<SettingsProvider>().sourceConfig),
-              Provider(create: (context) => np),
-              Provider(create: (context) => LogsProvider()),
-            ],
-            child: EasyLocalization(
-              supportedLocales: supportedLocales.map((e) => e.key).toList(),
-              path: localeDir,
-              fallbackLocale: fallbackLocale,
-              useOnlyLangCode: false,
-              child: const Obtainium(),
             ),
           ),
+          (error, stack) {
+            Sentry.captureException(error, stackTrace: stack).then((id) {
+              CrashTracker.recordCrash(id.toString());
+              CrashAnalytics.recordCrash(
+                errorType: error.runtimeType.toString(),
+                errorMessage: error.toString(),
+                eventId: id.toString(),
+              );
+              CrashFileHandler.writeCrashLog(
+                errorType: error.runtimeType.toString(),
+                message: error.toString(),
+                stackTrace: stack.toString(),
+                sentryEventId: id.toString(),
+              );
+            });
+          },
         );
         BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
       } catch (e, stackTrace) {
@@ -122,6 +212,12 @@ void main() async {
           errorType: e.runtimeType.toString(),
           errorMessage: e.toString(),
           eventId: sentryId.toString(),
+        );
+        await CrashFileHandler.writeCrashLog(
+          errorType: e.runtimeType.toString(),
+          message: e.toString(),
+          stackTrace: stackTrace.toString(),
+          sentryEventId: sentryId.toString(),
         );
         runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
       }
@@ -159,6 +255,12 @@ class _ObtainiumState extends State<Obtainium> {
           errorType: details.exception.runtimeType.toString(),
           errorMessage: details.exceptionAsString(),
           eventId: id.toString(),
+        );
+        CrashFileHandler.writeCrashLog(
+          errorType: details.exception.runtimeType.toString(),
+          message: details.exceptionAsString(),
+          stackTrace: details.stack?.toString() ?? '',
+          sentryEventId: id.toString(),
         );
       });
       return BuildErrorWidget(error: details.exceptionAsString(), stackTrace: details.stack?.toString() ?? '');
