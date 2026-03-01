@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/unsupported_source_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
@@ -92,7 +93,21 @@ class AddAppPageState extends State<AddAppPage> {
       sourceProvider.getSource(input);
       _changeUserInput(input, true, false, updateUrlInput: true);
     } catch (e) {
-      showError(e, context);
+      // If it's an unsupported URL, show helpful dialog with suggestions
+      if (e is UnsupportedURLError) {
+        // Get list of supported sources for the dialog
+        final supportedSources = sourceProvider.sources
+            .where((s) => s.hosts.isNotEmpty)
+            .map((s) => s.name)
+            .toList();
+        
+        showUnsupportedSourceDialog(
+          context: context,
+          suggestedSources: supportedSources.take(8).toList(),
+        );
+      } else {
+        showError(e, context);
+      }
     }
   }
 
