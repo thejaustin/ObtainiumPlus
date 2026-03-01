@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -80,7 +81,7 @@ class AppDisplaySection extends StatelessWidget {
         Consumer<ViewSettingsProvider>(
           builder: (context, settings, child) {
             return ListTile(
-              leading: const Icon(Icons.dense_outlined),
+              leading: const Icon(Icons.view_list_outlined),
               title: Text(tr('listDensity'), style: Theme.of(context).textTheme.bodyLarge),
               subtitle: Text(tr('listDensityDescription')),
               trailing: DropdownButton<AppListDensity>(
@@ -135,7 +136,7 @@ class AppDisplaySection extends StatelessWidget {
       _buildDisplayToggle(
         context,
         key: 'displayShowAppCount',
-        icon: Icons.count_to_outlined,
+        icon: Icons.format_list_numbered_outlined,
         title: tr('showAppCount'),
         subtitle: tr('showAppCountDescription'),
       ),

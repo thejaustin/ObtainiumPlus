@@ -89,7 +89,7 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              Icons.warning_outline_rounded,
+              Icons.warning_outlined,
               color: Theme.of(context).colorScheme.error,
             ),
           ),

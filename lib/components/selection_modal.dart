@@ -33,7 +33,8 @@ class SelectionModal extends StatefulWidget {
 class _SelectionModalState extends State<SelectionModal> {
   Map<MapEntry<String, List<String>>, bool> entrySelections = {};
   String filterRegex = '';
-  
+  Map<MapEntry<String, List<String>>, bool> filteredEntrySelections = {};
+
   @override
   void initState() {
     super.initState();
@@ -63,13 +64,8 @@ class _SelectionModalState extends State<SelectionModal> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    Map<MapEntry<String, List<String>>, bool> filteredEntrySelections = {};
+  void _updateFilteredEntries() {
+    filteredEntrySelections.clear();
     entrySelections.forEach((key, value) {
       var searchableText = key.value.isEmpty ? key.key : key.value[0];
       if (filterRegex.isEmpty || RegExp(filterRegex).hasMatch(searchableText)) {
@@ -88,31 +84,41 @@ class _SelectionModalState extends State<SelectionModal> {
         }
       });
     }
-    getSelectAllButton() {
-      if (widget.onlyOneSelectionAllowed) {
-        return SizedBox.shrink();
-      }
-      var noneSelected = entrySelections.values.where((v) => v == true).isEmpty;
-      return noneSelected
-          ? TextButton(
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              onPressed: () {
-                setState(() {
-                  selectAll();
-                });
-              },
-              child: Text(tr('selectAll')),
-            )
-          : TextButton(
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              onPressed: () {
-                setState(() {
-                  selectAll(deselect: true);
-                });
-              },
-              child: Text(tr('deselectX', args: [''])),
-            );
+  }
+
+  Widget _getSelectAllButton() {
+    if (widget.onlyOneSelectionAllowed) {
+      return const SizedBox.shrink();
     }
+    var noneSelected = entrySelections.values.where((v) => v == true).isEmpty;
+    return noneSelected
+        ? TextButton(
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
+            onPressed: () {
+              setState(() {
+                selectAll();
+              });
+            },
+            child: Text(tr('selectAll')),
+          )
+        : TextButton(
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
+            onPressed: () {
+              setState(() {
+                selectAll(deselect: true);
+              });
+            },
+            child: Text(tr('deselectX', args: [''])),
+          );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    _updateFilteredEntries();
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -400,7 +406,7 @@ class _SelectionModalState extends State<SelectionModal> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          getSelectAllButton(),
+          _getSelectAllButton(),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
