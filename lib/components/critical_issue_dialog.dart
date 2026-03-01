@@ -61,7 +61,7 @@ class CriticalIssueDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
-                _buildHeader(context, accentColor, enableGlass),
+                _buildHeader(context, accentColor, enableGlass, isCritical),
                 const Divider(height: 1),
                 // Content
                 Padding(
@@ -78,7 +78,7 @@ class CriticalIssueDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, Color accentColor, bool enableGlass) {
+  Widget _buildHeader(BuildContext context, Color accentColor, bool enableGlass, bool isCritical) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
