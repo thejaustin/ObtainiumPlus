@@ -31,6 +31,7 @@ import 'package:obtainium/services/background_update_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
+import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/locale_constants.dart';
 import 'package:obtainium/components/error_app.dart';
 
@@ -112,6 +113,11 @@ void main() async {
       } catch (e, stackTrace) {
         final sentryId = await Sentry.captureException(e, stackTrace: stackTrace);
         await CrashTracker.recordCrash(sentryId.toString());
+        await CrashAnalytics.recordCrash(
+          errorType: e.runtimeType.toString(),
+          errorMessage: e.toString(),
+          eventId: sentryId.toString(),
+        );
         runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
       }
     },
@@ -144,6 +150,11 @@ class _ObtainiumState extends State<Obtainium> {
       _buildStackTrace = details.stack?.toString();
       Sentry.captureException(details.exception, stackTrace: details.stack).then((id) {
         CrashTracker.recordCrash(id.toString());
+        CrashAnalytics.recordCrash(
+          errorType: details.exception.runtimeType.toString(),
+          errorMessage: details.exceptionAsString(),
+          eventId: id.toString(),
+        );
       });
       return BuildErrorWidget(error: details.exceptionAsString(), stackTrace: details.stack?.toString() ?? '');
     };

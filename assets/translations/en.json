@@ -871,5 +871,13 @@
     "plusAdvancedSortingDescription": "Extra sorting options",
     "plusCategoryReorderDescription": "Drag-and-drop category sorting",
     "backupAndSync": "Backup & Sync",
-    "backupAndSyncDescription": "Export, import, and sync app configurations"
+    "backupAndSyncDescription": "Export, import, and sync app configurations",
+    "didYouMean": "Did you mean: {}?",
+    "storageNotInitialized": "Storage not initialized",
+    "pleaseRestartApp": "Please restart the app to initialize storage",
+    "iconLoadFailed": "Failed to load app icon",
+    "cacheCorrupted": "Cache file corrupted - cleared automatically",
+    "appNotInstalled": "App not installed on device",
+    "networkError": "Network error - please check your connection",
+    "rateLimitExceeded": "Rate limit exceeded - please wait before trying again"
 }
