@@ -155,7 +155,9 @@ class AppsProvider with ChangeNotifier {
       // Load Apps into memory
       await loadApps();
       // Delete any partial APKs (if safe to do so)
-      AppFileService.cleanupPartialApks(APKDir, areDownloadsRunning());
+      if (APKDir != null) {
+        AppFileService.cleanupPartialApks(APKDir!, areDownloadsRunning());
+      }
     } finally {
       if (!(_initCompleter?.isCompleted ?? true)) {
         _initCompleter?.complete();
@@ -351,12 +353,15 @@ class AppsProvider with ChangeNotifier {
     bool forceParallelDownloads = false,
     bool useExisting = true,
   }) async {
+    if (APKDir == null) {
+      throw Exception('APK directory not initialized');
+    }
     return AppDownloadService.downloadAndInstallLatestApps(
       appIds: appIds,
       apps: apps,
       settingsProvider: settingsProvider,
       logs: logs,
-      APKDir: APKDir,
+      APKDir: APKDir!,
       notifyListeners: notifyListeners,
       saveApps: saveApps,
       removeApps: removeApps,
@@ -475,7 +480,9 @@ class AppsProvider with ChangeNotifier {
 
   Future<void> clearAppCache(String appId) async {
     await initializationDone;
-    AppFileService.clearAppCache(appId, APKDir);
+    if (APKDir != null) {
+      AppFileService.clearAppCache(appId, APKDir!);
+    }
     notifyListeners();
   }
 
@@ -507,10 +514,6 @@ class AppsProvider with ChangeNotifier {
       undoLastRemoval,
       settingsProvider.enableUndoForAppRemoval,
     );
-  }
-
-  void clearAppCache(String appId) {
-    AppFileService.clearAppCache(appId, APKDir);
   }
 
   void addMissingCategories(SettingsProvider settingsProvider) {

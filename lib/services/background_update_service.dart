@@ -309,12 +309,15 @@ class BackgroundUpdateService {
           // Corrected logic for moving map entry
         }
         try {
+          if (appsProvider.APKDir == null) {
+            throw Exception('APK directory not initialized');
+          }
           await AppDownloadService.downloadAndInstallLatestApps(
             appIds: toInstall.map((e) => e.key).toList(),
             apps: appsProvider.apps,
             settingsProvider: appsProvider.settingsProvider,
             logs: logs,
-            APKDir: appsProvider.APKDir,
+            APKDir: appsProvider.APKDir!,
             notifyListeners: appsProvider.notifyListeners,
             saveApps: appsProvider.saveApps,
             removeApps: appsProvider.removeApps,

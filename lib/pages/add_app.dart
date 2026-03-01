@@ -28,7 +28,8 @@ class AddAppPage extends StatefulWidget {
   final AddAppMode mode;
   final String? appId;
   final String? initialUrl;
-  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialUrl});
+  final int? initialTab;
+  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialUrl, this.initialTab});
 
   @override
   State<AddAppPage> createState() => AddAppPageState();

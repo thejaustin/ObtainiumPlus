@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:android_package_installer/android_package_installer.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -441,7 +442,7 @@ class _GlassErrorDialog extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildHeader(context, enableGlass),
+                _buildHeader(context, enableGlass, colorScheme),
                 const Divider(height: 1),
                 Flexible(
                   child: SingleChildScrollView(
@@ -449,7 +450,7 @@ class _GlassErrorDialog extends StatelessWidget {
                     child: _buildContent(context, colorScheme),
                   ),
                 ),
-                _buildActions(context),
+                _buildActions(context, enableGlass, colorScheme),
               ],
             ),
           ),
@@ -458,7 +459,7 @@ class _GlassErrorDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool enableGlass) {
+  Widget _buildHeader(BuildContext context, bool enableGlass, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -558,7 +559,7 @@ class _GlassErrorDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context) {
+  Widget _buildActions(BuildContext context, bool enableGlass, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(

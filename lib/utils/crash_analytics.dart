@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:obtainium/utils/crash_tracker.dart';
 
 /// Tracks crash analytics and provides insights for debugging
 class CrashAnalytics {
