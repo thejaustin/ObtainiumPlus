@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/source_utils.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 // ignore: must_be_immutable
@@ -30,6 +33,7 @@ class SelectionModal extends StatefulWidget {
 class _SelectionModalState extends State<SelectionModal> {
   Map<MapEntry<String, List<String>>, bool> entrySelections = {};
   String filterRegex = '';
+  
   @override
   void initState() {
     super.initState();
@@ -61,6 +65,10 @@ class _SelectionModalState extends State<SelectionModal> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
     Map<MapEntry<String, List<String>>, bool> filteredEntrySelections = {};
     entrySelections.forEach((key, value) {
       var searchableText = key.value.isEmpty ? key.key : key.value[0];
@@ -106,12 +114,106 @@ class _SelectionModalState extends State<SelectionModal> {
             );
     }
 
-    return AlertDialog(
-      scrollable: true,
-      title: Text(widget.title ?? tr('pick')),
-      content: Column(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
+              blurRadius: enableGlass ? 20 : 10,
+              spreadRadius: enableGlass ? 0 : -5,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: enableGlass ? 15 : 0,
+              sigmaY: enableGlass ? 15 : 0,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context, enableGlass),
+                const Divider(height: 1),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildContent(context),
+                  ),
+                ),
+                _buildActions(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool enableGlass) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
+            Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: enableGlass ? 0.15 : 0.25),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Row(
         children: [
-          GeneratedForm(
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.list_alt_outlined,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              widget.title ?? tr('pick'),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return Column(
+      children: [
+        // Filter field
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: GeneratedForm(
             items: [
               [
                 GeneratedFormTextField(
@@ -136,69 +238,74 @@ class _SelectionModalState extends State<SelectionModal> {
               }
             },
           ),
-          ...filteredEntrySelections.keys.map((entry) {
-            selectThis(bool? value) {
-              setState(() {
-                value ??= false;
-                if (value! && widget.onlyOneSelectionAllowed) {
-                  selectOnlyOne(entry.key);
-                } else {
-                  entrySelections[entry] = value!;
-                }
-              });
-            }
+        ),
+        const SizedBox(height: 16),
+        // Entry list
+        ...filteredEntrySelections.keys.map((entry) {
+          selectThis(bool? value) {
+            setState(() {
+              value ??= false;
+              if (value! && widget.onlyOneSelectionAllowed) {
+                selectOnlyOne(entry.key);
+              } else {
+                entrySelections[entry] = value!;
+              }
+            });
+          }
 
-            var urlLink = GestureDetector(
-              onTap: !widget.titlesAreLinks
-                  ? null
-                  : () {
-                      launchUrlString(
-                        entry.key,
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.value.isEmpty ? entry.key : entry.value[0],
-                    style: TextStyle(
-                      decoration: widget.titlesAreLinks
-                          ? TextDecoration.underline
-                          : null,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.start,
+          var urlLink = GestureDetector(
+            onTap: !widget.titlesAreLinks
+                ? null
+                : () {
+                    launchUrlString(
+                      entry.key,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.value.isEmpty ? entry.key : entry.value[0],
+                  style: TextStyle(
+                    decoration: widget.titlesAreLinks
+                        ? TextDecoration.underline
+                        : null,
+                    fontWeight: FontWeight.bold,
                   ),
-                  if (widget.titlesAreLinks)
-                    Text(
-                      Uri.parse(entry.key).host,
-                      style: const TextStyle(
-                        decoration: TextDecoration.underline,
-                        fontSize: 12,
-                      ),
-                    ),
-                ],
-              ),
-            );
-
-            var descriptionText = entry.value.length <= 1
-                ? const SizedBox.shrink()
-                : Text(
-                    entry.value[1].length > 128
-                        ? '${entry.value[1].substring(0, 128)}...'
-                        : entry.value[1],
+                  textAlign: TextAlign.start,
+                ),
+                if (widget.titlesAreLinks)
+                  Text(
+                    Uri.parse(entry.key).host,
                     style: const TextStyle(
-                      fontStyle: FontStyle.italic,
+                      decoration: TextDecoration.underline,
                       fontSize: 12,
                     ),
-                  );
+                  ),
+              ],
+            ),
+          );
 
-            var selectedEntries = entrySelections.entries
-                .where((e) => e.value)
-                .toList();
+          var descriptionText = entry.value.length <= 1
+              ? const SizedBox.shrink()
+              : Text(
+                  entry.value[1].length > 128
+                      ? '${entry.value[1].substring(0, 128)}...'
+                      : entry.value[1],
+                  style: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontSize: 12,
+                  ),
+                );
 
-            var singleSelectTile = ListTile(
+          var selectedEntries = entrySelections.entries
+              .where((e) => e.value)
+              .toList();
+
+          Widget tile;
+          if (widget.onlyOneSelectionAllowed) {
+            tile = ListTile(
               title: GestureDetector(
                 onTap: widget.titlesAreLinks
                     ? null
@@ -229,82 +336,101 @@ class _SelectionModalState extends State<SelectionModal> {
                 },
               ),
             );
-
-            var multiSelectTile = Row(
-              children: [
-                Checkbox(
-                  value: entrySelections[entry],
-                  onChanged: (value) {
-                    selectThis(value);
-                  },
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: widget.titlesAreLinks
-                            ? null
-                            : () {
-                                selectThis(!(entrySelections[entry] ?? false));
-                              },
-                        child: urlLink,
-                      ),
-                      entry.value.length <= 1
-                          ? const SizedBox.shrink()
-                          : GestureDetector(
-                              onTap: () {
-                                selectThis(!(entrySelections[entry] ?? false));
-                              },
-                              child: descriptionText,
-                            ),
-                      const SizedBox(height: 8),
-                    ],
+          } else {
+            tile = Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: entrySelections[entry],
+                    onChanged: (value) {
+                      selectThis(value);
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: widget.titlesAreLinks
+                              ? null
+                              : () {
+                                  selectThis(!(entrySelections[entry] ?? false));
+                                },
+                          child: urlLink,
+                        ),
+                        entry.value.length <= 1
+                            ? const SizedBox.shrink()
+                            : GestureDetector(
+                                onTap: () {
+                                  selectThis(!(entrySelections[entry] ?? false));
+                                },
+                                child: descriptionText,
+                              ),
+                        const SizedBox(height: 4),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
+          }
 
-            return widget.onlyOneSelectionAllowed
-                ? singleSelectTile
-                : multiSelectTile;
-          }),
+          return tile;
+        }),
+      ],
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          getSelectAllButton(),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(tr('cancel')),
+          ),
+          TextButton(
+            onPressed: entrySelections.values.where((b) => b).isEmpty
+                ? null
+                : () {
+                    Navigator.of(context).pop(
+                      entrySelections.entries
+                          .where((entry) => entry.value)
+                          .map((e) => e.key.key)
+                          .toList(),
+                    );
+                  },
+            child: Text(
+              widget.onlyOneSelectionAllowed
+                  ? tr('pick')
+                  : tr(
+                      'selectX',
+                      args: [
+                        entrySelections.values.where((b) => b).length.toString(),
+                      ],
+                    ),
+            ),
+          ),
         ],
       ),
-      actions: [
-        getSelectAllButton(),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('cancel')),
-        ),
-        TextButton(
-          onPressed: entrySelections.values.where((b) => b).isEmpty
-              ? null
-              : () {
-                  Navigator.of(context).pop(
-                    entrySelections.entries
-                        .where((entry) => entry.value)
-                        .map((e) => e.key.key)
-                        .toList(),
-                  );
-                },
-          child: Text(
-            widget.onlyOneSelectionAllowed
-                ? tr('pick')
-                : tr(
-                    'selectX',
-                    args: [
-                      entrySelections.values.where((b) => b).length.toString(),
-                    ],
-                  ),
-          ),
-        ),
-      ],
     );
   }
 }

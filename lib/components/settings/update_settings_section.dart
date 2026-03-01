@@ -238,8 +238,8 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildAdditionalUpdateSettings(BuildContext context) {
-    return Consumer<UpdateSettingsProvider>(
-      builder: (context, updateSettings, child) {
+    return Consumer2<UpdateSettingsProvider, SettingsProvider>(
+      builder: (context, updateSettings, settings, child) {
         return Column(
           children: [
             if (_matches(tr('checkUpdateOnDetailPage')))
@@ -280,10 +280,64 @@ class UpdateSettingsSection extends StatelessWidget {
                   ],
                 ),
               ),
+            if (_matches(tr('preferredUpdateSource')))
+              ListTile(
+                leading: const Icon(Icons.store_outlined),
+                title: Text(tr('preferredUpdateSource'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(_getSourceDisplayName(settings.preferredUpdateSource)),
+                trailing: DropdownButton<String>(
+                  value: settings.preferredUpdateSource,
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      settings.preferredUpdateSource = newValue;
+                    }
+                  },
+                  items: [
+                    DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
+                    DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
+                    DropdownMenuItem(value: 'aurora', child: Text('Aurora Store')),
+                    DropdownMenuItem(value: 'github', child: Text('GitHub')),
+                    DropdownMenuItem(value: 'apkpure', child: Text('APKPure')),
+                  ],
+                ),
+              ),
+            if (_matches(tr('allowThirdPartySources')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.cloud_download_outlined),
+                title: Text(tr('allowThirdPartySources'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(tr('allowThirdPartySourcesDescription')),
+                value: settings.allowThirdPartySources,
+                onChanged: (value) => settings.allowThirdPartySources = value,
+              ),
+            if (_matches(tr('usePlayStoreAppLinks')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.android_outlined),
+                title: Text(tr('usePlayStoreAppLinks'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(tr('usePlayStoreAppLinksDescription')),
+                value: settings.usePlayStoreAppLinks,
+                onChanged: (value) => settings.usePlayStoreAppLinks = value,
+              ),
           ],
         );
       },
     );
+  }
+
+  String _getSourceDisplayName(String source) {
+    switch (source) {
+      case 'direct':
+        return tr('direct');
+      case 'play_store':
+        return tr('playStore');
+      case 'aurora':
+        return 'Aurora Store';
+      case 'github':
+        return 'GitHub';
+      case 'apkpure':
+        return 'APKPure';
+      default:
+        return tr('direct');
+    }
   }
 
   void _showScheduleDialog(BuildContext context, UpdateSettingsProvider settings) {

@@ -1,4 +1,64 @@
 {
-  "schemaVersion": 1,
-  "issues": []
+  "issues": [
+    {
+      "id": "crash_late_error_apkdir",
+      "title": "Startup Crash: APKDir Not Initialized",
+      "description": "A 'LateInitializationError' occurs during startup when the app attempts to access the APK directory before it has been fully initialized. This can prevent the app from opening.",
+      "severity": "critical",
+      "affectedVersions": [
+        "1.2.9-p88"
+      ],
+      "affectedBuildRange": {
+        "min": 2400,
+        "max": 2412
+      },
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/103",
+      "fixedInVersion": "1.2.9-p89"
+    },
+    {
+      "id": "crash_type_error_settings",
+      "title": "Type Error: BehaviorSettingsProvider Mismatch",
+      "description": "A 'TypeError' occurs where BehaviorSettingsProvider is not recognized as a subtype of SettingsProvider. This typically happens when navigating to the settings page or during provider initialization.",
+      "severity": "critical",
+      "affectedVersions": [
+        "1.2.9-p88"
+      ],
+      "affectedBuildRange": {
+        "min": 2400,
+        "max": 2412
+      },
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/100",
+      "fixedInVersion": "1.2.9-p89"
+    },
+    {
+      "id": "crash_range_error_list",
+      "title": "Range Error: Invalid List Index",
+      "description": "A 'RangeError' occurs when accessing list elements, particularly during category reordering or rapid UI updates. This results in the app freezing or crashing to the error screen.",
+      "severity": "warning",
+      "affectedVersions": [
+        "1.2.9-p88"
+      ],
+      "affectedBuildRange": {
+        "min": 2400,
+        "max": 2412
+      },
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/101",
+      "fixedInVersion": "1.2.9-p89"
+    },
+    {
+      "id": "crash_null_check_multiapp",
+      "title": "Null Check Crash: MultiApp Error Reporting",
+      "description": "A crash occurs when reporting errors for multiple apps simultaneously due to an unexpected null value in the error handling logic.",
+      "severity": "warning",
+      "affectedVersions": [
+        "1.2.9-p88"
+      ],
+      "affectedBuildRange": {
+        "min": 2400,
+        "max": 2412
+      },
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/97",
+      "fixedInVersion": "1.2.9-p89"
+    }
+  ]
 }
