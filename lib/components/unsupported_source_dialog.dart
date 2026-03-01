@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 Future<void> showUnsupportedSourceDialog({
   required BuildContext context,
   List<String>? suggestedSources,
+  String? failedUrl,
 }) {
   final settings = context.read<SettingsProvider>();
   final enableGlass = settings.plusEnableGlassmorphism;
@@ -61,7 +62,7 @@ Future<void> showUnsupportedSourceDialog({
                 Flexible(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
-                    child: _buildContent(context, sources),
+                    child: _buildContent(context, sources, failedUrl),
                   ),
                 ),
                 _buildActions(context),
@@ -115,7 +116,7 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
   );
 }
 
-Widget _buildContent(BuildContext context, List<String> sources) {
+Widget _buildContent(BuildContext context, List<String> sources, String? failedUrl) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -123,6 +124,50 @@ Widget _buildContent(BuildContext context, List<String> sources) {
         tr('unsupportedUrlDescription'),
         style: Theme.of(context).textTheme.bodyMedium,
       ),
+      // Show failed URL for debugging (if developer mode or long-press)
+      if (failedUrl != null && failedUrl.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.bug_report_outlined,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Failed URL (for debugging):',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              SelectableText(
+                failedUrl,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
       const SizedBox(height: 20),
       Text(
         tr('supportedSources').toUpperCase(),

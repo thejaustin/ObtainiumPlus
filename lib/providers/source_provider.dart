@@ -30,6 +30,7 @@ import 'package:obtainium/app_sources/uptodown.dart';
 import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:obtainium/models/app.dart';
@@ -339,7 +340,22 @@ class SourceProvider {
       }
     }
     if (source == null) {
-      throw UnsupportedURLError();
+      // Log failed URL for debugging and potential new source requests
+      CrashAnalytics.recordCrash(
+        errorType: 'UnsupportedURLError',
+        errorMessage: 'Unsupported URL: $url',
+      );
+      
+      // Get list of supported sources for suggestions
+      final supportedSources = sources
+          .where((s) => s.hosts.isNotEmpty)
+          .map((s) => s.name)
+          .toList();
+      
+      throw UnsupportedURLError(
+        suggestedSources: supportedSources.take(8).toList(),
+        failedUrl: url,
+      );
     }
     return source;
   }
