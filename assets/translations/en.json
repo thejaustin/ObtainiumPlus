@@ -883,5 +883,16 @@
     "unsupportedUrl": "Unsupported URL",
     "unsupportedUrlDescription": "This URL is not from a supported app source. Obtainium can only track apps from specific sources.",
     "browseSupportedSources": "Browse Sources",
-    "supportedSourcesTip": "Copy and paste the app's URL from one of these supported sources"
+    "supportedSourcesTip": "Copy and paste the app's URL from one of these supported sources",
+    "searchOrEnterUrl": "Search apps or enter URL...",
+    "validUrlEnterToAdd": "Valid URL - press Add to install",
+    "invalidUrl": "Invalid or unsupported URL",
+    "addAppByUrl": "Add app by URL",
+    "addAppByUrlDescription": "Paste a URL from a supported source",
+    "discoverApps": "Discover apps",
+    "discoverAppsDescription": "Search across multiple sources",
+    "scanQRCode": "Scan QR code",
+    "scanQRCodeDescription": "Add apps by scanning QR codes",
+    "comingSoon": "Coming soon!",
+    "validUrl": "Valid URL"
 }
