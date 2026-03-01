@@ -112,7 +112,7 @@ class AppListTile extends StatelessWidget {
                 ? tr('changes')
                 : ''
           : DateFormat(
-              'yyyy-MM-dd',
+              'MMM d, yyyy',
             ).format(appInMemory.app.releaseDate!.toLocal());
     }
 
