@@ -21,7 +21,8 @@ class ErrorApp extends StatelessWidget {
   }
 
   Future<void> _followIssue() async {
-    final Uri url = Uri.parse(CrashTracker.issueTrackerUrl);
+    final String urlStr = await CrashTracker.getSpecificIssueUrl();
+    final Uri url = Uri.parse(urlStr);
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -164,7 +165,8 @@ class BuildErrorWidget extends StatelessWidget {
                         icon: const Icon(Icons.notifications_active_outlined, color: Colors.white70),
                         tooltip: 'Follow Issue on GitHub',
                         onPressed: () async {
-                          final Uri url = Uri.parse(CrashTracker.issueTrackerUrl);
+                          final String urlStr = await CrashTracker.getSpecificIssueUrl();
+                          final Uri url = Uri.parse(urlStr);
                           if (await canLaunchUrl(url)) {
                             await launchUrl(url, mode: LaunchMode.externalApplication);
                           }

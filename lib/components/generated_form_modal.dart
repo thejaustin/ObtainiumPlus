@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 
 class GeneratedFormModal extends StatefulWidget {
   const GeneratedFormModal({
@@ -13,6 +16,7 @@ class GeneratedFormModal extends StatefulWidget {
     this.additionalWidgets = const [],
     this.singleNullReturnButton,
     this.primaryActionColour,
+    this.icon,
   });
 
   final String title;
@@ -22,6 +26,7 @@ class GeneratedFormModal extends StatefulWidget {
   final List<Widget> additionalWidgets;
   final String? singleNullReturnButton;
   final Color? primaryActionColour;
+  final IconData? icon;
 
   @override
   State<GeneratedFormModal> createState() => _GeneratedFormModalState();
@@ -39,61 +44,165 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      scrollable: true,
-      title: Text(widget.title),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (widget.message.isNotEmpty) Text(widget.message),
-          if (widget.message.isNotEmpty) const SizedBox(height: 16),
-          GeneratedForm(
-            items: widget.items,
-            onValueChanges: (values, valid, isBuilding) {
-              if (isBuilding) {
-                this.values = values;
-                this.valid = valid;
-              } else {
-                setState(() {
-                  this.values = values;
-                  this.valid = valid;
-                });
-              }
-            },
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
           ),
-          if (widget.additionalWidgets.isNotEmpty) ...widget.additionalWidgets,
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: Text(
-            widget.singleNullReturnButton == null
-                ? tr('cancel')
-                : widget.singleNullReturnButton!,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
+              blurRadius: enableGlass ? 20 : 10,
+              spreadRadius: enableGlass ? 0 : -5,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: enableGlass ? 15 : 0,
+              sigmaY: enableGlass ? 15 : 0,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                _buildHeader(context, enableGlass),
+                const Divider(height: 1),
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (widget.message.isNotEmpty) ...[
+                          Text(widget.message),
+                          const SizedBox(height: 16),
+                        ],
+                        GeneratedForm(
+                          items: widget.items,
+                          onValueChanges: (values, valid, isBuilding) {
+                            if (isBuilding) {
+                              this.values = values;
+                              this.valid = valid;
+                            } else {
+                              setState(() {
+                                this.values = values;
+                                this.valid = valid;
+                              });
+                            }
+                          },
+                        ),
+                        ...widget.additionalWidgets,
+                      ],
+                    ),
+                  ),
+                ),
+                // Actions
+                _buildActions(context),
+              ],
+            ),
           ),
         ),
-        widget.singleNullReturnButton == null
-            ? TextButton(
-                style: widget.primaryActionColour == null
-                    ? null
-                    : TextButton.styleFrom(
-                        foregroundColor: widget.primaryActionColour,
-                      ),
-                onPressed: !valid
-                    ? null
-                    : () {
-                        if (valid) {
-                          HapticFeedback.selectionClick();
-                          Navigator.of(context).pop(values);
-                        }
-                      },
-                child: Text(tr('continue')),
-              )
-            : const SizedBox.shrink(),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool enableGlass) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: enableGlass ? 0.5 : 1.0),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          if (widget.icon != null) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(widget.icon, color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(width: 16),
+          ],
+          Expanded(
+            child: Text(
+              widget.title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(
+              widget.singleNullReturnButton == null
+                  ? tr('cancel')
+                  : widget.singleNullReturnButton!,
+            ),
+          ),
+          if (widget.singleNullReturnButton == null)
+            TextButton(
+              style: widget.primaryActionColour == null
+                  ? null
+                  : TextButton.styleFrom(
+                      foregroundColor: widget.primaryActionColour,
+                    ),
+              onPressed: !valid
+                  ? null
+                  : () {
+                      if (valid) {
+                        HapticFeedback.selectionClick();
+                        Navigator.of(context).pop(values);
+                      }
+                    },
+              child: Text(tr('continue')),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -79,9 +79,18 @@ class AppsProvider with ChangeNotifier {
   bool isForeground = true;
   late Stream<FGBGType>? foregroundStream;
   late StreamSubscription<FGBGType>? foregroundSubscription;
-  late Directory APKDir;
-  late Directory iconsCacheDir;
+  
+  Directory? _APKDir;
+  Directory? _iconsCacheDir;
+  
+  Directory get APKDir => _APKDir!;
+  Directory get iconsCacheDir => _iconsCacheDir!;
+
   late SettingsProvider settingsProvider;
+
+  // Completer for the overall initialization of the provider
+  Completer<void>? _initCompleter;
+  Future<void> get initializationDone => _initCompleter?.future ?? Future.value();
 
   // Optimized: Return values directly unless deep copy is explicitly needed
   Iterable<AppInMemory> getAppValues({bool deepCopy = true}) => 
@@ -110,6 +119,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   AppsProvider({isBg = false, SettingsProvider? settings}) {
+    _initCompleter = Completer<void>();
     settingsProvider = settings ?? SettingsProvider();
     // Always load SharedPreferences so settings reads return user values, not
     // hard-coded defaults — important for background instances that skip initialize().
@@ -119,26 +129,38 @@ class AppsProvider with ChangeNotifier {
     foregroundSubscription = foregroundStream?.listen((event) async {
       isForeground = event == FGBGType.foreground;
       if (isForeground) {
+        await initializationDone;
         await loadApps();
       }
     });
     if (!isBg) {
       initialize();
+    } else {
+      // For background, we still need to initialize directories if they'll be used
+      _initCompleter!.complete();
     }
   }
 
   /// Initializes the AppsProvider by loading settings and apps from storage.
   /// This method is called automatically in the constructor for foreground instances.
   Future<void> initialize() async {
-    await settingsProvider.initializeSettings();
-    // Set up APK and icons cache directories
-    var dirs = await AppFileService.initAppDirectories();
-    APKDir = dirs['APKDir']!;
-    iconsCacheDir = dirs['iconsCacheDir']!;
-    // Load Apps into memory
-    await loadApps();
-    // Delete any partial APKs (if safe to do so)
-    AppFileService.cleanupPartialApks(APKDir, areDownloadsRunning());
+    if (_initCompleter != null && _initCompleter!.isCompleted) return;
+    
+    try {
+      await settingsProvider.initializeSettings();
+      // Set up APK and icons cache directories
+      var dirs = await AppFileService.initAppDirectories();
+      _APKDir = dirs['APKDir']!;
+      _iconsCacheDir = dirs['iconsCacheDir']!;
+      // Load Apps into memory
+      await loadApps();
+      // Delete any partial APKs (if safe to do so)
+      AppFileService.cleanupPartialApks(APKDir, areDownloadsRunning());
+    } finally {
+      if (!(_initCompleter?.isCompleted ?? true)) {
+        _initCompleter?.complete();
+      }
+    }
   }
 
   /// Downloads the latest version of the app.
@@ -149,6 +171,7 @@ class AppsProvider with ChangeNotifier {
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
   }) async {
+    await initializationDone;
     Map<String, dynamic> res = await AppDownloadService.downloadApp(
       app: app,
       apps: apps,
@@ -390,6 +413,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
+    await initializationDone;
     await AppIconService.updateAppIcon(
       appId: appId,
       apps: apps,
@@ -400,6 +424,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> precacheIcons(List<String> appIds) async {
+    await initializationDone;
     await AppIconService.precacheIcons(
       appIds: appIds,
       apps: apps,
@@ -426,6 +451,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> removeApps(List<String> appIds) async {
+    await initializationDone;
     await AppCRUDService.removeApps(
       appIds: appIds,
       apps: apps,
@@ -435,6 +461,12 @@ class AppsProvider with ChangeNotifier {
       notifyListeners: notifyListeners,
       export: ({bool isAuto = false}) => export(isAuto: isAuto),
     );
+  }
+
+  Future<void> clearAppCache(String appId) async {
+    await initializationDone;
+    AppFileService.clearAppCache(appId, APKDir);
+    notifyListeners();
   }
 
   // Method to undo the last app removal

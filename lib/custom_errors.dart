@@ -128,10 +128,9 @@ class MultiAppMultiError extends ObtainiumError {
     rawErrors[appId] = error;
     stackTraces[appId] = stackTrace ?? (error is Error ? error.stackTrace : null);
     var string = error.toString();
-    var tempIds = idsByErrorString.remove(string);
-    tempIds ??= [];
+    var tempIds = idsByErrorString[string] ?? [];
     tempIds.add(appId);
-    idsByErrorString.putIfAbsent(string, () => tempIds!);
+    idsByErrorString[string] = tempIds;
     if (appName != null) {
       appIdNames[appId] = appName;
     }
@@ -256,7 +255,10 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
       tr('badDownloadTip'),
       fix: FixAction(tr('clearCache'), () {
         var appsProvider = Provider.of<AppsProvider>(context, listen: false);
-        appsProvider.clearAppCache(e.appId!);
+        final String? appId = e.appId;
+        if (appId != null) {
+          appsProvider.clearAppCache(appId);
+        }
         Navigator.maybeOf(context)?.pop();
         showMessage(tr('cacheCleared'), context);
       })
@@ -346,68 +348,229 @@ Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false,
       context,
     ).showSnackBar(SnackBar(content: Text(e.toString())));
   } else {
-    ErrorResolution? resolution = isError ? await getResolutionForError(e, context) : null;
+    ErrorResolution? resolution = await getResolutionForError(e, context);
     if (!context.mounted) return;
+    
+    // Use glass dialog for modern UI
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
-        return AlertDialog(
-          scrollable: true,
-          title: Text(
-            e is MultiAppMultiError
-                ? tr(isError ? 'someErrors' : 'updates')
-                : tr(isError ? 'unexpectedError' : 'unknown'),
+        return _GlassErrorDialog(
+          title: e is MultiAppMultiError
+              ? tr(isError ? 'someErrors' : 'updates')
+              : tr(isError ? 'unexpectedError' : 'unknown'),
+          error: e.toString(),
+          logMessage: logMessage,
+          resolution: resolution,
+        );
+      },
+    );
+  }
+}
+
+/// Glassmorphic error dialog widget
+class _GlassErrorDialog extends StatelessWidget {
+  final String title;
+  final String error;
+  final String logMessage;
+  final ErrorResolution? resolution;
+
+  const _GlassErrorDialog({
+    required this.title,
+    required this.error,
+    required this.logMessage,
+    this.resolution,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onLongPress: () {
-                  Clipboard.setData(ClipboardData(text: logMessage));
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
-                },
-                child: Text(e.toString()),
-              ),
-              if (resolution != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  '${tr('potentialFix')}:',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(resolution.tip),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: logMessage));
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
-              },
-              child: Text(tr('copy')),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
+              blurRadius: enableGlass ? 20 : 10,
+              spreadRadius: enableGlass ? 0 : -5,
             ),
-            if (resolution?.fix != null)
-              TextButton(
-                onPressed: () {
-                  Navigator.maybeOf(context)?.pop(null);
-                  resolution!.fix!.action();
-                },
-                child: Text(resolution!.fix!.label),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: enableGlass ? 15 : 0,
+              sigmaY: enableGlass ? 15 : 0,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context, enableGlass),
+                const Divider(height: 1),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildContent(context, colorScheme),
+                  ),
+                ),
+                _buildActions(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool enableGlass) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.errorContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorScheme.error.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.error_outline,
+              color: colorScheme.error,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ColorScheme colorScheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: GestureDetector(
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: logMessage));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(tr('copiedToClipboard'))),
+              );
+            },
+            child: Text(
+              error,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ),
+        if (resolution != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${tr('potentialFix')}:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(resolution!.tip),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: logMessage));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(tr('copiedToClipboard'))),
+              );
+            },
+            child: Text(tr('copy')),
+          ),
+          if (resolution?.fix != null)
             TextButton(
               onPressed: () {
                 Navigator.maybeOf(context)?.pop(null);
+                resolution!.fix!.action();
               },
-              child: Text(tr('ok')),
+              child: Text(resolution!.fix!.label),
             ),
-          ],
-        );
-      },
+          TextButton(
+            onPressed: () {
+              Navigator.maybeOf(context)?.pop(null);
+            },
+            child: Text(tr('ok')),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -19,6 +19,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/play_store_mirror_service.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher_string.dart';
@@ -307,53 +308,85 @@ class _AppPageState extends State<AppPage> {
             AppDescriptionSlider(app: app),
         ],
       ),
-      bottomSheet: _AppBottomBar(
-        app: app,
-        source: source,
-        trackOnly: trackOnly,
-        isVersionDetectionStandard: isVersionDetectionStandard,
-        showAppWebpageFinal: showAppWebpageFinal,
-        updating: updating,
-        onInstallUpdate: () async {
-          try {
-            var successMessage = app?.app.installedVersion == null
-                ? tr('installed')
-                : tr('appsUpdated');
-            HapticFeedback.heavyImpact();
-            var res = await appsProvider.downloadAndInstallLatestApps(
-              app?.app.id != null ? [app!.app.id] : [],
-              globalNavigatorKey.currentContext,
-            );
-            if (res.isNotEmpty && !trackOnly && mounted) {
-              showMessage(successMessage, context);
-            }
-            if (res.isNotEmpty && mounted) {
-              Navigator.of(context).pop();
-            }
-          } catch (e) {
-            if (mounted) showError(e, context);
-          }
-        },
-        onAdditionalOptions: () async {
-          var values = await showAdditionalOptionsDialog();
-          handleAdditionalOptionChanges(values);
-        },
-        onMarkUpdated: showMarkUpdatedDialog,
-        onResetInstallStatus: () {
-          app!.app.installedVersion = null;
-          appsProvider.saveApps([app.app]);
-        },
-        onRemove: () {
-          appsProvider
-              .removeAppsWithModal(context, app != null ? [app.app] : [])
-              .then((value) {
-                if (value == true && mounted) {
-                  Navigator.of(context).pop();
+      bottomSheet: Consumer<SettingsProvider>(
+        builder: (context, settings, _) {
+          return _AppBottomBar(
+            app: app,
+            source: source,
+            trackOnly: trackOnly,
+            isVersionDetectionStandard: isVersionDetectionStandard,
+            showAppWebpageFinal: showAppWebpageFinal,
+            updating: updating,
+            preferredSource: settings.preferredUpdateSource,
+            allowThirdPartySources: settings.allowThirdPartySources,
+            onSourceSelected: (String newSource) {
+              settings.preferredUpdateSource = newSource;
+            },
+            onInstallUpdate: () async {
+              try {
+                var successMessage = app?.app.installedVersion == null
+                    ? tr('installed')
+                    : tr('appsUpdated');
+                HapticFeedback.heavyImpact();
+                
+                // Handle different source types
+                if (settings.preferredUpdateSource == 'play_store' ||
+                    settings.preferredUpdateSource == 'aurora') {
+                  // Open in store instead of downloading
+                  await PlayStoreMirrorService.openInSource(
+                    appId: app!.app.id,
+                    source: settings.preferredUpdateSource,
+                  );
+                } else if (settings.preferredUpdateSource == 'github' ||
+                    settings.preferredUpdateSource == 'apkpure') {
+                  // Open in browser
+                  final uri = Uri.parse(
+                    settings.preferredUpdateSource == 'github'
+                        ? 'https://github.com/search?q=${app!.app.id}'
+                        : 'https://apkpure.com/any/${app!.app.id}',
+                  );
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                } else {
+                  // Direct download (default)
+                  var res = await appsProvider.downloadAndInstallLatestApps(
+                    app?.app.id != null ? [app!.app.id] : [],
+                    globalNavigatorKey.currentContext,
+                  );
+                  if (res.isNotEmpty && !trackOnly && mounted) {
+                    showMessage(successMessage, context);
+                  }
+                  if (res.isNotEmpty && mounted) {
+                    Navigator.of(context).pop();
+                  }
                 }
-              });
-        },
-        onMore: () {
-          _showAppDetailsDialog(context, app, appsProvider);
+              } catch (e) {
+                if (mounted) showError(e, context);
+              }
+            },
+            onAdditionalOptions: () async {
+              var values = await showAdditionalOptionsDialog();
+              handleAdditionalOptionChanges(values);
+            },
+            onMarkUpdated: showMarkUpdatedDialog,
+            onResetInstallStatus: () {
+              app!.app.installedVersion = null;
+              appsProvider.saveApps([app.app]);
+            },
+            onRemove: () {
+              appsProvider
+                  .removeAppsWithModal(context, app != null ? [app.app] : [])
+                  .then((value) {
+                    if (value == true && mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  });
+            },
+            onMore: () {
+              _showAppDetailsDialog(context, app, appsProvider);
+            },
+          );
         },
       ),
     );
@@ -1148,6 +1181,9 @@ class _AppBottomBar extends StatelessWidget {
     required this.onResetInstallStatus,
     required this.onRemove,
     required this.onMore,
+    required this.onSourceSelected,
+    required this.preferredSource,
+    required this.allowThirdPartySources,
   });
 
   final AppInMemory? app;
@@ -1162,6 +1198,9 @@ class _AppBottomBar extends StatelessWidget {
   final VoidCallback onResetInstallStatus;
   final VoidCallback onRemove;
   final VoidCallback onMore;
+  final Function(String) onSourceSelected;
+  final String preferredSource;
+  final bool allowThirdPartySources;
 
   @override
   Widget build(BuildContext context) {
@@ -1180,6 +1219,40 @@ class _AppBottomBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Source selector row
+              if (allowThirdPartySources && !trackOnly)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.store_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        tr('preferredUpdateSource'),
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const Spacer(),
+                      DropdownButton<String>(
+                        value: preferredSource,
+                        underline: const SizedBox.shrink(),
+                        onChanged: busy
+                            ? null
+                            : (String? newValue) {
+                                if (newValue != null) {
+                                  onSourceSelected(newValue);
+                                }
+                              },
+                        items: [
+                          DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
+                          DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
+                          DropdownMenuItem(value: 'aurora', child: const Text('Aurora Store')),
+                          DropdownMenuItem(value: 'github', child: const Text('GitHub')),
+                          DropdownMenuItem(value: 'apkpure', child: const Text('APKPure')),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 child: Row(

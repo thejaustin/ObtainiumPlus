@@ -76,14 +76,41 @@ jobs:
             }
             core.info(`Fetched ${sentryIssues.length} unresolved Sentry issues`);
 
-            // ── Create GitHub issues for new Sentry issues ────────────────────
+            // ── Create or Update GitHub issues ───────────────────────────────
             for (const issue of sentryIssues) {
-              const searchRes = await github.rest.search.issuesAndPullRequests({
-                q: `[Sentry #${issue.id}] repo:${owner}/${repo} is:issue`,
-              });
+              const searchQuery = `"[Sentry #${issue.id}]" repo:${owner}/${repo} is:issue`;
+              const searchRes = await github.rest.search.issuesAndPullRequests({ q: searchQuery });
+
+              // Fetch the latest event ID for this issue
+              let lastEventId = '';
+              try {
+                const eventsRes = await fetch(`${SENTRY_API}/issues/${issue.id}/events/?limit=1`, { headers: SENTRY_HEADERS });
+                if (eventsRes.ok) {
+                  const events = await eventsRes.json();
+                  if (events.length > 0) lastEventId = events[0].id;
+                }
+              } catch (e) {
+                core.warning(`Could not fetch events for Sentry #${issue.id}: ${e.message}`);
+              }
 
               if (searchRes.data.total_count > 0) {
-                core.info(`GitHub issue already exists for Sentry #${issue.id}`);
+                const ghIssue = searchRes.data.items[0];
+                if (ghIssue.state === 'closed') {
+                  await github.rest.issues.update({
+                    owner, repo,
+                    issue_number: ghIssue.number,
+                    state: 'open',
+                  });
+                  await github.rest.issues.createComment({
+                    owner, repo,
+                    issue_number: ghIssue.number,
+                    body: `🔄 This crash has reappeared in Sentry (status: **${issue.status}**). Re-opening issue for investigation.`,
+                  });
+                  core.info(`Re-opened GitHub #${ghIssue.number} for Sentry #${issue.id}`);
+                }
+                
+                // If we found a newer event, we could add it as a comment, but for now just updating the main issue body if we were to recreate it.
+                // However, since it's already open, we just continue.
                 continue;
               }
 
@@ -99,25 +126,28 @@ jobs:
                 `| **Affected Users** | ${issue.userCount} |`,
                 `| **Culprit** | \`${issue.culprit || 'Unknown'}\` |`,
                 ``,
-                `### Error`,
+                `### Error Details`,
                 `\`\`\``,
                 issue.title,
                 `\`\`\``,
                 ``,
                 `---`,
-                `> 👆 **Subscribe to this issue** (Watch → "Participating and @mentions" or use the Subscribe button) `,
-                `> to receive a notification when this crash is fixed and the issue is closed.`,
+                `> 👆 **Subscribe to this issue** to receive notifications when this crash is fixed.`,
+                `> Your crash report helps improve Obtainium+ for everyone!`,
                 ``,
                 `<!-- sentry-issue-id: ${issue.id} -->`,
-              ].join('\n');
+                `<!-- sentry-short-id: ${issue.shortId} -->`,
+                lastEventId ? `<!-- last-event-id: ${lastEventId} -->` : '',
+                lastEventId ? `<!-- Sentry #${lastEventId} -->` : '', // Make it searchable as Sentry #ID
+              ].filter(l => l).join('\n');
 
               await github.rest.issues.create({
                 owner, repo,
-                title: `[Crash] ${issue.title} [Sentry #${issue.id}]`,
+                title: `[Crash] ${issue.title} [${issue.shortId}] [Sentry #${issue.id}]`,
                 body,
                 labels: ['bug', 'sentry-crash', 'automated'],
               });
-              core.info(`Created GitHub issue for Sentry #${issue.id}: ${issue.title}`);
+              core.info(`Created GitHub issue for Sentry ${issue.shortId} (${issue.id})`);
             }
 
             // ── Close GitHub issues whose Sentry issue is now resolved ────────
@@ -126,35 +156,40 @@ jobs:
               labels: 'sentry-crash',
               state: 'open',
             });
-            core.info(`Checking ${openIssues.length} open sentry-crash GitHub issues for resolution`);
+            core.info(`Checking ${openIssues.length} open sentry-crash GitHub issues for resolution status`);
 
             for (const ghIssue of openIssues) {
               const match = ghIssue.title.match(/\[Sentry #(\d+)\]/);
               if (!match) continue;
               const sentryIssueId = match[1];
 
-              const issueRes = await fetch(
-                `${SENTRY_API}/issues/${sentryIssueId}/`,
-                { headers: SENTRY_HEADERS },
-              );
-              if (!issueRes.ok) {
-                core.warning(`Could not fetch Sentry issue ${sentryIssueId}: ${issueRes.status}`);
-                continue;
-              }
-              const sentryIssue = await issueRes.json();
-
-              if (sentryIssue.status === 'resolved') {
-                await github.rest.issues.createComment({
-                  owner, repo,
-                  issue_number: ghIssue.number,
-                  body: `✅ This crash has been marked as **resolved** in Sentry. A fix should be available in an upcoming release. Subscribe above to get notified when it ships.`,
-                });
-                await github.rest.issues.update({
-                  owner, repo,
-                  issue_number: ghIssue.number,
-                  state: 'closed',
-                  state_reason: 'completed',
-                });
-                core.info(`Closed GitHub #${ghIssue.number} (Sentry #${sentryIssueId} resolved)`);
+              try {
+                const issueRes = await fetch(
+                  `${SENTRY_API}/issues/${sentryIssueId}/`,
+                  { headers: SENTRY_HEADERS },
+                );
+                
+                if (!issueRes.ok) {
+                  core.warning(`Could not fetch Sentry issue ${sentryIssueId}: ${issueRes.status}`);
+                  continue;
+                }
+                
+                const sentryIssue = await issueRes.json();
+                if (sentryIssue.status === 'resolved') {
+                  await github.rest.issues.createComment({
+                    owner, repo,
+                    issue_number: ghIssue.number,
+                    body: `✅ This crash has been marked as **resolved** in Sentry. A fix should be available in a recent or upcoming release.`,
+                  });
+                  await github.rest.issues.update({
+                    owner, repo,
+                    issue_number: ghIssue.number,
+                    state: 'closed',
+                    state_reason: 'completed',
+                  });
+                  core.info(`Closed GitHub #${ghIssue.number} (Sentry #${sentryIssueId} resolved)`);
+                }
+              } catch (err) {
+                core.error(`Error processing Sentry issue ${sentryIssueId}: ${err.message}`);
               }
             }
