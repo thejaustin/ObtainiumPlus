@@ -48,8 +48,18 @@ class RateLimitError extends ObtainiumError {
 
 class InvalidURLError extends ObtainiumError {
   String? appId;
-  InvalidURLError(String sourceName, {this.appId})
-    : super(tr('invalidURLForSource', args: [sourceName]));
+  final String? detectedSource;
+  
+  InvalidURLError(String sourceName, {this.appId, this.detectedSource})
+    : super(_buildMessage(sourceName, detectedSource));
+  
+  static String _buildMessage(String sourceName, String? detectedSource) {
+    if (detectedSource != null && detectedSource != sourceName) {
+      return tr('invalidURLForSource', args: [sourceName]) + 
+             '\n\n${tr('didYouMean', args: [detectedSource])}';
+    }
+    return tr('invalidURLForSource', args: [sourceName]);
+  }
 }
 
 class CredsNeededError extends ObtainiumError {
