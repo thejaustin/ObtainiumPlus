@@ -500,7 +500,21 @@ class _AppPageState extends State<AppPage> {
     return Column(
       children: [
         InkWell(
-          onTap: () => app?.app.url != null ? launchUrlString(app!.app.url, mode: LaunchMode.externalApplication) : null,
+          onTap: () {
+            if (app?.app.url == null) return;
+            // For GitHub apps, open releases page instead of main repo
+            String urlToOpen = app!.app.url;
+            if (app.app.url.contains('github.com')) {
+              final uri = Uri.parse(app.app.url);
+              final pathSegments = uri.pathSegments;
+              if (pathSegments.length >= 2) {
+                final owner = pathSegments[0];
+                final repo = pathSegments[1];
+                urlToOpen = 'https://github.com/$owner/$repo/releases';
+              }
+            }
+            launchUrlString(urlToOpen, mode: LaunchMode.externalApplication);
+          },
           onLongPress: () {
             HapticFeedback.heavyImpact();
             _showContextMenu(
@@ -843,12 +857,22 @@ class _AppPageState extends State<AppPage> {
         const SizedBox(height: 24),
         GestureDetector(
           onTap: () {
-            if (app?.app.url != null) {
-              launchUrlString(
-                app?.app.url ?? '',
-                mode: LaunchMode.externalApplication,
-              );
+            if (app?.app.url == null) return;
+            // For GitHub apps, open releases page instead of main repo
+            String urlToOpen = app!.app.url;
+            if (app.app.url.contains('github.com')) {
+              final uri = Uri.parse(app.app.url);
+              final pathSegments = uri.pathSegments;
+              if (pathSegments.length >= 2) {
+                final owner = pathSegments[0];
+                final repo = pathSegments[1];
+                urlToOpen = 'https://github.com/$owner/$repo/releases';
+              }
             }
+            launchUrlString(
+              urlToOpen,
+              mode: LaunchMode.externalApplication,
+            );
           },
           onLongPress: () {
             HapticFeedback.heavyImpact();
@@ -1310,8 +1334,9 @@ class _AppBottomBar extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8.0),
-                    Flexible(
-                      flex: 2,
+                    // Expanded update/install button - takes available space
+                    Expanded(
+                      flex: 3,
                       child: FilledButton(
                         onPressed: !updating &&
                                 (app?.app.installedVersion == null ||
@@ -1320,14 +1345,36 @@ class _AppBottomBar extends StatelessWidget {
                                 !areDownloadsRunning
                             ? onInstallUpdate
                             : null,
-                        child: Text(
-                          app?.app.installedVersion == null
-                              ? !trackOnly
-                                    ? tr('install')
-                                    : tr('markInstalled')
-                              : !trackOnly
-                              ? tr('update')
-                              : tr('markUpdated'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              app?.app.installedVersion == null
+                                  ? Icons.download_outlined
+                                  : Icons.system_update_outlined,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                app?.app.installedVersion == null
+                                    ? !trackOnly
+                                          ? tr('install')
+                                          : tr('markInstalled')
+                                    : !trackOnly
+                                    ? tr('update')
+                                    : tr('markUpdated'),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
