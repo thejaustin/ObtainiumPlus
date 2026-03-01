@@ -259,39 +259,28 @@ jobs:
           retention-days: 90
 
       - name: Create Release
+        id: create_release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.bump_version.outputs.tag || format('v{0}', steps.bump_version.outputs.version) || 'latest' }}
-          name: "Obtainium+ ${{ steps.bump_version.outputs.version || 'Latest Build' }}"
-          commit: ${{ steps.commit_bump.outputs.sha || github.sha }}
+          tag: ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || 'latest' }}
+          name: "Obtainium+ ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || 'Latest Build' }}"
+          commit: ${{ github.sha }}
           draft: false
-          prerelease: ${{ inputs.beta || false }}
-          generateReleaseNotes: true
-          artifacts: "build/app/outputs/flutter-apk/*.apk"
+          prerelease: false
+          generateReleaseNotes: false
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/flutter-apk/app-release-armeabi-v7a.apk,build/app/outputs/flutter-apk/app-release-arm64-v8a.apk,build/app/outputs/flutter-apk/app-release-x86_64.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           skipIfReleaseExists: false
+          replacesArtifacts: true
           body: |
-            **Obtainium+ Build #${{ steps.bump_version.outputs.build_number || 'Unknown' }}**
-
-            ### Version Info
-            - **Version**: ${{ steps.bump_version.outputs.version || 'Latest' }}
-            - **Commit**: [`${{ steps.commit_bump.outputs.sha || github.sha }}`](https://github.com/${{ github.repository }}/commit/${{ steps.commit_bump.outputs.sha || github.sha }})
-            - **Build Date**: ${{ github.event.head_commit.timestamp }}
-
-            ### Installation
-            1. Download `app-release.apk` below
-            2. Enable 'Install from Unknown Sources' in Android settings
-            3. Install the APK
-
-            ### Changes in this build
-            ${{ steps.build_changelog.outputs.changelog }}
-
-            ---
-
-            📥 **[Download Latest](https://github.com/${{ github.repository }}/releases/latest)** | 📝 **[All Releases](https://github.com/${{ github.repository }}/releases)**
-
-            🤖 *Built with [Claude Code](https://claude.com/claude-code) and GitHub Actions*
+            **Obtainium+ Build**
+            
+            - **Commit**: ${{ github.sha }}
+            - **Date**: ${{ github.event.head_commit.timestamp }}
+            - **Artifacts**: APK files below
+            
+            Built with GitHub Actions.
 
   sync-sentry-issues:
     needs: build
