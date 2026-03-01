@@ -282,6 +282,18 @@ class AppActionsFAB extends StatelessWidget {
                 
                 _buildMenuItem(
                   context,
+                  icon: Icons.code_outlined,
+                  title: tr('importGithubStarredRepos'),
+                  subtitle: tr('importGithubStarredReposDescription'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await Navigator.pushNamed(context, '/import_export');
+                    // Could navigate directly to GitHub import or show username dialog
+                  },
+                ),
+                
+                _buildMenuItem(
+                  context,
                   icon: Icons.install_mobile_outlined,
                   title: tr('importInstalledApps'),
                   subtitle: tr('importInstalledAppsDescription'),
