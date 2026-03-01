@@ -240,14 +240,17 @@ class AddAppPageState extends State<AddAppPage> {
     try {
       var appsProvider = context.read<AppsProvider>();
       var userPickedTrackOnly = additionalSettings['trackOnly'] == true;
+      // Capture pickedSource locally before awaits to avoid TOCTOU race condition
+      final source = pickedSource;
+      if (source == null) return;
       App? app;
       if ((await _getTrackOnlyConfirmationIfNeeded(userPickedTrackOnly)) &&
           (await _getReleaseDateAsVersionConfirmationIfNeeded(
             userPickedTrackOnly,
           ))) {
-        var trackOnly = pickedSource!.enforceTrackOnly || userPickedTrackOnly;
+        var trackOnly = source.enforceTrackOnly || userPickedTrackOnly;
         app = await sourceProvider.getApp(
-          pickedSource!,
+          source,
           userInput.trim(),
           additionalSettings,
           trackOnlyOverride: trackOnly,

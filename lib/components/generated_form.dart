@@ -324,9 +324,17 @@ class _GeneratedFormState extends State<GeneratedForm> {
     initForm();
   }
 
+  bool _itemsDimensionsChanged() {
+    if (formInputs.length != widget.items.length) return true;
+    for (var r = 0; r < formInputs.length; r++) {
+      if (formInputs[r].length != widget.items[r].length) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.key.toString() != initKey) {
+    if (widget.key.toString() != initKey || _itemsDimensionsChanged()) {
       initForm();
     }
     for (var r = 0; r < formInputs.length; r++) {
