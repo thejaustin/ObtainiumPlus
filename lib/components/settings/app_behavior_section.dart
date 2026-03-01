@@ -30,7 +30,7 @@ class AppBehaviorSection extends StatelessWidget {
 
     List<Widget> children = [
       // Page Transitions
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildFeatureToggle(
         context,
         icon: Icons.animation_outlined,
         title: tr('disablePageTransitions'),
@@ -39,7 +39,7 @@ class AppBehaviorSection extends StatelessWidget {
         onChanged: (s, v) => s.disablePageTransitions = v,
         visible: (s) => _matches(tr('disablePageTransitions')),
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildFeatureToggle(
         context,
         icon: Icons.flip_outlined,
         title: tr('reversePageTransitions'),
@@ -50,7 +50,7 @@ class AppBehaviorSection extends StatelessWidget {
       ),
       
       // Haptic Feedback
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildFeatureToggle(
         context,
         icon: Icons.vibration_outlined,
         title: tr('enableHapticFeedback'),
@@ -61,7 +61,7 @@ class AppBehaviorSection extends StatelessWidget {
       ),
       
       // Swipe Gestures
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildFeatureToggle(
         context,
         icon: Icons.gesture_outlined,
         title: tr('enableSwipeGestures'),
@@ -72,7 +72,7 @@ class AppBehaviorSection extends StatelessWidget {
       ),
       
       // Undo App Removal
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildFeatureToggle(
         context,
         icon: Icons.undo_outlined,
         title: tr('enableUndoForAppRemoval'),
@@ -156,16 +156,16 @@ class AppBehaviorSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureToggle<T>(
+  Widget _buildFeatureToggle(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required bool Function(T) value,
-    required void Function(T, bool) onChanged,
-    required bool Function(T) visible,
+    required bool Function(BehaviorSettingsProvider) value,
+    required void Function(BehaviorSettingsProvider, bool) onChanged,
+    required bool Function(BehaviorSettingsProvider) visible,
   }) {
-    return Consumer<T>(
+    return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(

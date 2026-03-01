@@ -29,7 +29,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> children = [
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildBehaviorToggle(
         context,
         icon: Icons.delete_sweep_outlined,
         title: tr('removeOnExternalUninstall'),
@@ -38,7 +38,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.removeOnExternalUninstall = v,
         visible: (s) => _matches(tr('removeOnExternalUninstall')),
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildBehaviorToggle(
         context,
         icon: Icons.verified_user_outlined,
         title: tr('beforeNewInstallsShareToAppVerifier'),
@@ -49,7 +49,7 @@ class AdvancedSettingsSection extends StatelessWidget {
       ),
       if (_matches(tr('useShizuku'))) _buildUseShizukuToggle(context),
       if (_matches(tr('shizukuPretendToBeGooglePlay'))) _buildShizukuPretendToBeGooglePlayToggle(context),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildSettingsToggle(
         context,
         icon: Icons.report_off_outlined,
         title: tr('dontShowTrackOnlyWarnings'),
@@ -58,7 +58,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.hideTrackOnlyWarning = v,
         visible: (s) => _matches(tr('dontShowTrackOnlyWarnings')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildSettingsToggle(
         context,
         icon: Icons.security_outlined,
         title: tr('dontShowAPKOriginWarnings'),
@@ -67,7 +67,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.hideAPKOriginWarning = v,
         visible: (s) => _matches(tr('dontShowAPKOriginWarnings')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildSettingsToggle(
         context,
         icon: Icons.bug_report_outlined,
         title: tr('enableDeepLogging'),
@@ -76,7 +76,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.enableDeepLogging = v,
         visible: (s) => _matches(tr('enableDeepLogging')),
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildBehaviorToggle(
         context,
         icon: Icons.gesture_outlined,
         title: tr('enableSwipeGestures'),
@@ -85,7 +85,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.enableSwipeGestures = v,
         visible: (s) => _matches(tr('enableSwipeGestures')),
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildBehaviorToggle(
         context,
         icon: Icons.undo_outlined,
         title: tr('enableUndoForAppRemoval'),
@@ -94,7 +94,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.enableUndoForAppRemoval = v,
         visible: (s) => _matches(tr('enableUndoForAppRemoval')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildSettingsToggle(
         context,
         icon: Icons.lightbulb_outline,
         title: tr('enableContextualTips'),
@@ -103,7 +103,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.enableContextualTips = v,
         visible: (s) => _matches(tr('enableContextualTips')),
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      _buildBehaviorToggle(
         context,
         icon: Icons.vibration_outlined,
         title: tr('enableHapticFeedback'),
@@ -275,16 +275,39 @@ class AdvancedSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureToggle<T extends ChangeNotifier>(
+  Widget _buildBehaviorToggle(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required dynamic Function(T) value,
-    required void Function(T, bool) onChanged,
-    required bool Function(T) visible,
+    required bool Function(BehaviorSettingsProvider) value,
+    required void Function(BehaviorSettingsProvider, bool) onChanged,
+    required bool Function(BehaviorSettingsProvider) visible,
   }) {
-    return Consumer<T>(
+    return Consumer<BehaviorSettingsProvider>(
+      builder: (context, settings, child) {
+        if (!visible(settings)) return const SizedBox.shrink();
+        return SwitchListTile.adaptive(
+          secondary: Icon(icon),
+          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(subtitle),
+          value: value(settings),
+          onChanged: (v) => onChanged(settings, v),
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingsToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool Function(SettingsProvider) value,
+    required void Function(SettingsProvider, bool) onChanged,
+    required bool Function(SettingsProvider) visible,
+  }) {
+    return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(
