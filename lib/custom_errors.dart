@@ -88,8 +88,17 @@ class NoVersionError extends ObtainiumError {
 
 class UnsupportedURLError extends ObtainiumError {
   final List<String>? suggestedSources;
+  final String? failedUrl;
   
-  UnsupportedURLError({this.suggestedSources}) : super(tr('urlMatchesNoSource'));
+  UnsupportedURLError({this.suggestedSources, this.failedUrl}) 
+    : super(_buildMessage(failedUrl));
+  
+  static String _buildMessage(String? failedUrl) {
+    if (failedUrl != null && failedUrl.isNotEmpty) {
+      return '${tr('urlMatchesNoSource')}\n\nURL: $failedUrl';
+    }
+    return tr('urlMatchesNoSource');
+  }
 }
 
 class DowngradeError extends ObtainiumError {
