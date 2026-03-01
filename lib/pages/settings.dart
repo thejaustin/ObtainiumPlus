@@ -41,6 +41,9 @@ import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/legacy_settings.dart';
 import 'package:obtainium/pages/statistics.dart';
+import 'package:obtainium/components/settings/app_behavior_section.dart';
+import 'package:obtainium/components/settings/app_display_section.dart';
+import 'package:obtainium/components/settings/installation_section.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -309,10 +312,22 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
               SettingsGroup(title: tr('sourceSpecific'), children: sourceSpecificFields.toList()),
               const SizedBox(height: 24),
             ],
-            BehaviorSettingsSection(sortDropdown: sortDropdown, orderDropdown: orderDropdown, localeDropdown: localeDropdown),
+            // App Behavior Section
+            AppBehaviorSection(searchQuery: _searchQuery),
             const SizedBox(height: 24),
-            AdvancedSettingsSection(),
+            // App Display Section
+            AppDisplaySection(searchQuery: _searchQuery),
             const SizedBox(height: 24),
+            // Installation Section
+            InstallationSection(searchQuery: _searchQuery),
+            const SizedBox(height: 24),
+            // General Settings (sort, order, locale)
+            BehaviorSettingsSection(sortDropdown: sortDropdown, orderDropdown: orderDropdown, localeDropdown: localeDropdown, searchQuery: _searchQuery),
+            const SizedBox(height: 24),
+            // Advanced Settings
+            AdvancedSettingsSection(searchQuery: _searchQuery),
+            const SizedBox(height: 24),
+            // Troubleshooting
             const TroubleshootingSection(),
           ]),
         ),
