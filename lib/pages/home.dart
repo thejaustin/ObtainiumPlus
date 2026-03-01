@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/editable_navigation_bar.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
@@ -542,7 +543,8 @@ class HomePageState extends State<HomePage> {
     allPages = {
       'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
       'updates': NavigationPageItem('updates', tr('updates'), Icons.update_outlined, Icons.update, updatesPage),
-      'add': NavigationPageItem('add', tr('addApp'), Icons.add_circle_outline, Icons.add_circle, addAppPage),
+      if (settingsProvider.plusDeveloperMode)
+        'add': NavigationPageItem('add', tr('addApp'), Icons.add_circle_outline, Icons.add_circle, addAppPage),
       'discover': NavigationPageItem('discover', tr('discover'), Icons.explore_outlined, Icons.explore, discoverPage),
       'settings': NavigationPageItem('settings', tr('settings'), Icons.settings_outlined, Icons.settings, settingsPage),
       'import_export': NavigationPageItem('import_export', tr('importExport'), Icons.swap_vert_outlined, Icons.swap_vert, importExportPage),
@@ -614,18 +616,7 @@ class HomePageState extends State<HomePage> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           floatingActionButton: (activePages[currentIndex].id == 'apps' ||
                   activePages[currentIndex].id == 'updates')
-              ? FloatingActionButton(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) => const AddAppPage(),
-                    );
-                  },
-                  child: const Icon(Icons.add),
-                )
+              ? const AppActionsFAB()
               : null,
           body: PageView(
             controller: _pageController,
