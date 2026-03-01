@@ -250,37 +250,35 @@ jobs:
           git push origin HEAD:main
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Upload APK Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: obtainium-plus-apks-${{ steps.bump_version.outputs.version }}
-          path: build/app/outputs/flutter-apk/*.apk
-          if-no-files-found: error
-          retention-days: 90
+      - name: List Built APKs
+        run: |
+          echo "=== Built APK Files ==="
+          ls -lh build/app/outputs/flutter-apk/ || true
+          echo "========================"
 
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || 'latest' }}
-          name: "Obtainium+ ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || 'Latest Build' }}"
+          tag: ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || format('build-{0}', github.run_number) }}
+          name: "Obtainium+ Build ${{ github.run_number }}"
           commit: ${{ github.sha }}
           draft: false
           prerelease: false
           generateReleaseNotes: false
-          artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/flutter-apk/app-release-armeabi-v7a.apk,build/app/outputs/flutter-apk/app-release-arm64-v8a.apk,build/app/outputs/flutter-apk/app-release-x86_64.apk"
+          artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           skipIfReleaseExists: false
           replacesArtifacts: true
           body: |
-            **Obtainium+ Build**
+            **Obtainium+ Automated Build**
             
-            - **Commit**: ${{ github.sha }}
-            - **Date**: ${{ github.event.head_commit.timestamp }}
-            - **Artifacts**: APK files below
+            - **Build #:** ${{ github.run_number }}
+            - **Commit:** ${{ github.sha }}
+            - **Date:** ${{ github.event.head_commit.timestamp }}
             
-            Built with GitHub Actions.
+            Built automatically on push to main branch.
 
   sync-sentry-issues:
     needs: build
