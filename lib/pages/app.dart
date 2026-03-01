@@ -24,6 +24,7 @@ import 'package:obtainium/services/play_store_mirror_service.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class AppPage extends StatefulWidget {
