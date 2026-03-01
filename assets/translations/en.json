@@ -879,5 +879,9 @@
     "cacheCorrupted": "Cache file corrupted - cleared automatically",
     "appNotInstalled": "App not installed on device",
     "networkError": "Network error - please check your connection",
-    "rateLimitExceeded": "Rate limit exceeded - please wait before trying again"
+    "rateLimitExceeded": "Rate limit exceeded - please wait before trying again",
+    "unsupportedUrl": "Unsupported URL",
+    "unsupportedUrlDescription": "This URL is not from a supported app source. Obtainium can only track apps from specific sources.",
+    "browseSupportedSources": "Browse Sources",
+    "supportedSourcesTip": "Copy and paste the app's URL from one of these supported sources"
 }
