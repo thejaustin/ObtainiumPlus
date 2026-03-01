@@ -3,7 +3,7 @@
     package="app.obtainiumplus">
     <application
         android:label="@string/label"
-        android:name="${applicationName}"
+        android:name=".ObtainiumApplication"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:localeConfig="@xml/locales_config">

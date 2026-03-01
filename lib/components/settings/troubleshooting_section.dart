@@ -33,6 +33,13 @@ class TroubleshootingSection extends StatelessWidget {
         _buildSystemShortcutTile(context, icon: Icons.layers_outlined, title: tr('overlaySettings'), onTap: () => AppInstallService.openOverlaySettings(obtainiumId)),
       if (_matches(tr('usageAccessSettings')))
         _buildSystemShortcutTile(context, icon: Icons.insights_outlined, title: tr('usageAccessSettings'), onTap: () => AppInstallService.openUsageAccessSettings()),
+      if (!context.watch<SettingsProvider>().plusDeveloperMode)
+        ListTile(
+          leading: Icon(Icons.help_outline, color: Theme.of(context).colorScheme.primary),
+          title: const Text('Looking for Developer Options?'),
+          subtitle: const Text('Long-press the "App Logs" icon in the About section to enable.'),
+          dense: true,
+        ),
     ];
 
     if (items.isEmpty) return const SizedBox.shrink();
