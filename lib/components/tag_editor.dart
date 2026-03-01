@@ -236,11 +236,12 @@ Widget _buildActions(BuildContext context, List<String> selectedTags) {
 }
 
 /// Get all unique tags from a list of apps
-List<String> getAllTagsFromApps(List<dynamic> apps) {
+List<String> getAllTagsFromApps(List<MapEntry<String, dynamic>> apps) {
   final tags = <String>{};
   for (final app in apps) {
-    if (app.tags != null && app.tags is List) {
-      tags.addAll(app.tags.cast<String>());
+    final appTags = app.value.tags;
+    if (appTags != null) {
+      tags.addAll(appTags);
     }
   }
   return tags.toList()..sort();
