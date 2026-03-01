@@ -113,16 +113,56 @@ class AppIconService {
 
     _iconsLoading.add(appId);
     try {
-      var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
-      var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
-      var icon = alreadyCached
-          ? (await cachedIcon.readAsBytes())
-          : (await (await AppInstallService.getInstalledInfo(appId))?.applicationInfo?.getAppIcon());
-      
-      if (icon != null && !alreadyCached) {
-        unawaited(cachedIcon.writeAsBytes(icon.toList()));
+      // Check if cache directory exists
+      if (!iconsCacheDir.existsSync()) {
+        try {
+          iconsCacheDir.createSync(recursive: true);
+        } catch (e) {
+          _iconsFailed.add(appId);
+          return;
+        }
       }
+
+      var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
       
+      // Safely check and read cached icon
+      Uint8List? icon;
+      try {
+        var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
+        if (alreadyCached) {
+          icon = await cachedIcon.readAsBytes();
+        }
+      } catch (e) {
+        // Cache file exists but is corrupted or unreadable
+        try {
+          if (cachedIcon.existsSync()) {
+            cachedIcon.deleteSync();
+          }
+        } catch (_) {}
+        icon = null;
+      }
+
+      // Fetch from installed app if not cached
+      if (icon == null) {
+        try {
+          final installedInfo = await AppInstallService.getInstalledInfo(appId);
+          icon = await installedInfo?.applicationInfo?.getAppIcon();
+          
+          // Save to cache if successfully fetched
+          if (icon != null) {
+            try {
+              await cachedIcon.writeAsBytes(icon.toList());
+            } catch (e) {
+              // Cache write failed, but we can still use the icon
+            }
+          }
+        } catch (e) {
+          // App not installed or icon not available
+          _iconsFailed.add(appId);
+          return;
+        }
+      }
+
       if (icon != null) {
         _iconsFailed.remove(appId);
         // Add to LRU cache
@@ -146,6 +186,9 @@ class AppIconService {
       } else {
         _iconsFailed.add(appId);
       }
+    } catch (e) {
+      // Unexpected error during icon loading
+      _iconsFailed.add(appId);
     } finally {
       _iconsLoading.remove(appId);
     }
