@@ -201,4 +201,34 @@ class BehaviorSettingsProvider with ChangeNotifier {
     prefs?.setInt('swipeLeftAction', val.index);
     notifyListeners();
   }
+
+  /// Preferred update source: 'play_store', 'github', 'apkpure', 'direct'
+  String get preferredUpdateSource {
+    return prefs?.getString('preferredUpdateSource') ?? 'direct';
+  }
+
+  set preferredUpdateSource(String val) {
+    prefs?.setString('preferredUpdateSource', val);
+    notifyListeners();
+  }
+
+  /// Allow third-party sources for updates
+  bool get allowThirdPartySources {
+    return prefs?.getBool('allowThirdPartySources') ?? true;
+  }
+
+  set allowThirdPartySources(bool val) {
+    prefs?.setBool('allowThirdPartySources', val);
+    notifyListeners();
+  }
+
+  /// Use app links for Google Play Store
+  bool get usePlayStoreAppLinks {
+    return prefs?.getBool('usePlayStoreAppLinks') ?? true;
+  }
+
+  set usePlayStoreAppLinks(bool val) {
+    prefs?.setBool('usePlayStoreAppLinks', val);
+    notifyListeners();
+  }
 }

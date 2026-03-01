@@ -1,5 +1,8 @@
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 
 class ImportErrorDialog extends StatefulWidget {
   const ImportErrorDialog({
@@ -18,13 +21,106 @@ class ImportErrorDialog extends StatefulWidget {
 class _ImportErrorDialogState extends State<ImportErrorDialog> {
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      scrollable: true,
-      title: Text(tr('importErrors')),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
+              blurRadius: enableGlass ? 20 : 10,
+              spreadRadius: enableGlass ? 0 : -5,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: enableGlass ? 15 : 0,
+              sigmaY: enableGlass ? 15 : 0,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context, enableGlass),
+                const Divider(height: 1),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildContent(context),
+                  ),
+                ),
+                _buildActions(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool enableGlass) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Row(
         children: [
-          Text(
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.warning_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              tr('importErrors'),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Text(
             tr(
               'importedXOfYApps',
               args: [
@@ -34,31 +130,67 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 16),
-          Text(
-            tr('followingURLsHadErrors'),
-            style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        const SizedBox(height: 20),
+        Text(
+          tr('followingURLsHadErrors'),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
-          ...widget.errors.map((e) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+        ),
+        const SizedBox(height: 12),
+        ...widget.errors.map((e) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
-                Text(e[0]),
-                Text(e[1], style: const TextStyle(fontStyle: FontStyle.italic)),
+                Text(
+                  e[0],
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  e[1],
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
+                ),
               ],
-            );
-          }),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(tr('ok')),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: Text(tr('ok')),
-        ),
-      ],
     );
   }
 }

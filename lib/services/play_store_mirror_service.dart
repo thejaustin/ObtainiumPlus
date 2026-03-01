@@ -6,6 +6,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/version_utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ExternalAppUpdate {
   final String appId;
@@ -108,12 +109,73 @@ class PlayStoreMirrorService {
     }
   }
 
-  static Future<void> openInPlayStore(String appId) async {
+  static Future<void> openInPlayStore(String appId, {bool useAppLinks = true}) async {
+    if (useAppLinks) {
+      // Try using app links (https URL) first
+      final playStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=$appId');
+      if (await canLaunchUrl(playStoreUri)) {
+        try {
+          await launchUrl(
+            playStoreUri,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+          return;
+        } catch (e) {
+          // Fall through to intent-based approach
+        }
+      }
+    }
+    
+    // Fallback to Android Intent with market:// scheme
     final intent = AndroidIntent(
       action: 'android.intent.action.VIEW',
       data: 'https://play.google.com/store/apps/details?id=$appId',
       package: 'com.android.vending',
     );
-    await intent.launch();
+    try {
+      await intent.launch();
+    } catch (e) {
+      // Try market:// scheme as final fallback
+      final marketIntent = AndroidIntent(
+        action: 'android.intent.action.VIEW',
+        data: 'market://details?id=$appId',
+      );
+      await marketIntent.launch();
+    }
+  }
+
+  /// Open app in a specific store or source
+  static Future<void> openInSource({
+    required String appId,
+    required String source,
+    String? packageName,
+  }) async {
+    switch (source) {
+      case 'play_store':
+        await openInPlayStore(appId);
+        break;
+      case 'aurora':
+        await openInAuroraStore(appId);
+        break;
+      case 'github':
+        if (packageName != null) {
+          final uri = Uri.parse('https://github.com/search?q=$packageName');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        }
+        break;
+      case 'apkpure':
+        if (packageName != null) {
+          final uri = Uri.parse('https://apkpure.com/any/$packageName');
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        }
+        break;
+      default:
+        // Default to Play Store
+        await openInPlayStore(appId);
+    }
   }
 }

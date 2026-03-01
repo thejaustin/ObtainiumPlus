@@ -27,7 +27,7 @@ class BackgroundUpdateService {
     LogsProvider logs = LogsProvider();
     NotificationsProvider notificationsProvider = NotificationsProvider();
     AppsProvider appsProvider = AppsProvider(isBg: true);
-    await appsProvider.loadApps();
+    await appsProvider.initialize();
 
     int maxAttempts = 4; // Immediate retries
     int maxRetryWaitSeconds = 5;
