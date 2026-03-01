@@ -105,18 +105,24 @@ jobs:
           fi
 
       - name: Validate Secrets
+        id: check_secrets
         run: |
+          has_secrets=true
           if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ]; then
-            echo "ERROR: Required secrets are missing for signing APK."
-            echo "Please configure the following secrets in your repository:"
+            echo "⚠️ WARNING: Signing secrets are missing. Building unsigned APK."
+            echo "To enable signing, configure these secrets:"
             echo "- KEYSTORE_BASE64"
             echo "- KEYSTORE_PASSWORD"
             echo "- KEY_PASSWORD"
             echo "- KEY_ALIAS"
-            exit 1
+            has_secrets=false
+          else
+            echo "✅ Signing secrets found"
           fi
+          echo "has_secrets=$has_secrets" >> $GITHUB_OUTPUT
 
       - name: Setup Keystore
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         run: |
           echo "Creating keystore from secret..."
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-keystore.jks
