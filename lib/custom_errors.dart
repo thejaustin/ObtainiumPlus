@@ -49,8 +49,9 @@ class RateLimitError extends ObtainiumError {
 class InvalidURLError extends ObtainiumError {
   String? appId;
   final String? detectedSource;
+  final List<String>? suggestedSources;
   
-  InvalidURLError(String sourceName, {this.appId, this.detectedSource})
+  InvalidURLError(String sourceName, {this.appId, this.detectedSource, this.suggestedSources})
     : super(_buildMessage(sourceName, detectedSource));
   
   static String _buildMessage(String sourceName, String? detectedSource) {
@@ -86,7 +87,9 @@ class NoVersionError extends ObtainiumError {
 }
 
 class UnsupportedURLError extends ObtainiumError {
-  UnsupportedURLError() : super(tr('urlMatchesNoSource'));
+  final List<String>? suggestedSources;
+  
+  UnsupportedURLError({this.suggestedSources}) : super(tr('urlMatchesNoSource'));
 }
 
 class DowngradeError extends ObtainiumError {
