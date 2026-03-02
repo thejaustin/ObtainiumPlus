@@ -170,4 +170,22 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setBool('playStoreExcludeSystemApps', val);
     notifyListeners();
   }
+
+  bool get playStoreNoAdsFilter => _prefs?.getBool('playStoreNoAdsFilter') ?? false;
+  set playStoreNoAdsFilter(bool val) {
+    _prefs?.setBool('playStoreNoAdsFilter', val);
+    notifyListeners();
+  }
+
+  int get playStoreMinDownloads => _prefs?.getInt('playStoreMinDownloads') ?? 0;
+  set playStoreMinDownloads(int val) {
+    _prefs?.setInt('playStoreMinDownloads', val);
+    notifyListeners();
+  }
+
+  bool get requireVPNForPlayStore => _prefs?.getBool('requireVPNForPlayStore') ?? false;
+  set requireVPNForPlayStore(bool val) {
+    _prefs?.setBool('requireVPNForPlayStore', val);
+    notifyListeners();
+  }
 }
