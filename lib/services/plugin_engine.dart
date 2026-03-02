@@ -1,5 +1,7 @@
 import 'package:flutter_js/flutter_js.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 
 class PluginEngine {
   late JavascriptRuntime _runtime;
@@ -10,22 +12,27 @@ class PluginEngine {
 
   /// Initialize the runtime with common utilities
   void init() {
-    // Inject http helper for plugins
     _runtime.onMessage('httpGet', (args) async {
-      // Implementation of a secure http getter exposed to JS
       talker.debug('Plugin calling httpGet: ${args['url']}');
       return {'status': 200, 'body': '...mocked...'};
     });
   }
 
-  /// Execute a specific function in a plugin
-  Future<dynamic> call(String jsCode, String functionName, List<dynamic> args) async {
+  /// Maps a JS plugin to a functional AppSource
+  Future<APKDetails?> executeSourcePlugin(String jsCode, String url) async {
     try {
       _runtime.evaluate(jsCode);
-      final result = _runtime.evaluate('$functionName(...${args.map((a) => '"$a"').toList()})');
-      return result.rawResult;
+      // Expected JS function: getDetails(url) -> { version: string, name: string, apkUrls: string[] }
+      final result = _runtime.evaluate('getDetails("$url")');
+      final data = result.rawResult as Map<String, dynamic>;
+      
+      return APKDetails(
+        data['version'] ?? 'Unknown',
+        (data['apkUrls'] as List).map((u) => MapEntry(u.toString(), u.toString())).toList(),
+        AppNames(data['name'] ?? 'Plugin App', data['name'] ?? 'Plugin App'),
+      );
     } catch (e, stack) {
-      talker.handle(e, stack, 'JS Plugin Execution Error: $functionName');
+      talker.handle(e, stack, 'Plugin Execution Failed');
       return null;
     }
   }
