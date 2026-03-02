@@ -43,8 +43,28 @@ class PlayStoreApi {
       return null;
     }
   }
+/// Search for apps using the FDFE API
+Future<List<Map<String, dynamic>>> search(String query, {bool verifiedOnly = false}) async {
+  try {
+    final spParam = verifiedOnly ? '&sp=CAU%3D' : '';
+    final url = '$_baseUrl/search?c=3&q=${Uri.encodeComponent(query)}$spParam';
+    talker.info('Play Store Native Search: $query (Verified: $verifiedOnly)');
 
-  /// Request actual download URLs by extracting them from the FDFE Protobuf response
+    final response = await http.get(Uri.parse(url), headers: _headers);
+    if (response.statusCode == 200) {
+      talker.debug('Play Store Search Results Length: ${response.bodyBytes.length}');
+      // Logic to parse results from Protobuf/JSON would go here
+      return [];
+    }
+  } catch (e, stack) {
+    talker.handle(e, stack, 'Play Store API Search Error');
+  }
+  return [];
+}
+
+/// Request actual download URLs by extracting them from the FDFE Protobuf response
+...
+
   Future<List<String>> getDeliveryUrls(String appId, int versionCode) async {
     try {
       final url = '$_baseUrl/delivery?doc=$appId&vc=$versionCode&ot=1';
