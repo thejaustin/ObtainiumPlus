@@ -188,4 +188,10 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setBool('requireVPNForPlayStore', val);
     notifyListeners();
   }
+
+  bool get autoDiscardTokens => _prefs?.getBool('autoDiscardTokens') ?? true;
+  set autoDiscardTokens(bool val) {
+    _prefs?.setBool('autoDiscardTokens', val);
+    notifyListeners();
+  }
 }

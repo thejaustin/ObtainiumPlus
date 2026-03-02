@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/models/auth_bundle.dart';
 import 'package:obtainium/utils/logger.dart';
-
+import 'dart:math';
+...
 class PlayStoreApi {
   final AuthBundle auth;
   final String _baseUrl = 'https://android.clients.google.com/fdfe';
@@ -11,23 +12,36 @@ class PlayStoreApi {
 
   Map<String, String> get _headers {
     final deviceId = auth.deviceConfig['androidId'] ?? '0000000000000000';
-    // If aasToken is present, it's likely a dispenser-based anonymous account
     final authHeader = auth.aasToken.isNotEmpty 
         ? 'GoogleLogin auth=${auth.authToken}' 
         : 'Bearer ${auth.authToken}';
 
+    // User-Agent Jitter: Vary versions slightly to avoid rigid fingerprinting
+    final versions = ['38.5.18-29', '37.5.24-21', '39.1.12-21', '38.2.10-21'];
+    final selectedVersion = versions[Random().nextInt(versions.length)];
+
     return {
       'Authorization': authHeader,
       'X-Ad-Id': '00000000-0000-0000-0000-000000000000',
-      'User-Agent': 'Android-Finsky/38.5.18-29 [0] [PR] 561633513 (api=3,build=561633513,is_tablet=false)',
+      'User-Agent': 'Android-Finsky/$selectedVersion [0] [PR] 561633513 (api=3,build=561633513,is_tablet=false)',
       'X-DFE-Device-Id': deviceId,
+      'Accept-Language': 'en-US',
     };
+  }
+
+  /// Mimics human latency to avoid bot detection
+  Future<void> _humanDelay() async {
+    final ms = 500 + Random().nextInt(1500); // 0.5s to 2s delay
+    await Future.delayed(Duration(milliseconds: ms));
   }
 
   /// Fetch app details natively using Protobuf/JSON
   Future<Map<String, dynamic>?> getDetails(String appId) async {
     try {
+      await _humanDelay();
       final url = '$_baseUrl/details?doc=$appId';
+...
+
       talker.info('Play Store Native Details: $appId');
       final response = await http.get(Uri.parse(url), headers: _headers);
       
