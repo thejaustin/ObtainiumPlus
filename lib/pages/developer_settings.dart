@@ -6,6 +6,7 @@ import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
 import 'package:obtainium/components/info_tooltip.dart';
@@ -335,11 +336,13 @@ class _DispenserManagerSheet extends StatefulWidget {
 }
 
 class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
-  final List<String> _dispensers = ['https://auroraoss.com/api/auth'];
   final TextEditingController _controller = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -359,15 +362,37 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
             'Dispensers provide anonymous login tokens for Google Play access.',
             textAlign: TextAlign.center,
           ),
-          const Divider(),
-          ..._dispensers.map((d) => ListTile(
-            title: Text(d),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => setState(() => _dispensers.remove(d)),
+          if (authProvider.hasActiveToken)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Chip(
+                avatar: const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                label: Text('Active: ${authProvider.activeBundle!.email}'),
+                onDeleted: authProvider.clearBundle,
+                deleteIcon: const Icon(Icons.close, size: 16),
+              ),
             ),
-            onTap: () => _testDispenser(d),
-          )),
+          const Divider(),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: authProvider.dispensers.map((d) => ListTile(
+                title: Text(d),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_isLoading)
+                      const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => authProvider.removeDispenser(d),
+                    ),
+                  ],
+                ),
+                onTap: _isLoading ? null : () => _testDispenser(context, authProvider, d),
+              )).toList(),
+            ),
+          ),
           TextField(
             controller: _controller,
             decoration: InputDecoration(
@@ -376,7 +401,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
                 icon: const Icon(Icons.add),
                 onPressed: () {
                   if (_controller.text.isNotEmpty) {
-                    setState(() => _dispensers.add(_controller.text));
+                    authProvider.addDispenser(_controller.text);
                     _controller.clear();
                   }
                 },
@@ -389,10 +414,23 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
     );
   }
 
-  Future<void> _testDispenser(String url) async {
-    talker.info('Testing dispenser: $url');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Testing $url...')),
-    );
+  Future<void> _testDispenser(BuildContext context, AuthProvider authProvider, String url) async {
+    setState(() => _isLoading = true);
+    try {
+      await authProvider.refreshBundle(url);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Successfully retrieved token!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
