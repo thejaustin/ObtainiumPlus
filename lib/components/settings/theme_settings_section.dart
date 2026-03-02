@@ -8,7 +8,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/native_provider.dart';
-import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Theme & Colors settings section widget
@@ -83,7 +83,7 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
       if (_matches(tr('navigationLabels'))) _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
-
+      
       // Advanced/Experimental Section
       if (settings.plusEnableExperimentalCustomization && advancedWidgets.any((w) => w is! SizedBox))
         Padding(
@@ -187,7 +187,6 @@ class ThemeSettingsSection extends StatelessWidget {
       ],
     );
   }
-
 
   Widget _buildThemeSegmented(BuildContext context) {
     return Consumer<SettingsProvider>(
