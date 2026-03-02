@@ -84,8 +84,29 @@ class DeveloperSettingsPage extends StatelessWidget {
           ),
           _buildSection(
             context,
-            'Diagnostics',
+            'Play Store Safety & Filters',
             [
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.verified_user_outlined),
+                title: const Text('Verified Apps Only'),
+                subtitle: const Text('Only show apps verified by Play Protect in search results.'),
+                value: context.watch<PlusSettingsProvider>().playStoreVerifiedOnly,
+                onChanged: (val) => context.read<PlusSettingsProvider>().playStoreVerifiedOnly = val,
+              ),
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.system_security_update_warning_outlined),
+                title: const Text('Exclude System Apps'),
+                subtitle: const Text('Prevents updating critical system components via the native bridge.'),
+                value: context.watch<PlusSettingsProvider>().playStoreExcludeSystemApps,
+                onChanged: (val) => context.read<PlusSettingsProvider>().playStoreExcludeSystemApps = val,
+              ),
+            ],
+          ),
+          _buildSection(
+            context,
+            'Diagnostics',
+          ...
+
               ListTile(
                 leading: const Icon(Icons.receipt_long_outlined),
                 title: Row(
@@ -279,7 +300,7 @@ void _showAuthModePicker(BuildContext context) {
           ListTile(
             leading: const Icon(Icons.group_outlined),
             title: const Text('Anonymous (Dispenser)'),
-            subtitle: const Text('Use a throwaway account from a remote server'),
+            subtitle: const Text('Use throwaway accounts only. Safest for your personal account.'),
             trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
             onTap: () {
               authProvider.setAuthMode(AuthMode.anonymous);
@@ -289,13 +310,24 @@ void _showAuthModePicker(BuildContext context) {
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Personal (microG)'),
-            subtitle: const Text('Use a Google account signed into microG on this device'),
+            subtitle: const Text('Use your real account for all actions. Highest risk.'),
             trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
             onTap: () {
               authProvider.setAuthMode(AuthMode.microG);
               Navigator.pop(context);
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.security_outlined),
+            title: const Text('Hybrid (Safety First)'),
+            subtitle: const Text('Anonymous for search/browsing, Personal only for paid apps.'),
+            trailing: authProvider.authMode == AuthMode.hybrid ? const Icon(Icons.check, color: Colors.green) : null,
+            onTap: () {
+              authProvider.setAuthMode(AuthMode.hybrid);
+              Navigator.pop(context);
+            },
+          ),
+
         ],
       ),
     ),
