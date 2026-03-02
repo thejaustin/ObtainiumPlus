@@ -43,20 +43,17 @@ Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>> sourceRequest
 }) async {
   talker.info('HTTP $method Request: $url');
   var httpClient = createHttpClient(allowInsecure: allowInsecure);
-...
-      var response = await request.close();
-      talker.debug('HTTP Response: ${response.statusCode} for $url');
-...
-
+  var currentUrl = url;
+  for (var i = 0; i <= maxRedirects; i++) {
     var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
     request.followRedirects = false;
     headers.forEach((key, value) {
       request.headers.set(key, value);
     });
     var response = await request.close();
+    talker.debug('HTTP Response: ${response.statusCode} for $url');
     if (followRedirects &&
-        (
-            response.statusCode == 301 ||
+        (response.statusCode == 301 ||
             response.statusCode == 302 ||
             response.statusCode == 303 ||
             response.statusCode == 307 ||
@@ -181,75 +178,47 @@ class SourceUtils {
     if (value == null) {
       return tr('invalidInput');
     }
-    var num = int.tryParse(value);
-    if (num == null) {
-      return tr('invalidInput');
-    }
-    if (positive && num <= 0) {
+    var val = int.tryParse(value);
+    if (val == null || (positive && val < 0)) {
       return tr('invalidInput');
     }
     return null;
   }
 
-  static bool isTempId(App app) {
-    return RegExp(r'^[0-9]+$').hasMatch(app.id);
+  static String? doubleValidator(String? value, {bool positive = false}) {
+    if (value == null) {
+      return tr('invalidInput');
+    }
+    var val = double.tryParse(value);
+    if (val == null || (positive && val < 0)) {
+      return tr('invalidInput');
+    }
+    return null;
   }
 
-  static String? replaceMatchGroupsInString(RegExpMatch match, String matchGroupString) {
-    if (RegExp(r'^\d+$').hasMatch(matchGroupString)) {
-      matchGroupString = r'\' + matchGroupString;
-    }
-    final numberRegex = RegExp(r'\\$\d+');
-    final numbers = numberRegex.allMatches(matchGroupString);
-    if (numbers.isEmpty) {
+  static String? equationValidator(String? value) {
+    if (value == null || value.isEmpty) {
       return null;
     }
-    var outputString = matchGroupString;
-    for (final numberMatch in numbers) {
-      final number = numberMatch.group(0)!;
-      final matchGroup = match.group(int.parse(number.substring(1))) ?? '';
-      final isEscaped = outputString.contains('\\$number');
-      if (!isEscaped) {
-        outputString = outputString.replaceAll(number, matchGroup);
-      } else {
-        outputString = outputString.replaceAll('\\$number', number);
-      }
-    }
-    return outputString;
-  }
-
-  /// Executes a regex operation with a timeout to prevent ReDoS attacks.
-  /// Returns null if the operation times out.
-  static T? safeRegex<T>(T Function() operation, {Duration timeout = const Duration(seconds: 5)}) {
     try {
-      return operation();
-    } on FormatException {
-      return null;
+      Expression(value);
     } catch (e) {
-      return null;
+      return tr('invalidEquation');
     }
+    return null;
   }
 
-  static String? extractVersion(
-    String? versionExtractionRegEx,
-    String? matchGroupString,
-    String stringToCheck,
-  ) {
-    if (versionExtractionRegEx?.isNotEmpty == true) {
-      String? version = stringToCheck;
-      // Limit input length to prevent ReDoS on large strings
-      if (version.length > 10000) {
-        version = version.substring(0, 10000);
-      }
-      var match = safeRegex(() => RegExp(versionExtractionRegEx!).allMatches(version!).toList());
-      if (match == null || match.isEmpty) {
-        throw NoVersionError();
-      }
-      matchGroupString = matchGroupString?.trim() ?? '';
-      if (matchGroupString.isEmpty) {
-        matchGroupString = "0";
-      }
-      version = replaceMatchGroupsInString(match.last, matchGroupString);
+  static Future<String?> getLatestVersion(
+    AppInMemory app,
+    Map<String, dynamic> additionalSettings,
+  ) async {
+    var source = SourceProvider().getSource(app.app.url);
+    if (source != null) {
+      var details = await source.getLatestAPKDetails(
+        app.app.url,
+        additionalSettings,
+      );
+      var version = details.version;
       if (version?.isNotEmpty != true) {
         throw NoVersionError();
       }

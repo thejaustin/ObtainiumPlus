@@ -14,6 +14,7 @@ import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/app_sources/gitlab.dart';
 import 'package:obtainium/app_sources/googleplay.dart';
+import 'package:obtainium/app_sources/googleplay_native.dart';
 import 'package:obtainium/app_sources/huaweiappgallery.dart';
 import 'package:obtainium/app_sources/izzyondroid.dart';
 import 'package:obtainium/app_sources/html.dart';
@@ -269,13 +270,10 @@ class SourceProvider {
     FDroidRepo(),
     IzzyOnDroid(),
     SourceHut(),
-import 'package:obtainium/app_sources/googleplay_native.dart';
-...
     APKPure(),
     GooglePlay(),
     GooglePlayNative(),
     Aptoide(),
-...
     Uptodown(),
     HuaweiAppGallery(),
     Tencent(),
