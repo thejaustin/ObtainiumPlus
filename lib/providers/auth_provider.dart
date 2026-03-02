@@ -5,15 +5,19 @@ import 'package:obtainium/models/auth_bundle.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:math' as math;
 
 enum AuthMode { anonymous, microG, hybrid }
 
 class AuthProvider with ChangeNotifier {
+  final _storage = const FlutterSecureStorage();
   AuthBundle? _anonymousBundle;
   AuthBundle? _personalBundle;
   List<String> _dispensers = ['https://auroraoss.com/api/auth'];
   AuthMode _authMode = AuthMode.hybrid;
   String? _microGEmail;
+  String? _spoofedAndroidId;
   SharedPreferences? _prefs;
 
   AuthBundle? get activeBundle {
@@ -28,23 +32,26 @@ class AuthProvider with ChangeNotifier {
   List<String> get dispensers => _dispensers;
   AuthMode get authMode => _authMode;
   String? get microGEmail => _microGEmail;
+  String? get spoofedAndroidId => _spoofedAndroidId;
   bool get hasActiveToken => activeBundle != null;
 
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
     
     _dispensers = _prefs?.getStringList('play_store_dispensers') ?? ['https://auroraoss.com/api/auth'];
-    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2]; // Default to Hybrid
+    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
     _microGEmail = _prefs?.getString('microg_email');
+    _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
 
-    final anonJson = _prefs?.getString('anonymous_auth_bundle');
+    // Load bundles from secure storage
+    final anonJson = await _storage.read(key: 'anonymous_auth_bundle');
     if (anonJson != null) {
       try {
         _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson));
       } catch (_) {}
     }
     
-    final personalJson = _prefs?.getString('personal_auth_bundle');
+    final personalJson = await _storage.read(key: 'personal_auth_bundle');
     if (personalJson != null) {
       try {
         _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson));
@@ -52,6 +59,22 @@ class AuthProvider with ChangeNotifier {
     }
     
     notifyListeners();
+  }
+
+  /// Rotates the spoofed Device ID used for anonymous sessions
+  Future<void> rotateDeviceId() async {
+    const chars = '0123456789abcdef';
+    final random = math.Random();
+    _spoofedAndroidId = List.generate(16, (index) => chars[random.nextInt(chars.length)]).join();
+    await _prefs?.setString('spoofed_android_id', _spoofedAndroidId!);
+    notifyListeners();
+  }
+
+  String get effectiveDeviceId {
+    if (_authMode == AuthMode.anonymous || _authMode == AuthMode.hybrid) {
+      return _spoofedAndroidId ?? '0000000000000000';
+    }
+    return 'native'; 
   }
 
   Future<void> setAuthMode(AuthMode mode) async {
@@ -81,7 +104,7 @@ class AuthProvider with ChangeNotifier {
         authToken: token,
         deviceConfig: {}, 
       );
-      await _prefs?.setString('personal_auth_bundle', jsonEncode(_personalBundle!.toJson()));
+      await _storage.write(key: 'personal_auth_bundle', value: jsonEncode(_personalBundle!.toJson()));
       notifyListeners();
     } else {
       throw ObtainiumError('Failed to retrieve token from microG');
@@ -92,7 +115,8 @@ class AuthProvider with ChangeNotifier {
     try {
       final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
       _anonymousBundle = bundle;
-      await _prefs?.setString('anonymous_auth_bundle', jsonEncode(bundle.toJson()));
+      await _storage.write(key: 'anonymous_auth_bundle', value: jsonEncode(bundle.toJson()));
+      await rotateDeviceId();
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -113,11 +137,10 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearBundle() {
+  void clearBundle() async {
     _anonymousBundle = null;
     _personalBundle = null;
-    _prefs?.remove('anonymous_auth_bundle');
-    _prefs?.remove('personal_auth_bundle');
+    await _storage.deleteAll();
     notifyListeners();
   }
 }
