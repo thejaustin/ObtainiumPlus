@@ -3,7 +3,7 @@ package app.obtainiumplus
 import io.flutter.app.FlutterApplication
 import leakcanary.LeakCanary
 import leakcanary.EventListener
-import leakcanary.SharkLog
+import android.util.Log
 import io.sentry.Sentry
 import io.sentry.SentryEvent
 import io.sentry.SentryLevel
@@ -54,9 +54,9 @@ class ObtainiumApplication : FlutterApplication() {
             }
             
             // Also log it so it shows up in logcat
-            SharkLog.d { "Leak trace saved to: ${leakFile.absolutePath}" }
+            Log.d("LeakCanary", "Leak trace saved to: ${leakFile.absolutePath}")
         } catch (e: Exception) {
-            SharkLog.d { "Failed to save leak trace: ${e.message}" }
+            Log.d("LeakCanary", "Failed to save leak trace: ${e.message}")
         }
     }
 }
