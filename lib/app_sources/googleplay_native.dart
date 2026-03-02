@@ -21,14 +21,20 @@ class GooglePlayNative extends AppSource {
   ) async {
     final appId = Uri.parse(standardUrl).queryParameters['id'] ?? '';
     final authProvider = Provider.of<AuthProvider>(globalNavigatorKey.currentContext!, listen: false);
+if (authProvider.hasActiveToken) {
+  final api = PlayStoreApi(authProvider.activeBundle!);
+  final details = await api.getDetails(appId);
 
-    if (authProvider.hasActiveToken) {
-      final api = PlayStoreApi(authProvider.activeBundle!);
-      final details = await api.getDetails(appId);
-      
-      if (details != null) {
-        // Here we would parse the Protobuf details. For now, return stub with real appId
-        return APKDetails(
+  if (details != null) {
+    // Discard token after use if requested for safety
+    if (Provider.of<PlusSettingsProvider>(globalNavigatorKey.currentContext!, listen: false).autoDiscardTokens) {
+      authProvider.clearBundle();
+      talker.info('AuthBundle discarded for safety after request');
+    }
+
+    return APKDetails(
+...
+
           'Native Version', // Extract from real Protobuf in future
           [], 
           AppNames(appId, 'Google Play (Native)'),

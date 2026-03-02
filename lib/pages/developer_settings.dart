@@ -86,6 +86,8 @@ class DeveloperSettingsPage extends StatelessWidget {
             context,
             'Play Store Safety & Filters',
             [
+              _buildSafetyScoreCard(context),
+              const SizedBox(height: 12),
               SwitchListTile.adaptive(
                 secondary: const Icon(Icons.verified_user_outlined),
                 title: const Text('Verified Apps Only'),
@@ -113,6 +115,13 @@ class DeveloperSettingsPage extends StatelessWidget {
                 subtitle: const Text('Block all native Play Store traffic unless connected to a VPN/Proxy.'),
                 value: context.watch<PlusSettingsProvider>().requireVPNForPlayStore,
                 onChanged: (val) => context.read<PlusSettingsProvider>().requireVPNForPlayStore = val,
+              ),
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.auto_delete_outlined),
+                title: const Text('Auto-Discard Tokens'),
+                subtitle: const Text('Immediately clear authentication tokens after each successful request.'),
+                value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
+                onChanged: (val) => context.read<PlusSettingsProvider>().autoDiscardTokens = val,
               ),
             ],
           ),
@@ -416,6 +425,50 @@ void _showDispenserManager(BuildContext context) {
       context: context,
       isScrollControlled: true,
       builder: (context) => const _SpoofingManagerSheet(),
+    );
+  }
+
+  Widget _buildSafetyScoreCard(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    
+    int score = 0;
+    if (authProvider.authMode == AuthMode.hybrid) score += 30;
+    if (authProvider.authMode == AuthMode.anonymous) score += 40;
+    if (plusSettings.playStoreVerifiedOnly) score += 10;
+    if (plusSettings.requireVPNForPlayStore) score += 30;
+    if (plusSettings.autoDiscardTokens) score += 20;
+    
+    if (score > 100) score = 100;
+
+    final color = score > 80 ? Colors.green : (score > 50 ? Colors.orange : Colors.red);
+    final label = score > 80 ? 'Excellent' : (score > 50 ? 'Moderate' : 'Low');
+
+    return Card(
+      elevation: 0,
+      color: color.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Account Safety Score', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('$score%', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: score / 100, backgroundColor: color.withValues(alpha: 0.1), color: color),
+            const SizedBox(height: 8),
+            Text('Current Protection: $label', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
     );
   }
 }
