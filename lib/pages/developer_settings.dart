@@ -195,8 +195,8 @@ class DeveloperSettingsPage extends StatelessWidget {
                   talker.info('Triggering test network request...');
                   try {
                     // ignore: unused_local_variable
-                    final response = await Sentry.getHttpClient().get(Uri.parse('https://api.github.com/zen'));
-                    talker.success('Test network request successful');
+                    final response = await SentryHttpClient().get(Uri.parse('https://api.github.com/zen'));
+                    talker.info('Test network request successful');
                   } catch (e, st) {
                     talker.handle(e, st, 'Test network request failed');
                   }

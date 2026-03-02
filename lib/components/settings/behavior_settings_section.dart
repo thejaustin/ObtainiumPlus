@@ -103,8 +103,7 @@ class BehaviorSettingsSection extends StatelessWidget {
       if (_matches(tr('swipeRightAction'))) _buildSwipeRightDropdown(context),
       if (_matches(tr('swipeLeftAction'))) _buildSwipeLeftDropdown(context),
     ];
-import 'package:obtainium/components/settings/expressive_settings_group.dart';
-...
+
     return Column(
       children: [
         if (children.any((w) => w is! SizedBox))
