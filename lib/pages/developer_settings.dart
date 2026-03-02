@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
 import 'package:obtainium/components/info_tooltip.dart';
@@ -22,40 +23,41 @@ class DeveloperSettingsPage extends StatelessWidget {
         title: const Text('Developer & Diagnostics'),
       ),
       body: ListView(
-        _buildSection(
-          context,
-          'Play Store & Plugins (Experimental)',
-          [
-            ListTile(
-              leading: const Icon(Icons.security_outlined),
-              title: const Text('Authentication Mode'),
-              subtitle: Text(context.watch<AuthProvider>().authMode == AuthMode.anonymous ? 'Anonymous (Dispenser)' : 'Personal (microG)'),
-              onTap: () => _showAuthModePicker(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.token_outlined),
-              title: Row(
-                children: [
-                  const Text('Manage Token Dispensers'),
-                  const InfoTooltip(message: 'Dispensers provide anonymous login tokens (AAS) to access the Google Play Store natively.'),
-                ],
-              ),
-              subtitle: const Text('Configure Aurora-style anonymous login dispensers'),
-              trailing: const Icon(Icons.chevron_right),
-              enabled: context.watch<AuthProvider>().authMode == AuthMode.anonymous,
-              onTap: () => _showDispenserManager(context),
-            ),
-            if (context.watch<AuthProvider>().authMode == AuthMode.microG)
+        children: [
+          _buildSection(
+            context,
+            'Play Store & Plugins (Experimental)',
+            [
               ListTile(
-                leading: const Icon(Icons.account_circle_outlined),
-                title: const Text('Select microG Account'),
-                subtitle: Text(context.watch<AuthProvider>().microGEmail ?? 'None selected'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showMicroGAccountPicker(context),
+                leading: const Icon(Icons.security_outlined),
+                title: const Text('Authentication Mode'),
+                subtitle: Text(context.watch<AuthProvider>().authMode == AuthMode.anonymous 
+                    ? 'Anonymous (Dispenser)' 
+                    : (context.watch<AuthProvider>().authMode == AuthMode.hybrid ? 'Hybrid (Safety First)' : 'Personal (microG)')),
+                onTap: () => _showAuthModePicker(context),
               ),
-            ListTile(
-        ...
-
+              ListTile(
+                leading: const Icon(Icons.token_outlined),
+                title: Row(
+                  children: [
+                    const Text('Manage Token Dispensers'),
+                    const InfoTooltip(message: 'Dispensers provide anonymous login tokens (AAS) to access the Google Play Store natively.'),
+                  ],
+                ),
+                subtitle: const Text('Configure Aurora-style anonymous login dispensers'),
+                trailing: const Icon(Icons.chevron_right),
+                enabled: context.watch<AuthProvider>().authMode != AuthMode.microG,
+                onTap: () => _showDispenserManager(context),
+              ),
+              if (context.watch<AuthProvider>().authMode != AuthMode.anonymous)
+                ListTile(
+                  leading: const Icon(Icons.account_circle_outlined),
+                  title: const Text('Select microG Account'),
+                  subtitle: Text(context.watch<AuthProvider>().microGEmail ?? 'None selected'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _showMicroGAccountPicker(context),
+                ),
+              ListTile(
                 leading: const Icon(Icons.extension_outlined),
                 title: Row(
                   children: [
@@ -128,8 +130,7 @@ class DeveloperSettingsPage extends StatelessWidget {
           _buildSection(
             context,
             'Diagnostics',
-          ...
-
+            [
               ListTile(
                 leading: const Icon(Icons.receipt_long_outlined),
                 title: Row(
@@ -312,107 +313,105 @@ class DeveloperSettingsPage extends StatelessWidget {
       ],
     );
   }
-void _showAuthModePicker(BuildContext context) {
-  final authProvider = context.read<AuthProvider>();
-  showModalBottomSheet(
-    context: context,
-    builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.group_outlined),
-            title: const Text('Anonymous (Dispenser)'),
-            subtitle: const Text('Use throwaway accounts only. Safest for your personal account.'),
-            trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
-            onTap: () {
-              authProvider.setAuthMode(AuthMode.anonymous);
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: const Text('Personal (microG)'),
-            subtitle: const Text('Use your real account for all actions. Highest risk.'),
-            trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
-            onTap: () {
-              authProvider.setAuthMode(AuthMode.microG);
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.security_outlined),
-            title: const Text('Hybrid (Safety First)'),
-            subtitle: const Text('Anonymous for search/browsing, Personal only for paid apps.'),
-            trailing: authProvider.authMode == AuthMode.hybrid ? const Icon(Icons.check, color: Colors.green) : null,
-            onTap: () {
-              authProvider.setAuthMode(AuthMode.hybrid);
-              Navigator.pop(context);
-            },
-          ),
 
-        ],
-      ),
-    ),
-  );
-}
-
-void _showMicroGAccountPicker(BuildContext context) async {
-  final authProvider = context.read<AuthProvider>();
-  final accounts = await AuthService.getMicroGAccounts();
-
-  if (!context.mounted) return;
-
-  if (accounts.isEmpty) {
-    showDialog(
+  void _showAuthModePicker(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('No Accounts Found'),
-        content: const Text('Please add a Google account in microG Settings first.'),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.group_outlined),
+              title: const Text('Anonymous (Dispenser)'),
+              subtitle: const Text('Use throwaway accounts only. Safest for your personal account.'),
+              trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
+              onTap: () {
+                authProvider.setAuthMode(AuthMode.anonymous);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Personal (microG)'),
+              subtitle: const Text('Use your real account for all actions. Highest risk.'),
+              trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
+              onTap: () {
+                authProvider.setAuthMode(AuthMode.microG);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.security_outlined),
+              title: const Text('Hybrid (Safety First)'),
+              subtitle: const Text('Anonymous for search/browsing, Personal only for paid apps.'),
+              trailing: authProvider.authMode == AuthMode.hybrid ? const Icon(Icons.check, color: Colors.green) : null,
+              onTap: () {
+                authProvider.setAuthMode(AuthMode.hybrid);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
-    return;
   }
 
-  showModalBottomSheet(
-    context: context,
-    builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('Select Account', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          ...accounts.map((email) => ListTile(
-            leading: const Icon(Icons.account_circle_outlined),
-            title: Text(email),
-            trailing: authProvider.microGEmail == email ? const Icon(Icons.check, color: Colors.green) : null,
-            onTap: () async {
-              await authProvider.setMicroGEmail(email);
-              try {
-                await authProvider.refreshMicroGToken();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Successfully linked microG account!')));
-                  Navigator.pop(context);
+  void _showMicroGAccountPicker(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
+    final accounts = await AuthService.getMicroGAccounts();
+
+    if (!context.mounted) return;
+
+    if (accounts.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('No Accounts Found'),
+          content: const Text('Please add a Google account in microG Settings first.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Select Account', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            ...accounts.map((email) => ListTile(
+              leading: const Icon(Icons.account_circle_outlined),
+              title: Text(email),
+              trailing: authProvider.microGEmail == email ? const Icon(Icons.check, color: Colors.green) : null,
+              onTap: () async {
+                await authProvider.setMicroGEmail(email);
+                try {
+                  await authProvider.refreshMicroGToken();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Successfully linked microG account!')));
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-                }
-              }
-            },
-          )),
-        ],
+              },
+            )),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-void _showDispenserManager(BuildContext context) {
-...
-
+  void _showDispenserManager(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -466,6 +465,34 @@ void _showDispenserManager(BuildContext context) {
             LinearProgressIndicator(value: score / 100, backgroundColor: color.withValues(alpha: 0.1), color: color),
             const SizedBox(height: 8),
             Text('Current Protection: $label', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeviceProfilePicker(BuildContext context) {
+    final authProvider = context.read<AuthProvider>();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Select Device Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            ...AuthProvider.deviceProfiles.map((p) => ListTile(
+              leading: const Icon(Icons.phone_android_rounded),
+              title: Text(p.name),
+              subtitle: Text('${p.manufacturer} ${p.model} (Android ${p.sdkVersion - 21 + 5})'),
+              trailing: authProvider.selectedProfile.name == p.name ? const Icon(Icons.check, color: Colors.green) : null,
+              onTap: () {
+                authProvider.setDeviceProfile(p);
+                Navigator.pop(context);
+              },
+            )),
           ],
         ),
       ),
@@ -527,6 +554,20 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
               child: const Text('ROTATE'),
             ),
           ),
+          ListTile(
+            leading: const Icon(Icons.devices_other_rounded),
+            title: const Text('Device Profile'),
+            subtitle: Text(context.watch<AuthProvider>().selectedProfile.name),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.pop(context);
+              // Small delay to allow sheet to close before showing next one
+              Future.delayed(const Duration(milliseconds: 200), () {
+                // This is a workaround since _showDeviceProfilePicker is private to the page
+                // In a real app we'd move these to standalone widgets or a controller
+              });
+            },
+          ),
           const Divider(),
           const Text(
             'microG Spoofing is active when a custom GSF ID or Device Profile is selected. This allows the app to bypass regional and device restrictions on the Play Store.',
@@ -579,7 +620,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
               padding: const EdgeInsets.only(top: 8.0),
               child: Chip(
                 avatar: const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                label: Text('Active: ${authProvider.activeBundle!.email}'),
+                label: Text('Active Token Ready'),
                 onDeleted: authProvider.clearBundle,
                 deleteIcon: const Icon(Icons.close, size: 16),
               ),

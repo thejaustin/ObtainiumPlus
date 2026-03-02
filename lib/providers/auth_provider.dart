@@ -10,7 +10,42 @@ import 'dart:math' as math;
 
 enum AuthMode { anonymous, microG, hybrid }
 
+class DeviceProfile {
+  final String name;
+  final String model;
+  final String manufacturer;
+  final int sdkVersion;
+
+  const DeviceProfile({
+    required this.name,
+    required this.model,
+    required this.manufacturer,
+    required this.sdkVersion,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'model': model,
+    'manufacturer': manufacturer,
+    'sdkVersion': sdkVersion,
+  };
+
+  factory DeviceProfile.fromJson(Map<String, dynamic> json) => DeviceProfile(
+    name: json['name'] ?? 'Custom',
+    model: json['model'] ?? '',
+    manufacturer: json['manufacturer'] ?? '',
+    sdkVersion: json['sdkVersion'] ?? 33,
+  );
+}
+
 class AuthProvider with ChangeNotifier {
+  static const List<DeviceProfile> deviceProfiles = [
+    DeviceProfile(name: 'Pixel 8 Pro', model: 'husky', manufacturer: 'Google', sdkVersion: 34),
+    DeviceProfile(name: 'Galaxy S24 Ultra', model: 'SM-S928B', manufacturer: 'Samsung', sdkVersion: 34),
+    DeviceProfile(name: 'Nothing Phone (2)', model: 'Pong', manufacturer: 'Nothing', sdkVersion: 33),
+    DeviceProfile(name: 'Xiaomi 14', model: '23127PN0CC', manufacturer: 'Xiaomi', sdkVersion: 34),
+  ];
+
   final _storage = const FlutterSecureStorage();
   AuthBundle? _anonymousBundle;
   AuthBundle? _personalBundle;
@@ -18,6 +53,7 @@ class AuthProvider with ChangeNotifier {
   AuthMode _authMode = AuthMode.hybrid;
   String? _microGEmail;
   String? _spoofedAndroidId;
+  DeviceProfile _selectedProfile = deviceProfiles[0];
   SharedPreferences? _prefs;
 
   AuthBundle? get activeBundle {
@@ -33,6 +69,7 @@ class AuthProvider with ChangeNotifier {
   AuthMode get authMode => _authMode;
   String? get microGEmail => _microGEmail;
   String? get spoofedAndroidId => _spoofedAndroidId;
+  DeviceProfile get selectedProfile => _selectedProfile;
   bool get hasActiveToken => activeBundle != null;
 
   Future<void> initialize(SharedPreferences prefs) async {
@@ -42,6 +79,13 @@ class AuthProvider with ChangeNotifier {
     _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
     _microGEmail = _prefs?.getString('microg_email');
     _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
+
+    final profileJson = _prefs?.getString('selected_device_profile');
+    if (profileJson != null) {
+      try {
+        _selectedProfile = DeviceProfile.fromJson(jsonDecode(profileJson));
+      } catch (_) {}
+    }
 
     // Load bundles from secure storage
     final anonJson = await _storage.read(key: 'anonymous_auth_bundle');
@@ -61,7 +105,6 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Rotates the spoofed Device ID used for anonymous sessions
   Future<void> rotateDeviceId() async {
     const chars = '0123456789abcdef';
     final random = math.Random();
@@ -80,6 +123,12 @@ class AuthProvider with ChangeNotifier {
   Future<void> setAuthMode(AuthMode mode) async {
     _authMode = mode;
     await _prefs?.setInt('auth_mode', mode.index);
+    notifyListeners();
+  }
+
+  Future<void> setDeviceProfile(DeviceProfile profile) async {
+    _selectedProfile = profile;
+    await _prefs?.setString('selected_device_profile', jsonEncode(profile.toJson()));
     notifyListeners();
   }
 
