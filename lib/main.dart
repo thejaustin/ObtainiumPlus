@@ -45,6 +45,7 @@ import 'package:obtainium/components/error_app.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:sentry_talker/sentry_talker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 var fdroid = false;
 
@@ -131,9 +132,13 @@ void main() async {
       try {
         await EasyLocalization.ensureInitialized();
         final sp = await SharedPreferences.getInstance();
-        final settingsProvider = context.read<SettingsProvider>();
+        
+        final settingsProvider = SettingsProvider();
         await settingsProvider.initializeSettings(sp);
-        await context.read<PluginProvider>().initialize(sp);
+        
+        final pluginProvider = PluginProvider();
+        await pluginProvider.initialize(sp);
+
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         
         final manufacturer = androidInfo.manufacturer.toLowerCase();
@@ -176,17 +181,17 @@ void main() async {
           () => runApp(
             MultiProvider(
               providers: [
-                ChangeNotifierProvider(create: (context) => SettingsProvider()),
+                ChangeNotifierProvider.value(value: settingsProvider),
                 ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
-                  create: (ctx) => AppsProvider(settings: ctx.read<SettingsProvider>()),
+                  create: (ctx) => AppsProvider(settings: settingsProvider),
                   update: (ctx, settings, apps) => apps!..settingsProvider = settings,
                 ),
-                ChangeNotifierProvider<UpdateSettingsProvider>(create: (context) => context.read<SettingsProvider>().updateSettings),
-                ChangeNotifierProvider<ViewSettingsProvider>(create: (context) => context.read<SettingsProvider>().viewSettings),
-                ChangeNotifierProvider<BehaviorSettingsProvider>(create: (context) => context.read<SettingsProvider>().behaviorSettings),
-                ChangeNotifierProvider<PlusSettingsProvider>(create: (context) => context.read<SettingsProvider>().plusSettings),
-                ChangeNotifierProvider<SourceConfigProvider>(create: (context) => context.read<SettingsProvider>().sourceConfig),
-                ChangeNotifierProvider<PluginProvider>(create: (context) => PluginProvider()),
+                ChangeNotifierProvider.value(value: settingsProvider.updateSettings),
+                ChangeNotifierProvider.value(value: settingsProvider.viewSettings),
+                ChangeNotifierProvider.value(value: settingsProvider.behaviorSettings),
+                ChangeNotifierProvider.value(value: settingsProvider.plusSettings),
+                ChangeNotifierProvider.value(value: settingsProvider.sourceConfig),
+                ChangeNotifierProvider.value(value: pluginProvider),
                 Provider(create: (context) => np),
                 Provider(create: (context) => LogsProvider()),
               ],

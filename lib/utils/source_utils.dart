@@ -6,10 +6,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:equations/equations.dart';
 
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
@@ -248,4 +250,70 @@ class SourceUtils {
       app.additionalSettings['trackOnly'] == true ||
       (app.installedVersion != null &&
           app.additionalSettings['versionDetection'] != true);
+
+  static bool isTempId(App app) {
+    return RegExp(r'^[0-9]+$').hasMatch(app.id);
+  }
+
+  static String? replaceMatchGroupsInString(RegExpMatch match, String matchGroupString) {
+    if (RegExp(r'^\d+$').hasMatch(matchGroupString)) {
+      matchGroupString = r'\' + matchGroupString;
+    }
+    final numberRegex = RegExp(r'\\$\d+');
+    final numbers = numberRegex.allMatches(matchGroupString);
+    if (numbers.isEmpty) {
+      return null;
+    }
+    var outputString = matchGroupString;
+    for (final numberMatch in numbers) {
+      final number = numberMatch.group(0)!;
+      final matchGroup = match.group(int.parse(number.substring(1))) ?? '';
+      final isEscaped = outputString.contains('\\$number');
+      if (!isEscaped) {
+        outputString = outputString.replaceAll(number, matchGroup);
+      } else {
+        outputString = outputString.replaceAll('\\$number', number);
+      }
+    }
+    return outputString;
+  }
+
+  static T? safeRegex<T>(T Function() operation, {Duration timeout = const Duration(seconds: 5)}) {
+    try {
+      return operation();
+    } on FormatException {
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static String? extractVersion(
+    String? versionExtractionRegEx,
+    String? matchGroupString,
+    String stringToCheck,
+  ) {
+    if (versionExtractionRegEx?.isNotEmpty == true) {
+      String? version = stringToCheck;
+      // Limit input length to prevent ReDoS on large strings
+      if (version.length > 10000) {
+        version = version.substring(0, 10000);
+      }
+      var match = safeRegex(() => RegExp(versionExtractionRegEx!).allMatches(version!).toList());
+      if (match == null || match.isEmpty) {
+        throw NoVersionError();
+      }
+      matchGroupString = matchGroupString?.trim() ?? '';
+      if (matchGroupString.isEmpty) {
+        matchGroupString = "0";
+      }
+      version = replaceMatchGroupsInString(match.last, matchGroupString);
+      if (version?.isNotEmpty != true) {
+        throw NoVersionError();
+      }
+      return version!;
+    } else {
+      return null;
+    }
+  }
 }
