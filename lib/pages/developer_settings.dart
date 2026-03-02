@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
+import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
