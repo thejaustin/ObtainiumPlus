@@ -15,9 +15,24 @@ import 'package:equations/equations.dart';
 
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
-  if (allowInsecure) {
-    client.badCertificateCallback =
-        ((X509Certificate cert, String host, int port) {
+  
+  // Pinning for Google Play Store domains (android.clients.google.com)
+  // Hardcoded fingerprint for GTS CA 1C3 (valid until 2027)
+  const googlePin = '23ecb03eec17338c4e33a6b48a41dc3cda12281bbc3ff813c0589d6cc2387522';
+
+  client.badCertificateCallback = ((X509Certificate cert, String host, int port) {
+    if (host.contains('android.clients.google.com') || host.contains('play.googleapis.com')) {
+      final fingerprint = cert.sha256.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      if (fingerprint == googlePin) {
+        talker.info('Certificate Pinning Verified for $host');
+        return true;
+      } else {
+        talker.error('SECURITY ALERT: Certificate Pinning FAILED for $host! Expected $googlePin but got $fingerprint');
+        return false; // Terminate connection - possible MITM attack
+      }
+    }
+
+    if (allowInsecure) {
       final warning = 'WARNING: Accepting insecure certificate for $host:$port '
           '(subject: ${cert.subject}, issuer: ${cert.issuer}, '
           'sha1: ${cert.sha1.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':')})';
@@ -29,8 +44,10 @@ HttpClient createHttpClient({bool allowInsecure = false}) {
         level: LogLevels.warning,
       );
       return true;
-    });
-  }
+    }
+    return false;
+  });
+  
   return client;
 }
 
