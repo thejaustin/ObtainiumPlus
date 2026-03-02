@@ -11,8 +11,13 @@ class PlayStoreApi {
 
   Map<String, String> get _headers {
     final deviceId = auth.deviceConfig['androidId'] ?? '0000000000000000';
+    // If aasToken is present, it's likely a dispenser-based anonymous account
+    final authHeader = auth.aasToken.isNotEmpty 
+        ? 'GoogleLogin auth=${auth.authToken}' 
+        : 'Bearer ${auth.authToken}';
+
     return {
-      'Authorization': 'Bearer ${auth.authToken}',
+      'Authorization': authHeader,
       'X-Ad-Id': '00000000-0000-0000-0000-000000000000',
       'User-Agent': 'Android-Finsky/38.5.18-29 [0] [PR] 561633513 (api=3,build=561633513,is_tablet=false)',
       'X-DFE-Device-Id': deviceId,

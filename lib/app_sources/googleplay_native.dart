@@ -59,11 +59,21 @@ class GooglePlayNative extends AppSource {
     if (forAPKDownload && url.contains('android.clients.google.com')) {
       final authProvider = Provider.of<AuthProvider>(globalNavigatorKey.currentContext!, listen: false);
       if (authProvider.hasActiveToken) {
-        // Basic implementation, a real system would need to fetch the FDFE delivery cookie 
-        // at the time of download and inject it here, or encode it in the URL parameters.
-        final deviceId = authProvider.activeBundle!.deviceConfig['androidId'] ?? '0000000000000000';
+        final bundle = authProvider.activeBundle!;
+        var deviceId = bundle.deviceConfig['androidId'] ?? '0000000000000000';
+        
+        // If deviceId is missing (common in microG mode), try fetching native one
+        if (deviceId == '0000000000000000') {
+          const platform = MethodChannel('app.obtainiumplus/native');
+          deviceId = await platform.invokeMethod('getGsfId') ?? deviceId;
+        }
+
+        final authHeader = bundle.aasToken.isNotEmpty 
+            ? 'GoogleLogin auth=${bundle.authToken}' 
+            : 'Bearer ${bundle.authToken}';
+
         return {
-          'Authorization': 'Bearer ${authProvider.activeBundle!.authToken}',
+          'Authorization': authHeader,
           'User-Agent': 'Android-Finsky/38.5.18-29 [0] [PR] 561633513 (api=3,build=561633513,is_tablet=false)',
           'X-DFE-Device-Id': deviceId,
         };
