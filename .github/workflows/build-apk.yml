@@ -80,9 +80,6 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - name: Flutter Doctor
-        run: flutter doctor -v
-
       - name: Get dependencies
         run: flutter pub get
 
@@ -139,24 +136,11 @@ jobs:
       - name: Build APK
         run: |
           echo "Building universal APK (Obtainium Plus)..."
-          flutter build apk --flavor normal --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+          # Using --no-pub since we already ran it
+          flutter build apk --flavor normal --no-pub --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
 
           echo "Renaming APK to remove flavor suffix..."
-          for file in build/app/outputs/flutter-apk/app-*normal*.apk; do
-            if [ -f "$file" ]; then
-              mv "$file" "${file//-normal/}"
-            fi
-          done
-
-          echo "Building split APKs by ABI (Obtainium Plus)..."
-          flutter build apk --split-per-abi --flavor normal --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
-
-          echo "Renaming split APKs to remove flavor suffix..."
-          for file in build/app/outputs/flutter-apk/app-*normal*-*.apk; do
-            if [ -f "$file" ]; then
-              mv "$file" "${file//-normal/}"
-            fi
-          done
+          find build/app/outputs/flutter-apk/ -name "app-*normal*.apk" -exec bash -c 'mv "$1" "${1//-normal/}"' -- {} \;
 
           echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
