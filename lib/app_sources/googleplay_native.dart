@@ -66,12 +66,12 @@ if (authProvider.hasActiveToken) {
       final authProvider = Provider.of<AuthProvider>(globalNavigatorKey.currentContext!, listen: false);
       if (authProvider.hasActiveToken) {
         final bundle = authProvider.activeBundle!;
-        var deviceId = bundle.deviceConfig['androidId'] ?? '0000000000000000';
+        var deviceId = authProvider.effectiveDeviceId;
         
-        // If deviceId is missing (common in microG mode), try fetching native one
-        if (deviceId == '0000000000000000') {
+        // If deviceId is native (Personal mode), fetch from microG
+        if (deviceId == 'native') {
           const platform = MethodChannel('app.obtainiumplus/native');
-          deviceId = await platform.invokeMethod('getGsfId') ?? deviceId;
+          deviceId = await platform.invokeMethod('getGsfId') ?? '0000000000000000';
         }
 
         final authHeader = bundle.aasToken.isNotEmpty 

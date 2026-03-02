@@ -518,6 +518,15 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
               onPressed: _getGsfId,
             ),
           ),
+          ListTile(
+            leading: const Icon(Icons.shuffle_rounded),
+            title: const Text('Anonymous Device ID'),
+            subtitle: Text(context.watch<AuthProvider>().spoofedAndroidId ?? 'None generated'),
+            trailing: TextButton(
+              onPressed: () => context.read<AuthProvider>().rotateDeviceId(),
+              child: const Text('ROTATE'),
+            ),
+          ),
           const Divider(),
           const Text(
             'microG Spoofing is active when a custom GSF ID or Device Profile is selected. This allows the app to bypass regional and device restrictions on the Play Store.',
