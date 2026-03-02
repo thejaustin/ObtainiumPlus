@@ -11,6 +11,13 @@ class AuthBundle {
     required this.deviceConfig,
   });
 
+  Map<String, dynamic> toJson() => {
+    'email': email,
+    'aasToken': aasToken,
+    'authToken': authToken,
+    'deviceConfig': deviceConfig,
+  };
+
   factory AuthBundle.fromJson(Map<String, dynamic> json) {
     return AuthBundle(
       email: json['email'] ?? '',

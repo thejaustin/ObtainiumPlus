@@ -12,6 +12,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:equations/equations.dart';
+import 'package:crypto/crypto.dart';
 
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
@@ -22,7 +23,7 @@ HttpClient createHttpClient({bool allowInsecure = false}) {
 
   client.badCertificateCallback = ((X509Certificate cert, String host, int port) {
     if (host.contains('android.clients.google.com') || host.contains('play.googleapis.com')) {
-      final fingerprint = cert.sha256.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      final fingerprint = sha256.convert(cert.der).toString();
       if (fingerprint == googlePin) {
         talker.info('Certificate Pinning Verified for $host');
         return true;
