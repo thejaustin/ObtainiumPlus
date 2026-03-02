@@ -22,24 +22,40 @@ class DeveloperSettingsPage extends StatelessWidget {
         title: const Text('Developer & Diagnostics'),
       ),
       body: ListView(
-        children: [
-          _buildSection(
-            context,
-            'Experimental Plugins & Play Store',
-            [
-              ListTile(
-                leading: const Icon(Icons.token_outlined),
-                title: Row(
-                  children: [
-                    const Text('Manage Token Dispensers'),
-                    const InfoTooltip(message: 'Dispensers provide anonymous login tokens (AAS) to access the Google Play Store natively.'),
-                  ],
-                ),
-                subtitle: const Text('Configure Aurora-style anonymous login dispensers'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showDispenserManager(context),
+        _buildSection(
+          context,
+          'Play Store & Plugins (Experimental)',
+          [
+            ListTile(
+              leading: const Icon(Icons.security_outlined),
+              title: const Text('Authentication Mode'),
+              subtitle: Text(context.watch<AuthProvider>().authMode == AuthMode.anonymous ? 'Anonymous (Dispenser)' : 'Personal (microG)'),
+              onTap: () => _showAuthModePicker(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.token_outlined),
+              title: Row(
+                children: [
+                  const Text('Manage Token Dispensers'),
+                  const InfoTooltip(message: 'Dispensers provide anonymous login tokens (AAS) to access the Google Play Store natively.'),
+                ],
               ),
+              subtitle: const Text('Configure Aurora-style anonymous login dispensers'),
+              trailing: const Icon(Icons.chevron_right),
+              enabled: context.watch<AuthProvider>().authMode == AuthMode.anonymous,
+              onTap: () => _showDispenserManager(context),
+            ),
+            if (context.watch<AuthProvider>().authMode == AuthMode.microG)
               ListTile(
+                leading: const Icon(Icons.account_circle_outlined),
+                title: const Text('Select microG Account'),
+                subtitle: Text(context.watch<AuthProvider>().microGEmail ?? 'None selected'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showMicroGAccountPicker(context),
+              ),
+            ListTile(
+        ...
+
                 leading: const Icon(Icons.extension_outlined),
                 title: Row(
                   children: [
@@ -252,8 +268,96 @@ class DeveloperSettingsPage extends StatelessWidget {
       ],
     );
   }
+void _showAuthModePicker(BuildContext context) {
+  final authProvider = context.read<AuthProvider>();
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.group_outlined),
+            title: const Text('Anonymous (Dispenser)'),
+            subtitle: const Text('Use a throwaway account from a remote server'),
+            trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
+            onTap: () {
+              authProvider.setAuthMode(AuthMode.anonymous);
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: const Text('Personal (microG)'),
+            subtitle: const Text('Use a Google account signed into microG on this device'),
+            trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
+            onTap: () {
+              authProvider.setAuthMode(AuthMode.microG);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
-  void _showDispenserManager(BuildContext context) {
+void _showMicroGAccountPicker(BuildContext context) async {
+  final authProvider = context.read<AuthProvider>();
+  final accounts = await AuthService.getMicroGAccounts();
+
+  if (!context.mounted) return;
+
+  if (accounts.isEmpty) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('No Accounts Found'),
+        content: const Text('Please add a Google account in microG Settings first.'),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+      ),
+    );
+    return;
+  }
+
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('Select Account', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          ...accounts.map((email) => ListTile(
+            leading: const Icon(Icons.account_circle_outlined),
+            title: Text(email),
+            trailing: authProvider.microGEmail == email ? const Icon(Icons.check, color: Colors.green) : null,
+            onTap: () async {
+              await authProvider.setMicroGEmail(email);
+              try {
+                await authProvider.refreshMicroGToken();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Successfully linked microG account!')));
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+          )),
+        ],
+      ),
+    ),
+  );
+}
+
+void _showDispenserManager(BuildContext context) {
+...
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
