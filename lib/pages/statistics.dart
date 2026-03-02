@@ -1,3 +1,4 @@
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
@@ -127,67 +128,80 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ).length;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle(context, tr('overview')),
-                const SizedBox(height: 8),
-                _buildMetricsGrid(context, [
-                  _MetricItem(
-                    label: tr('totalApps'),
-                    value: totalApps.toString(),
-                    icon: Icons.apps,
-                    color: Colors.blue,
-                  ),
-                  _MetricItem(
-                    label: tr('installed'),
-                    value: installedApps.toString(),
-                    icon: Icons.check_circle_outline,
-                    color: Colors.green,
-                  ),
-                  _MetricItem(
-                    label: tr('updatesAvailable'),
-                    value: updatesAvailable.toString(),
-                    icon: Icons.system_update,
-                    color: Colors.orange,
-                  ),
-                  _MetricItem(
-                    label: tr('notInstalled'),
-                    value: notInstalledApps.toString(),
-                    icon: Icons.cloud_off,
-                    color: Colors.grey,
-                  ),
-                ]),
+                ExpressiveSettingsGroup(
+                  title: tr('overview'),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildMetricsGrid(context, [
+                        _MetricItem(
+                          label: tr('totalApps'),
+                          value: totalApps.toString(),
+                          icon: Icons.apps,
+                          color: Colors.blue,
+                        ),
+                        _MetricItem(
+                          label: tr('installed'),
+                          value: installedApps.toString(),
+                          icon: Icons.check_circle_outline,
+                          color: Colors.green,
+                        ),
+                        _MetricItem(
+                          label: tr('updatesAvailable'),
+                          value: updatesAvailable.toString(),
+                          icon: Icons.system_update,
+                          color: Colors.orange,
+                        ),
+                        _MetricItem(
+                          label: tr('notInstalled'),
+                          value: notInstalledApps.toString(),
+                          icon: Icons.cloud_off,
+                          color: Colors.grey,
+                        ),
+                      ]),
+                    ),
+                  ],
+                ),
                 
-                const SizedBox(height: 24),
-                _buildSectionTitle(context, tr('activity')),
-                const SizedBox(height: 8),
-                _buildMetricsGrid(context, [
-                  _MetricItem(
-                    label: tr('installs30Days'),
-                    value: successfulInstalls30Days.toString(),
-                    icon: Icons.history,
-                    color: Colors.purple,
-                  ),
-                  _MetricItem(
-                    label: tr('installs7Days'),
-                    value: successfulInstalls7Days.toString(),
-                    icon: Icons.calendar_today,
-                    color: Colors.teal,
-                  ),
-                  _MetricItem(
-                    label: tr('pinnedApps'),
-                    value: pinnedApps.toString(),
-                    icon: Icons.push_pin,
-                    color: Colors.redAccent,
-                  ),
-                ]),
+                ExpressiveSettingsGroup(
+                  title: tr('activity'),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildMetricsGrid(context, [
+                        _MetricItem(
+                          label: tr('installs30Days'),
+                          value: successfulInstalls30Days.toString(),
+                          icon: Icons.history,
+                          color: Colors.purple,
+                        ),
+                        _MetricItem(
+                          label: tr('installs7Days'),
+                          value: successfulInstalls7Days.toString(),
+                          icon: Icons.calendar_today,
+                          color: Colors.teal,
+                        ),
+                        _MetricItem(
+                          label: tr('pinnedApps'),
+                          value: pinnedApps.toString(),
+                          icon: Icons.push_pin,
+                          color: Colors.redAccent,
+                        ),
+                      ]),
+                    ),
+                  ],
+                ),
 
-                const SizedBox(height: 24),
-                _buildSectionTitle(context, tr('recentInstalls')),
-                const SizedBox(height: 8),
-                _buildRecentHistoryList(context, installEvents),
+                ExpressiveSettingsGroup(
+                  title: tr('recentInstalls'),
+                  children: [
+                    _buildRecentHistoryList(context, installEvents),
+                  ],
+                ),
               ],
             ),
           );
