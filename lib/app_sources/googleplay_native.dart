@@ -6,6 +6,10 @@ import 'package:obtainium/models/auth_bundle.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/main.dart'; // To get global context if needed, but better via provider
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/auth_provider.dart';
+import 'package:obtainium/utils/logger.dart';
+import 'package:flutter/services.dart';
 
 class GooglePlayNative extends AppSource {
   GooglePlayNative() {
@@ -21,20 +25,19 @@ class GooglePlayNative extends AppSource {
   ) async {
     final appId = Uri.parse(standardUrl).queryParameters['id'] ?? '';
     final authProvider = Provider.of<AuthProvider>(globalNavigatorKey.currentContext!, listen: false);
-if (authProvider.hasActiveToken) {
-  final api = PlayStoreApi(authProvider.activeBundle!);
-  final details = await api.getDetails(appId);
 
-  if (details != null) {
-    // Discard token after use if requested for safety
-    if (Provider.of<PlusSettingsProvider>(globalNavigatorKey.currentContext!, listen: false).autoDiscardTokens) {
-      authProvider.clearBundle();
-      talker.info('AuthBundle discarded for safety after request');
-    }
+    if (authProvider.hasActiveToken) {
+      final api = PlayStoreApi(authProvider.activeBundle!);
+      final details = await api.getDetails(appId);
 
-    return APKDetails(
-...
+      if (details != null) {
+        // Discard token after use if requested for safety
+        if (Provider.of<PlusSettingsProvider>(globalNavigatorKey.currentContext!, listen: false).autoDiscardTokens) {
+          authProvider.clearBundle();
+          talker.info('AuthBundle discarded for safety after request');
+        }
 
+        return APKDetails(
           'Native Version', // Extract from real Protobuf in future
           [], 
           AppNames(appId, 'Google Play (Native)'),
