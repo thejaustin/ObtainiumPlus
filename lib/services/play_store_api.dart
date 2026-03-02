@@ -103,7 +103,7 @@ class PlayStoreApi {
             .toList();
             
         if (urls.isNotEmpty) {
-          talker.success('Extracted ${urls.length} download URLs');
+          talker.info('Extracted ${urls.length} download URLs');
           return urls;
         }
       } else {
