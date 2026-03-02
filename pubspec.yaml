@@ -93,7 +93,7 @@ dependencies:
   go_router: ^14.6.3
   sentry_flutter: ^8.13.0
   talker_flutter: ^5.1.14
-  talker_sentry: ^5.1.14
+  sentry_talker: ^1.0.0+1
   talker_logger: ^5.1.14
   flutter_js: ^0.8.7
   protobuf: ^6.0.0
