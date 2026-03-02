@@ -4,6 +4,10 @@ import io.flutter.app.FlutterApplication
 import leakcanary.LeakCanary
 import leakcanary.EventListener
 import leakcanary.SharkLog
+import io.sentry.Sentry
+import io.sentry.SentryEvent
+import io.sentry.SentryLevel
+import io.sentry.protocol.Message
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -25,25 +29,20 @@ class ObtainiumApplication : FlutterApplication() {
                 }
             }
         )
-    import io.sentry.Sentry
-    import io.sentry.SentryEvent
-    import io.sentry.SentryLevel
-    import io.sentry.protocol.Message
-    ...
-        private fun saveLeakToFile(leakTrace: String) {
-            try {
-                // Also report to Sentry as a non-fatal message with high severity
-                val event = SentryEvent()
-                event.level = SentryLevel.WARNING
-                val message = Message()
-                message.message = "Memory Leak Detected by LeakCanary"
-                event.message = message
-                event.setExtra("leak_trace", leakTrace)
-                Sentry.captureEvent(event)
+    }
 
-                // Write to a shared storage folder that the CLI (Termux) can access easily
-    ...
+    private fun saveLeakToFile(leakTrace: String) {
+        try {
+            // Also report to Sentry as a non-fatal message with high severity
+            val event = SentryEvent()
+            event.level = SentryLevel.WARNING
+            val message = Message()
+            message.message = "Memory Leak Detected by LeakCanary"
+            event.message = message
+            event.setExtra("leak_trace", leakTrace)
+            Sentry.captureEvent(event)
 
+            // Write to a shared storage folder that the CLI (Termux) can access easily
             val timeStamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault()).format(Date())
             val filename = "leak_report_$timeStamp.txt"
             
