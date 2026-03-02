@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -288,12 +289,103 @@ class _AppPageState extends State<AppPage> {
                                 children: [
                                   _buildMainInfo(context, app, appsProvider),
                                   const SizedBox(height: 24),
-                                  _buildStatsSection(context, app, updating, highlightTouchTargets, appsProvider),
-                                  const SizedBox(height: 32),
-                                  _buildCategorySection(context, app, appsProvider),
-                                  const SizedBox(height: 32),
-                                  _buildAboutSection(context, app, appsProvider),
-                                  const SizedBox(height: 150), // Spacing for bottom bar
+                                  
+                                  // 1. Stats Group
+                                  ExpressiveSettingsGroup(
+                                    title: tr('statistics'),
+                                    children: [
+                                      _buildStatRow(
+                                        context,
+                                        icon: Icons.install_mobile_rounded,
+                                        label: tr('installed'),
+                                        value: app?.app.installedVersion ?? tr('notInstalled'),
+                                        isBold: true,
+                                      ),
+                                      _buildStatRow(
+                                        context,
+                                        icon: Icons.new_releases_rounded,
+                                        label: tr('latest'),
+                                        value: app?.app.latestVersion ?? tr('unknown'),
+                                        valueColor: (app?.app.installedVersion == app?.app.latestVersion) ? null : Theme.of(context).colorScheme.primary,
+                                      ),
+                                      _buildStatRow(
+                                        context,
+                                        icon: Icons.update_rounded,
+                                        label: tr('lastChecked'),
+                                        value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // 2. Metadata Group
+                                  ExpressiveSettingsGroup(
+                                    title: 'App Details',
+                                    children: [
+                                      ListTile(
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+                                          child: Icon(Icons.link_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                                        ),
+                                        title: Text(tr('sourceUrl'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        subtitle: Text(app?.app.url ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        trailing: const Icon(Icons.open_in_new, size: 18),
+                                        onTap: () => launchUrlString(app?.app.url ?? '', mode: LaunchMode.externalApplication),
+                                      ),
+                                      ListTile(
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+                                          child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                                        ),
+                                        title: const Text('App ID', style: TextStyle(fontWeight: FontWeight.bold)),
+                                        subtitle: Text(app?.app.id ?? ''),
+                                        onTap: () {
+                                          Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                                        },
+                                      ),
+                                    ],
+                                  ),
+
+                                  // 3. Category Group
+                                  ExpressiveSettingsGroup(
+                                    title: tr('categories'),
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: CategoryEditorSelector(
+                                          alignment: WrapAlignment.start,
+                                          preselected: app?.app.categories != null ? app!.app.categories.toSet() : {},
+                                          onSelected: (categories) {
+                                            if (app != null) {
+                                              app.app.categories = categories;
+                                              appsProvider.saveApps([app.app]);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // 4. About Group
+                                  if (app?.app.additionalSettings['about'] != null && app!.app.additionalSettings['about'].toString().isNotEmpty)
+                                    ExpressiveSettingsGroup(
+                                      title: tr('about'),
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: MarkdownBody(
+                                            data: app.app.additionalSettings['about'].toString(),
+                                            onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
+                                            styleSheet: MarkdownStyleSheet(
+                                              p: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  const SizedBox(height: 150),
                                 ],
                               ),
                             ),
