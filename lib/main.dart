@@ -75,7 +75,7 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
         (f) =>
             (f.package ?? '').toLowerCase().contains('shizuku') ||
             (f.absPath ?? '').toLowerCase().contains('shizuku') ||
-            (f.className ?? '').toLowerCase().contains('shizuku'),
+            (f.module ?? '').toLowerCase().contains('shizuku'),
       );
       if (hasShizukuFrame) return null;
     }

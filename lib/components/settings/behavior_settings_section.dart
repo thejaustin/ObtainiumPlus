@@ -119,7 +119,6 @@ class BehaviorSettingsSection extends StatelessWidget {
       ],
     );
   }
-...
 
   Widget _buildLocaleDropdown(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
