@@ -156,10 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late Future<AndroidDeviceInfo> _androidInfoFuture;
   bool _isIgnoringBatteryOptimizations = false;
 
-  final Map<ColorSwatch<Object>, String> colorsNameMap = {
-    ColorPicker.primary: 'Primary',
-    ColorPicker.accent: 'Accent',
-  };
+  final Map<ColorSwatch<Object>, String> colorsNameMap = {};
 
   @override
   void initState() {
