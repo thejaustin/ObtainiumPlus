@@ -8,9 +8,165 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/native_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:provider/provider.dart';
-...
+
+/// Theme & Colors settings section widget
+/// PERFORMANCE: Extracted to reduce unnecessary rebuilds
+class ThemeSettingsSection extends StatelessWidget {
+  final Future<AndroidDeviceInfo>? androidInfoFuture;
+  final Map<ColorSwatch<Object>, String> colorsNameMap;
+  final String? searchQuery;
+
+  const ThemeSettingsSection({
+    super.key,
+    required this.androidInfoFuture,
+    required this.colorsNameMap,
+    this.searchQuery,
+  });
+
+  bool _matches(String text) {
+    if (searchQuery == null || searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final settings = context.watch<SettingsProvider>();
+
+    List<Widget> advancedWidgets = [
+      _buildFeatureToggle(
+        context,
+        icon: Icons.blur_on_rounded,
+        title: tr('glassmorphismUI'),
+        subtitle: tr('glassmorphismUIDescription'),
+        value: (SettingsProvider s) => s.plusEnableGlassmorphism,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableGlassmorphism = v,
+        visible: (SettingsProvider s) => _matches(tr('glassmorphismUI')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.unfold_more_rounded,
+        title: tr('plusPopupSlider'),
+        subtitle: tr('plusPopupSliderDescription'),
+        value: (SettingsProvider s) => s.plusEnablePopupSlider,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnablePopupSlider = v,
+        visible: (SettingsProvider s) => _matches(tr('plusPopupSlider')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.animation_outlined,
+        title: tr('plusMaterialExpressive'),
+        subtitle: tr('plusMaterialExpressiveDescription'),
+        value: (SettingsProvider s) => s.plusEnableMaterialExpressive,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableMaterialExpressive = v,
+        visible: (SettingsProvider s) => _matches(tr('plusMaterialExpressive')),
+      ),
+    ];
+
+    List<Widget> themeWidgets = [
+      if (_matches(tr('theme'))) _buildThemeSegmented(context),
+      if (_matches(tr('followSystemThemeExplanation'))) _buildFollowSystemExplanation(context),
+      if (_matches(tr('themePresets'))) _buildThemePresets(context),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.dark_mode_outlined,
+        title: tr('useBlackTheme'),
+        subtitle: tr('useBlackThemeDescription'),
+        value: (SettingsProvider s) => s.useBlackTheme,
+        onChanged: (SettingsProvider s, bool v) => s.useBlackTheme = v,
+        visible: (SettingsProvider s) => _matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light,
+      ),
+      _buildMaterialYouToggle(context),
+      _buildMatchSystemMaterialStyleToggle(context),
+      if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
+      if (_matches(tr('navigationLabels'))) _buildNavigationLabelSegmented(context),
+      if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
+
+      // Advanced/Experimental Section
+      if (settings.plusEnableExperimentalCustomization && advancedWidgets.any((w) => w is! SizedBox))
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: ExpansionTile(
+            leading: const Icon(Icons.science_outlined),
+            title: Text(tr('advancedTheming'), style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(tr('advancedThemingDescription')),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, size: 20, color: Theme.of(context).colorScheme.error),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          tr('experimentalModeInfo'),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              ...advancedWidgets,
+            ],
+          ),
+        ),
+    ];
+
+    List<Widget> typographyWidgets = [
+       if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
+    ];
+
+    List<Widget> animationWidgets = [
+       _buildFeatureToggle(
+        context,
+        icon: Icons.auto_awesome_motion_rounded,
+        title: tr('plusEnhancedAnimations'),
+        subtitle: tr('plusEnhancedAnimationsDescription'),
+        value: (SettingsProvider s) => s.plusEnableEnhancedAnimations,
+        onChanged: (SettingsProvider s, bool v) => s.plusEnableEnhancedAnimations = v,
+        visible: (SettingsProvider s) => _matches(tr('plusEnhancedAnimations')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.animation_outlined,
+        title: tr('disablePageTransitions'),
+        subtitle: tr('disablePageTransitionsDescription'),
+        value: (SettingsProvider s) => s.disablePageTransitions,
+        onChanged: (SettingsProvider s, bool v) => s.disablePageTransitions = v,
+        visible: (SettingsProvider s) => _matches(tr('disablePageTransitions')),
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.swap_horizontal_circle_outlined,
+        title: tr('reversePageTransitions'),
+        subtitle: tr('reversePageTransitionsDescription'),
+        value: (SettingsProvider s) => s.reversePageTransitions,
+        onChanged: (SettingsProvider s, bool v) => s.reversePageTransitions = v,
+        visible: (SettingsProvider s) => _matches(tr('reversePageTransitions')) && !s.disablePageTransitions,
+      ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.touch_app_outlined,
+        title: tr('highlightTouchTargets'),
+        subtitle: tr('highlightTouchTargetsDescription'),
+        value: (SettingsProvider s) => s.highlightTouchTargets,
+        onChanged: (SettingsProvider s, bool v) => s.highlightTouchTargets = v,
+        visible: (SettingsProvider s) => _matches(tr('highlightTouchTargets')),
+      ),
+    ];
+
     return Column(
       children: [
         if (themeWidgets.any((w) => w is! SizedBox))
@@ -31,6 +187,7 @@ import 'package:provider/provider.dart';
       ],
     );
   }
+
 
   Widget _buildThemeSegmented(BuildContext context) {
     return Consumer<SettingsProvider>(

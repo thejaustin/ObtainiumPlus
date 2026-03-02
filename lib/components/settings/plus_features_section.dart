@@ -7,7 +7,20 @@ import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
-...
+
+class PlusFeaturesSection extends StatelessWidget {
+  final String? searchQuery;
+
+  const PlusFeaturesSection({
+    super.key,
+    this.searchQuery,
+  });
+
+  bool _matches(String text) {
+    if (searchQuery == null || searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
