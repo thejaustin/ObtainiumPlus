@@ -134,7 +134,8 @@ void main() async {
         final sp = await SharedPreferences.getInstance();
         
         final settingsProvider = SettingsProvider();
-        await settingsProvider.initializeSettings(sp);
+        settingsProvider.prefs = sp;
+        await settingsProvider.initializeSettings();
         
         final pluginProvider = PluginProvider();
         await pluginProvider.initialize(sp);
