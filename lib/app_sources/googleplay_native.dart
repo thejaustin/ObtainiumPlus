@@ -26,9 +26,9 @@ class GooglePlayNative extends AppSource {
     // Attempt to use native API if a token is available
     // In a real implementation, we'd pull the AuthBundle from a provider
     return APKDetails(
-      AppNames(appId, 'Google Play'),
       'Unknown', // Version from native API
       [], // APK URLs from native API
+      AppNames(appId, 'Google Play'),
     );
   }
 
