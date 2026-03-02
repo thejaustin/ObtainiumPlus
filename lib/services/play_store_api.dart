@@ -11,34 +11,26 @@ class PlayStoreApi {
   PlayStoreApi(this.auth);
 
   Map<String, String> get _headers {
-    final deviceId = auth.deviceConfig['androidId'] ?? '0000000000000000';
+    final authProvider = Provider.of<AuthProvider>(globalNavigatorKey.currentContext!, listen: false);
+    final profile = authProvider.selectedProfile;
+    final deviceId = authProvider.effectiveDeviceId == 'native' ? '0000000000000000' : authProvider.effectiveDeviceId;
+
     final authHeader = auth.aasToken.isNotEmpty 
         ? 'GoogleLogin auth=${auth.authToken}' 
         : 'Bearer ${auth.authToken}';
 
-    // User-Agent Jitter: Vary versions slightly to avoid rigid fingerprinting
     final versions = ['38.5.18-29', '37.5.24-21', '39.1.12-21', '38.2.10-21'];
     final selectedVersion = versions[Random().nextInt(versions.length)];
 
-    // Protocol Masking: Use only essential headers to minimize fingerprint
-    // and match the exact order and casing used by the native Finsky client.
-    final headers = {
+    return {
       'Authorization': authHeader,
       'X-Ad-Id': '00000000-0000-0000-0000-000000000000',
-      'User-Agent': 'Android-Finsky/$selectedVersion [0] [PR] 561633513 (api=3,build=561633513,is_tablet=false)',
+      'User-Agent': 'Android-Finsky/$selectedVersion [0] [PR] 561633513 (api=3,build=561633513,sdk=${profile.sdkVersion},device=${profile.model},hardware=${profile.manufacturer})',
       'X-DFE-Device-Id': deviceId,
       'Accept-Language': 'en-US',
       'Host': 'android.clients.google.com',
       'Connection': 'Keep-Alive',
     };
-
-    // Sanitize logs: never log full tokens or IDs
-    final sanitizedHeaders = Map<String, String>.from(headers);
-    sanitizedHeaders['Authorization'] = 'Bearer ***';
-    sanitizedHeaders['X-DFE-Device-Id'] = deviceId.substring(0, 4) + '...';
-    
-    talker.debug('Constructed Hardened Headers (Sanitized): $sanitizedHeaders');
-    return headers;
   }
 
   /// Mimics human latency to avoid bot detection
