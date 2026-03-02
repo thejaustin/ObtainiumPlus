@@ -19,16 +19,27 @@ class GooglePlayNative extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    // This source requires a token dispenser to be configured
-    // For now, we'll implement the metadata part
-    String appId = Uri.parse(standardUrl).queryParameters['id'] ?? '';
-    
-    // Attempt to use native API if a token is available
-    // In a real implementation, we'd pull the AuthBundle from a provider
+    final appId = Uri.parse(standardUrl).queryParameters['id'] ?? '';
+    final authProvider = Provider.of<AuthProvider>(globalNavigatorKey.currentContext!, listen: false);
+
+    if (authProvider.hasActiveToken) {
+      final api = PlayStoreApi(authProvider.activeBundle!);
+      final details = await api.getDetails(appId);
+      
+      if (details != null) {
+        // Here we would parse the Protobuf details. For now, return stub with real appId
+        return APKDetails(
+          'Native Version', // Extract from real Protobuf in future
+          [], 
+          AppNames(appId, 'Google Play (Native)'),
+        );
+      }
+    }
+
     return APKDetails(
-      'Unknown', // Version from native API
-      [], // APK URLs from native API
-      AppNames(appId, 'Google Play'),
+      'Unknown',
+      [],
+      AppNames(appId, 'Google Play (Native)'),
     );
   }
 

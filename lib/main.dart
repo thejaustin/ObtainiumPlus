@@ -15,6 +15,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_config_provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
+import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -140,6 +141,9 @@ void main() async {
         final pluginProvider = PluginProvider();
         await pluginProvider.initialize(sp);
 
+        final authProvider = AuthProvider();
+        await authProvider.initialize(sp);
+
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         
         final manufacturer = androidInfo.manufacturer.toLowerCase();
@@ -193,6 +197,7 @@ void main() async {
                 ChangeNotifierProvider.value(value: settingsProvider.plusSettings),
                 ChangeNotifierProvider.value(value: settingsProvider.sourceConfig),
                 ChangeNotifierProvider.value(value: pluginProvider),
+                ChangeNotifierProvider.value(value: authProvider),
                 Provider(create: (context) => np),
                 Provider(create: (context) => LogsProvider()),
               ],
