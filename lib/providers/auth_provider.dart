@@ -4,41 +4,53 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/models/auth_bundle.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/custom_errors.dart';
 
-enum AuthMode { anonymous, microG }
+enum AuthMode { anonymous, microG, hybrid }
 
 class AuthProvider with ChangeNotifier {
-  AuthBundle? _activeBundle;
+  AuthBundle? _anonymousBundle;
+  AuthBundle? _personalBundle;
   List<String> _dispensers = ['https://auroraoss.com/api/auth'];
-  AuthMode _authMode = AuthMode.anonymous;
+  AuthMode _authMode = AuthMode.hybrid;
   String? _microGEmail;
   SharedPreferences? _prefs;
 
-  AuthBundle? get activeBundle => _activeBundle;
+  AuthBundle? get activeBundle {
+    if (_authMode == AuthMode.hybrid || _authMode == AuthMode.anonymous) {
+      return _anonymousBundle ?? _personalBundle;
+    }
+    return _personalBundle ?? _anonymousBundle;
+  }
+
+  AuthBundle? get personalBundle => _personalBundle;
+  AuthBundle? get anonymousBundle => _anonymousBundle;
   List<String> get dispensers => _dispensers;
   AuthMode get authMode => _authMode;
   String? get microGEmail => _microGEmail;
-  bool get hasActiveToken => _activeBundle != null;
+  bool get hasActiveToken => activeBundle != null;
 
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
-
-    // Load dispensers
+    
     _dispensers = _prefs?.getStringList('play_store_dispensers') ?? ['https://auroraoss.com/api/auth'];
-
-    // Load mode
-    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 0];
+    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2]; // Default to Hybrid
     _microGEmail = _prefs?.getString('microg_email');
 
-    // Load active bundle if exists
-    final bundleJson = _prefs?.getString('active_auth_bundle');
-    if (bundleJson != null) {
+    final anonJson = _prefs?.getString('anonymous_auth_bundle');
+    if (anonJson != null) {
       try {
-        _activeBundle = AuthBundle.fromJson(jsonDecode(bundleJson));
-      } catch (e) {
-        talker.warning('Failed to parse stored AuthBundle');
-      }
+        _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson));
+      } catch (_) {}
     }
+    
+    final personalJson = _prefs?.getString('personal_auth_bundle');
+    if (personalJson != null) {
+      try {
+        _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson));
+      } catch (_) {}
+    }
+    
     notifyListeners();
   }
 
@@ -60,27 +72,32 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> refreshMicroGToken() async {
     if (_microGEmail == null) throw ObtainiumError('No microG account selected');
-
+    
     final token = await AuthService.getMicroGToken(_microGEmail!);
     if (token != null) {
-      _activeBundle = AuthBundle(
+      _personalBundle = AuthBundle(
         email: _microGEmail!,
-        aasToken: '', // Not needed for direct FDFE with OAuth2 token
+        aasToken: '',
         authToken: token,
-        deviceConfig: {}, // Will use native GSF ID
+        deviceConfig: {}, 
       );
-      await _prefs?.setString('active_auth_bundle', jsonEncode({
-        'email': _activeBundle!.email,
-        'aasToken': '',
-        'authToken': token,
-        'deviceConfig': {},
-      }));
+      await _prefs?.setString('personal_auth_bundle', jsonEncode(_personalBundle!.toJson()));
       notifyListeners();
     } else {
       throw ObtainiumError('Failed to retrieve token from microG');
     }
   }
-...
+
+  Future<void> refreshBundle(String dispenserUrl) async {
+    try {
+      final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
+      _anonymousBundle = bundle;
+      await _prefs?.setString('anonymous_auth_bundle', jsonEncode(bundle.toJson()));
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   Future<void> addDispenser(String url) async {
     if (!_dispensers.contains(url)) {
@@ -96,26 +113,11 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshBundle(String dispenserUrl) async {
-    try {
-      final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
-      _activeBundle = bundle;
-      await _prefs?.setString('active_auth_bundle', jsonEncode({
-        'email': bundle.email,
-        'aasToken': bundle.aasToken,
-        'authToken': bundle.authToken,
-        'deviceConfig': bundle.deviceConfig,
-      }));
-      notifyListeners();
-    } catch (e) {
-      // Errors handled by service/caller
-      rethrow;
-    }
-  }
-
   void clearBundle() {
-    _activeBundle = null;
-    _prefs?.remove('active_auth_bundle');
+    _anonymousBundle = null;
+    _personalBundle = null;
+    _prefs?.remove('anonymous_auth_bundle');
+    _prefs?.remove('personal_auth_bundle');
     notifyListeners();
   }
 }

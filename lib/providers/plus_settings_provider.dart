@@ -158,4 +158,16 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setBool('plusShowLegacyUIComparison', val);
     notifyListeners();
   }
+
+  bool get playStoreVerifiedOnly => _prefs?.getBool('playStoreVerifiedOnly') ?? true;
+  set playStoreVerifiedOnly(bool val) {
+    _prefs?.setBool('playStoreVerifiedOnly', val);
+    notifyListeners();
+  }
+
+  bool get playStoreExcludeSystemApps => _prefs?.getBool('playStoreExcludeSystemApps') ?? true;
+  set playStoreExcludeSystemApps(bool val) {
+    _prefs?.setBool('playStoreExcludeSystemApps', val);
+    notifyListeners();
+  }
 }
