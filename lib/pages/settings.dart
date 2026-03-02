@@ -453,6 +453,13 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                             color: Theme.of(context).colorScheme.onSurface,
                                           ),
                                         ),
+                                    actions: isSearching ? null : [
+                                      IconButton(
+                                        icon: Icon(_useGridView ? Icons.view_list_outlined : Icons.grid_view_outlined),
+                                        tooltip: _useGridView ? 'List view' : 'Grid view',
+                                        onPressed: () => setState(() => _useGridView = !_useGridView),
+                                      ),
+                                    ],
                                   ),
                         
                                   // 2. Search Pill (Persistent below title)
@@ -551,12 +558,13 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                     ),
                                   ),
                         
-                                  // 3. Settings Content (Material 3 Expressive Groups)
+                                  // 3. Settings Content (Material 3 Expressive Grouped Layout)
                                   SliverPadding(
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     sliver: SliverList(
                                       delegate: SliverChildListDelegate([
                                         if (isSearching) ...[
+                                          // Searching view remains flattened for scanability
                                           _buildExpressiveGroup(
                                             context,
                                             title: tr('suggested'),
@@ -587,97 +595,60 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                             ],
                                           ),
                                           const SizedBox(height: 16),
-                                          _buildExpressiveGroup(
-                                            context,
-                                            title: tr('theme'),
-                                            children: [
-                                              ThemeSettingsSection(
-                                                androidInfoFuture: _androidInfoFuture,
-                                                colorsNameMap: colorsNameMap,
-                                                searchQuery: _searchQuery,
-                                              ),
-                                            ],
-                                          ),
+                                          _buildExpressiveGroup(context, title: tr('theme'), children: [ThemeSettingsSection(androidInfoFuture: _androidInfoFuture, colorsNameMap: colorsNameMap, searchQuery: _searchQuery)]),
                                           const SizedBox(height: 16),
-                                          _buildExpressiveGroup(
-                                            context,
-                                            title: tr('updatesAndAutomation'),
-                                            children: [
-                                              UpdateSettingsSection(
-                                                showIntervalLabel: showIntervalLabel,
-                                                onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
-                                                androidInfoFuture: _androidInfoFuture,
-                                                searchQuery: _searchQuery,
-                                              ),
-                                            ],
-                                          ),
+                                          _buildExpressiveGroup(context, title: tr('updatesAndAutomation'), children: [UpdateSettingsSection(showIntervalLabel: showIntervalLabel, onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value), androidInfoFuture: _androidInfoFuture, searchQuery: _searchQuery)]),
                                           const SizedBox(height: 16),
-                                          _buildExpressiveGroup(
-                                            context,
-                                            title: tr('layout'),
-                                            children: [
-                                              AppsViewSettingsSection(onSetState: setState, searchQuery: _searchQuery),
-                                            ],
-                                          ),
+                                          _buildExpressiveGroup(context, title: tr('layout'), children: [AppsViewSettingsSection(onSetState: setState, searchQuery: _searchQuery)]),
                                           const SizedBox(height: 16),
-                                          _buildExpressiveGroup(
-                                            context,
-                                            title: tr('appBehavior'),
-                                            children: [
-                                              BehaviorSettingsSection(
-                                                sortDropdown: sortDropdown,
-                                                orderDropdown: orderDropdown,
-                                                localeDropdown: localeDropdown,
-                                                searchQuery: _searchQuery,
-                                              ),
-                                            ],
-                                          ),
+                                          _buildExpressiveGroup(context, title: tr('appBehavior'), children: [BehaviorSettingsSection(sortDropdown: sortDropdown, orderDropdown: orderDropdown, localeDropdown: localeDropdown, searchQuery: _searchQuery)]),
                                           const SizedBox(height: 16),
-                                          _buildExpressiveGroup(
-                                            context,
-                                            title: tr('advancedAndTroubleshooting'),
-                                            children: [
-                                              AdvancedSettingsSection(searchQuery: _searchQuery),
-                                              const Divider(height: 1, indent: 56, endIndent: 16),
-                                              TroubleshootingSection(searchQuery: _searchQuery),
-                                            ],
-                                          ),
+                                          _buildExpressiveGroup(context, title: tr('advancedAndTroubleshooting'), children: [AdvancedSettingsSection(searchQuery: _searchQuery), const Divider(height: 1, indent: 56, endIndent: 16), TroubleshootingSection(searchQuery: _searchQuery)]),
                                         ] else ...[
-                                          // Standard Menu Mode
+                                          // --- GROUPED MENU MODE ---
+                                          
+                                          // 1. Feature Group
                                           _buildExpressiveGroup(
                                             context,
-                                            title: 'Obtainium+ Features',
+                                            title: 'Features',
                                             children: [
-                                              _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: 'Obtainium+ Features', builder: _hubBuilderPlus, subtitle: tr('plusFeaturesDescription')),
-                                              _buildSubMenuTile(context, icon: Icons.sync_outlined, title: 'Updates & Automation', builder: _hubBuilderUpdates, subtitle: tr('updatesDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), builder: _hubBuilderPlus, subtitle: tr('plusFeaturesDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), builder: _hubBuilderUpdates, subtitle: tr('updatesDescription')),
                                             ],
                                           ),
                                           const SizedBox(height: 16),
+
+                                          // 2. Personalization Group
                                           _buildExpressiveGroup(
                                             context,
                                             title: 'Personalization',
                                             children: [
-                                              _buildSubMenuTile(context, icon: Icons.palette_outlined, title: 'Appearance', builder: _hubBuilderTheming, subtitle: tr('themingDescription')),
-                                              _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: 'Layout', builder: _hubBuilderLayout, subtitle: tr('layoutDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.palette_outlined, title: tr('theming'), builder: _hubBuilderTheming, subtitle: tr('themingDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: tr('layout'), builder: _hubBuilderLayout, subtitle: tr('layoutDescription')),
                                             ],
                                           ),
                                           const SizedBox(height: 16),
+
+                                          // 3. Maintenance Group
                                           _buildExpressiveGroup(
                                             context,
-                                            title: 'Data & Insights',
+                                            title: 'Maintenance',
                                             children: [
-                                              _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: 'Statistics', builder: _hubBuilderStats, subtitle: tr('statisticsDescription')),
-                                              _buildSubMenuTile(context, icon: Icons.backup_outlined, title: 'Backup & Sync', builder: _hubBuilderBackup, subtitle: tr('backupAndSyncDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), builder: _hubBuilderStats, subtitle: tr('statisticsDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.backup_outlined, title: tr('backupAndSync'), builder: _hubBuilderBackup, subtitle: tr('backupAndSyncDescription')),
                                             ],
                                           ),
                                           const SizedBox(height: 16),
-                                          _buildExpressiveGroup(
+
+                                          // 4. Expandable System Settings (To shorten the scroll)
+                                          _buildExpandableExpressiveGroup(
                                             context,
-                                            title: 'Advanced & Support',
+                                            title: 'System & Advanced',
+                                            icon: Icons.settings_suggest_outlined,
                                             children: [
-                                              _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: 'Advanced Settings', builder: _hubBuilderAdvanced, subtitle: tr('advancedDescription')),
+                                              _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: tr('advanced'), builder: _hubBuilderAdvanced, subtitle: tr('advancedDescription')),
                                               if (settingsProvider.plusDeveloperMode)
-                                                _buildSubMenuTile(context, icon: Icons.code_rounded, title: 'Dev & Logs', builder: (ctx) => const DeveloperSettingsPage(), subtitle: 'Debug tools and logs'),
+                                                _buildSubMenuTile(context, icon: Icons.code_rounded, title: 'Dev & Logs', builder: (ctx) => const DeveloperSettingsPage(), subtitle: 'Diagnostics and debugging'),
                                             ],
                                           ),
                                         ],
@@ -1018,6 +989,72 @@ Widget _buildQuickToggle(BuildContext context, {required IconData icon, required
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildExpandableExpressiveGroup(BuildContext context, {required String title, required IconData icon, required List<Widget> children}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          ),
+          child: ExpansionTile(
+            shape: const RoundedRectangleBorder(side: BorderSide.none),
+            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+            ),
+            title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+            subtitle: Text('Tap to expand', style: Theme.of(context).textTheme.bodySmall),
+            children: children.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final child = entry.value;
+              return Column(
+                children: [
+                  if (idx == 0)
+                    Divider(
+                      height: 1,
+                      indent: 56,
+                      endIndent: 16,
+                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    ),
+                  child,
+                  if (idx < children.length - 1)
+                    Divider(
+                      height: 1,
+                      indent: 56,
+                      endIndent: 16,
+                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 

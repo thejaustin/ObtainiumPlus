@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -103,22 +103,24 @@ class BehaviorSettingsSection extends StatelessWidget {
       if (_matches(tr('swipeRightAction'))) _buildSwipeRightDropdown(context),
       if (_matches(tr('swipeLeftAction'))) _buildSwipeLeftDropdown(context),
     ];
-
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
+...
     return Column(
       children: [
         if (children.any((w) => w is! SizedBox))
-          SettingsGroup(
+          ExpressiveSettingsGroup(
             title: isSearching ? null : tr('general'),
             children: children,
           ),
         if (swipeChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
+          ExpressiveSettingsGroup(
             title: isSearching ? null : tr('swipeActions'),
             children: swipeChildren,
           ),
       ],
     );
   }
+...
 
   Widget _buildLocaleDropdown(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
