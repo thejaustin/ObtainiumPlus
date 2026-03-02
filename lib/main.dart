@@ -44,6 +44,7 @@ import 'package:obtainium/utils/locale_constants.dart';
 import 'package:obtainium/components/error_app.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:sentry_talker/sentry_talker.dart';
 
 var fdroid = false;
 
@@ -84,10 +85,12 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
 }
 
 void main() async {
-  initLogger();
   await SentryFlutter.init(
     (options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
+
+      // Add Talker integration
+      options.addIntegration(TalkerIntegration(talker: talker));
 
       // Performance — keep sample rates low to avoid overwhelming Sentry
       options.tracesSampleRate = 0.2;

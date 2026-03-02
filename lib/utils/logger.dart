@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:talker_sentry/talker_sentry.dart';
+import 'package:sentry_talker/sentry_talker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Global Talker instance for logging
@@ -17,20 +17,6 @@ final talker = TalkerFlutter.init(
     ),
   ),
 );
-
-/// Initialize Talker with Sentry integration
-void initLogger() {
-  talker.configure(
-    observers: [
-      TalkerSentryObserver(
-        settings: const TalkerSentrySettings(
-          addHistoryToSentry: true,
-          sendLogsToSentry: true,
-        ),
-      ),
-    ],
-  );
-}
 
 /// Helper extension for easier logging
 extension TalkerExt on Object {
