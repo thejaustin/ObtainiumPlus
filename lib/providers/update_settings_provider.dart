@@ -26,7 +26,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   Future<void> initializeSettings(SharedPreferences p) async {
     prefs = p;
     initUpdateIntervalInterpolator();
-    processIntervalSliderValue(updateIntervalSliderVal, notify: false);
+    processIntervalSliderValue(updateIntervalSliderVal, notify: false, skipLabel: true);
     notifyListeners();
   }
 
@@ -40,10 +40,10 @@ class UpdateSettingsProvider with ChangeNotifier {
     updateIntervalInterpolator = SplineInterpolation(nodes: nodes);
   }
 
-  void processIntervalSliderValue(double val, {bool notify = true}) {
+  void processIntervalSliderValue(double val, {bool notify = true, bool skipLabel = false}) {
     if (val < 0.5) {
       prefs?.setInt('updateInterval', 0);
-      updateIntervalLabel = tr('neverManualOnly');
+      if (!skipLabel) updateIntervalLabel = tr('neverManualOnly');
       if (notify) notifyListeners();
       return;
     }
@@ -55,25 +55,27 @@ class UpdateSettingsProvider with ChangeNotifier {
     }
     if (valInterpolated < 60) {
       prefs?.setInt('updateInterval', valInterpolated);
-      updateIntervalLabel = plural('minute', valInterpolated);
+      if (!skipLabel) updateIntervalLabel = plural('minute', valInterpolated);
     } else if (valInterpolated < 8 * 60) {
       int valRounded = (valInterpolated / 15).floor() * 15;
       prefs?.setInt('updateInterval', valRounded);
-      updateIntervalLabel = plural('hour', valRounded ~/ 60);
-      int mins = valRounded % 60;
-      if (mins != 0) updateIntervalLabel += " ${plural('minute', mins)}";
+      if (!skipLabel) {
+        updateIntervalLabel = plural('hour', valRounded ~/ 60);
+        int mins = valRounded % 60;
+        if (mins != 0) updateIntervalLabel += " ${plural('minute', mins)}";
+      }
     } else if (valInterpolated < 24 * 60) {
       int valRounded = (valInterpolated / 30).floor() * 30;
       prefs?.setInt('updateInterval', valRounded);
-      updateIntervalLabel = plural('hour', valRounded / 60);
+      if (!skipLabel) updateIntervalLabel = plural('hour', valRounded / 60);
     } else if (valInterpolated < 7 * 24 * 60) {
       int valRounded = (valInterpolated / (12 * 60)).floor() * 12 * 60;
       prefs?.setInt('updateInterval', valRounded);
-      updateIntervalLabel = plural('day', valRounded / (24 * 60));
+      if (!skipLabel) updateIntervalLabel = plural('day', valRounded / (24 * 60));
     } else {
       int valRounded = (valInterpolated / (24 * 60)).floor() * 24 * 60;
       prefs?.setInt('updateInterval', valRounded);
-      updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
+      if (!skipLabel) updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
     }
     if (notify) notifyListeners();
   }

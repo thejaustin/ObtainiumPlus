@@ -307,7 +307,7 @@ class AddAppPageState extends State<AddAppPage> {
         );
       }
     } catch (e) {
-      showError(e, context);
+      if (mounted) showError(e, context);
     } finally {
       if (mounted) {
         setState(() {

@@ -1,9 +1,12 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/pages/home.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 
 class EditableNavigationBar extends StatefulWidget {
   final List<NavigationPageItem> activePages;
@@ -70,9 +73,29 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final enableGlass = context.select<SettingsProvider, bool>(
+      (sp) => sp.plusEnableGlassmorphism,
+    );
     final availableTabs = widget.allPages.keys
         .where((id) => !widget.activePages.any((p) => p.id == id))
         .toList();
+
+    final navContent = SafeArea(
+      top: false,
+      child: SizedBox(
+        height: 80,
+        child: Row(
+          children: [
+            Expanded(child: _buildTabRow(context, colorScheme)),
+            if (widget.isEditMode) ...[
+              if (availableTabs.isNotEmpty)
+                _buildAddButton(context, colorScheme, availableTabs),
+              _buildDoneButton(context, colorScheme),
+            ],
+          ],
+        ),
+      ),
+    );
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -82,45 +105,49 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               HapticFeedback.heavyImpact();
               widget.onEditModeChanged(true);
             },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withValues(alpha: 0.1),
-              blurRadius: 3,
-              offset: const Offset(0, -1),
-            ),
-          ],
-          border: widget.isEditMode
-              ? Border(
-                  top: BorderSide(
-                    color: colorScheme.primary.withValues(alpha: 0.4),
-                    width: 2,
+      child: enableGlass
+          ? ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface.withValues(alpha: 0.75),
+                    border: Border(
+                      top: BorderSide(
+                        color: widget.isEditMode
+                            ? colorScheme.primary.withValues(alpha: 0.4)
+                            : colorScheme.outlineVariant.withValues(alpha: 0.35),
+                        width: widget.isEditMode ? 2 : 1,
+                      ),
+                    ),
                   ),
-                )
-              : null,
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 80,
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildTabRow(context, colorScheme),
+                  child: navContent,
                 ),
-                if (widget.isEditMode) ...[
-                  if (availableTabs.isNotEmpty)
-                    _buildAddButton(context, colorScheme, availableTabs),
-                  _buildDoneButton(context, colorScheme),
+              ),
+            )
+          : AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 3,
+                    offset: const Offset(0, -1),
+                  ),
                 ],
-              ],
+                border: widget.isEditMode
+                    ? Border(
+                        top: BorderSide(
+                          color: colorScheme.primary.withValues(alpha: 0.4),
+                          width: 2,
+                        ),
+                      )
+                    : null,
+              ),
+              child: navContent,
             ),
-          ),
-        ),
-      ),
     );
   }
 

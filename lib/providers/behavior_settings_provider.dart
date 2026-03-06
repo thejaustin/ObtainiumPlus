@@ -202,9 +202,15 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Preferred update source: 'play_store', 'github', 'apkpure', 'direct'
+  /// Preferred update source: 'direct', 'play_store', 'aurora'
   String get preferredUpdateSource {
-    return prefs?.getString('preferredUpdateSource') ?? 'direct';
+    final val = prefs?.getString('preferredUpdateSource') ?? 'direct';
+    // Migrate deprecated 'github' and 'apkpure' values to 'direct'.
+    if (val == 'github' || val == 'apkpure') {
+      prefs?.setString('preferredUpdateSource', 'direct');
+      return 'direct';
+    }
+    return val;
   }
 
   set preferredUpdateSource(String val) {

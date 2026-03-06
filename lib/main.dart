@@ -457,16 +457,21 @@ class _ObtainiumState extends State<Obtainium> {
             );
           }
 
-          // set the background and surface colors to pure black in the amoled theme
+          // Set all M3 surface tokens to near-black values for true AMOLED.
+          // Avoid .harmonized() after this to preserve pure-black surfaces.
           if (settingsProvider.useBlackTheme) {
-            darkColorScheme = darkColorScheme
-                .copyWith(
-                  surface: Colors.black,
-                  onSurface: Colors.white, // Ensure text remains visible on pure black background
-                  surfaceVariant: Colors.grey[900]!, // Darker variant for contrast
-                  onSurfaceVariant: Colors.white70, // Lighter text for secondary content
-                )
-                .harmonized();
+            darkColorScheme = darkColorScheme.copyWith(
+              surface: Colors.black,
+              surfaceContainerLowest: Colors.black,
+              surfaceContainerLow: const Color(0xFF080808),
+              surfaceContainer: const Color(0xFF0F0F0F),
+              surfaceContainerHigh: const Color(0xFF181818),
+              surfaceContainerHighest: const Color(0xFF212121),
+              surfaceDim: Colors.black,
+              surfaceBright: const Color(0xFF1C1C1C),
+              onSurface: Colors.white,
+              onSurfaceVariant: const Color(0xFFCCCCCC),
+            );
           }
 
           if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();

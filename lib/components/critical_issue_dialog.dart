@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/known_issues_service.dart';
@@ -36,26 +37,34 @@ class CriticalIssueDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 450),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.1),
+            color: enableGlass
+                ? colorScheme.onSurface.withValues(alpha: 0.18)
+                : colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.3 : 0.15),
-              blurRadius: enableGlass ? 25 : 15,
-              spreadRadius: enableGlass ? 0 : -5,
+              color: Colors.black.withValues(alpha: enableGlass ? 0.28 : 0.15),
+              blurRadius: enableGlass ? 32 : 15,
+              spreadRadius: enableGlass ? -2 : -5,
             ),
+            if (enableGlass)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: enableGlass ? 15 : 0,
-              sigmaY: enableGlass ? 15 : 0,
+              sigmaX: enableGlass ? 24 : 0,
+              sigmaY: enableGlass ? 24 : 0,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -132,14 +141,14 @@ class CriticalIssueDialog extends StatelessWidget {
         if (issue.fixedInVersion != null) ...[
           _InfoChip(
             icon: Icons.check_circle_outline,
-            label: 'Fixed in ${issue.fixedInVersion}',
+            label: tr('fixedInVersion', namedArgs: {'version': issue.fixedInVersion!}),
             color: Colors.green.shade700,
           ),
           const SizedBox(height: 8),
         ],
         _InfoChip(
           icon: Icons.open_in_new,
-          label: 'Tracked on GitHub',
+          label: tr('trackedOnGitHub'),
           color: colorScheme.primary,
         ),
       ],
@@ -161,7 +170,7 @@ class CriticalIssueDialog extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               icon: const Icon(Icons.system_update_outlined),
-              label: const Text('Check for Updates'),
+              label: Text(tr('checkForUpdates')),
               style: FilledButton.styleFrom(
                 backgroundColor: accentColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -179,7 +188,7 @@ class CriticalIssueDialog extends StatelessWidget {
                     await KnownIssuesService.dismissIssue(issue.id);
                     if (context.mounted) Navigator.of(context).pop();
                   },
-                  child: const Text('Dismiss'),
+                  child: Text(tr('dismiss')),
                 ),
               ),
               const SizedBox(width: 8),
@@ -187,7 +196,7 @@ class CriticalIssueDialog extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.notifications_active_outlined),
-                  label: const Text('Follow'),
+                  label: Text(tr('followIssue')),
                   onPressed: () async {
                     final url = Uri.parse(issue.githubIssueUrl);
                     if (await canLaunchUrl(url)) {

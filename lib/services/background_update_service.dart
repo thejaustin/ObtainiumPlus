@@ -155,7 +155,7 @@ class BackgroundUpdateService {
       MultiAppMultiError? errors;
       MultiAppMultiError toThrow = MultiAppMultiError();
       CheckingUpdatesNotification notif = CheckingUpdatesNotification(
-        plural('apps', toCheck.length),
+        () { try { return plural('apps', toCheck.length); } catch (_) { return '${toCheck.length} apps'; } }(),
       );
 
       try {

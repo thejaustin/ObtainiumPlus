@@ -337,8 +337,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
     if (widget.key.toString() != initKey || _itemsDimensionsChanged()) {
       initForm();
     }
-    for (var r = 0; r < formInputs.length; r++) {
-      for (var e = 0; e < formInputs[r].length; e++) {
+    for (var r = 0; r < formInputs.length && r < widget.items.length; r++) {
+      for (var e = 0; e < formInputs[r].length && e < widget.items[r].length; e++) {
         final item = widget.items[r][e];
         final fieldKey = item.key;
         if (item is GeneratedFormSwitch) {
