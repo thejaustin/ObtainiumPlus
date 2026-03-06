@@ -323,11 +323,22 @@ class AppsProvider with ChangeNotifier {
       return temp.sublist(temp.length - 2).join('.');
     }
 
+    // Domains that belong to the same CDN/infrastructure as their parent host.
+    // Treats these as the same source to avoid spurious origin warnings.
+    bool isTrustedRelatedDomain(String? sourceHost, String? apkHost) {
+      if (sourceHost == null || apkHost == null) return false;
+      if (sourceHost == apkHost) return true;
+      const githubDomains = {'github.com', 'githubusercontent.com', 'github.io'};
+      if (githubDomains.contains(sourceHost) && githubDomains.contains(apkHost)) {
+        return true;
+      }
+      return false;
+    }
+
     if (appFileUrl != null &&
-        ![
-          getHost(app.url),
-          'placeholder',
-        ].contains(getHost(appFileUrl.value)) &&
+        !isTrustedRelatedDomain(getHost(app.url), getHost(appFileUrl.value)) &&
+        getHost(appFileUrl.value) != null &&
+        getHost(appFileUrl.value) != 'placeholder' &&
         context != null) {
       if (!(settingsProvider.hideAPKOriginWarning) &&
           await showAnimatedDialog(

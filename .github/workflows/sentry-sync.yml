@@ -79,7 +79,13 @@ jobs:
             // ── Create or Update GitHub issues ───────────────────────────────
             for (const issue of sentryIssues) {
               const searchQuery = `"[Sentry #${issue.id}]" repo:${owner}/${repo} is:issue`;
-              const searchRes = await github.rest.search.issuesAndPullRequests({ q: searchQuery });
+              let searchRes;
+              try {
+                searchRes = await github.rest.search.issuesAndPullRequests({ q: searchQuery });
+              } catch (e) {
+                core.warning(`GitHub search failed for Sentry #${issue.id} (${e.status ?? e.message}) — skipping`);
+                continue;
+              }
 
               // Fetch the latest event ID for this issue
               let lastEventId = '';

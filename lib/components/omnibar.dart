@@ -6,6 +6,8 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/unsupported_source_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/pages/import_export.dart';
+import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -222,6 +224,7 @@ class AppActionsFAB extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      showDragHandle: false,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
@@ -275,31 +278,37 @@ class AppActionsFAB extends StatelessWidget {
                   subtitle: tr('discoverAppsDescription'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigate to discover page or show search
-                    Navigator.pushNamed(context, '/discover');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(tr('comingSoon'))),
+                    );
                   },
                 ),
-                
+
                 _buildMenuItem(
                   context,
                   icon: Icons.code_outlined,
                   title: tr('importGithubStarredRepos'),
                   subtitle: tr('importGithubStarredReposDescription'),
-                  onTap: () async {
+                  onTap: () {
                     Navigator.pop(context);
-                    await Navigator.pushNamed(context, '/import_export');
-                    // Could navigate directly to GitHub import or show username dialog
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                    );
                   },
                 ),
-                
+
                 _buildMenuItem(
                   context,
                   icon: Icons.install_mobile_outlined,
                   title: tr('importInstalledApps'),
                   subtitle: tr('importInstalledAppsDescription'),
-                  onTap: () async {
+                  onTap: () {
                     Navigator.pop(context);
-                    await Navigator.pushNamed(context, '/system_app_selector');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SystemAppSelector()),
+                    );
                   },
                 ),
                 

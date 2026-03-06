@@ -20,6 +20,7 @@ Future<T?> showAddAppSheet<T>({
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
+    showDragHandle: false,
     elevation: 0,
     barrierColor: Colors.black54,
     transitionAnimationController: AnimationController(
@@ -27,31 +28,42 @@ Future<T?> showAddAppSheet<T>({
       vsync: Navigator.of(context),
     ),
     builder: (ctx) {
-      return Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: enableGlass ? 0.92 : 1.0),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-              width: 1,
-            ),
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: enableGlass ? 24 : 0,
+            sigmaY: enableGlass ? 24 : 0,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.3 : 0.15),
-              blurRadius: enableGlass ? 30 : 15,
-              spreadRadius: enableGlass ? 0 : -5,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: enableGlass ? 20 : 0,
-              sigmaY: enableGlass ? 20 : 0,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(
+                top: BorderSide(
+                  color: enableGlass
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.18)
+                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                ),
+                left: BorderSide(
+                  color: enableGlass
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                ),
+                right: BorderSide(
+                  color: enableGlass
+                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: enableGlass ? 0.28 : 0.15),
+                  blurRadius: enableGlass ? 32 : 15,
+                  spreadRadius: enableGlass ? -2 : -5,
+                ),
+              ],
             ),
             child: _AddAppSheetContent(
               initialUrl: initialUrl,

@@ -25,6 +25,7 @@ class CommandCenter extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false,
       builder: (context) => const CommandCenter(),
     );
   }
@@ -144,20 +145,32 @@ class _CommandCenterState extends State<CommandCenter> {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
         filter: ImageFilter.blur(
-          sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
-          sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+          sigmaX: settings.plusEnableGlassmorphism ? 24 : 0,
+          sigmaY: settings.plusEnableGlassmorphism ? 24 : 0,
         ),
         child: Container(
           height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
-            color: (isDark 
-                ? theme.colorScheme.surfaceContainerHighest 
-                : theme.colorScheme.surface)
-              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+            color: (isDark
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : theme.colorScheme.surface)
+                .withValues(alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(
-                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+            border: Border(
+              top: BorderSide(
+                color: settings.plusEnableGlassmorphism
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+              ),
+              left: BorderSide(
+                color: settings.plusEnableGlassmorphism
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    : Colors.transparent,
+              ),
+              right: BorderSide(
+                color: settings.plusEnableGlassmorphism
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    : Colors.transparent,
               ),
             ),
           ),

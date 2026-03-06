@@ -31,6 +31,7 @@ class SortFilterPanel extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false,
       builder: (context) => SortFilterPanel(
         filter: filter,
         onFilterChanged: onFilterChanged,
@@ -87,21 +88,33 @@ class _SortFilterPanelState extends State<SortFilterPanel>
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
         filter: ImageFilter.blur(
-          sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
-          sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+          sigmaX: settings.plusEnableGlassmorphism ? 24 : 0,
+          sigmaY: settings.plusEnableGlassmorphism ? 24 : 0,
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: (isDark 
-                ? theme.colorScheme.surfaceContainerHigh 
-                : theme.colorScheme.surface)
-              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+            color: (isDark
+                    ? theme.colorScheme.surfaceContainerHigh
+                    : theme.colorScheme.surface)
+                .withValues(alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(
-                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1
+            border: Border(
+              top: BorderSide(
+                color: settings.plusEnableGlassmorphism
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+                width: 1,
               ),
-              width: 1,
+              left: BorderSide(
+                color: settings.plusEnableGlassmorphism
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    : Colors.transparent,
+              ),
+              right: BorderSide(
+                color: settings.plusEnableGlassmorphism
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    : Colors.transparent,
+              ),
             ),
           ),
           child: SafeArea(
