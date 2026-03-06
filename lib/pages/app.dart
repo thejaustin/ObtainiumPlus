@@ -280,7 +280,6 @@ class _AppPageState extends State<AppPage> {
                 : (appsProvider.settingsProvider.plusEnableModernAppPage
                     ? CustomScrollView(
                         slivers: [
-                          if (widget.isModal) _buildModalHandle(context),
                           _buildSliverAppBar(context, app),
                           SliverToBoxAdapter(
                             child: Padding(
@@ -431,19 +430,8 @@ class _AppPageState extends State<AppPage> {
                     appId: app!.app.id,
                     source: settings.preferredUpdateSource,
                   );
-                } else if (settings.preferredUpdateSource == 'github' ||
-                    settings.preferredUpdateSource == 'apkpure') {
-                  // Open in browser
-                  final uri = Uri.parse(
-                    settings.preferredUpdateSource == 'github'
-                        ? 'https://github.com/search?q=${app!.app.id}'
-                        : 'https://apkpure.com/any/${app!.app.id}',
-                  );
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
                 } else {
-                  // Direct download (default)
+                  // Direct download (default, or fallback for any unknown source value)
                   var res = await appsProvider.downloadAndInstallLatestApps(
                     app?.app.id != null ? [app!.app.id] : [],
                     globalNavigatorKey.currentContext,
@@ -482,22 +470,6 @@ class _AppPageState extends State<AppPage> {
             },
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildModalHandle(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 12),
-          width: 32,
-          height: 4,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
       ),
     );
   }
@@ -1364,8 +1336,6 @@ class _AppBottomBar extends StatelessWidget {
                           DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
                           DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
                           DropdownMenuItem(value: 'aurora', child: const Text('Aurora Store')),
-                          DropdownMenuItem(value: 'github', child: const Text('GitHub')),
-                          DropdownMenuItem(value: 'apkpure', child: const Text('APKPure')),
                         ],
                       ),
                     ],
@@ -1448,21 +1418,27 @@ class _AppBottomBar extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              app?.app.installedVersion == null
-                                  ? Icons.download_outlined
-                                  : Icons.system_update_outlined,
+                              preferredSource == 'play_store' || preferredSource == 'aurora'
+                                  ? Icons.open_in_new
+                                  : app?.app.installedVersion == null
+                                      ? Icons.download_outlined
+                                      : Icons.system_update_outlined,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                app?.app.installedVersion == null
-                                    ? !trackOnly
-                                          ? tr('install')
-                                          : tr('markInstalled')
-                                    : !trackOnly
-                                    ? tr('update')
-                                    : tr('markUpdated'),
+                                preferredSource == 'play_store'
+                                    ? tr('playStore')
+                                    : preferredSource == 'aurora'
+                                    ? 'Aurora Store'
+                                    : app?.app.installedVersion == null
+                                        ? !trackOnly
+                                              ? tr('install')
+                                              : tr('markInstalled')
+                                        : !trackOnly
+                                        ? tr('update')
+                                        : tr('markUpdated'),
                                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

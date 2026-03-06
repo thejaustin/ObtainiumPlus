@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
@@ -53,7 +54,7 @@ class ErrorApp extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.bug_report, color: Colors.white),
                       onPressed: _reportToGitHub,
-                      tooltip: 'Report to GitHub',
+                      tooltip: tr('reportOnGitHub'),
                     ),
                   ],
                 ),
@@ -85,7 +86,7 @@ class ErrorApp extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: _reportToGitHub,
                       icon: const Icon(Icons.launch),
-                      label: const Text('Report on GitHub'),
+                      label: Text(tr('reportOnGitHub')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.red.shade900,
@@ -95,7 +96,7 @@ class ErrorApp extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: _followIssue,
                       icon: const Icon(Icons.notifications_active_outlined, color: Colors.white70),
-                      label: const Text('Follow Issue', style: TextStyle(color: Colors.white70)),
+                      label: Text(tr('followIssue'), style: const TextStyle(color: Colors.white70)),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white54),
                       ),
@@ -163,7 +164,7 @@ class BuildErrorWidget extends StatelessWidget {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.notifications_active_outlined, color: Colors.white70),
-                        tooltip: 'Follow Issue on GitHub',
+                        tooltip: tr('followIssueOnGitHub'),
                         onPressed: () async {
                           final String urlStr = await CrashTracker.getSpecificIssueUrl();
                           final Uri url = Uri.parse(urlStr);
@@ -174,7 +175,7 @@ class BuildErrorWidget extends StatelessWidget {
                       ),
                       IconButton(
                         icon: const Icon(Icons.bug_report, color: Colors.white),
-                        tooltip: 'Report on GitHub',
+                        tooltip: tr('reportOnGitHub'),
                         onPressed: () async {
                           await Sentry.captureMessage('User Feedback Triggered (Build Error)');
                           final Uri url = Uri.parse(
