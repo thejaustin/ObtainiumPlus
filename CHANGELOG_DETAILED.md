@@ -1,3 +1,34 @@
+### (pending) - fix: comprehensive crash fixes and settings reorganization
+- **Date**: 2026-03-06
+- **Author**: Claude Code (claude-sonnet-4-6)
+- **Details**: Multi-part session covering crash fixes and settings UX improvements.
+
+#### Crash Fixes (Sentry issues)
+- **OBTAINIUMPLUS-J** (`omnibar.dart`): Replaced `Navigator.pushNamed` calls using unregistered GoRouter routes (`/discover`, `/import_export`, `/system_app_selector`) with direct `MaterialPageRoute` pushes and a snackbar for the unimplemented Discover route.
+- **OBTAINIUMPLUS-H** (`update_settings_provider.dart`): Added `skipLabel` parameter to `processIntervalSliderValue` to prevent `plural()`/`tr()` calls during `initializeSettings()` before easy_localization has initialized `_locale`, fixing `LateInitializationError`.
+- **OBTAINIUMPLUS-C** (`generated_form.dart`): Clamped nested build-loop bounds to `min(formInputs.length, widget.items.length)` to prevent `RangeError` when form state is stale vs. widget items.
+- **OBTAINIUMPLUS-F** (`add_app.dart`): Added `if (mounted)` guard before `showError(e, context)` in async catch block to prevent `Null check operator on null value` when widget unmounts mid-operation.
+- **OBTAINIUMPLUS-D** (`background_update_service.dart`): Wrapped `plural('apps', ...)` notification call in try/catch with plain-string fallback to handle locale-not-ready state during background wakeup.
+- **OBTAINIUMPLUS-B/G** (`advanced_settings_section.dart`): Removed orphaned dead methods (`_buildDeepLoggingToggle`, etc.) left from the p89→p90 generic Consumer refactor. The runtime type crash was already fixed; this removes the dead code.
+- **GitHub Actions** (`.github/workflows/sentry-sync.yml`): Wrapped `github.rest.search.issuesAndPullRequests` in try/catch to handle transient 502 errors gracefully instead of failing the entire sync job.
+
+#### Settings Reorganization
+- **Renamed "Backup & Sync" hub → "Installation"**: The hub was mislabeled — it contained installation behavior settings, not backup/sync. Updated icon (`backup_outlined` → `install_mobile_outlined`), title (`tr('backupAndSync')` → `tr('installation')`), and subtitle in both grid and list views.
+- **Removed 7 duplicate settings from `AdvancedSettingsSection`**: `removeOnExternalUninstall`, `beforeNewInstallsShareToAppVerifier`, `useShizuku`, `shizukuPretendToBeGooglePlay` (all now canonical in `InstallationSection`) plus `enableSwipeGestures`, `enableUndoForAppRemoval`, `enableHapticFeedback` (moved to `AppBehaviorSection`).
+- **Fixed generic `Consumer<T>` anti-pattern in `InstallationSection`**: Replaced `_buildFeatureToggle<T>` with explicit `_buildBehaviorToggle` typed to `Consumer<BehaviorSettingsProvider>` (per MEMORY.md anti-pattern documentation).
+- **Shizuku permission check ported to `InstallationSection`**: The canonical Shizuku toggle now calls `ShizukuApkInstaller.checkPermission()` before enabling (previously only the duplicate in AdvancedSettingsSection did this). `shizukuPretendToBeGooglePlay` is now hidden when Shizuku is off.
+- **Wired orphaned `AppBehaviorSection` into Advanced hub**: Previously defined but never used. Now renders above `AdvancedSettingsSection` in the Advanced Settings sheet, exposing `disablePageTransitions`, `reversePageTransitions`, `animationSpeed`, `swipeRightAction`, `swipeLeftAction` — all previously inaccessible.
+- **Cleaned unused imports**: Removed `shizuku_apk_installer`, `url_launcher`, `info_tooltip`, `custom_errors`, `behavior_settings_provider` from `advanced_settings_section.dart`; removed `info_tooltip`, `settings_provider` from `installation_section.dart`; replaced dead `behavior_settings_section.dart` import with `app_behavior_section.dart` in `settings.dart`.
+
+#### Translation fixes (`assets/translations/en.json`)
+- Removed duplicate `disablePageTransitionsDescription` and `reversePageTransitionsDescription` keys (stale earlier copies from a prior pass).
+- Removed duplicate `action_*` keys (`action_none`, `action_update`, `action_togglePin`, `action_share`, `action_launch`, `action_delete`).
+- Added missing `enableDeepLoggingDescription` key referenced by `AdvancedSettingsSection`.
+
+#### Documentation
+- **README.md**: Rewrote Settings & Customization section to list all 8 hubs accurately, document Shizuku setup, and update Vanilla Mode/granular control info.
+- **User-Guide.md**: Added Settings Hub Overview table, Shizuku setup steps, App Behavior & Gestures section; updated Performance Tips paths.
+
 ### xxxxxxx - feat: combine add app tabs into single view
 - **Date**: 2026-01-31
 - **Author**: Gemini CLI

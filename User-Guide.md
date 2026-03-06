@@ -32,10 +32,48 @@ Obtainium+ gives you advanced control over your app list:
 - **Advanced Sorting**: Use the sort icon to organize apps by *Latest Updates*, *Recently Added*, *Install Status*, or *Alphabetical (A-Z/Z-A)*.
 - **Quick Filters**: Use the chips at the top of your apps list to quickly show only apps with "Updates Available" or "Not Installed".
 
+## ⚙️ Settings Hub Overview
+
+The settings page uses a **hub-and-spoke** layout. Each card opens a focused settings sheet.
+
+| Hub | What's inside |
+|-----|--------------|
+| **Obtainium+ Features** | Vanilla Mode master switch, grid view, icon cache, animations |
+| **Updates & Automation** | Background check interval, WiFi-only, scheduled windows |
+| **Theming** | Light/Dark/AMOLED, Material You, accent color, font |
+| **Layout** | List/grid density, sort order, swipe gestures, category display |
+| **Installation** | Shizuku, AppVerifier, parallel downloads, auto-remove |
+| **Statistics** | Per-app update history and install counts |
+| **Advanced Settings** | App behavior, page transitions, haptics, warnings, deep logging |
+| **Dev & Logs** | Error logs, diagnostics *(visible only in Developer Mode)* |
+
+> **Developer Mode:** Long-press the **App Info** button at the bottom of Settings to toggle it on/off.
+
+## 📲 Silent Installs with Shizuku
+
+Shizuku lets Obtainium+ install and update apps silently without a system dialog.
+
+1. Download and run [Shizuku](https://github.com/RikkaApps/Shizuku)
+2. Open **Settings → Installation → Use Shizuku** and enable it
+3. Grant the permission prompt — if permission is denied, the toggle stays off automatically
+4. Optionally enable **Pretend to be Google Play** if a source requires a Play Store identity
+
+> **AppVerifier:** Enable *Share new apps with AppVerifier* to cryptographically check APKs before they install.
+
+## 🎮 App Behavior & Gestures
+
+Found in **Settings → Advanced Settings → App Behavior**:
+
+- **Swipe gestures** — assign actions (Update, Pin, Share, Launch, Delete, None) to left/right swipes independently
+- **Animation speed** — scale UI animation duration (50%–200%)
+- **Page transitions** — disable or reverse screen switch animations
+- **Haptic feedback** — vibrate on interactions
+- **Undo app removal** — undo deletions within a few seconds via snackbar
+
 ## ⚡ Performance Tips
-- **Background Updates**: Set your preferred update interval in `Settings > Updates`. You can also enable **Scheduled Updates** to only check for versions during specific hours (e.g., overnight) to save battery.
-- **Undo Removal**: Accidentally deleted an app? You have 30 seconds to tap "Undo" on the notification snackbar to restore it.
-- **Haptic Feedback**: Enjoy subtle tactile feedback on interactions (can be disabled in Plus Features).
+- **Background Updates**: Set your update interval in `Settings → Updates & Automation`. Enable **Scheduled Updates** to limit checks to specific hours (e.g., overnight).
+- **Undo Removal**: Accidentally deleted an app? Enable *Undo app removal* in Advanced Settings, then tap "Undo" in the snackbar before it disappears.
+- **Haptic Feedback**: Subtle tactile feedback on interactions — toggle in **Advanced Settings → App Behavior**.
 
 ---
 *For technical details on how these features are implemented, see the [Technical Architecture](Technical-Architecture.md) guide.*

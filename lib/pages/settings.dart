@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/apps_view_settings_section.dart';
-import 'package:obtainium/components/settings/behavior_settings_section.dart';
+import 'package:obtainium/components/settings/app_behavior_section.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
@@ -152,6 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
   int _aboutTapCount = 0;
   Timer? _aboutTapTimer;
   bool _useGridView = true;
+  int _lastNonZeroUpdateInterval = 360;
 
   late Future<AndroidDeviceInfo> _androidInfoFuture;
   bool _isIgnoringBatteryOptimizations = false;
@@ -234,8 +235,8 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    Widget Function(BuildContext) _hubBuilderBackup = (_) => const _SettingsSubMenuPage(
-      title: 'Backup & Sync',
+    Widget Function(BuildContext) _hubBuilderInstallation = (_) => _SettingsSubMenuPage(
+      title: tr('installation'),
       child: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16),
@@ -246,11 +247,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
     Widget Function(BuildContext) _hubBuilderStats = (_) => StatisticsPage();
     Widget Function(BuildContext) _hubBuilderAdvanced = (_) => _SettingsSubMenuPage(
-      title: 'Advanced Settings',
+      title: tr('advanced'),
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(children: [
+            AppBehaviorSection(searchQuery: _searchQuery),
+            const SizedBox(height: 24),
             AdvancedSettingsSection(searchQuery: _searchQuery),
             const SizedBox(height: 24),
             TroubleshootingSection(searchQuery: _searchQuery),
@@ -312,9 +315,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         _buildQuickToggle(
                           context,
                           icon: Icons.sync_outlined,
-                          label: 'Updates',
+                          label: tr('updates'),
                           value: settingsProvider.updateInterval > 0,
-                          onChanged: (val) => settingsProvider.updateInterval = val ? 360 : 0,
+                          onChanged: (val) {
+                            if (!val) {
+                              if (settingsProvider.updateInterval > 0) _lastNonZeroUpdateInterval = settingsProvider.updateInterval;
+                              settingsProvider.updateInterval = 0;
+                            } else {
+                              settingsProvider.updateInterval = _lastNonZeroUpdateInterval;
+                            }
+                          },
                         ),
                         const SizedBox(width: 8),
                         ActionChip(
@@ -335,7 +345,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         _buildQuickToggle(
                           context,
                           icon: Icons.check_circle_outline,
-                          label: 'Installed',
+                          label: tr('installed'),
                           value: settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
                           onChanged: (val) => settingsProvider.onlyCheckInstalledOrTrackOnlyApps = val,
                         ),
@@ -343,9 +353,28 @@ class _SettingsPageState extends State<SettingsPage> {
                         _buildQuickToggle(
                           context,
                           icon: Icons.bolt_outlined,
-                          label: 'Shizuku',
+                          label: 'Shizuku / Sui',
                           value: settingsProvider.useShizuku,
-                          onChanged: (val) => settingsProvider.useShizuku = val,
+                          onChanged: (val) {
+                            if (!val) {
+                              settingsProvider.useShizuku = false;
+                              return;
+                            }
+                            ShizukuApkInstaller.checkPermission().then((resCode) {
+                              if (resCode == null || !resCode.startsWith('granted')) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(resCode == 'binder_not_found' || resCode == null
+                                      ? tr('shizukuBinderNotFound')
+                                      : resCode == 'old_shizuku'
+                                          ? tr('shizukuOld')
+                                          : tr('shizukuBinderNotFound')),
+                                  behavior: SnackBarBehavior.floating,
+                                ));
+                                return;
+                              }
+                              settingsProvider.useShizuku = true;
+                            });
+                          },
                         ),
                       ],
                     ),
@@ -369,10 +398,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildHubCard(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), subtitle: tr('updatesDescription'), builder: _hubBuilderUpdates),
                     _buildHubCard(context, icon: Icons.palette_outlined, title: tr('theming'), subtitle: tr('themingDescription'), builder: _hubBuilderTheming),
                     _buildHubCard(context, icon: Icons.grid_view_outlined, title: tr('layout'), subtitle: tr('layoutDescription'), builder: _hubBuilderLayout),
-                    _buildHubCard(context, icon: Icons.backup_outlined, title: tr('backupAndSync'), subtitle: tr('backupAndSyncDescription'), builder: _hubBuilderBackup),
+                    _buildHubCard(context, icon: Icons.install_mobile_outlined, title: tr('installation'), subtitle: tr('installationDescription'), builder: _hubBuilderInstallation),
                     _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
                     if (settingsProvider.plusDeveloperMode)
-                      _buildHubCard(context, icon: Icons.code_rounded, title: 'Dev & Logs', subtitle: 'Diagnostics and debug tools', builder: (ctx) => const DeveloperSettingsPage()),
+                      _buildHubCard(context, icon: Icons.code_rounded, title: tr('devAndLogs'), subtitle: tr('devAndLogsDescription'), builder: (ctx) => const DeveloperSettingsPage()),
                     _buildHubCard(context, icon: Icons.bug_report_outlined, title: tr('advanced'), subtitle: tr('advancedDescription'), builder: _hubBuilderAdvanced),
                   ]),
                 )
@@ -380,7 +409,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   delegate: SliverChildListDelegate([
                     _buildExpressiveGroup(
                       context,
-                      title: 'Features',
+                      title: tr('settingsFeatures'),
                       children: [
                         _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), builder: _hubBuilderPlus, subtitle: tr('plusFeaturesDescription')),
                         _buildSubMenuTile(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), builder: _hubBuilderUpdates, subtitle: tr('updatesDescription')),
@@ -389,7 +418,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 16),
                     _buildExpressiveGroup(
                       context,
-                      title: 'Personalization',
+                      title: tr('settingsPersonalization'),
                       children: [
                         _buildSubMenuTile(context, icon: Icons.palette_outlined, title: tr('theming'), builder: _hubBuilderTheming, subtitle: tr('themingDescription')),
                         _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: tr('layout'), builder: _hubBuilderLayout, subtitle: tr('layoutDescription')),
@@ -398,21 +427,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 16),
                     _buildExpressiveGroup(
                       context,
-                      title: 'Maintenance',
+                      title: tr('settingsMaintenance'),
                       children: [
                         _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), builder: _hubBuilderStats, subtitle: tr('statisticsDescription')),
-                        _buildSubMenuTile(context, icon: Icons.backup_outlined, title: tr('backupAndSync'), builder: _hubBuilderBackup, subtitle: tr('backupAndSyncDescription')),
+                        _buildSubMenuTile(context, icon: Icons.install_mobile_outlined, title: tr('installation'), builder: _hubBuilderInstallation, subtitle: tr('installationDescription')),
                       ],
                     ),
                     const SizedBox(height: 16),
                     _buildExpandableExpressiveGroup(
                       context,
-                      title: 'System & Advanced',
+                      title: tr('settingsSystemAndAdvanced'),
                       icon: Icons.settings_suggest_outlined,
                       children: [
                         _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: tr('advanced'), builder: _hubBuilderAdvanced, subtitle: tr('advancedDescription')),
                         if (settingsProvider.plusDeveloperMode)
-                          _buildSubMenuTile(context, icon: Icons.code_rounded, title: 'Dev & Logs', builder: (ctx) => const DeveloperSettingsPage(), subtitle: 'Diagnostics and debugging'),
+                          _buildSubMenuTile(context, icon: Icons.code_rounded, title: tr('devAndLogs'), builder: (ctx) => const DeveloperSettingsPage(), subtitle: tr('devAndLogsDescription')),
                       ],
                     ),
                   ]),

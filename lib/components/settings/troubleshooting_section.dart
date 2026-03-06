@@ -36,8 +36,8 @@ class TroubleshootingSection extends StatelessWidget {
       if (!context.watch<SettingsProvider>().plusDeveloperMode)
         ListTile(
           leading: Icon(Icons.help_outline, color: Theme.of(context).colorScheme.primary),
-          title: const Text('Looking for Developer Options?'),
-          subtitle: const Text('Long-press the "App Logs" icon in the About section to enable.'),
+          title: Text(tr('lookingForDevOptions')),
+          subtitle: Text(tr('devOptionsHint')),
           dense: true,
         ),
     ];
