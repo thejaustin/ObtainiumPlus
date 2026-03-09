@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/search/command_center.dart';
 import 'package:obtainium/components/unsupported_source_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
@@ -218,121 +220,148 @@ class AppActionsFAB extends StatelessWidget {
   const AppActionsFAB({super.key});
 
   void _showAddAppMenu(BuildContext context) {
-    final appsProvider = context.read<AppsProvider>();
     final settings = context.read<SettingsProvider>();
-    
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       showDragHandle: false,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+      builder: (ctx) {
+        return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: enableGlass ? 24 : 0,
+              sigmaY: enableGlass ? 24 : 0,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(
+                  top: BorderSide(
+                    color: enableGlass
+                        ? colorScheme.onSurface.withValues(alpha: 0.18)
+                        : colorScheme.outline.withValues(alpha: 0.12),
+                  ),
+                  left: BorderSide(
+                    color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+                  ),
+                  right: BorderSide(
+                    color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
                   ),
                 ),
-                const SizedBox(height: 20),
-                
-                // Title
-                Text(
-                  tr('addApp'),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Menu items
-                _buildMenuItem(
-                  context,
-                  icon: Icons.link_outlined,
-                  title: tr('addAppByUrl'),
-                  subtitle: tr('addAppByUrlDescription'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AddAppPage()),
-                    );
-                  },
-                ),
-                
-                _buildMenuItem(
-                  context,
-                  icon: Icons.search_outlined,
-                  title: tr('discoverApps'),
-                  subtitle: tr('discoverAppsDescription'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(tr('comingSoon'))),
-                    );
-                  },
-                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Handle
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
-                _buildMenuItem(
-                  context,
-                  icon: Icons.code_outlined,
-                  title: tr('importGithubStarredRepos'),
-                  subtitle: tr('importGithubStarredReposDescription'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ImportExportPage()),
-                    );
-                  },
-                ),
+                      // Title
+                      Text(
+                        tr('addApp'),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
-                _buildMenuItem(
-                  context,
-                  icon: Icons.install_mobile_outlined,
-                  title: tr('importInstalledApps'),
-                  subtitle: tr('importInstalledAppsDescription'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SystemAppSelector()),
-                    );
-                  },
-                ),
-                
-                if (settings.plusDeveloperMode)
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.qr_code_scanner_outlined,
-                    title: tr('scanQRCode'),
-                    subtitle: tr('scanQRCodeDescription'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // TODO: Implement QR scanner
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(tr('comingSoon'))),
-                      );
-                    },
+                      // Search shortcut — always reachable from thumb zone
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.search_rounded,
+                        title: tr('search'),
+                        subtitle: tr('searchOrEnterUrl'),
+                        iconColor: colorScheme.tertiary,
+                        containerColor: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                        onTap: () {
+                          Navigator.pop(context);
+                          CommandCenter.show(context);
+                        },
+                      ),
+
+                      const Divider(height: 20),
+
+                      // Add by URL
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.link_outlined,
+                        title: tr('addAppByUrl'),
+                        subtitle: tr('addAppByUrlDescription'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AddAppPage()),
+                          );
+                        },
+                      ),
+
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.code_outlined,
+                        title: tr('importGithubStarredRepos'),
+                        subtitle: tr('importGithubStarredReposDescription'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                          );
+                        },
+                      ),
+
+                      _buildMenuItem(
+                        context,
+                        icon: Icons.install_mobile_outlined,
+                        title: tr('importInstalledApps'),
+                        subtitle: tr('importInstalledAppsDescription'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SystemAppSelector()),
+                          );
+                        },
+                      ),
+
+                      if (settings.plusDeveloperMode)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.qr_code_scanner_outlined,
+                          title: tr('scanQRCode'),
+                          subtitle: tr('scanQRCodeDescription'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(tr('comingSoon'))),
+                            );
+                          },
+                        ),
+
+                      const SizedBox(height: 8),
+                    ],
                   ),
-                
-                const SizedBox(height: 20),
-              ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -342,15 +371,18 @@ class AppActionsFAB extends StatelessWidget {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color? iconColor,
+    Color? containerColor,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+          color: containerColor ?? colorScheme.primaryContainer.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        child: Icon(icon, color: iconColor ?? colorScheme.primary),
       ),
       title: Text(title, style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),

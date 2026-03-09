@@ -150,7 +150,7 @@ class PlusFeaturesSection extends StatelessWidget {
                     _buildFeatureToggle(
                       context,
                       settings,
-                      icon: Icons.filter_alt_outlined,
+                      icon: Icons.back_hand_outlined,
                       title: tr('plusQuickFilters'),
                       subtitle: tr('plusQuickFiltersDescription'),
                       value: settings.plusEnableQuickFilters,

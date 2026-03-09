@@ -76,26 +76,34 @@ $logs''';
       child: Container(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: colorScheme.outline.withValues(alpha: 0.1),
+            color: enableGlass
+                ? colorScheme.onSurface.withValues(alpha: 0.18)
+                : colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
-              blurRadius: enableGlass ? 20 : 10,
-              spreadRadius: enableGlass ? 0 : -5,
+              color: Colors.black.withValues(alpha: enableGlass ? 0.28 : 0.1),
+              blurRadius: enableGlass ? 32 : 10,
+              spreadRadius: enableGlass ? -2 : -5,
             ),
+            if (enableGlass)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: enableGlass ? 15 : 0,
-              sigmaY: enableGlass ? 15 : 0,
+              sigmaX: enableGlass ? 24 : 0,
+              sigmaY: enableGlass ? 24 : 0,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
