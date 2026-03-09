@@ -112,8 +112,12 @@ abstract class AppSource {
     } else if (!url.startsWith('http')) {
       url = 'https://$url';
     }
-    var uri = Uri.parse(url);
-    if (uri.host.isEmpty) {
+    try {
+      var uri = Uri.parse(url);
+      if (uri.host.isEmpty) {
+        throw UnsupportedURLError();
+      }
+    } on FormatException {
       throw UnsupportedURLError();
     }
     return url;
