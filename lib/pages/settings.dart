@@ -170,6 +170,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _checkBatteryStatus() async {
     bool isIgnoring = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+    if (!mounted) return;
     setState(() {
       _isIgnoringBatteryOptimizations = isIgnoring;
     });
