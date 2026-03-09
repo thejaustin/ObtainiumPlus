@@ -927,5 +927,8 @@
     "addTag": "Add tag",
     "removeTag": "Remove tag",
     "filterByTags": "Filter by tags",
-    "noTags": "No tags yet"
+    "noTags": "No tags yet",
+    "skip": "Skip",
+    "updateRecommended": "Update Recommended",
+    "fixedIn": "Fixed in"
 }

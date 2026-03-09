@@ -28,6 +28,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/components/critical_issue_dialog.dart';
+import 'package:obtainium/components/force_update_dialog.dart';
 import 'package:obtainium/services/app_install_service.dart';
 
 /// Shows the tab customization bottom sheet.
@@ -359,18 +360,27 @@ class HomePageState extends State<HomePage> {
           );
           for (final issue in activeIssues) {
             if (!mounted) break;
-            await showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => CriticalIssueDialog(
-                issue: issue,
-                onCheckForUpdates: () {
-                  Navigator.of(context).pop();
-                  final idx = activePages.indexWhere((p) => p.id == 'updates');
-                  if (idx != -1) switchToPage(idx);
-                },
-              ),
-            );
+            if (issue.forceUpdate) {
+              await showDialog<void>(
+                context: context,
+                barrierDismissible: true,
+                builder: (_) => ForceUpdateDialog(issue: issue),
+              );
+            } else {
+              await showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => CriticalIssueDialog(
+                  issue: issue,
+                  onCheckForUpdates: () {
+                    Navigator.of(context).pop();
+                    final idx =
+                        activePages.indexWhere((p) => p.id == 'updates');
+                    if (idx != -1) switchToPage(idx);
+                  },
+                ),
+              );
+            }
           }
         }
       }
