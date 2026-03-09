@@ -345,6 +345,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
 }
 
 Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false, StackTrace? stackTrace}) async {
+  if (!context.mounted) return;
   var settings = Provider.of<SettingsProvider>(context, listen: false);
   String logMessage = e.toString();
   
