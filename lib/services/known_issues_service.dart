@@ -23,6 +23,11 @@ class KnownIssue {
   /// Human-readable version in which the fix ships, shown as a hint.
   final String? fixedInVersion;
 
+  /// When true, a skippable "update recommended" dialog is shown instead of
+  /// the non-dismissible CriticalIssueDialog.  The user can skip (with an
+  /// optional "don't show again" toggle) or tap "Update Now".
+  final bool forceUpdate;
+
   const KnownIssue({
     required this.id,
     required this.title,
@@ -33,6 +38,7 @@ class KnownIssue {
     this.maxBuild,
     required this.githubIssueUrl,
     this.fixedInVersion,
+    this.forceUpdate = false,
   });
 
   factory KnownIssue.fromJson(Map<String, dynamic> json) => KnownIssue(
@@ -48,6 +54,7 @@ class KnownIssue {
             as int?,
         githubIssueUrl: json['githubIssueUrl'] as String,
         fixedInVersion: json['fixedInVersion'] as String?,
+        forceUpdate: (json['forceUpdate'] as bool?) ?? false,
       );
 
   bool affects(String versionName, int buildNumber) {
