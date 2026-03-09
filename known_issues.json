@@ -1,6 +1,20 @@
 {
   "issues": [
     {
+      "id": "force_update_pre_p93",
+      "title": "Several crashes fixed — please update to p93",
+      "description": "Multiple stability issues were detected in your version and have been resolved in p93:\n\n• Crash when navigating via the + menu (omnibar null-route, OBTAINIUMPLUS-J)\n• Crash in error reporting with a stale UI context (OBTAINIUMPLUS-9 / -F)\n• Type error: BehaviorSettingsProvider mismatch on Settings page (OBTAINIUMPLUS-B / -G)\n• Null crash on settings page init (OBTAINIUMPLUS-K)\n\nThese appear in crash analytics. Updating takes ~30 seconds via the Updates tab.",
+      "severity": "warning",
+      "affectedVersions": [],
+      "affectedBuildRange": {
+        "min": 2406,
+        "max": 2416
+      },
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/releases",
+      "fixedInVersion": "1.2.9-p93",
+      "forceUpdate": true
+    },
+    {
       "id": "crash_late_error_apkdir",
       "title": "Startup Crash: APKDir Not Initialized",
       "description": "A 'LateInitializationError' occurs during startup when the app attempts to access the APK directory before it has been fully initialized. This can prevent the app from opening.",
