@@ -371,7 +371,7 @@ class AppsPageState extends State<AppsPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      floatingActionButton: settingsProvider.plusShowLegacyUIComparison 
+      floatingActionButton: settingsProvider.plusShowLegacyUIComparison
           ? Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: FloatingActionButton.small(
@@ -380,13 +380,23 @@ class AppsPageState extends State<AppsPage> {
                   HapticFeedback.mediumImpact();
                   settingsProvider.plusEnableModernAppListTile = !settingsProvider.plusEnableModernAppListTile;
                 },
-                child: Icon(settingsProvider.plusEnableModernAppListTile 
-                    ? Icons.visibility_outlined 
+                child: Icon(settingsProvider.plusEnableModernAppListTile
+                    ? Icons.visibility_outlined
                     : Icons.visibility_off_outlined),
               ),
             )
           : null,
-      body: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
+      body: Stack(
+        children: [
+          _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
+          if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty)
+            Positioned(
+              left: 16,
+              bottom: 16,
+              child: _buildQuickActionStrip(context, viewSettings, isFilterOff),
+            ),
+        ],
+      ),
     );
   }
 
@@ -453,8 +463,8 @@ class AppsPageState extends State<AppsPage> {
       flexibleSpace: ClipRRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(
-            sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
-            sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
+            sigmaX: settings.plusEnableGlassmorphism ? 24 : 0,
+            sigmaY: settings.plusEnableGlassmorphism ? 24 : 0,
           ),
           child: Container(
             color: (isDark 
@@ -617,6 +627,120 @@ class AppsPageState extends State<AppsPage> {
         ],
       ),
     ];
+  }
+
+  /// Floating bottom-left strip with search + filter for one-handed reachability.
+  /// Shown when [plusEnableQuickFilters] is on and no apps are selected.
+  Widget _buildQuickActionStrip(
+    BuildContext context,
+    ViewSettingsProvider viewSettings,
+    bool isFilterOff,
+  ) {
+    final settings = context.read<SettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final enableGlass = settings.plusEnableGlassmorphism;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: enableGlass ? 20 : 0,
+          sigmaY: enableGlass ? 20 : 0,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHigh.withValues(alpha: enableGlass ? 0.72 : 0.96),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: enableGlass
+                  ? colorScheme.onSurface.withValues(alpha: 0.15)
+                  : colorScheme.outline.withValues(alpha: 0.2),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: enableGlass ? 0.22 : 0.12),
+                blurRadius: enableGlass ? 24 : 8,
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Search
+              Tooltip(
+                message: tr('search'),
+                child: InkWell(
+                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(32)),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    CommandCenter.show(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Icon(
+                      Icons.search_rounded,
+                      size: 22,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+              // Divider
+              Container(
+                width: 1,
+                height: 24,
+                color: colorScheme.onSurface.withValues(alpha: 0.15),
+              ),
+              // Filter/Sort with active badge
+              Tooltip(
+                message: tr('sortOptions'),
+                child: InkWell(
+                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(32)),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    SortFilterPanel.show(
+                      context,
+                      filter: filter,
+                      onFilterChanged: () => setState(() {}),
+                      categories: viewSettings.categories,
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 22,
+                          color: isFilterOff
+                              ? colorScheme.onSurface
+                              : colorScheme.primary,
+                        ),
+                        if (!isFilterOff)
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: colorScheme.error,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildLoadingOverlay(AppsProvider appsProvider) {
