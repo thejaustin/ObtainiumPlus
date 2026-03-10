@@ -1,78 +1,48 @@
 {
   "issues": [
     {
-      "id": "force_update_pre_p93",
-      "title": "Several crashes fixed — please update to p93",
-      "description": "Multiple stability issues were detected in your version and have been resolved in p93:\n\n• Crash when navigating via the + menu (omnibar null-route, OBTAINIUMPLUS-J)\n• Crash in error reporting with a stale UI context (OBTAINIUMPLUS-9 / -F)\n• Type error: BehaviorSettingsProvider mismatch on Settings page (OBTAINIUMPLUS-B / -G)\n• Null crash on settings page init (OBTAINIUMPLUS-K)\n\nThese appear in crash analytics. Updating takes ~30 seconds via the Updates tab.",
+      "id": "sections_broken_p82_to_p88",
+      "title": "Multiple crashes detected in your version",
+      "description": "Crash analytics identified the following issues in p82–p88:\n\n• App list crashes with a range error during category reordering (OBTAINIUMPLUS-C)\n• APK directory fails to initialize, breaking installs (OBTAINIUMPLUS-D)\n• Null check crash in error reporting (OBTAINIUMPLUS-9)\n• Icon update fails with an invalid bitmap size (OBTAINIUMPLUS-2)\n\nAll resolved in p89+. Updating takes ~30 seconds via the Updates tab.",
+      "severity": "critical",
+      "affectedVersions": [
+        "1.2.9-p82",
+        "1.2.9-p83",
+        "1.2.9-p84",
+        "1.2.9-p85",
+        "1.2.9-p86",
+        "1.2.9-p87",
+        "1.2.9-p88"
+      ],
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/releases",
+      "fixedInVersion": "1.2.9-p89",
+      "forceUpdate": false
+    },
+    {
+      "id": "sections_broken_p89",
+      "title": "Settings page & background updates broken",
+      "description": "Crash analytics detected these issues in your version (p89):\n\n• Settings page crashes every time it is opened — a provider type mismatch makes the entire Settings section unusable (OBTAINIUMPLUS-B/G, 220+ events across 7 users)\n• Background update checks silently crash — automatic updates will not run (OBTAINIUMPLUS-D, 11 events)\n• Localization initialization may fail on launch (OBTAINIUMPLUS-H)\n\nAll resolved in p93. Update via the Updates tab.",
+      "severity": "critical",
+      "affectedVersions": [
+        "1.2.9-p89"
+      ],
+      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/100",
+      "fixedInVersion": "1.2.9-p93",
+      "forceUpdate": false
+    },
+    {
+      "id": "sections_broken_p90_to_p92",
+      "title": "Add App menu, Settings & error handling broken",
+      "description": "Crash analytics detected these issues in your version (p90–p92):\n\n• Tapping the + (Add App) button crashes the app — the menu cannot be opened (OBTAINIUMPLUS-J, 8 events across 3 users)\n• Settings page crashes on open due to a null initialization error (OBTAINIUMPLUS-K)\n• Adding an app via URL crashes mid-flow (OBTAINIUMPLUS-F)\n• Error notifications silently fail when context is stale (OBTAINIUMPLUS-9)\n\nAll resolved in p93. Update via the Updates tab.",
       "severity": "warning",
-      "affectedVersions": [],
-      "affectedBuildRange": {
-        "min": 2406,
-        "max": 2416
-      },
+      "affectedVersions": [
+        "1.2.9-p90",
+        "1.2.9-p91",
+        "1.2.9-p92"
+      ],
       "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/releases",
       "fixedInVersion": "1.2.9-p93",
       "forceUpdate": true
-    },
-    {
-      "id": "crash_late_error_apkdir",
-      "title": "Startup Crash: APKDir Not Initialized",
-      "description": "A 'LateInitializationError' occurs during startup when the app attempts to access the APK directory before it has been fully initialized. This can prevent the app from opening.",
-      "severity": "critical",
-      "affectedVersions": [
-        "1.2.9-p88"
-      ],
-      "affectedBuildRange": {
-        "min": 2400,
-        "max": 2412
-      },
-      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/103",
-      "fixedInVersion": "1.2.9-p89"
-    },
-    {
-      "id": "crash_type_error_settings",
-      "title": "Type Error: BehaviorSettingsProvider Mismatch",
-      "description": "A 'TypeError' occurs where BehaviorSettingsProvider is not recognized as a subtype of SettingsProvider. This typically happens when navigating to the settings page or during provider initialization.",
-      "severity": "critical",
-      "affectedVersions": [
-        "1.2.9-p88"
-      ],
-      "affectedBuildRange": {
-        "min": 2400,
-        "max": 2412
-      },
-      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/100",
-      "fixedInVersion": "1.2.9-p89"
-    },
-    {
-      "id": "crash_range_error_list",
-      "title": "Range Error: Invalid List Index",
-      "description": "A 'RangeError' occurs when accessing list elements, particularly during category reordering or rapid UI updates. This results in the app freezing or crashing to the error screen.",
-      "severity": "warning",
-      "affectedVersions": [
-        "1.2.9-p88"
-      ],
-      "affectedBuildRange": {
-        "min": 2400,
-        "max": 2412
-      },
-      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/101",
-      "fixedInVersion": "1.2.9-p89"
-    },
-    {
-      "id": "crash_null_check_multiapp",
-      "title": "Null Check Crash: MultiApp Error Reporting",
-      "description": "A crash occurs when reporting errors for multiple apps simultaneously due to an unexpected null value in the error handling logic.",
-      "severity": "warning",
-      "affectedVersions": [
-        "1.2.9-p88"
-      ],
-      "affectedBuildRange": {
-        "min": 2400,
-        "max": 2412
-      },
-      "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/issues/97",
-      "fixedInVersion": "1.2.9-p89"
     }
   ]
 }
