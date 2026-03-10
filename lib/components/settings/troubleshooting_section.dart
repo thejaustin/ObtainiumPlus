@@ -36,9 +36,8 @@ class TroubleshootingSection extends StatelessWidget {
       if (!context.watch<SettingsProvider>().plusDeveloperMode)
         ListTile(
           leading: Icon(Icons.help_outline, color: Theme.of(context).colorScheme.primary),
-          title: Text(tr('lookingForDevOptions')),
+          title: Text(tr('lookingForDevOptions'), style: Theme.of(context).textTheme.bodyLarge),
           subtitle: Text(tr('devOptionsHint')),
-          dense: true,
         ),
     ];
 
@@ -58,7 +57,7 @@ class TroubleshootingSection extends StatelessWidget {
   }) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
-      title: Text(title),
+      title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
       trailing: const Icon(Icons.open_in_new, size: 18),
       onTap: () {
         HapticFeedback.lightImpact();

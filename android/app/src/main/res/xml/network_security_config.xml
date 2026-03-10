@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+
+    <!--
+        Google Play Store DFE endpoints:
+        - Only system-trusted CAs allowed — user-installed certs (e.g. corporate
+          MitM proxies, mitmproxy, Burp) are explicitly rejected.
+        - Cleartext HTTP is forbidden.
+        This mirrors Aurora Store's approach and prevents token interception.
+    -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">android.clients.google.com</domain>
+        <domain includeSubdomains="true">play.googleapis.com</domain>
+        <domain includeSubdomains="true">accounts.google.com</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+            <!-- No user certificates for these domains -->
+        </trust-anchors>
+    </domain-config>
+
+    <!--
+        All other traffic (GitHub, F-Droid, source scrapers, etc.):
+        - HTTPS enforced (no cleartext).
+        - Both system and user CAs trusted so advanced users can inspect
+          non-sensitive traffic if desired.
+    -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </base-config>
+
+</network-security-config>

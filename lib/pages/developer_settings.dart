@@ -11,7 +11,6 @@ import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
-import 'package:obtainium/components/info_tooltip.dart';
 import 'package:flutter/services.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
@@ -39,13 +38,8 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.token_outlined),
-                title: Row(
-                  children: [
-                    const Text('Manage Token Dispensers'),
-                    const InfoTooltip(message: 'Dispensers provide anonymous login tokens (AAS) to access the Google Play Store natively.'),
-                  ],
-                ),
-                subtitle: const Text('Configure Aurora-style anonymous login dispensers'),
+                title: const Text('Manage Token Dispensers'),
+                subtitle: const Text('Anonymous login tokens (AAS) for Google Play Store access'),
                 trailing: const Icon(Icons.chevron_right),
                 enabled: context.watch<AuthProvider>().authMode != AuthMode.microG,
                 onTap: () => _showDispenserManager(context),
@@ -53,20 +47,23 @@ class DeveloperSettingsPage extends StatelessWidget {
               if (context.watch<AuthProvider>().authMode != AuthMode.anonymous)
                 ListTile(
                   leading: const Icon(Icons.account_circle_outlined),
-                  title: const Text('Select microG Account'),
+                  title: const Text('microG Account'),
                   subtitle: Text(context.watch<AuthProvider>().microGEmail ?? 'None selected'),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: context.watch<AuthProvider>().microGEmail != null
+                      ? IconButton(
+                          icon: const Icon(Icons.link_off),
+                          tooltip: 'Remove linked account',
+                          onPressed: () async {
+                            await context.read<AuthProvider>().setMicroGEmail(null);
+                          },
+                        )
+                      : const Icon(Icons.chevron_right),
                   onTap: () => _showMicroGAccountPicker(context),
                 ),
               ListTile(
                 leading: const Icon(Icons.extension_outlined),
-                title: Row(
-                  children: [
-                    const Text('Plugin Manager'),
-                    const InfoTooltip(message: 'Plugins are JavaScript "Recipes" that allow the app to scrape or download from new sources without a full update.'),
-                  ],
-                ),
-                subtitle: const Text('Add and manage custom source plugins (JS)'),
+                title: const Text('Plugin Manager'),
+                subtitle: const Text('JS "Recipes" that add new sources without a full app update'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const PluginManagerPage()),
@@ -74,13 +71,8 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.phonelink_setup_outlined),
-                title: Row(
-                  children: [
-                    const Text('Device Spoofing (microG)'),
-                    const InfoTooltip(message: 'Uses your system GSF ID or a custom profile to trick Google Play into serving app versions for specific devices or regions.'),
-                  ],
-                ),
-                subtitle: const Text('View and spoof device identifiers for GMS'),
+                title: const Text('Device Spoofing (microG)'),
+                subtitle: const Text('Spoof GSF ID / device profile for regional app compatibility'),
                 onTap: () => _showSpoofingManager(context),
               ),
             ],
@@ -134,13 +126,8 @@ class DeveloperSettingsPage extends StatelessWidget {
             [
               ListTile(
                 leading: const Icon(Icons.receipt_long_outlined),
-                title: Row(
-                  children: [
-                    const Text('View Talker Logs'),
-                    const InfoTooltip(message: 'Talker is a "Flight Data Recorder" that captures all network requests, UI navigation, and errors in real-time.'),
-                  ],
-                ),
-                subtitle: const Text('Advanced in-app logs, network, and errors'),
+                title: const Text('View Talker Logs'),
+                subtitle: const Text('Real-time network requests, UI events, and errors'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -150,13 +137,8 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.analytics_outlined),
-                title: Row(
-                  children: [
-                    const Text('Crash Statistics'),
-                    const InfoTooltip(message: 'Shows how often the app has crashed and what types of errors (e.g., Timeout, FormatException) occurred.'),
-                  ],
-                ),
-                subtitle: const Text('Local crash frequency and types'),
+                title: const Text('Crash Statistics'),
+                subtitle: const Text('Local crash frequency and error type breakdown'),
                 onTap: () async {
                   final stats = await CrashAnalytics.getStats();
                   if (context.mounted) {
@@ -200,13 +182,8 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.upload_file_outlined),
-                title: Row(
-                  children: [
-                    const Text('Upload Logs to New Issue'),
-                    const InfoTooltip(message: 'Quickly creates a pre-formatted GitHub issue with your current diagnostic logs attached for easier bug reports.'),
-                  ],
-                ),
-                subtitle: const Text('Creates a GitHub issue with current logs'),
+                title: const Text('Upload Logs to New Issue'),
+                subtitle: const Text('Opens a pre-filled GitHub issue with current diagnostic logs'),
                 onTap: () async {
                   final history = talker.history.reversed.take(200).toList().reversed;
                   final logText = history.map((e) => '[${e.title}] ${e.message}').join('\n');
@@ -233,13 +210,8 @@ class DeveloperSettingsPage extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.flash_on_outlined),
                 iconColor: Colors.red,
-                title: Row(
-                  children: [
-                    const Text('Trigger Test Crash'),
-                    const InfoTooltip(message: 'Forces a simulated error to verify that Sentry (remote) and Talker (local) are capturing crashes correctly.'),
-                  ],
-                ),
-                subtitle: const Text('Forces a crash to verify Sentry/Talker integration'),
+                title: const Text('Trigger Test Crash'),
+                subtitle: const Text('Forces a crash to verify Sentry and Talker are capturing errors'),
                 onTap: () {
                   talker.warning('User triggered a test crash');
                   throw Exception('Obtainium+ Test Crash');
@@ -247,13 +219,8 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.network_check_outlined),
-                title: Row(
-                  children: [
-                    const Text('Test Network Logging'),
-                    const InfoTooltip(message: 'Triggers a dummy request to verify that network calls are being intercepted and logged correctly.'),
-                  ],
-                ),
-                subtitle: const Text('Triggers a dummy request to verify network logs'),
+                title: const Text('Test Network Logging'),
+                subtitle: const Text('Sends a dummy request to verify network interception logging'),
                 onTap: () async {
                   talker.info('Triggering test network request...');
                   try {
@@ -361,55 +328,43 @@ class DeveloperSettingsPage extends StatelessWidget {
 
   void _showMicroGAccountPicker(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
-    final accounts = await AuthService.getMicroGAccounts();
 
-    if (!context.mounted) return;
+    // Native account picker — backed by microG's registered Google accounts.
+    final String? email = await AuthService.pickGoogleAccount();
+    if (email == null || !context.mounted) return;
 
-    if (accounts.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('No Accounts Found'),
-          content: const Text('Please add a Google account in microG Settings first.'),
-          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
-        ),
-      );
-      return;
-    }
-
-    showModalBottomSheet(
+    // Show a non-dismissible loading dialog while we wait for the token.
+    // If microG needs a consent screen it launches on top of this; the dialog
+    // resumes behind it and is dismissed when the token arrives or fails.
+    showDialog(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Select Account', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            ...accounts.map((email) => ListTile(
-              leading: const Icon(Icons.account_circle_outlined),
-              title: Text(email),
-              trailing: authProvider.microGEmail == email ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () async {
-                await authProvider.setMicroGEmail(email);
-                try {
-                  await authProvider.refreshMicroGToken();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Successfully linked microG account!')));
-                    Navigator.pop(context);
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-                  }
-                }
-              },
-            )),
-          ],
-        ),
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Flexible(child: Text('Linking account…')),
+        ]),
       ),
     );
+
+    try {
+      await authProvider.setMicroGEmail(email);
+      await authProvider.refreshMicroGToken();
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Linked $email successfully')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('ObtainiumError: ', ''))),
+        );
+      }
+    }
   }
 
   void _showDispenserManager(BuildContext context) {
@@ -472,33 +427,42 @@ class DeveloperSettingsPage extends StatelessWidget {
     );
   }
 
-  void _showDeviceProfilePicker(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Select Device Profile', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            ...AuthProvider.deviceProfiles.map((p) => ListTile(
-              leading: const Icon(Icons.phone_android_rounded),
-              title: Text(p.name),
-              subtitle: Text('${p.manufacturer} ${p.model} (Android ${p.sdkVersion - 21 + 5})'),
-              trailing: authProvider.selectedProfile.name == p.name ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () {
-                authProvider.setDeviceProfile(p);
-                Navigator.pop(context);
-              },
-            )),
-          ],
-        ),
+  void _showDeviceProfilePicker(BuildContext context) =>
+      showDeviceProfilePicker(context);
+}
+
+/// Top-level so it can be called from both [DeveloperSettingsPage] and
+/// [_SpoofingManagerSheetState] without the private-method access problem.
+void showDeviceProfilePicker(BuildContext context) {
+  final authProvider = context.read<AuthProvider>();
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('Select Device Profile',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          ...AuthProvider.deviceProfiles.map((p) => ListTile(
+                leading: const Icon(Icons.phone_android_rounded),
+                title: Text(p.name),
+                subtitle: Text(
+                    '${p.manufacturer} ${p.model} (Android ${p.sdkVersion - 21 + 5})'),
+                trailing: authProvider.selectedProfile.name == p.name
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : null,
+                onTap: () {
+                  authProvider.setDeviceProfile(p);
+                  Navigator.pop(context);
+                },
+              )),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _SpoofingManagerSheet extends StatefulWidget {
@@ -562,10 +526,8 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.pop(context);
-              // Small delay to allow sheet to close before showing next one
-              Future.delayed(const Duration(milliseconds: 200), () {
-                // This is a workaround since _showDeviceProfilePicker is private to the page
-                // In a real app we'd move these to standalone widgets or a controller
+              Future.delayed(const Duration(milliseconds: 150), () {
+                if (context.mounted) showDeviceProfilePicker(context);
               });
             },
           ),
@@ -622,7 +584,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
               child: Chip(
                 avatar: const Icon(Icons.check_circle, color: Colors.green, size: 16),
                 label: Text('Active Token Ready'),
-                onDeleted: authProvider.clearBundle,
+                onDeleted: () => authProvider.clearBundle(),
                 deleteIcon: const Icon(Icons.close, size: 16),
               ),
             ),

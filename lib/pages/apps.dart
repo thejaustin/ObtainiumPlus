@@ -415,6 +415,9 @@ class AppsPageState extends State<AppsPage> {
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
                 ..._buildLoadingOverlay(appsProvider),
                 _buildContent(context, viewSettings, listedApps, listedCategories),
+                // Bottom padding to prevent FAB / quick-filter strip from
+                // obscuring the last list item.
+                const SliverToBoxAdapter(child: SizedBox(height: 88)),
               ],
             ),
           ),
