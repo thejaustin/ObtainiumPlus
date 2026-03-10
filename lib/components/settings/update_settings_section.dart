@@ -2,7 +2,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -170,7 +169,6 @@ class UpdateSettingsSection extends StatelessWidget {
           leading: const Icon(Icons.history_toggle_off_outlined),
           title: Text(tr('bgUpdateCheckInterval'), style: Theme.of(context).textTheme.bodyLarge),
           subtitle: Text(updateSettings.updateIntervalLabel),
-          trailing: InfoTooltip(message: tr('backgroundUpdateCheckIntervalTooltip')),
         );
       },
     );

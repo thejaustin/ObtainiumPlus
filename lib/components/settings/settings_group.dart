@@ -69,7 +69,7 @@ class SettingsGroup extends StatelessWidget {
                       if (index < visibleChildren.length - 1)
                         Divider(
                           height: 1,
-                          indent: 16,
+                          indent: 56,
                           endIndent: 16,
                           color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
                         ),

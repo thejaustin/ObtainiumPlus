@@ -3,7 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/components/info_tooltip.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
@@ -331,25 +330,6 @@ class ThemeSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildBlackThemeToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        if (settings.theme == ThemeSettings.light) {
-          return const SizedBox.shrink();
-        }
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.dark_mode_outlined),
-          title: Text(tr('useBlackTheme'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.useBlackTheme,
-          onChanged: (value) {
-            HapticFeedback.selectionClick();
-            settings.useBlackTheme = value;
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildMaterialYouToggle(BuildContext context) {
     return FutureBuilder<AndroidDeviceInfo>(
       future: androidInfoFuture,
@@ -504,53 +484,6 @@ class ThemeSettingsSection extends StatelessWidget {
                 }
               },
             );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildPageTransitionsToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.animation_outlined),
-          title: Text(tr('disablePageTransitions'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.disablePageTransitions,
-          onChanged: (value) {
-            settings.disablePageTransitions = value;
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildReverseTransitionsToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.swap_horizontal_circle_outlined),
-          title: Text(tr('reversePageTransitions'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.reversePageTransitions,
-          onChanged: settings.disablePageTransitions
-              ? null
-              : (value) {
-                  settings.reversePageTransitions = value;
-                },
-        );
-      },
-    );
-  }
-
-  Widget _buildHighlightTouchTargetsToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.touch_app_outlined),
-          title: Text(tr('highlightTouchTargets'), style: Theme.of(context).textTheme.bodyLarge),
-          value: settings.highlightTouchTargets,
-          onChanged: (value) {
-            settings.highlightTouchTargets = value;
           },
         );
       },

@@ -46,7 +46,15 @@ class AuthProvider with ChangeNotifier {
     DeviceProfile(name: 'Xiaomi 14', model: '23127PN0CC', manufacturer: 'Xiaomi', sdkVersion: 34),
   ];
 
-  final _storage = const FlutterSecureStorage();
+  // Secure storage keys — all sensitive data lives here, not in SharedPreferences
+  static const _kAnonBundle     = 'anonymous_auth_bundle';
+  static const _kPersonalBundle = 'personal_auth_bundle';
+  static const _kMicroGEmail    = 'microg_email';
+
+  final _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   AuthBundle? _anonymousBundle;
   AuthBundle? _personalBundle;
   List<String> _dispensers = ['https://auroraoss.com/api/auth'];
@@ -56,120 +64,143 @@ class AuthProvider with ChangeNotifier {
   DeviceProfile _selectedProfile = deviceProfiles[0];
   SharedPreferences? _prefs;
 
-  AuthBundle? get activeBundle {
-    if (_authMode == AuthMode.hybrid || _authMode == AuthMode.anonymous) {
-      return _anonymousBundle ?? _personalBundle;
-    }
-    return _personalBundle ?? _anonymousBundle;
-  }
+  // ── Getters ──────────────────────────────────────────────────────────────
 
-  AuthBundle? get personalBundle => _personalBundle;
+  AuthBundle? get personalBundle  => _personalBundle;
   AuthBundle? get anonymousBundle => _anonymousBundle;
-  List<String> get dispensers => _dispensers;
-  AuthMode get authMode => _authMode;
-  String? get microGEmail => _microGEmail;
-  String? get spoofedAndroidId => _spoofedAndroidId;
+  List<String> get dispensers     => _dispensers;
+  AuthMode     get authMode       => _authMode;
+  String?      get microGEmail    => _microGEmail;
+  String?      get spoofedAndroidId => _spoofedAndroidId;
   DeviceProfile get selectedProfile => _selectedProfile;
   bool get hasActiveToken => activeBundle != null;
 
+  /// Returns the bundle to use for the current auth mode.
+  /// - anonymous: only the anonymous bundle; never exposes personal credentials.
+  /// - microG: personal bundle only — returns null (not anon fallback) so
+  ///   callers know unambiguously when the personal token is missing.
+  /// - hybrid: anonymous for general traffic; callers that need personal access
+  ///   (e.g. paid-app download) must read [personalBundle] directly.
+  /// Call [ensureValidPersonalToken] before using in microG / hybrid mode.
+  AuthBundle? get activeBundle {
+    switch (_authMode) {
+      case AuthMode.anonymous:
+        return _anonymousBundle;
+      case AuthMode.microG:
+        // Intentionally no anon fallback — callers can check hasActiveToken
+        // and surface a "link a microG account" prompt when null.
+        return _personalBundle;
+      case AuthMode.hybrid:
+        return _anonymousBundle;
+    }
+  }
+
+  /// True if the stored personal OAuth2 token is past its 55-minute safe window.
+  bool get isPersonalTokenExpired => _personalBundle?.isExpired ?? false;
+
+  // ── Initialisation ────────────────────────────────────────────────────────
+
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
-    
-    _dispensers = _prefs?.getStringList('play_store_dispensers') ?? ['https://auroraoss.com/api/auth'];
-    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
-    _microGEmail = _prefs?.getString('microg_email');
+
+    _dispensers   = _prefs?.getStringList('play_store_dispensers') ?? ['https://auroraoss.com/api/auth'];
+    _authMode     = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
     _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
 
     final profileJson = _prefs?.getString('selected_device_profile');
     if (profileJson != null) {
-      try {
-        _selectedProfile = DeviceProfile.fromJson(jsonDecode(profileJson));
-      } catch (_) {}
+      try { _selectedProfile = DeviceProfile.fromJson(jsonDecode(profileJson)); } catch (_) {}
     }
 
-    // Load bundles from secure storage
-    final anonJson = await _storage.read(key: 'anonymous_auth_bundle');
+    // One-time migration: move email from SharedPreferences → secure storage.
+    // Uses try/finally so the plaintext key is always removed even if the
+    // secure write fails (prefer losing the value over leaving it in plaintext).
+    final legacyEmail = _prefs?.getString('microg_email');
+    if (legacyEmail != null) {
+      try {
+        await _storage.write(key: _kMicroGEmail, value: legacyEmail);
+      } finally {
+        await _prefs?.remove('microg_email');
+      }
+    }
+
+    // Email and tokens stored in encrypted secure storage — never in SharedPreferences
+    _microGEmail = await _storage.read(key: _kMicroGEmail);
+
+    final anonJson = await _storage.read(key: _kAnonBundle);
     if (anonJson != null) {
-      try {
-        _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson));
-      } catch (_) {}
+      try { _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson)); } catch (_) {}
     }
-    
-    final personalJson = await _storage.read(key: 'personal_auth_bundle');
+
+    final personalJson = await _storage.read(key: _kPersonalBundle);
     if (personalJson != null) {
-      try {
-        _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson));
-      } catch (_) {}
+      try { _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson)); } catch (_) {}
     }
-    
+
     notifyListeners();
   }
 
-  Future<void> rotateDeviceId() async {
-    const chars = '0123456789abcdef';
-    final random = math.Random();
-    _spoofedAndroidId = List.generate(16, (index) => chars[random.nextInt(chars.length)]).join();
-    await _prefs?.setString('spoofed_android_id', _spoofedAndroidId!);
-    notifyListeners();
-  }
-
-  String get effectiveDeviceId {
-    if (_authMode == AuthMode.anonymous || _authMode == AuthMode.hybrid) {
-      return _spoofedAndroidId ?? '0000000000000000';
-    }
-    return 'native'; 
-  }
-
-  Future<void> setAuthMode(AuthMode mode) async {
-    _authMode = mode;
-    await _prefs?.setInt('auth_mode', mode.index);
-    notifyListeners();
-  }
-
-  Future<void> setDeviceProfile(DeviceProfile profile) async {
-    _selectedProfile = profile;
-    await _prefs?.setString('selected_device_profile', jsonEncode(profile.toJson()));
-    notifyListeners();
-  }
+  // ── microG token management ───────────────────────────────────────────────
 
   Future<void> setMicroGEmail(String? email) async {
     _microGEmail = email;
     if (email != null) {
-      await _prefs?.setString('microg_email', email);
+      await _storage.write(key: _kMicroGEmail, value: email);
     } else {
-      await _prefs?.remove('microg_email');
+      await _storage.delete(key: _kMicroGEmail);
+      // Clear personal bundle when account is removed
+      _personalBundle = null;
+      await _storage.delete(key: _kPersonalBundle);
     }
     notifyListeners();
   }
 
+  /// Fetches a fresh microG OAuth2 token and stores it with a timestamp.
   Future<void> refreshMicroGToken() async {
     if (_microGEmail == null) throw ObtainiumError('No microG account selected');
-    
+
     final token = await AuthService.getMicroGToken(_microGEmail!);
-    if (token != null) {
-      _personalBundle = AuthBundle(
-        email: _microGEmail!,
-        aasToken: '',
-        authToken: token,
-        deviceConfig: {}, 
-      );
-      await _storage.write(key: 'personal_auth_bundle', value: jsonEncode(_personalBundle!.toJson()));
-      notifyListeners();
-    } else {
-      throw ObtainiumError('Failed to retrieve token from microG');
+    _personalBundle = AuthBundle(
+      email: _microGEmail!,
+      aasToken: '',       // empty = OAuth2 Bearer flow, not AAS
+      authToken: token,
+      deviceConfig: {},
+      tokenIssuedAt: DateTime.now(),
+    );
+    await _storage.write(
+      key: _kPersonalBundle,
+      value: jsonEncode(_personalBundle!.toJson()),
+    );
+    notifyListeners();
+  }
+
+  /// Refreshes the personal token only if it has expired (55-min window).
+  /// Safe to call before every Play Store API request — no-op when still valid.
+  Future<void> ensureValidPersonalToken() async {
+    if (_microGEmail != null && isPersonalTokenExpired) {
+      talker.info('microG token expired — refreshing silently');
+      await refreshMicroGToken();
     }
   }
 
+  /// Call after receiving a 401 from the Play Store API.
+  /// Invalidates the token in the AccountManager so microG issues a fresh one,
+  /// then immediately re-fetches.
+  Future<void> handleTokenRejected() async {
+    if (_microGEmail == null || _personalBundle == null) return;
+    talker.warning('microG token rejected (401) — invalidating and re-fetching');
+    await AuthService.invalidateMicroGToken(_personalBundle!.authToken);
+    await refreshMicroGToken();
+  }
+
+  // ── Anonymous / dispenser ─────────────────────────────────────────────────
+
   Future<void> refreshBundle(String dispenserUrl) async {
-    try {
-      final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
-      _anonymousBundle = bundle;
-      await _storage.write(key: 'anonymous_auth_bundle', value: jsonEncode(bundle.toJson()));
-      await rotateDeviceId();
-      notifyListeners();
-    } catch (e) {
-      rethrow;
-    }
+    final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
+    _anonymousBundle = bundle;
+    await _storage.write(key: _kAnonBundle, value: jsonEncode(bundle.toJson()));
+    await rotateDeviceId();
+    notifyListeners();
   }
 
   Future<void> addDispenser(String url) async {
@@ -186,10 +217,47 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearBundle() async {
+  /// Clears auth tokens only — does NOT touch other secure storage entries.
+  /// Also invalidates the microG AccountManager token cache so the old token
+  /// cannot be reused from outside this app.
+  Future<void> clearBundle() async {
+    // Invalidate microG's cached token before nulling our reference.
+    if (_personalBundle != null) {
+      await AuthService.invalidateMicroGToken(_personalBundle!.authToken);
+    }
     _anonymousBundle = null;
-    _personalBundle = null;
-    await _storage.deleteAll();
+    _personalBundle  = null;
+    await _storage.delete(key: _kAnonBundle);
+    await _storage.delete(key: _kPersonalBundle);
+    notifyListeners();
+  }
+
+  // ── Device spoofing ────────────────────────────────────────────────────────
+
+  Future<void> rotateDeviceId() async {
+    const chars = '0123456789abcdef';
+    final random = math.Random.secure();
+    _spoofedAndroidId = List.generate(16, (_) => chars[random.nextInt(chars.length)]).join();
+    await _prefs?.setString('spoofed_android_id', _spoofedAndroidId!);
+    notifyListeners();
+  }
+
+  String get effectiveDeviceId {
+    if (_authMode == AuthMode.anonymous || _authMode == AuthMode.hybrid) {
+      return _spoofedAndroidId ?? '0000000000000000';
+    }
+    return 'native';
+  }
+
+  Future<void> setAuthMode(AuthMode mode) async {
+    _authMode = mode;
+    await _prefs?.setInt('auth_mode', mode.index);
+    notifyListeners();
+  }
+
+  Future<void> setDeviceProfile(DeviceProfile profile) async {
+    _selectedProfile = profile;
+    await _prefs?.setString('selected_device_profile', jsonEncode(profile.toJson()));
     notifyListeners();
   }
 }

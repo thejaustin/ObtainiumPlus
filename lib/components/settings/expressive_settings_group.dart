@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:obtainium/components/info_tooltip.dart';
 
 class ExpressiveSettingsGroup extends StatelessWidget {
   final String? title;
@@ -55,10 +54,13 @@ class ExpressiveSettingsGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (title != null)
+        // Expandable groups show their title inside the ExpansionTile header —
+        // suppress the outer label to prevent it rendering twice.
+        if (title != null && !isExpandable)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 24, 16, 8),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title!.toUpperCase(),
@@ -68,8 +70,15 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                         letterSpacing: 1.2,
                       ),
                 ),
-                if (description != null)
-                  InfoTooltip(message: description!, size: 16),
+                if (description != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    description!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
