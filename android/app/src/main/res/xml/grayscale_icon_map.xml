@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Google Themed Icons / Android 13+ spec.
+    Launchers that implement the themed-icon standard (Pixel Launcher, Lawnchair, etc.)
+    read this file from the app's own package to resolve its monochrome icon drawable
+    without needing a third-party icon pack entry.
+
+    Also covers the original Obtainium component so launchers that do alias-aware
+    themed-icon resolution can match both packages to the same drawable.
+-->
+<IconMap xmlns:android="http://schemas.android.com/apk/res/android">
+    <Activity
+        android:name="app.obtainiumplus.MainActivity"
+        android:icon="@drawable/ic_launcher_monochrome" />
+    <!-- Alias for original Obtainium component — helps launchers that do
+         themed-icon lookup by activity class name -->
+    <Activity
+        android:name="dev.imranr.obtainium.MainActivity"
+        android:icon="@drawable/ic_launcher_monochrome" />
+</IconMap>
