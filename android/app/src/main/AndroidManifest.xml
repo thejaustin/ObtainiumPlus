@@ -5,6 +5,7 @@
         android:label="@string/label"
         android:name=".ObtainiumApplication"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:requestLegacyExternalStorage="true"
         android:localeConfig="@xml/locales_config">
         <activity
@@ -40,6 +41,40 @@
                 <data android:scheme="obtainium" />
             </intent-filter>
         </activity>
+        <!--
+            Activity aliases for original Obtainium's component names.
+            Icon packs map icons to ComponentInfo{package/activity}. Since Obtainium+
+            uses a different package (app.obtainiumplus) than the original
+            (dev.imranr.obtainium), most icon packs won't match us automatically.
+
+            Launchers that resolve icon pack icons by activity class name only
+            (rather than the full package/activity pair) will pick up the Obtainium
+            icon pack entry via these aliases.
+
+            Two aliases cover the two common appfilter.xml formats:
+              - Fully-qualified:  ComponentInfo{dev.imranr.obtainium/dev.imranr.obtainium.MainActivity}
+              - Short-form:       ComponentInfo{dev.imranr.obtainium/.MainActivity}
+        -->
+        <activity-alias
+            android:name="dev.imranr.obtainium.MainActivity"
+            android:targetActivity=".MainActivity"
+            android:exported="false"
+            android:enabled="true" />
+        <activity-alias
+            android:name="dev.imranr.obtainium.ObtainiumActivity"
+            android:targetActivity=".MainActivity"
+            android:exported="false"
+            android:enabled="true" />
+
+        <!--
+            Themed Icons (Android 13+ / Google spec).
+            Launchers implementing the Themed Icons standard (Pixel Launcher, Lawnchair, etc.)
+            read this to resolve our monochrome icon without a third-party icon pack entry.
+        -->
+        <meta-data
+            android:name="android.app.icon_map"
+            android:resource="@xml/grayscale_icon_map" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
