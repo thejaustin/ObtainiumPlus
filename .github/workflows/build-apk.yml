@@ -245,7 +245,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || format('build-{0}', github.run_number) }}
-          name: "Obtainium+ Build ${{ github.run_number }}"
+          name: "Obtainium+ ${{ steps.bump_version.outputs.version }}"
           commit: ${{ github.sha }}
           draft: false
           prerelease: false
