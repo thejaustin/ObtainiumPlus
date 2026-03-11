@@ -9,7 +9,7 @@ import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/main.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
+import 'dart:math' show Random;
 
 // Domains the Play Store client is allowed to connect to.
 // Any redirect or response that targets outside this set is rejected.
@@ -38,6 +38,12 @@ http.Client _buildPlayStoreClient() {
 
   return IOClient(inner);
 }
+
+// Shared secure RNG — avoids creating a new instance on every request.
+final _rng = Random.secure();
+
+// Pre-compiled URL pattern for delivery response parsing.
+final _urlRegex = RegExp(r'https://[^"\0\n]+');
 
 class PlayStoreApi {
   final String _baseUrl = 'https://android.clients.google.com/fdfe';
@@ -68,7 +74,7 @@ class PlayStoreApi {
 
     // Rotate Finsky version per-request to reduce fingerprinting.
     const versions = ['38.5.18-29', '37.5.24-21', '39.1.12-21', '38.2.10-21'];
-    final version = versions[Random().nextInt(versions.length)];
+    final version = versions[_rng.nextInt(versions.length)];
 
     final headers = {
       'Authorization': authHeader,
@@ -94,7 +100,7 @@ class PlayStoreApi {
 
   Future<void> _humanDelay() async {
     await Future.delayed(
-        Duration(milliseconds: 500 + Random().nextInt(1500)));
+        Duration(milliseconds: 500 + _rng.nextInt(1500)));
   }
 
   /// Validates that [uri] targets an allowed host.
@@ -200,8 +206,7 @@ class PlayStoreApi {
 
       if (response.statusCode == 200) {
         final body = utf8.decode(response.bodyBytes, allowMalformed: true);
-        final urlRegex = RegExp(r'https://[^"\0\n]+');
-        final urls = urlRegex
+        final urls = _urlRegex
             .allMatches(body)
             .map((m) => m.group(0)!)
             .where((u) =>
