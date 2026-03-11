@@ -20,8 +20,8 @@ import 'package:obtainium/app_sources/izzyondroid.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/app_sources/jenkins.dart';
 import 'package:obtainium/app_sources/liteapks.dart';
-import 'package:obtainium/app_sources/moddroid.dart';
 import 'package:obtainium/app_sources/neutroncode.dart';
+import 'package:obtainium/app_sources/rockmods.dart';
 import 'package:obtainium/app_sources/rustore.dart';
 import 'package:obtainium/app_sources/sourceforge.dart';
 import 'package:obtainium/app_sources/sourcehut.dart';
@@ -34,6 +34,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
+import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/app_source.dart';
@@ -279,7 +280,7 @@ class SourceProvider {
     Tencent(),
     CoolApk(),
     LiteAPKs(),
-    Moddroid(),
+    RockMods(),
     VivoAppStore(),
     Jenkins(),
     APKMirror(),
@@ -294,7 +295,7 @@ class SourceProvider {
   List<AppSource> get sources => _cachedSources;
 
   // Add more mass url source classes here so they are available via the service
-  List<MassAppUrlSource> massUrlSources = [GitHubStars()];
+  List<MassAppUrlSource> massUrlSources = [GitHubStars(), GitHubPersonalRepos()];
 
   AppSource getSource(String url, {String? overrideSource}) {
     url = GitHub().preStandardizeUrl(url); // Any AppSource can provide this

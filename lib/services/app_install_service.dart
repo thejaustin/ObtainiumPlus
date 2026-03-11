@@ -22,12 +22,13 @@ import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
 final pm = AndroidPackageManager();
+final packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates});
 
 class AppInstallService {
   AppInstallService._();
 
   static Future<List<PackageInfo>> getAllInstalledInfo() async {
-    return await pm.getInstalledPackages() ?? [];
+    return await pm.getInstalledPackages(flags: packageInfoFlags) ?? [];
   }
 
   static Future<PackageInfo?> getInstalledInfo(
@@ -36,7 +37,10 @@ class AppInstallService {
   }) async {
     if (packageName != null) {
       try {
-        return await pm.getPackageInfo(packageName: packageName);
+        return await pm.getPackageInfo(
+          packageName: packageName,
+          flags: packageInfoFlags,
+        );
       } catch (e) {
         if (printErr) {
           print(e);

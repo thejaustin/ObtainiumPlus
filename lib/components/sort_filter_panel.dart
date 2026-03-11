@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -121,16 +122,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Drag handle
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 32,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                const DragHandle(),
 
             Flexible(
               child: SingleChildScrollView(

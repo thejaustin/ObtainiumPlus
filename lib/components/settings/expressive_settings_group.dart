@@ -100,22 +100,30 @@ class ExpressiveSettingsGroup extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24.0),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
-                sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
-              ),
-              child: isExpandable
-                  ? ExpansionTile(
-                      shape: const RoundedRectangleBorder(side: BorderSide.none),
-                      collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-                      initiallyExpanded: initiallyExpanded,
-                      leading: icon != null ? Icon(icon, color: Theme.of(context).colorScheme.primary) : null,
-                      title: Text(title ?? 'Settings', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      children: [content],
-                    )
-                  : content,
-            ),
+            child: settings.plusEnableGlassmorphism
+                ? BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: isExpandable
+                        ? ExpansionTile(
+                            shape: const RoundedRectangleBorder(side: BorderSide.none),
+                            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+                            initiallyExpanded: initiallyExpanded,
+                            leading: icon != null ? Icon(icon, color: Theme.of(context).colorScheme.primary) : null,
+                            title: Text(title ?? 'Settings', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            children: [content],
+                          )
+                        : content,
+                  )
+                : isExpandable
+                    ? ExpansionTile(
+                        shape: const RoundedRectangleBorder(side: BorderSide.none),
+                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+                        initiallyExpanded: initiallyExpanded,
+                        leading: icon != null ? Icon(icon, color: Theme.of(context).colorScheme.primary) : null,
+                        title: Text(title ?? 'Settings', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        children: [content],
+                      )
+                    : content,
           ),
         ),
       ],

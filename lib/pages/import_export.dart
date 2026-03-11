@@ -22,6 +22,7 @@ import 'package:obtainium/utils/language_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
+import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});
@@ -444,6 +445,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _sectionHeader(context, tr('exportAndImport')),
                   FutureBuilder(
                     future: settingsProvider.getExportDir(),
                     builder: (context, snapshot) {
@@ -548,7 +550,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       );
                     },
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 8),
+                  _sectionHeader(context, tr('githubIntegration')),
                   Text(
                     tr('githubStarredRepos'),
                     style: TextStyle(
@@ -565,7 +568,25 @@ class _ImportExportPageState extends State<ImportExportPage> {
                           },
                     child: Text(tr('importGithubStarredRepos')),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+                  Text(
+                    tr('githubPersonalRepos'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: importInProgress
+                        ? null
+                        : () {
+                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubPersonalRepos().runtimeType));
+                          },
+                    child: Text(tr('importX', args: [tr('githubPersonalRepos')])),
+                  ),
+                  const SizedBox(height: 8),
+                  _sectionHeader(context, tr('importApps')),
                   if (importInProgress)
                     const Column(
                       children: [
@@ -640,22 +661,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         ),
                       ],
                     ),
-                  ...sourceProvider.massUrlSources.map(
-                    (source) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: importInProgress
-                              ? null
-                              : () {
-                                  runMassSourceImport(source);
-                                },
-                          child: Text(tr('importX', args: [source.name])),
-                        ),
-                      ],
-                    ),
-                  ),
                   const Spacer(),
                   const Divider(height: 32),
                   Text(
@@ -672,6 +677,20 @@ class _ImportExportPageState extends State<ImportExportPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }

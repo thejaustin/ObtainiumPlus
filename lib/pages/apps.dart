@@ -463,20 +463,16 @@ class AppsPageState extends State<AppsPage> {
       snap: false,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      flexibleSpace: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: settings.plusEnableGlassmorphism ? 24 : 0,
-            sigmaY: settings.plusEnableGlassmorphism ? 24 : 0,
-          ),
-          child: Container(
-            color: (isDark 
-                ? Theme.of(context).colorScheme.surface 
-                : Theme.of(context).colorScheme.surface)
-              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
-          ),
-        ),
-      ),
+      flexibleSpace: settings.plusEnableGlassmorphism
+          ? ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                child: Container(
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
+                ),
+              ),
+            )
+          : Container(color: Theme.of(context).colorScheme.surface),
       leading: selectedAppIds.isNotEmpty
           ? IconButton(
               icon: const Icon(Icons.close),
@@ -643,31 +639,24 @@ class AppsPageState extends State<AppsPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final enableGlass = settings.plusEnableGlassmorphism;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: enableGlass ? 20 : 0,
-          sigmaY: enableGlass ? 20 : 0,
+    final pill = Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh.withValues(alpha: enableGlass ? 0.72 : 0.96),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: enableGlass
+              ? colorScheme.onSurface.withValues(alpha: 0.15)
+              : colorScheme.outline.withValues(alpha: 0.2),
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHigh.withValues(alpha: enableGlass ? 0.72 : 0.96),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: enableGlass
-                  ? colorScheme.onSurface.withValues(alpha: 0.15)
-                  : colorScheme.outline.withValues(alpha: 0.2),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: enableGlass ? 0.22 : 0.12),
-                blurRadius: enableGlass ? 24 : 8,
-                spreadRadius: -2,
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: enableGlass ? 0.22 : 0.12),
+            blurRadius: enableGlass ? 24 : 8,
+            spreadRadius: -2,
           ),
-          child: Row(
+        ],
+      ),
+      child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Search
@@ -740,8 +729,15 @@ class AppsPageState extends State<AppsPage> {
                 ),
               ),
             ],
-          ),
-        ),
+      ),
+    );
+
+    if (!enableGlass) return pill;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: pill,
       ),
     );
   }
