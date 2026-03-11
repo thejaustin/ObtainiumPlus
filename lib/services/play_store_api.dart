@@ -33,7 +33,9 @@ http.Client _buildPlayStoreClient() {
     ..idleTimeout = const Duration(seconds: 15)
     ..autoUncompress = true;
   // Ensure all Play Store traffic goes direct — no system or app proxy.
-  // Must be set after the cascade; the 2-arg signature is required by dart:io.
+  // Assigned outside the cascade to avoid a type-inference break in the
+  // cascade chain (the closure return type caused Dart to resolve subsequent
+  // cascade members against String instead of HttpClient).
   inner.findProxy = (uri, scheme) => 'DIRECT';
 
   return IOClient(inner);
