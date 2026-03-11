@@ -36,7 +36,7 @@ http.Client _buildPlayStoreClient() {
   // Assigned outside the cascade to avoid a type-inference break in the
   // cascade chain (the closure return type caused Dart to resolve subsequent
   // cascade members against String instead of HttpClient).
-  inner.findProxy = (uri, scheme) => 'DIRECT';
+  inner.findProxy = (uri) => 'DIRECT';
 
   return IOClient(inner);
 }
