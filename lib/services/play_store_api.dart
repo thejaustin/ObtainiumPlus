@@ -31,9 +31,10 @@ http.Client _buildPlayStoreClient() {
   final inner = HttpClient()
     ..connectionTimeout = const Duration(seconds: 10)
     ..idleTimeout = const Duration(seconds: 15)
-    // Reject redirects to unexpected hosts
-    ..findProxy = (uri) => 'DIRECT'
     ..autoUncompress = true;
+  // Ensure all Play Store traffic goes direct — no system or app proxy.
+  // Must be set after the cascade; the 2-arg signature is required by dart:io.
+  inner.findProxy = (uri, scheme) => 'DIRECT';
 
   return IOClient(inner);
 }
