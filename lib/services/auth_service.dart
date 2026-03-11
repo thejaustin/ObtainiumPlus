@@ -25,7 +25,6 @@ class AuthService {
         final Map<String, dynamic> data = jsonDecode(response.body);
         talker.info('Successfully retrieved AuthBundle for: ${data['email']}');
         return AuthBundle.fromJson(data);
-      }
       } else if (response.statusCode == 429) {
         throw ObtainiumError('Dispenser rate limited (429). Try again later.');
       } else {
