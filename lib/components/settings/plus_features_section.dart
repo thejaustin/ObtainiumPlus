@@ -132,6 +132,63 @@ class PlusFeaturesSection extends StatelessWidget {
                 ],
               ),
 
+              // --- QUICK-ADD FAB MENU ---
+              ExpressiveSettingsGroup(
+                title: isSearching ? null : tr('fabMenuItems'),
+                children: [
+                  if (_matches(tr('fabShowSearch')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.search_rounded,
+                      title: tr('fabShowSearch'),
+                      subtitle: tr('fabShowSearchDescription'),
+                      value: settings.plusFabShowSearch,
+                      onChanged: (val) => settings.plusFabShowSearch = val,
+                    ),
+                  if (_matches(tr('fabShowAddByUrl')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.link_outlined,
+                      title: tr('fabShowAddByUrl'),
+                      subtitle: tr('fabShowAddByUrlDescription'),
+                      value: settings.plusFabShowAddByUrl,
+                      onChanged: (val) => settings.plusFabShowAddByUrl = val,
+                    ),
+                  if (_matches(tr('fabShowGithubStarred')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.star_border_rounded,
+                      title: tr('fabShowGithubStarred'),
+                      subtitle: tr('fabShowGithubStarredDescription'),
+                      value: settings.plusFabShowGithubStarred,
+                      onChanged: (val) => settings.plusFabShowGithubStarred = val,
+                    ),
+                  if (_matches(tr('fabShowGithubPersonalRepos')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.person_outline_rounded,
+                      title: tr('fabShowGithubPersonalRepos'),
+                      subtitle: tr('fabShowGithubPersonalReposDescription'),
+                      value: settings.plusFabShowGithubPersonalRepos,
+                      onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
+                    ),
+                  if (_matches(tr('fabShowImportInstalled')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.install_mobile_outlined,
+                      title: tr('fabShowImportInstalled'),
+                      subtitle: tr('fabShowImportInstalledDescription'),
+                      value: settings.plusFabShowImportInstalled,
+                      onChanged: (val) => settings.plusFabShowImportInstalled = val,
+                    ),
+                ],
+              ),
+
               // --- ADVANCED CUSTOMIZATION (Expandable) ---
               ExpressiveSettingsGroup(
                 title: isSearching ? null : 'Organization & Sorting',
@@ -172,20 +229,6 @@ class PlusFeaturesSection extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildCategoryHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-        ),
-      ),
     );
   }
 

@@ -194,4 +194,35 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setBool('autoDiscardTokens', val);
     notifyListeners();
   }
+
+  // Quick-Add FAB menu item visibility
+  bool get plusFabShowSearch => _prefs?.getBool('plusFabShowSearch') ?? true;
+  set plusFabShowSearch(bool val) {
+    _prefs?.setBool('plusFabShowSearch', val);
+    notifyListeners();
+  }
+
+  bool get plusFabShowAddByUrl => _prefs?.getBool('plusFabShowAddByUrl') ?? true;
+  set plusFabShowAddByUrl(bool val) {
+    _prefs?.setBool('plusFabShowAddByUrl', val);
+    notifyListeners();
+  }
+
+  bool get plusFabShowGithubStarred => _prefs?.getBool('plusFabShowGithubStarred') ?? true;
+  set plusFabShowGithubStarred(bool val) {
+    _prefs?.setBool('plusFabShowGithubStarred', val);
+    notifyListeners();
+  }
+
+  bool get plusFabShowGithubPersonalRepos => _prefs?.getBool('plusFabShowGithubPersonalRepos') ?? true;
+  set plusFabShowGithubPersonalRepos(bool val) {
+    _prefs?.setBool('plusFabShowGithubPersonalRepos', val);
+    notifyListeners();
+  }
+
+  bool get plusFabShowImportInstalled => _prefs?.getBool('plusFabShowImportInstalled') ?? true;
+  set plusFabShowImportInstalled(bool val) {
+    _prefs?.setBool('plusFabShowImportInstalled', val);
+    notifyListeners();
+  }
 }

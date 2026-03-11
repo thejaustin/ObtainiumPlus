@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
@@ -165,18 +166,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle
+                  DragHandle(width: 40, margin: const EdgeInsets.only(bottom: 16)),
                 const SizedBox(height: 20),
                 
                 Text(
@@ -272,6 +267,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                 ),
               ],
             ),
+          ),
           );
         },
       ),

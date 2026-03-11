@@ -8,7 +8,6 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/source_provider.dart';
 
 class OnboardingPage extends StatefulWidget {
   final VoidCallback onDone;
@@ -24,15 +23,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   bool _isSamsung = false;
   bool _isXiaomi = false;
 
-  // Quick Start State
   bool _addObtainiumPlus = true;
-  bool _pinObtainiumPlus = true;
-  final Map<String, String> _recommendedApps = {
-    'F-Droid': 'https://f-droid.org/',
-    'Signal': 'https://signal.org/android/apk/',
-    'Bitwarden': 'https://github.com/bitwarden/mobile',
-  };
-  final Set<String> _selectedRecommended = {};
 
   @override
   void initState() {
@@ -74,7 +65,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _finishOnboarding() async {
-    // Show loading indicator
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -85,7 +75,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
       final appsProvider = context.read<AppsProvider>();
       List<App> appsToAdd = [];
 
-      // 1. Add Obtainium+ if selected
       if (_addObtainiumPlus) {
         try {
           var info = await AppInstallService.getInstalledInfo(obtainiumId);
@@ -106,7 +95,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   'invertAPKFilter': true,
                 },
                 null,
-                _pinObtainiumPlus,
+                true, // always pin Obtainium+ to the top
               ),
             );
           }
@@ -122,20 +111,26 @@ class _OnboardingPageState extends State<OnboardingPage> {
       debugPrint('Error during onboarding finish: $e');
     } finally {
       if (mounted) {
-        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context);
         widget.onDone();
       }
     }
   }
 
-  Widget _buildFeatureCard(BuildContext context, {required IconData icon, required String title, required String subtitle}) {
+  Widget _buildFeatureCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Color? iconColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Card(
         elevation: 0,
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
         child: ListTile(
-          leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          leading: Icon(icon, color: iconColor ?? Theme.of(context).colorScheme.primary),
           title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
           dense: true,
@@ -144,95 +139,347 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
+  Widget _buildPermissionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: FilledButton.tonalIcon(
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(label),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+      ),
+    );
+  }
+
+  Widget _buildFabToggle(
+    BuildContext context,
+    SettingsProvider settings, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SwitchListTile.adaptive(
+      secondary: Icon(icon, size: 22),
+      title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      value: value,
+      onChanged: onChanged,
+      dense: true,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const bodyStyle = TextStyle(fontSize: 19.0);
     const pageDecoration = PageDecoration(
       titleTextStyle: TextStyle(fontSize: 28.0, fontWeight: FontWeight.w700),
-      bodyTextStyle: bodyStyle,
+      bodyTextStyle: TextStyle(fontSize: 16.0),
       bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-      pageColor: Colors.transparent, // Use theme background
+      pageColor: Colors.transparent,
       imagePadding: EdgeInsets.zero,
     );
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return IntroductionScreen(
       key: introKey,
-      globalBackgroundColor: Theme.of(context).colorScheme.surface,
+      globalBackgroundColor: colorScheme.surface,
       allowImplicitScrolling: true,
-      autoScrollDuration: null, // Disable auto scroll for interaction
-      
+      autoScrollDuration: null,
+
       pages: [
-        // 1. What it does
+        // ── 1. Welcome ──────────────────────────────────────────────────────
         PageViewModel(
-          title: "Obtainium+",
-          body: "Install and update Android apps directly from their source releases (GitHub, GitLab, F-Droid, etc.) without an app store.",
-          image: Icon(Icons.download_for_offline, size: 100, color: Theme.of(context).colorScheme.primary),
+          title: 'Obtainium+',
+          body: 'Install and update Android apps directly from their source — GitHub, GitLab, F-Droid, and more — without an app store.',
+          image: Icon(Icons.download_for_offline, size: 100, color: colorScheme.primary),
           decoration: pageDecoration,
         ),
 
-        // 2. How to add
+        // ── 2. Add Apps ──────────────────────────────────────────────────────
         PageViewModel(
-          title: "Add Apps",
-          body: "Simply paste an app's release page URL (like a GitHub repo) or use the search feature to start tracking updates.",
-          image: Icon(Icons.add_circle_outline, size: 100, color: Theme.of(context).colorScheme.secondary),
+          title: 'Add Apps',
+          body: 'Multiple ways to build your app list fast.',
+          image: Icon(Icons.add_circle_outline, size: 100, color: colorScheme.secondary),
           decoration: pageDecoration,
+          footer: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildFeatureCard(
+                context,
+                icon: Icons.link_outlined,
+                title: 'Paste a URL',
+                subtitle: 'Paste any GitHub, GitLab, or other release page URL to start tracking.',
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.star_border_rounded,
+                title: 'GitHub Starred Repos',
+                subtitle: 'Import apps from your GitHub starred repositories in bulk.',
+                iconColor: colorScheme.tertiary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.person_outline_rounded,
+                title: 'GitHub Personal Repos',
+                subtitle: 'Import from your own repos — private repos included when a token is set.',
+                iconColor: colorScheme.tertiary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.install_mobile_outlined,
+                title: 'Import Installed Apps',
+                subtitle: 'Scan your device and start tracking apps already installed.',
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Card(
+                  color: colorScheme.secondaryContainer,
+                  elevation: 0,
+                  child: ListTile(
+                    leading: Icon(Icons.key_outlined, color: colorScheme.onSecondaryContainer),
+                    title: Text(
+                      'GitHub Token (optional)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Add a token in Settings → GitHub to unlock private repos and avoid rate limits.',
+                      style: TextStyle(fontSize: 12, color: colorScheme.onSecondaryContainer),
+                    ),
+                    dense: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
-        // 3. Smart Settings
+        // ── 3. Permissions ────────────────────────────────────────────────────
         PageViewModel(
-          title: "Stay Updated",
-          body: "Enable background checks and notifications to ensure your apps are always up to date.",
-          image: Icon(Icons.sync_lock, size: 100, color: Theme.of(context).colorScheme.tertiary),
+          title: 'Permissions',
+          body: 'Grant these so Obtainium+ can install apps and check for updates in the background.',
+          image: Icon(Icons.security_outlined, size: 100, color: colorScheme.tertiary),
+          decoration: pageDecoration,
+          footer: Builder(
+            builder: (ctx) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildPermissionButton(
+                  context: ctx,
+                  icon: Icons.install_mobile_rounded,
+                  label: 'Allow Installing Apps',
+                  onPressed: _requestInstallPermission,
+                ),
+                _buildPermissionButton(
+                  context: ctx,
+                  icon: Icons.notifications_outlined,
+                  label: 'Allow Notifications',
+                  onPressed: _requestNotificationPermission,
+                ),
+                _buildPermissionButton(
+                  context: ctx,
+                  icon: Icons.battery_saver_outlined,
+                  label: 'Disable Battery Optimisation',
+                  onPressed: _openBatteryOptimization,
+                ),
+                _buildPermissionButton(
+                  context: ctx,
+                  icon: Icons.track_changes_outlined,
+                  label: 'Allow Usage Access',
+                  onPressed: _openUsageAccess,
+                ),
+                if (_isSamsung || _isXiaomi)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Card(
+                      color: colorScheme.tertiaryContainer,
+                      child: ListTile(
+                        leading: Icon(Icons.info_outline, color: colorScheme.onTertiaryContainer),
+                        title: Text(
+                          _isSamsung ? 'Samsung tip' : 'Xiaomi tip',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          _isSamsung
+                              ? 'On Samsung, also enable "Auto-launch" for Obtainium+ in Device Care → Battery.'
+                              : 'On Xiaomi, enable "Auto-start" for Obtainium+ in Security → Manage apps.',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        dense: true,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+
+        // ── 4. Stay Updated ──────────────────────────────────────────────────
+        PageViewModel(
+          title: 'Stay Updated',
+          body: 'Enable background checks so your apps are always up to date.',
+          image: Icon(Icons.sync_lock, size: 100, color: colorScheme.primary),
           decoration: pageDecoration,
           footer: Consumer<SettingsProvider>(
             builder: (context, settings, _) {
               return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SwitchListTile.adaptive(
-                    title: const Text("Automatic Background Checks"),
-                    subtitle: const Text("Check for updates while the app is closed"),
+                    title: const Text(
+                      'Automatic Background Checks',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text('Check for updates while the app is closed'),
                     value: settings.updateInterval > 0,
-                    onChanged: (val) {
-                      settings.updateInterval = val ? 360 : 0;
-                      setState(() {});
-                    },
+                    onChanged: (val) => settings.updateInterval = val ? 360 : 0,
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: _requestNotificationPermission,
-                    icon: const Icon(Icons.notifications),
-                    label: const Text("Allow Notifications"),
-                  ),
+                  if (settings.updateInterval > 0) ...[
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: settings.updateInterval.toDouble().clamp(60, 1440),
+                      min: 60,
+                      max: 1440,
+                      divisions: 23,
+                      label: '${(settings.updateInterval / 60).round()}h',
+                      onChanged: (val) => settings.updateInterval = val.round(),
+                    ),
+                    Center(
+                      child: Text(
+                        'Check every ${(settings.updateInterval / 60).round()}h',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               );
-            }
+            },
           ),
         ),
 
-        // 4. Custom Sources & Plugins
+        // ── 5. Quick-Add Menu ────────────────────────────────────────────────
         PageViewModel(
-          title: "Extend & Expand",
-          body: "Add support for even more apps through custom community-made plugins and source recipes.",
-          image: Icon(Icons.extension_outlined, size: 100, color: Theme.of(context).colorScheme.primary),
+          title: 'Quick-Add Menu',
+          body: 'Choose which shortcuts appear when you tap +. Adjust anytime in Settings → Obtainium+ Features.',
+          image: Icon(Icons.add_box_outlined, size: 100, color: colorScheme.secondary),
+          decoration: pageDecoration,
+          footer: Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              return Card(
+                elevation: 0,
+                color: colorScheme.surfaceContainerHigh,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: [
+                      _buildFabToggle(
+                        context,
+                        settings,
+                        icon: Icons.search_rounded,
+                        title: 'Search',
+                        subtitle: 'Quick-launch the app search',
+                        value: settings.plusFabShowSearch,
+                        onChanged: (val) => settings.plusFabShowSearch = val,
+                      ),
+                      _buildFabToggle(
+                        context,
+                        settings,
+                        icon: Icons.link_outlined,
+                        title: 'Add by URL',
+                        subtitle: 'Paste a release page URL',
+                        value: settings.plusFabShowAddByUrl,
+                        onChanged: (val) => settings.plusFabShowAddByUrl = val,
+                      ),
+                      _buildFabToggle(
+                        context,
+                        settings,
+                        icon: Icons.star_border_rounded,
+                        title: 'GitHub Starred Repos',
+                        subtitle: 'Import your starred repositories',
+                        value: settings.plusFabShowGithubStarred,
+                        onChanged: (val) => settings.plusFabShowGithubStarred = val,
+                      ),
+                      _buildFabToggle(
+                        context,
+                        settings,
+                        icon: Icons.person_outline_rounded,
+                        title: 'GitHub Personal Repos',
+                        subtitle: 'Import your own repositories',
+                        value: settings.plusFabShowGithubPersonalRepos,
+                        onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
+                      ),
+                      _buildFabToggle(
+                        context,
+                        settings,
+                        icon: Icons.install_mobile_outlined,
+                        title: 'Import Installed Apps',
+                        subtitle: 'Scan device for installed apps',
+                        value: settings.plusFabShowImportInstalled,
+                        onChanged: (val) => settings.plusFabShowImportInstalled = val,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // ── 6. Personalize ───────────────────────────────────────────────────
+        PageViewModel(
+          title: 'Personalize',
+          body: 'Obtainium+ adds visual polish and one-handed shortcuts. All toggleable in Settings → Obtainium+ Features.',
+          image: Icon(Icons.auto_awesome_outlined, size: 100, color: colorScheme.tertiary),
           decoration: pageDecoration,
           footer: Column(
             children: [
               _buildFeatureCard(
                 context,
-                icon: Icons.auto_awesome_outlined,
-                title: "Obtainium+ Features",
-                subtitle: "Unlock advanced automation and UI enhancements.",
+                icon: Icons.blur_on_outlined,
+                title: 'Glassmorphism',
+                subtitle: 'Frosted-glass nav bars, sheets, and menus.',
+                iconColor: colorScheme.secondary,
               ),
               _buildFeatureCard(
                 context,
-                icon: Icons.extension_outlined,
-                title: "Custom Source Plugins",
-                subtitle: "Add new app sources via community-maintained JS scripts.",
+                icon: Icons.back_hand_outlined,
+                title: 'Quick Filters',
+                subtitle: 'One-handed filter strip pinned at the bottom of your app list.',
+                iconColor: colorScheme.secondary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.grid_view_outlined,
+                title: 'Grid View',
+                subtitle: 'Switch between list and grid layouts.',
+                iconColor: colorScheme.secondary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.swipe_outlined,
+                title: 'Swipe Actions',
+                subtitle: 'Swipe app tiles to quickly update or open them.',
+                iconColor: colorScheme.secondary,
               ),
             ],
           ),
         ),
       ],
+
       onDone: _finishOnboarding,
       onSkip: _finishOnboarding,
       showSkipButton: true,
@@ -248,12 +495,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
       controlsPadding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
       dotsDecorator: DotsDecorator(
         size: const Size(10.0, 10.0),
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: colorScheme.onSurfaceVariant,
         activeSize: const Size(22.0, 10.0),
         activeShape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(25.0)),
         ),
-        activeColor: Theme.of(context).colorScheme.primary,
+        activeColor: colorScheme.primary,
       ),
     );
   }

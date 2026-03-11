@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -229,45 +230,34 @@ class AppActionsFAB extends StatelessWidget {
       backgroundColor: Colors.transparent,
       showDragHandle: false,
       builder: (ctx) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: enableGlass ? 24 : 0,
-              sigmaY: enableGlass ? 24 : 0,
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                border: Border(
-                  top: BorderSide(
-                    color: enableGlass
-                        ? colorScheme.onSurface.withValues(alpha: 0.18)
-                        : colorScheme.outline.withValues(alpha: 0.12),
-                  ),
-                  left: BorderSide(
-                    color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
-                  ),
-                  right: BorderSide(
-                    color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
-                  ),
-                ),
+        final sheet = Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+              top: BorderSide(
+                color: enableGlass
+                    ? colorScheme.onSurface.withValues(alpha: 0.18)
+                    : colorScheme.outline.withValues(alpha: 0.12),
               ),
-              child: SafeArea(
+              left: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+              ),
+              right: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+              ),
+            ),
+          ),
+          child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Handle
-                      Container(
+                      DragHandle(
                         width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 20),
 
@@ -281,63 +271,87 @@ class AppActionsFAB extends StatelessWidget {
                       const SizedBox(height: 8),
 
                       // Search shortcut — always reachable from thumb zone
-                      _buildMenuItem(
-                        context,
-                        icon: Icons.search_rounded,
-                        title: tr('search'),
-                        subtitle: tr('searchOrEnterUrl'),
-                        iconColor: colorScheme.tertiary,
-                        containerColor: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
-                        onTap: () {
-                          Navigator.pop(context);
-                          CommandCenter.show(context);
-                        },
-                      ),
+                      if (settings.plusFabShowSearch)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.search_rounded,
+                          title: tr('search'),
+                          subtitle: tr('searchOrEnterUrl'),
+                          iconColor: colorScheme.tertiary,
+                          containerColor: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                          onTap: () {
+                            Navigator.pop(context);
+                            CommandCenter.show(context);
+                          },
+                        ),
 
-                      const Divider(height: 20),
+                      if (settings.plusFabShowSearch &&
+                          (settings.plusFabShowAddByUrl ||
+                              settings.plusFabShowGithubStarred ||
+                              settings.plusFabShowGithubPersonalRepos ||
+                              settings.plusFabShowImportInstalled))
+                        const Divider(height: 20),
 
                       // Add by URL
-                      _buildMenuItem(
-                        context,
-                        icon: Icons.link_outlined,
-                        title: tr('addAppByUrl'),
-                        subtitle: tr('addAppByUrlDescription'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AddAppPage()),
-                          );
-                        },
-                      ),
+                      if (settings.plusFabShowAddByUrl)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.link_outlined,
+                          title: tr('addAppByUrl'),
+                          subtitle: tr('addAppByUrlDescription'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AddAppPage()),
+                            );
+                          },
+                        ),
 
-                      _buildMenuItem(
-                        context,
-                        icon: Icons.code_outlined,
-                        title: tr('importGithubStarredRepos'),
-                        subtitle: tr('importGithubStarredReposDescription'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ImportExportPage()),
-                          );
-                        },
-                      ),
+                      if (settings.plusFabShowGithubStarred)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.star_border_rounded,
+                          title: tr('importGithubStarredRepos'),
+                          subtitle: tr('importGithubStarredReposDescription'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                            );
+                          },
+                        ),
 
-                      _buildMenuItem(
-                        context,
-                        icon: Icons.install_mobile_outlined,
-                        title: tr('importInstalledApps'),
-                        subtitle: tr('importInstalledAppsDescription'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SystemAppSelector()),
-                          );
-                        },
-                      ),
+                      if (settings.plusFabShowGithubPersonalRepos)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.person_outline_rounded,
+                          title: tr('githubPersonalRepos'),
+                          subtitle: tr('githubPersonalReposDescription'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ImportExportPage()),
+                            );
+                          },
+                        ),
+
+                      if (settings.plusFabShowImportInstalled)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.install_mobile_outlined,
+                          title: tr('importInstalledApps'),
+                          subtitle: tr('importInstalledAppsDescription'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const SystemAppSelector()),
+                            );
+                          },
+                        ),
 
                       if (settings.plusDeveloperMode)
                         _buildMenuItem(
@@ -353,12 +367,40 @@ class AppActionsFAB extends StatelessWidget {
                           },
                         ),
 
+                      // Fallback when every item is disabled
+                      if (!settings.plusFabShowSearch &&
+                          !settings.plusFabShowAddByUrl &&
+                          !settings.plusFabShowGithubStarred &&
+                          !settings.plusFabShowGithubPersonalRepos &&
+                          !settings.plusFabShowImportInstalled &&
+                          !settings.plusDeveloperMode)
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.link_outlined,
+                          title: tr('addAppByUrl'),
+                          subtitle: tr('addAppByUrlDescription'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AddAppPage()),
+                            );
+                          },
+                        ),
+
                       const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
-            ),
+        );
+
+        if (!enableGlass) return sheet;
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: sheet,
           ),
         );
       },

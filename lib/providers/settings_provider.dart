@@ -512,6 +512,37 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Quick-Add FAB menu item visibility
+  bool get plusFabShowSearch => plusSettings.plusFabShowSearch;
+  set plusFabShowSearch(bool val) {
+    plusSettings.plusFabShowSearch = val;
+    notifyListeners();
+  }
+
+  bool get plusFabShowAddByUrl => plusSettings.plusFabShowAddByUrl;
+  set plusFabShowAddByUrl(bool val) {
+    plusSettings.plusFabShowAddByUrl = val;
+    notifyListeners();
+  }
+
+  bool get plusFabShowGithubStarred => plusSettings.plusFabShowGithubStarred;
+  set plusFabShowGithubStarred(bool val) {
+    plusSettings.plusFabShowGithubStarred = val;
+    notifyListeners();
+  }
+
+  bool get plusFabShowGithubPersonalRepos => plusSettings.plusFabShowGithubPersonalRepos;
+  set plusFabShowGithubPersonalRepos(bool val) {
+    plusSettings.plusFabShowGithubPersonalRepos = val;
+    notifyListeners();
+  }
+
+  bool get plusFabShowImportInstalled => plusSettings.plusFabShowImportInstalled;
+  set plusFabShowImportInstalled(bool val) {
+    plusSettings.plusFabShowImportInstalled = val;
+    notifyListeners();
+  }
+
   bool get enableContextualTips => prefs?.getBool('enableContextualTips') ?? true;
   set enableContextualTips(bool val) {
     prefs?.setBool('enableContextualTips', val);
