@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/source_utils.dart';
@@ -85,7 +86,7 @@ class RockMods extends AppSource {
               additionalSettings,
             );
             if (resIntermediate.statusCode != 200) {
-              throw getObtainiumHttpError(resIntermediate);
+              throw SourceUtils.getObtainiumHttpError(resIntermediate);
             }
             return parse(resIntermediate.body);
           }).toList();
@@ -108,7 +109,7 @@ class RockMods extends AppSource {
       var slugFutures = slugs.map((slugUrl) async {
         var resSlug = await sourceRequest(slugUrl, additionalSettings);
         if (resSlug.statusCode != 200) {
-          throw getObtainiumHttpError(resSlug);
+          throw SourceUtils.getObtainiumHttpError(resSlug);
         }
         return MapEntry(slugUrl, parse(resSlug.body));
       }).toList();
