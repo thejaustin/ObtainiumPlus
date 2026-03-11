@@ -26,7 +26,12 @@ class AuthService {
         talker.info('Successfully retrieved AuthBundle for: ${data['email']}');
         return AuthBundle.fromJson(data);
       } else if (response.statusCode == 429) {
-        throw ObtainiumError('Dispenser rate limited (429). Try again later.');
+        // Parse Retry-After (seconds) if the dispenser provides it.
+        final retryAfter = response.headers['retry-after'];
+        final minutes = retryAfter != null
+            ? ((int.tryParse(retryAfter) ?? 1800) / 60).ceil()
+            : 30;
+        throw RateLimitError(minutes);
       } else {
         // Truncate to 200 chars — prevents token fragments from a rogue
         // dispenser leaking into logs or GitHub issue reports.
