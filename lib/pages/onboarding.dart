@@ -21,7 +21,7 @@ class OnboardingPage extends StatefulWidget {
   State<OnboardingPage> createState() => _OnboardingPageState();
 }
 
-class _OnboardingPageState extends State<OnboardingPage> {
+class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObserver {
   final introKey = GlobalKey<IntroductionScreenState>();
   bool _isSamsung = false;
   bool _isXiaomi = false;
@@ -29,10 +29,47 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   bool _addObtainiumPlus = true;
 
+  // Permission statuses
+  bool _installGranted = false;
+  bool _notifGranted = false;
+  bool _batteryGranted = false;
+  bool _usageGranted = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkDevice();
+    _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+    }
+  }
+
+  Future<void> _checkPermissions() async {
+    final install = await Permission.requestInstallPackages.isGranted;
+    final notif = await Permission.notification.isGranted;
+    final battery = await Permission.ignoreBatteryOptimizations.isGranted;
+    final usage = await AppInstallService.isUsageAccessGranted();
+    
+    if (mounted) {
+      setState(() {
+        _installGranted = install;
+        _notifGranted = notif;
+        _batteryGranted = battery;
+        _usageGranted = usage;
+      });
+    }
   }
 
   Future<void> _checkDevice() async {
@@ -49,17 +86,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Future<void> _requestNotificationPermission() async {
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
+      await _checkPermissions();
     }
   }
 
   Future<void> _requestInstallPermission() async {
     if (await Permission.requestInstallPackages.isDenied) {
       await Permission.requestInstallPackages.request();
+      await _checkPermissions();
     }
   }
 
   Future<void> _openUsageAccess() async {
     await AppInstallService.openUsageAccessSettings();
+    // This will open a new activity, so re-check will happen on resume
   }
 
   Future<void> _openBatteryOptimization() async {
@@ -67,6 +107,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       await AppInstallService.openBatteryOptimizationSettings();
     } else {
       await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      await _checkPermissions();
     }
   }
 
@@ -167,14 +208,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
     required IconData icon,
     required String label,
     required VoidCallback onPressed,
+    bool isGranted = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: FilledButton.tonalIcon(
         onPressed: onPressed,
-        icon: Icon(icon),
+        icon: Icon(isGranted ? Icons.check_circle : icon,
+            color: isGranted ? Colors.green : null),
         label: Text(label),
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+          side: isGranted ? BorderSide(color: Colors.green.withOpacity(0.5)) : null,
+        ),
       ),
     );
   }
@@ -409,24 +455,28 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   icon: Icons.install_mobile_rounded,
                   label: 'Allow Installing Apps',
                   onPressed: _requestInstallPermission,
+                  isGranted: _installGranted,
                 ),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.notifications_outlined,
                   label: 'Allow Notifications',
                   onPressed: _requestNotificationPermission,
+                  isGranted: _notifGranted,
                 ),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.battery_saver_outlined,
                   label: 'Disable Battery Optimisation',
                   onPressed: _openBatteryOptimization,
+                  isGranted: _batteryGranted,
                 ),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.track_changes_outlined,
                   label: 'Allow Usage Access',
                   onPressed: _openUsageAccess,
+                  isGranted: _usageGranted,
                 ),
                 if (_isSamsung || _isXiaomi)
                   Padding(

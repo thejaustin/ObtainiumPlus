@@ -5,6 +5,7 @@ import android.accounts.AccountManagerCallback
 import android.accounts.AuthenticatorException
 import android.accounts.OperationCanceledException
 import android.app.Activity
+import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
@@ -81,9 +82,31 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
                 }
+                "isUsageAccessGranted" -> {
+                    result.success(isUsageAccessGranted())
+                }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun isUsageAccessGranted(): Boolean {
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOps.unsafeCheckOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(),
+                packageName
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            appOps.checkOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(),
+                packageName
+            )
+        }
+        return mode == AppOpsManager.MODE_ALLOWED
     }
 
     @Deprecated("Deprecated in Java")

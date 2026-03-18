@@ -6,6 +6,7 @@ import 'package:android_package_manager/android_package_manager.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -109,6 +110,16 @@ class AppInstallService {
       action: 'android.settings.USAGE_ACCESS_SETTINGS',
     );
     await intent.launch();
+  }
+
+  static Future<bool> isUsageAccessGranted() async {
+    try {
+      final bool? granted = await const MethodChannel('app.obtainiumplus/native')
+          .invokeMethod<bool>('isUsageAccessGranted');
+      return granted ?? false;
+    } catch (e) {
+      return false;
+    }
   }
 
   static Future<void> openApp(String appId) async {
