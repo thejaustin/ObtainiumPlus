@@ -506,6 +506,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusTopUILayout => plusSettings.plusTopUILayout;
+  set plusTopUILayout(bool val) {
+    plusSettings.plusTopUILayout = val;
+    notifyListeners();
+  }
+
   bool get plusShowLegacyUIComparison => plusSettings.plusShowLegacyUIComparison;
   set plusShowLegacyUIComparison(bool val) {
     plusSettings.plusShowLegacyUIComparison = val;

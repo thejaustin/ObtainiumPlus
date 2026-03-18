@@ -146,6 +146,12 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusTopUILayout => _prefs?.getBool('plusTopUILayout') ?? false;
+  set plusTopUILayout(bool val) {
+    _prefs?.setBool('plusTopUILayout', val);
+    notifyListeners();
+  }
+
   // Developer Mode & UI Comparison
   bool get plusDeveloperMode => _prefs?.getBool('plusDeveloperMode') ?? false;
   set plusDeveloperMode(bool val) {

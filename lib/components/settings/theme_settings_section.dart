@@ -62,6 +62,15 @@ class ThemeSettingsSection extends StatelessWidget {
         onChanged: (SettingsProvider s, bool v) => s.plusEnableMaterialExpressive = v,
         visible: (SettingsProvider s) => _matches(tr('plusMaterialExpressive')),
       ),
+      _buildFeatureToggle(
+        context,
+        icon: Icons.vertical_align_top_rounded,
+        title: tr('plusTopUILayout'),
+        subtitle: tr('plusTopUILayoutDescription'),
+        value: (SettingsProvider s) => s.plusTopUILayout,
+        onChanged: (SettingsProvider s, bool v) => s.plusTopUILayout = v,
+        visible: (SettingsProvider s) => _matches(tr('plusTopUILayout')),
+      ),
     ];
 
     List<Widget> themeWidgets = [
