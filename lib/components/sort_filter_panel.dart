@@ -6,6 +6,7 @@ import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
