@@ -26,6 +26,7 @@ import 'package:obtainium/components/search/command_center.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
