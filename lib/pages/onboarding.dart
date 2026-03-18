@@ -109,9 +109,17 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
 
   Future<void> _openBatteryOptimization() async {
     if (_isXiaomi) {
+      // Xiaomi/MIUI often blocks the standard dialog or ignores it;
+      // it's safer to open their specific settings.
       await AppInstallService.openBatteryOptimizationSettings();
     } else {
-      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      final status = await Permission.ignoreBatteryOptimizations.status;
+      if (status.isDenied) {
+        // This triggers the standard Android "Allow app to ignore battery optimizations?" popup
+        await Permission.ignoreBatteryOptimizations.request();
+      } else {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
       await _checkPermissions();
     }
   }
