@@ -193,6 +193,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         ),
                       ]),
                     ),
+                    const SizedBox(height: 8),
+                    _buildActivityChart(context, installEvents),
+                    const SizedBox(height: 16),
                   ],
                 ),
 
@@ -296,6 +299,43 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
+  Widget _buildActivityChart(BuildContext context, List<Log> events) {
+    // Group events by day for the last 30 days
+    final now = DateTime.now();
+    final Map<int, int> dailyCounts = {};
+    for (int i = 0; i < 30; i++) {
+      dailyCounts[i] = 0;
+    }
+
+    for (var event in events) {
+      final daysAgo = now.difference(event.timestamp).inDays;
+      if (daysAgo >= 0 && daysAgo < 30) {
+        dailyCounts[daysAgo] = (dailyCounts[daysAgo] ?? 0) + 1;
+      }
+    }
+
+    final counts = List<int>.generate(30, (i) => dailyCounts[29 - i] ?? 0);
+    final maxCount = counts.isEmpty ? 0 : counts.reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      height: 100,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: CustomPaint(
+        size: Size.infinite,
+        painter: _ActivityPainter(
+          counts: counts,
+          maxCount: maxCount,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
   Widget _buildRecentHistoryList(BuildContext context, List<Log> events) {
     if (events.isEmpty) {
       return Center(
@@ -358,4 +398,81 @@ class _MetricItem {
     required this.icon,
     required this.color,
   });
+}
+
+class _ActivityPainter extends CustomPainter {
+  final List<int> counts;
+  final int maxCount;
+  final Color color;
+
+  _ActivityPainter({
+    required this.counts,
+    required this.maxCount,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (counts.isEmpty) return;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.0)],
+      ).createShader(Rect.fromLTRB(0, 0, size.width, size.height));
+
+    final path = Path();
+    final stepX = size.width / (counts.length - 1);
+    final scaleY = maxCount == 0 ? 0 : size.height / (maxCount * 1.2);
+
+    for (int i = 0; i < counts.length; i++) {
+      final x = i * stepX;
+      final y = size.height - (counts[i] * scaleY);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        // Simple cubic bezier for smoothness
+        final prevX = (i - 1) * stepX;
+        final prevY = size.height - (counts[i - 1] * scaleY);
+        path.cubicTo(
+          prevX + stepX / 2, prevY,
+          x - stepX / 2, y,
+          x, y,
+        );
+      }
+    }
+
+    // Draw fill
+    final fillPath = Path.from(path);
+    fillPath.lineTo(size.width, size.height);
+    fillPath.lineTo(0, size.height);
+    fillPath.close();
+    canvas.drawPath(fillPath, fillPaint);
+
+    // Draw line
+    canvas.drawPath(path, paint);
+
+    // Draw points for days with activity
+    final pointPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < counts.length; i++) {
+      if (counts[i] > 0) {
+        final x = i * stepX;
+        final y = size.height - (counts[i] * scaleY);
+        canvas.drawCircle(Offset(x, y), 3, pointPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

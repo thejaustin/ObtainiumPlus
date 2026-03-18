@@ -183,6 +183,11 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// Returns true if microG or Google Play Services is detected.
+  Future<bool> checkMicroGAvailability() async {
+    return await AuthService.isMicroGAvailable();
+  }
+
   /// Call after receiving a 401 from the Play Store API.
   /// Invalidates the token in the AccountManager so microG issues a fresh one,
   /// then immediately re-fetches.
