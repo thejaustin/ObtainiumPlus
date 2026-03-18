@@ -14,13 +14,13 @@ Future<List<String>?> showTagEditor({
   final settings = context.read<SettingsProvider>();
   final enableGlass = settings.plusEnableGlassmorphism;
   
+  final selectedTags = Set<String>.from(currentTags);
+  final TextEditingController _controller = TextEditingController();
+
   return showDialog<List<String>>(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (context, setSheetState) {
-        final selectedTags = Set<String>.from(currentTags);
-        final TextEditingController _controller = TextEditingController();
-        
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
