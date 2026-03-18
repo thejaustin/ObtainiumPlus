@@ -261,11 +261,11 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     const pageDecoration = PageDecoration(
-      titleTextStyle: TextStyle(fontSize: 28.0, fontWeight: FontWeight.w700),
-      bodyTextStyle: TextStyle(fontSize: 16.0),
-      bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+      titleTextStyle: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w700),
+      bodyTextStyle: TextStyle(fontSize: 14.0),
+      bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 8.0),
       pageColor: Colors.transparent,
-      imagePadding: EdgeInsets.zero,
+      imagePadding: EdgeInsets.only(top: 16.0),
     );
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -281,36 +281,36 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         PageViewModel(
           title: 'Obtainium+',
           body: 'Install and update Android apps directly from their source — GitHub, GitLab, F-Droid, and more — without an app store.',
-          image: Icon(Icons.download_for_offline, size: 100, color: colorScheme.primary),
+          image: Icon(Icons.download_for_offline, size: 80, color: colorScheme.primary),
           decoration: pageDecoration,
         ),
 
         // ── 2. Add Apps ──────────────────────────────────────────────────────
         PageViewModel(
           title: 'Add Apps',
-          image: Icon(Icons.add_circle_outline, size: 100, color: colorScheme.secondary),
+          image: Icon(Icons.add_circle_outline, size: 80, color: colorScheme.secondary),
           decoration: pageDecoration,
           bodyWidget: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Multiple ways to build your app list fast.',
+                'Build your app list fast.',
                 textAlign: TextAlign.center,
                 style: pageDecoration.bodyTextStyle,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _buildFeatureCard(
                 context,
                 icon: Icons.link_outlined,
                 title: 'Paste a URL',
-                subtitle: 'Paste any GitHub, GitLab, or other release page URL to start tracking.',
+                subtitle: 'Paste any release page URL.',
                 onTap: () => _handleFeatureTap('addByUrl'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.star_border_rounded,
                 title: 'GitHub Starred Repos',
-                subtitle: 'Import apps from your GitHub starred repositories in bulk.',
+                subtitle: 'Import starred repos in bulk.',
                 iconColor: colorScheme.tertiary,
                 onTap: () => _handleFeatureTap('githubStarred'),
               ),
@@ -318,7 +318,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 context,
                 icon: Icons.person_outline_rounded,
                 title: 'GitHub Personal Repos',
-                subtitle: 'Import from your own repos — private repos included when a token is set.',
+                subtitle: 'Import from your own repos.',
                 iconColor: colorScheme.tertiary,
                 onTap: () => _handleFeatureTap('githubPersonal'),
               ),
@@ -326,35 +326,36 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 context,
                 icon: Icons.install_mobile_outlined,
                 title: 'Import Installed Apps',
-                subtitle: 'Scan your device and start tracking apps already installed.',
+                subtitle: 'Scan your device for apps.',
                 onTap: () => _handleFeatureTap('importInstalled'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.cloud_sync_outlined,
                 title: 'Cloud Backup & Restore',
-                subtitle: 'Sync your app list and settings across devices via your cloud provider.',
+                subtitle: 'Sync app list via cloud provider.',
                 iconColor: colorScheme.secondary,
                 onTap: () => _handleFeatureTap('importExport'),
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 0),
                 child: Card(
                   color: colorScheme.secondaryContainer,
                   elevation: 0,
+                  margin: EdgeInsets.zero,
                   child: ListTile(
-                    leading: Icon(Icons.key_outlined, color: colorScheme.onSecondaryContainer),
+                    leading: Icon(Icons.key_outlined, size: 20, color: colorScheme.onSecondaryContainer),
                     title: Text(
                       'GitHub Token (optional)',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSecondaryContainer,
                       ),
                     ),
                     subtitle: Text(
-                      'Add a token in Settings → GitHub to unlock private repos and avoid rate limits.',
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSecondaryContainer),
+                      'Set in Settings to unlock private repos.',
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSecondaryContainer),
                     ),
                     dense: true,
                   ),
@@ -367,7 +368,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         // ── 3. Play Store & microG ─────────────────────────────────────────────
         PageViewModel(
           title: 'Play Store & microG',
-          image: Icon(Icons.shop_outlined, size: 100, color: colorScheme.primary),
+          image: Icon(Icons.shop_outlined, size: 80, color: colorScheme.primary),
           decoration: pageDecoration,
           bodyWidget: Consumer<AuthProvider>(
             builder: (context, auth, _) {
@@ -375,21 +376,21 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Update apps from Google Play without a Google Account using microG.',
+                    'Update apps from Google Play.',
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildFeatureCard(
                     context,
                     icon: _microGAvailable ? Icons.check_circle_outline : Icons.error_outline,
                     title: 'Status',
                     subtitle: _microGAvailable
-                        ? 'microG / GMS detected! You can link your account in Settings.'
-                        : 'microG not found. You can still use anonymous dispensers.',
+                        ? 'microG / GMS detected!'
+                        : 'microG not found. Still usable via anonymous.',
                     iconColor: _microGAvailable ? Colors.green : Colors.orange,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   _buildPermissionButton(
                     context: context,
                     icon: Icons.account_circle_outlined,
@@ -451,18 +452,18 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         // ── 4. Permissions ────────────────────────────────────────────────────
         PageViewModel(
           title: 'Permissions',
-          image: Icon(Icons.security_outlined, size: 100, color: colorScheme.tertiary),
+          image: Icon(Icons.security_outlined, size: 80, color: colorScheme.tertiary),
           decoration: pageDecoration,
           bodyWidget: Builder(
             builder: (ctx) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Grant these so Obtainium+ can install apps and check for updates in the background.',
+                  'Grant these for background updates.',
                   textAlign: TextAlign.center,
                   style: pageDecoration.bodyTextStyle,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.install_mobile_rounded,
@@ -493,18 +494,19 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 ),
                 if (_isXiaomi)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: 4),
                     child: Card(
                       color: colorScheme.tertiaryContainer,
+                      margin: EdgeInsets.zero,
                       child: ListTile(
-                        leading: Icon(Icons.info_outline, color: colorScheme.onTertiaryContainer),
+                        leading: Icon(Icons.info_outline, size: 20, color: colorScheme.onTertiaryContainer),
                         title: const Text(
                           'Xiaomi tip',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                         subtitle: const Text(
-                          'On Xiaomi, enable "Auto-start" for Obtainium+ in Security → Manage apps.',
-                          style: TextStyle(fontSize: 12),
+                          'Enable "Auto-start" in Security.',
+                          style: TextStyle(fontSize: 11),
                         ),
                         dense: true,
                       ),
@@ -518,7 +520,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         // ── 5. Stay Updated ──────────────────────────────────────────────────
         PageViewModel(
           title: 'Stay Updated',
-          image: Icon(Icons.sync_lock, size: 100, color: colorScheme.primary),
+          image: Icon(Icons.sync_lock, size: 80, color: colorScheme.primary),
           decoration: pageDecoration,
           bodyWidget: Consumer<SettingsProvider>(
             builder: (context, settings, _) {
@@ -526,22 +528,22 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Enable background checks so your apps are always up to date.',
+                    'Check for updates while closed.',
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   SwitchListTile.adaptive(
                     title: const Text(
-                      'Automatic Background Checks',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      'Background Checks',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
-                    subtitle: const Text('Check for updates while the app is closed'),
                     value: settings.updateInterval > 0,
                     onChanged: (val) => settings.updateInterval = val ? 360 : 0,
+                    dense: true,
                   ),
                   if (settings.updateInterval > 0) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Slider(
                       value: settings.updateInterval.toDouble().clamp(60, 1440),
                       min: 60,
@@ -556,6 +558,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                         style: TextStyle(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -569,72 +572,70 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         // ── 6. Quick-Add Menu ────────────────────────────────────────────────
         PageViewModel(
           title: 'Quick-Add Menu',
-          image: Icon(Icons.add_box_outlined, size: 100, color: colorScheme.secondary),
+          image: Icon(Icons.add_box_outlined, size: 80, color: colorScheme.secondary),
           decoration: pageDecoration,
           bodyWidget: Consumer<SettingsProvider>(
             builder: (context, settings, _) {
               return Column(
                 children: [
                   Text(
-                    'Choose which shortcuts appear when you tap +. Adjust anytime in Settings → Obtainium+ Features.',
+                    'Choose shortcuts for the + button.',
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Card(
                     elevation: 0,
+                    margin: EdgeInsets.zero,
                     color: colorScheme.surfaceContainerHigh,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        children: [
-                          _buildFabToggle(
-                            context,
-                            settings,
-                            icon: Icons.search_rounded,
-                            title: 'Search',
-                            subtitle: 'Quick-launch the app search',
-                            value: settings.plusFabShowSearch,
-                            onChanged: (val) => settings.plusFabShowSearch = val,
-                          ),
-                          _buildFabToggle(
-                            context,
-                            settings,
-                            icon: Icons.link_outlined,
-                            title: 'Add by URL',
-                            subtitle: 'Paste a release page URL',
-                            value: settings.plusFabShowAddByUrl,
-                            onChanged: (val) => settings.plusFabShowAddByUrl = val,
-                          ),
-                          _buildFabToggle(
-                            context,
-                            settings,
-                            icon: Icons.star_border_rounded,
-                            title: 'GitHub Starred Repos',
-                            subtitle: 'Import your starred repositories',
-                            value: settings.plusFabShowGithubStarred,
-                            onChanged: (val) => settings.plusFabShowGithubStarred = val,
-                          ),
-                          _buildFabToggle(
-                            context,
-                            settings,
-                            icon: Icons.person_outline_rounded,
-                            title: 'GitHub Personal Repos',
-                            subtitle: 'Import your own repositories',
-                            value: settings.plusFabShowGithubPersonalRepos,
-                            onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
-                          ),
-                          _buildFabToggle(
-                            context,
-                            settings,
-                            icon: Icons.install_mobile_outlined,
-                            title: 'Import Installed Apps',
-                            subtitle: 'Scan device for installed apps',
-                            value: settings.plusFabShowImportInstalled,
-                            onChanged: (val) => settings.plusFabShowImportInstalled = val,
-                          ),
-                        ],
-                      ),
+                    child: Column(
+                      children: [
+                        _buildFabToggle(
+                          context,
+                          settings,
+                          icon: Icons.search_rounded,
+                          title: 'Search',
+                          subtitle: 'Quick-launch search',
+                          value: settings.plusFabShowSearch,
+                          onChanged: (val) => settings.plusFabShowSearch = val,
+                        ),
+                        _buildFabToggle(
+                          context,
+                          settings,
+                          icon: Icons.link_outlined,
+                          title: 'Add by URL',
+                          subtitle: 'Paste release URL',
+                          value: settings.plusFabShowAddByUrl,
+                          onChanged: (val) => settings.plusFabShowAddByUrl = val,
+                        ),
+                        _buildFabToggle(
+                          context,
+                          settings,
+                          icon: Icons.star_border_rounded,
+                          title: 'GitHub Starred',
+                          subtitle: 'Import starred repos',
+                          value: settings.plusFabShowGithubStarred,
+                          onChanged: (val) => settings.plusFabShowGithubStarred = val,
+                        ),
+                        _buildFabToggle(
+                          context,
+                          settings,
+                          icon: Icons.person_outline_rounded,
+                          title: 'GitHub Personal',
+                          subtitle: 'Import own repos',
+                          value: settings.plusFabShowGithubPersonalRepos,
+                          onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
+                        ),
+                        _buildFabToggle(
+                          context,
+                          settings,
+                          icon: Icons.install_mobile_outlined,
+                          title: 'Import Installed',
+                          subtitle: 'Scan device',
+                          value: settings.plusFabShowImportInstalled,
+                          onChanged: (val) => settings.plusFabShowImportInstalled = val,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -646,45 +647,53 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         // ── 7. Personalize ───────────────────────────────────────────────────
         PageViewModel(
           title: 'Personalize',
-          image: Icon(Icons.auto_awesome_outlined, size: 100, color: colorScheme.tertiary),
+          image: Icon(Icons.auto_awesome_outlined, size: 80, color: colorScheme.tertiary),
           decoration: pageDecoration,
-          bodyWidget: Column(
-            children: [
-              Text(
-                'Obtainium+ adds visual polish and one-handed shortcuts. All toggleable in Settings → Obtainium+ Features.',
-                textAlign: TextAlign.center,
-                style: pageDecoration.bodyTextStyle,
-              ),
-              const SizedBox(height: 16),
-              _buildFeatureCard(
-                context,
-                icon: Icons.blur_on_outlined,
-                title: 'Glassmorphism',
-                subtitle: 'Frosted-glass nav bars, sheets, and menus.',
-                iconColor: colorScheme.secondary,
-              ),
-              _buildFeatureCard(
-                context,
-                icon: Icons.back_hand_outlined,
-                title: 'Quick Filters',
-                subtitle: 'One-handed filter strip pinned at the bottom of your app list.',
-                iconColor: colorScheme.secondary,
-              ),
-              _buildFeatureCard(
-                context,
-                icon: Icons.grid_view_outlined,
-                title: 'Grid View',
-                subtitle: 'Switch between list and grid layouts.',
-                iconColor: colorScheme.secondary,
-              ),
-              _buildFeatureCard(
-                context,
-                icon: Icons.swipe_outlined,
-                title: 'Swipe Actions',
-                subtitle: 'Swipe app tiles to quickly update or open them.',
-                iconColor: colorScheme.secondary,
-              ),
-            ],
+          bodyWidget: Consumer<SettingsProvider>(
+            builder: (context, settings, _) {
+              return Column(
+                children: [
+                  Text(
+                    'Visual polish and shortcuts.',
+                    textAlign: TextAlign.center,
+                    style: pageDecoration.bodyTextStyle,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.blur_on_outlined,
+                    title: 'Glassmorphism',
+                    subtitle: 'Frosted-glass nav bars and menus.',
+                    iconColor: colorScheme.secondary,
+                    onTap: () => settings.useGlassmorphism = !settings.useGlassmorphism,
+                  ),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.back_hand_outlined,
+                    title: 'Quick Filters',
+                    subtitle: 'One-handed filter strip at bottom.',
+                    iconColor: colorScheme.secondary,
+                    onTap: () => settings.showQuickFilterStrip = !settings.showQuickFilterStrip,
+                  ),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.grid_view_outlined,
+                    title: 'Grid View',
+                    subtitle: 'Switch between list and grid.',
+                    iconColor: colorScheme.secondary,
+                    onTap: () => settings.useGridView = !settings.useGridView,
+                  ),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.swipe_outlined,
+                    title: 'Swipe Actions',
+                    subtitle: 'Quickly update or open apps.',
+                    iconColor: colorScheme.secondary,
+                    onTap: () => settings.enableSwipeActions = !settings.enableSwipeActions,
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ],
