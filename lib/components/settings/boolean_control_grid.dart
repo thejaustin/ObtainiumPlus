@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 /// Control Grid for Boolean Settings
 /// Displays boolean settings in a compact 2-column grid layout
@@ -48,13 +49,11 @@ class BooleanControlGrid extends StatelessWidget {
                     alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1
                   ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: AppShadows.smooth(
+                  color: Theme.of(context).colorScheme.shadow,
+                  opacity: 0.08,
+                  blurFactor: settings.plusEnableGlassmorphism ? 1.2 : 1.0,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

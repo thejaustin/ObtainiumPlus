@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/known_issues_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -55,19 +56,11 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                 ? colorScheme.onSurface.withValues(alpha: 0.18)
                 : colorScheme.outline.withValues(alpha: 0.1),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.28 : 0.1),
-              blurRadius: enableGlass ? 32 : 10,
-              spreadRadius: -2,
-            ),
-            if (enableGlass)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-          ],
+          boxShadow: AppShadows.smooth(
+            color: Colors.black,
+            opacity: enableGlass ? 0.28 : 0.1,
+            blurFactor: enableGlass ? 1.5 : 1.0,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),

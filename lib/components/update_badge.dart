@@ -53,13 +53,10 @@ class _UpdateBadgeState extends State<UpdateBadge> with SingleTickerProviderStat
                 color: Theme.of(context).colorScheme.surface,
                 width: 2,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                  blurRadius: 4 * _pulseAnimation.value,
-                  spreadRadius: 1,
-                ),
-              ],
+              boxShadow: AppShadows.glow(
+                color: Theme.of(context).colorScheme.primary,
+                intensity: (_pulseAnimation.value - 1.0) * 2,
+              ),
             ),
           ),
         );

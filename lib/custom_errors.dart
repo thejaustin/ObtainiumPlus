@@ -13,6 +13,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -425,13 +426,11 @@ class _GlassErrorDialog extends StatelessWidget {
             color: colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
-              blurRadius: enableGlass ? 20 : 10,
-              spreadRadius: enableGlass ? 0 : -5,
-            ),
-          ],
+          boxShadow: AppShadows.smooth(
+            color: Colors.black,
+            opacity: enableGlass ? 0.2 : 0.1,
+            blurFactor: enableGlass ? 1.5 : 1.0,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
