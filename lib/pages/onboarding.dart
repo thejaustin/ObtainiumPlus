@@ -9,6 +9,9 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 
+import 'package:obtainium/providers/auth_provider.dart';
+import 'package:obtainium/services/auth_service.dart';
+
 class OnboardingPage extends StatefulWidget {
   final VoidCallback onDone;
 
@@ -22,6 +25,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final introKey = GlobalKey<IntroductionScreenState>();
   bool _isSamsung = false;
   bool _isXiaomi = false;
+  bool _microGAvailable = false;
 
   bool _addObtainiumPlus = true;
 
@@ -34,9 +38,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Future<void> _checkDevice() async {
     final info = await DeviceInfoPlugin().androidInfo;
     final manufacturer = info.manufacturer.toLowerCase();
+    final microG = await AuthService.isMicroGAvailable();
     setState(() {
       _isSamsung = manufacturer.contains('samsung');
       _isXiaomi = ['xiaomi', 'redmi', 'poco'].any((x) => manufacturer.contains(x));
+      _microGAvailable = microG;
     });
   }
 
@@ -238,6 +244,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 title: 'Import Installed Apps',
                 subtitle: 'Scan your device and start tracking apps already installed.',
               ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.cloud_sync_outlined,
+                title: 'Cloud Backup & Restore',
+                subtitle: 'Sync your app list and settings across devices via your cloud provider.',
+                iconColor: colorScheme.secondary,
+              ),
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Card(
@@ -265,7 +278,59 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
         ),
 
-        // ── 3. Permissions ────────────────────────────────────────────────────
+        // ── 3. Play Store & microG ─────────────────────────────────────────────
+        PageViewModel(
+          title: 'Play Store & microG',
+          body: 'Update apps from Google Play without a Google Account using microG.',
+          image: Icon(Icons.shop_outlined, size: 100, color: colorScheme.primary),
+          decoration: pageDecoration,
+          footer: Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildFeatureCard(
+                    context,
+                    icon: _microGAvailable ? Icons.check_circle_outline : Icons.error_outline,
+                    title: 'Status',
+                    subtitle: _microGAvailable 
+                        ? 'microG / GMS detected! You can link your account in Settings.' 
+                        : 'microG not found. You can still use anonymous dispensers.',
+                    iconColor: _microGAvailable ? Colors.green : Colors.orange,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPermissionButton(
+                    context: context,
+                    icon: Icons.account_circle_outlined,
+                    label: 'Sign in via microG',
+                    onPressed: () async {
+                      try {
+                        final email = await AuthService.pickGoogleAccount();
+                        if (email != null) {
+                          await auth.setMicroGEmail(email);
+                          await auth.refreshMicroGToken();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Linked to $email')),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.toString())),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+
+        // ── 4. Permissions ────────────────────────────────────────────────────
         PageViewModel(
           title: 'Permissions',
           body: 'Grant these so Obtainium+ can install apps and check for updates in the background.',

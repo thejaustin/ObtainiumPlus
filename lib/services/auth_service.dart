@@ -83,6 +83,20 @@ class AuthService {
     }
   }
 
+  /// Returns true if microG (or Google Play Services) is installed and accessible.
+  static Future<bool> isMicroGAvailable() async {
+    try {
+      // If we can open the account picker, microG/GMS is available
+      final accounts = await _platform.invokeMethod<String>('pickGoogleAccount');
+      return accounts != null || true; // If it didn't throw a "not found" error, it's there
+    } on PlatformException catch (e) {
+      if (e.code == 'CANCELLED' || e.code == 'IN_PROGRESS') return true;
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Requests a Play Store auth token for a specific microG account via microG.
   ///
   /// Throws [ObtainiumError] with an actionable message on failure so the UI
