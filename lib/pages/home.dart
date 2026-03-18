@@ -400,9 +400,6 @@ class HomePageState extends State<HomePage> {
     if (!activePages.any((p) => p.id == 'apps')) {
       activePages.insert(0, allPages['apps']!);
     }
-    if (!activePages.any((p) => p.id == 'settings')) {
-      activePages.add(allPages['settings']!);
-    }
 
     int currentIndex = selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
     if (currentIndex >= activePages.length) {
@@ -465,7 +462,7 @@ class HomePageState extends State<HomePage> {
             physics: const NeverScrollableScrollPhysics(),
             children: activePages.map((p) => p.widget).toList(),
           ),
-          bottomNavigationBar: EditableNavigationBar(
+          bottomNavigationBar: activePages.length > 1 ? EditableNavigationBar(
             activePages: activePages,
             allPages: allPages,
             selectedIndex: currentIndex,
@@ -516,7 +513,7 @@ class HomePageState extends State<HomePage> {
               viewSettings.bottomTabs = tabs;
             },
             labelBehavior: viewSettings.navigationLabelBehavior,
-          ),
+          ) : null,
         ),
       ),
     );

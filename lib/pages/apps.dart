@@ -137,6 +137,61 @@ class AppsPageState extends State<AppsPage> {
     appsProvider.precacheIcons(appIdsToCache);
   }
 
+  void _applyFilterMode(String mode) {
+    setState(() {
+      filter.statusFilter.clear();
+      if (mode != 'all') {
+        filter.statusFilter.add(mode);
+      }
+    });
+  }
+
+  String _getCurrentFilterMode() {
+    if (filter.statusFilter.contains('updates')) return 'updates';
+    if (filter.statusFilter.contains('trackonly')) return 'trackonly';
+    if (filter.statusFilter.contains('installed')) return 'installed';
+    return 'all';
+  }
+
+  Widget _buildPillSlider(BuildContext context, AppsProvider appsProvider) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: SegmentedButton<String>(
+          segments: [
+            ButtonSegment(
+              value: 'all', 
+              label: Text(tr('all')),
+              icon: const Icon(Icons.apps_rounded, size: 18),
+            ),
+            ButtonSegment(
+              value: 'updates', 
+              label: Text(tr('updates')),
+              icon: const Icon(Icons.update_rounded, size: 18),
+            ),
+            ButtonSegment(
+              value: 'installed', 
+              label: Text(tr('installed')),
+              icon: const Icon(Icons.install_mobile_rounded, size: 18),
+            ),
+          ],
+          selected: { _getCurrentFilterMode() },
+          onSelectionChanged: (Set<String> selection) {
+            HapticFeedback.selectionClick();
+            _applyFilterMode(selection.first);
+          },
+          showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            selectedForegroundColor: colorScheme.onSecondaryContainer,
+            selectedBackgroundColor: colorScheme.secondaryContainer,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
@@ -391,7 +446,7 @@ class AppsPageState extends State<AppsPage> {
       body: Stack(
         children: [
           _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
-          if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty)
+          if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty && !settingsProvider.plusTopUILayout)
             Positioned(
               left: 16,
               bottom: 16,
@@ -415,6 +470,7 @@ class AppsPageState extends State<AppsPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
+                if (selectedAppIds.isEmpty) _buildPillSlider(context, appsProvider),
                 ..._buildLoadingOverlay(appsProvider),
                 _buildContent(context, viewSettings, listedApps, listedCategories),
                 // Bottom padding to prevent FAB / quick-filter strip from
@@ -602,50 +658,66 @@ class AppsPageState extends State<AppsPage> {
     ViewSettingsProvider viewSettings,
     bool isFilterOff,
   ) {
+    final settings = context.read<SettingsProvider>();
+    final showTopActions = settings.plusTopUILayout || !settings.plusEnableQuickFilters;
+
     return [
-      IconButton(
-        icon: Icon(isFilterOff
-            ? Icons.search_rounded
-            : Icons.search_off_rounded),
-        onPressed: () {
-          if (isFilterOff) {
-            CommandCenter.show(context);
-          } else {
-            setState(() => filter = AppsFilter());
-          }
-        },
-        tooltip: isFilterOff ? tr('search') : tr('clear'),
-      ),
-      Stack(
-        alignment: Alignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.tune),
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              SortFilterPanel.show(
-                context,
-                filter: filter,
-                onFilterChanged: () => setState(() {}),
-                categories: viewSettings.categories,
-              );
-            },
-            tooltip: tr('sortOptions'),
-          ),
-          if (!isFilterOff)
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.error,
-                  shape: BoxShape.circle,
+      if (showTopActions) ...[
+        IconButton(
+          icon: Icon(isFilterOff
+              ? Icons.search_rounded
+              : Icons.search_off_rounded),
+          onPressed: () {
+            if (isFilterOff) {
+              CommandCenter.show(context);
+            } else {
+              setState(() => filter = AppsFilter());
+            }
+          },
+          tooltip: isFilterOff ? tr('search') : tr('clear'),
+        ),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.tune),
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                SortFilterPanel.show(
+                  context,
+                  filter: filter,
+                  onFilterChanged: () => setState(() {}),
+                  categories: viewSettings.categories,
+                );
+              },
+              tooltip: tr('sortOptions'),
+            ),
+            if (!isFilterOff)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.error,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
+      ],
+      IconButton(
+        icon: const Icon(Icons.settings_outlined),
+        onPressed: () {
+          HapticFeedback.selectionClick();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SettingsPage()),
+          );
+        },
+        tooltip: tr('settings'),
       ),
     ];
   }

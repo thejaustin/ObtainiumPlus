@@ -797,6 +797,8 @@
     "beforeNewInstallsShareToAppVerifierDescription": "Analyze APKs with AppVerifier before installation",
     "plusPopupSlider": "Popup description slider",
     "plusPopupSliderDescription": "Floating description panel with smooth gestures",
+    "plusTopUILayout": "Top UI Layout",
+    "plusTopUILayoutDescription": "Move Search, Filter, and Settings to the top AppBar. Disables the bottom quick action strip.",
     "advancedTheming": "Advanced & Experimental Theming",
     "advancedThemingDescription": "Configure granular visual and motion parameters",
     "glassmorphismUI": "Glassmorphism effects",
