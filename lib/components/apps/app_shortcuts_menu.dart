@@ -2,8 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
+import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -14,57 +16,145 @@ void showAppShortcutsMenu(
   required String appUrl,
   required VoidCallback onToggleSelected,
 }) {
+  final appsProvider = context.read<AppsProvider>();
+  final appInMemory = appsProvider.apps[appId];
+  if (appInMemory == null) return;
+
   HapticFeedback.heavyImpact();
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const DragHandle(margin: EdgeInsets.only(top: 8, bottom: 8)),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: Text(tr('editAppSettings')),
-            onTap: () {
-              Navigator.pop(ctx);
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                useSafeArea: true,
-                builder: (context) => AppPage(appId: appId, isModal: true),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.refresh_outlined),
-            title: Text(tr('forceUpdate')),
-            onTap: () {
-              Navigator.pop(ctx);
-              context
-                  .read<AppsProvider>()
-                  .downloadAndInstallLatestApps([appId], context, useExisting: false);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.share_outlined),
-            title: Text(tr('share')),
-            onTap: () {
-              Navigator.pop(ctx);
-              Share.share(appUrl);
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.select_all_outlined),
-            title: Text(tr('select')),
-            onTap: () {
-              Navigator.pop(ctx);
-              onToggleSelected();
-            },
-          ),
-        ],
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const DragHandle(margin: EdgeInsets.only(top: 8, bottom: 8)),
+            
+            // Header with App Name
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                appInMemory.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.launch_outlined),
+              title: Text(tr('launch')),
+              onTap: () {
+                Navigator.pop(ctx);
+                AppInstallService.openApp(appId);
+              },
+            ),
+            
+            ListTile(
+              leading: const Icon(Icons.system_update_outlined),
+              title: Text(tr('update')),
+              enabled: appInMemory.app.installedVersion != appInMemory.app.latestVersion,
+              onTap: () {
+                Navigator.pop(ctx);
+                appsProvider.downloadAndInstallLatestApps([appId], context);
+              },
+            ),
+
+            ListTile(
+              leading: Icon(appInMemory.app.pinned ? Icons.push_pin_outlined : Icons.push_pin),
+              title: Text(appInMemory.app.pinned ? tr('unpin') : tr('pin')),
+              onTap: () {
+                Navigator.pop(ctx);
+                appInMemory.app.pinned = !appInMemory.app.pinned;
+                appsProvider.saveApps([appInMemory.app]);
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: Text(tr('categorize')),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final newCategories = await showDialog<Set<String>>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(tr('categorize')),
+                    content: SizedBox(
+                      width: double.maxFinite,
+                      child: SingleChildScrollView(
+                        child: CategoryEditorSelector(
+                          alignment: WrapAlignment.start,
+                          preselected: appInMemory.app.categories.toSet(),
+                          onSelected: (categories) => Navigator.pop(ctx, categories),
+                        ),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('cancel'))),
+                    ],
+                  ),
+                );
+                if (newCategories != null) {
+                  appInMemory.app.categories = newCategories.toList();
+                  appsProvider.saveApps([appInMemory.app]);
+                }
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: Text(tr('editAppSettings')),
+              onTap: () {
+                Navigator.pop(ctx);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (context) => AppPage(appId: appId, isModal: true),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: Text(tr('share')),
+              onTap: () {
+                Navigator.pop(ctx);
+                Share.share(appUrl);
+              },
+            ),
+
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.select_all_outlined),
+              title: Text(tr('select')),
+              onTap: () {
+                Navigator.pop(ctx);
+                onToggleSelected();
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: Text(tr('remove'), style: const TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(ctx);
+                appsProvider.removeAppsWithModal(context, [appInMemory.app]);
+              },
+            ),
+          ],
+        ),
       ),
     ),
   );

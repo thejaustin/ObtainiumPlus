@@ -7,6 +7,7 @@ class AppsFilter {
   bool includeUptodate = true;
   bool includeNonInstalled = true;
   Set<String> categoryFilter = {};
+  Set<String> tagFilter = {}; // Added tag filtering
   Set<String> statusFilter = {};
   String sourceFilter = '';
 
@@ -25,6 +26,8 @@ class AppsFilter {
   bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
       authorFilter == other.authorFilter && nameFilter == other.nameFilter && idFilter == other.idFilter &&
       includeUptodate == other.includeUptodate && includeNonInstalled == other.includeNonInstalled &&
-      settingsProvider.setEqual(categoryFilter, other.categoryFilter) && sourceFilter == other.sourceFilter &&
+      settingsProvider.setEqual(categoryFilter, other.categoryFilter) &&
+      settingsProvider.setEqual(tagFilter, other.tagFilter) && // Check tag filter
+      sourceFilter == other.sourceFilter &&
       settingsProvider.setEqual(statusFilter, other.statusFilter);
 }

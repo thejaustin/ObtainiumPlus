@@ -148,6 +148,10 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                       const SizedBox(height: 20),
                     ],
 
+                    // Tag filter section
+                    _buildAnimatedSection(3, _buildTagSection(theme)),
+                    const SizedBox(height: 20),
+
                     // Advanced filters section
                     _buildAnimatedSection(4, _buildAdvancedSection(sourceProvider, theme)),
                   ],
@@ -338,6 +342,45 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                     selectedCats.add(cat);
                   } else {
                     selectedCats.remove(cat);
+                  }
+                });
+                widget.onFilterChanged();
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTagSection(ThemeData theme) {
+    final appsProvider = context.read<AppsProvider>();
+    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    allTags.sort();
+    
+    final selectedTags = widget.filter.tagFilter;
+
+    if (allTags.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(tr('tags'), theme),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: allTags.map((tag) {
+            final selected = selectedTags.contains(tag);
+            return FilterChip(
+              label: Text(tag),
+              selected: selected,
+              onSelected: (val) {
+                HapticFeedback.selectionClick();
+                setState(() {
+                  if (val) {
+                    selectedTags.add(tag);
+                  } else {
+                    selectedTags.remove(tag);
                   }
                 });
                 widget.onFilterChanged();

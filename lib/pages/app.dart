@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_description_slider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
@@ -366,6 +367,18 @@ class _AppPageState extends State<AppPage> {
                                       ),
                                     ],
                                   ),
+
+                                  // 3.5 Tags Group
+                                  if (app != null)
+                                    ExpressiveSettingsGroup(
+                                      title: tr('tags'),
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: _buildTagsSection(context, app, appsProvider),
+                                        ),
+                                      ],
+                                    ),
 
                                   // 4. About Group
                                   if (app?.app.additionalSettings['about'] != null && app!.app.additionalSettings['about'].toString().isNotEmpty)
@@ -741,6 +754,78 @@ class _AppPageState extends State<AppPage> {
             }
           },
         ),
+      ],
+    );
+  }
+
+  Widget _buildTagsSection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+    if (app == null) return const SizedBox.shrink();
+    
+    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    allTags.sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Text(tr('tags'), style: Theme.of(context).textTheme.titleSmall),
+        ),
+        if (app.app.tags.isEmpty)
+          OutlinedButton.icon(
+            onPressed: () async {
+              final newTags = await showTagEditor(
+                context: context,
+                currentTags: app.app.tags,
+                allTags: allTags,
+              );
+              if (newTags != null) {
+                app.app.tags = newTags;
+                appsProvider.saveApps([app.app]);
+              }
+            },
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(tr('addTags')),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...app.app.tags.map((tag) => ActionChip(
+                label: Text(tag),
+                onPressed: () async {
+                  final newTags = await showTagEditor(
+                    context: context,
+                    currentTags: app.app.tags,
+                    allTags: allTags,
+                  );
+                  if (newTags != null) {
+                    app.app.tags = newTags;
+                    appsProvider.saveApps([app.app]);
+                  }
+                },
+              )),
+              ActionChip(
+                avatar: const Icon(Icons.add_rounded, size: 16),
+                label: Text(tr('add')),
+                onPressed: () async {
+                  final newTags = await showTagEditor(
+                    context: context,
+                    currentTags: app.app.tags,
+                    allTags: allTags,
+                  );
+                  if (newTags != null) {
+                    app.app.tags = newTags;
+                    appsProvider.saveApps([app.app]);
+                  }
+                },
+              ),
+            ],
+          ),
       ],
     );
   }

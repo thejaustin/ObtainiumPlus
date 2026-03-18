@@ -180,6 +180,8 @@ void main() async {
         await np.initialize();
         FlutterForegroundTask.initCommunicationPort();
 
+        BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
+
         // Zone guard catches unhandled async errors that escape the widget tree
         // (mirrors hexodus's zone-level error boundary pattern)
         runZonedGuarded(
@@ -228,7 +230,6 @@ void main() async {
             });
           },
         );
-        BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
       } catch (e, stackTrace) {
         talker.handle(e, stackTrace, 'Main Catch Error');
         final sentryId = await Sentry.captureException(e, stackTrace: stackTrace);
