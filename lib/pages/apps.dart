@@ -742,13 +742,11 @@ class AppsPageState extends State<AppsPage> {
               ? colorScheme.onSurface.withValues(alpha: 0.15)
               : colorScheme.outline.withValues(alpha: 0.2),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: enableGlass ? 0.22 : 0.12),
-            blurRadius: enableGlass ? 24 : 8,
-            spreadRadius: -2,
-          ),
-        ],
+        boxShadow: AppShadows.smooth(
+          color: Colors.black,
+          opacity: enableGlass ? 0.22 : 0.12,
+          blurFactor: enableGlass ? 1.5 : 1.0,
+        ),
       ),
       child: Row(
             mainAxisSize: MainAxisSize.min,

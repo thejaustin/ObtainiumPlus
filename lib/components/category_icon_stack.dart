@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'dart:typed_data';
 
 class CategoryIconStack extends StatelessWidget {
@@ -49,13 +50,11 @@ class CategoryIconStack extends StatelessWidget {
                   color: Theme.of(context).colorScheme.surface,
                   width: 2,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: AppShadows.smooth(
+                  color: Colors.black,
+                  opacity: 0.1,
+                  blurFactor: 0.5,
+                ),
               ),
               child: ClipOval(
                 child: Image.memory(

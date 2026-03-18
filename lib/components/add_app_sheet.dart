@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
 /// Shows the modern "Add App" bottom sheet with glassmorphism.
@@ -57,13 +58,11 @@ Future<T?> showAddAppSheet<T>({
                       : Colors.transparent,
                 ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: enableGlass ? 0.28 : 0.15),
-                  blurRadius: enableGlass ? 32 : 15,
-                  spreadRadius: enableGlass ? -2 : -5,
-                ),
-              ],
+              boxShadow: AppShadows.smooth(
+                color: Colors.black,
+                opacity: enableGlass ? 0.28 : 0.15,
+                blurFactor: enableGlass ? 1.5 : 1.0,
+              ),
             ),
             child: _AddAppSheetContent(
               initialUrl: initialUrl,
@@ -292,13 +291,10 @@ class _QuickAddButtonState extends State<QuickAddButton>
               borderRadius: BorderRadius.circular(16),
               boxShadow: widget.loading
                   ? null
-                  : [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        spreadRadius: -2,
-                      ),
-                    ],
+                  : AppShadows.glow(
+                      color: Theme.of(context).colorScheme.primary,
+                      intensity: 0.6,
+                    ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

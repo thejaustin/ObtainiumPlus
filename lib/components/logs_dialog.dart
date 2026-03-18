@@ -7,6 +7,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -84,19 +85,11 @@ $logs''';
                 : colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.28 : 0.1),
-              blurRadius: enableGlass ? 32 : 10,
-              spreadRadius: enableGlass ? -2 : -5,
-            ),
-            if (enableGlass)
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-          ],
+          boxShadow: AppShadows.smooth(
+            color: Colors.black,
+            opacity: enableGlass ? 0.28 : 0.1,
+            blurFactor: enableGlass ? 1.5 : 1.0,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),

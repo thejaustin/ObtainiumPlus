@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -117,13 +118,11 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                         color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                         width: 1,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: AppShadows.smooth(
+                        color: Colors.black,
+                        opacity: settings.plusEnableGlassmorphism ? 0.2 : 0.1,
+                        blurFactor: settings.plusEnableGlassmorphism ? 1.2 : 1.0,
+                      ),
                     ),
                     child: Material(
                       color: Colors.transparent,

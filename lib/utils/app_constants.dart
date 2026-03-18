@@ -106,3 +106,56 @@ class AppOpacity {
   /// Muted secondary text (0.65)
   static const double muted = 0.65;
 }
+
+/// Centralised shadow configurations.
+/// Uses layered shadows for a "smoother" look.
+class AppShadows {
+  AppShadows._();
+
+  /// A smooth, multi-layered shadow for glassmorphic elements or "glowing" cards.
+  static List<BoxShadow> smooth({
+    required Color color,
+    double opacity = 0.15,
+    double blurFactor = 1.0,
+  }) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: opacity * 0.4),
+        blurRadius: 24 * blurFactor,
+        spreadRadius: -2,
+        offset: const Offset(0, 8),
+      ),
+      BoxShadow(
+        color: color.withValues(alpha: opacity * 0.6),
+        blurRadius: 12 * blurFactor,
+        spreadRadius: -1,
+        offset: const Offset(0, 4),
+      ),
+      BoxShadow(
+        color: color.withValues(alpha: opacity),
+        blurRadius: 4 * blurFactor,
+        spreadRadius: 0,
+        offset: const Offset(0, 1),
+      ),
+    ];
+  }
+
+  /// A diffuse glow effect for selected or highlighted items.
+  static List<BoxShadow> glow({
+    required Color color,
+    double intensity = 1.0,
+  }) {
+    return [
+      BoxShadow(
+        color: color.withValues(alpha: 0.2 * intensity),
+        blurRadius: 20,
+        spreadRadius: 2,
+      ),
+      BoxShadow(
+        color: color.withValues(alpha: 0.1 * intensity),
+        blurRadius: 40,
+        spreadRadius: 4,
+      ),
+    ];
+  }
+}

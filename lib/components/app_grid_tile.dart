@@ -106,9 +106,15 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
           child: AnimatedContainer(
             duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? AppConstants.shortAnimationMs : 200),
             curve: settingsProvider.plusEnableEnhancedAnimations ? Curves.easeOutCubic : Curves.easeInOut,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(cardBorderRadius),
+              boxShadow: widget.isSelected 
+                  ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
+                  : null,
+            ),
             child: Card(
-              elevation: widget.isSelected ? 8 : 1,
-              shadowColor: widget.isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3) : null,
+              elevation: widget.isSelected ? 0 : 1,
+              shadowColor: Colors.transparent,
               surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
               color: widget.isSelected
                   ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4)
@@ -194,13 +200,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                                       color: Theme.of(context).colorScheme.surface,
                                       width: 2,
                                     ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                                        blurRadius: 4 * _pulseAnimation.value,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
+                                    boxShadow: AppShadows.glow(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      intensity: (_pulseAnimation.value - 1.0) * 2,
+                                    ),
                                   ),
                                 ),
                               );

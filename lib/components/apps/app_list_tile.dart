@@ -9,6 +9,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -340,13 +341,7 @@ class AppListTile extends StatelessWidget {
                 width: isSelected || appInMemory.app.pinned ? 1.5 : 0,
               ),
               boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
+                  ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.5)
                   : null,
             ),
             child: ClipRRect(

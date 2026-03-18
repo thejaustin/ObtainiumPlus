@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
 /// Shows a dialog when user enters an unsupported URL,
@@ -38,17 +39,14 @@ Future<void> showUnsupportedSourceDialog({
           border: Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
             width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
-              blurRadius: enableGlass ? 20 : 10,
-              spreadRadius: enableGlass ? 0 : -5,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+            boxShadow: AppShadows.smooth(
+            color: Colors.black,
+            opacity: enableGlass ? 0.2 : 0.1,
+            blurFactor: enableGlass ? 1.5 : 1.0,
+            ),
+            ),
+            child: ClipRRect(          borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
             filter: ImageFilter.blur(
               sigmaX: enableGlass ? 15 : 0,

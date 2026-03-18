@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
 class EditableNavigationBar extends StatefulWidget {
@@ -130,13 +131,11 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.shadow.withValues(alpha: 0.1),
-                    blurRadius: 3,
-                    offset: const Offset(0, -1),
-                  ),
-                ],
+                boxShadow: AppShadows.smooth(
+                  color: colorScheme.shadow,
+                  opacity: 0.08,
+                  blurFactor: 0.8,
+                ),
                 border: widget.isEditMode
                     ? Border(
                         top: BorderSide(
