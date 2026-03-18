@@ -84,17 +84,22 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
   }
 
   Future<void> _requestNotificationPermission() async {
-    if (await Permission.notification.isDenied) {
+    final status = await Permission.notification.status;
+    if (status.isDenied || status.isLimited) {
       await Permission.notification.request();
-      await _checkPermissions();
+    } else if (status.isPermanentlyDenied) {
+      // If permanently denied, request() won't show anything.
+      // We could optionally show a snackbar or open settings,
+      // but the user wants dialogs/popups where possible.
+      await openAppSettings();
     }
+    await _checkPermissions();
   }
 
   Future<void> _requestInstallPermission() async {
-    if (await Permission.requestInstallPackages.isDenied) {
-      await Permission.requestInstallPackages.request();
-      await _checkPermissions();
-    }
+    // Android doesn't allow a popup for this; it MUST go to settings.
+    await AppInstallService.openInstallUnknownAppsSettings(obtainiumId);
+    // Re-check will happen when the user returns to the app
   }
 
   Future<void> _openUsageAccess() async {
@@ -453,7 +458,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.install_mobile_rounded,
-                  label: 'Allow Installing Apps',
+                  label: 'Allow Installing Apps (Settings)',
                   onPressed: _requestInstallPermission,
                   isGranted: _installGranted,
                 ),
@@ -474,7 +479,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.track_changes_outlined,
-                  label: 'Allow Usage Access',
+                  label: 'Allow Usage Access (Settings)',
                   onPressed: _openUsageAccess,
                   isGranted: _usageGranted,
                 ),
