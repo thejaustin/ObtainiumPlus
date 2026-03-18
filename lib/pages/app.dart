@@ -338,7 +338,7 @@ class _AppPageState extends State<AppPage> {
                                           decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
                                           child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                                         ),
-                                        title: const Text('App ID', style: TextStyle(fontWeight: FontWeight.bold)),
+                                        title: Text(tr('appId'), style: const TextStyle(fontWeight: FontWeight.bold)),
                                         subtitle: Text(app?.app.id ?? ''),
                                         onTap: () {
                                           Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
@@ -1420,7 +1420,7 @@ class _AppBottomBar extends StatelessWidget {
                         items: [
                           DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
                           DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
-                          DropdownMenuItem(value: 'aurora', child: const Text('Aurora Store')),
+                          DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
                         ],
                       ),
                     ],

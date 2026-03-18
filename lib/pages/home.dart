@@ -155,14 +155,12 @@ class HomePageState extends State<HomePage> {
           ScaffoldMessenger.of(context).showMaterialBanner(
             MaterialBanner(
               leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-              content: const Text(
-                'A crash was detected in your last session. Follow the issue on GitHub to be notified when it\'s fixed.',
-              ),
+              content: Text(tr('crashDetectedFollowOnGitHub')),
               actions: [
                 TextButton(
                   onPressed: () =>
                       ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                  child: const Text('Dismiss'),
+                  child: Text(tr('dismiss')),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -174,7 +172,7 @@ class HomePageState extends State<HomePage> {
                       );
                     } catch (_) {}
                   },
-                  child: const Text('Follow Issue'),
+                  child: Text(tr('followIssue')),
                 ),
               ],
             ),

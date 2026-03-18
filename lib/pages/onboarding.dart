@@ -294,7 +294,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Build your app list fast.',
+                tr('onboardingAddAppsSubtitle'),
                 textAlign: TextAlign.center,
                 style: pageDecoration.bodyTextStyle,
               ),
@@ -302,38 +302,38 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
               _buildFeatureCard(
                 context,
                 icon: Icons.link_outlined,
-                title: 'Paste a URL',
-                subtitle: 'Paste any release page URL.',
+                title: tr('addAppByUrl'),
+                subtitle: tr('onboardingPasteUrlSubtitle'),
                 onTap: () => _handleFeatureTap('addByUrl'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.star_border_rounded,
-                title: 'GitHub Starred Repos',
-                subtitle: 'Import starred repos in bulk.',
+                title: tr('githubStarredRepos'),
+                subtitle: tr('onboardingStarredReposSubtitle'),
                 iconColor: colorScheme.tertiary,
                 onTap: () => _handleFeatureTap('githubStarred'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.person_outline_rounded,
-                title: 'GitHub Personal Repos',
-                subtitle: 'Import from your own repos.',
+                title: tr('githubPersonalRepos'),
+                subtitle: tr('onboardingPersonalReposSubtitle'),
                 iconColor: colorScheme.tertiary,
                 onTap: () => _handleFeatureTap('githubPersonal'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.install_mobile_outlined,
-                title: 'Import Installed Apps',
-                subtitle: 'Scan your device for apps.',
+                title: tr('importInstalledApps'),
+                subtitle: tr('onboardingImportInstalledSubtitle'),
                 onTap: () => _handleFeatureTap('importInstalled'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.cloud_sync_outlined,
-                title: 'Cloud Backup & Restore',
-                subtitle: 'Sync app list via cloud provider.',
+                title: tr('backupAndSync'),
+                subtitle: tr('onboardingCloudSyncSubtitle'),
                 iconColor: colorScheme.secondary,
                 onTap: () => _handleFeatureTap('importExport'),
               ),
@@ -346,7 +346,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                   child: ListTile(
                     leading: Icon(Icons.key_outlined, size: 20, color: colorScheme.onSecondaryContainer),
                     title: Text(
-                      'GitHub Token (optional)',
+                      tr('githubTokenOptional'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -354,7 +354,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                       ),
                     ),
                     subtitle: Text(
-                      'Set in Settings to unlock private repos.',
+                      tr('githubTokenSettingsNote'),
                       style: TextStyle(fontSize: 11, color: colorScheme.onSecondaryContainer),
                     ),
                     dense: true,
@@ -376,7 +376,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Update apps from Google Play.',
+                    tr('onboardingPlayStoreSubtitle'),
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
@@ -384,18 +384,17 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                   _buildFeatureCard(
                     context,
                     icon: _microGAvailable ? Icons.check_circle_outline : Icons.error_outline,
-                    title: 'Status',
+                    title: tr('status'),
                     subtitle: _microGAvailable
-                        ? 'microG / GMS detected!'
-                        : 'microG not found. Still usable via anonymous.',
+                        ? tr('microGDetected')
+                        : tr('microGNotFound'),
                     iconColor: _microGAvailable ? Colors.green : Colors.orange,
                   ),
                   const SizedBox(height: 4),
                   _buildPermissionButton(
                     context: context,
                     icon: Icons.account_circle_outlined,
-                    label: 'Sign in via microG',
-                    onPressed: () async {
+                    label: tr('signInViaMicroG'),                    onPressed: () async {
                       try {
                         final email = await AuthService.pickGoogleAccount();
                         if (email != null) {
@@ -459,7 +458,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Grant these for background updates.',
+                  tr('onboardingPermissionsSubtitle'),
                   textAlign: TextAlign.center,
                   style: pageDecoration.bodyTextStyle,
                 ),
@@ -467,28 +466,28 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.install_mobile_rounded,
-                  label: 'Allow Installing Apps (Settings)',
+                  label: tr('allowInstallingAppsSettings'),
                   onPressed: _requestInstallPermission,
                   isGranted: _installGranted,
                 ),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.notifications_outlined,
-                  label: 'Allow Notifications',
+                  label: tr('allowNotifications'),
                   onPressed: _requestNotificationPermission,
                   isGranted: _notifGranted,
                 ),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.battery_saver_outlined,
-                  label: 'Disable Battery Optimisation',
+                  label: tr('disableBatteryOptimisation'),
                   onPressed: _openBatteryOptimization,
                   isGranted: _batteryGranted,
                 ),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.track_changes_outlined,
-                  label: 'Allow Usage Access (Settings)',
+                  label: tr('allowUsageAccessSettings'),
                   onPressed: _openUsageAccess,
                   isGranted: _usageGranted,
                 ),
@@ -500,13 +499,13 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                       margin: EdgeInsets.zero,
                       child: ListTile(
                         leading: Icon(Icons.info_outline, size: 20, color: colorScheme.onTertiaryContainer),
-                        title: const Text(
-                          'Xiaomi tip',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        title: Text(
+                          tr('xiaomiTip'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                         ),
-                        subtitle: const Text(
-                          'Enable "Auto-start" in Security.',
-                          style: TextStyle(fontSize: 11),
+                        subtitle: Text(
+                          tr('enableAutoStartInSecurity'),
+                          style: const TextStyle(fontSize: 11),
                         ),
                         dense: true,
                       ),
@@ -528,15 +527,15 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Check for updates while closed.',
+                    tr('onboardingStayUpdatedSubtitle'),
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile.adaptive(
-                    title: const Text(
-                      'Background Checks',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    title: Text(
+                      tr('backgroundChecks'),
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                     value: settings.updateInterval > 0,
                     onChanged: (val) => settings.updateInterval = val ? 360 : 0,
@@ -554,7 +553,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                     ),
                     Center(
                       child: Text(
-                        'Check every ${(settings.updateInterval / 60).round()}h',
+                        tr('checkEveryXHours', args: [(settings.updateInterval / 60).round().toString()]),
                         style: TextStyle(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w500,
@@ -579,7 +578,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
               return Column(
                 children: [
                   Text(
-                    'Choose shortcuts for the + button.',
+                    tr('onboardingQuickAddSubtitle'),
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
@@ -594,8 +593,8 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                           context,
                           settings,
                           icon: Icons.search_rounded,
-                          title: 'Search',
-                          subtitle: 'Quick-launch search',
+                          title: tr('search'),
+                          subtitle: tr('quickLaunchSearch'),
                           value: settings.plusFabShowSearch,
                           onChanged: (val) => settings.plusFabShowSearch = val,
                         ),
@@ -603,8 +602,8 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                           context,
                           settings,
                           icon: Icons.link_outlined,
-                          title: 'Add by URL',
-                          subtitle: 'Paste release URL',
+                          title: tr('addByUrl'),
+                          subtitle: tr('pasteReleaseUrl'),
                           value: settings.plusFabShowAddByUrl,
                           onChanged: (val) => settings.plusFabShowAddByUrl = val,
                         ),
@@ -612,8 +611,8 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                           context,
                           settings,
                           icon: Icons.star_border_rounded,
-                          title: 'GitHub Starred',
-                          subtitle: 'Import starred repos',
+                          title: tr('githubStarred'),
+                          subtitle: tr('importStarredRepos'),
                           value: settings.plusFabShowGithubStarred,
                           onChanged: (val) => settings.plusFabShowGithubStarred = val,
                         ),
@@ -621,8 +620,8 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                           context,
                           settings,
                           icon: Icons.person_outline_rounded,
-                          title: 'GitHub Personal',
-                          subtitle: 'Import own repos',
+                          title: tr('githubPersonal'),
+                          subtitle: tr('importOwnRepos'),
                           value: settings.plusFabShowGithubPersonalRepos,
                           onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
                         ),
@@ -630,8 +629,8 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                           context,
                           settings,
                           icon: Icons.install_mobile_outlined,
-                          title: 'Import Installed',
-                          subtitle: 'Scan device',
+                          title: tr('importInstalled'),
+                          subtitle: tr('scanDevice'),
                           value: settings.plusFabShowImportInstalled,
                           onChanged: (val) => settings.plusFabShowImportInstalled = val,
                         ),
@@ -654,7 +653,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
               return Column(
                 children: [
                   Text(
-                    'Visual polish and shortcuts.',
+                    tr('onboardingPersonalizeSubtitle'),
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
@@ -662,32 +661,32 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                   _buildFeatureCard(
                     context,
                     icon: Icons.blur_on_outlined,
-                    title: 'Glassmorphism',
-                    subtitle: 'Frosted-glass nav bars and menus.',
+                    title: tr('glassmorphismUI'),
+                    subtitle: tr('glassmorphismSubtitle'),
                     iconColor: colorScheme.secondary,
                     onTap: () => settings.plusEnableGlassmorphism = !settings.plusEnableGlassmorphism,
                   ),
                   _buildFeatureCard(
                     context,
                     icon: Icons.back_hand_outlined,
-                    title: 'Quick Filters',
-                    subtitle: 'One-handed filter strip at bottom.',
+                    title: tr('quickFilters'),
+                    subtitle: tr('quickFiltersSubtitle'),
                     iconColor: colorScheme.secondary,
                     onTap: () => settings.plusEnableQuickFilters = !settings.plusEnableQuickFilters,
                   ),
                   _buildFeatureCard(
                     context,
                     icon: Icons.grid_view_outlined,
-                    title: 'Grid View',
-                    subtitle: 'Switch between list and grid.',
+                    title: tr('grid'),
+                    subtitle: tr('gridViewSubtitle'),
                     iconColor: colorScheme.secondary,
                     onTap: () => settings.plusEnableGridView = !settings.plusEnableGridView,
                   ),
                   _buildFeatureCard(
                     context,
                     icon: Icons.swipe_outlined,
-                    title: 'Swipe Actions',
-                    subtitle: 'Quickly update or open apps.',
+                    title: tr('swipeActions'),
+                    subtitle: tr('swipeActionsSubtitle'),
                     iconColor: colorScheme.secondary,
                     onTap: () => settings.plusEnableSwipeActions = !settings.plusEnableSwipeActions,
                   ),

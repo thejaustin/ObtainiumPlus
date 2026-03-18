@@ -293,9 +293,9 @@ class UpdateSettingsSection extends StatelessWidget {
                   items: [
                     DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
                     DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
-                    DropdownMenuItem(value: 'aurora', child: Text('Aurora Store')),
-                    DropdownMenuItem(value: 'github', child: Text('GitHub')),
-                    DropdownMenuItem(value: 'apkpure', child: Text('APKPure')),
+                    DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
+                    DropdownMenuItem(value: 'github', child: Text(tr('github'))),
+                    DropdownMenuItem(value: 'apkpure', child: Text(tr('apkpure'))),
                   ],
                 ),
               ),
@@ -328,11 +328,11 @@ class UpdateSettingsSection extends StatelessWidget {
       case 'play_store':
         return tr('playStore');
       case 'aurora':
-        return 'Aurora Store';
+        return tr('auroraStore');
       case 'github':
-        return 'GitHub';
+        return tr('github');
       case 'apkpure':
-        return 'APKPure';
+        return tr('apkpure');
       default:
         return tr('direct');
     }
