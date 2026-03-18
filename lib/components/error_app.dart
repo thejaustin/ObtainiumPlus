@@ -37,9 +37,9 @@ class ErrorApp extends StatelessWidget {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
