@@ -665,7 +665,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                     title: 'Glassmorphism',
                     subtitle: 'Frosted-glass nav bars and menus.',
                     iconColor: colorScheme.secondary,
-                    onTap: () => settings.useGlassmorphism = !settings.useGlassmorphism,
+                    onTap: () => settings.plusEnableGlassmorphism = !settings.plusEnableGlassmorphism,
                   ),
                   _buildFeatureCard(
                     context,
@@ -673,7 +673,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                     title: 'Quick Filters',
                     subtitle: 'One-handed filter strip at bottom.',
                     iconColor: colorScheme.secondary,
-                    onTap: () => settings.showQuickFilterStrip = !settings.showQuickFilterStrip,
+                    onTap: () => settings.plusEnableQuickFilters = !settings.plusEnableQuickFilters,
                   ),
                   _buildFeatureCard(
                     context,
@@ -681,7 +681,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                     title: 'Grid View',
                     subtitle: 'Switch between list and grid.',
                     iconColor: colorScheme.secondary,
-                    onTap: () => settings.useGridView = !settings.useGridView,
+                    onTap: () => settings.plusEnableGridView = !settings.plusEnableGridView,
                   ),
                   _buildFeatureCard(
                     context,
@@ -689,7 +689,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                     title: 'Swipe Actions',
                     subtitle: 'Quickly update or open apps.',
                     iconColor: colorScheme.secondary,
-                    onTap: () => settings.enableSwipeActions = !settings.enableSwipeActions,
+                    onTap: () => settings.plusEnableSwipeActions = !settings.plusEnableSwipeActions,
                   ),
                 ],
               );

@@ -653,12 +653,6 @@ class AppsProvider with ChangeNotifier {
     );
   }
 
-  @override
-  void dispose() {
-    foregroundSubscription?.cancel();
-    super.dispose();
-  }
-
     Future<List<List<String>>> addAppsByURL(
       List<String> urls, {
       AppSource? sourceOverride,
