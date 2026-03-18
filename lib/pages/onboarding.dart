@@ -113,14 +113,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
       if (appsToAdd.isNotEmpty) {
         await appsProvider.saveApps(appsToAdd, onlyIfExists: false);
       }
+      
+      // Ensure the flag is set so we don't show onboarding again
+      context.read<SettingsProvider>().welcomeShown = true;
     } catch (e) {
       debugPrint('Error during onboarding finish: $e');
     } finally {
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context); // Pop loading dialog
         widget.onDone();
       }
     }
+  }
+
+  void _handleFeatureTap(String feature) {
+    // Navigate to the relevant page after onboarding is finished
+    _finishOnboarding().then((_) {
+      // The onDone callback in HomePage will handle the actual navigation if needed
+      // or we can just let the user know they can find it in the + menu.
+    });
   }
 
   Widget _buildFeatureCard(
@@ -129,17 +140,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
     required String title,
     required String subtitle,
     Color? iconColor,
+    VoidCallback? onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Card(
         elevation: 0,
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        child: ListTile(
-          leading: Icon(icon, color: iconColor ?? Theme.of(context).colorScheme.primary),
-          title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-          dense: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: ListTile(
+            leading: Icon(icon, color: iconColor ?? Theme.of(context).colorScheme.primary),
+            title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+            dense: true,
+            trailing: onTap != null ? const Icon(Icons.chevron_right, size: 18) : null,
+          ),
         ),
       ),
     );
@@ -212,17 +229,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
         // ── 2. Add Apps ──────────────────────────────────────────────────────
         PageViewModel(
           title: 'Add Apps',
-          body: 'Multiple ways to build your app list fast.',
           image: Icon(Icons.add_circle_outline, size: 100, color: colorScheme.secondary),
           decoration: pageDecoration,
-          footer: Column(
+          bodyWidget: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(
+                'Multiple ways to build your app list fast.',
+                textAlign: TextAlign.center,
+                style: pageDecoration.bodyTextStyle,
+              ),
+              const SizedBox(height: 16),
               _buildFeatureCard(
                 context,
                 icon: Icons.link_outlined,
                 title: 'Paste a URL',
                 subtitle: 'Paste any GitHub, GitLab, or other release page URL to start tracking.',
+                onTap: () => _handleFeatureTap('addByUrl'),
               ),
               _buildFeatureCard(
                 context,
@@ -230,6 +253,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 title: 'GitHub Starred Repos',
                 subtitle: 'Import apps from your GitHub starred repositories in bulk.',
                 iconColor: colorScheme.tertiary,
+                onTap: () => _handleFeatureTap('githubStarred'),
               ),
               _buildFeatureCard(
                 context,
@@ -237,12 +261,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 title: 'GitHub Personal Repos',
                 subtitle: 'Import from your own repos — private repos included when a token is set.',
                 iconColor: colorScheme.tertiary,
+                onTap: () => _handleFeatureTap('githubPersonal'),
               ),
               _buildFeatureCard(
                 context,
                 icon: Icons.install_mobile_outlined,
                 title: 'Import Installed Apps',
                 subtitle: 'Scan your device and start tracking apps already installed.',
+                onTap: () => _handleFeatureTap('importInstalled'),
               ),
               _buildFeatureCard(
                 context,
@@ -250,6 +276,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 title: 'Cloud Backup & Restore',
                 subtitle: 'Sync your app list and settings across devices via your cloud provider.',
                 iconColor: colorScheme.secondary,
+                onTap: () => _handleFeatureTap('importExport'),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -281,20 +308,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
         // ── 3. Play Store & microG ─────────────────────────────────────────────
         PageViewModel(
           title: 'Play Store & microG',
-          body: 'Update apps from Google Play without a Google Account using microG.',
           image: Icon(Icons.shop_outlined, size: 100, color: colorScheme.primary),
           decoration: pageDecoration,
-          footer: Consumer<AuthProvider>(
+          bodyWidget: Consumer<AuthProvider>(
             builder: (context, auth, _) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    'Update apps from Google Play without a Google Account using microG.',
+                    textAlign: TextAlign.center,
+                    style: pageDecoration.bodyTextStyle,
+                  ),
+                  const SizedBox(height: 16),
                   _buildFeatureCard(
                     context,
                     icon: _microGAvailable ? Icons.check_circle_outline : Icons.error_outline,
                     title: 'Status',
-                    subtitle: _microGAvailable 
-                        ? 'microG / GMS detected! You can link your account in Settings.' 
+                    subtitle: _microGAvailable
+                        ? 'microG / GMS detected! You can link your account in Settings.'
                         : 'microG not found. You can still use anonymous dispensers.',
                     iconColor: _microGAvailable ? Colors.green : Colors.orange,
                   ),
@@ -316,9 +348,36 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           }
                         }
                       } catch (e) {
+                        String message = e.toString();
+                        if (message.contains('UnregisteredOnApiConsole')) {
+                          message = 'microG error: This app is not registered in the Google API Console. '
+                              'If you are using a custom build of Obtainium+, you may need to '
+                              'configure your own OAuth credentials or use anonymous dispensers.';
+                        }
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(e.toString())),
+                            SnackBar(
+                              content: Text(message),
+                              duration: const Duration(seconds: 10),
+                              action: SnackBarAction(
+                                label: 'Details',
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('microG Error'),
+                                      content: Text(e.toString()),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           );
                         }
                       }
@@ -333,13 +392,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
         // ── 4. Permissions ────────────────────────────────────────────────────
         PageViewModel(
           title: 'Permissions',
-          body: 'Grant these so Obtainium+ can install apps and check for updates in the background.',
           image: Icon(Icons.security_outlined, size: 100, color: colorScheme.tertiary),
           decoration: pageDecoration,
-          footer: Builder(
+          bodyWidget: Builder(
             builder: (ctx) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(
+                  'Grant these so Obtainium+ can install apps and check for updates in the background.',
+                  textAlign: TextAlign.center,
+                  style: pageDecoration.bodyTextStyle,
+                ),
+                const SizedBox(height: 16),
                 _buildPermissionButton(
                   context: ctx,
                   icon: Icons.install_mobile_rounded,
@@ -390,17 +454,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
         ),
 
-        // ── 4. Stay Updated ──────────────────────────────────────────────────
+        // ── 5. Stay Updated ──────────────────────────────────────────────────
         PageViewModel(
           title: 'Stay Updated',
-          body: 'Enable background checks so your apps are always up to date.',
           image: Icon(Icons.sync_lock, size: 100, color: colorScheme.primary),
           decoration: pageDecoration,
-          footer: Consumer<SettingsProvider>(
+          bodyWidget: Consumer<SettingsProvider>(
             builder: (context, settings, _) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Text(
+                    'Enable background checks so your apps are always up to date.',
+                    textAlign: TextAlign.center,
+                    style: pageDecoration.bodyTextStyle,
+                  ),
+                  const SizedBox(height: 16),
                   SwitchListTile.adaptive(
                     title: const Text(
                       'Automatic Background Checks',
@@ -436,82 +505,96 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
         ),
 
-        // ── 5. Quick-Add Menu ────────────────────────────────────────────────
+        // ── 6. Quick-Add Menu ────────────────────────────────────────────────
         PageViewModel(
           title: 'Quick-Add Menu',
-          body: 'Choose which shortcuts appear when you tap +. Adjust anytime in Settings → Obtainium+ Features.',
           image: Icon(Icons.add_box_outlined, size: 100, color: colorScheme.secondary),
           decoration: pageDecoration,
-          footer: Consumer<SettingsProvider>(
+          bodyWidget: Consumer<SettingsProvider>(
             builder: (context, settings, _) {
-              return Card(
-                elevation: 0,
-                color: colorScheme.surfaceContainerHigh,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    children: [
-                      _buildFabToggle(
-                        context,
-                        settings,
-                        icon: Icons.search_rounded,
-                        title: 'Search',
-                        subtitle: 'Quick-launch the app search',
-                        value: settings.plusFabShowSearch,
-                        onChanged: (val) => settings.plusFabShowSearch = val,
-                      ),
-                      _buildFabToggle(
-                        context,
-                        settings,
-                        icon: Icons.link_outlined,
-                        title: 'Add by URL',
-                        subtitle: 'Paste a release page URL',
-                        value: settings.plusFabShowAddByUrl,
-                        onChanged: (val) => settings.plusFabShowAddByUrl = val,
-                      ),
-                      _buildFabToggle(
-                        context,
-                        settings,
-                        icon: Icons.star_border_rounded,
-                        title: 'GitHub Starred Repos',
-                        subtitle: 'Import your starred repositories',
-                        value: settings.plusFabShowGithubStarred,
-                        onChanged: (val) => settings.plusFabShowGithubStarred = val,
-                      ),
-                      _buildFabToggle(
-                        context,
-                        settings,
-                        icon: Icons.person_outline_rounded,
-                        title: 'GitHub Personal Repos',
-                        subtitle: 'Import your own repositories',
-                        value: settings.plusFabShowGithubPersonalRepos,
-                        onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
-                      ),
-                      _buildFabToggle(
-                        context,
-                        settings,
-                        icon: Icons.install_mobile_outlined,
-                        title: 'Import Installed Apps',
-                        subtitle: 'Scan device for installed apps',
-                        value: settings.plusFabShowImportInstalled,
-                        onChanged: (val) => settings.plusFabShowImportInstalled = val,
-                      ),
-                    ],
+              return Column(
+                children: [
+                  Text(
+                    'Choose which shortcuts appear when you tap +. Adjust anytime in Settings → Obtainium+ Features.',
+                    textAlign: TextAlign.center,
+                    style: pageDecoration.bodyTextStyle,
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  Card(
+                    elevation: 0,
+                    color: colorScheme.surfaceContainerHigh,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        children: [
+                          _buildFabToggle(
+                            context,
+                            settings,
+                            icon: Icons.search_rounded,
+                            title: 'Search',
+                            subtitle: 'Quick-launch the app search',
+                            value: settings.plusFabShowSearch,
+                            onChanged: (val) => settings.plusFabShowSearch = val,
+                          ),
+                          _buildFabToggle(
+                            context,
+                            settings,
+                            icon: Icons.link_outlined,
+                            title: 'Add by URL',
+                            subtitle: 'Paste a release page URL',
+                            value: settings.plusFabShowAddByUrl,
+                            onChanged: (val) => settings.plusFabShowAddByUrl = val,
+                          ),
+                          _buildFabToggle(
+                            context,
+                            settings,
+                            icon: Icons.star_border_rounded,
+                            title: 'GitHub Starred Repos',
+                            subtitle: 'Import your starred repositories',
+                            value: settings.plusFabShowGithubStarred,
+                            onChanged: (val) => settings.plusFabShowGithubStarred = val,
+                          ),
+                          _buildFabToggle(
+                            context,
+                            settings,
+                            icon: Icons.person_outline_rounded,
+                            title: 'GitHub Personal Repos',
+                            subtitle: 'Import your own repositories',
+                            value: settings.plusFabShowGithubPersonalRepos,
+                            onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
+                          ),
+                          _buildFabToggle(
+                            context,
+                            settings,
+                            icon: Icons.install_mobile_outlined,
+                            title: 'Import Installed Apps',
+                            subtitle: 'Scan device for installed apps',
+                            value: settings.plusFabShowImportInstalled,
+                            onChanged: (val) => settings.plusFabShowImportInstalled = val,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
         ),
 
-        // ── 6. Personalize ───────────────────────────────────────────────────
+        // ── 7. Personalize ───────────────────────────────────────────────────
         PageViewModel(
           title: 'Personalize',
-          body: 'Obtainium+ adds visual polish and one-handed shortcuts. All toggleable in Settings → Obtainium+ Features.',
           image: Icon(Icons.auto_awesome_outlined, size: 100, color: colorScheme.tertiary),
           decoration: pageDecoration,
-          footer: Column(
+          bodyWidget: Column(
             children: [
+              Text(
+                'Obtainium+ adds visual polish and one-handed shortcuts. All toggleable in Settings → Obtainium+ Features.',
+                textAlign: TextAlign.center,
+                style: pageDecoration.bodyTextStyle,
+              ),
+              const SizedBox(height: 16),
               _buildFeatureCard(
                 context,
                 icon: Icons.blur_on_outlined,
