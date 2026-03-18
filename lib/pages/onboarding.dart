@@ -491,22 +491,20 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                   onPressed: _openUsageAccess,
                   isGranted: _usageGranted,
                 ),
-                if (_isSamsung || _isXiaomi)
+                if (_isXiaomi)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Card(
                       color: colorScheme.tertiaryContainer,
                       child: ListTile(
                         leading: Icon(Icons.info_outline, color: colorScheme.onTertiaryContainer),
-                        title: Text(
-                          _isSamsung ? 'Samsung tip' : 'Xiaomi tip',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        title: const Text(
+                          'Xiaomi tip',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
-                        subtitle: Text(
-                          _isSamsung
-                              ? 'On Samsung, also enable "Auto-launch" for Obtainium+ in Device Care → Battery.'
-                              : 'On Xiaomi, enable "Auto-start" for Obtainium+ in Security → Manage apps.',
-                          style: const TextStyle(fontSize: 12),
+                        subtitle: const Text(
+                          'On Xiaomi, enable "Auto-start" for Obtainium+ in Security → Manage apps.',
+                          style: TextStyle(fontSize: 12),
                         ),
                         dense: true,
                       ),
