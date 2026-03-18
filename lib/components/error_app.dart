@@ -32,9 +32,11 @@ class ErrorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        backgroundColor: Colors.red.shade900,
-        body: SafeArea(
+      home: Material(
+        color: Colors.red.shade900,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(

@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -559,6 +561,10 @@ class AppsPageState extends State<AppsPage> {
         onSelected: (value) {
           if (value == 'markUpdated') {
             _markSelectedAppsUpdated(context, listedApps);
+          } else if (value == 'categorize') {
+            _bulkCategorize(context, listedApps);
+          } else if (value == 'tag') {
+            _bulkTag(context, listedApps);
           }
         },
         itemBuilder: (context) => [
@@ -567,6 +573,22 @@ class AppsPageState extends State<AppsPage> {
             child: ListTile(
               leading: const Icon(Icons.done_all),
               title: Text(tr('markSelectedAppsUpdated')),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: 'categorize',
+            child: ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: Text(tr('categorize')),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: 'tag',
+            child: ListTile(
+              leading: const Icon(Icons.label_outline),
+              title: Text(tr('addTags')),
               contentPadding: EdgeInsets.zero,
             ),
           ),
@@ -936,6 +958,83 @@ class AppsPageState extends State<AppsPage> {
       await appsProvider.saveApps(selectedApps);
       clearSelected();
       showMessage(tr('appsUpdated'), context);
+    }
+  }
+
+  void _bulkCategorize(BuildContext context, List<AppInMemory> listedApps) async {
+    final appsProvider = context.read<AppsProvider>();
+    final selectedApps = listedApps
+        .where((e) => selectedAppIds.contains(e.app.id))
+        .map((e) => e.app)
+        .toList();
+    
+    if (selectedApps.isEmpty) return;
+
+    Set<String> commonCategories = {};
+    if (selectedApps.length == 1) {
+      commonCategories = selectedApps.first.categories.toSet();
+    }
+
+    final newCategories = await showDialog<Set<String>>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('categorizeXApps', args: [selectedApps.length.toString()])),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: CategoryEditorSelector(
+              alignment: WrapAlignment.start,
+              preselected: commonCategories,
+              onSelected: (categories) => Navigator.pop(ctx, categories),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('cancel'))),
+        ],
+      ),
+    );
+
+    if (newCategories != null) {
+      for (var app in selectedApps) {
+        app.categories = newCategories.toList();
+      }
+      await appsProvider.saveApps(selectedApps);
+      clearSelected();
+      showMessage(tr('appsCategorized'), context);
+    }
+  }
+
+  void _bulkTag(BuildContext context, List<AppInMemory> listedApps) async {
+    final appsProvider = context.read<AppsProvider>();
+    final selectedApps = listedApps
+        .where((e) => selectedAppIds.contains(e.app.id))
+        .map((e) => e.app)
+        .toList();
+    
+    if (selectedApps.isEmpty) return;
+
+    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    allTags.sort();
+
+    Set<String> commonTags = {};
+    if (selectedApps.length == 1) {
+      commonTags = selectedApps.first.tags.toSet();
+    }
+
+    final newTags = await showTagEditor(
+      context: context,
+      currentTags: commonTags.toList(),
+      allTags: allTags,
+    );
+
+    if (newTags != null) {
+      for (var app in selectedApps) {
+        app.tags = newTags;
+      }
+      await appsProvider.saveApps(selectedApps);
+      clearSelected();
+      showMessage(tr('appsTagged'), context);
     }
   }
 }

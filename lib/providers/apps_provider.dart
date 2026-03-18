@@ -118,27 +118,24 @@ class AppsProvider with ChangeNotifier {
     );
   }
 
-  AppsProvider({isBg = false, SettingsProvider? settings}) {
+  AppsProvider({bool isBg = false, SettingsProvider? settings}) {
     _initCompleter = Completer<void>();
     settingsProvider = settings ?? SettingsProvider();
-    // Always load SharedPreferences so settings reads return user values, not
-    // hard-coded defaults — important for background instances that skip initialize().
-    settingsProvider.initializeSettings();
+    
     // Subscribe to changes in the app foreground status
-    foregroundStream = FGBGEvents.instance.stream.asBroadcastStream();
-    foregroundSubscription = foregroundStream?.listen((event) async {
-      isForeground = event == FGBGType.foreground;
-      if (isForeground) {
-        await initializationDone;
-        await loadApps();
-      }
-    });
     if (!isBg) {
-      initialize();
-    } else {
-      // For background, we still need to initialize directories if they'll be used
-      _initCompleter!.complete();
+      foregroundStream = FGBGEvents.instance.stream.asBroadcastStream();
+      foregroundSubscription = foregroundStream?.listen((event) async {
+        isForeground = event == FGBGType.foreground;
+        if (isForeground) {
+          await initializationDone;
+          await loadApps();
+        }
+      });
     }
+
+    // Always call initialize to set up directories and load apps
+    initialize();
   }
 
   /// Initializes the AppsProvider by loading settings and apps from storage.

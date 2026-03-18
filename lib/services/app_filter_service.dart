@@ -52,6 +52,7 @@ class AppFilterService {
       }
       if (filter.idFilter.isNotEmpty && !app.app.id.contains(filter.idFilter)) return false;
       if (filter.categoryFilter.isNotEmpty && filter.categoryFilter.intersection(app.app.categories.toSet()).isEmpty) return false;
+      if (filter.tagFilter.isNotEmpty && filter.tagFilter.intersection(app.app.tags.toSet()).isEmpty) return false; // Added tag filtering
       if (filter.sourceFilter.isNotEmpty && SourceProvider().getSource(app.app.url, overrideSource: app.app.overrideSource).runtimeType.toString() != filter.sourceFilter) return false;
       
       return true;
