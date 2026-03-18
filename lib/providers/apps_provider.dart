@@ -87,6 +87,7 @@ class AppsProvider with ChangeNotifier {
   Directory? get iconsCacheDir => _iconsCacheDir;
 
   late SettingsProvider settingsProvider;
+  String? _lastObtainiumReleaseChannel;
 
   // Completer for the overall initialization of the provider
   Completer<void>? _initCompleter;
@@ -132,10 +133,34 @@ class AppsProvider with ChangeNotifier {
           await loadApps();
         }
       });
+
+      // Listen for settings changes that might require an immediate Obtainium+ update check
+      settingsProvider.addListener(_onSettingsChanged);
     }
 
     // Always call initialize to set up directories and load apps
     initialize();
+  }
+
+  void _onSettingsChanged() {
+    if (settingsProvider.obtainiumReleaseChannel != _lastObtainiumReleaseChannel) {
+      final oldChannel = _lastObtainiumReleaseChannel;
+      _lastObtainiumReleaseChannel = settingsProvider.obtainiumReleaseChannel;
+      
+      // If the channel changed and we've already initialized (meaning we have an old value to compare against)
+      if (oldChannel != null && apps.containsKey(obtainiumId)) {
+        checkObtainiumUpdate(ignoreCache: true).catchError((e) {
+          logs.add('Error checking Obtainium+ update after channel change: $e');
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    settingsProvider.removeListener(_onSettingsChanged);
+    foregroundSubscription?.cancel();
+    super.dispose();
   }
 
   /// Initializes the AppsProvider by loading settings and apps from storage.
@@ -145,6 +170,7 @@ class AppsProvider with ChangeNotifier {
     
     try {
       await settingsProvider.initializeSettings();
+      _lastObtainiumReleaseChannel = settingsProvider.obtainiumReleaseChannel;
       // Set up APK and icons cache directories
       var dirs = await AppFileService.initAppDirectories();
       _APKDir = dirs['APKDir']!;
@@ -535,6 +561,9 @@ class AppsProvider with ChangeNotifier {
   /// Checks for updates for a single app.
   /// Returns the updated [App] object if an update is found, or null if no update is found.
   Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
+    if (appId == obtainiumId) {
+      return checkObtainiumUpdate(ignoreCache: ignoreCache);
+    }
     return AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
   }
 
@@ -542,7 +571,7 @@ class AppsProvider with ChangeNotifier {
     return AppUpdateService.checkObtainiumUpdate(
       apps: apps,
       settingsProvider: settingsProvider,
-      checkUpdateFn: (id, {bool ignoreCache = false}) => checkUpdate(id, ignoreCache: ignoreCache),
+      checkUpdateFn: (id, {bool ignoreCache = false}) => AppUpdateService.checkUpdate(id, apps, saveApps, ignoreCache: ignoreCache),
       ignoreCache: ignoreCache,
     );
   }

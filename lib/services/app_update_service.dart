@@ -20,11 +20,23 @@ import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
 
+import 'package:obtainium/utils/version_utils.dart';
+
 class AppUpdateService {
   AppUpdateService._();
 
   static final Map<String, (App, DateTime)> _updateCache = {};
   static const Duration _cacheTtl = Duration(minutes: 5);
+
+  static bool _areVersionsDifferent(String? installed, String latest) {
+    if (installed == null) return true;
+    if (installed == latest) return false;
+    final reconciliation = reconcileVersionDifferences(installed, latest);
+    if (reconciliation != null && reconciliation.key == true) {
+      return false; // Reconciled as equal
+    }
+    return true;
+  }
 
   static Future<App?> checkUpdate(
     String appId,
@@ -40,7 +52,7 @@ class AppUpdateService {
     if (!ignoreCache && _updateCache.containsKey(appId)) {
       var (cachedApp, timestamp) = _updateCache[appId]!;
       if (DateTime.now().difference(timestamp) < _cacheTtl) {
-        return cachedApp.latestVersion != currentApp.latestVersion
+        return _areVersionsDifferent(currentApp.installedVersion, cachedApp.latestVersion)
             ? cachedApp
             : null;
       }
@@ -68,7 +80,7 @@ class AppUpdateService {
     // Update cache
     _updateCache[appId] = (newApp, DateTime.now());
 
-    return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
+    return _areVersionsDifferent(newApp.installedVersion, newApp.latestVersion) ? newApp : null;
   }
 
   static List<String> getAppsSortedByUpdateCheckTime(
@@ -197,7 +209,7 @@ class AppUpdateService {
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
       App? app = apps[appIds[i]]!.app;
-      if (app.installedVersion != app.latestVersion &&
+      if (_areVersionsDifferent(app.installedVersion, app.latestVersion) &&
           (!installedOnly || !nonInstalledOnly)) {
         if ((app.installedVersion == null &&
                 (nonInstalledOnly || !installedOnly) ||

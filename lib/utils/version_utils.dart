@@ -7,19 +7,22 @@ List<String> generateStandardVersionRegExStrings() {
     '[0-9]+\\.[0-9]+\\.[0-9]+',
     '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+',
   ];
+  var prefixes = ['[vV]?', '[pP]?'];
   var preSuffixes = ['-', '\\+'];
   var suffixes = ['alpha', 'beta', 'ose', '[0-9]+'];
   var finals = ['\\+[0-9]+', '[0-9]+'];
   List<String> results = [];
   for (var b in basics) {
-    results.add(b);
-    for (var p in preSuffixes) {
-      for (var s in suffixes) {
-        results.add('$b$s');
-        results.add('$b$p$s');
-        for (var f in finals) {
-          results.add('$b$s$f');
-          results.add('$b$p$s$f');
+    for (var pre in prefixes) {
+      results.add('$pre$b');
+      for (var p in preSuffixes) {
+        for (var s in suffixes) {
+          results.add('$pre$b$s');
+          results.add('$pre$b$p$s');
+          for (var f in finals) {
+            results.add('$pre$b$s$f');
+            results.add('$pre$b$p$s$f');
+          }
         }
       }
     }
@@ -87,12 +90,24 @@ MapEntry<bool, String>? reconcileVersionDifferences(
   return MapEntry(false, templateVersion);
 }
 
+String normalizeVersion(String version) {
+  // Remove leading 'v' or 'p' (case-insensitive) followed by a digit
+  // e.g. v1.2.3 -> 1.2.3, p100 -> 100
+  var vPrefixed = RegExp(r'^[vV](?=[0-9])');
+  var pPrefixed = RegExp(r'^[pP](?=[0-9])');
+  return version.replaceFirst(vPrefixed, '').replaceFirst(pPrefixed, '');
+}
+
 bool doStringsMatchUnderRegEx(String pattern, String value1, String value2) {
   var r = RegExp(pattern);
   var m1 = r.firstMatch(value1);
   var m2 = r.firstMatch(value2);
-  return m1 != null && m2 != null
-      ? value1.substring(m1.start, m1.end) ==
-            value2.substring(m2.start, m2.end)
-      : false;
+  if (m1 != null && m2 != null) {
+    var v1 = value1.substring(m1.start, m1.end);
+    var v2 = value2.substring(m2.start, m2.end);
+    if (v1 == v2) return true;
+    // Try normalized matching
+    return normalizeVersion(v1) == normalizeVersion(v2);
+  }
+  return false;
 }
