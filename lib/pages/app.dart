@@ -325,7 +325,7 @@ class _AppPageState extends State<AppPage> {
                                       ListTile(
                                         leading: Container(
                                           padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3), borderRadius: BorderRadius.circular(12)),
                                           child: Icon(Icons.link_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                                         ),
                                         title: Text(tr('sourceUrl'), style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -336,7 +336,7 @@ class _AppPageState extends State<AppPage> {
                                       ListTile(
                                         leading: Container(
                                           padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3), borderRadius: BorderRadius.circular(12)),
                                           child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                                         ),
                                         title: Text(tr('appId'), style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -664,11 +664,10 @@ class _AppPageState extends State<AppPage> {
             color: (isDark 
                 ? Theme.of(context).colorScheme.surfaceContainerLow 
                 : Theme.of(context).colorScheme.surface)
-              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+              .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1,
               ),
             ),
           ),
@@ -858,11 +857,10 @@ class _AppPageState extends State<AppPage> {
                 color: (isDark 
                     ? Theme.of(context).colorScheme.surfaceContainerLow 
                     : Theme.of(context).colorScheme.surface)
-                  .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+                  .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                  color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1,
                   ),
                 ),
               ),
@@ -875,7 +873,7 @@ class _AppPageState extends State<AppPage> {
                 ),
                 styleSheet: MarkdownStyleSheet(
                   p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
                   ),
                 ),
               ),

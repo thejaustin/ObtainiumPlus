@@ -255,12 +255,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   color: (isDark 
                       ? Theme.of(context).colorScheme.surfaceContainerHighest 
                       : Theme.of(context).colorScheme.surface)
-                    .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 0.5),
+                    .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                     side: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                        alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.5,
+                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.5,
                       ),
                     ),
                   ),
@@ -322,7 +321,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: CustomPaint(
@@ -355,7 +354,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListView.separated(
         shrinkWrap: true,
@@ -373,7 +372,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.green.withValues(alpha: 0.1),
+              backgroundColor: Colors.green.withOpacity(0.1),
               child: const Icon(Icons.download_done, color: Colors.green, size: 20),
             ),
             title: Text(appId),
@@ -425,7 +424,7 @@ class _ActivityPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.0)],
+        colors: [color.withOpacity(0.3), color.withOpacity(0.0)],
       ).createShader(Rect.fromLTRB(0, 0, size.width, size.height));
 
     final path = Path();

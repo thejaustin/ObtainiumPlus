@@ -113,12 +113,12 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: colorScheme.surface.withValues(alpha: 0.75),
+                    color: colorScheme.surface.withOpacity(0.75),
                     border: Border(
                       top: BorderSide(
                         color: widget.isEditMode
-                            ? colorScheme.primary.withValues(alpha: 0.4)
-                            : colorScheme.outlineVariant.withValues(alpha: 0.35),
+                            ? colorScheme.primary.withOpacity(0.4)
+                            : colorScheme.outlineVariant.withOpacity(0.35),
                         width: widget.isEditMode ? 2 : 1,
                       ),
                     ),
@@ -139,7 +139,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                 border: widget.isEditMode
                     ? Border(
                         top: BorderSide(
-                          color: colorScheme.primary.withValues(alpha: 0.4),
+                          color: colorScheme.primary.withOpacity(0.4),
                           width: 2,
                         ),
                       )
@@ -301,7 +301,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
         duration: const Duration(milliseconds: 200),
         decoration: isDragTarget
             ? BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
+                color: colorScheme.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
               )
             : null,

@@ -254,10 +254,9 @@ class AppListTile extends StatelessWidget {
                 contentPadding: isCompact ? const EdgeInsets.symmetric(horizontal: 12) : null,
                 dense: isCompact,
                 tileColor: appInMemory.app.pinned
-                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)
                     : Colors.transparent,
-                selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withValues(
-                  alpha: appInMemory.app.pinned ? 0.7 : 0.5,
+                selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(appInMemory.app.pinned ? 0.7 : 0.5,
                 ),
                 selected: isSelected,
                 shape: RoundedRectangleBorder(
@@ -328,9 +327,9 @@ class AppListTile extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7)
+                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
                   : appInMemory.app.pinned
-                      ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4)
                       : Theme.of(context).colorScheme.surface,
               border: Border.all(
                 color: isSelected
