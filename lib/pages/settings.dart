@@ -71,10 +71,10 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Card(
         elevation: 0,
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+          side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -127,7 +127,7 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
               Icon(Icons.add_circle_outline, size: 18, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 12),
               Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
             ],
           ),
         ),
@@ -339,7 +339,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           onPressed: () => _cycleTheme(settingsProvider),
-                          shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                          shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5))),
                         ),
                         const SizedBox(width: 8),
                         _buildQuickToggle(
@@ -524,7 +524,7 @@ class _SettingsPageState extends State<SettingsPage> {
       checkmarkColor: Theme.of(context).colorScheme.onPrimary,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5))),
+      shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5))),
     );
   }
 
@@ -535,7 +535,7 @@ class _SettingsPageState extends State<SettingsPage> {
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3)),
       ),
       child: InkWell(
         onTap: () {
@@ -592,7 +592,7 @@ class _SettingsPageState extends State<SettingsPage> {
           elevation: 0,
           margin: EdgeInsets.zero,
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3))),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3))),
           child: Column(
             children: children.asMap().entries.map((entry) {
               final idx = entry.key;
@@ -601,7 +601,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   child,
                   if (idx < children.length - 1)
-                    Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                    Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3)),
                 ],
               );
             }).toList(),
@@ -616,11 +616,11 @@ class _SettingsPageState extends State<SettingsPage> {
       elevation: 0,
       margin: EdgeInsets.zero,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3))),
       child: ExpansionTile(
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-        leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
+        leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
         title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
         children: [
           const Divider(height: 1, indent: 56, endIndent: 16),
@@ -632,7 +632,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required Widget Function(BuildContext) builder}) {
     return ListTile(
-      leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
+      leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
       title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
       subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)) : null,
       trailing: const Icon(Icons.chevron_right, size: 20),

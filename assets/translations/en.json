@@ -997,5 +997,6 @@
     "noTags": "No tags yet",
     "skip": "Skip",
     "updateRecommended": "Update Recommended",
-    "fixedIn": "Fixed in"
+    "fixedIn": "Fixed in",
+    "plural_apps": "{} Apps"
 }

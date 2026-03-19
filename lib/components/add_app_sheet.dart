@@ -39,22 +39,22 @@ Future<T?> showAddAppSheet<T>({
           child: Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+              color: Theme.of(context).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(
                 top: BorderSide(
                   color: enableGlass
-                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.18)
-                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.18)
+                      : Theme.of(context).colorScheme.outline.withOpacity(0.2),
                 ),
                 left: BorderSide(
                   color: enableGlass
-                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12)
+                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.12)
                       : Colors.transparent,
                 ),
                 right: BorderSide(
                   color: enableGlass
-                      ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12)
+                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.12)
                       : Colors.transparent,
                 ),
               ),
@@ -174,7 +174,7 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
                       ? tr('editAppDescription')
                       : tr('addAppDescription'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -199,7 +199,7 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
           Icon(
             Icons.add_circle_outline,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
           ),
           const SizedBox(height: 24),
           Text(
@@ -210,7 +210,7 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
           Text(
             tr('enterAppUrlOrSearch'),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             ),
             textAlign: TextAlign.center,
           ),
