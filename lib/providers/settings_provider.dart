@@ -500,6 +500,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableHomeDashboard => plusSettings.plusEnableHomeDashboard;
+  set plusEnableHomeDashboard(bool val) {
+    plusSettings.plusEnableHomeDashboard = val;
+    notifyListeners();
+  }
+
   bool get plusDeveloperMode => plusSettings.plusDeveloperMode;
   set plusDeveloperMode(bool val) {
     plusSettings.plusDeveloperMode = val;

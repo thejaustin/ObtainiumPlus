@@ -67,3 +67,4 @@ sentry.properties
 wiki_temp
 flutter_sdk.tar.xz
 flutter/
+.gemini/

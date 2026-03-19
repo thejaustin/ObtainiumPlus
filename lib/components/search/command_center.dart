@@ -18,15 +18,17 @@ import 'package:obtainium/main.dart';
 import 'package:provider/provider.dart';
 
 class CommandCenter extends StatefulWidget {
-  const CommandCenter({super.key});
+  final String? initialQuery;
 
-  static Future<void> show(BuildContext context) async {
+  const CommandCenter({super.key, this.initialQuery});
+
+  static Future<void> show(BuildContext context, {String? initialQuery}) async {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       showDragHandle: false,
-      builder: (context) => const CommandCenter(),
+      builder: (context) => CommandCenter(initialQuery: initialQuery),
     );
   }
 
@@ -46,6 +48,11 @@ class _CommandCenterState extends State<CommandCenter> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialQuery != null) {
+      _controller.text = widget.initialQuery!;
+      _query = widget.initialQuery!;
+      _handleSearch(widget.initialQuery!);
+    }
     _focusNode.requestFocus();
   }
 
