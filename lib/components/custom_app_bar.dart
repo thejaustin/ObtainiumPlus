@@ -45,6 +45,7 @@ class CustomSliverAppBar extends StatelessWidget {
     super.key,
     required this.title,
     this.actions,
+    this.leading,
     this.pinned = true,
     this.floating = false,
     this.snap = false,
@@ -53,6 +54,7 @@ class CustomSliverAppBar extends StatelessWidget {
 
   final String title;
   final List<Widget>? actions;
+  final Widget? leading;
   final bool pinned;
   final bool floating;
   final bool snap;
@@ -65,6 +67,7 @@ class CustomSliverAppBar extends StatelessWidget {
       floating: floating,
       snap: snap,
       automaticallyImplyLeading: automaticallyImplyLeading,
+      leading: leading,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -88,6 +91,7 @@ class CustomSliverAppBarCompact extends StatelessWidget {
     super.key,
     required this.title,
     this.actions,
+    this.leading,
     this.pinned = true,
     this.floating = false,
     this.snap = false,
@@ -96,6 +100,7 @@ class CustomSliverAppBarCompact extends StatelessWidget {
 
   final String title;
   final List<Widget>? actions;
+  final Widget? leading;
   final bool pinned;
   final bool floating;
   final bool snap;
@@ -108,6 +113,7 @@ class CustomSliverAppBarCompact extends StatelessWidget {
       floating: floating,
       snap: snap,
       automaticallyImplyLeading: automaticallyImplyLeading,
+      leading: leading,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -133,6 +139,7 @@ class AdaptiveSliverAppBar extends StatelessWidget {
     required this.title,
     required this.pageId,
     this.actions,
+    this.leading,
     this.pinned = true,
     this.floating = false,
     this.snap = false,
@@ -142,6 +149,7 @@ class AdaptiveSliverAppBar extends StatelessWidget {
   final String title;
   final String pageId;
   final List<Widget>? actions;
+  final Widget? leading;
   final bool pinned;
   final bool floating;
   final bool snap;
@@ -157,6 +165,7 @@ class AdaptiveSliverAppBar extends StatelessWidget {
       return CustomSliverAppBar(
         title: title,
         actions: actions,
+        leading: leading,
         pinned: pinned,
         floating: floating,
         snap: snap,
@@ -166,6 +175,7 @@ class AdaptiveSliverAppBar extends StatelessWidget {
       return CustomSliverAppBarCompact(
         title: title,
         actions: actions,
+        leading: leading,
         pinned: pinned,
         floating: floating,
         snap: snap,

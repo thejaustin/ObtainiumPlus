@@ -68,6 +68,15 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusEnableModernAppPage = v),
         visible: (s) => _matches(tr('plusModernAppPage')),
       ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.dashboard_customize_outlined,
+        title: tr('plusHomeDashboard'),
+        subtitle: tr('plusHomeDashboardDescription'),
+        value: (s) => s.plusEnableHomeDashboard,
+        onChanged: (s, v) => onSetState(() => s.plusEnableHomeDashboard = v),
+        visible: (s) => _matches(tr('plusHomeDashboard')),
+      ),
       _buildGridSettings(context),
     ];
 
