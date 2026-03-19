@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -7,12 +8,16 @@ import 'package:provider/provider.dart';
 import 'dart:ui';
 
 class AppDashboard extends StatelessWidget {
+  final String currentFilterMode;
+  final Function(String) onFilterChanged;
   final Function(String) onSearchQuery;
   final Function(String) onUrlInput;
   final VoidCallback onCheckUpdates;
 
   const AppDashboard({
     super.key,
+    required this.currentFilterMode,
+    required this.onFilterChanged,
     required this.onSearchQuery,
     required this.onUrlInput,
     required this.onCheckUpdates,
@@ -91,6 +96,46 @@ class AppDashboard extends StatelessWidget {
                   color: colorScheme.tertiary,
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Filter Mode Selector (Segmented Button)
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              segments: [
+                ButtonSegment(
+                  value: 'all', 
+                  label: Text(tr('all')),
+                  icon: const Icon(Icons.apps_rounded, size: 18),
+                ),
+                ButtonSegment(
+                  value: 'updates', 
+                  label: Text(tr('updates')),
+                  icon: const Icon(Icons.update_rounded, size: 18),
+                ),
+                ButtonSegment(
+                  value: 'installed', 
+                  label: Text(tr('installed')),
+                  icon: const Icon(Icons.install_mobile_rounded, size: 18),
+                ),
+              ],
+              selected: { currentFilterMode },
+              onSelectionChanged: (Set<String> selection) {
+                HapticFeedback.selectionClick();
+                onFilterChanged(selection.first);
+              },
+              showSelectedIcon: false,
+              style: SegmentedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                selectedForegroundColor: colorScheme.onSecondaryContainer,
+                selectedBackgroundColor: colorScheme.secondaryContainer,
+                side: BorderSide(
+                  color: colorScheme.outline.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.15),
+                ),
+              ),
             ),
           ),
           
