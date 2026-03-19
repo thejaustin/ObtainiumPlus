@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "sentry": {
-      "url": "https://mcp.sentry.dev/mcp",
-      "type": "http"
-    }
-  }
-}

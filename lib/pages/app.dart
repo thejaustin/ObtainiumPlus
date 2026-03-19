@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_description_slider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -488,7 +489,8 @@ class _AppPageState extends State<AppPage> {
   }
 
   Widget _buildSliverAppBar(BuildContext context, AppInMemory? app) {
-    return SliverAppBar.large(
+    return AdaptiveSliverAppBar(
+      pageId: 'app',
       automaticallyImplyLeading: !widget.isModal,
       leading: widget.isModal
           ? null
@@ -496,8 +498,7 @@ class _AppPageState extends State<AppPage> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context),
             ),
-      title: Text(app?.name ?? tr('app')),
-      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+      title: app?.name ?? tr('app'),
     );
   }
 

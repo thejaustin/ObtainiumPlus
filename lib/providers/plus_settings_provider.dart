@@ -134,6 +134,12 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableHomeDashboard => _prefs?.getBool('plusEnableHomeDashboard') ?? true;
+  set plusEnableHomeDashboard(bool val) {
+    _prefs?.setBool('plusEnableHomeDashboard', val);
+    notifyListeners();
+  }
+
   bool get plusEnableSwipeActions => _prefs?.getBool('plusEnableSwipeActions') ?? true;
   set plusEnableSwipeActions(bool val) {
     _prefs?.setBool('plusEnableSwipeActions', val);
