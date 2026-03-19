@@ -119,6 +119,16 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableEnhancedAnimations,
                       onChanged: (val) => settings.plusEnableEnhancedAnimations = val,
                     ),
+                  if (_matches(tr('plusHomeDashboard')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.dashboard_customize_outlined,
+                      title: tr('plusHomeDashboard'),
+                      subtitle: tr('plusHomeDashboardDescription'),
+                      value: settings.plusEnableHomeDashboard,
+                      onChanged: (val) => settings.plusEnableHomeDashboard = val,
+                    ),
                   if (_matches(tr('plusHapticFeedback')))
                     _buildFeatureToggle(
                       context,

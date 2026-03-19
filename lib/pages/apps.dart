@@ -14,8 +14,10 @@ import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
-import 'package:obtainium/components/apps/app_list_tile.dart';
+import 'package:obtainium/components/apps/app_changelog.dart';
+import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
+
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
@@ -152,6 +154,30 @@ class AppsPageState extends State<AppsPage> {
     if (filter.statusFilter.contains('trackonly')) return 'trackonly';
     if (filter.statusFilter.contains('installed')) return 'installed';
     return 'all';
+  }
+
+  Widget _buildDashboard(BuildContext context, AppsProvider appsProvider) {
+    final settings = context.read<SettingsProvider>();
+    if (!settings.plusEnableHomeDashboard || selectedAppIds.isNotEmpty || appsProvider.searchQuery.isNotEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return SliverToBoxAdapter(
+      child: AppDashboard(
+        onSearchQuery: (query) {
+          appsProvider.searchQuery = query;
+          refresh();
+        },
+        onUrlInput: (url) {
+          // Trigger the command center with the URL input
+          CommandCenter.show(context, initialQuery: url);
+        },
+        onCheckUpdates: () {
+          appsProvider.filterMode = AppFilterMode.updates;
+          refresh();
+        },
+      ),
+    );
   }
 
   Widget _buildPillSlider(BuildContext context, AppsProvider appsProvider) {
@@ -471,7 +497,8 @@ class AppsPageState extends State<AppsPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
-                if (selectedAppIds.isEmpty) _buildPillSlider(context, appsProvider),
+                _buildDashboard(context, appsProvider),
+                if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 ..._buildLoadingOverlay(appsProvider),
                 _buildContent(context, viewSettings, listedApps, listedCategories),
                 // Bottom padding to prevent FAB / quick-filter strip from
@@ -515,19 +542,89 @@ class AppsPageState extends State<AppsPage> {
   ) {
     final settings = context.watch<SettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Automatically use compact style if in Bottom Focus mode to reduce empty space
+    final style = settings.plusTopUILayout 
+        ? settings.getAppBarStyleForPage('apps') 
+        : AppBarStyle.compact;
 
-    return SliverAppBar.large(
+    if (style == AppBarStyle.large) {
+      return SliverAppBar.large(
+        pinned: true,
+        floating: true,
+        snap: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        flexibleSpace: settings.plusEnableGlassmorphism
+            ? ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
+                  ),
+                ),
+              )
+            : Container(color: Theme.of(context).colorScheme.surface),
+        leading: selectedAppIds.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: clearSelected,
+                tooltip: tr('clear'),
+              )
+            : null,
+        title: GestureDetector(
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsPage(initialTab: 0),
+              ),
+            );
+          },
+          child: Text(
+            selectedAppIds.isNotEmpty
+                ? '${selectedAppIds.length}'
+                : tr('appsString'),
+          ),
+        ),
+        actions: [
+          if (selectedAppIds.isNotEmpty)
+            ..._buildSelectionActions(context, listedApps)
+          else
+            ..._buildNormalActions(context, viewSettings, isFilterOff),
+          
+          if (viewSettings.displayShowAppCount && selectedAppIds.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Text(
+                  '${listedApps.length}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
+    // Compact style
+    return SliverAppBar(
       pinned: true,
       floating: true,
       snap: false,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
+      centerTitle: true,
       flexibleSpace: settings.plusEnableGlassmorphism
           ? ClipRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                 child: Container(
-                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
                 ),
               ),
             )
@@ -664,18 +761,29 @@ class AppsPageState extends State<AppsPage> {
 
     return [
       if (showTopActions) ...[
-        IconButton(
-          icon: Icon(isFilterOff
-              ? Icons.search_rounded
-              : Icons.search_off_rounded),
-          onPressed: () {
-            if (isFilterOff) {
-              CommandCenter.show(context);
-            } else {
-              setState(() => filter = AppsFilter());
-            }
-          },
-          tooltip: isFilterOff ? tr('search') : tr('clear'),
+        Tooltip(
+          message: isFilterOff ? tr('search') : tr('clear'),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () {
+              if (isFilterOff) {
+                CommandCenter.show(context);
+              } else {
+                setState(() => filter = AppsFilter());
+              }
+            },
+            onLongPress: () {
+              HapticFeedback.heavyImpact();
+              settings.plusTopUILayout = !settings.plusTopUILayout;
+              showMessage(tr('toggleUIFocus'), context);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(isFilterOff
+                  ? Icons.search_rounded
+                  : Icons.search_off_rounded),
+            ),
+          ),
         ),
         Stack(
           alignment: Alignment.center,
@@ -760,6 +868,11 @@ class AppsPageState extends State<AppsPage> {
                   onTap: () {
                     HapticFeedback.selectionClick();
                     CommandCenter.show(context);
+                  },
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    settings.plusTopUILayout = !settings.plusTopUILayout;
+                    showMessage(tr('toggleUIFocus'), context);
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

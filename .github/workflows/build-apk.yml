@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'feature/*'
   workflow_dispatch:
     inputs:
       beta:
@@ -26,8 +27,19 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Detect Build Type
+        id: detect_build
+        run: |
+          IS_DEV=false
+          if [[ "${{ github.ref }}" == refs/heads/feature/* ]]; then
+            IS_DEV=true
+          fi
+          echo "is_dev=$IS_DEV" >> $GITHUB_OUTPUT
+          echo "Build type: $( [ "$IS_DEV" = true ] && echo 'Dev' || echo 'Release' )"
+
       - name: Auto-bump version
         id: bump_version
+        if: steps.detect_build.outputs.is_dev != 'true'
         run: |
           # Extract current version
           CURRENT_VERSION=$(grep -oP "^version: \K[^\+]+" pubspec.yaml)
@@ -142,6 +154,11 @@ jobs:
           echo "Renaming APK to remove flavor suffix..."
           find build/app/outputs/flutter-apk/ -name "app-*normal*.apk" -exec bash -c 'mv "$1" "${1//-normal/}"' -- {} \;
 
+          if [ "${{ steps.detect_build.outputs.is_dev }}" = "true" ]; then
+            echo "Labeling APK as Dev build..."
+            mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/Obtainium-Plus-Dev.apk
+          fi
+
           echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
 
@@ -244,11 +261,11 @@ jobs:
         id: create_release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || format('build-{0}', github.run_number) }}
-          name: "Obtainium+ ${{ steps.bump_version.outputs.version }}"
+          tag: ${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || format('build-{0}', github.run_number) }}
+          name: "${{ (steps.detect_build.outputs.is_dev == 'true' && format('Obtainium+ Dev Build #{0}', github.run_number)) || format('Obtainium+ {0}', steps.bump_version.outputs.version) }}"
           commit: ${{ github.sha }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.detect_build.outputs.is_dev == 'true' }}
           generateReleaseNotes: false
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -256,13 +273,14 @@ jobs:
           skipIfReleaseExists: false
           replacesArtifacts: true
           body: |
-            **Obtainium+ Automated Build**
+            **Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
             
             - **Build #:** ${{ github.run_number }}
             - **Commit:** ${{ github.sha }}
             - **Date:** ${{ github.event.head_commit.timestamp }}
+            - **Branch:** ${{ github.ref_name }}
             
-            Built automatically on push to main branch.
+            Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch.
 
   sync-sentry-issues:
     needs: build
