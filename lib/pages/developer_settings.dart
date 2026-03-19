@@ -401,10 +401,10 @@ class DeveloperSettingsPage extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: color.withValues(alpha: 0.1),
+      color: color.withOpacity(0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
+        side: BorderSide(color: color.withOpacity(0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -418,7 +418,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            LinearProgressIndicator(value: score / 100, backgroundColor: color.withValues(alpha: 0.1), color: color),
+            LinearProgressIndicator(value: score / 100, backgroundColor: color.withOpacity(0.1), color: color),
             const SizedBox(height: 8),
             Text('Current Protection: $label', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           ],

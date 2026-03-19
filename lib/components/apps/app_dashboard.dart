@@ -27,10 +27,12 @@ class AppDashboard extends StatelessWidget {
 
     final apps = appsProvider.getAppValues();
     final totalApps = apps.length;
-    final updatesAvailable = apps.where((app) => 
+    
+    final updateApps = apps.where((app) => 
         app.app.installedVersion != null && 
         app.app.installedVersion != app.app.latestVersion
-    ).length;
+    ).toList();
+    final updatesAvailable = updateApps.length;
 
     DateTime? lastCheck;
     for (var app in apps) {
@@ -119,12 +121,10 @@ class AppDashboard extends StatelessWidget {
               height: 64,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: apps.where((app) => app.app.installedVersion != app.app.latestVersion).length.clamp(0, 10),
+                itemCount: updatesAvailable.clamp(0, 10),
                 separatorBuilder: (context, index) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
-                  final updateApps = apps.where((app) => app.app.installedVersion != app.app.latestVersion).toList();
-                  final app = updateApps[index];
-                  return _buildRecentUpdateIcon(context, app);
+                  return _buildRecentUpdateIcon(context, updateApps[index]);
                 },
               ),
             ),
@@ -159,10 +159,10 @@ class AppDashboard extends StatelessWidget {
             width: 130,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+              color: color.withOpacity(isDark ? 0.15 : 0.08),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: color.withValues(alpha: settings.plusEnableGlassmorphism ? 0.3 : 0.1),
+                color: color.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.1),
                 width: 1,
               ),
             ),
@@ -201,7 +201,7 @@ class AppDashboard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.error.withOpacity(0.3),
             width: 1.5,
           ),
         ),
@@ -213,7 +213,7 @@ class AppDashboard extends StatelessWidget {
                 child: Image.memory(app.icon!, fit: BoxFit.cover, width: 64, height: 64),
               )
             else
-              Center(child: Icon(Icons.apps_rounded, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5))),
+              Center(child: Icon(Icons.apps_rounded, color: Theme.of(context).colorScheme.primary.withOpacity(0.5))),
             
             Positioned(
               right: 4,
