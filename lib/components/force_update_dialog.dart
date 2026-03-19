@@ -49,12 +49,12 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 460),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withValues(alpha: 0.18)
-                : colorScheme.outline.withValues(alpha: 0.1),
+                ? colorScheme.onSurface.withOpacity(0.18)
+                : colorScheme.outline.withOpacity(0.1),
           ),
           boxShadow: AppShadows.smooth(
             color: Colors.black,
@@ -80,9 +80,9 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                     gradient: LinearGradient(
                       colors: [
                         colorScheme.primaryContainer
-                            .withValues(alpha: enableGlass ? 0.3 : 0.5),
+                            .withOpacity(enableGlass ? 0.3 : 0.5),
                         colorScheme.primaryContainer
-                            .withValues(alpha: enableGlass ? 0.15 : 0.25),
+                            .withOpacity(enableGlass ? 0.15 : 0.25),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -95,7 +95,7 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.2),
+                          color: colorScheme.primary.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -179,7 +179,7 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
+                        .withOpacity(0.3),
                     borderRadius: const BorderRadius.vertical(
                         bottom: Radius.circular(24)),
                   ),

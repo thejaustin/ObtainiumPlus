@@ -98,23 +98,23 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             color: (isDark
                     ? theme.colorScheme.surfaceContainerHigh
                     : theme.colorScheme.surface)
-                .withValues(alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0),
+                .withOpacity(settings.plusEnableGlassmorphism ? 0.72 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
-                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+                    ? theme.colorScheme.onSurface.withOpacity(0.18)
+                    : theme.colorScheme.outlineVariant.withOpacity(0.1),
                 width: 1,
               ),
               left: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    ? theme.colorScheme.onSurface.withOpacity(0.12)
                     : Colors.transparent,
               ),
               right: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    ? theme.colorScheme.onSurface.withOpacity(0.12)
                     : Colors.transparent,
               ),
             ),
@@ -334,7 +334,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             return FilterChip(
               label: Text(cat),
               selected: selected,
-              selectedColor: color.withValues(alpha: 0.2),
+              selectedColor: color.withOpacity(0.2),
               checkmarkColor: color,
               onSelected: (val) {
                 HapticFeedback.selectionClick();

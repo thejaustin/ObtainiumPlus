@@ -51,11 +51,10 @@ class SettingsGroup extends StatelessWidget {
                 color: (isDark 
                     ? Theme.of(context).colorScheme.surfaceContainerHigh 
                     : Theme.of(context).colorScheme.surface)
-                  .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                  .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
                 borderRadius: BorderRadius.circular(28.0),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2
+                  color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2
                   ),
                   width: 1,
                 ),
@@ -71,7 +70,7 @@ class SettingsGroup extends StatelessWidget {
                           height: 1,
                           indent: 56,
                           endIndent: 16,
-                          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
+                          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
                         ),
                     ],
                   );
