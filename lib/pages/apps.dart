@@ -164,6 +164,8 @@ class AppsPageState extends State<AppsPage> {
 
     return SliverToBoxAdapter(
       child: AppDashboard(
+        currentFilterMode: _getCurrentFilterMode(),
+        onFilterChanged: _applyFilterMode,
         onSearchQuery: (query) {
           appsProvider.searchQuery = query;
           refresh();
@@ -173,8 +175,7 @@ class AppsPageState extends State<AppsPage> {
           CommandCenter.show(context, initialQuery: url);
         },
         onCheckUpdates: () {
-          appsProvider.filterMode = AppFilterMode.updates;
-          refresh();
+          _applyFilterMode('updates');
         },
       ),
     );

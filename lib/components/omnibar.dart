@@ -435,6 +435,39 @@ class AppActionsFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final showSearch = !settings.plusTopUILayout;
+
+    if (showSearch) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onLongPress: () {
+              HapticFeedback.heavyImpact();
+              settings.plusTopUILayout = !settings.plusTopUILayout;
+            },
+            child: FloatingActionButton.small(
+              heroTag: 'fab_search',
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                CommandCenter.show(context);
+              },
+              child: const Icon(Icons.search_rounded),
+            ),
+          ),
+          const SizedBox(width: 12),
+          FloatingActionButton.extended(
+            heroTag: 'fab_add',
+            onPressed: () => _showAddAppMenu(context),
+            icon: const Icon(Icons.add),
+            label: Text(tr('addApp')),
+            elevation: 4,
+          ),
+        ],
+      );
+    }
+
     return FloatingActionButton.extended(
       onPressed: () => _showAddAppMenu(context),
       icon: const Icon(Icons.add),
