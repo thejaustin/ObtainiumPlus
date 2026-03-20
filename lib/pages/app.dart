@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_description_slider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -1544,7 +1545,7 @@ class _AppBottomBar extends StatelessWidget {
               if (currentApp?.downloadProgress != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                  child: LinearProgressIndicator(
+                  child: ExpressiveProgressIndicator(
                     value: currentApp!.downloadProgress! >= 0
                         ? currentApp.downloadProgress! / 100
                         : null,

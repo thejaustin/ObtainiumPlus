@@ -205,6 +205,65 @@ class DeveloperSettingsPage extends StatelessWidget {
           ),
           _buildSection(
             context,
+            'Expressive Design & Shapes',
+            [
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.gesture_rounded),
+                title: const Text('Squiggly Progress Bars'),
+                subtitle: const Text('Use Play Store-style sinusoidal animations for loading and downloads.'),
+                value: context.watch<PlusSettingsProvider>().plusEnableExpressiveProgress,
+                onChanged: (val) => context.read<PlusSettingsProvider>().plusEnableExpressiveProgress = val,
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.rounded_corner_rounded),
+                title: const Text('Global Corner Radius'),
+                subtitle: Text('Default roundedness for cards and containers (${context.watch<PlusSettingsProvider>().plusGlobalCornerRadius.toInt()}px)'),
+              ),
+              Slider(
+                value: context.watch<PlusSettingsProvider>().plusGlobalCornerRadius,
+                min: 0,
+                max: 40,
+                divisions: 40,
+                onChanged: (val) => context.read<PlusSettingsProvider>().plusGlobalCornerRadius = val,
+              ),
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.tune_rounded),
+                title: const Text('Override Individual Radii'),
+                subtitle: const Text('Fine-tune roundedness for specific areas of the app.'),
+                value: context.watch<PlusSettingsProvider>().plusOverrideIndividualCornerRadius,
+                onChanged: (val) => context.read<PlusSettingsProvider>().plusOverrideIndividualCornerRadius = val,
+              ),
+              if (context.watch<PlusSettingsProvider>().plusOverrideIndividualCornerRadius) ...[
+                ListTile(
+                  leading: const Icon(Icons.home_max_rounded),
+                  title: const Text('Home Screen Radius'),
+                  subtitle: Text('Roundedness for dashboard and app list elements (${context.watch<PlusSettingsProvider>().plusHomeCornerRadius.toInt()}px)'),
+                ),
+                Slider(
+                  value: context.watch<PlusSettingsProvider>().plusHomeCornerRadius,
+                  min: 0,
+                  max: 40,
+                  divisions: 40,
+                  onChanged: (val) => context.read<PlusSettingsProvider>().plusHomeCornerRadius = val,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings_suggest_rounded),
+                  title: const Text('Settings Radius'),
+                  subtitle: Text('Roundedness for settings groups and cards (${context.watch<PlusSettingsProvider>().plusSettingsCornerRadius.toInt()}px)'),
+                ),
+                Slider(
+                  value: context.watch<PlusSettingsProvider>().plusSettingsCornerRadius,
+                  min: 0,
+                  max: 40,
+                  divisions: 40,
+                  onChanged: (val) => context.read<PlusSettingsProvider>().plusSettingsCornerRadius = val,
+                ),
+              ],
+            ],
+          ),
+          _buildSection(
+            context,
             'Testing',
             [
               ListTile(
