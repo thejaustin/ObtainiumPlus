@@ -164,6 +164,36 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableExpressiveProgress => _prefs?.getBool('plusEnableExpressiveProgress') ?? true;
+  set plusEnableExpressiveProgress(bool val) {
+    _prefs?.setBool('plusEnableExpressiveProgress', val);
+    notifyListeners();
+  }
+
+  double get plusGlobalCornerRadius => _prefs?.getDouble('plusGlobalCornerRadius') ?? 20.0;
+  set plusGlobalCornerRadius(double val) {
+    _prefs?.setDouble('plusGlobalCornerRadius', val);
+    notifyListeners();
+  }
+
+  double get plusHomeCornerRadius => _prefs?.getDouble('plusHomeCornerRadius') ?? 20.0;
+  set plusHomeCornerRadius(double val) {
+    _prefs?.setDouble('plusHomeCornerRadius', val);
+    notifyListeners();
+  }
+
+  double get plusSettingsCornerRadius => _prefs?.getDouble('plusSettingsCornerRadius') ?? 16.0;
+  set plusSettingsCornerRadius(double val) {
+    _prefs?.setDouble('plusSettingsCornerRadius', val);
+    notifyListeners();
+  }
+
+  bool get plusOverrideIndividualCornerRadius => _prefs?.getBool('plusOverrideIndividualCornerRadius') ?? false;
+  set plusOverrideIndividualCornerRadius(bool val) {
+    _prefs?.setBool('plusOverrideIndividualCornerRadius', val);
+    notifyListeners();
+  }
+
   bool get plusEnableHapticFeedback => _prefs?.getBool('plusEnableHapticFeedback') ?? true;
   set plusEnableHapticFeedback(bool val) {
     _prefs?.setBool('plusEnableHapticFeedback', val);

@@ -191,11 +191,15 @@ class AppDashboard extends StatelessWidget {
     final settings = context.read<SettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
+    final radius = settings.plusOverrideIndividualCornerRadius 
+        ? settings.plusHomeCornerRadius 
+        : settings.plusGlobalCornerRadius;
+    
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(radius),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(radius),
         child: BackdropFilter(
           filter: ImageFilter.blur(
             sigmaX: settings.plusEnableGlassmorphism ? 12 : 0,
@@ -206,7 +210,7 @@ class AppDashboard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: color.withOpacity(isDark ? 0.15 : 0.08),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(radius),
               border: Border.all(
                 color: color.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.1),
                 width: 1,
