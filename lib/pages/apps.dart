@@ -769,7 +769,7 @@ class AppsPageState extends State<AppsPage> {
     final showTopActions = settings.plusTopUILayout || !settings.plusEnableQuickFilters;
 
     return [
-      if (showTopActions) ...[
+      if (showTopActions && settings.plusShowAppBarSearch) ...[
         Tooltip(
           message: isFilterOff ? tr('search') : tr('clear'),
           child: InkWell(
@@ -870,35 +870,37 @@ class AppsPageState extends State<AppsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Search
-              Tooltip(
-                message: tr('search'),
-                child: InkWell(
-                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(32)),
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    CommandCenter.show(context);
-                  },
-                  onLongPress: () {
-                    HapticFeedback.heavyImpact();
-                    settings.plusTopUILayout = !settings.plusTopUILayout;
-                    showMessage(tr('toggleUIFocus'), context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Icon(
-                      Icons.search_rounded,
-                      size: 22,
-                      color: colorScheme.onSurface,
+              if (settings.plusShowFloatingSearch)
+                Tooltip(
+                  message: tr('search'),
+                  child: InkWell(
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(32)),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      CommandCenter.show(context);
+                    },
+                    onLongPress: () {
+                      HapticFeedback.heavyImpact();
+                      settings.plusTopUILayout = !settings.plusTopUILayout;
+                      showMessage(tr('toggleUIFocus'), context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Icon(
+                        Icons.search_rounded,
+                        size: 22,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ),
-              ),
               // Divider
-              Container(
-                width: 1,
-                height: 24,
-                color: colorScheme.onSurface.withOpacity(0.15),
-              ),
+              if (settings.plusShowFloatingSearch)
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: colorScheme.onSurface.withOpacity(0.15),
+                ),
               // Filter/Sort with active badge
               Tooltip(
                 message: tr('sortOptions'),

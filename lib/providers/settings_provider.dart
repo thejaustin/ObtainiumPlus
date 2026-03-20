@@ -506,6 +506,24 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusShowAppBarSearch => plusSettings.plusShowAppBarSearch;
+  set plusShowAppBarSearch(bool val) {
+    plusSettings.plusShowAppBarSearch = val;
+    notifyListeners();
+  }
+
+  bool get plusShowDashboardSearch => plusSettings.plusShowDashboardSearch;
+  set plusShowDashboardSearch(bool val) {
+    plusSettings.plusShowDashboardSearch = val;
+    notifyListeners();
+  }
+
+  bool get plusShowFloatingSearch => plusSettings.plusShowFloatingSearch;
+  set plusShowFloatingSearch(bool val) {
+    plusSettings.plusShowFloatingSearch = val;
+    notifyListeners();
+  }
+
   bool get plusDeveloperMode => plusSettings.plusDeveloperMode;
   set plusDeveloperMode(bool val) {
     plusSettings.plusDeveloperMode = val;
