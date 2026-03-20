@@ -452,6 +452,36 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableExpressiveProgress => plusSettings.plusEnableExpressiveProgress;
+  set plusEnableExpressiveProgress(bool val) {
+    plusSettings.plusEnableExpressiveProgress = val;
+    notifyListeners();
+  }
+
+  double get plusGlobalCornerRadius => plusSettings.plusGlobalCornerRadius;
+  set plusGlobalCornerRadius(double val) {
+    plusSettings.plusGlobalCornerRadius = val;
+    notifyListeners();
+  }
+
+  double get plusHomeCornerRadius => plusSettings.plusHomeCornerRadius;
+  set plusHomeCornerRadius(double val) {
+    plusSettings.plusHomeCornerRadius = val;
+    notifyListeners();
+  }
+
+  double get plusSettingsCornerRadius => plusSettings.plusSettingsCornerRadius;
+  set plusSettingsCornerRadius(double val) {
+    plusSettings.plusSettingsCornerRadius = val;
+    notifyListeners();
+  }
+
+  bool get plusOverrideIndividualCornerRadius => plusSettings.plusOverrideIndividualCornerRadius;
+  set plusOverrideIndividualCornerRadius(bool val) {
+    plusSettings.plusOverrideIndividualCornerRadius = val;
+    notifyListeners();
+  }
+
   bool get plusEnableGlassmorphism => plusSettings.plusEnableGlassmorphism;
   set plusEnableGlassmorphism(bool val) {
     plusSettings.plusEnableGlassmorphism = val;
