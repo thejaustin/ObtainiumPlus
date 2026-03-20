@@ -140,6 +140,36 @@ class AppsViewSettingsSection extends StatelessWidget {
       ),
     ];
 
+    List<Widget> searchWidgets = [
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.vertical_align_top_rounded,
+        title: tr('showAppBarSearch'),
+        subtitle: tr('showAppBarSearchDescription'),
+        value: (s) => s.plusShowAppBarSearch,
+        onChanged: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
+        visible: (s) => _matches(tr('showAppBarSearch')),
+      ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.dashboard_outlined,
+        title: tr('showDashboardSearch'),
+        subtitle: tr('showDashboardSearchDescription'),
+        value: (s) => s.plusShowDashboardSearch,
+        onChanged: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
+        visible: (s) => _matches(tr('showDashboardSearch')),
+      ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.ads_click_rounded,
+        title: tr('showFloatingSearch'),
+        subtitle: tr('showFloatingSearchDescription'),
+        value: (s) => s.plusShowFloatingSearch,
+        onChanged: (s, v) => onSetState(() => s.plusShowFloatingSearch = v),
+        visible: (s) => _matches(tr('showFloatingSearch')),
+      ),
+    ];
+
     return Column(
       children: [
         if (categoryWidgets.any((w) => w is! SizedBox))
@@ -151,6 +181,11 @@ class AppsViewSettingsSection extends StatelessWidget {
           SettingsGroup(
             title: isSearching ? null : tr('categoryIconPreview'),
             children: iconWidgets,
+          ),
+        if (searchWidgets.any((w) => w is! SizedBox))
+          SettingsGroup(
+            title: isSearching ? null : tr('searchSettings'),
+            children: searchWidgets,
           ),
         if (viewWidgets.any((w) => w is! SizedBox))
           SettingsGroup(
