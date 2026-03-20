@@ -440,7 +440,7 @@ class AppsPageState extends State<AppsPage> {
             // Master View (App List)
             SizedBox(
               width: 350,
-              child: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
+              child: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh, settingsProvider, getLoadingWidgets()),
             ),
             const VerticalDivider(width: 1),
             // Detail View
