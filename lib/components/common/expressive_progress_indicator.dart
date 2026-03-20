@@ -88,7 +88,7 @@ class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator>
           painter: _SquigglyPainter(
             progress: widget.value,
             animationValue: _controller.value,
-            color: widget.color,
+            color: widget.color ?? Theme.of(context).colorScheme.primary,
             backgroundColor: widget.backgroundColor,
           ),
           child: const SizedBox.expand(),
