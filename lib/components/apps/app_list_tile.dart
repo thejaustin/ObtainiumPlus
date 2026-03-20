@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -208,6 +209,10 @@ class AppListTile extends StatelessWidget {
         : null;
     final displayCategoryColor = categoryColorVal != null ? Color(categoryColorVal) : null;
 
+    final radius = settingsProvider.plusOverrideIndividualCornerRadius 
+        ? settingsProvider.plusHomeCornerRadius 
+        : settingsProvider.plusGlobalCornerRadius;
+
     if (!settingsProvider.plusEnableModernAppListTile) {
       // --- LEGACY UI ---
       var transparent = Theme.of(context).colorScheme.surface.withAlpha(0).value;
@@ -260,7 +265,7 @@ class AppListTile extends StatelessWidget {
                 ),
                 selected: isSelected,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(radius),
                 ),
                 leading: getAppIcon(),
                 title: Text(
@@ -320,12 +325,12 @@ class AppListTile extends StatelessWidget {
         child: InkWell(
           onLongPress: onLongPress,
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(radius),
           child: AnimatedContainer(
             duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 200 : 0),
             curve: Curves.easeOutCubic,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               color: isSelected
                   ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
                   : appInMemory.app.pinned
@@ -344,7 +349,7 @@ class AppListTile extends StatelessWidget {
                   : null,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               child: Stack(
                 children: [
                   // Modern Category Indicator (Vertical bar)
@@ -422,11 +427,11 @@ class AppListTile extends StatelessWidget {
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),
                                 const SizedBox(height: 4),
-                                LinearProgressIndicator(
+                                ExpressiveProgressIndicator(
                                   value: appInMemory.downloadProgress! >= 0
                                       ? appInMemory.downloadProgress! / 100
                                       : null,
-                                  borderRadius: BorderRadius.circular(2),
+                                  height: 4,
                                 ),
                               ],
                             ),

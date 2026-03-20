@@ -51,6 +51,10 @@ class ExpressiveSettingsGroup extends StatelessWidget {
       }),
     );
 
+    final radius = settings.plusOverrideIndividualCornerRadius 
+        ? settings.plusSettingsCornerRadius 
+        : settings.plusGlobalCornerRadius;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -90,7 +94,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
               : Theme.of(context).colorScheme.surface)
             .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.0),
+            borderRadius: BorderRadius.circular(radius),
             side: BorderSide(
               color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2
               ),
@@ -98,7 +102,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24.0),
+            borderRadius: BorderRadius.circular(radius),
             child: settings.plusEnableGlassmorphism
                 ? BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
