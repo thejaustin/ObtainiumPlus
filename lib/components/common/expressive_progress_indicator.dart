@@ -125,34 +125,47 @@ class _SquigglyPainter extends CustomPainter {
       paint,
     );
 
-    if (progress == 0.0) return;
-
     final activePaint = Paint()
       ..color = color
       ..strokeWidth = size.height
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    final double activeWidth = (progress ?? 1.0) * size.width;
     final path = Path();
-    
-    // Squiggly line parameters
     const double amplitude = 2.0;
     const double frequency = 0.15;
     
-    path.moveTo(0, size.height / 2);
-    
-    for (double x = 0; x <= activeWidth; x += 1.0) {
-      // Create wave effect
-      final double y = size.height / 2 + 
-          math.sin((x * frequency) + (animationValue * math.pi * 2)) * amplitude;
-      path.lineTo(x, y);
+    if (progress != null) {
+      // Determinate state
+      if (progress == 0.0) return;
+      final double activeWidth = progress! * size.width;
+      path.moveTo(0, size.height / 2);
+      for (double x = 0; x <= activeWidth; x += 2.0) {
+        final double y = size.height / 2 + 
+            math.sin((x * frequency) + (animationValue * math.pi * 2)) * amplitude;
+        path.lineTo(x, y);
+      }
+    } else {
+      // Indeterminate state - moving segment
+      final double segmentWidth = size.width * 0.3;
+      final double startX = (animationValue * (size.width + segmentWidth)) - segmentWidth;
+      final double endX = startX + segmentWidth;
+      
+      bool first = true;
+      for (double x = startX; x <= endX; x += 2.0) {
+        if (x < 0 || x > size.width) continue;
+        final double y = size.height / 2 + 
+            math.sin((x * frequency) + (animationValue * math.pi * 10)) * amplitude;
+        if (first) {
+          path.moveTo(x, y);
+          first = false;
+        } else {
+          path.lineTo(x, y);
+        }
+      }
     }
 
     canvas.drawPath(path, activePaint);
-    
-    // If indeterminate, we might want a different moving segment, 
-    // but for simplicity, we'll just squiggle the whole bar if value is null
   }
 
   @override
