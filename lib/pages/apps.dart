@@ -473,7 +473,7 @@ class AppsPageState extends State<AppsPage> {
           : null,
       body: Stack(
         children: [
-          _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh, settingsProvider),
+          _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh, settingsProvider, getLoadingWidgets()),
           if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty && !settingsProvider.plusTopUILayout)
             Positioned(
               left: 16,
@@ -492,6 +492,7 @@ class AppsPageState extends State<AppsPage> {
     bool isFilterOff, 
     Future<void> Function() onRefresh,
     SettingsProvider settingsProvider,
+    List<Widget> loadingWidgets,
   ) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, viewSettings, _) {
@@ -507,7 +508,7 @@ class AppsPageState extends State<AppsPage> {
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
                 _buildDashboard(context, appsProvider, onRefresh),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
-                ..._buildLoadingOverlay(appsProvider),
+                ...loadingWidgets,
                 _buildContent(context, viewSettings, listedApps, listedCategories),
                 // Bottom padding to prevent FAB / quick-filter strip from
                 // obscuring the last list item.
