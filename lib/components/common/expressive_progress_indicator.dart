@@ -46,7 +46,7 @@ class ExpressiveProgressIndicator extends StatelessWidget {
 
 class SquigglyProgressIndicator extends StatefulWidget {
   final double? value;
-  final Color color;
+  final Color? color;
   final Color backgroundColor;
 
   const SquigglyProgressIndicator({
