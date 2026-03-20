@@ -140,6 +140,24 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusShowAppBarSearch => _prefs?.getBool('plusShowAppBarSearch') ?? true;
+  set plusShowAppBarSearch(bool val) {
+    _prefs?.setBool('plusShowAppBarSearch', val);
+    notifyListeners();
+  }
+
+  bool get plusShowDashboardSearch => _prefs?.getBool('plusShowDashboardSearch') ?? true;
+  set plusShowDashboardSearch(bool val) {
+    _prefs?.setBool('plusShowDashboardSearch', val);
+    notifyListeners();
+  }
+
+  bool get plusShowFloatingSearch => _prefs?.getBool('plusShowFloatingSearch') ?? true;
+  set plusShowFloatingSearch(bool val) {
+    _prefs?.setBool('plusShowFloatingSearch', val);
+    notifyListeners();
+  }
+
   bool get plusEnableSwipeActions => _prefs?.getBool('plusEnableSwipeActions') ?? true;
   set plusEnableSwipeActions(bool val) {
     _prefs?.setBool('plusEnableSwipeActions', val);
