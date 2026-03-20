@@ -57,12 +57,13 @@ class AppDashboard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Omnibar - Unified Search/Add
-          Omnibar(
-            onSearchQuery: onSearchQuery,
-            onUrlInput: onUrlInput,
-          ),
-          
-          const SizedBox(height: 20),
+          if (settings.plusShowDashboardSearch) ...[
+            Omnibar(
+              onSearchQuery: onSearchQuery,
+              onUrlInput: onUrlInput,
+            ),
+            const SizedBox(height: 20),
+          ],
           
           // Summary Row
           SingleChildScrollView(

@@ -436,7 +436,7 @@ class AppActionsFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final showSearch = !settings.plusTopUILayout;
+    final showSearch = !settings.plusTopUILayout && settings.plusShowFloatingSearch;
 
     if (showSearch) {
       return Row(
