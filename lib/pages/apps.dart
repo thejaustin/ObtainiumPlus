@@ -156,9 +156,9 @@ class AppsPageState extends State<AppsPage> {
     return 'all';
   }
 
-  Widget _buildDashboard(BuildContext context, AppsProvider appsProvider) {
+  Widget _buildDashboard(BuildContext context, AppsProvider appsProvider, Future<void> Function() onRefresh) {
     final settings = context.read<SettingsProvider>();
-    if (!settings.plusEnableHomeDashboard || selectedAppIds.isNotEmpty || appsProvider.searchQuery.isNotEmpty) {
+    if (!settings.plusEnableHomeDashboard || selectedAppIds.isNotEmpty || filter.nameFilter.isNotEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
@@ -167,8 +167,8 @@ class AppsPageState extends State<AppsPage> {
         currentFilterMode: _getCurrentFilterMode(),
         onFilterChanged: _applyFilterMode,
         onSearchQuery: (query) {
-          appsProvider.searchQuery = query;
-          refresh();
+          setState(() => filter.nameFilter = query);
+          onRefresh();
         },
         onUrlInput: (url) {
           // Trigger the command center with the URL input
@@ -473,7 +473,7 @@ class AppsPageState extends State<AppsPage> {
           : null,
       body: Stack(
         children: [
-          _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh),
+          _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh, settingsProvider),
           if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty && !settingsProvider.plusTopUILayout)
             Positioned(
               left: 16,
@@ -485,7 +485,14 @@ class AppsPageState extends State<AppsPage> {
     );
   }
 
-  Widget _buildMainContent(AppsProvider appsProvider, List<AppInMemory> listedApps, List<String?> listedCategories, bool isFilterOff, Future<void> Function() onRefresh) {
+  Widget _buildMainContent(
+    AppsProvider appsProvider, 
+    List<AppInMemory> listedApps, 
+    List<String?> listedCategories, 
+    bool isFilterOff, 
+    Future<void> Function() onRefresh,
+    SettingsProvider settingsProvider,
+  ) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, viewSettings, _) {
         return RefreshIndicator(
@@ -498,7 +505,7 @@ class AppsPageState extends State<AppsPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
-                _buildDashboard(context, appsProvider),
+                _buildDashboard(context, appsProvider, onRefresh),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 ..._buildLoadingOverlay(appsProvider),
                 _buildContent(context, viewSettings, listedApps, listedCategories),
