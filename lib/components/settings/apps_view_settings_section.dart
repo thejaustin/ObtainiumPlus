@@ -77,6 +77,15 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusEnableHomeDashboard = v),
         visible: (s) => _matches(tr('plusHomeDashboard')),
       ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.gesture_rounded,
+        title: tr('plusExpressiveProgress'),
+        subtitle: tr('plusExpressiveProgressDescription'),
+        value: (s) => s.plusEnableExpressiveProgress,
+        onChanged: (s, v) => onSetState(() => s.plusEnableExpressiveProgress = v),
+        visible: (s) => _matches(tr('plusExpressiveProgress')),
+      ),
       _buildGridSettings(context),
     ];
 

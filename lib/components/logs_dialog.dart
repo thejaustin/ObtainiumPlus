@@ -8,6 +8,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -210,7 +211,7 @@ $logs''';
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.all(40),
-                    child: CircularProgressIndicator(
+                    child: ExpressiveCircularProgressIndicator(
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),

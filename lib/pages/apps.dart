@@ -17,6 +17,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
@@ -307,8 +308,7 @@ class AppsPageState extends State<AppsPage> {
             hasScrollBody: false,
             child: appsProvider.loadingApps
                 ? const Center(
-                    child: CircularProgressIndicator(
-                      semanticsLabel: 'Loading apps',
+                    child: ExpressiveCircularProgressIndicator(
                       strokeWidth: 3,
                     ),
                   )
@@ -984,7 +984,7 @@ class AppsPageState extends State<AppsPage> {
       return SliverFillRemaining(
         hasScrollBody: false,
         child: appsProvider.loadingApps
-            ? const Center(child: CircularProgressIndicator(strokeWidth: 3))
+            ? const Center(child: ExpressiveCircularProgressIndicator(strokeWidth: 3))
             : EmptyStateWidget(
                 title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
                 subtitle: appsProvider.apps.isEmpty
