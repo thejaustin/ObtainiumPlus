@@ -11,6 +11,7 @@ import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:flutter/services.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
@@ -400,7 +401,7 @@ class DeveloperSettingsPage extends StatelessWidget {
       barrierDismissible: false,
       builder: (_) => const AlertDialog(
         content: Row(children: [
-          CircularProgressIndicator(),
+          ExpressiveCircularProgressIndicator(),
           SizedBox(width: 16),
           Flexible(child: Text('Linking account…')),
         ]),
@@ -657,7 +658,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (_isLoading)
-                      const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                      const SizedBox(width: 20, height: 20, child: ExpressiveCircularProgressIndicator(strokeWidth: 2)),
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => authProvider.removeDispenser(d),

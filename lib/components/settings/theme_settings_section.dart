@@ -175,12 +175,82 @@ class ThemeSettingsSection extends StatelessWidget {
       ),
     ];
 
+    List<Widget> shapeWidgets = [
+      if (_matches(tr('plusGlobalCornerRadius'))) ...[
+        ListTile(
+          leading: const Icon(Icons.rounded_corner_rounded),
+          title: Text(tr('plusGlobalCornerRadius'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text("${settings.plusGlobalCornerRadius.toInt()}px"),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Slider(
+            value: settings.plusGlobalCornerRadius,
+            min: 0,
+            max: 40,
+            divisions: 40,
+            onChanged: (val) => settings.plusGlobalCornerRadius = val,
+          ),
+        ),
+      ],
+      _buildFeatureToggle(
+        context,
+        icon: Icons.tune_rounded,
+        title: tr('plusOverrideIndividualCornerRadius'),
+        subtitle: tr('plusOverrideIndividualCornerRadiusDescription'),
+        value: (SettingsProvider s) => s.plusOverrideIndividualCornerRadius,
+        onChanged: (SettingsProvider s, bool v) => s.plusOverrideIndividualCornerRadius = v,
+        visible: (SettingsProvider s) => _matches(tr('plusOverrideIndividualCornerRadius')),
+      ),
+      if (settings.plusOverrideIndividualCornerRadius) ...[
+        if (_matches(tr('plusHomeCornerRadius'))) ...[
+          ListTile(
+            leading: const Icon(Icons.home_max_rounded),
+            title: Text(tr('plusHomeCornerRadius'), style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text("${settings.plusHomeCornerRadius.toInt()}px"),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Slider(
+              value: settings.plusHomeCornerRadius,
+              min: 0,
+              max: 40,
+              divisions: 40,
+              onChanged: (val) => settings.plusHomeCornerRadius = val,
+            ),
+          ),
+        ],
+        if (_matches(tr('plusSettingsCornerRadius'))) ...[
+          ListTile(
+            leading: const Icon(Icons.settings_suggest_rounded),
+            title: Text(tr('plusSettingsCornerRadius'), style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text("${settings.plusSettingsCornerRadius.toInt()}px"),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Slider(
+              value: settings.plusSettingsCornerRadius,
+              min: 0,
+              max: 40,
+              divisions: 40,
+              onChanged: (val) => settings.plusSettingsCornerRadius = val,
+            ),
+          ),
+        ],
+      ],
+    ];
+
     return Column(
       children: [
         if (themeWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appearance'),
             children: themeWidgets,
+          ),
+        if (shapeWidgets.any((w) => w is! SizedBox))
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('plusShapesAndCorners'),
+            children: shapeWidgets,
           ),
         if (typographyWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(

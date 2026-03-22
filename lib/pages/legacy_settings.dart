@@ -10,6 +10,7 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart'; // Added
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/providers/apps_provider.dart';
@@ -115,7 +116,7 @@ class _LegacySettingsPageState extends State<LegacySettingsPage> {
     
     if (settingsProvider.prefs == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: ExpressiveCircularProgressIndicator()),
       );
     }
 

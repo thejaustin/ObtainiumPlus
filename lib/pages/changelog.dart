@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -30,7 +31,7 @@ class _ChangelogPageState extends State<ChangelogPage> {
         future: _changelogFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: ExpressiveCircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('${tr('error')}: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {

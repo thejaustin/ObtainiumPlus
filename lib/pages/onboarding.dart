@@ -7,6 +7,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 
 import 'package:obtainium/providers/auth_provider.dart';
@@ -128,7 +129,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: ExpressiveCircularProgressIndicator()),
     );
 
     try {
