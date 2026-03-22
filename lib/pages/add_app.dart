@@ -15,6 +15,7 @@ import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -684,7 +685,7 @@ class AddAppPageState extends State<AddAppPage> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                           )
                         : FilledButton.tonal(
                             onPressed: _canAddUrl
