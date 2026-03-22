@@ -7,6 +7,7 @@ import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -115,7 +116,7 @@ $logs''';
                     logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
                     return SelectableText(logString ?? '');
                   } else {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: ExpressiveCircularProgressIndicator());
                   }
                 },
               ),

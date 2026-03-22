@@ -6,6 +6,7 @@ import 'package:android_package_manager/android_package_manager.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/empty_state.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
@@ -402,7 +403,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: ExpressiveCircularProgressIndicator())
           : Padding(
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + kToolbarHeight + (_viewMode == SystemAppViewMode.grid ? 140 : 120)),
               child: filteredApps.isEmpty

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:provider/provider.dart';
 
 /// Shows the modern "Add App" bottom sheet with glassmorphism.
@@ -303,7 +304,7 @@ class _QuickAddButtonState extends State<QuickAddButton>
                   SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
+                    child: ExpressiveCircularProgressIndicator(
                       strokeWidth: 2,
                       color: Theme.of(context).colorScheme.primary,
                     ),

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:intl/intl.dart';
 import 'package:obtainium/components/empty_state.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -85,7 +86,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         future: _logsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: ExpressiveCircularProgressIndicator());
           }
           
           if (snapshot.hasError) {
