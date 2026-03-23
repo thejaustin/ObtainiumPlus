@@ -218,7 +218,11 @@ class AppFileService {
         logs: logs,
       );
     } catch (e) {
-      if (retries > 0 && e is ClientException) {
+      if (retries > 0 &&
+          (e is ClientException ||
+              e is HttpException ||
+              e is SocketException ||
+              e is HandshakeException)) {
         await Future.delayed(const Duration(seconds: 5));
         return await downloadFileWithRetry(
           url,

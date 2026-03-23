@@ -1,3 +1,14 @@
+### (pending) - fix: resolve Sentry crash issues regarding downloads and platform exceptions
+- **Date**: 2026-03-23
+- **Author**: Gemini CLI
+- **Details**: Fixes for multiple Sentry-reported crash issues.
+
+#### Crash Fixes (Sentry issues)
+- **OBTAINIUMPLUS-3 / OBTAINIUMPLUS-15**: Fixed `HttpException`, `SocketException`, and `HandshakeException` during downloads from unstable sources (e.g. APKPure) by adding them to the retry logic in `AppFileService.downloadFileWithRetry`.
+- **OBTAINIUMPLUS-17 / OBTAINIUMPLUS-16**: Mitigated `NullPointerException` crashes in the `android_package_manager` native library by wrapping `getAllInstalledInfo` and `getPackageArchiveInfo` calls with `try-catch` blocks across `AppInstallService` and `AppDownloadService`. Also added a protective `catch` to `AppsProvider.loadApps`.
+- **OBTAINIUMPLUS-T**: Prevented microG authentication errors from manifesting as fatal crashes. Improved logging by downgrading the error level to `warning` and surfacing a cleaner, actionable error message for `UnregisteredOnApiConsole` when `getMicroGToken` fails.
+- General: Integrated `talker` error logging to the newly created try-catch blocks to ensure that errors are properly surfaced during local debugging rather than being completely swallowed.
+
 ### (pending) - fix: comprehensive crash fixes and settings reorganization
 - **Date**: 2026-03-06
 - **Author**: Claude Code (claude-sonnet-4-6)

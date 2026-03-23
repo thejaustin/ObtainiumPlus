@@ -46,6 +46,7 @@ import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_crud_service.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/comparable_utils.dart';
@@ -449,6 +450,8 @@ class AppsProvider with ChangeNotifier {
         removeApps: removeApps,
         singleId: singleId,
       );
+    } catch (e) {
+      talker.error('Error loading apps: ${e.toString()}');
     } finally {
       loadingApps = false;
       _loadAppsCompleter?.complete();
