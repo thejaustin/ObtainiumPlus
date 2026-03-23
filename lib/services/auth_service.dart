@@ -112,9 +112,13 @@ class AuthService {
       talker.info('microG token retrieved for ${email.split('@').first}@…');
       return token;
     } on PlatformException catch (e) {
-      talker.error('getMicroGToken platform error [${e.code}]: ${e.message}');
+      talker.warning('getMicroGToken platform error [${e.code}]: ${e.message}');
       // Surface the native error message directly — it's already user-friendly.
-      throw ObtainiumError(e.message ?? 'Failed to retrieve microG token (${e.code})');
+      var message = e.message ?? 'Failed to retrieve microG token (${e.code})';
+      if (e.message?.contains('UnregisteredOnApiConsole') == true) {
+        message = 'microG error: UnregisteredOnApiConsole. Try signing out and back in to the account in microG Settings.';
+      }
+      throw ObtainiumError(message);
     } catch (e, stack) {
       talker.handle(e, stack, 'getMicroGToken unexpected error');
       throw ObtainiumError('Failed to retrieve microG token: $e');
