@@ -17,6 +17,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -286,9 +287,13 @@ class AppDownloadService {
       var isXAPK = downloadedFile.path.toLowerCase().endsWith('.xapk');
       Directory? apkDir;
       if (isAPK) {
-        newInfo = await pm.getPackageArchiveInfo(
-          archiveFilePath: downloadedFile.path,
-        );
+        try {
+          newInfo = await pm.getPackageArchiveInfo(
+            archiveFilePath: downloadedFile.path,
+          );
+        } catch (e) {
+          talker.error('Error getting package archive info: ${e.toString()}');
+        }
       } else {
         var res = await _processDownloadedArchive(
           downloadedFile,
