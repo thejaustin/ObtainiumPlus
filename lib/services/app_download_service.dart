@@ -585,7 +585,8 @@ class AppDownloadService {
         throw ObtainiumError(tr('cancelled'));
       }
     } else {
-      switch ((await ShizukuApkInstaller.checkPermission())!) {
+      var shizukuPermission = await ShizukuApkInstaller.checkPermission();
+      switch (shizukuPermission) {
         case 'binder_not_found':
           throw ObtainiumError(tr('shizukuBinderNotFound'));
         case 'old_shizuku':
@@ -593,6 +594,10 @@ class AppDownloadService {
         case 'old_android_with_adb':
           throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
         case 'denied':
+        case null:
+          throw ObtainiumError(tr('cancelled'));
+        default:
+          // In case of unknown response, treat as cancelled/denied
           throw ObtainiumError(tr('cancelled'));
       }
     }
