@@ -286,9 +286,13 @@ class AppDownloadService {
       var isXAPK = downloadedFile.path.toLowerCase().endsWith('.xapk');
       Directory? apkDir;
       if (isAPK) {
-        newInfo = await pm.getPackageArchiveInfo(
-          archiveFilePath: downloadedFile.path,
-        );
+        try {
+          newInfo = await pm.getPackageArchiveInfo(
+            archiveFilePath: downloadedFile.path,
+          );
+        } catch (e) {
+          newInfo = null;
+        }
       } else {
         var res = await _processDownloadedArchive(
           downloadedFile,
@@ -580,7 +584,11 @@ class AppDownloadService {
         throw ObtainiumError(tr('cancelled'));
       }
     } else {
-      switch ((await ShizukuApkInstaller.checkPermission())!) {
+      var shizukuPermission = await ShizukuApkInstaller.checkPermission();
+      if (shizukuPermission == null) {
+        throw ObtainiumError(tr('shizukuBinderNotFound'));
+      }
+      switch (shizukuPermission) {
         case 'binder_not_found':
           throw ObtainiumError(tr('shizukuBinderNotFound'));
         case 'old_shizuku':
