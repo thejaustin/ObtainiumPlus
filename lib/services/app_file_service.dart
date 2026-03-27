@@ -28,7 +28,7 @@ class AppFileService {
       '${(await getAppStorageDir()).path}/app_data',
     );
     if (!appsDir.existsSync()) {
-      appsDir.createSync();
+      appsDir.createSync(recursive: true);
     }
     return appsDir;
   }
@@ -57,22 +57,22 @@ class AppFileService {
   static Future<Map<String, Directory>> initAppDirectories() async {
     Directory APKDir;
     Directory iconsCacheDir;
-    
+
     var cacheDirs = await getExternalCacheDirectories();
     if (cacheDirs?.isNotEmpty ?? false) {
       APKDir = cacheDirs!.first;
       iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
       if (!iconsCacheDir.existsSync()) {
-        iconsCacheDir.createSync();
+        iconsCacheDir.createSync(recursive: true);
       }
     } else {
       APKDir = Directory('${(await getAppStorageDir()).path}/apks');
       if (!APKDir.existsSync()) {
-        APKDir.createSync();
+        APKDir.createSync(recursive: true);
       }
       iconsCacheDir = Directory('${(await getAppStorageDir()).path}/icons');
       if (!iconsCacheDir.existsSync()) {
-        iconsCacheDir.createSync();
+        iconsCacheDir.createSync(recursive: true);
       }
     }
 
