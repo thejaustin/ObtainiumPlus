@@ -557,7 +557,7 @@ class _AppPageState extends State<AppPage> {
                 actions: [
                   if (app?.installedInfo != null)
                     MapEntry(tr('openAppInfo'), () => AppInstallService.openAppSettings(app!.app.id)),
-                  MapEntry(tr('appearance'), () => pushRoute(context, const SettingsPage(initialTab: 0)))),
+                  MapEntry(tr('appearance'), () => pushRoute(context, const SettingsPage(initialTab: 0))),
                 ],
               );
             },
@@ -936,19 +936,21 @@ class _AppPageState extends State<AppPage> {
   }
 
   void _showAppDetailsDialog(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
-    GlassDialog.show(
+    showDialog(
       context: context,
-      title: app?.name ?? '',
-      content: Column(
-        children: [
-          if (app?.icon != null) Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
-          const SizedBox(height: 16),
-          Text(app?.app.id ?? '', style: Theme.of(context).textTheme.labelSmall),
+      builder: (_) => GlassDialog(
+        title: app?.name ?? '',
+        content: Column(
+          children: [
+            if (app?.icon != null) Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
+            const SizedBox(height: 16),
+            Text(app?.app.id ?? '', style: Theme.of(context).textTheme.labelSmall),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ok'))),
         ],
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ok'))),
-      ],
     );
   }
 

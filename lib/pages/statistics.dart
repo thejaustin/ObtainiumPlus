@@ -247,7 +247,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             final item = items[index];
             return ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: ConditionalBlur(sigma: 10, enabled: enableGlass, child: Card(
+              child: ConditionalBlur(sigma: 10, enabled: settings.plusEnableGlassmorphism, child: Card(
                   elevation: 0,
                   margin: EdgeInsets.zero,
                   color: (isDark 
