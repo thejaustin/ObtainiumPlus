@@ -1546,12 +1546,17 @@ class _AppBottomBar extends StatelessWidget {
                         ),
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
-                          child: updating && currentApp?.downloadProgress == null
-                              ? const SizedBox(
-                                  key: ValueKey('btn_spinner'),
+                          child: updating
+                              ? SizedBox(
+                                  key: const ValueKey('btn_spinner'),
                                   width: 22,
                                   height: 22,
-                                  child: ExpressiveCircularProgressIndicator(),
+                                  child: ExpressiveCircularProgressIndicator(
+                                    value: currentApp?.downloadProgress != null &&
+                                            currentApp!.downloadProgress! >= 0
+                                        ? currentApp.downloadProgress! / 100
+                                        : null,
+                                  ),
                                 )
                               : Row(
                                   key: const ValueKey('btn_content'),
