@@ -4,6 +4,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
@@ -556,7 +557,7 @@ class _AppPageState extends State<AppPage> {
                 actions: [
                   if (app?.installedInfo != null)
                     MapEntry(tr('openAppInfo'), () => AppInstallService.openAppSettings(app!.app.id)),
-                  MapEntry(tr('appearance'), () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage(initialTab: 0)))),
+                  MapEntry(tr('appearance'), () => pushRoute(context, const SettingsPage(initialTab: 0)))),
                 ],
               );
             },
@@ -741,8 +742,7 @@ class _AppPageState extends State<AppPage> {
                 ),
               ],
             ],
-      ),
-    );
+      );
     if (!settings.plusEnableGlassmorphism) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius),

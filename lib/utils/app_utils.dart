@@ -1,9 +1,29 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hsluv/hsluv.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+
+/// Push a route with a M3 Expressive shared-axis (horizontal) transition.
+Future<T?> pushRoute<T>(BuildContext context, Widget page) {
+  return Navigator.of(context).push<T>(
+    PageRouteBuilder<T>(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return SharedAxisTransition(
+          animation: animation,
+          secondaryAnimation: secondaryAnimation,
+          transitionType: SharedAxisTransitionType.horizontal,
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+    ),
+  );
+}
 
 List<List<String>> stringMapListTo2DList(
   List<MapEntry<String, String>> mapList,

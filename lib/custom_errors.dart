@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:android_package_installer/android_package_installer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:obtainium/pages/add_app.dart';
@@ -187,9 +188,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
      return ErrorResolution(
        tr('rateLimitTip'), 
        fix: FixAction(tr('openSettings'), () {
-         Navigator.of(context).push(
-           MaterialPageRoute(builder: (context) => const SettingsPage()),
-         );
+         pushRoute(context, const SettingsPage());
        })
      );
   }
