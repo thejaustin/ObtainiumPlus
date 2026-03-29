@@ -742,7 +742,8 @@ class _AppPageState extends State<AppPage> {
                 ),
               ],
             ],
-      );
+      ),
+    );
     if (!settings.plusEnableGlassmorphism) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius),
