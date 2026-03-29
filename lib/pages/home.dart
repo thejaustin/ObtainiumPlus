@@ -373,13 +373,17 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final viewSettings = context.watch<ViewSettingsProvider>();
-    final settingsProvider = context.watch<SettingsProvider>();
+    // Use select to avoid rebuilding the root Scaffold when unrelated provider
+    // fields change (e.g. sort order, glass setting, app list updates).
+    final bottomTabs = context.select<ViewSettingsProvider, List<String>>((v) => List.from(v.bottomTabs));
+    final labelBehavior = context.select<ViewSettingsProvider, NavigationDestinationLabelBehavior>((v) => v.navigationLabelBehavior);
+    final plusDeveloperMode = context.select<SettingsProvider, bool>((s) => s.plusDeveloperMode);
+    final plusEnableMaterialExpressive = context.select<SettingsProvider, bool>((s) => s.plusEnableMaterialExpressive);
 
     allPages = {
       'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
       'updates': NavigationPageItem('updates', tr('updates'), Icons.update_outlined, Icons.update, updatesPage),
-      if (settingsProvider.plusDeveloperMode)
+      if (plusDeveloperMode)
         'add': NavigationPageItem('add', tr('addApp'), Icons.add_circle_outline, Icons.add_circle, addAppPage),
       'discover': NavigationPageItem('discover', tr('discover'), Icons.explore_outlined, Icons.explore, discoverPage),
       'settings': NavigationPageItem('settings', tr('settings'), Icons.settings_outlined, Icons.settings, settingsPage),
@@ -387,7 +391,7 @@ class HomePageState extends State<HomePage> {
       'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
     };
 
-    activePages = viewSettings.bottomTabs
+    activePages = bottomTabs
         .where((id) => allPages.containsKey(id))
         .map((id) => allPages[id]!)
         .toList();
@@ -438,8 +442,8 @@ class HomePageState extends State<HomePage> {
               _pageController.animateToPage(
                 targetIndex,
                 duration: const Duration(milliseconds: 300),
-                curve: settingsProvider.plusEnableMaterialExpressive 
-                    ? AppConstants.expressiveStandard 
+                curve: plusEnableMaterialExpressive
+                    ? AppConstants.expressiveStandard
                     : AppConstants.standardStandard,
               );
             }
@@ -480,7 +484,8 @@ class HomePageState extends State<HomePage> {
               }
             },
             onReorder: (oldIndex, newIndex) {
-              final tabs = List<String>.from(viewSettings.bottomTabs);
+              final vs = context.read<ViewSettingsProvider>();
+              final tabs = List<String>.from(vs.bottomTabs);
               // Map from activePages indices to tab IDs
               final movedId = activePages[oldIndex].id;
               final targetId = activePages[newIndex].id;
@@ -489,24 +494,26 @@ class HomePageState extends State<HomePage> {
               if (fromIdx != -1 && toIdx != -1) {
                 tabs.removeAt(fromIdx);
                 tabs.insert(toIdx, movedId);
-                viewSettings.bottomTabs = tabs;
+                vs.bottomTabs = tabs;
               }
             },
             onRemoveTab: (String id) {
-              final tabs = List<String>.from(viewSettings.bottomTabs);
+              final vs = context.read<ViewSettingsProvider>();
+              final tabs = List<String>.from(vs.bottomTabs);
               tabs.remove(id);
-              viewSettings.bottomTabs = tabs;
+              vs.bottomTabs = tabs;
               // Adjust selected index if needed
               if (currentIndex >= tabs.length) {
                 switchToPage(tabs.length - 1);
               }
             },
             onAddTab: (String id) {
-              final tabs = List<String>.from(viewSettings.bottomTabs);
+              final vs = context.read<ViewSettingsProvider>();
+              final tabs = List<String>.from(vs.bottomTabs);
               tabs.add(id);
-              viewSettings.bottomTabs = tabs;
+              vs.bottomTabs = tabs;
             },
-            labelBehavior: viewSettings.navigationLabelBehavior,
+            labelBehavior: labelBehavior,
           ) : null,
         ),
       ),
