@@ -42,7 +42,7 @@ class AppListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appsProvider = context.read<AppsProvider>();
-    final settingsProvider = context.read<SettingsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
     final isCheckingUpdate = context.select<AppsProvider, bool>(
       (p) => p.checkingUpdateIds.contains(appInMemory.app.id),
     );

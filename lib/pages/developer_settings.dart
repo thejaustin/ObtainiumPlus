@@ -568,8 +568,10 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
   Future<void> _getGsfId() async {
     try {
       final String result = await _platform.invokeMethod('getGsfId');
+      if (!mounted) return;
       setState(() => _gsfId = result);
     } on PlatformException catch (e) {
+      if (!mounted) return;
       setState(() => _gsfId = 'Failed to get GSF ID: ${e.message}');
     }
   }
@@ -577,7 +579,7 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
+    final enableGlass = context.select<SettingsProvider, bool>((s) => s.plusEnableGlassmorphism);
     final content = Container(
       decoration: BoxDecoration(
         color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
@@ -665,7 +667,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final cs = Theme.of(context).colorScheme;
-    final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
+    final enableGlass = context.select<SettingsProvider, bool>((s) => s.plusEnableGlassmorphism);
 
     final content = Container(
       decoration: BoxDecoration(
