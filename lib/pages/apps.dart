@@ -838,10 +838,7 @@ class AppsPageState extends State<AppsPage> {
         icon: const Icon(Icons.settings_outlined),
         onPressed: () {
           HapticFeedback.selectionClick();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const SettingsPage()),
-          );
+          pushRoute(context, const SettingsPage());
         },
         tooltip: tr('settings'),
       ),
@@ -1003,14 +1000,14 @@ class AppsPageState extends State<AppsPage> {
                 onActionPressed: appsProvider.apps.isEmpty
                     ? () {
                         HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAppPage()));
+                        pushRoute(context, const AddAppPage());
                       }
                     : null,
                 secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
                 onSecondaryActionPressed: appsProvider.apps.isEmpty
                     ? () {
                         HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const AddAppPage(initialTab: 1)));
+                        pushRoute(context, const AddAppPage(initialTab: 1));
                       }
                     : null,
               ),

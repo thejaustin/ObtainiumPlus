@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -105,15 +106,10 @@ class AppListTile extends StatelessWidget {
           AppInstallService.openApp(appInMemory.app.id);
         },
         onLongPress: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AppPage(
-                appId: appInMemory.app.id,
-                showOppositeOfPreferredView: true,
-              ),
-            ),
-          );
+          pushRoute(context, AppPage(
+            appId: appInMemory.app.id,
+            showOppositeOfPreferredView: true,
+          ));
         },
       );
     }

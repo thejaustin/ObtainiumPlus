@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
@@ -66,10 +67,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         HapticFeedback.selectionClick();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SystemAppSelector()),
-                        );
+                        pushRoute(context, SystemAppSelector());
                       },
                     ),
                   if (_matches(tr('plusSystemUpdateScanner')))

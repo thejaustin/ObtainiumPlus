@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/search/command_center.dart';
@@ -312,10 +313,7 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('addAppByUrlDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const AddAppPage()),
-                            );
+                            pushRoute(context, const AddAppPage());
                           },
                         ),
 
@@ -327,10 +325,7 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('importGithubStarredReposDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ImportExportPage()),
-                            );
+                            pushRoute(context, const ImportExportPage());
                           },
                         ),
 
@@ -342,10 +337,7 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('githubPersonalReposDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ImportExportPage()),
-                            );
+                            pushRoute(context, const ImportExportPage());
                           },
                         ),
 
@@ -357,10 +349,7 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('importInstalledAppsDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const SystemAppSelector()),
-                            );
+                            pushRoute(context, const SystemAppSelector());
                           },
                         ),
 
@@ -392,10 +381,7 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('addAppByUrlDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const AddAppPage()),
-                            );
+                            pushRoute(context, const AddAppPage());
                           },
                         ),
 

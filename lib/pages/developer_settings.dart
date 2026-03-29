@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -69,9 +70,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                 title: const Text('Plugin Manager'),
                 subtitle: const Text('JS "Recipes" that add new sources without a full app update'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const PluginManagerPage()),
-                ),
+                onTap: () => pushRoute(context, const PluginManagerPage()),
               ),
               ListTile(
                 leading: const Icon(Icons.phonelink_setup_outlined),
@@ -133,11 +132,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                 title: const Text('View Talker Logs'),
                 subtitle: const Text('Real-time network requests, UI events, and errors'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => TalkerScreen(talker: talker),
-                  ),
-                ),
+                onTap: () => pushRoute(context, TalkerScreen(talker: talker)),
               ),
               ListTile(
                 leading: const Icon(Icons.analytics_outlined),
