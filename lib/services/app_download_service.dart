@@ -174,6 +174,7 @@ class AppDownloadService {
             settingsProvider: settingsProvider,
             logs: logs,
             notifyListeners: notifyListeners,
+            saveApps: (appList) => saveApps(appList),
             notificationsProvider: notificationsProvider,
             context: context,
           );
@@ -618,6 +619,7 @@ class AppDownloadService {
     required SettingsProvider settingsProvider,
     required LogsProvider logs,
     required Function() notifyListeners,
+    Future<void> Function(List<App>)? saveApps,
     NotificationsProvider? notificationsProvider,
     BuildContext? context,
   }) async {
@@ -645,6 +647,7 @@ class AppDownloadService {
           apps,
           needsBGWorkaround: needBGWorkaround,
           shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+          saveApps: saveApps,
         );
       } else if (downloadedDir != null) {
         sayInstalled = await AppInstallService.installApkDir(
@@ -655,6 +658,7 @@ class AppDownloadService {
           apps,
           needsBGWorkaround: needBGWorkaround,
           shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+          saveApps: saveApps,
         );
       }
       if (willBeSilent && context == null) {
