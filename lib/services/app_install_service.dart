@@ -232,6 +232,7 @@ class AppInstallService {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
     List<DownloadedApk> additionalAPKs = const [],
+    Future<void> Function(List<App>)? saveApps,
   }) async {
     if (firstTimeWithContext != null &&
         settingsProvider.beforeNewInstallsShareToAppVerifier &&
@@ -276,9 +277,15 @@ class AppInstallService {
       throw DowngradeError(appInfo.versionCode!, newInfo.versionCode!, appId: apps[file.appId]!.app.id);
     }
     if (needsBGWorkaround) {
-      // Background workaround logic might need to be moved back to AppsProvider
-      // because it updates the app's installed version and saves it.
-      // For now, I'll keep it here but it might need a callback.
+      // In a background process, the await on AndroidPackageInstaller.installApk
+      // never returns because the process is killed after the install intent is
+      // launched. Pre-emptively mark the app as installed before the await so
+      // the version update is persisted even when the process dies. See upstream #896.
+      apps[file.appId]!.app.installedVersion =
+          apps[file.appId]!.app.latestVersion;
+      if (saveApps != null) {
+        await saveApps([apps[file.appId]!.app]);
+      }
     }
     int? code;
     if (!settingsProvider.useShizuku) {
@@ -323,6 +330,7 @@ class AppInstallService {
     Map<String, AppInMemory> apps, {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
+    Future<void> Function(List<App>)? saveApps,
   }) async {
     var somethingInstalled = false;
     try {
@@ -363,6 +371,7 @@ class AppInstallService {
           additionalAPKs: APKFiles.sublist(
             1,
           ).map((a) => DownloadedApk(dir.appId, a)).toList(),
+          saveApps: saveApps,
         );
         somethingInstalled = somethingInstalled || wasInstalled;
         dir.file.delete(recursive: true);
