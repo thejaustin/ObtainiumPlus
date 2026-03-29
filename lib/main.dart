@@ -82,6 +82,20 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
       );
       if (hasShizukuFrame) return null;
     }
+
+    // PlatformException from Shizuku channel calls (e.g. PERMISSION_DENIED,
+    // binder not ready) — identified by shizuku in the value or stack frames
+    if (type.contains('PlatformException')) {
+      if (value.contains('shizuku')) return null;
+      final frames = ex.stackTrace?.frames ?? [];
+      final hasShizukuFrame = frames.any(
+        (f) =>
+            (f.package ?? '').toLowerCase().contains('shizuku') ||
+            (f.absPath ?? '').toLowerCase().contains('shizuku') ||
+            (f.module ?? '').toLowerCase().contains('shizuku'),
+      );
+      if (hasShizukuFrame) return null;
+    }
   }
 
   return event;
