@@ -936,24 +936,19 @@ class _AppPageState extends State<AppPage> {
   }
 
   void _showAppDetailsDialog(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
-    showDialog(
+    GlassDialog.show(
       context: context,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          scrollable: true,
-          content: Column(
-            children: [
-              if (app?.icon != null) Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
-              const SizedBox(height: 16),
-              Text(app?.app.id ?? '', style: Theme.of(context).textTheme.labelSmall),
-            ],
-          ),
-          title: Text(app?.name ?? ''),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ok'))),
-          ],
-        );
-      },
+      title: app?.name ?? '',
+      content: Column(
+        children: [
+          if (app?.icon != null) Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
+          const SizedBox(height: 16),
+          Text(app?.app.id ?? '', style: Theme.of(context).textTheme.labelSmall),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ok'))),
+      ],
     );
   }
 

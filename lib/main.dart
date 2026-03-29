@@ -405,7 +405,7 @@ class _ObtainiumState extends State<Obtainium> {
                 }
               })
               .catchError((err) {
-                print(err);
+                talker.handle(err, null, 'Locale change error');
               });
         }
       }

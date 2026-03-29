@@ -4,6 +4,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/logger.dart';
 
 class BackgroundService {
   BackgroundService._();
@@ -16,7 +17,7 @@ class BackgroundService {
     String taskId = task.taskId;
     bool isTimeout = task.timeout;
     if (isTimeout) {
-      print('BG update task timed out.');
+      talker.warning('BG update task timed out.');
       BackgroundFetch.finish(taskId);
       return;
     }
@@ -85,7 +86,7 @@ class BackgroundService {
 class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    print('onStart(starter: ${starter.name})');
+    talker.debug('onStart(starter: ${starter.name})');
     BackgroundUpdateService.bgUpdateCheck('bg_check', null);
   }
 
@@ -96,7 +97,7 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
-    print('Foreground service onDestroy(isTimeout: $isTimeout)');
+    talker.debug('Foreground service onDestroy(isTimeout: $isTimeout)');
   }
 
   @override
