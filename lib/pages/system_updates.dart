@@ -62,18 +62,21 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final stateKey = _isScanning ? 'scanning' : (_updates.isEmpty ? 'empty' : 'results');
+
+    Widget body;
     if (!_isScanning && _updates.isEmpty) {
-      return EmptyStateWidget(
+      body = EmptyStateWidget(
+        key: const ValueKey('empty'),
         icon: Icons.system_update_alt_rounded,
         title: tr('scanForUpdates'),
         subtitle: tr('plusSystemUpdateScannerDescription'),
         actionLabel: tr('scanForUpdates'),
         onActionPressed: _startScan,
       );
-    }
-
-    if (_isScanning) {
-      return Center(
+    } else if (_isScanning) {
+      body = Center(
+        key: const ValueKey('scanning'),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -91,9 +94,9 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
           ],
         ),
       );
-    }
-
-    return Scaffold(
+    } else {
+      body = Scaffold(
+        key: const ValueKey('results'),
       body: ListView.builder(
         padding: const EdgeInsets.all(8),
         itemCount: _updates.length,
@@ -107,6 +110,16 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
         tooltip: tr('refresh'),
         child: const Icon(Icons.refresh),
       ),
+    );
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (child, anim) => FadeTransition(
+        opacity: anim,
+        child: child,
+      ),
+      child: KeyedSubtree(key: ValueKey(stateKey), child: body),
     );
   }
 

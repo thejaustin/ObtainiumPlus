@@ -307,13 +307,18 @@ class AppsPageState extends State<AppsPage> {
         if (listedApps.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: appsProvider.loadingApps
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+              child: appsProvider.loadingApps
                 ? const Center(
+                    key: ValueKey('loading'),
                     child: ExpressiveCircularProgressIndicator(
                       strokeWidth: 3,
                     ),
                   )
                 : EmptyStateWidget(
+                    key: ValueKey(appsProvider.apps.isEmpty ? 'empty' : 'filtered'),
                     title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
                     subtitle: appsProvider.apps.isEmpty
                         ? tr('startByAddingFirstApp')
@@ -344,6 +349,7 @@ class AppsPageState extends State<AppsPage> {
                           }
                         : null,
                   ),
+            ),
           ),
         if (refreshingSince != null || appsProvider.loadingApps)
           SliverToBoxAdapter(
