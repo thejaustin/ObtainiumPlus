@@ -79,6 +79,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
     final info = await DeviceInfoPlugin().androidInfo;
     final manufacturer = info.manufacturer.toLowerCase();
     final microG = await AuthService.isMicroGAvailable();
+    if (!mounted) return;
     setState(() {
       _isSamsung = manufacturer.contains('samsung');
       _isXiaomi = ['xiaomi', 'redmi', 'poco'].any((x) => manufacturer.contains(x));
