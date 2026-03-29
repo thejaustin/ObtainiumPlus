@@ -53,7 +53,7 @@ class AppListTile extends StatelessWidget {
           child: SizedBox(
             width: 24,
             height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
           ),
         );
       }

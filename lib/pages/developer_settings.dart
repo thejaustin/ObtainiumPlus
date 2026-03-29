@@ -478,7 +478,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            LinearProgressIndicator(value: score / 100, backgroundColor: color.withValues(alpha: 0.1), color: color),
+            ExpressiveProgressIndicator(value: score / 100, backgroundColor: color.withValues(alpha: 0.1), color: color),
             const SizedBox(height: 8),
             Text('Current Protection: $label', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           ],

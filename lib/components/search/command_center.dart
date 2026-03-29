@@ -349,7 +349,7 @@ class _CommandCenterState extends State<CommandCenter> {
         if (_isSearching) 
           const Padding(
             padding: EdgeInsets.only(bottom: 8.0),
-            child: LinearProgressIndicator(),
+            child: const ExpressiveProgressIndicator(),
           ),
         ..._discoverResults.entries.map((entry) {
           final url = entry.key;
