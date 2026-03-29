@@ -38,47 +38,56 @@ class SettingsGroup extends StatelessWidget {
                   ),
             ),
           ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(28.0),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
-              sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              decoration: BoxDecoration(
-                color: (isDark 
-                    ? Theme.of(context).colorScheme.surfaceContainerHigh 
-                    : Theme.of(context).colorScheme.surface)
+        Builder(builder: (context) {
+          final container = Container(
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            decoration: BoxDecoration(
+              color: (isDark
+                      ? Theme.of(context).colorScheme.surfaceContainerHigh
+                      : Theme.of(context).colorScheme.surface)
                   .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
-                borderRadius: BorderRadius.circular(28.0),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2
-                  ),
-                  width: 1,
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: List.generate(visibleChildren.length, (index) {
-                  return Column(
-                    children: [
-                      visibleChildren[index],
-                      if (index < visibleChildren.length - 1)
-                        Divider(
-                          height: 1,
-                          indent: 56,
-                          endIndent: 16,
-                          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
-                        ),
-                    ],
-                  );
-                }),
+              borderRadius: BorderRadius.circular(28.0),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2),
+                width: 1,
               ),
             ),
-          ),
-        ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: List.generate(visibleChildren.length, (index) {
+                return Column(
+                  children: [
+                    visibleChildren[index],
+                    if (index < visibleChildren.length - 1)
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant
+                            .withValues(alpha: 0.2),
+                      ),
+                  ],
+                );
+              }),
+            ),
+          );
+          if (!settings.plusEnableGlassmorphism) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(28.0),
+              child: container,
+            );
+          }
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(28.0),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: container,
+            ),
+          );
+        }),
       ],
     );
   }

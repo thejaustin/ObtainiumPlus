@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -226,18 +228,29 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                     ),
                   ),
                   // Download progress
-                  if (widget.appInMemory.downloadProgress != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: SizedBox(
-                        height: 2,
-                        child: LinearProgressIndicator(
-                          value: widget.appInMemory.downloadProgress! >= 0
-                              ? widget.appInMemory.downloadProgress! / 100
-                              : null,
+                  if (widget.appInMemory.downloadProgress != null) ...[
+                    if (widget.appInMemory.downloadProgress! < 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          tr('installing'),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: ExpressiveProgressIndicator(
+                        value: widget.appInMemory.downloadProgress! >= 0
+                            ? widget.appInMemory.downloadProgress! / 100
+                            : null,
+                        height: 2,
+                      ),
                     ),
+                  ],
                 ],
               ),
             ),

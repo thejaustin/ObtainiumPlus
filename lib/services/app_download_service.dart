@@ -119,7 +119,7 @@ class AppDownloadService {
     appsToInstall = moveStrToEnd(appsToInstall, 'app.obtainiumplus.fdroid');
 
     List<Map<String, dynamic>> downloadResults = [];
-    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
+    if (!forceParallelDownloads && !settingsProvider.parallelDownloads) {
       for (var id in appsToInstall) {
         downloadResults.add(await _downloadAppWrapper(
           id: id,
@@ -446,7 +446,7 @@ class AppDownloadService {
       }
     }
 
-    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
+    if (!forceParallelDownloads && !settingsProvider.parallelDownloads) {
       for (var urlWithApp in filesToDownload) {
         await downloadFn(urlWithApp.key, urlWithApp.value);
       }
