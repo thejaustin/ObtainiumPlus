@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'package:obtainium/components/common/conditional_blur.dart';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -94,12 +96,7 @@ $logs''';
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: enableGlass ? 24 : 0,
-              sigmaY: enableGlass ? 24 : 0,
-            ),
-            child: Column(
+          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(context, enableGlass),

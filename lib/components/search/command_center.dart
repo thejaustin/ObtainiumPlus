@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:obtainium/components/common/conditional_blur.dart';
+
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
@@ -152,12 +154,7 @@ class _CommandCenterState extends State<CommandCenter> {
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: settings.plusEnableGlassmorphism ? 24 : 0,
-          sigmaY: settings.plusEnableGlassmorphism ? 24 : 0,
-        ),
-        child: Container(
+      child: ConditionalBlur(sigma: 24, enabled: settings.plusEnableGlassmorphism, child: Container(
           height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
             color: (isDark

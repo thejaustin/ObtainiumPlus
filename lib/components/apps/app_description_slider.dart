@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'package:obtainium/components/common/conditional_blur.dart';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -99,12 +101,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
               tag: 'app_about_${widget.app.app.id}',
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: settings.plusEnableGlassmorphism ? 15 : 0,
-                    sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
-                  ),
-                  child: AnimatedContainer(
+                child: ConditionalBlur(sigma: 15, enabled: settings.plusEnableGlassmorphism, child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: double.infinity,
                     height: 80 + (_heightFactor.value * 300),

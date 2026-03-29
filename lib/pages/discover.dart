@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:obtainium/components/common/conditional_blur.dart';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -333,12 +335,7 @@ class DiscoverPageState extends State<DiscoverPage> {
 
                           return ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(
-                                sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
-                                sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
-                              ),
-                              child: Card(
+                            child: ConditionalBlur(sigma: 10, enabled: enableGlass, child: Card(
                                 elevation: settings.plusEnableGlassmorphism ? 0 : 2,
                                 margin: EdgeInsets.zero,
                                 color: (isDark
