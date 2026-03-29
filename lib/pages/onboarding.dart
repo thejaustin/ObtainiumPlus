@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -162,7 +163,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
             );
           }
         } catch (e) {
-          debugPrint('Error adding Obtainium+: $e');
+          talker.warning('Error adding Obtainium+ during onboarding: $e');
         }
       }
 
@@ -173,7 +174,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
       // Ensure the flag is set so we don't show onboarding again
       context.read<SettingsProvider>().welcomeShown = true;
     } catch (e) {
-      debugPrint('Error during onboarding finish: $e');
+      talker.warning('Error during onboarding finish: $e');
     } finally {
       if (mounted) {
         Navigator.pop(context); // Pop loading dialog

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -84,6 +85,7 @@ class DiscoverPageState extends State<DiscoverPage> {
             );
             return MapEntry(source.name, res);
           } catch (e) {
+            talker.warning('Discover search failed for ${source.name}: $e');
             return null;
           }
         }),
@@ -102,7 +104,7 @@ class DiscoverPageState extends State<DiscoverPage> {
         results = aggregatedResults;
       });
     } catch (e) {
-      // Error handling
+      talker.warning('Discover search error: $e');
     } finally {
       setState(() {
         searching = false;
