@@ -558,7 +558,7 @@ class _FormSwitchFieldState extends State<_FormSwitchField> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.65),
+                                    .withValues(alpha: 0.65),
                               ),
                               child: w,
                             ),

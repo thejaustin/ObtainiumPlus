@@ -890,13 +890,13 @@ class AddAppPageState extends State<AddAppPage> {
             color: Theme.of(context)
                 .colorScheme
                 .primaryContainer
-                .withOpacity(0.3),
+                .withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Theme.of(context)
                   .colorScheme
                   .primary
-                  .withOpacity(0.2),
+                  .withValues(alpha: 0.2),
             ),
           ),
           child: Row(

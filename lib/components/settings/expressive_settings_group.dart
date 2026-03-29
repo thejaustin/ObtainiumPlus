@@ -44,7 +44,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                 height: 1,
                 indent: 56,
                 endIndent: 16,
-                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
               ),
           ],
         );
@@ -92,11 +92,11 @@ class ExpressiveSettingsGroup extends StatelessWidget {
           color: (isDark 
               ? Theme.of(context).colorScheme.surfaceContainerLow 
               : Theme.of(context).colorScheme.surface)
-            .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+            .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2
               ),
               width: 1,
             ),

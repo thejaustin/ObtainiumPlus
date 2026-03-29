@@ -44,11 +44,11 @@ class EmptyStateWidget extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2,
+                    color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2,
                     ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(settings.plusEnableGlassmorphism ? 0.2 : 0.0,
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: settings.plusEnableGlassmorphism ? 0.2 : 0.0,
                       ),
                     ),
                   ),

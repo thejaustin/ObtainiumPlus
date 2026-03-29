@@ -233,7 +233,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         label: Text(label),
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          side: isGranted ? BorderSide(color: Colors.green.withOpacity(0.5)) : null,
+          side: isGranted ? BorderSide(color: Colors.green.withValues(alpha: 0.5)) : null,
         ),
       ),
     );
