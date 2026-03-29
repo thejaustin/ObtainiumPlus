@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/tag_editor.dart';
@@ -403,15 +404,16 @@ class AppsPageState extends State<AppsPage> {
 
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(tr('markSelectedAppsUpdated')),
+        builder: (ctx) => GlassDialog(
+          title: tr('markSelectedAppsUpdated'),
+          icon: Icons.check_circle_outline,
           content: Text(tr('markXSelectedAppsAsUpdated',
               args: [selectedApps.length.toString()])),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(tr('no'))),
-            TextButton(
+            FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(tr('yes'))),
           ],
@@ -1135,13 +1137,14 @@ class AppsPageState extends State<AppsPage> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('markSelectedAppsUpdated')),
+      builder: (ctx) => GlassDialog(
+        title: tr('markSelectedAppsUpdated'),
+        icon: Icons.check_circle_outline,
         content: Text(tr('markXSelectedAppsAsUpdated',
             args: [selectedApps.length.toString()])),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('no'))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('yes'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('yes'))),
         ],
       ),
     );
@@ -1172,17 +1175,13 @@ class AppsPageState extends State<AppsPage> {
 
     final newCategories = await showDialog<Set<String>>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('categorizeXApps', args: [selectedApps.length.toString()])),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: CategoryEditorSelector(
-              alignment: WrapAlignment.start,
-              preselected: commonCategories,
-              onSelected: (categories) => Navigator.pop(ctx, categories),
-            ),
-          ),
+      builder: (ctx) => GlassDialog(
+        title: tr('categorizeXApps', args: [selectedApps.length.toString()]),
+        icon: Icons.label_outline,
+        content: CategoryEditorSelector(
+          alignment: WrapAlignment.start,
+          preselected: commonCategories,
+          onSelected: (categories) => Navigator.pop(ctx, categories),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('cancel'))),

@@ -12,6 +12,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:flutter/services.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
@@ -145,15 +146,16 @@ class DeveloperSettingsPage extends StatelessWidget {
                   if (context.mounted) {
                     showDialog(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Local Crash Stats'),
+                      builder: (context) => GlassDialog(
+                        title: 'Local Crash Stats',
+                        icon: Icons.analytics_outlined,
                         content: Text(
                           'Total Crashes: ${stats.totalCrashes}\n'
                           'Last Crash: ${stats.lastCrashTime ?? "Never"}\n'
                           'Types: ${stats.crashTypes.join(", ")}',
                         ),
                         actions: [
-                          TextButton(
+                          FilledButton(
                             onPressed: () => Navigator.pop(context),
                             child: const Text('Close'),
                           ),

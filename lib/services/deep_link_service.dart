@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/pages/add_app.dart';
@@ -23,11 +24,12 @@ class DeepLinkService {
       showDialog(
         context: context,
         builder: (BuildContext ctx) {
-          return AlertDialog(
-            title: Text(tr('error')),
-            content: Text('Invalid or unauthorized deep link.'),
+          return GlassDialog(
+            title: tr('error'),
+            icon: Icons.link_off_outlined,
+            content: const Text('Invalid or unauthorized deep link.'),
             actions: [
-              TextButton(
+              FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(tr('ok')),
               ),
@@ -52,11 +54,12 @@ class DeepLinkService {
           showDialog(
             context: context,
             builder: (BuildContext ctx) {
-              return AlertDialog(
-                title: Text(tr('error')),
-                content: Text('Invalid or potentially malicious JSON data.'),
+              return GlassDialog(
+                title: tr('error'),
+                icon: Icons.warning_amber_outlined,
+                content: const Text('Invalid or potentially malicious JSON data.'),
                 actions: [
-                  TextButton(
+                  FilledButton(
                     onPressed: () => Navigator.of(ctx).pop(),
                     child: Text(tr('ok')),
                   ),

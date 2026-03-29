@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/editable_navigation_bar.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -105,9 +106,9 @@ class HomePageState extends State<HomePage> {
         await showDialog(
           context: context,
           builder: (BuildContext ctx) {
-            return AlertDialog(
-              title: Text(tr('note')),
-              scrollable: true,
+            return GlassDialog(
+              title: tr('note'),
+              icon: Icons.info_outline,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 spacing: 20,
@@ -226,12 +227,12 @@ class HomePageState extends State<HomePage> {
       await showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          icon: const Icon(Icons.battery_alert_outlined, color: Colors.orange, size: 48),
-          title: Text(tr('xiaomiSetupRequired')),
+        builder: (ctx) => GlassDialog(
+          title: tr('xiaomiSetupRequired'),
+          icon: Icons.battery_alert_outlined,
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(tr('xiaomiSetupDescription')),
               const SizedBox(height: 16),
@@ -239,37 +240,31 @@ class HomePageState extends State<HomePage> {
                 tr('xiaomiSetupSteps'),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await AppInstallService.openXiaomiAutostartSettings();
+                },
+                icon: const Icon(Icons.rocket_launch_outlined),
+                label: Text(tr('enableAutoStart')),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await AppInstallService.openXiaomiBatterySaverSettings();
+                },
+                icon: const Icon(Icons.battery_saver_outlined),
+                label: Text(tr('disableBatterySaver')),
+              ),
             ],
           ),
-          actionsAlignment: MainAxisAlignment.center,
           actions: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await AppInstallService.openXiaomiAutostartSettings();
-                  },
-                  icon: const Icon(Icons.rocket_launch_outlined),
-                  label: Text(tr('enableAutoStart')),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await AppInstallService.openXiaomiBatterySaverSettings();
-                  },
-                  icon: const Icon(Icons.battery_saver_outlined),
-                  label: Text(tr('disableBatterySaver')),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () {
-                    sp.xiaomiSetupShown = true;
-                    Navigator.of(ctx).pop();
-                  },
-                  child: Text(tr('done')),
-                ),
-              ],
+            FilledButton(
+              onPressed: () {
+                sp.xiaomiSetupShown = true;
+                Navigator.of(ctx).pop();
+              },
+              child: Text(tr('done')),
             ),
           ],
         ),

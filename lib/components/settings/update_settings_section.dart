@@ -2,6 +2,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -123,42 +124,35 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget buildXiaomiTroubleshootingDialog(BuildContext context) {
-    return AlertDialog(
-      title: Row(
+    return GlassDialog(
+      title: tr('xiaomiTroubleshootingTitle'),
+      icon: Icons.battery_alert_outlined,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.battery_alert_outlined, color: Colors.orange),
-          const SizedBox(width: 8),
-          Expanded(child: Text(tr('xiaomiTroubleshootingTitle'))),
+          Text(tr('xiaomiTroubleshootingDescription')),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              AppInstallService.openXiaomiAutostartSettings();
+            },
+            icon: const Icon(Icons.play_arrow_outlined),
+            label: Text(tr('enableAutostart')),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              AppInstallService.openXiaomiBatterySaverSettings();
+            },
+            icon: const Icon(Icons.battery_saver_outlined),
+            label: Text(tr('disableBatterySaver')),
+          ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(tr('xiaomiTroubleshootingDescription')),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                AppInstallService.openXiaomiAutostartSettings();
-              },
-              icon: const Icon(Icons.play_arrow_outlined),
-              label: Text(tr('enableAutostart')),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                AppInstallService.openXiaomiBatterySaverSettings();
-              },
-              icon: const Icon(Icons.battery_saver_outlined),
-              label: Text(tr('disableBatterySaver')),
-            ),
-          ],
-        ),
-      ),
-      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('ok')))],
+      actions: [FilledButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('ok')))],
     );
   }
 
@@ -342,11 +336,12 @@ class UpdateSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(tr('updateSchedule')),
-              content: Column(
+        return GlassDialog(
+          title: tr('updateSchedule'),
+          icon: Icons.schedule_outlined,
+          content: StatefulBuilder(
+            builder: (context, setDialogState) {
+              return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
@@ -412,15 +407,15 @@ class UpdateSettingsSection extends StatelessWidget {
                     }),
                   ),
                 ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(tr('done')),
-                ),
-              ],
-            );
-          },
+              );
+            },
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('done')),
+            ),
+          ],
         );
       },
     );

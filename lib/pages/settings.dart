@@ -7,6 +7,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/components/settings/app_behavior_section.dart';
@@ -471,8 +472,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (!mounted) return;
                           showDialog(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Obtainium+ Info'),
+                            builder: (ctx) => GlassDialog(
+                              title: 'Obtainium+ Info',
+                              icon: Icons.info_outline,
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
