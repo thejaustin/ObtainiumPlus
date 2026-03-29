@@ -104,16 +104,21 @@ class SafeAsync {
     try {
       return await operation().timeout(timeout);
     } on TimeoutException {
+      talker.warning('$operationName timed out after ${timeout.inSeconds}s');
       await CrashAnalytics.recordCrash(
         errorType: 'TimeoutException',
         errorMessage: '$operationName timed out after ${timeout.inSeconds}s',
       );
       return defaultValue;
     } catch (e, stack) {
+      talker.handle(e, stack, 'Operation failed: $operationName');
       await CrashAnalytics.recordCrash(
         errorType: e.runtimeType.toString(),
         errorMessage: '$operationName: ${e.toString()}',
       );
+      if (e is! ObtainiumError || e.unexpected) {
+        await Sentry.captureException(e, stackTrace: stack);
+      }
       return defaultValue;
     }
   }
@@ -134,10 +139,14 @@ class SafeAsync {
         attempt++;
         
         if (attempt >= maxRetries) {
+          talker.warning('$operationName failed after $maxRetries attempts: $e');
           await CrashAnalytics.recordCrash(
             errorType: e.runtimeType.toString(),
             errorMessage: '$operationName failed after $maxRetries attempts',
           );
+          if (e is! ObtainiumError || (e is ObtainiumError && e.unexpected)) {
+            await Sentry.captureException(e);
+          }
           return null;
         }
         
@@ -161,10 +170,14 @@ extension SafeFuture<T> on Future<T> {
     try {
       return await this;
     } catch (e, stack) {
+      talker.handle(e, stack, 'Operation failed: $operationName');
       await CrashAnalytics.recordCrash(
         errorType: e.runtimeType.toString(),
         errorMessage: '$operationName: ${e.toString()}',
       );
+      if (e is! ObtainiumError || (e is ObtainiumError && e.unexpected)) {
+        await Sentry.captureException(e, stackTrace: stack);
+      }
       onError?.call(e, stack);
       return null;
     }
