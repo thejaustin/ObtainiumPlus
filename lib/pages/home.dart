@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -271,7 +272,7 @@ class HomePageState extends State<HomePage> {
         ),
       );
     } catch (e) {
-      // Ignore errors in device detection
+      talker.warning('Device detection error (Xiaomi setup): $e');
     }
   }
 
