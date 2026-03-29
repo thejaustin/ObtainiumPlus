@@ -43,6 +43,7 @@ import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/utils/locale_constants.dart';
 import 'package:obtainium/components/error_app.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:sentry_talker/sentry_talker.dart';
@@ -214,6 +215,9 @@ void main() async {
           ),
           (error, stack) {
             talker.handle(error, stack, 'Unhandled Zone Error');
+            // Expected ObtainiumErrors are user-facing (e.g. bad dispenser URL,
+            // microG misconfiguration) — show to user but don't pollute Sentry.
+            if (error is ObtainiumError && !error.unexpected) return;
             Sentry.captureException(error, stackTrace: stack).then((id) {
               CrashTracker.recordCrash(id.toString());
               CrashAnalytics.recordCrash(
@@ -232,6 +236,10 @@ void main() async {
         );
       } catch (e, stackTrace) {
         talker.handle(e, stackTrace, 'Main Catch Error');
+        if (e is ObtainiumError && !e.unexpected) {
+          runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
+          return;
+        }
         final sentryId = await Sentry.captureException(e, stackTrace: stackTrace);
         await CrashTracker.recordCrash(sentryId.toString());
         await CrashAnalytics.recordCrash(
