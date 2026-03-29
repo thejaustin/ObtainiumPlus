@@ -113,6 +113,9 @@ void main() async {
       options.enableBrightnessChangeBreadcrumbs = true;
       options.enableTextScaleChangeBreadcrumbs = true;
 
+      // Environment tag — distinguish production crashes from debug sessions
+      options.environment = kReleaseMode ? 'production' : 'development';
+
       // Filter out expected Shizuku exceptions (hexodus parity)
       options.beforeSend = _filterShizukuNoise;
     },
@@ -153,12 +156,9 @@ void main() async {
             androidInfo.model.toLowerCase().contains('flip');
 
         Sentry.configureScope((scope) {
-          scope.setTag('android_sdk', androidInfo.version.sdkInt.toString());
-          scope.setTag('device', androidInfo.model);
-          // Extended device tags (hexodus parity)
-          scope.setTag('manufacturer', manufacturer);
-          scope.setTag('device_model', androidInfo.model);
           scope.setTag('android_api', androidInfo.version.sdkInt.toString());
+          scope.setTag('device', androidInfo.model);
+          scope.setTag('manufacturer', manufacturer);
           scope.setTag('is_samsung', isSamsung.toString());
           scope.setTag('is_foldable', isFoldable.toString());
           scope.setContexts('android_device', {
@@ -320,7 +320,7 @@ class _ObtainiumState extends State<Obtainium> {
       }
     } catch (e) {
       // Ignore errors on devices that don't handle this intent correctly
-      print('Failed to request battery optimization: $e');
+      talker.warning('Failed to request battery optimization: $e');
     }
   }
 
