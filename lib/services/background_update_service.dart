@@ -19,7 +19,7 @@ class BackgroundUpdateService {
   BackgroundUpdateService._();
 
   static Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? initialParams) async {
-    print('BG task started $taskId: ${initialParams.toString()}');
+    talker.debug('BG task started $taskId: ${initialParams.toString()}');
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
     await loadTranslations();
@@ -133,7 +133,7 @@ class BackgroundUpdateService {
                   .isBefore(DateTime.now());
           
           if (!enoughTimePassed && currentParams['toCheck'] == null && dueRetries.isEmpty) {
-            print('BG update task: Too early for another check.');
+            talker.debug('BG update task: Too early for another check.');
             return;
           }
         }

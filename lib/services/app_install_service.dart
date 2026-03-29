@@ -49,7 +49,7 @@ class AppInstallService {
         );
       } catch (e) {
         if (printErr) {
-          print(e);
+          talker.warning('getPackageInfo: $e');
         }
       }
     }

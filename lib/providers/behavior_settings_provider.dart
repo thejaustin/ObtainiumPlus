@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
@@ -25,10 +25,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   Future<bool> getInstallPermission({bool enforce = false}) async {
     while (!(await Permission.requestInstallPackages.isGranted)) {
-      Fluttertoast.showToast(
-        msg: tr('pleaseAllowInstallPerm'),
-        toastLength: Toast.LENGTH_LONG,
-      );
+      talker.info(tr('pleaseAllowInstallPerm'));
       if ((await Permission.requestInstallPackages.request()) ==
           PermissionStatus.granted) {
         return true;
