@@ -146,7 +146,7 @@ class MultiAppMultiError extends ObtainiumError {
   Map<String, List<String>> idsByErrorString = {};
   Map<String, String> appIdNames = {};
 
-  MultiAppMultiError() : super(tr('placeholder'), unexpected: true);
+  MultiAppMultiError() : super(tr('placeholder'), unexpected: false);
 
   void add(String appId, dynamic error, {String? appName, StackTrace? stackTrace}) {
     if (error is SocketException) {
@@ -165,6 +165,10 @@ class MultiAppMultiError extends ObtainiumError {
     if (appName != null) {
       appIdNames[appId] = appName;
     }
+    // Recompute: unexpected only if at least one contained error is truly unexpected
+    unexpected = rawErrors.values.any(
+      (e) => e is! ObtainiumError || e.unexpected,
+    );
   }
 
   String errorString(String appId, {bool includeIdsWithNames = false}) =>
