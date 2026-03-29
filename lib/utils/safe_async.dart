@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Wrapper for async operations with comprehensive error handling
 class SafeAsync {
@@ -31,7 +32,12 @@ class SafeAsync {
         errorType: e.runtimeType.toString(),
         errorMessage: '$operationName: ${e.toString()}',
       );
-      
+
+      // Report to Sentry if requested
+      if (logToSentry) {
+        await Sentry.captureException(e, stackTrace: stack);
+      }
+
       // Call custom error handler if provided
       onError?.call(e, stack);
       
