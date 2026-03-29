@@ -653,29 +653,22 @@ class _AppPageState extends State<AppPage> {
     final settings = appsProvider.settingsProvider;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
-          sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: (isDark 
-                ? Theme.of(context).colorScheme.surfaceContainerLow 
+    final statsContainer = Container(
+      decoration: BoxDecoration(
+        color: (isDark
+                ? Theme.of(context).colorScheme.surfaceContainerLow
                 : Theme.of(context).colorScheme.surface)
-              .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
-              ),
-            ),
-          ),
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              _buildStatRow(
+            .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(
+              alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1),
+        ),
+      ),
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          _buildStatRow(
                 context,
                 icon: Icons.install_mobile_rounded,
                 label: tr('installed'),
@@ -709,8 +702,19 @@ class _AppPageState extends State<AppPage> {
                 ),
               ],
             ],
-          ),
-        ),
+      ),
+    );
+    if (!settings.plusEnableGlassmorphism) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: statsContainer,
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: statsContainer,
       ),
     );
   }
@@ -844,43 +848,49 @@ class _AppPageState extends State<AppPage> {
           padding: const EdgeInsets.only(left: 4, bottom: 12),
           child: Text(tr('about'), style: Theme.of(context).textTheme.titleSmall),
         ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: settings.plusEnableGlassmorphism ? 10 : 0,
-              sigmaY: settings.plusEnableGlassmorphism ? 10 : 0,
-            ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: (isDark 
-                    ? Theme.of(context).colorScheme.surfaceContainerLow 
-                    : Theme.of(context).colorScheme.surface)
+        Builder(builder: (ctx) {
+          final aboutContainer = Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: (isDark
+                      ? Theme.of(ctx).colorScheme.surfaceContainerLow
+                      : Theme.of(ctx).colorScheme.surface)
                   .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
-                  ),
-                ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Theme.of(ctx).colorScheme.outlineVariant.withValues(
+                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1),
               ),
-              child: MarkdownBody(
-                data: about.toString(),
-                onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
-                extensionSet: md.ExtensionSet(
-                  md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                  [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
-                ),
-                styleSheet: MarkdownStyleSheet(
-                  p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9),
-                  ),
+            ),
+            child: MarkdownBody(
+              data: about.toString(),
+              onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
+              extensionSet: md.ExtensionSet(
+                md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
+              ),
+              styleSheet: MarkdownStyleSheet(
+                p: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.9),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+          if (!settings.plusEnableGlassmorphism) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: aboutContainer,
+            );
+          }
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: aboutContainer,
+            ),
+          );
+        }),
       ],
     );
   }
@@ -1498,38 +1508,49 @@ class _AppBottomBar extends StatelessWidget {
                           minimumSize: const Size(0, 48),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              preferredSource == 'play_store' || preferredSource == 'aurora'
-                                  ? Icons.open_in_new
-                                  : app?.app.installedVersion == null
-                                      ? Icons.download_outlined
-                                      : Icons.system_update_outlined,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                preferredSource == 'play_store'
-                                    ? tr('playStore')
-                                    : preferredSource == 'aurora'
-                                    ? 'Aurora Store'
-                                    : app?.app.installedVersion == null
-                                        ? !trackOnly
-                                              ? tr('install')
-                                              : tr('markInstalled')
-                                        : !trackOnly
-                                        ? tr('update')
-                                        : tr('markUpdated'),
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: updating && currentApp?.downloadProgress == null
+                              ? const SizedBox(
+                                  key: ValueKey('btn_spinner'),
+                                  width: 22,
+                                  height: 22,
+                                  child: ExpressiveCircularProgressIndicator(),
+                                )
+                              : Row(
+                                  key: const ValueKey('btn_content'),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      preferredSource == 'play_store' || preferredSource == 'aurora'
+                                          ? Icons.open_in_new
+                                          : app?.app.installedVersion == null
+                                              ? Icons.download_outlined
+                                              : Icons.system_update_outlined,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        preferredSource == 'play_store'
+                                            ? tr('playStore')
+                                            : preferredSource == 'aurora'
+                                            ? 'Aurora Store'
+                                            : app?.app.installedVersion == null
+                                                ? !trackOnly
+                                                      ? tr('install')
+                                                      : tr('markInstalled')
+                                                : !trackOnly
+                                                ? tr('update')
+                                                : tr('markUpdated'),
+                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ),
@@ -1542,15 +1563,28 @@ class _AppBottomBar extends StatelessWidget {
                   ],
                 ),
               ),
-              if (currentApp?.downloadProgress != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                  child: ExpressiveProgressIndicator(
-                    value: currentApp!.downloadProgress! >= 0
-                        ? currentApp.downloadProgress! / 100
-                        : null,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: SizeTransition(
+                    sizeFactor: anim,
+                    axis: Axis.vertical,
+                    child: child,
                   ),
                 ),
+                child: currentApp?.downloadProgress != null
+                    ? Padding(
+                        key: const ValueKey('progress_bar'),
+                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                        child: ExpressiveProgressIndicator(
+                          value: currentApp!.downloadProgress! >= 0
+                              ? currentApp.downloadProgress! / 100
+                              : null,
+                        ),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('no_progress')),
+              ),
             ],
           ),
         );

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/app.dart';
@@ -57,7 +58,7 @@ class AppListTile extends StatelessWidget {
                       appInMemory.app.id,
                     ], context)
                     .catchError((e) {
-                      // Error handling should be done by the caller or via a global utility
+                      showError(e, context);
                       return <String>[];
                     });
               },
