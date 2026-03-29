@@ -84,7 +84,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
             Text('$_scanCurrent / $_scanTotal', style: Theme.of(context).textTheme.bodySmall),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-              child: LinearProgressIndicator(
+              child: ExpressiveProgressIndicator(
                 value: _scanTotal > 0 ? _scanCurrent / _scanTotal : null,
               ),
             ),

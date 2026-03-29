@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -591,7 +592,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     const Column(
                       children: [
                         SizedBox(height: 14),
-                        LinearProgressIndicator(),
+                        const ExpressiveProgressIndicator(),
                         SizedBox(height: 14),
                       ],
                     )

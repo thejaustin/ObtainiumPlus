@@ -346,7 +346,7 @@ class AppsPageState extends State<AppsPage> {
           ),
         if (refreshingSince != null || appsProvider.loadingApps)
           SliverToBoxAdapter(
-            child: LinearProgressIndicator(
+            child: ExpressiveProgressIndicator(
               value: appsProvider.loadingApps ? null : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
               semanticsLabel: appsProvider.loadingApps ? tr('loadingApps') : tr('checkingForUpdates'),
             ),
