@@ -30,14 +30,7 @@ Future<T?> showAddAppSheet<T>({
       vsync: Navigator.of(context),
     ),
     builder: (ctx) {
-      return ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: enableGlass ? 24 : 0,
-            sigmaY: enableGlass ? 24 : 0,
-          ),
-          child: Container(
+      final sheet = Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
@@ -70,6 +63,18 @@ Future<T?> showAddAppSheet<T>({
               editAppId: editAppId,
             ),
           ),
+        ),
+      );
+      final clipped = ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: sheet,
+      );
+      if (!enableGlass) return clipped;
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: sheet,
         ),
       );
     },

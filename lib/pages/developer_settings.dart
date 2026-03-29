@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
@@ -348,43 +350,63 @@ class DeveloperSettingsPage extends StatelessWidget {
     final authProvider = context.read<AuthProvider>();
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.group_outlined),
-              title: const Text('Anonymous (Dispenser)'),
-              subtitle: const Text('Use throwaway accounts only. Safest for your personal account.'),
-              trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () {
-                authProvider.setAuthMode(AuthMode.anonymous);
-                Navigator.pop(context);
-              },
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
+        final sheet = Container(
+          decoration: BoxDecoration(
+            color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+              top: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2)),
+              left: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+              right: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
             ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Personal (microG)'),
-              subtitle: const Text('Use your real account for all actions. Highest risk.'),
-              trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () {
-                authProvider.setAuthMode(AuthMode.microG);
-                Navigator.pop(context);
-              },
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.group_outlined),
+                  title: const Text('Anonymous (Dispenser)'),
+                  subtitle: const Text('Use throwaway accounts only. Safest for your personal account.'),
+                  trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
+                  onTap: () { authProvider.setAuthMode(AuthMode.anonymous); Navigator.pop(context); },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: const Text('Personal (microG)'),
+                  subtitle: const Text('Use your real account for all actions. Highest risk.'),
+                  trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
+                  onTap: () { authProvider.setAuthMode(AuthMode.microG); Navigator.pop(context); },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.security_outlined),
+                  title: const Text('Hybrid (Safety First)'),
+                  subtitle: const Text('Anonymous for search/browsing, Personal only for paid apps.'),
+                  trailing: authProvider.authMode == AuthMode.hybrid ? const Icon(Icons.check, color: Colors.green) : null,
+                  onTap: () { authProvider.setAuthMode(AuthMode.hybrid); Navigator.pop(context); },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.security_outlined),
-              title: const Text('Hybrid (Safety First)'),
-              subtitle: const Text('Anonymous for search/browsing, Personal only for paid apps.'),
-              trailing: authProvider.authMode == AuthMode.hybrid ? const Icon(Icons.check, color: Colors.green) : null,
-              onTap: () {
-                authProvider.setAuthMode(AuthMode.hybrid);
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+        final clipped = ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: sheet,
+        );
+        if (!enableGlass) return clipped;
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: sheet,
+          ),
+        );
+      },
     );
   }
 
@@ -433,6 +455,8 @@ class DeveloperSettingsPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => const _DispenserManagerSheet(),
     );
   }
@@ -441,6 +465,8 @@ class DeveloperSettingsPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (context) => const _SpoofingManagerSheet(),
     );
   }
@@ -555,7 +581,18 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final cs = Theme.of(context).colorScheme;
+    final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
+    final content = Container(
+      decoration: BoxDecoration(
+        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          top: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2)),
+          left: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+          right: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+        ),
+      ),
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -603,6 +640,18 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
         ],
       ),
     );
+    final clipped = ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: content,
+    );
+    if (!enableGlass) return clipped;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: content,
+      ),
+    );
   }
 }
 
@@ -620,10 +669,21 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final cs = Theme.of(context).colorScheme;
+    final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
 
-    return Padding(
+    final content = Container(
+      decoration: BoxDecoration(
+        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          top: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2)),
+          left: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+          right: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+        ),
+      ),
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         left: 16,
         right: 16,
         top: 16,
@@ -688,6 +748,18 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
           ),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+    final clipped = ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: content,
+    );
+    if (!enableGlass) return clipped;
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: content,
       ),
     );
   }
