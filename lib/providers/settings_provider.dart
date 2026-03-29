@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
