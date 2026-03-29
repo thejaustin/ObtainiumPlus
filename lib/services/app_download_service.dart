@@ -92,6 +92,7 @@ class AppDownloadService {
     NotificationsProvider? notificationsProvider,
     bool forceParallelDownloads = false,
     bool useExisting = true,
+    bool Function(String appId)? isCancelled,
   }) async {
     notificationsProvider =
         notificationsProvider ?? context?.read<NotificationsProvider>();
@@ -136,6 +137,7 @@ class AppDownloadService {
           context: context,
           notificationsProvider: notificationsProvider,
           useExisting: useExisting,
+          isCancelled: isCancelled,
         ));
       }
     } else {
@@ -156,6 +158,7 @@ class AppDownloadService {
           notificationsProvider: notificationsProvider,
           useExisting: useExisting,
           skipInstalls: true,
+          isCancelled: isCancelled,
         )),
       );
     }
@@ -201,6 +204,7 @@ class AppDownloadService {
     BuildContext? context,
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
+    bool Function(String appId)? isCancelled,
   }) async {
     var notifId = DownloadNotification(app.finalName, 0).id;
     if (apps[app.id] != null) {
@@ -268,6 +272,7 @@ class AppDownloadService {
         useExisting: useExisting,
         allowInsecure: app.additionalSettings['allowInsecure'] == true,
         logs: logs,
+        isCancelled: isCancelled != null ? () => isCancelled!(app.id) : null,
       );
       
       logs.logEvent('DownloadCompleted', {
@@ -690,6 +695,7 @@ class AppDownloadService {
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
     bool skipInstalls = false,
+    bool Function(String appId)? isCancelled,
   }) async {
     bool willBeSilent = false;
     DownloadedApk? downloadedFile;
@@ -711,6 +717,7 @@ class AppDownloadService {
             context: context,
             notificationsProvider: notificationsProvider,
             useExisting: useExisting,
+            isCancelled: isCancelled,
           );
       if (downloadedArtifact['isAPK'] == true) {
         downloadedFile = DownloadedApk(id, downloadedArtifact['downloadedFile'] as File);
@@ -725,7 +732,14 @@ class AppDownloadService {
         await waitForUserToReturnToForeground(context);
       }
     } catch (e) {
-      errors.add(id, e, appName: apps[id]?.name);
+      if (e is! DownloadCancelledError) {
+        errors.add(id, e, appName: apps[id]?.name);
+      }
+      // Clear progress on cancellation
+      if (apps[id] != null) {
+        apps[id]!.downloadProgress = null;
+        notifyListeners();
+      }
     }
     return {
       'id': id,

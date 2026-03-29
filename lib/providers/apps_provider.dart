@@ -71,6 +71,8 @@ class AppsProvider with ChangeNotifier {
   Map<String, AppInMemory> apps = {};
   bool loadingApps = false;
   bool gettingUpdates = false;
+  final Set<String> checkingUpdateIds = {};
+  final Set<String> _cancelledDownloadIds = {};
   LogsProvider logs = LogsProvider();
 
   // Completer for proper async synchronization of loadApps
@@ -239,6 +241,13 @@ class AppsProvider with ChangeNotifier {
       .where((element) => element.downloadProgress != null)
       .isNotEmpty;
 
+  void cancelDownload(String appId) {
+    _cancelledDownloadIds.add(appId);
+    notifyListeners();
+  }
+
+  bool _isCancelled(String appId) => _cancelledDownloadIds.contains(appId);
+
   Future<bool> canInstallSilently(App app) async {
     return AppInstallService.canInstallSilently(app, settingsProvider, logs);
   }
@@ -391,7 +400,12 @@ class AppsProvider with ChangeNotifier {
     if (APKDir == null) {
       throw Exception('APK directory not initialized');
     }
-    return AppDownloadService.downloadAndInstallLatestApps(
+    // Clear any stale cancel flags for these apps before starting
+    for (final id in appIds) {
+      _cancelledDownloadIds.remove(id);
+    }
+    try {
+      return await AppDownloadService.downloadAndInstallLatestApps(
       appIds: appIds,
       apps: apps,
       settingsProvider: settingsProvider,
@@ -408,7 +422,14 @@ class AppsProvider with ChangeNotifier {
       notificationsProvider: notificationsProvider,
       forceParallelDownloads: forceParallelDownloads,
       useExisting: useExisting,
+      isCancelled: _isCancelled,
     );
+    } finally {
+      // Clean up cancel flags
+      for (final id in appIds) {
+        _cancelledDownloadIds.remove(id);
+      }
+    }
   }
 
   Future<List<String>> downloadAppAssets(
@@ -564,10 +585,17 @@ class AppsProvider with ChangeNotifier {
   /// Checks for updates for a single app.
   /// Returns the updated [App] object if an update is found, or null if no update is found.
   Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
-    if (appId == obtainiumId) {
-      return checkObtainiumUpdate(ignoreCache: ignoreCache);
+    checkingUpdateIds.add(appId);
+    notifyListeners();
+    try {
+      if (appId == obtainiumId) {
+        return await checkObtainiumUpdate(ignoreCache: ignoreCache);
+      }
+      return await AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
+    } finally {
+      checkingUpdateIds.remove(appId);
+      notifyListeners();
     }
-    return AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
   }
 
   Future<App?> checkObtainiumUpdate({bool ignoreCache = false}) async {

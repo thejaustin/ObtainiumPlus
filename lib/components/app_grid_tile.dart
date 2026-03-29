@@ -227,6 +227,19 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                           widget.appInMemory.app.pinned ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
+                  // Checking for update indicator
+                  Builder(builder: (ctx) {
+                    final isChecking = ctx.select<AppsProvider, bool>(
+                      (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
+                    );
+                    if (isChecking && widget.appInMemory.downloadProgress == null) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: ExpressiveProgressIndicator(value: null, height: 2),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
                   // Download progress
                   if (widget.appInMemory.downloadProgress != null) ...[
                     if (widget.appInMemory.downloadProgress! < 0)

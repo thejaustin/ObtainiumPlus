@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -55,26 +56,59 @@ class _AppPageState extends State<AppPage> {
     required String title,
     required List<MapEntry<String, VoidCallback>> actions,
   }) {
+    final settings = context.read<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final colorScheme = Theme.of(context).colorScheme;
+
     showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      backgroundColor: Colors.transparent,
+      showDragHandle: false,
+      builder: (ctx) {
+        final sheet = Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.18 : 0),
               ),
-              const Divider(height: 1),
-              ...actions.map((action) => ListTile(
-                title: Text(action.key),
-                onTap: () {
-                  Navigator.pop(context);
-                  action.value();
-                },
-              )),
-            ],
+              left: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+              ),
+              right: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+              ),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const DragHandle(margin: EdgeInsets.only(top: 8, bottom: 4)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(title, style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+                const Divider(height: 1),
+                ...actions.map((action) => ListTile(
+                  title: Text(action.key),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    action.value();
+                  },
+                )),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+        if (!enableGlass) return sheet;
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: sheet,
           ),
         );
       },
@@ -525,7 +559,7 @@ class _AppPageState extends State<AppPage> {
             child: Hero(
               tag: 'app_icon_${widget.appId}',
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(appsProvider.settingsProvider.plusGlobalCornerRadius),
                 child: Image.memory(app!.icon!, height: 120, width: 120, gaplessPlayback: true),
               ),
             ),
@@ -653,13 +687,14 @@ class _AppPageState extends State<AppPage> {
     final settings = appsProvider.settingsProvider;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final radius = settings.plusGlobalCornerRadius;
     final statsContainer = Container(
       decoration: BoxDecoration(
         color: (isDark
                 ? Theme.of(context).colorScheme.surfaceContainerLow
                 : Theme.of(context).colorScheme.surface)
             .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(radius),
         border: Border.all(
           color: Theme.of(context).colorScheme.outlineVariant.withValues(
               alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1),
@@ -706,12 +741,12 @@ class _AppPageState extends State<AppPage> {
     );
     if (!settings.plusEnableGlassmorphism) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(radius),
         child: statsContainer,
       );
     }
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: statsContainer,
@@ -849,6 +884,7 @@ class _AppPageState extends State<AppPage> {
           child: Text(tr('about'), style: Theme.of(context).textTheme.titleSmall),
         ),
         Builder(builder: (ctx) {
+          final aboutRadius = settings.plusGlobalCornerRadius;
           final aboutContainer = Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -857,7 +893,7 @@ class _AppPageState extends State<AppPage> {
                       ? Theme.of(ctx).colorScheme.surfaceContainerLow
                       : Theme.of(ctx).colorScheme.surface)
                   .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(aboutRadius),
               border: Border.all(
                 color: Theme.of(ctx).colorScheme.outlineVariant.withValues(
                     alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1),
@@ -879,12 +915,12 @@ class _AppPageState extends State<AppPage> {
           );
           if (!settings.plusEnableGlassmorphism) {
             return ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(aboutRadius),
               child: aboutContainer,
             );
           }
           return ClipRRect(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(aboutRadius),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: aboutContainer,
@@ -1573,17 +1609,37 @@ class _AppBottomBar extends StatelessWidget {
                     child: child,
                   ),
                 ),
-                child: currentApp?.downloadProgress != null
+                child: currentApp?.downloadProgress != null && currentApp!.downloadProgress! >= 0
                     ? Padding(
                         key: const ValueKey('progress_bar'),
-                        padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-                        child: ExpressiveProgressIndicator(
-                          value: currentApp!.downloadProgress! >= 0
-                              ? currentApp.downloadProgress! / 100
-                              : null,
+                        padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ExpressiveProgressIndicator(
+                                value: currentApp.downloadProgress! / 100,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed: () => appsProvider.cancelDownload(app!.app.id),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(tr('cancel'), style: const TextStyle(fontSize: 12)),
+                            ),
+                          ],
                         ),
                       )
-                    : const SizedBox.shrink(key: ValueKey('no_progress')),
+                    : currentApp?.downloadProgress != null
+                        ? Padding(
+                            key: const ValueKey('installing_bar'),
+                            padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
+                            child: ExpressiveProgressIndicator(value: null),
+                          )
+                        : const SizedBox.shrink(key: ValueKey('no_progress')),
               ),
             ],
           ),
