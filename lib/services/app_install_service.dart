@@ -7,7 +7,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
@@ -241,10 +240,14 @@ class AppInstallService {
         file.file.readAsBytesSync(),
         mimeType: 'application/vnd.android.package-archive',
       );
-      Fluttertoast.showToast(
-        msg: tr('appVerifierInstructionToast'),
-        toastLength: Toast.LENGTH_LONG,
-      );
+      if (firstTimeWithContext!.mounted) {
+        ScaffoldMessenger.of(firstTimeWithContext!).showSnackBar(
+          SnackBar(
+            content: Text(tr('appVerifierInstructionToast')),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
       await Share.shareXFiles([f]);
     }
     PackageInfo? newInfo;

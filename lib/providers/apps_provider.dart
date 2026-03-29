@@ -7,7 +7,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'package:battery_plus/battery_plus.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:typed_data';
 
