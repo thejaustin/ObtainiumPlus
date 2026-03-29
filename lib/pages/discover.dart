@@ -167,7 +167,7 @@ class DiscoverPageState extends State<DiscoverPage> {
   Widget _buildListResultTile(String url, String name, String description, String sourceName) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : '?',
           style: TextStyle(
@@ -345,11 +345,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                                 color: (isDark
                                         ? Theme.of(context).colorScheme.surfaceContainerHighest
                                         : Theme.of(context).colorScheme.surface)
-                                    .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                                    .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   side: BorderSide(
-                                    color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                                    color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
                                     ),
                                   ),
                                 ),
@@ -370,7 +370,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                                               width: 64,
                                               height: 64,
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+                                                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
                                                 shape: BoxShape.circle,
                                               ),
                                               alignment: Alignment.center,

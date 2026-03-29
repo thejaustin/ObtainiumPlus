@@ -295,7 +295,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               sigmaY: settings.plusEnableGlassmorphism ? 15 : 0,
             ),
             child: Container(
-              color: Theme.of(context).colorScheme.surface.withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
               ),
             ),
           ),
@@ -353,7 +353,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   leading: const Icon(Icons.search),
                   onChanged: (val) => setState(() => _searchQuery = val),
                   elevation: WidgetStateProperty.all(0),
-                  backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.surfaceContainerHigh.withOpacity(settings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                  backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: settings.plusEnableGlassmorphism ? 0.5 : 1.0,
                   )),
                 ),
                 
@@ -452,7 +452,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.5),
+      color: Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -494,7 +494,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     Text(
                       pkg.packageName ?? '',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -508,7 +508,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+                              color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -557,7 +557,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(0.5),
+      color: Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -605,7 +605,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(

@@ -117,7 +117,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
               shadowColor: Colors.transparent,
               surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
               color: widget.isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
+                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4)
                   : null,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(cardBorderRadius),
