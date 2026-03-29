@@ -46,6 +46,7 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/sort_filter_panel.dart';
+import 'package:obtainium/utils/app_utils.dart';
 
 class AppsPage extends StatefulWidget {
   const AppsPage({super.key, this.initialFilter});
@@ -355,7 +356,6 @@ class AppsPageState extends State<AppsPage> {
           SliverToBoxAdapter(
             child: ExpressiveProgressIndicator(
               value: appsProvider.loadingApps ? null : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
-              semanticsLabel: appsProvider.loadingApps ? tr('loadingApps') : tr('checkingForUpdates'),
             ),
           ),
       ];

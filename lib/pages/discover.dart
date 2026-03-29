@@ -337,7 +337,7 @@ class DiscoverPageState extends State<DiscoverPage> {
 
                           return ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: ConditionalBlur(sigma: 10, enabled: enableGlass, child: Card(
+                            child: ConditionalBlur(sigma: 10, enabled: settings.plusEnableGlassmorphism, child: Card(
                                 elevation: settings.plusEnableGlassmorphism ? 0 : 2,
                                 margin: EdgeInsets.zero,
                                 color: (isDark

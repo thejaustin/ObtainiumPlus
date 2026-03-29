@@ -14,6 +14,7 @@ import 'package:http/http.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/offline_service.dart';
+import 'package:obtainium/utils/logger.dart';
 
 class BackgroundUpdateService {
   BackgroundUpdateService._();

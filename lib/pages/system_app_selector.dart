@@ -291,7 +291,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         flexibleSpace: ClipRRect(
-          child: ConditionalBlur(sigma: 15, enabled: enableGlass, child: Container(
+          child: ConditionalBlur(sigma: 15, enabled: settings.plusEnableGlassmorphism, child: Container(
               color: Theme.of(context).colorScheme.surface.withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
               ),
             ),
