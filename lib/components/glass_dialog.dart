@@ -54,33 +54,33 @@ class GlassDialog extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: enableGlass ? 24 : 0,
-              sigmaY: enableGlass ? 24 : 0,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                _buildHeader(context, enableGlass),
-                const Divider(height: 1),
-                // Content
-                Flexible(
-                  child: scrollable
-                      ? SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
-                          child: content,
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: content,
-                        ),
-                ),
-                // Actions
-                if (actions != null && actions!.isNotEmpty) _buildActions(context),
-              ],
-            ),
+          child: Builder(
+            builder: (context) {
+              final inner = Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeader(context, enableGlass),
+                  const Divider(height: 1),
+                  Flexible(
+                    child: scrollable
+                        ? SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: content,
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: content,
+                          ),
+                  ),
+                  if (actions != null && actions!.isNotEmpty) _buildActions(context),
+                ],
+              );
+              if (!enableGlass) return inner;
+              return BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                child: inner,
+              );
+            },
           ),
         ),
       ),
