@@ -307,6 +307,10 @@ class AppInstallService {
       apps[file.appId]!.app.installedVersion =
           apps[file.appId]!.app.latestVersion;
       file.file.delete(recursive: true);
+    } else if (code == 3 && firstTimeWithContext != null && firstTimeWithContext.mounted) {
+      ScaffoldMessenger.of(firstTimeWithContext).showSnackBar(
+        SnackBar(content: Text(tr('installationCancelled'))),
+      );
     }
     return installed;
   }

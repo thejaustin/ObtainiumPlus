@@ -204,6 +204,7 @@ class AppFileService {
     int retries = 3,
     bool allowInsecure = false,
     LogsProvider? logs,
+    bool Function()? isCancelled,
   }) async {
     try {
       return await downloadFile(
@@ -216,14 +217,17 @@ class AppFileService {
         headers: headers,
         allowInsecure: allowInsecure,
         logs: logs,
+        isCancelled: isCancelled,
       );
     } catch (e) {
+      if (e is DownloadCancelledError) rethrow;
       if (retries > 0 &&
           (e is ClientException ||
               e is HttpException ||
               e is SocketException ||
               e is HandshakeException)) {
         await Future.delayed(const Duration(seconds: 5));
+        if (isCancelled?.call() == true) throw DownloadCancelledError();
         return await downloadFileWithRetry(
           url,
           fileName,
@@ -235,6 +239,7 @@ class AppFileService {
           retries: (retries - 1),
           allowInsecure: allowInsecure,
           logs: logs,
+          isCancelled: isCancelled,
         );
       } else {
         rethrow;
@@ -252,6 +257,7 @@ class AppFileService {
     Map<String, String>? headers,
     bool allowInsecure = false,
     LogsProvider? logs,
+    bool Function()? isCancelled,
   }) async {
     var reqHeaders = headers ?? {};
     var req = Request('GET', Uri.parse(url));
@@ -375,6 +381,9 @@ class AppFileService {
     await response
         .asBroadcastStream()
         .map((chunk) {
+          if (isCancelled?.call() == true) {
+            throw DownloadCancelledError();
+          }
           received += chunk.length;
           final now = DateTime.now();
           if (onProgress != null &&

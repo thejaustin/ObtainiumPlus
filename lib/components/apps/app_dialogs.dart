@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -34,21 +35,17 @@ class _AppFilePickerState extends State<AppFilePicker> {
     if (widget.pickAnyAsset) {
       urlsToSelectFrom = [...urlsToSelectFrom, ...widget.app.otherAssetUrls];
     }
-    return AlertDialog(
-      scrollable: true,
-      title: Text(
-        widget.pickAnyAsset
-            ? tr('selectX', args: [tr('releaseAsset').toLowerCase()]) // Simplified for refactor
-            : tr('pickAnAPK'),
-      ),
+    return GlassDialog(
+      title: widget.pickAnyAsset
+          ? tr('selectX', args: [tr('releaseAsset').toLowerCase()])
+          : tr('pickAnAPK'),
+      icon: Icons.install_mobile_outlined,
       content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          urlsToSelectFrom.length > 1
-              ? Text(
-                  tr('appHasMoreThanOnePackage', args: [widget.app.finalName]),
-                )
-              : const SizedBox.shrink(),
-          const SizedBox(height: 16),
+          if (urlsToSelectFrom.length > 1)
+            Text(tr('appHasMoreThanOnePackage', args: [widget.app.finalName])),
+          if (urlsToSelectFrom.length > 1) const SizedBox(height: 16),
           ...urlsToSelectFrom.map(
             (u) => RadioListTile<String>(
               title: Text(u.key),
@@ -69,19 +66,17 @@ class _AppFilePickerState extends State<AppFilePicker> {
             Text(
               widget.archs!.length == 1
                   ? tr('deviceSupportsXArch', args: [widget.archs![0]])
-                  : tr('deviceSupportsFollowingArchs'), // Simplified
+                  : tr('deviceSupportsFollowingArchs'),
               style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
             ),
         ],
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.maybeOf(context)?.pop(null);
-          },
+          onPressed: () => Navigator.maybeOf(context)?.pop(null),
           child: Text(tr('cancel')),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () {
             HapticFeedback.selectionClick();
             Navigator.maybeOf(context)?.pop(fileUrl);
@@ -93,7 +88,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
   }
 }
 
-class APKOriginWarningDialog extends StatefulWidget {
+class APKOriginWarningDialog extends StatelessWidget {
   const APKOriginWarningDialog({
     super.key,
     required this.sourceUrl,
@@ -104,32 +99,25 @@ class APKOriginWarningDialog extends StatefulWidget {
   final String apkUrl;
 
   @override
-  State<APKOriginWarningDialog> createState() => _APKOriginWarningDialogState();
-}
-
-class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
-  @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      scrollable: true,
-      title: Text(tr('warning')),
+    return GlassDialog(
+      title: tr('warning'),
+      icon: Icons.warning_amber_rounded,
       content: Text(
         tr(
           'sourceIsXButPackageFromYPrompt',
           args: [
-            Uri.parse(widget.sourceUrl).host,
-            Uri.parse(widget.apkUrl).host,
+            Uri.parse(sourceUrl).host,
+            Uri.parse(apkUrl).host,
           ],
         ),
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.maybeOf(context)?.pop(null);
-          },
+          onPressed: () => Navigator.maybeOf(context)?.pop(null),
           child: Text(tr('cancel')),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () {
             HapticFeedback.selectionClick();
             Navigator.maybeOf(context)?.pop(true);

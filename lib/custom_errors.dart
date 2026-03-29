@@ -42,6 +42,10 @@ class ErrorResolution {
   ErrorResolution(this.tip, {this.fix});
 }
 
+class DownloadCancelledError extends ObtainiumError {
+  DownloadCancelledError() : super(tr('downloadCancelled'), unexpected: false);
+}
+
 class RateLimitError extends ObtainiumError {
   late int remainingMinutes;
   RateLimitError(this.remainingMinutes)
@@ -387,6 +391,7 @@ Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false,
           error: e.toString(),
           logMessage: logMessage,
           resolution: resolution,
+          multiError: e is MultiAppMultiError ? e : null,
         );
       },
     );
@@ -399,12 +404,14 @@ class _GlassErrorDialog extends StatelessWidget {
   final String error;
   final String logMessage;
   final ErrorResolution? resolution;
+  final MultiAppMultiError? multiError;
 
   const _GlassErrorDialog({
     required this.title,
     required this.error,
     required this.logMessage,
     this.resolution,
+    this.multiError,
   });
 
   @override
@@ -497,27 +504,30 @@ class _GlassErrorDialog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: GestureDetector(
-            onLongPress: () {
-              Clipboard.setData(ClipboardData(text: logMessage));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(tr('copiedToClipboard'))),
-              );
-            },
-            child: Text(
-              error,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontFamily: 'monospace',
+        if (multiError != null)
+          _buildPerAppErrorList(context, colorScheme)
+        else
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: GestureDetector(
+              onLongPress: () {
+                Clipboard.setData(ClipboardData(text: logMessage));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(tr('copiedToClipboard'))),
+                );
+              },
+              child: Text(
+                error,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace',
+                ),
               ),
             ),
           ),
-        ),
         if (resolution != null) ...[
           const SizedBox(height: 16),
           Container(
@@ -555,6 +565,68 @@ class _GlassErrorDialog extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildPerAppErrorList(BuildContext context, ColorScheme colorScheme) {
+    final me = multiError!;
+    final appIds = me.rawErrors.keys.toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${appIds.length} ${appIds.length == 1 ? tr('error') : tr('errors')}',
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 8),
+        ...appIds.map((appId) {
+          final appName = me.appIdNames[appId] ?? appId;
+          final errText = me.rawErrors[appId].toString();
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.error.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                leading: Icon(Icons.error_outline, color: colorScheme.error, size: 20),
+                title: Text(
+                  appName,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                children: [
+                  GestureDetector(
+                    onLongPress: () {
+                      Clipboard.setData(ClipboardData(text: errText));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(tr('copiedToClipboard'))),
+                      );
+                    },
+                    child: Text(
+                      errText,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ],
     );
   }

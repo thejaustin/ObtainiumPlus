@@ -42,8 +42,21 @@ class AppListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final appsProvider = context.read<AppsProvider>();
     final settingsProvider = context.read<SettingsProvider>();
+    final isCheckingUpdate = context.select<AppsProvider, bool>(
+      (p) => p.checkingUpdateIds.contains(appInMemory.app.id),
+    );
 
     Widget getUpdateButton() {
+      if (isCheckingUpdate) {
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      }
       return IconButton(
         visualDensity: VisualDensity.compact,
         color: Theme.of(context).colorScheme.primary,
@@ -415,29 +428,36 @@ class AppListTile extends StatelessWidget {
                           ),
                       ],
                     ),
-                    trailing: appInMemory.downloadProgress != null
-                        ? SizedBox(
-                            width: 60,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  appInMemory.downloadProgress! >= 0
-                                      ? '${appInMemory.downloadProgress!.toInt()}%'
-                                      : tr('installing'),
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
-                                const SizedBox(height: 4),
-                                ExpressiveProgressIndicator(
-                                  value: appInMemory.downloadProgress! >= 0
-                                      ? appInMemory.downloadProgress! / 100
-                                      : null,
-                                  height: 4,
-                                ),
-                              ],
+                    trailing: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: appInMemory.downloadProgress != null
+                          ? SizedBox(
+                              key: const ValueKey('download'),
+                              width: 60,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    appInMemory.downloadProgress! >= 0
+                                        ? '${appInMemory.downloadProgress!.toInt()}%'
+                                        : tr('installing'),
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ExpressiveProgressIndicator(
+                                    value: appInMemory.downloadProgress! >= 0
+                                        ? appInMemory.downloadProgress! / 100
+                                        : null,
+                                    height: 4,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : KeyedSubtree(
+                              key: const ValueKey('info'),
+                              child: trailingRow,
                             ),
-                          )
-                        : trailingRow,
+                    ),
                   ),
                 ],
               ),
