@@ -45,14 +45,14 @@ class ThemeBuilder {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
@@ -202,7 +202,7 @@ class ThemeBuilder {
       activeTrackColor: colorScheme.primary,
       inactiveTrackColor: colorScheme.surfaceContainerHighest,
       thumbColor: colorScheme.primary,
-      overlayColor: colorScheme.primary.withOpacity(0.12),
+      overlayColor: colorScheme.primary.withValues(alpha: 0.12),
       valueIndicatorColor: colorScheme.primaryContainer,
       valueIndicatorTextStyle: TextStyle(
         color: colorScheme.onPrimaryContainer,
@@ -239,7 +239,7 @@ class ThemeBuilder {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      dragHandleColor: colorScheme.onSurfaceVariant.withOpacity(0.4),
+      dragHandleColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
       dragHandleSize: const Size(32, 4),
       showDragHandle: true,
     );
@@ -314,13 +314,13 @@ class ThemeBuilder {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.secondaryContainer,
-      disabledColor: colorScheme.onSurface.withOpacity(0.12),
+      disabledColor: colorScheme.onSurface.withValues(alpha: 0.12),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
       secondaryLabelStyle: TextStyle(color: colorScheme.onSecondaryContainer),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
-      side: BorderSide(color: colorScheme.outline.withOpacity(0.5)),
+      side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.5)),
     );
   }
 

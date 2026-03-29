@@ -220,7 +220,11 @@ class _SquigglyPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SquigglyPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _SquigglyPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.animationValue != animationValue ||
+      oldDelegate.color != color ||
+      oldDelegate.backgroundColor != backgroundColor;
 }
 
 class WavyCircularProgressIndicator extends StatefulWidget {
@@ -298,7 +302,7 @@ class _WavyCircularPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (math.min(size.width, size.height) - strokeWidth - 8) / 2;
+    final radius = (math.min(size.width, size.height) - strokeWidth * 2) / 2;
 
     final bgPaint = Paint()
       ..color = backgroundColor
@@ -366,5 +370,10 @@ class _WavyCircularPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _WavyCircularPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _WavyCircularPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.animationValue != animationValue ||
+      oldDelegate.color != color ||
+      oldDelegate.backgroundColor != backgroundColor ||
+      oldDelegate.strokeWidth != strokeWidth;
 }

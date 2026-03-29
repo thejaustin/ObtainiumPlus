@@ -107,34 +107,45 @@ class _OmnibarState extends State<Omnibar> {
     final settings = context.watch<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Easing.standard,
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isValidUrl 
-              ? colorScheme.primary.withOpacity(0.5)
+          color: _isValidUrl
+              ? colorScheme.primary.withValues(alpha: 0.5)
               : _urlError != null
-                  ? colorScheme.error.withOpacity(0.5)
-                  : colorScheme.outline.withOpacity(0.3),
+                  ? colorScheme.error.withValues(alpha: 0.5)
+                  : colorScheme.outline.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
       child: Row(
         children: [
-          // Icon indicating input type
+          // Icon indicating input type — AnimatedSwitcher for smooth transitions
           Padding(
             padding: const EdgeInsets.only(left: 12),
-            child: Icon(
-              _isUrl 
-                  ? (_isValidUrl ? Icons.link : Icons.link_off)
-                  : Icons.search,
-              color: _isValidUrl
-                  ? colorScheme.primary
-                  : _urlError != null
-                      ? colorScheme.error
-                      : colorScheme.onSurfaceVariant,
-              size: 22,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(scale: anim, child: child),
+              ),
+              child: Icon(
+                _isUrl
+                    ? (_isValidUrl ? Icons.link : Icons.link_off)
+                    : Icons.search,
+                key: ValueKey(
+                    'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}'),
+                color: _isValidUrl
+                    ? colorScheme.primary
+                    : _urlError != null
+                        ? colorScheme.error
+                        : colorScheme.onSurfaceVariant,
+                size: 22,
+              ),
             ),
           ),
           
@@ -147,7 +158,7 @@ class _OmnibarState extends State<Omnibar> {
                     ? (_isValidUrl ? tr('validUrlEnterToAdd') : tr('invalidUrl'))
                     : tr('searchOrEnterUrl'),
                 hintStyle: TextStyle(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -232,19 +243,19 @@ class AppActionsFAB extends StatelessWidget {
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
                 color: enableGlass
-                    ? colorScheme.onSurface.withOpacity(0.18)
-                    : colorScheme.outline.withOpacity(0.12),
+                    ? colorScheme.onSurface.withValues(alpha: 0.18)
+                    : colorScheme.outline.withValues(alpha: 0.12),
               ),
               left: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
               ),
               right: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
               ),
             ),
           ),
@@ -257,7 +268,7 @@ class AppActionsFAB extends StatelessWidget {
                       // Handle
                       DragHandle(
                         width: 40,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 20),
 
@@ -278,7 +289,7 @@ class AppActionsFAB extends StatelessWidget {
                           title: tr('search'),
                           subtitle: tr('searchOrEnterUrl'),
                           iconColor: colorScheme.tertiary,
-                          containerColor: colorScheme.tertiaryContainer.withOpacity(0.5),
+                          containerColor: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
                           onTap: () {
                             Navigator.pop(context);
                             CommandCenter.show(context);
@@ -421,7 +432,7 @@ class AppActionsFAB extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: containerColor ?? colorScheme.primaryContainer.withOpacity(0.5),
+          color: containerColor ?? colorScheme.primaryContainer.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: iconColor ?? colorScheme.primary),
