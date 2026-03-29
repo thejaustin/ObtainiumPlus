@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/apps/app_tile_skeleton.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -111,54 +112,52 @@ class DiscoverPageState extends State<DiscoverPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return AlertDialog(
-              title: Text(tr('searchOptions')),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: searchableSources.where((s) => s.searchQuerySettingFormItems.isNotEmpty).map((source) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            source.name,
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+        return GlassDialog(
+          title: tr('searchOptions'),
+          icon: Icons.tune_outlined,
+          content: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: searchableSources.where((s) => s.searchQuerySettingFormItems.isNotEmpty).map((source) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          source.name,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        GeneratedForm(
-                          items: source.searchQuerySettingFormItems.map((e) {
-                            // Sync with current settings
-                            if (sourceQuerySettings[source.name]?.containsKey(e.key) ?? false) {
-                              e.defaultValue = sourceQuerySettings[source.name]![e.key];
-                            }
-                            return [e];
-                          }).toList(),
-                          onValueChanges: (values, valid, isBuilding) {
-                            if (!isBuilding) {
-                              sourceQuerySettings[source.name] = values;
-                            }
-                          },
-                        ),
-                        const Divider(),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(tr('ok')),
-                ),
-              ],
-            );
-          },
+                      ),
+                      GeneratedForm(
+                        items: source.searchQuerySettingFormItems.map((e) {
+                          if (sourceQuerySettings[source.name]?.containsKey(e.key) ?? false) {
+                            e.defaultValue = sourceQuerySettings[source.name]![e.key];
+                          }
+                          return [e];
+                        }).toList(),
+                        onValueChanges: (values, valid, isBuilding) {
+                          if (!isBuilding) {
+                            sourceQuerySettings[source.name] = values;
+                          }
+                        },
+                      ),
+                      const Divider(),
+                    ],
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('ok')),
+            ),
+          ],
         );
       },
     );

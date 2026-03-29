@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -424,11 +425,12 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                                 onPressed: () {
                                   showDialog(
                                     context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: const Text('microG Error'),
+                                    builder: (ctx) => GlassDialog(
+                                      title: 'microG Error',
+                                      icon: Icons.error_outline,
                                       content: Text(e.toString()),
                                       actions: [
-                                        TextButton(
+                                        FilledButton(
                                           onPressed: () => Navigator.pop(ctx),
                                           child: const Text('OK'),
                                         ),

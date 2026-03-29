@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:obtainium/components/common/drag_handle.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -189,8 +190,11 @@ class _AppPageState extends State<AppPage> {
       return showDialog(
         context: context,
         builder: (BuildContext ctx) {
-          return AlertDialog(
-            title: Text(tr('alreadyUpToDateQuestion')),
+          return GlassDialog(
+            title: tr('alreadyUpToDateQuestion'),
+            icon: Icons.check_circle_outline,
+            content: const SizedBox.shrink(),
+            scrollable: false,
             actions: [
               TextButton(
                 onPressed: () {
@@ -198,7 +202,7 @@ class _AppPageState extends State<AppPage> {
                 },
                 child: Text(tr('no')),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () {
                   HapticFeedback.selectionClick();
                   var updatedApp = app?.app;
