@@ -5,6 +5,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/utils/logger.dart';
 
 /// App installation and update settings
 class InstallationSection extends StatelessWidget {

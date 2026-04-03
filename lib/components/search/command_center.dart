@@ -19,6 +19,7 @@ import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:provider/provider.dart';
 
 class CommandCenter extends StatefulWidget {
