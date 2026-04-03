@@ -17,6 +17,7 @@ import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
