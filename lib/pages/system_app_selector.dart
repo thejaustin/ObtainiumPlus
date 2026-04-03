@@ -9,6 +9,7 @@ import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
@@ -17,6 +18,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/main.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +38,11 @@ enum SystemAppViewMode {
 }
 
 class SystemAppSelector extends StatefulWidget {
-  const SystemAppSelector({super.key});
+  /// When true, tapping an app pops the route with its URL string instead of
+  /// importing directly. Used by AddAppPage to pre-fill the URL field.
+  final bool returnUrlOnSelect;
+
+  const SystemAppSelector({super.key, this.returnUrlOnSelect = false});
 
   @override
   State<SystemAppSelector> createState() => _SystemAppSelectorState();
@@ -129,9 +135,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   }
 
   List<_EnhancedPackageInfo> _getFilteredApps() {
+    final trackedApps = context.read<AppsProvider>().apps;
     return _apps.where((pkg) {
       // Filter out apps already tracked
-      if (context.read<AppsProvider>().apps.containsKey(pkg.packageName)) return false;
+      if (trackedApps.containsKey(pkg.packageName)) return false;
 
       // Filter by system status
       if (!_showSystemApps && pkg.isSystemApp) return false;
@@ -433,11 +440,18 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           },
                         ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: filteredApps.isEmpty ? null : () => _importSelectedApps(filteredApps, appsProvider),
-        icon: const Icon(Icons.download_outlined),
-        label: Text(tr('importXApps', args: [filteredApps.length.toString()])),
-      ),
+      floatingActionButton: widget.returnUrlOnSelect
+          ? null
+          : Builder(builder: (context) {
+              final selectedCount = _apps.where((a) => a.isSelected).length;
+              return FloatingActionButton.extended(
+                onPressed: selectedCount == 0
+                    ? null
+                    : () => _importSelectedApps(appsProvider),
+                icon: const Icon(Icons.download_outlined),
+                label: Text(tr('importXApps', args: [selectedCount.toString()])),
+              );
+            }),
     );
   }
 
@@ -649,46 +663,62 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
 
   Future<void> _importApp(_EnhancedPackageInfo pkg, AppsProvider appsProvider) async {
     if (pkg.packageName == null) return;
-    
+    final url = 'https://play.google.com/store/apps/details?id=${pkg.packageName}';
+
+    // In returnUrlOnSelect mode (opened from AddAppPage), pop with the URL so
+    // AddAppPage can pre-fill its input field and let the user choose the source.
+    if (widget.returnUrlOnSelect) {
+      Navigator.pop(context, url);
+      return;
+    }
+
     try {
-      final url = 'https://play.google.com/store/apps/details?id=${pkg.packageName}';
-      await appsProvider.addAppsByURL([url]);
-      
-      if (mounted) {
+      final errors = await appsProvider.addAppsByURL([url]);
+      if (!mounted) return;
+      if (errors.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(tr('importedX', args: [pkg.appName ?? pkg.packageName ?? ''])),
             behavior: SnackBarBehavior.floating,
           ),
         );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => ImportErrorDialog(urlsLength: 1, errors: errors),
+        );
       }
     } catch (e) {
-      if (mounted) {
-        showError(e, context);
-      }
+      if (mounted) showError(e, context);
     }
   }
 
-  Future<void> _importSelectedApps(List<_EnhancedPackageInfo> apps, AppsProvider appsProvider) async {
-    final selectedApps = apps.where((a) => a.isSelected).toList();
+  Future<void> _importSelectedApps(AppsProvider appsProvider) async {
+    final selectedApps = _apps.where((a) => a.isSelected).toList();
     if (selectedApps.isEmpty) return;
-    
+
+    final urls = selectedApps
+        .map((a) => 'https://play.google.com/store/apps/details?id=${a.packageName}')
+        .toList();
+
     try {
-      final urls = selectedApps.map((a) => 'https://play.google.com/store/apps/details?id=${a.packageName}').toList();
-      await appsProvider.addAppsByURL(urls);
-      
-      if (mounted) {
+      final errors = await appsProvider.addAppsByURL(urls);
+      if (!mounted) return;
+      if (errors.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(tr('importedXApps', args: [selectedApps.length.toString()])),
             behavior: SnackBarBehavior.floating,
           ),
         );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => ImportErrorDialog(urlsLength: urls.length, errors: errors),
+        );
       }
     } catch (e) {
-      if (mounted) {
-        showError(e, context);
-      }
+      if (mounted) showError(e, context);
     }
   }
 }

@@ -28,7 +28,17 @@ class AppFileService {
       '${(await getAppStorageDir()).path}/app_data',
     );
     if (!appsDir.existsSync()) {
-      appsDir.createSync(recursive: true);
+      try {
+        appsDir.createSync(recursive: true);
+      } catch (_) {
+        // External storage creation failed (e.g. Android scoped storage
+        // restriction). Fall back to internal app documents directory.
+        final fallback = await getApplicationDocumentsDirectory();
+        appsDir = Directory('${fallback.path}/app_data');
+        if (!appsDir.existsSync()) {
+          appsDir.createSync(recursive: true);
+        }
+      }
     }
     return appsDir;
   }
