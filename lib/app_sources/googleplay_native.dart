@@ -22,7 +22,10 @@ class GooglePlayNative extends AppSource {
     Map<String, dynamic> additionalSettings,
   ) async {
     final appId = Uri.parse(standardUrl).queryParameters['id'] ?? '';
-    final ctx = globalNavigatorKey.currentContext!;
+    final ctx = globalNavigatorKey.currentContext;
+    if (ctx == null) {
+      return APKDetails('Unknown', [], AppNames(appId, 'Google Play (Native)'));
+    }
     final authProvider = Provider.of<AuthProvider>(ctx, listen: false);
 
     if (!authProvider.hasActiveToken) {
@@ -72,8 +75,9 @@ class GooglePlayNative extends AppSource {
   }) async {
     if (!forAPKDownload || !url.contains('android.clients.google.com')) return null;
 
-    final authProvider = Provider.of<AuthProvider>(
-        globalNavigatorKey.currentContext!, listen: false);
+    final ctx = globalNavigatorKey.currentContext;
+    if (ctx == null) return null;
+    final authProvider = Provider.of<AuthProvider>(ctx, listen: false);
     final bundle = authProvider.activeBundle;
     if (bundle == null) return null;
 

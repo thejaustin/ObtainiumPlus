@@ -458,7 +458,12 @@ class _CommandCenterState extends State<CommandCenter> {
             children: [
               _buildActionChip(Icons.sync, tr('checkUpdates'), () {
                 Navigator.pop(context);
-                context.read<AppsProvider>().checkUpdates(ignoreCache: true);
+                context.read<AppsProvider>().checkUpdates(ignoreCache: true)
+                    .catchError((e) {
+                  if (context.mounted) {
+                    showError(e is Map ? e['errors'] : e, context);
+                  }
+                });
               }),
               _buildActionChip(Icons.import_export, tr('importExport'), () {
                 Navigator.pop(context);

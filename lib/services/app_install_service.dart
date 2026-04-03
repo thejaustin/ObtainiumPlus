@@ -23,14 +23,18 @@ import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
 final pm = AndroidPackageManager();
+// Full flags (with signing certs) used for single-package lookups only.
 final packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates});
+// Lightweight flags for bulk listing — signing certs bloat the Binder parcel
+// to hundreds of MB on devices with many apps, causing TransactionTooLargeException.
+final _listPackageFlags = PackageInfoFlags(const {});
 
 class AppInstallService {
   AppInstallService._();
 
   static Future<List<PackageInfo>> getAllInstalledInfo() async {
     try {
-      return await pm.getInstalledPackages(flags: packageInfoFlags) ?? [];
+      return await pm.getInstalledPackages(flags: _listPackageFlags) ?? [];
     } catch (e) {
       talker.error('Error fetching installed packages: ${e.toString()}');
       return [];

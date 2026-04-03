@@ -87,6 +87,11 @@ class InstallationSection extends StatelessWidget {
                   case 'denied':
                     _showError(context, ObtainiumError(tr('cancelled')));
                 }
+              }).catchError((e) {
+                // Swallow PlatformException from Shizuku plugin (e.g. "Reply
+                // already submitted" when the user toggles rapidly). The switch
+                // value stays unchanged so no silent state change occurs.
+                talker.warning('Shizuku checkPermission error: $e');
               });
             },
           ),
@@ -115,7 +120,8 @@ class InstallationSection extends StatelessWidget {
   }
 
   void _showError(BuildContext context, ObtainiumError error) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    // Use maybeOf so stale contexts from async .then() callbacks don't crash.
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(content: Text(error.message), behavior: SnackBarBehavior.floating),
     );
   }

@@ -609,7 +609,7 @@ class AddAppPageState extends State<AddAppPage> {
               final result = await Navigator.push<String>(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SystemAppSelector(),
+                  builder: (context) => const SystemAppSelector(returnUrlOnSelect: true),
                 ),
               );
               if (result != null) {

@@ -6,16 +6,83 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/components/search/command_center.dart';
+import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/unsupported_source_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
+import 'package:obtainium/mass_app_sources/githubstars.dart';
+import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/pages/add_app.dart';
-import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
+
+/// Directly runs the GitHub mass-source import flow from any context,
+/// without needing to navigate to ImportExportPage first.
+Future<void> _runMassImport(BuildContext context, MassAppUrlSource source) async {
+  final appsProvider = context.read<AppsProvider>();
+
+  final values = await showDialog<Map<String, dynamic>?>(
+    context: context,
+    builder: (ctx) => GeneratedFormModal(
+      title: tr('importX', args: [source.name]),
+      items: source.requiredArgs.map((e) => [GeneratedFormTextField(e, label: e)]).toList(),
+    ),
+  );
+  if (values == null) return;
+  if (!context.mounted) return;
+
+  // Show a non-dismissible loading dialog while fetching.
+  final nav = Navigator.of(context);
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    final urlsWithDescriptions = await source.getUrlsWithDescriptions(
+      values.values.map((e) => e.toString()).toList(),
+    );
+    nav.pop(); // close loading
+    if (!context.mounted) return;
+
+    if (urlsWithDescriptions.isEmpty) {
+      showError(ObtainiumError(tr('noResults')), context);
+      return;
+    }
+
+    final selectedUrls = await showDialog<List<String>?>(
+      context: context,
+      builder: (ctx) => SelectionModal(entries: urlsWithDescriptions),
+    );
+    if (!context.mounted) return;
+
+    if (selectedUrls != null && selectedUrls.isNotEmpty) {
+      final errors = await appsProvider.addAppsByURL(selectedUrls);
+      if (!context.mounted) return;
+      if (errors.isEmpty) {
+        showMessage(
+          tr('importedX', args: [plural('apps', selectedUrls.length).toLowerCase()]),
+          context,
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (ctx) => ImportErrorDialog(urlsLength: selectedUrls.length, errors: errors),
+        );
+      }
+    }
+  } catch (e) {
+    try { nav.pop(); } catch (_) {} // dismiss loading if still showing
+    if (context.mounted) showError(e, context);
+  }
+}
 
 /// Omnibar widget that combines search, URL input, and app discovery
 /// Replaces separate search bars with unified input
@@ -325,7 +392,10 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('importGithubStarredReposDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            pushRoute(context, const ImportExportPage());
+                            _runMassImport(
+                              context,
+                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubStars),
+                            );
                           },
                         ),
 
@@ -337,7 +407,10 @@ class AppActionsFAB extends StatelessWidget {
                           subtitle: tr('githubPersonalReposDescription'),
                           onTap: () {
                             Navigator.pop(context);
-                            pushRoute(context, const ImportExportPage());
+                            _runMassImport(
+                              context,
+                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubPersonalRepos),
+                            );
                           },
                         ),
 

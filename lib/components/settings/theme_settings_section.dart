@@ -557,6 +557,8 @@ class ThemeSettingsSection extends StatelessWidget {
                 if (useSystemFont) {
                   NativeFeatures.loadSystemFont().then((val) {
                     settings.useSystemFont = true;
+                  }).catchError((e) {
+                    talker.warning('loadSystemFont failed: $e');
                   });
                 } else {
                   settings.useSystemFont = false;

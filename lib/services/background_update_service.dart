@@ -204,10 +204,12 @@ class BackgroundUpdateService {
           notificationsProvider.cancel(notif.id);
         }
 
+        final silentFlags = await Future.wait(
+          updates.map((app) => appsProvider.canInstallSilently(app)),
+        );
         List<App> toNotify = [];
         for (var i = 0; i < updates.length; i++) {
-          var canInstallSilently = await appsProvider.canInstallSilently(updates[i]);
-          if (networkRestricted || chargingRestricted || !canInstallSilently) {
+          if (networkRestricted || chargingRestricted || !silentFlags[i]) {
             if (updates[i].additionalSettings['skipUpdateNotifications'] != true) {
               toNotify.add(updates[i]);
             }
@@ -248,10 +250,11 @@ class BackgroundUpdateService {
         logs.add('BG install task: Started (${toInstall.length}).');
         if (toInstall.isEmpty && !networkRestricted && !chargingRestricted) {
           var temp = appsProvider.findExistingUpdates(installedOnly: true);
+          final canInstallFlags = await Future.wait(
+            temp.map((id) => appsProvider.canInstallSilently(appsProvider.apps[id]!.app)),
+          );
           for (var i = 0; i < temp.length; i++) {
-            if (await appsProvider.canInstallSilently(appsProvider.apps[temp[i]]!.app)) {
-              toInstall.add(MapEntry(temp[i], 0));
-            }
+            if (canInstallFlags[i]) toInstall.add(MapEntry(temp[i], 0));
           }
         }
         if (toInstall.isNotEmpty) {
@@ -272,8 +275,9 @@ class BackgroundUpdateService {
               notificationsProvider: notificationsProvider,
               forceParallelDownloads: true,
             );
-          } catch (e) {
-             // Handle or log errors
+          } catch (e, stack) {
+            logs.add('BG install task error: $e');
+            talker.handle(e, stack, 'BG install task');
           }
           logs.add('BG install task: Done.');
         }

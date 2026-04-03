@@ -246,6 +246,10 @@ void main() async {
                 stackTrace: stack.toString(),
                 sentryEventId: id.toString(),
               );
+            }).catchError((e) {
+              // Swallow — never let crash-recording failures recurse back into
+              // the zone error handler and create an infinite reporting loop.
+              talker.warning('Crash reporting pipeline failed: $e');
             });
           },
         );
@@ -312,6 +316,8 @@ class _ObtainiumState extends State<Obtainium> {
           stackTrace: details.stack?.toString() ?? '',
           sentryEventId: id.toString(),
         );
+      }).catchError((e) {
+        talker.warning('Build error reporting pipeline failed: $e');
       });
       return BuildErrorWidget(error: details.exceptionAsString(), stackTrace: details.stack?.toString() ?? '');
     };
