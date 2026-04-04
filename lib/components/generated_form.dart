@@ -904,7 +904,7 @@ class _FormTagInputFieldState extends State<_FormTagInputField> {
                           e2.key,
                           style: const TextStyle(fontSize: 12),
                         ),
-                        backgroundColor: Color(e2.value.key).withAlpha(50),
+                        backgroundColor: Color(e2.value.key).withValues(alpha: 50 / 255),
                         selectedColor: Color(e2.value.key),
                         visualDensity: VisualDensity.compact,
                         selected: e2.value.value,
