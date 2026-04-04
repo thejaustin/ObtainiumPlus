@@ -42,7 +42,8 @@ class FixAction {
 class ErrorResolution {
   final String tip;
   final FixAction? fix;
-  ErrorResolution(this.tip, {this.fix});
+  final FixAction? fix2;
+  ErrorResolution(this.tip, {this.fix, this.fix2});
 }
 
 class DownloadCancelledError extends ObtainiumError {
@@ -254,20 +255,28 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
   }
 
   if (e is DowngradeError) {
-    var res = ErrorResolution(tr('downgradeErrorTip'));
     if (e.appId != null) {
+      final appId = e.appId!;
+      final appsProvider = Provider.of<AppsProvider>(context, listen: false);
       return ErrorResolution(
         tr('downgradeErrorTip'),
         fix: FixAction(tr('uninstallApp'), () {
           AndroidIntent intent = AndroidIntent(
             action: 'android.intent.action.DELETE',
-            data: 'package:${e.appId}',
+            data: 'package:$appId',
           );
           intent.launch();
-        })
+        }),
+        fix2: FixAction(tr('markUpdated'), () {
+          final app = appsProvider.apps[appId]?.app;
+          if (app != null) {
+            app.installedVersion = app.latestVersion;
+            appsProvider.saveApps([app]);
+          }
+        }),
       );
     }
-    return res;
+    return ErrorResolution(tr('downgradeErrorTip'));
   }
 
   if (e is IDChangedError && e.appId != null) {
@@ -657,6 +666,14 @@ class _GlassErrorDialog extends StatelessWidget {
                 resolution!.fix!.action();
               },
               child: Text(resolution!.fix!.label),
+            ),
+          if (resolution?.fix2 != null)
+            TextButton(
+              onPressed: () {
+                Navigator.maybeOf(context)?.pop(null);
+                resolution!.fix2!.action();
+              },
+              child: Text(resolution!.fix2!.label),
             ),
           TextButton(
             onPressed: () {
