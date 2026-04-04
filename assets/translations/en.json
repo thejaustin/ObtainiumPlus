@@ -653,7 +653,7 @@
     "openStorageSettings": "Open Storage Settings",
     "installErrorTip": "Installation failed. You might need to allow 'Install unknown apps' or free up space.",
     "openInstallUnknownApps": "Open Install Unknown Apps",
-    "downgradeErrorTip": "You are trying to install an older version over a newer one. You must uninstall the current version first.",
+    "downgradeErrorTip": "The downloaded APK has a lower version code than the installed app. This can happen if you have a dev/pre-release build installed that is newer than the tracked release. Uninstall first to switch to the older release, or mark as up-to-date to dismiss this update.",
     "uninstallApp": "Uninstall App",
     "idChangedErrorTip": "The app ID (package name) has changed. Check the app info or source.",
     "openAppInfo": "Open App Info",
