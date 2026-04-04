@@ -92,7 +92,25 @@ class _StatisticsPageState extends State<StatisticsPage> {
           }
           
           if (snapshot.hasError) {
-            return Center(child: Text('Error loading stats: ${snapshot.error}'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      tr('error'),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           if (totalApps == 0) {
@@ -145,25 +163,25 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           label: tr('totalApps'),
                           value: totalApps.toString(),
                           icon: Icons.apps,
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         _MetricItem(
                           label: tr('installed'),
                           value: installedApps.toString(),
                           icon: Icons.check_circle_outline,
-                          color: Colors.green,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                         _MetricItem(
                           label: tr('updatesAvailable'),
                           value: updatesAvailable.toString(),
                           icon: Icons.system_update,
-                          color: Colors.orange,
+                          color: Theme.of(context).colorScheme.tertiary,
                         ),
                         _MetricItem(
                           label: tr('notInstalled'),
                           value: notInstalledApps.toString(),
                           icon: Icons.cloud_off,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ]),
                     ),
@@ -180,19 +198,19 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           label: tr('installs30Days'),
                           value: successfulInstalls30Days.toString(),
                           icon: Icons.history,
-                          color: Colors.purple,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         _MetricItem(
                           label: tr('installs7Days'),
                           value: successfulInstalls7Days.toString(),
                           icon: Icons.calendar_today,
-                          color: Colors.teal,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                         _MetricItem(
                           label: tr('pinnedApps'),
                           value: pinnedApps.toString(),
                           icon: Icons.push_pin,
-                          color: Colors.redAccent,
+                          color: Theme.of(context).colorScheme.error,
                         ),
                       ]),
                     ),
@@ -370,8 +388,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.green.withValues(alpha: 0.1),
-              child: const Icon(Icons.download_done, color: Colors.green, size: 20),
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(Icons.download_done, color: Theme.of(context).colorScheme.primary, size: 20),
             ),
             title: Text(appId),
             subtitle: Text(DateFormat.yMMMd().add_jm().format(event.timestamp)),

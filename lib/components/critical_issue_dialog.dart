@@ -31,7 +31,7 @@ class CriticalIssueDialog extends StatelessWidget {
     final enableGlass = settings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
     final isCritical = issue.severity == 'critical';
-    final accentColor = isCritical ? Colors.red.shade700 : Colors.orange;
+    final accentColor = isCritical ? colorScheme.error : colorScheme.tertiary;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -132,7 +132,7 @@ class CriticalIssueDialog extends StatelessWidget {
           _InfoChip(
             icon: Icons.check_circle_outline,
             label: tr('fixedInVersion', namedArgs: {'version': issue.fixedInVersion!}),
-            color: Colors.green.shade700,
+            color: colorScheme.secondary,
           ),
           const SizedBox(height: 8),
         ],

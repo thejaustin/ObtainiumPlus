@@ -282,13 +282,13 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
     final StringBuffer label = StringBuffer(widget.appInMemory.name);
 
     if (widget.hasUpdate) {
-      label.write(', update available');
+      label.write(', ${tr('updateAvailable')}');
     }
 
     if (widget.appInMemory.installedInfo != null) {
-      label.write(', installed');
+      label.write(', ${tr('installed')}');
     } else {
-      label.write(', not installed');
+      label.write(', ${tr('notInstalled')}');
     }
 
     if (widget.appInMemory.app.pinned) {
@@ -301,9 +301,9 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
 
     if (widget.appInMemory.downloadProgress != null) {
       final progress = widget.appInMemory.downloadProgress! >= 0
-          ? '${widget.appInMemory.downloadProgress}%'
-          : 'in progress';
-      label.write(', downloading $progress');
+          ? tr('percentProgress', args: [widget.appInMemory.downloadProgress!.toInt().toString()])
+          : tr('installing');
+      label.write(', $progress');
     }
 
     return label.toString();

@@ -145,10 +145,10 @@ class AppListTile extends StatelessWidget {
                   ? (Theme.of(context).brightness == Brightness.light
                             ? Theme.of(context).primaryColor
                             : Theme.of(context).primaryColorLight)
-                        .withAlpha(
-                          Theme.of(context).brightness == Brightness.light
-                              ? 20
-                              : 40,
+                        .withValues(
+                          alpha: Theme.of(context).brightness == Brightness.light
+                              ? 20 / 255
+                              : 40 / 255,
                         )
                   : null,
             ),
@@ -200,7 +200,7 @@ class AppListTile extends StatelessWidget {
       ],
     );
 
-    var transparent = Theme.of(context).colorScheme.surface.withAlpha(0).value;
+    var transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
     List<double> stops = [
       ...appInMemory.app.categories.asMap().entries.map(
         (e) =>
@@ -225,7 +225,7 @@ class AppListTile extends StatelessWidget {
 
     if (!settingsProvider.plusEnableModernAppListTile) {
       // --- LEGACY UI ---
-      var transparent = Theme.of(context).colorScheme.surface.withAlpha(0).value;
+      var transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
       List<double> stops = [
         ...appInMemory.app.categories.asMap().entries.map(
           (e) =>
@@ -250,7 +250,7 @@ class AppListTile extends StatelessWidget {
               ...appInMemory.app.categories.map(
                 (e) => Color(
                   settingsProvider.categories[e] ?? transparent,
-                ).withAlpha(255),
+                ).withValues(alpha: 1.0),
               ),
               Color(transparent),
             ],
