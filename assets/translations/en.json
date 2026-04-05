@@ -1015,5 +1015,8 @@
     "skip": "Skip",
     "updateRecommended": "Update Recommended",
     "fixedIn": "Fixed in",
-    "plural_apps": "{} Apps"
+    "plural_apps": "{} Apps",
+    "quickSetupAssistant": "Quick Setup Assistant",
+    "quickSetupAllowBackground": "Allow background updates",
+    "quickSetupEnableNotifications": "Enable update notifications"
 }
