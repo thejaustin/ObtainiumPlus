@@ -26,6 +26,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/utils/version_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/play_store_mirror_service.dart';
 import 'package:provider/provider.dart';
@@ -1390,6 +1391,17 @@ class _AppWebViewState extends State<_AppWebView> {
   }
 }
 
+/// Returns true if the app has a pending update using the same reconciliation
+/// logic as AppUpdateService, so the install button state is consistent.
+bool _appNeedsUpdate(AppInMemory? app) {
+  if (app == null) return false;
+  final inst = app.app.installedVersion;
+  final latest = app.app.latestVersion;
+  if (inst == null) return true; // not installed yet
+  if (inst == latest) return false;
+  return reconcileVersionDifferences(inst, latest)?.key != true;
+}
+
 class _AppBottomBar extends StatelessWidget {
   const _AppBottomBar({
     required this.app,
@@ -1431,7 +1443,6 @@ class _AppBottomBar extends StatelessWidget {
       builder: (context, appsProvider, _) {
         final currentApp = app != null ? appsProvider.apps[app!.app.id] : null;
         final busy = currentApp?.downloadProgress != null || updating;
-        final areDownloadsRunning = appsProvider.areDownloadsRunning();
         return Padding(
           padding: EdgeInsets.fromLTRB(
             0,
@@ -1535,11 +1546,7 @@ class _AppBottomBar extends StatelessWidget {
                     Expanded(
                       flex: 3,
                       child: FilledButton(
-                        onPressed: !updating &&
-                                (app?.app.installedVersion == null ||
-                                    app?.app.installedVersion !=
-                                        app?.app.latestVersion) &&
-                                !areDownloadsRunning
+                        onPressed: !busy && _appNeedsUpdate(app)
                             ? onInstallUpdate
                             : null,
                         style: FilledButton.styleFrom(
