@@ -104,11 +104,6 @@ class AppBehaviorSection extends StatelessWidget {
         ),
     ];
 
-    List<Widget> swipeChildren = [
-      if (_matches(tr('swipeRightAction'))) _buildSwipeActionDropdown(context, isRight: true),
-      if (_matches(tr('swipeLeftAction'))) _buildSwipeActionDropdown(context, isRight: false),
-    ];
-
     return Column(
       children: [
         if (children.any((w) => w is! SizedBox))
@@ -116,11 +111,30 @@ class AppBehaviorSection extends StatelessWidget {
             title: isSearching ? null : tr('appBehavior'),
             children: children,
           ),
-        if (swipeChildren.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('swipeActions'),
-            children: swipeChildren,
-          ),
+        Consumer<BehaviorSettingsProvider>(
+          builder: (context, settings, _) {
+            if (!settings.enableSwipeGestures &&
+                !_matches(tr('swipeRightAction')) &&
+                !_matches(tr('swipeLeftAction'))) {
+              return const SizedBox.shrink();
+            }
+            final swipeChildren = [
+              if (_matches(tr('swipeRightAction'))) _buildSwipeActionDropdown(context, isRight: true),
+              if (_matches(tr('swipeLeftAction'))) _buildSwipeActionDropdown(context, isRight: false),
+            ];
+            if (swipeChildren.isEmpty) return const SizedBox.shrink();
+            return Opacity(
+              opacity: settings.enableSwipeGestures ? 1.0 : 0.4,
+              child: IgnorePointer(
+                ignoring: !settings.enableSwipeGestures,
+                child: SettingsGroup(
+                  title: isSearching ? null : tr('swipeActions'),
+                  children: swipeChildren,
+                ),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
