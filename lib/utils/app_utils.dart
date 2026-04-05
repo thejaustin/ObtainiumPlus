@@ -5,22 +5,41 @@ import 'package:flutter/material.dart';
 import 'package:hsluv/hsluv.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 
-/// Push a route with a M3 Expressive shared-axis (horizontal) transition.
+/// Push a route respecting the user's transition preferences:
+///   - disablePageTransitions → instant jump
+///   - reversePageTransitions → right-to-left (slide back)
+///   - animationSpeedMultiplier → scales duration
 Future<T?> pushRoute<T>(BuildContext context, Widget page) {
+  final settings = context.read<SettingsProvider>();
+  if (settings.disablePageTransitions) {
+    return Navigator.of(context).push<T>(
+      PageRouteBuilder<T>(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+  }
+  final speed = settings.animationSpeedMultiplier;
+  final fwdMs = (300 * speed).round();
+  final revMs = (250 * speed).round();
+  final reverse = settings.reversePageTransitions;
   return Navigator.of(context).push<T>(
     PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return SharedAxisTransition(
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
+          animation: reverse ? ReverseAnimation(animation) : animation,
+          secondaryAnimation: reverse ? ReverseAnimation(secondaryAnimation) : secondaryAnimation,
           transitionType: SharedAxisTransitionType.horizontal,
           child: child,
         );
       },
-      transitionDuration: const Duration(milliseconds: 300),
-      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionDuration: Duration(milliseconds: fwdMs),
+      reverseTransitionDuration: Duration(milliseconds: revMs),
     ),
   );
 }
