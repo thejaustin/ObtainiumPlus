@@ -264,6 +264,26 @@ class DeveloperSettingsPage extends StatelessWidget {
           ),
           _buildSection(
             context,
+            'Experimental Features',
+            [
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.compare_arrows_outlined),
+                title: const Text('Legacy UI Comparison'),
+                subtitle: const Text('Injects FABs on the app list, app detail, and add-app pages to preview the old UI side-by-side.'),
+                value: context.watch<PlusSettingsProvider>().plusShowLegacyUIComparison,
+                onChanged: (val) => context.read<PlusSettingsProvider>().plusShowLegacyUIComparison = val,
+              ),
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.science_outlined),
+                title: const Text('Advanced Theming'),
+                subtitle: const Text('Unlocks the experimental Advanced Theming section in Settings → Appearance. May have visual regressions.'),
+                value: context.watch<PlusSettingsProvider>().plusEnableExperimentalCustomization,
+                onChanged: (val) => context.read<PlusSettingsProvider>().plusEnableExperimentalCustomization = val,
+              ),
+            ],
+          ),
+          _buildSection(
+            context,
             'Testing',
             [
               ListTile(
