@@ -1018,5 +1018,7 @@
     "plural_apps": "{} Apps",
     "quickSetupAssistant": "Quick Setup Assistant",
     "quickSetupAllowBackground": "Allow background updates",
-    "quickSetupEnableNotifications": "Enable update notifications"
+    "quickSetupEnableNotifications": "Enable update notifications",
+    "plusSectionInterfaceVisuals": "Interface & Visuals",
+    "plusSectionOrganizationSorting": "Organization & Sorting"
 }

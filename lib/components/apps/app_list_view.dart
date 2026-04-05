@@ -103,8 +103,9 @@ class AppListView extends StatelessWidget {
             return false; // Don't dismiss the row
           }
 
-          // Check if swipe actions are enabled via Plus Features
+          // Check if swipe actions are enabled via Plus Features AND user preference
           final swipeEnabled = plusEnableSwipeActions &&
+              behaviorSettings.enableSwipeGestures &&
               !(behaviorSettings.swipeRightAction == AppSwipeAction.none && behaviorSettings.swipeLeftAction == AppSwipeAction.none);
 
           void _showAppShortcuts() => showAppShortcutsMenu(

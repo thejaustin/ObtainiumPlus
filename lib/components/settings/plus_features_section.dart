@@ -96,7 +96,7 @@ class PlusFeaturesSection extends StatelessWidget {
 
               // --- UI & VISUALS ---
               ExpressiveSettingsGroup(
-                title: isSearching ? null : 'Interface & Visuals',
+                title: isSearching ? null : tr('plusSectionInterfaceVisuals'),
                 children: [
                   if (_matches(tr('plusModernSettings')))
                     _buildFeatureToggle(
@@ -200,7 +200,7 @@ class PlusFeaturesSection extends StatelessWidget {
 
               // --- ADVANCED CUSTOMIZATION (Expandable) ---
               ExpressiveSettingsGroup(
-                title: isSearching ? null : 'Organization & Sorting',
+                title: isSearching ? null : tr('plusSectionOrganizationSorting'),
                 children: [
                   if (_matches(tr('plusIconCaching')))
                     _buildFeatureToggle(
