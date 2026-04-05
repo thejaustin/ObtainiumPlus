@@ -1518,9 +1518,7 @@ class _AppBottomBar extends StatelessWidget {
                                 icon: const Icon(Icons.more_horiz),
                                 tooltip: tr('more'),
                               ),
-                            if (app?.app.installedVersion != null &&
-                                app?.app.installedVersion !=
-                                    app?.app.latestVersion &&
+                            if (_appNeedsUpdate(app) &&
                                 !isVersionDetectionStandard &&
                                 !trackOnly)
                               IconButton(
