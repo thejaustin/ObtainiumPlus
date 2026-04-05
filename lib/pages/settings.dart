@@ -87,14 +87,14 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
                 children: [
                   Icon(Icons.auto_fix_high, color: Theme.of(context).colorScheme.primary, size: 20),
                   const SizedBox(width: 8),
-                  const Text('Quick Setup Assistant', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(tr('quickSetupAssistant'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 12),
               if (!_isIgnoringBattery)
                 _buildActionRow(
                   context,
-                  label: 'Allow background updates',
+                  label: tr('quickSetupAllowBackground'),
                   onTap: () async {
                     await FlutterForegroundTask.requestIgnoreBatteryOptimization();
                     _checkStatus();
@@ -103,7 +103,7 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
               if (!_hasNotificationPermission)
                 _buildActionRow(
                   context,
-                  label: 'Enable update notifications',
+                  label: tr('quickSetupEnableNotifications'),
                   onTap: () async {
                     await Permission.notification.request();
                     _checkStatus();
