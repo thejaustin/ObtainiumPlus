@@ -673,7 +673,23 @@ class AppDownloadService {
         }
       }
       if (sayInstalled) {
-        notificationsProvider?.cancel(UpdateNotification([]).id);
+        // Re-evaluate remaining updates — update the notification if some apps
+        // still need updates, cancel it if all are now up-to-date.
+        final remaining = apps.values
+            .where((a) {
+              final inst = a.app.installedVersion;
+              final latest = a.app.latestVersion;
+              if (inst == null || inst == latest) return false;
+              final rec = reconcileVersionDifferences(inst, latest);
+              return rec == null || rec.key == false;
+            })
+            .map((a) => a.app)
+            .toList();
+        if (remaining.isEmpty) {
+          notificationsProvider?.cancel(UpdateNotification([]).id);
+        } else {
+          notificationsProvider?.notify(UpdateNotification(remaining));
+        }
       }
       logs.logEvent('InstallCompleted', {'appId': id, 'success': sayInstalled});
       return sayInstalled;

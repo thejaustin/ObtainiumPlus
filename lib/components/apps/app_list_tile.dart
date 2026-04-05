@@ -115,6 +115,9 @@ class AppListTile extends StatelessWidget {
     }
 
     String getVersionText() {
+      if (hasUpdate && appInMemory.app.installedVersion != null) {
+        return '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}';
+      }
       return appInMemory.app.installedVersion ?? tr('notInstalled');
     }
 

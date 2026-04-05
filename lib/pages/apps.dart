@@ -516,6 +516,7 @@ class AppsPageState extends State<AppsPage> {
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
                 _buildDashboard(context, appsProvider, onRefresh),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
+                if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),
                 ...loadingWidgets,
                 _buildContent(context, viewSettings, listedApps, listedCategories),
                 // Bottom padding to prevent FAB / quick-filter strip from
@@ -1233,6 +1234,84 @@ class AppsPageState extends State<AppsPage> {
       clearSelected();
       showMessage(tr('appsTagged'), context);
     }
+  }
+
+  Widget _buildDownloadProgressBanner(BuildContext context, AppsProvider appsProvider) {
+    final active = appsProvider.apps.values
+        .where((a) => a.downloadProgress != null)
+        .toList();
+    if (active.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    final downloading = active.where((a) => a.downloadProgress! >= 0).toList();
+    final installing = active.where((a) => a.downloadProgress! < 0).toList();
+
+    double? aggProgress;
+    if (downloading.isNotEmpty) {
+      aggProgress = downloading
+              .map((a) => a.downloadProgress!)
+              .reduce((a, b) => a + b) /
+          downloading.length /
+          100;
+    }
+
+    final isAllInstalling = downloading.isEmpty && installing.isNotEmpty;
+    final nameOrCount = active.length == 1
+        ? active.first.name
+        : plural('apps', active.length);
+    final label = isAllInstalling
+        ? '${tr('installing')} $nameOrCount'
+        : tr('downloadingX', args: [nameOrCount]);
+
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
+            child: Row(
+              children: [
+                Icon(
+                  isAllInstalling
+                      ? Icons.install_mobile_outlined
+                      : Icons.downloading_outlined,
+                  size: 15,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    for (final a in active) {
+                      appsProvider.cancelDownload(a.app.id);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.close,
+                      size: 15,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ExpressiveProgressIndicator(value: aggProgress),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
   }
 }
 
