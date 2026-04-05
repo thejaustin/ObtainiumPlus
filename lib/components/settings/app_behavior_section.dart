@@ -34,16 +34,6 @@ class AppBehaviorSection extends StatelessWidget {
         onChanged: (s, v) => s.disablePageTransitions = v,
         visible: (s) => _matches(tr('disablePageTransitions')),
       ),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.flip_outlined,
-        title: tr('reversePageTransitions'),
-        subtitle: tr('reversePageTransitionsDescription'),
-        value: (s) => s.reversePageTransitions,
-        onChanged: (s, v) => s.reversePageTransitions = v,
-        visible: (s) => _matches(tr('reversePageTransitions')),
-      ),
-      
       // Haptic Feedback
       _buildFeatureToggle(
         context,

@@ -361,11 +361,12 @@ class HomePageState extends State<HomePage> {
       if (settingsProvider.disablePageTransitions) {
         _pageController.jumpToPage(index);
       } else {
+        final speed = settingsProvider.animationSpeedMultiplier;
         _pageController.animateToPage(
           index,
-          duration: const Duration(milliseconds: 300),
-          curve: settingsProvider.plusEnableMaterialExpressive 
-              ? AppConstants.expressiveStandard 
+          duration: Duration(milliseconds: (300 * speed).round()),
+          curve: settingsProvider.plusEnableMaterialExpressive
+              ? AppConstants.expressiveStandard
               : AppConstants.standardStandard,
         );
       }
