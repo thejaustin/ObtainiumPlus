@@ -7,6 +7,7 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 
 class AppGridView extends StatelessWidget {
@@ -53,8 +54,11 @@ class AppGridView extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
             var app = apps[index];
-            var hasUpdate = app.app.installedVersion != null &&
-                app.app.installedVersion != app.app.latestVersion;
+            final inst = app.app.installedVersion;
+            final latest = app.app.latestVersion;
+            final hasUpdate = inst != null &&
+                inst != latest &&
+                (reconcileVersionDifferences(inst, latest)?.key != true);
 
             void showAppShortcuts() => showAppShortcutsMenu(
                   context,
