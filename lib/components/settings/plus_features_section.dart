@@ -79,6 +79,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       subtitle: tr('plusSystemUpdateScannerDescription'),
                       value: settings.plusEnableSystemUpdateScanner,
                       onChanged: (val) => settings.plusEnableSystemUpdateScanner = val,
+                      experimental: true,
                     ),
                   if (_matches(tr('plusUpdateSchedule')))
                     _buildFeatureToggle(
@@ -248,10 +249,32 @@ class PlusFeaturesSection extends StatelessWidget {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
+    bool experimental = false,
   }) {
     return SwitchListTile.adaptive(
       secondary: Icon(icon),
-      title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+      title: Row(
+        children: [
+          Expanded(child: Text(title, style: Theme.of(context).textTheme.bodyLarge)),
+          if (experimental)
+            Container(
+              margin: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'BETA',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onTertiaryContainer,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+        ],
+      ),
       subtitle: Text(subtitle),
       value: value,
       onChanged: onChanged,
