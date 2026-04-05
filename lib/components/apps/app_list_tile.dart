@@ -64,7 +64,7 @@ class AppListTile extends StatelessWidget {
         tooltip: appInMemory.app.additionalSettings['trackOnly'] == true
             ? tr('markUpdated')
             : tr('update'),
-        onPressed: appsProvider.areDownloadsRunning()
+        onPressed: appInMemory.downloadProgress != null
             ? null
             : () {
                 appsProvider

@@ -206,6 +206,9 @@ class AppDownloadService {
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
     bool Function(String appId)? isCancelled,
+    // When false, the finally block skips the downloadProgress=null reset so
+    // _installApp can take over immediately without a visible null flash.
+    bool clearProgressOnComplete = true,
   }) async {
     var notifId = DownloadNotification(app.finalName, 0).id;
     if (apps[app.id] != null) {
@@ -345,7 +348,7 @@ class AppDownloadService {
       };
     } finally {
       notificationsProvider?.cancel(notifId);
-      if (apps[app.id] != null) {
+      if (clearProgressOnComplete && apps[app.id] != null) {
         apps[app.id]!.downloadProgress = null;
         notifyListeners();
       }
@@ -738,6 +741,9 @@ class AppDownloadService {
             notificationsProvider: notificationsProvider,
             useExisting: useExisting,
             isCancelled: isCancelled,
+            // Keep progress visible during the handoff to _installApp so the
+            // banner doesn't flicker null→-1 between download and install.
+            clearProgressOnComplete: false,
           );
       if (downloadedArtifact['isAPK'] == true) {
         downloadedFile = DownloadedApk(id, downloadedArtifact['downloadedFile'] as File);
