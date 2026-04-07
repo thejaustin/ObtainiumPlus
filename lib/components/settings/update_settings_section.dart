@@ -242,7 +242,8 @@ class UpdateSettingsSection extends StatelessWidget {
                 value: updateSettings.checkUpdateOnDetailPage,
                 onChanged: (value) => updateSettings.checkUpdateOnDetailPage = value,
               ),
-            if (_matches(tr('updateSchedule')))
+            if (_matches(tr('updateSchedule')) &&
+                context.watch<SettingsProvider>().plusEnableUpdateSchedule)
               ListTile(
                 leading: const Icon(Icons.schedule_outlined),
                 title: Text(tr('updateSchedule'), style: Theme.of(context).textTheme.bodyLarge),

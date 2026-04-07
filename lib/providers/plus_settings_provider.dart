@@ -47,12 +47,6 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableUICustomization => _prefs?.getBool('plusEnableUICustomization') ?? true;
-  set plusEnableUICustomization(bool val) {
-    _prefs?.setBool('plusEnableUICustomization', val);
-    notifyListeners();
-  }
-
   bool get plusEnableExperimentalCustomization => _prefs?.getBool('plusEnableExperimentalCustomization') ?? false;
   set plusEnableExperimentalCustomization(bool val) {
     _prefs?.setBool('plusEnableExperimentalCustomization', val);
