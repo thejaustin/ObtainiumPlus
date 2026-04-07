@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -208,7 +209,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               selected: selected,
               onSelected: (val) {
                 if (val) {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   sp.appSortMethod = method;
                 }
               },
@@ -239,7 +240,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           ],
           selected: {sp.globalViewMode},
           onSelectionChanged: (modes) {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             sp.globalViewMode = modes.first;
           },
         ),
@@ -261,7 +262,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               label: Text(tr('installed')),
               selected: statusFilter.contains('installed'),
               onSelected: (val) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 setState(() {
                   if (val) {
                     statusFilter.add('installed');
@@ -276,7 +277,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               label: Text(tr('trackOnly')),
               selected: statusFilter.contains('trackonly'),
               onSelected: (val) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 setState(() {
                   if (val) {
                     statusFilter.add('trackonly');
@@ -291,7 +292,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               label: Text(tr('upToDateApps')),
               selected: !widget.filter.includeUptodate,
               onSelected: (val) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 setState(() {
                   widget.filter.includeUptodate = !val;
                 });
@@ -302,7 +303,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               label: Text(tr('nonInstalledApps')),
               selected: !widget.filter.includeNonInstalled,
               onSelected: (val) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 setState(() {
                   widget.filter.includeNonInstalled = !val;
                 });
@@ -334,7 +335,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               selectedColor: color.withValues(alpha: 0.2),
               checkmarkColor: color,
               onSelected: (val) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 setState(() {
                   if (val) {
                     selectedCats.add(cat);
@@ -373,7 +374,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               label: Text(tag),
               selected: selected,
               onSelected: (val) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 setState(() {
                   if (val) {
                     selectedTags.add(tag);

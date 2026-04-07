@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -288,7 +289,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 ],
                 selected: {settings.theme},
                 onSelectionChanged: (Set<ThemeSettings> newSelection) {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   settings.theme = newSelection.first;
                 },
               ),
@@ -338,7 +339,7 @@ class ThemeSettingsSection extends StatelessWidget {
                       selected: isSelected,
                       onSelected: (selected) {
                         if (selected) {
-                          HapticFeedback.selectionClick();
+                          AppHaptics.selectionClick();
                           settings.themeColor = color;
                         }
                       },
@@ -374,7 +375,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 ],
                 selected: {settings.navigationLabelBehavior},
                 onSelectionChanged: (Set<NavigationDestinationLabelBehavior> newSelection) {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   settings.navigationLabelBehavior = newSelection.first;
                 },
               ),
@@ -424,7 +425,7 @@ class ThemeSettingsSection extends StatelessWidget {
               title: Text(tr('useMaterialYou'), style: Theme.of(context).textTheme.bodyLarge),
               value: settings.useMaterialYou,
               onChanged: (value) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 settings.useMaterialYou = value;
               },
             );
@@ -446,7 +447,7 @@ class ThemeSettingsSection extends StatelessWidget {
           subtitle: Text(tr('matchSystemMaterialStyleDescription')),
           value: settings.matchSystemMaterialStyle,
           onChanged: (value) {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             settings.matchSystemMaterialStyle = value;
           },
         );
@@ -473,7 +474,7 @@ class ThemeSettingsSection extends StatelessWidget {
             }).toList(),
             onChanged: (value) {
               if (value != null) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 settings.themeVariant = value;
               }
             },
@@ -499,7 +500,7 @@ class ThemeSettingsSection extends StatelessWidget {
             borderRadius: 16,
             color: settings.themeColor,
             onSelect: () async {
-              HapticFeedback.lightImpact();
+              AppHaptics.lightImpact();
               final Color colorBeforeDialog = settings.themeColor;
               if (!(await _showColorPickerDialog(context, settings))) {
                 settings.themeColor = colorBeforeDialog;
@@ -554,7 +555,7 @@ class ThemeSettingsSection extends StatelessWidget {
               title: Text(tr('useSystemFont'), style: Theme.of(context).textTheme.bodyLarge),
               value: settings.useSystemFont,
               onChanged: (useSystemFont) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 if (useSystemFont) {
                   NativeFeatures.loadSystemFont().then((val) {
                     settings.useSystemFont = true;

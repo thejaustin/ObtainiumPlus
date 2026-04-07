@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -186,7 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final values = ThemeSettings.values;
     final next = values[(sp.theme.index + 1) % values.length];
     sp.theme = next;
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
   }
 
   @override
@@ -494,7 +495,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                         onLongPress: () {
                           settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
-                          HapticFeedback.heavyImpact();
+                          AppHaptics.heavyImpact();
                           showMessage(settingsProvider.plusDeveloperMode ? 'Developer Mode Enabled' : 'Developer Mode Disabled', context);
                         },
                       ),
@@ -522,7 +523,7 @@ class _SettingsPageState extends State<SettingsPage> {
       label: Text(label, style: TextStyle(fontSize: 12, color: value ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface)),
       selected: value,
       onSelected: (val) {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         onChanged(val);
       },
       selectedColor: Theme.of(context).colorScheme.primary,
@@ -544,7 +545,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       child: InkWell(
         onTap: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick();
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
@@ -642,7 +643,7 @@ class _SettingsPageState extends State<SettingsPage> {
       subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)) : null,
       trailing: const Icon(Icons.chevron_right, size: 20),
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         showModalBottomSheet(context: context, isScrollControlled: true, useSafeArea: true, builder: builder);
       },
     );
@@ -653,7 +654,7 @@ class _SettingsPageState extends State<SettingsPage> {
       width: 76,
       child: InkWell(
         onTap: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick();
           onTap();
         },
         onLongPress: onLongPress,

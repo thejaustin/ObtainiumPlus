@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ void showAppShortcutsMenu(
   final enableGlass = settings.plusEnableGlassmorphism;
   final colorScheme = Theme.of(context).colorScheme;
 
-  HapticFeedback.heavyImpact();
+  AppHaptics.heavyImpact();
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,

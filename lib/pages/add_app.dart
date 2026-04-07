@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -574,7 +575,7 @@ class AddAppPageState extends State<AddAppPage> {
               child: FloatingActionButton.small(
                 heroTag: 'add_app_ui_comparison_toggle',
                 onPressed: () {
-                  HapticFeedback.mediumImpact();
+                  AppHaptics.mediumImpact();
                   settingsProvider.plusEnableModernAddAppPage =
                       !settingsProvider.plusEnableModernAddAppPage;
                 },
@@ -690,7 +691,7 @@ class AddAppPageState extends State<AddAppPage> {
                         : FilledButton.tonal(
                             onPressed: _canAddUrl
                                 ? () {
-                                    HapticFeedback.selectionClick();
+                                    AppHaptics.selectionClick();
                                     _addApp();
                                   }
                                 : null,

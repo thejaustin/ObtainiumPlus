@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -143,7 +144,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                   onTapCancel: () => setState(() => _isPressed = false),
                   onLongPressStart: (_) {
                     setState(() => _isPressed = true);
-                    HapticFeedback.mediumImpact();
+                    AppHaptics.mediumImpact();
                   },
                   onLongPressEnd: (_) {
                     setState(() => _isPressed = false);
