@@ -129,16 +129,6 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableHomeDashboard,
                       onChanged: (val) => settings.plusEnableHomeDashboard = val,
                     ),
-                  if (_matches(tr('plusHapticFeedback')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
-                      icon: Icons.vibration_rounded,
-                      title: tr('plusHapticFeedback'),
-                      subtitle: tr('plusHapticFeedbackDescription'),
-                      value: settings.plusEnableHapticFeedback,
-                      onChanged: (val) => settings.plusEnableHapticFeedback = val,
-                    ),
                 ],
               ),
 
