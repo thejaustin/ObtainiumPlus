@@ -433,12 +433,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableUICustomization => plusSettings.plusEnableUICustomization;
-  set plusEnableUICustomization(bool val) {
-    plusSettings.plusEnableUICustomization = val;
-    notifyListeners();
-  }
-
   bool get plusEnableExperimentalCustomization => plusSettings.plusEnableExperimentalCustomization;
   set plusEnableExperimentalCustomization(bool val) {
     plusSettings.plusEnableExperimentalCustomization = val;

@@ -566,6 +566,7 @@ class AddAppPageState extends State<AddAppPage> {
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
     final isModern = settingsProvider.plusEnableModernAddAppPage;
+    final discoverEnabled = settingsProvider.plusEnableDiscover;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -644,7 +645,7 @@ class AddAppPageState extends State<AddAppPage> {
               ),
               onChanged: (value) {
                 _changeUserInput(value, true, false);
-                if (!value.trim().startsWith('http')) {
+                if (discoverEnabled && !value.trim().startsWith('http')) {
                   _discoverPageKey.currentState?.searchQuery = value;
                   _discoverSearchDebounce?.cancel();
                   _discoverSearchDebounce = Timer(const Duration(milliseconds: 800), () {
@@ -657,13 +658,13 @@ class AddAppPageState extends State<AddAppPage> {
               onSubmitted: (_) {
                 if (_isUrlMode) {
                   if (_canAddUrl) _addApp();
-                } else if (userInput.trim().isNotEmpty) {
+                } else if (discoverEnabled && userInput.trim().isNotEmpty) {
                   _discoverPageKey.currentState?.searchQuery = userInput;
                   _discoverPageKey.currentState?.runSearch();
                 }
               },
               trailing: [
-                if (!_isUrlMode && userInput.trim().isNotEmpty)
+                if (discoverEnabled && !_isUrlMode && userInput.trim().isNotEmpty)
                   IconButton(
                     icon: const Icon(Icons.tune),
                     onPressed: () =>
@@ -701,7 +702,7 @@ class AddAppPageState extends State<AddAppPage> {
                             child: Text(tr('add')),
                           ),
                   )
-                else if (userInput.trim().isNotEmpty)
+                else if (discoverEnabled && userInput.trim().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilledButton.tonal(
@@ -736,7 +737,7 @@ class AddAppPageState extends State<AddAppPage> {
             ),
 
           // Source filter chips (discover mode only)
-          if (!_isUrlMode && userInput.trim().isNotEmpty)
+          if (discoverEnabled && !_isUrlMode && userInput.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Consumer<SettingsProvider>(
@@ -782,13 +783,14 @@ class AddAppPageState extends State<AddAppPage> {
                 isModern
                     ? _buildModernUrlContent(context)
                     : _buildLegacyUrlContent(context),
-                // Discover mode
-                DiscoverPage(
-                  key: _discoverPageKey,
-                  showAppBar: false,
-                  showSearchBar: false,
-                  initialQuery: userInput,
-                ),
+                // Discover mode (gated on plusEnableDiscover)
+                if (discoverEnabled)
+                  DiscoverPage(
+                    key: _discoverPageKey,
+                    showAppBar: false,
+                    showSearchBar: false,
+                    initialQuery: userInput,
+                  ),
               ],
             ),
           ),

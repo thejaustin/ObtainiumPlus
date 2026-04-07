@@ -99,16 +99,6 @@ class PlusFeaturesSection extends StatelessWidget {
               ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('plusSectionInterfaceVisuals'),
                 children: [
-                  if (_matches(tr('plusModernSettings')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
-                      icon: Icons.settings_suggest_outlined,
-                      title: tr('plusModernSettings'),
-                      subtitle: tr('plusModernSettingsDescription'),
-                      value: settings.plusEnableModernSettings,
-                      onChanged: (val) => settings.plusEnableModernSettings = val,
-                    ),
                   if (_matches(tr('plusEnhancedAnimations')))
                     _buildFeatureToggle(
                       context,
