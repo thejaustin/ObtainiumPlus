@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -199,7 +200,7 @@ class _AppDashboardState extends State<AppDashboard>
                 ],
                 selected: {widget.currentFilterMode},
                 onSelectionChanged: (Set<String> selection) {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   widget.onFilterChanged(selection.first);
                 },
                 showSelectedIcon: false,

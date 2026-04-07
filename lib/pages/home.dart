@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
@@ -471,7 +472,7 @@ class HomePageState extends State<HomePage> {
               setState(() => _isEditMode = editing);
             },
             onDestinationSelected: (int index) {
-              HapticFeedback.selectionClick();
+              AppHaptics.selectionClick();
               if (index == currentIndex) {
                 if (activePages[index].widget == appsPage) {
                   (appsPage.key as GlobalKey<AppsPageState>?)

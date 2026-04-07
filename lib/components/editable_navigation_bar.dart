@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -103,7 +104,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       onLongPress: widget.isEditMode
           ? null
           : () {
-              HapticFeedback.heavyImpact();
+              AppHaptics.heavyImpact();
               widget.onEditModeChanged(true);
             },
       child: enableGlass
@@ -214,7 +215,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       data: index,
       delay: const Duration(milliseconds: 100),
       onDragStarted: () {
-        HapticFeedback.mediumImpact();
+        AppHaptics.mediumImpact();
         setState(() => _dragFromIndex = index);
       },
       onDragEnd: (_) {
@@ -258,7 +259,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
         onWillAcceptWithDetails: (details) {
           if (details.data != index) {
             setState(() => _dragOverIndex = index);
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
           }
           return details.data != index;
         },
@@ -270,7 +271,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
         onAcceptWithDetails: (details) {
           final fromIndex = details.data;
           widget.onReorder(fromIndex, index);
-          HapticFeedback.mediumImpact();
+          AppHaptics.mediumImpact();
           setState(() {
             _dragFromIndex = null;
             _dragOverIndex = null;
@@ -404,7 +405,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               right: 8,
               child: GestureDetector(
                 onTap: () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.lightImpact();
                   widget.onRemoveTab(page.id);
                 },
                 child: Container(
@@ -436,7 +437,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       width: 48,
       child: PopupMenuButton<String>(
         onSelected: (id) {
-          HapticFeedback.lightImpact();
+          AppHaptics.lightImpact();
           widget.onAddTab(id);
         },
         offset: const Offset(0, -200),
@@ -490,7 +491,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       width: 48,
       child: GestureDetector(
         onTap: () {
-          HapticFeedback.lightImpact();
+          AppHaptics.lightImpact();
           widget.onEditModeChanged(false);
         },
         behavior: HitTestBehavior.opaque,

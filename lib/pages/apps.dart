@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
@@ -209,7 +210,7 @@ class AppsPageState extends State<AppsPage> {
           ],
           selected: { _getCurrentFilterMode() },
           onSelectionChanged: (Set<String> selection) {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             _applyFilterMode(selection.first);
           },
           showSelectedIcon: false,
@@ -240,7 +241,7 @@ class AppsPageState extends State<AppsPage> {
     );
 
     refresh() {
-      HapticFeedback.lightImpact();
+      AppHaptics.lightImpact();
       setState(() {
         refreshingSince = DateTime.now();
       });
@@ -251,7 +252,7 @@ class AppsPageState extends State<AppsPage> {
             return <App>[];
           })
           .whenComplete(() {
-            HapticFeedback.lightImpact();
+            AppHaptics.lightImpact();
             if (mounted) setState(() {
               refreshingSince = null;
             });
@@ -328,7 +329,7 @@ class AppsPageState extends State<AppsPage> {
                     actionLabel: appsProvider.apps.isEmpty ? tr('addApp') : null,
                     onActionPressed: appsProvider.apps.isEmpty
                         ? () {
-                            HapticFeedback.lightImpact();
+                            AppHaptics.lightImpact();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -340,7 +341,7 @@ class AppsPageState extends State<AppsPage> {
                     secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
                     onSecondaryActionPressed: appsProvider.apps.isEmpty
                         ? () {
-                            HapticFeedback.lightImpact();
+                            AppHaptics.lightImpact();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -366,7 +367,7 @@ class AppsPageState extends State<AppsPage> {
     getMassObtainFunction() {
       if (appsProvider.areDownloadsRunning() || (existingUpdateIds.isEmpty && newInstallIds.isEmpty && trackOnlyUpdateIds.isEmpty)) return null;
       return () {
-        HapticFeedback.heavyImpact();
+        AppHaptics.heavyImpact();
         List<GeneratedFormItem> formItems = [];
         if (existingUpdateIds.isNotEmpty) {
           formItems.add(GeneratedFormSwitch('updates', label: tr('updateX', args: [plural('apps', existingUpdateIds.length).toLowerCase()]), defaultValue: true));
@@ -472,7 +473,7 @@ class AppsPageState extends State<AppsPage> {
               child: FloatingActionButton.small(
                 heroTag: 'ui_comparison_toggle',
                 onPressed: () {
-                  HapticFeedback.mediumImpact();
+                  AppHaptics.mediumImpact();
                   settingsProvider.plusEnableModernAppListTile = !settingsProvider.plusEnableModernAppListTile;
                 },
                 child: Icon(settingsProvider.plusEnableModernAppListTile
@@ -594,7 +595,7 @@ class AppsPageState extends State<AppsPage> {
             : null,
         title: GestureDetector(
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -658,7 +659,7 @@ class AppsPageState extends State<AppsPage> {
           : null,
       title: GestureDetector(
         onLongPress: () {
-          HapticFeedback.heavyImpact();
+          AppHaptics.heavyImpact();
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -793,7 +794,7 @@ class AppsPageState extends State<AppsPage> {
               }
             },
             onLongPress: () {
-              HapticFeedback.heavyImpact();
+              AppHaptics.heavyImpact();
               settings.plusTopUILayout = !settings.plusTopUILayout;
               showMessage(tr('toggleUIFocus'), context);
             },
@@ -811,7 +812,7 @@ class AppsPageState extends State<AppsPage> {
             IconButton(
               icon: const Icon(Icons.tune),
               onPressed: () {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 SortFilterPanel.show(
                   context,
                   filter: filter,
@@ -840,7 +841,7 @@ class AppsPageState extends State<AppsPage> {
       IconButton(
         icon: const Icon(Icons.settings_outlined),
         onPressed: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick();
           pushRoute(context, const SettingsPage());
         },
         tooltip: tr('settings'),
@@ -884,11 +885,11 @@ class AppsPageState extends State<AppsPage> {
                   child: InkWell(
                     borderRadius: const BorderRadius.horizontal(left: Radius.circular(32)),
                     onTap: () {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.selectionClick();
                       CommandCenter.show(context);
                     },
                     onLongPress: () {
-                      HapticFeedback.heavyImpact();
+                      AppHaptics.heavyImpact();
                       settings.plusTopUILayout = !settings.plusTopUILayout;
                       showMessage(tr('toggleUIFocus'), context);
                     },
@@ -915,7 +916,7 @@ class AppsPageState extends State<AppsPage> {
                 child: InkWell(
                   borderRadius: const BorderRadius.horizontal(right: Radius.circular(32)),
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    AppHaptics.selectionClick();
                     SortFilterPanel.show(
                       context,
                       filter: filter,
@@ -1002,14 +1003,14 @@ class AppsPageState extends State<AppsPage> {
                 actionLabel: appsProvider.apps.isEmpty ? tr('addApp') : null,
                 onActionPressed: appsProvider.apps.isEmpty
                     ? () {
-                        HapticFeedback.lightImpact();
+                        AppHaptics.lightImpact();
                         pushRoute(context, const AddAppPage());
                       }
                     : null,
                 secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
                 onSecondaryActionPressed: appsProvider.apps.isEmpty
                     ? () {
-                        HapticFeedback.lightImpact();
+                        AppHaptics.lightImpact();
                         pushRoute(context, const AddAppPage(initialTab: 1));
                       }
                     : null,
@@ -1096,7 +1097,7 @@ class AppsPageState extends State<AppsPage> {
     if (appsProvider.areDownloadsRunning() || (existingUpdateIds.isEmpty && newInstallIds.isEmpty && trackOnlyUpdateIds.isEmpty)) return null;
     
     return () {
-      HapticFeedback.heavyImpact();
+      AppHaptics.heavyImpact();
       List<GeneratedFormItem> formItems = [];
       if (existingUpdateIds.isNotEmpty) {
         formItems.add(GeneratedFormSwitch('updates', label: tr('updateX', args: [plural('apps', existingUpdateIds.length).toLowerCase()]), defaultValue: true));

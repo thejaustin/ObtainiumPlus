@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -56,10 +57,10 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
         _controller.forward();
-        HapticFeedback.mediumImpact();
+        AppHaptics.mediumImpact();
       } else {
         _controller.reverse();
-        HapticFeedback.lightImpact();
+        AppHaptics.lightImpact();
       }
     });
   }

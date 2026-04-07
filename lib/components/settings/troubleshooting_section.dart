@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -60,7 +61,7 @@ class TroubleshootingSection extends StatelessWidget {
       title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
       trailing: const Icon(Icons.open_in_new, size: 18),
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.lightImpact();
         onTap();
       },
     );

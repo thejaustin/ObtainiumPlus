@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -130,7 +131,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     }
 
     runObtainiumExport({bool pickOnly = false}) async {
-      HapticFeedback.selectionClick();
+      AppHaptics.selectionClick();
       try {
         final result = await appsProvider.export(
           pickOnly:
@@ -148,7 +149,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     }
 
     runObtainiumImport() async {
-      HapticFeedback.selectionClick();
+      AppHaptics.selectionClick();
       try {
         final result = await FilePicker.platform.pickFiles(
           type: FileType.custom,

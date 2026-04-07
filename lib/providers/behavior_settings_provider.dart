@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
@@ -11,6 +12,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   Future<void> initializeSettings(SharedPreferences p) async {
     prefs = p;
+    AppHaptics.enabled = enableHapticFeedback;
     notifyListeners();
   }
 
@@ -166,6 +168,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   set enableHapticFeedback(bool enabled) {
     prefs?.setBool('enableHapticFeedback', enabled);
+    AppHaptics.enabled = enabled;
     notifyListeners();
   }
 

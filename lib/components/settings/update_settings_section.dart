@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -135,7 +136,7 @@ class UpdateSettingsSection extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {
-              HapticFeedback.selectionClick();
+              AppHaptics.selectionClick();
               AppInstallService.openXiaomiAutostartSettings();
             },
             icon: const Icon(Icons.play_arrow_outlined),
@@ -144,7 +145,7 @@ class UpdateSettingsSection extends StatelessWidget {
           const SizedBox(height: 8),
           ElevatedButton.icon(
             onPressed: () {
-              HapticFeedback.selectionClick();
+              AppHaptics.selectionClick();
               AppInstallService.openXiaomiBatterySaverSettings();
             },
             icon: const Icon(Icons.battery_saver_outlined),

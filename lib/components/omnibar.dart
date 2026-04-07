@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
@@ -514,13 +515,13 @@ class AppActionsFAB extends StatelessWidget {
         children: [
           GestureDetector(
             onLongPress: () {
-              HapticFeedback.heavyImpact();
+              AppHaptics.heavyImpact();
               settings.plusTopUILayout = !settings.plusTopUILayout;
             },
             child: FloatingActionButton.small(
               heroTag: 'fab_search',
               onPressed: () {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
                 CommandCenter.show(context);
               },
               child: const Icon(Icons.search_rounded),

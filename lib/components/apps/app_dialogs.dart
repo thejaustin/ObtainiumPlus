@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,7 +79,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
         ),
         FilledButton(
           onPressed: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             Navigator.maybeOf(context)?.pop(fileUrl);
           },
           child: Text(tr('continue')),
@@ -119,7 +120,7 @@ class APKOriginWarningDialog extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             Navigator.maybeOf(context)?.pop(true);
           },
           child: Text(tr('continue')),

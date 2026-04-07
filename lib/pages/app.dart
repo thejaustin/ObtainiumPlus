@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/glass_dialog.dart';
@@ -206,7 +207,7 @@ class _AppPageState extends State<AppPage> {
               ),
               FilledButton(
                 onPressed: () {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   var updatedApp = app?.app;
                   if (updatedApp != null) {
                     updatedApp.installedVersion = updatedApp.latestVersion;
@@ -296,7 +297,7 @@ class _AppPageState extends State<AppPage> {
               child: FloatingActionButton.small(
                 heroTag: 'app_page_ui_comparison_toggle',
                 onPressed: () {
-                  HapticFeedback.mediumImpact();
+                  AppHaptics.mediumImpact();
                   appsProvider.settingsProvider.plusEnableModernAppPage = !appsProvider.settingsProvider.plusEnableModernAppPage;
                 },
                 child: Icon(appsProvider.settingsProvider.plusEnableModernAppPage 
@@ -475,7 +476,7 @@ class _AppPageState extends State<AppPage> {
                 var successMessage = app?.app.installedVersion == null
                     ? tr('installed')
                     : tr('appsUpdated');
-                HapticFeedback.heavyImpact();
+                AppHaptics.heavyImpact();
                 
                 // Handle different source types
                 if (settings.preferredUpdateSource == 'play_store' ||
@@ -552,7 +553,7 @@ class _AppPageState extends State<AppPage> {
           GestureDetector(
             onTap: () => AppInstallService.openApp(app!.app.id),
             onLongPress: () {
-              HapticFeedback.heavyImpact();
+              AppHaptics.heavyImpact();
               _showContextMenu(
                 title: tr('appearance'),
                 actions: [
@@ -579,7 +580,7 @@ class _AppPageState extends State<AppPage> {
         const SizedBox(height: 8),
         GestureDetector(
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             _showContextMenu(
               title: tr('author'),
               actions: [
@@ -637,7 +638,7 @@ class _AppPageState extends State<AppPage> {
             launchUrlString(urlToOpen, mode: LaunchMode.externalApplication);
           },
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             _showContextMenu(
               title: tr('sourceOptions'),
               actions: [
@@ -666,7 +667,7 @@ class _AppPageState extends State<AppPage> {
         const SizedBox(height: 4),
         GestureDetector(
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             _showContextMenu(
               title: tr('appId'),
               actions: [
@@ -980,7 +981,7 @@ class _AppPageState extends State<AppPage> {
                             ? null
                             : () => AppInstallService.openApp(app.app.id),
                         onLongPress: () {
-                          HapticFeedback.heavyImpact();
+                          AppHaptics.heavyImpact();
                           _showContextMenu(
                             title: tr('appearance'),
                             actions: [
@@ -1030,7 +1031,7 @@ class _AppPageState extends State<AppPage> {
         ),
         GestureDetector(
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             _showContextMenu(
               title: tr('author'),
               actions: [
@@ -1075,7 +1076,7 @@ class _AppPageState extends State<AppPage> {
             );
           },
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             _showContextMenu(
               title: tr('sourceOptions'),
               actions: [
@@ -1104,7 +1105,7 @@ class _AppPageState extends State<AppPage> {
         ),
         GestureDetector(
           onLongPress: () {
-            HapticFeedback.heavyImpact();
+            AppHaptics.heavyImpact();
             _showContextMenu(
               title: tr('appId'),
               actions: [
@@ -1180,7 +1181,7 @@ class _AppPageState extends State<AppPage> {
               const SizedBox(height: 8),
               GestureDetector(
                 onLongPress: () {
-                  HapticFeedback.heavyImpact();
+                  AppHaptics.heavyImpact();
                   _showContextMenu(
                     title: tr('versionOptions'),
                     actions: [

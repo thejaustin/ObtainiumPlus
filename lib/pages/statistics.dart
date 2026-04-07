@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'dart:convert';
 import 'dart:ui';
@@ -120,7 +121,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               subtitle: tr('startByAddingFirstApp'),
               actionLabel: tr('addApp'),
               onActionPressed: () {
-                HapticFeedback.lightImpact();
+                AppHaptics.lightImpact();
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,

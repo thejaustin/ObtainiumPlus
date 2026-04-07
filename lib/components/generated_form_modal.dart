@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -193,7 +194,7 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
                   ? null
                   : () {
                       if (valid) {
-                        HapticFeedback.selectionClick();
+                        AppHaptics.selectionClick();
                         Navigator.of(context).pop(values);
                       }
                     },
