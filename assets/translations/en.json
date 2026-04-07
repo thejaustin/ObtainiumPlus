@@ -1020,5 +1020,9 @@
     "quickSetupAllowBackground": "Allow background updates",
     "quickSetupEnableNotifications": "Enable update notifications",
     "plusSectionInterfaceVisuals": "Interface & Visuals",
-    "plusSectionOrganizationSorting": "Organization & Sorting"
+    "plusSectionOrganizationSorting": "Organization & Sorting",
+    "plusResponsiveLayout": "Responsive Layout",
+    "plusResponsiveLayoutDescription": "On wide screens (>800dp), display apps in a centered column for better readability.",
+    "plusCategoryReorder": "Drag to Reorder Categories",
+    "plusCategoryReorderDescription": "Long-press a category header to drag and reorder it in the app list."
 }

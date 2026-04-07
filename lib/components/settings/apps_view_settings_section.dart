@@ -86,6 +86,24 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusEnableExpressiveProgress = v),
         visible: (s) => _matches(tr('plusExpressiveProgress')),
       ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.tablet_android_rounded,
+        title: tr('plusResponsiveLayout'),
+        subtitle: tr('plusResponsiveLayoutDescription'),
+        value: (s) => s.plusEnableResponsiveAppLayout,
+        onChanged: (s, v) => onSetState(() => s.plusEnableResponsiveAppLayout = v),
+        visible: (s) => _matches(tr('plusResponsiveLayout')),
+      ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
+        icon: Icons.drag_indicator_rounded,
+        title: tr('plusCategoryReorder'),
+        subtitle: tr('plusCategoryReorderDescription'),
+        value: (s) => s.plusEnableCategoryReorder,
+        onChanged: (s, v) => onSetState(() => s.plusEnableCategoryReorder = v),
+        visible: (s) => _matches(tr('plusCategoryReorder')),
+      ),
       _buildGridSettings(context),
     ];
 
