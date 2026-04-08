@@ -84,11 +84,28 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           _isLoading = false;
         });
         _sortApps();
+        _loadIcons(installed);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loadIcons(List<PackageInfo> packages) async {
+    const batchSize = 10;
+    for (int i = 0; i < packages.length; i += batchSize) {
+      if (!mounted) return;
+      final batch = packages.sublist(i, (i + batchSize).clamp(0, packages.length));
+      await Future.wait(batch.map((pkg) async {
+        try {
+          final iconBytes = await pkg.applicationInfo?.getAppIcon();
+          if (iconBytes == null || !mounted) return;
+          final idx = _apps.indexWhere((a) => a.packageName == pkg.packageName);
+          if (idx != -1) setState(() => _apps[idx].icon = iconBytes);
+        } catch (_) {}
+      }));
     }
   }
 
@@ -456,7 +473,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   }
 
   Widget _buildAppTile(_EnhancedPackageInfo pkg, AppsProvider appsProvider) {
-    final settings = context.read<SettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final appLabels = _appLabels[pkg.packageName] ?? [];
     
@@ -563,7 +579,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   }
 
   Widget _buildGridAppTile(_EnhancedPackageInfo pkg, AppsProvider appsProvider) {
-    final settings = context.read<SettingsProvider>();
     final appLabels = _appLabels[pkg.packageName] ?? [];
     
     return Card(
@@ -707,7 +722,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       if (errors.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr('importedXApps', args: [selectedApps.length.toString()])),
+            content: Text(tr('importedX', args: [selectedApps.length.toString()])),
             behavior: SnackBarBehavior.floating,
           ),
         );
