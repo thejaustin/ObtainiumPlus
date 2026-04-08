@@ -264,7 +264,30 @@ class UpdateSettingsSection extends StatelessWidget {
                 trailing: DropdownButton<String>(
                   value: updateSettings.obtainiumReleaseChannel,
                   onChanged: (String? newValue) {
-                    if (newValue != null) {
+                    if (newValue == null) return;
+                    if (newValue == 'dev' && updateSettings.obtainiumReleaseChannel != 'dev') {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                          title: Text(tr('devChannelWarningTitle')),
+                          content: Text(tr('devChannelWarningMessage')),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(tr('cancel')),
+                            ),
+                            FilledButton(
+                              onPressed: () {
+                                updateSettings.obtainiumReleaseChannel = 'dev';
+                                Navigator.pop(ctx);
+                              },
+                              child: Text(tr('enable')),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
                       updateSettings.obtainiumReleaseChannel = newValue;
                     }
                   },
