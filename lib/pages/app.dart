@@ -354,7 +354,7 @@ class _AppPageState extends State<AppPage> {
                                       _buildStatRow(
                                         context,
                                         icon: Icons.update_rounded,
-                                        label: tr('lastChecked'),
+                                        label: tr('lastCheck'),
                                         value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
                                       ),
                                     ],
@@ -370,7 +370,7 @@ class _AppPageState extends State<AppPage> {
                                           decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
                                           child: Icon(Icons.link_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                                         ),
-                                        title: Text(tr('sourceUrl'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        title: Text(tr('appSourceURL'), style: const TextStyle(fontWeight: FontWeight.bold)),
                                         subtitle: Text(app?.app.url ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
                                         trailing: const Icon(Icons.open_in_new, size: 18),
                                         onTap: () => launchUrlString(app?.app.url ?? '', mode: LaunchMode.externalApplication),
@@ -729,7 +729,7 @@ class _AppPageState extends State<AppPage> {
               _buildStatRow(
                 context,
                 icon: Icons.update_rounded,
-                label: tr('lastChecked'),
+                label: tr('lastCheck'),
                 value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
               ),
               if (changeLogFn != null) ...[
@@ -737,7 +737,7 @@ class _AppPageState extends State<AppPage> {
                 OutlinedButton.icon(
                   onPressed: changeLogFn,
                   icon: const Icon(Icons.history_rounded, size: 18),
-                  label: Text(tr('viewChanges')),
+                  label: Text(tr('viewChangelog')),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
