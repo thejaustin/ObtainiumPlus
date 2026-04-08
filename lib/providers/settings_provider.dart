@@ -373,73 +373,77 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableGridView => plusSettings.plusEnableGridView;
+  /// Gates a Plus feature value behind the master toggle.
+  /// Returns [val] only when all Plus features are enabled; false otherwise.
+  bool _plus(bool val) => enableAllPlusFeatures && val;
+
+  bool get plusEnableGridView => _plus(plusSettings.plusEnableGridView);
   set plusEnableGridView(bool val) {
     plusSettings.plusEnableGridView = val;
     notifyListeners();
   }
 
-  bool get plusEnableQuickFilters => plusSettings.plusEnableQuickFilters;
+  bool get plusEnableQuickFilters => _plus(plusSettings.plusEnableQuickFilters);
   set plusEnableQuickFilters(bool val) {
     plusSettings.plusEnableQuickFilters = val;
     notifyListeners();
   }
 
-  bool get plusEnableDiscover => plusSettings.plusEnableDiscover;
+  bool get plusEnableDiscover => _plus(plusSettings.plusEnableDiscover);
   set plusEnableDiscover(bool val) {
     plusSettings.plusEnableDiscover = val;
     notifyListeners();
   }
 
-  bool get plusEnableIconCaching => plusSettings.plusEnableIconCaching;
+  bool get plusEnableIconCaching => _plus(plusSettings.plusEnableIconCaching);
   set plusEnableIconCaching(bool val) {
     plusSettings.plusEnableIconCaching = val;
     notifyListeners();
   }
 
-  bool get plusEnableAdvancedSorting => plusSettings.plusEnableAdvancedSorting;
+  bool get plusEnableAdvancedSorting => _plus(plusSettings.plusEnableAdvancedSorting);
   set plusEnableAdvancedSorting(bool val) {
     plusSettings.plusEnableAdvancedSorting = val;
     notifyListeners();
   }
 
-  bool get plusEnableSwipeActions => plusSettings.plusEnableSwipeActions;
+  bool get plusEnableSwipeActions => _plus(plusSettings.plusEnableSwipeActions);
   set plusEnableSwipeActions(bool val) {
     plusSettings.plusEnableSwipeActions = val;
     notifyListeners();
   }
 
-  bool get plusEnableCategoryReorder => plusSettings.plusEnableCategoryReorder;
+  bool get plusEnableCategoryReorder => _plus(plusSettings.plusEnableCategoryReorder);
   set plusEnableCategoryReorder(bool val) {
     plusSettings.plusEnableCategoryReorder = val;
     notifyListeners();
   }
 
-  bool get plusEnableUpdateSchedule => plusSettings.plusEnableUpdateSchedule;
+  bool get plusEnableUpdateSchedule => _plus(plusSettings.plusEnableUpdateSchedule);
   set plusEnableUpdateSchedule(bool val) {
     plusSettings.plusEnableUpdateSchedule = val;
     notifyListeners();
   }
 
-  bool get plusEnableEnhancedAnimations => plusSettings.plusEnableEnhancedAnimations;
+  bool get plusEnableEnhancedAnimations => _plus(plusSettings.plusEnableEnhancedAnimations);
   set plusEnableEnhancedAnimations(bool val) {
     plusSettings.plusEnableEnhancedAnimations = val;
     notifyListeners();
   }
 
-  bool get plusEnableMaterialExpressive => plusSettings.plusEnableMaterialExpressive;
+  bool get plusEnableMaterialExpressive => _plus(plusSettings.plusEnableMaterialExpressive);
   set plusEnableMaterialExpressive(bool val) {
     plusSettings.plusEnableMaterialExpressive = val;
     notifyListeners();
   }
 
-  bool get plusEnableExperimentalCustomization => plusSettings.plusEnableExperimentalCustomization;
+  bool get plusEnableExperimentalCustomization => _plus(plusSettings.plusEnableExperimentalCustomization);
   set plusEnableExperimentalCustomization(bool val) {
     plusSettings.plusEnableExperimentalCustomization = val;
     notifyListeners();
   }
 
-  bool get plusEnableExpressiveProgress => plusSettings.plusEnableExpressiveProgress;
+  bool get plusEnableExpressiveProgress => _plus(plusSettings.plusEnableExpressiveProgress);
   set plusEnableExpressiveProgress(bool val) {
     plusSettings.plusEnableExpressiveProgress = val;
     notifyListeners();
@@ -463,73 +467,73 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusOverrideIndividualCornerRadius => plusSettings.plusOverrideIndividualCornerRadius;
+  bool get plusOverrideIndividualCornerRadius => _plus(plusSettings.plusOverrideIndividualCornerRadius);
   set plusOverrideIndividualCornerRadius(bool val) {
     plusSettings.plusOverrideIndividualCornerRadius = val;
     notifyListeners();
   }
 
-  bool get plusEnableGlassmorphism => plusSettings.plusEnableGlassmorphism;
+  bool get plusEnableGlassmorphism => _plus(plusSettings.plusEnableGlassmorphism);
   set plusEnableGlassmorphism(bool val) {
     plusSettings.plusEnableGlassmorphism = val;
     notifyListeners();
   }
 
-  bool get plusEnablePopupSlider => plusSettings.plusEnablePopupSlider;
+  bool get plusEnablePopupSlider => _plus(plusSettings.plusEnablePopupSlider);
   set plusEnablePopupSlider(bool val) {
     plusSettings.plusEnablePopupSlider = val;
     notifyListeners();
   }
 
-  bool get plusEnableModernAppPage => plusSettings.plusEnableModernAppPage;
+  bool get plusEnableModernAppPage => _plus(plusSettings.plusEnableModernAppPage);
   set plusEnableModernAppPage(bool val) {
     plusSettings.plusEnableModernAppPage = val;
     notifyListeners();
   }
 
-  bool get plusEnableModernAddAppPage => plusSettings.plusEnableModernAddAppPage;
+  bool get plusEnableModernAddAppPage => _plus(plusSettings.plusEnableModernAddAppPage);
   set plusEnableModernAddAppPage(bool val) {
     plusSettings.plusEnableModernAddAppPage = val;
     notifyListeners();
   }
 
-  bool get plusEnableModernAppListTile => plusSettings.plusEnableModernAppListTile;
+  bool get plusEnableModernAppListTile => _plus(plusSettings.plusEnableModernAppListTile);
   set plusEnableModernAppListTile(bool val) {
     plusSettings.plusEnableModernAppListTile = val;
     notifyListeners();
   }
 
-  bool get plusEnableResponsiveAppLayout => plusSettings.plusEnableResponsiveAppLayout;
+  bool get plusEnableResponsiveAppLayout => _plus(plusSettings.plusEnableResponsiveAppLayout);
   set plusEnableResponsiveAppLayout(bool val) {
     plusSettings.plusEnableResponsiveAppLayout = val;
     notifyListeners();
   }
 
-  bool get plusEnableSystemUpdateScanner => plusSettings.plusEnableSystemUpdateScanner;
+  bool get plusEnableSystemUpdateScanner => _plus(plusSettings.plusEnableSystemUpdateScanner);
   set plusEnableSystemUpdateScanner(bool val) {
     plusSettings.plusEnableSystemUpdateScanner = val;
     notifyListeners();
   }
 
-  bool get plusEnableHomeDashboard => plusSettings.plusEnableHomeDashboard;
+  bool get plusEnableHomeDashboard => _plus(plusSettings.plusEnableHomeDashboard);
   set plusEnableHomeDashboard(bool val) {
     plusSettings.plusEnableHomeDashboard = val;
     notifyListeners();
   }
 
-  bool get plusShowAppBarSearch => plusSettings.plusShowAppBarSearch;
+  bool get plusShowAppBarSearch => _plus(plusSettings.plusShowAppBarSearch);
   set plusShowAppBarSearch(bool val) {
     plusSettings.plusShowAppBarSearch = val;
     notifyListeners();
   }
 
-  bool get plusShowDashboardSearch => plusSettings.plusShowDashboardSearch;
+  bool get plusShowDashboardSearch => _plus(plusSettings.plusShowDashboardSearch);
   set plusShowDashboardSearch(bool val) {
     plusSettings.plusShowDashboardSearch = val;
     notifyListeners();
   }
 
-  bool get plusShowFloatingSearch => plusSettings.plusShowFloatingSearch;
+  bool get plusShowFloatingSearch => _plus(plusSettings.plusShowFloatingSearch);
   set plusShowFloatingSearch(bool val) {
     plusSettings.plusShowFloatingSearch = val;
     notifyListeners();
@@ -541,7 +545,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusTopUILayout => plusSettings.plusTopUILayout;
+  bool get plusTopUILayout => _plus(plusSettings.plusTopUILayout);
   set plusTopUILayout(bool val) {
     plusSettings.plusTopUILayout = val;
     notifyListeners();
@@ -554,31 +558,31 @@ class SettingsProvider with ChangeNotifier {
   }
 
   // Quick-Add FAB menu item visibility
-  bool get plusFabShowSearch => plusSettings.plusFabShowSearch;
+  bool get plusFabShowSearch => _plus(plusSettings.plusFabShowSearch);
   set plusFabShowSearch(bool val) {
     plusSettings.plusFabShowSearch = val;
     notifyListeners();
   }
 
-  bool get plusFabShowAddByUrl => plusSettings.plusFabShowAddByUrl;
+  bool get plusFabShowAddByUrl => _plus(plusSettings.plusFabShowAddByUrl);
   set plusFabShowAddByUrl(bool val) {
     plusSettings.plusFabShowAddByUrl = val;
     notifyListeners();
   }
 
-  bool get plusFabShowGithubStarred => plusSettings.plusFabShowGithubStarred;
+  bool get plusFabShowGithubStarred => _plus(plusSettings.plusFabShowGithubStarred);
   set plusFabShowGithubStarred(bool val) {
     plusSettings.plusFabShowGithubStarred = val;
     notifyListeners();
   }
 
-  bool get plusFabShowGithubPersonalRepos => plusSettings.plusFabShowGithubPersonalRepos;
+  bool get plusFabShowGithubPersonalRepos => _plus(plusSettings.plusFabShowGithubPersonalRepos);
   set plusFabShowGithubPersonalRepos(bool val) {
     plusSettings.plusFabShowGithubPersonalRepos = val;
     notifyListeners();
   }
 
-  bool get plusFabShowImportInstalled => plusSettings.plusFabShowImportInstalled;
+  bool get plusFabShowImportInstalled => _plus(plusSettings.plusFabShowImportInstalled);
   set plusFabShowImportInstalled(bool val) {
     plusSettings.plusFabShowImportInstalled = val;
     notifyListeners();
