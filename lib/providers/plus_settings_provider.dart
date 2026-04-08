@@ -182,12 +182,6 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableHapticFeedback => _prefs?.getBool('plusEnableHapticFeedback') ?? true;
-  set plusEnableHapticFeedback(bool val) {
-    _prefs?.setBool('plusEnableHapticFeedback', val);
-    notifyListeners();
-  }
-
   bool get plusTopUILayout => _prefs?.getBool('plusTopUILayout') ?? false;
   set plusTopUILayout(bool val) {
     _prefs?.setBool('plusTopUILayout', val);
