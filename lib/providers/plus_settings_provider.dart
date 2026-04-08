@@ -72,12 +72,6 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   // Modern UI Toggles
-  bool get plusEnableModernSettings => _prefs?.getBool('plusEnableModernSettings') ?? true;
-  set plusEnableModernSettings(bool val) {
-    _prefs?.setBool('plusEnableModernSettings', val);
-    notifyListeners();
-  }
-
   bool get plusEnableModernAppPage => _prefs?.getBool('plusEnableModernAppPage') ?? true;
   set plusEnableModernAppPage(bool val) {
     _prefs?.setBool('plusEnableModernAppPage', val);
