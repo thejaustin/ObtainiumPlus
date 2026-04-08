@@ -439,12 +439,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableHapticFeedback => plusSettings.plusEnableHapticFeedback;
-  set plusEnableHapticFeedback(bool val) {
-    plusSettings.plusEnableHapticFeedback = val;
-    notifyListeners();
-  }
-
   bool get plusEnableExpressiveProgress => plusSettings.plusEnableExpressiveProgress;
   set plusEnableExpressiveProgress(bool val) {
     plusSettings.plusEnableExpressiveProgress = val;
