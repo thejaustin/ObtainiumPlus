@@ -129,9 +129,11 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sort section
-                    _buildAnimatedSection(0, _buildSortSection(settingsProvider, theme)),
-                    const SizedBox(height: 20),
+                    // Sort section (gated by plusEnableAdvancedSorting)
+                    if (settings.plusEnableAdvancedSorting) ...[
+                      _buildAnimatedSection(0, _buildSortSection(settingsProvider, theme)),
+                      const SizedBox(height: 20),
+                    ],
 
                     // View mode section
                     _buildAnimatedSection(1, _buildViewModeSection(settingsProvider, theme)),

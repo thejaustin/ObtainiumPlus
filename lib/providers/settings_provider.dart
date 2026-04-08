@@ -487,12 +487,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableModernSettings => plusSettings.plusEnableModernSettings;
-  set plusEnableModernSettings(bool val) {
-    plusSettings.plusEnableModernSettings = val;
-    notifyListeners();
-  }
-
   bool get plusEnableModernAppPage => plusSettings.plusEnableModernAppPage;
   set plusEnableModernAppPage(bool val) {
     plusSettings.plusEnableModernAppPage = val;
