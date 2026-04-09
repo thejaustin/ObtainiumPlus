@@ -68,3 +68,6 @@ wiki_temp
 flutter_sdk.tar.xz
 flutter/
 .gemini/
+CLAUDE.md
+GEMINI.md
+QWEN.md
