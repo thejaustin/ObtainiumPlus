@@ -425,20 +425,37 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
                               action: SnackBarAction(
                                 label: 'Details',
                                 onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => GlassDialog(
-                                      title: 'microG Error',
-                                      icon: Icons.error_outline,
-                                      content: Text(e.toString()),
-                                      actions: [
-                                        FilledButton(
-                                          onPressed: () => Navigator.pop(ctx),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
+                                  if (mounted) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => GlassDialog(
+                                        title: 'microG Error',
+                                        icon: Icons.error_outline,
+                                        content: Text(e.toString()),
+                                        actions: [
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else if (globalNavigatorKey.currentContext != null) {
+                                    showDialog(
+                                      context: globalNavigatorKey.currentContext!,
+                                      builder: (ctx) => GlassDialog(
+                                        title: 'microG Error',
+                                        icon: Icons.error_outline,
+                                        content: Text(e.toString()),
+                                        actions: [
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
                                 },
                               ),
                             ),

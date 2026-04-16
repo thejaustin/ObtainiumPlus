@@ -328,10 +328,14 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Future<void> requestNonOptionalPermissions() async {
-    final NotificationPermission notificationPermission =
-        await FlutterForegroundTask.checkNotificationPermission();
-    if (notificationPermission != NotificationPermission.granted) {
-      await FlutterForegroundTask.requestNotificationPermission();
+    try {
+      final NotificationPermission notificationPermission =
+          await FlutterForegroundTask.checkNotificationPermission();
+      if (notificationPermission != NotificationPermission.granted) {
+        await FlutterForegroundTask.requestNotificationPermission();
+      }
+    } catch (e) {
+      talker.warning('Failed to request notification permission: $e');
     }
 
     // Check if this is a Xiaomi device (uses shared DeviceUtils)
