@@ -461,7 +461,7 @@ class _CommandCenterState extends State<CommandCenter> {
                 Navigator.pop(context);
                 context.read<AppsProvider>().checkUpdates(ignoreCache: true)
                     .catchError((e) {
-                  if (context.mounted) {
+                  if (mounted) {
                     showError(e is Map ? e['errors'] : e, context);
                   }
                 });

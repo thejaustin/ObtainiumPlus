@@ -387,9 +387,9 @@ Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false,
     listen: false,
   ).add(logMessage, level: isError ? LogLevels.error : LogLevels.info);
   if (e is String || (e is ObtainiumError && !e.unexpected)) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(e.toString())));
+   ScaffoldMessenger.maybeOf(
+     context,
+   )?.showSnackBar(SnackBar(content: Text(e.toString())));
   } else {
     ErrorResolution? resolution = await getResolutionForError(e, context);
     if (!context.mounted) return;

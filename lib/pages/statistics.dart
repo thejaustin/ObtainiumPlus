@@ -1,6 +1,7 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -14,6 +15,8 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/custom_errors.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -48,7 +51,22 @@ class _StatisticsPageState extends State<StatisticsPage> {
     };
 
     final jsonStr = const JsonEncoder.withIndent('  ').convert(stats);
-    await Share.share(jsonStr, subject: 'Obtainium_Stats_${DateTime.now().millisecondsSinceEpoch}.json');
+    
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'Obtainium_Stats_${DateTime.now().millisecondsSinceEpoch}.json';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(jsonStr);
+      
+      await Share.shareXFiles(
+        [XFile(file.path, name: fileName, mimeType: 'application/json')],
+        subject: fileName,
+      );
+    } catch (e) {
+      if (mounted) {
+        showError(e, context);
+      }
+    }
   }
 
   @override
