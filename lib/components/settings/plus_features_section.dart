@@ -112,6 +112,33 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableUpdateSchedule,
                       onChanged: (val) => settings.plusEnableUpdateSchedule = val,
                     ),
+                  if (_matches(tr('plusEnableAutoUpdateRules')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.rule_outlined,
+                      title: tr('plusEnableAutoUpdateRules'),
+                      subtitle: tr('plusEnableAutoUpdateRulesDescription'),
+                      value: settings.plusEnableAutoUpdateRules,
+                      onChanged: (val) => settings.plusEnableAutoUpdateRules = val,
+                    ),
+                ],
+              ),
+
+              // --- NOTIFICATIONS ---
+              ExpressiveSettingsGroup(
+                title: isSearching ? null : tr('notifications'),
+                children: [
+                  if (_matches(tr('plusEnableNotificationEnhancements')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.notifications_active_outlined,
+                      title: tr('plusEnableNotificationEnhancements'),
+                      subtitle: tr('plusEnableNotificationEnhancementsDescription'),
+                      value: settings.plusEnableNotificationEnhancements,
+                      onChanged: (val) => settings.plusEnableNotificationEnhancements = val,
+                    ),
                 ],
               ),
 
@@ -232,6 +259,16 @@ class PlusFeaturesSection extends StatelessWidget {
                       subtitle: tr('plusShowTagsInListDescription'),
                       value: settings.plusShowTagsInList,
                       onChanged: (val) => settings.plusShowTagsInList = val,
+                    ),
+                  if (_matches(tr('plusEnableTags')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.label_important_outline,
+                      title: tr('plusEnableTags'),
+                      subtitle: tr('plusEnableTagsDescription'),
+                      value: settings.plusEnableTags,
+                      onChanged: (val) => settings.plusEnableTags = val,
                     ),
                   if (_matches(tr('plusAdvancedSorting')))
                     _buildFeatureToggle(
