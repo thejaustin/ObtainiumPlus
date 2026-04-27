@@ -607,7 +607,7 @@ class AddAppPageState extends State<AddAppPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.install_mobile_rounded),
+            icon: const Icon(Icons.install_mobile_outlined),
             onPressed: () async {
               final result = await Navigator.push<String>(
                 context,
@@ -667,14 +667,14 @@ class AddAppPageState extends State<AddAppPage> {
               trailing: [
                 if (discoverEnabled && !_isUrlMode && userInput.trim().isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.tune),
+                    icon: const Icon(Icons.tune_outlined),
                     onPressed: () =>
                         _discoverPageKey.currentState?.showSearchOptions(),
                     tooltip: tr('searchOptions'),
                   ),
                 if (userInput.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(Icons.clear_rounded),
                     onPressed: () {
                       _discoverSearchDebounce?.cancel();
                       _inputController.clear();
