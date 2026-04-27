@@ -21,6 +21,7 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
 import 'package:obtainium/utils/language_utils.dart';
+import 'package:obtainium/services/app_export_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';

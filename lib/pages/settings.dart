@@ -553,7 +553,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildHubCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Widget Function(BuildContext) builder}) {
+  Widget _buildHubCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Widget Function(BuildContext, ScrollController) builder}) {
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -565,10 +565,8 @@ class _SettingsPageState extends State<SettingsPage> {
       child: InkWell(
         onTap: () {
           AppHaptics.selectionClick();
-          showModalBottomSheet(
+          showDraggableModalBottomSheet(
             context: context,
-            isScrollControlled: true,
-            useSafeArea: true,
             builder: builder,
           );
         },

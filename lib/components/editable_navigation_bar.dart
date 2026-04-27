@@ -444,51 +444,52 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       child: SizedBox(
         width: 48,
         child: PopupMenuButton<String>(
-        onSelected: (id) {
-          AppHaptics.lightImpact();
-          widget.onAddTab(id);
-        },
-        offset: const Offset(0, -200),
-        itemBuilder: (context) {
-          return availableTabs.map((id) {
-            final page = widget.allPages[id]!;
-            return PopupMenuItem<String>(
-              value: id,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(page.icon, size: 20),
-                  const SizedBox(width: 12),
-                  Text(page.title),
-                ],
+          onSelected: (id) {
+            AppHaptics.lightImpact();
+            widget.onAddTab(id);
+          },
+          offset: const Offset(0, -200),
+          itemBuilder: (context) {
+            return availableTabs.map((id) {
+              final page = widget.allPages[id]!;
+              return PopupMenuItem<String>(
+                value: id,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(page.icon, size: 20),
+                    const SizedBox(width: 12),
+                    Text(page.title),
+                  ],
+                ),
+              );
+            }).toList();
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add,
+                  size: 20,
+                  color: colorScheme.onPrimaryContainer,
+                ),
               ),
-            );
-          }).toList();
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                shape: BoxShape.circle,
+              const SizedBox(height: 4),
+              Text(
+                tr('add'),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                maxLines: 1,
               ),
-              child: Icon(
-                Icons.add,
-                size: 20,
-                color: colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              tr('add'),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colorScheme.primary,
-                  ),
-              maxLines: 1,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -501,35 +502,36 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       child: SizedBox(
         width: 48,
         child: GestureDetector(
-        onTap: () {
-          AppHaptics.lightImpact();
-          widget.onEditModeChanged(false);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                shape: BoxShape.circle,
+          onTap: () {
+            AppHaptics.lightImpact();
+            widget.onEditModeChanged(false);
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check,
+                  size: 20,
+                  color: colorScheme.onPrimaryContainer,
+                ),
               ),
-              child: Icon(
-                Icons.check,
-                size: 20,
-                color: colorScheme.onPrimaryContainer,
+              const SizedBox(height: 4),
+              Text(
+                tr('ok'),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                maxLines: 1,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              tr('ok'),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colorScheme.primary,
-                  ),
-              maxLines: 1,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
