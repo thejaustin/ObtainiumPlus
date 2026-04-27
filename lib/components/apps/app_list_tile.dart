@@ -355,145 +355,145 @@ class AppListTile extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(radius),
             child: AnimatedContainer(
-...
-            duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 200 : 0),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(radius),
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7)
-                  : appInMemory.app.pinned
-                      ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
-                      : Theme.of(context).colorScheme.surface,
-              border: Border.all(
+              duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 200 : 0),
+              curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(radius),
                 color: isSelected
-                    ? Theme.of(context).colorScheme.primary
+                    ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7)
                     : appInMemory.app.pinned
-                        ? Theme.of(context).colorScheme.outlineVariant
-                        : Colors.transparent,
-                width: isSelected || appInMemory.app.pinned ? 1.5 : 0,
+                        ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                        : Theme.of(context).colorScheme.surface,
+                border: Border.all(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : appInMemory.app.pinned
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Colors.transparent,
+                  width: isSelected || appInMemory.app.pinned ? 1.5 : 0,
+                ),
+                boxShadow: isSelected
+                    ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.5)
+                    : null,
               ),
-              boxShadow: isSelected
-                  ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.5)
-                  : null,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              child: Stack(
-                children: [
-                  // Modern Category Indicator (Vertical bar)
-                  if (displayCategoryColor != null)
-                    Positioned(
-                      left: 0,
-                      top: 12,
-                      bottom: 12,
-                      child: Container(
-                        width: 4,
-                        decoration: BoxDecoration(
-                          color: displayCategoryColor,
-                          borderRadius: const BorderRadius.horizontal(
-                            right: Radius.circular(4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(radius),
+                child: Stack(
+                  children: [
+                    // Modern Category Indicator (Vertical bar)
+                    if (displayCategoryColor != null)
+                      Positioned(
+                        left: 0,
+                        top: 12,
+                        bottom: 12,
+                        child: Container(
+                          width: 4,
+                          decoration: BoxDecoration(
+                            color: displayCategoryColor,
+                            borderRadius: const BorderRadius.horizontal(
+                              right: Radius.circular(4),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  
-                  ListTile(
-                    visualDensity: isCompact ? VisualDensity.compact : null,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? 12 : 16,
-                      vertical: isCompact ? 0 : 4,
-                    ),
-                    dense: isCompact,
-                    leading: Padding(
-                      padding: EdgeInsets.only(left: displayCategoryColor != null ? 4 : 0),
-                      child: getAppIcon(),
-                    ),
-                    title: Text(
-                      appInMemory.name,
-                      maxLines: 1,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            overflow: TextOverflow.ellipsis,
-                            fontWeight: appInMemory.app.pinned
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                          ),
-                    ),
-                    subtitle: Row(
-                      children: [
-                        if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: appInMemory.app.tags.take(2).map((tag) => Container(
-                                margin: const EdgeInsets.only(right: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  tag,
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9),
-                                ),
-                              )).toList(),
+                    
+                    ListTile(
+                      visualDensity: isCompact ? VisualDensity.compact : null,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 12 : 16,
+                        vertical: isCompact ? 0 : 4,
+                      ),
+                      dense: isCompact,
+                      leading: Padding(
+                        padding: EdgeInsets.only(left: displayCategoryColor != null ? 4 : 0),
+                        child: getAppIcon(),
+                      ),
+                      title: Text(
+                        appInMemory.name,
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              overflow: TextOverflow.ellipsis,
+                              fontWeight: appInMemory.app.pinned
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                             ),
-                          ),
-                        if (settingsProvider.displayShowAuthor)
-                          Expanded(
-                            child: Text(
-                              appInMemory.author,
-                              maxLines: 1,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    overflow: TextOverflow.ellipsis,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      subtitle: Row(
+                        children: [
+                          if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: appInMemory.app.tags.take(2).map((tag) => Container(
+                                  margin: const EdgeInsets.only(right: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(4),
                                   ),
-                            ),
-                          ),
-                        if (settingsProvider.displayShowVersion && !isCompact)
-                          Text(
-                            ' • ${getVersionText()}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
-                                      ? FontStyle.italic
-                                      : null,
-                                ),
-                          ),
-                      ],
-                    ),
-                    trailing: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: appInMemory.downloadProgress != null
-                          ? SizedBox(
-                              key: const ValueKey('download'),
-                              width: 60,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    appInMemory.downloadProgress! >= 0
-                                        ? '${appInMemory.downloadProgress!.toInt()}%'
-                                        : tr('installing'),
-                                    style: Theme.of(context).textTheme.labelSmall,
+                                  child: Text(
+                                    tag,
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9),
                                   ),
-                                  const SizedBox(height: 4),
-                                  ExpressiveProgressIndicator(
-                                    value: appInMemory.downloadProgress! >= 0
-                                        ? appInMemory.downloadProgress! / 100
-                                        : null,
-                                    height: 4,
-                                  ),
-                                ],
+                                )).toList(),
                               ),
-                            )
-                          : KeyedSubtree(
-                              key: const ValueKey('info'),
-                              child: trailingRow,
                             ),
+                          if (settingsProvider.displayShowAuthor)
+                            Expanded(
+                              child: Text(
+                                appInMemory.author,
+                                maxLines: 1,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      overflow: TextOverflow.ellipsis,
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ),
+                          if (settingsProvider.displayShowVersion && !isCompact)
+                            Text(
+                              ' • ${getVersionText()}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
+                                        ? FontStyle.italic
+                                        : null,
+                                  ),
+                            ),
+                        ],
+                      ),
+                      trailing: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: appInMemory.downloadProgress != null
+                            ? SizedBox(
+                                key: const ValueKey('download'),
+                                width: 60,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      appInMemory.downloadProgress! >= 0
+                                          ? '${appInMemory.downloadProgress!.toInt()}%'
+                                          : tr('installing'),
+                                      style: Theme.of(context).textTheme.labelSmall,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    ExpressiveProgressIndicator(
+                                      value: appInMemory.downloadProgress! >= 0
+                                          ? appInMemory.downloadProgress! / 100
+                                          : null,
+                                      height: 4,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : KeyedSubtree(
+                                key: const ValueKey('info'),
+                                child: trailingRow,
+                              ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -424,7 +424,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildHubCard(context, icon: Icons.install_mobile_outlined, title: tr('installation'), subtitle: tr('installationDescription'), builder: _hubBuilderInstallation),
                     _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
                     if (settingsProvider.plusDeveloperMode)
-                      _buildHubCard(context, icon: Icons.code_rounded, title: tr('devAndLogs'), subtitle: tr('devAndLogsDescription'), builder: (ctx) => const DeveloperSettingsPage()),
+                      _buildHubCard(context, icon: Icons.code_rounded, title: tr('devAndLogs'), subtitle: tr('devAndLogsDescription'), builder: (ctx, controller) => DeveloperSettingsPage(scrollController: controller)),
                     _buildHubCard(context, icon: Icons.bug_report_outlined, title: tr('advanced'), subtitle: tr('advancedDescription'), builder: _hubBuilderAdvanced),
                   ]),
                 )
@@ -465,7 +465,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: tr('advanced'), builder: _hubBuilderAdvanced, subtitle: tr('advancedDescription')),
                         if (settingsProvider.plusDeveloperMode)
-                          _buildSubMenuTile(context, icon: Icons.code_rounded, title: tr('devAndLogs'), builder: (ctx) => const DeveloperSettingsPage(), subtitle: tr('devAndLogsDescription')),
+                          _buildSubMenuTile(context, icon: Icons.code_rounded, title: tr('devAndLogs'), builder: (ctx, controller) => DeveloperSettingsPage(scrollController: controller), subtitle: tr('devAndLogsDescription')),
                       ],
                     ),
                   ]),

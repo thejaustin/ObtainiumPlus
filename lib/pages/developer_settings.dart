@@ -28,6 +28,7 @@ class DeveloperSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = context.watch<SettingsProvider>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Developer & Diagnostics'),
