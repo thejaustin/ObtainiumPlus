@@ -612,6 +612,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Map<String, dynamic> get autoUpdateRules => updateSettings.autoUpdateRules;
+  set autoUpdateRules(Map<String, dynamic> val) {
+    updateSettings.autoUpdateRules = val;
+    notifyListeners();
+  }
+
   bool get enableContextualTips => prefs?.getBool('enableContextualTips') ?? true;
   set enableContextualTips(bool val) {
     prefs?.setBool('enableContextualTips', val);

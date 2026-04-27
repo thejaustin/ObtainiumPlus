@@ -90,8 +90,8 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
 
       if (addedAppIds.isNotEmpty) {
         await appsProvider.downloadAndInstallLatestApps(
-          appIds: addedAppIds,
-          context: context,
+          addedAppIds,
+          context,
         );
       }
       
@@ -138,7 +138,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       for (var url in urls) {
         final app = appsProvider.apps.values.firstWhere(
           (a) => a.app.url == url,
-          orElse: () => AppInMemory(App(id: '', name: '', url: ''), null, null, null),
+          orElse: () => AppInMemory(App('', '', '', '', null, '', [], 0, {}, null, false), null, null, null),
         );
         if (app.app.id.isNotEmpty) {
           overallProgress += app.downloadProgress ?? 0;
