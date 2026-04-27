@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
