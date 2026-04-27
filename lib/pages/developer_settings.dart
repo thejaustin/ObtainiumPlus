@@ -20,6 +20,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:obtainium/services/app_install_service.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
   const DeveloperSettingsPage({super.key});
