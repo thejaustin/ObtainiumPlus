@@ -119,6 +119,25 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
+  void _showTagEditor(AppInMemory appInMemory) async {
+    final appsProvider = context.read<AppsProvider>();
+    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    allTags.sort();
+
+    final newTags = await showTagEditor(
+      context: context,
+      currentTags: appInMemory.app.tags,
+      allTags: allTags,
+    );
+
+    if (newTags != null) {
+      final app = appInMemory.app;
+      app.tags = newTags;
+      await appsProvider.saveApps([app]);
+      if (mounted) setState(() {});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -471,6 +490,7 @@ class _AppPageState extends State<AppPage> {
             onSourceSelected: (String newSource) {
               settings.preferredUpdateSource = newSource;
             },
+            onEditTags: () => _showTagEditor(app!),
             onInstallUpdate: () async {
               try {
                 var successMessage = app?.app.installedVersion == null
@@ -1418,6 +1438,7 @@ class _AppBottomBar extends StatelessWidget {
     required this.onRemove,
     required this.onMore,
     required this.onSourceSelected,
+    required this.onEditTags,
     required this.preferredSource,
     required this.allowThirdPartySources,
   });
@@ -1434,6 +1455,7 @@ class _AppBottomBar extends StatelessWidget {
   final VoidCallback onResetInstallStatus;
   final VoidCallback onRemove;
   final VoidCallback onMore;
+  final VoidCallback onEditTags;
   final Function(String) onSourceSelected;
   final String preferredSource;
   final bool allowThirdPartySources;
@@ -1482,6 +1504,41 @@ class _AppBottomBar extends StatelessWidget {
                           DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
                           DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
                         ],
+                      ),
+                    ],
+                  ),
+                ),
+              // Tags row
+              if (app != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.label_outline, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: app!.app.tags.isEmpty
+                                ? [Text(tr('noTags'), style: Theme.of(context).textTheme.labelMedium?.copyWith(fontStyle: FontStyle.italic))]
+                                : app!.app.tags.map((tag) => Padding(
+                                    padding: const EdgeInsets.only(right: 4.0),
+                                    child: Chip(
+                                      label: Text(tag, style: const TextStyle(fontSize: 10)),
+                                      visualDensity: VisualDensity.compact,
+                                      padding: EdgeInsets.zero,
+                                      labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                                    ),
+                                  )).toList(),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        onPressed: onEditTags,
+                        visualDensity: VisualDensity.compact,
+                        tooltip: tr('editTags'),
                       ),
                     ],
                   ),

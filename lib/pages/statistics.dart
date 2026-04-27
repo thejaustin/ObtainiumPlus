@@ -235,6 +235,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     ),
                     const SizedBox(height: 8),
                     _buildActivityChart(context, installEvents),
+                    const SizedBox(height: 24),
+                    _buildDistributionSection(context, allApps),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -250,6 +252,135 @@ class _StatisticsPageState extends State<StatisticsPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildDistributionSection(BuildContext context, List<AppInMemory> apps) {
+    if (apps.isEmpty) return const SizedBox.shrink();
+
+    // Calculate Category Distribution
+    final Map<String, int> categoryCounts = {};
+    for (var app in apps) {
+      if (app.app.categories.isEmpty) {
+        categoryCounts[tr('uncategorized')] = (categoryCounts[tr('uncategorized')] ?? 0) + 1;
+      } else {
+        for (var cat in app.app.categories) {
+          categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
+        }
+      }
+    }
+
+    // Calculate Source Distribution
+    final Map<String, int> sourceCounts = {};
+    for (var app in apps) {
+      String source = 'Other';
+      final url = app.app.url.toLowerCase();
+      if (url.contains('github.com')) source = 'GitHub';
+      else if (url.contains('gitlab.com')) source = 'GitLab';
+      else if (url.contains('f-droid.org')) source = 'F-Droid';
+      else if (url.contains('play.google.com')) source = 'Play Store';
+      else if (url.contains('apkpure.com')) source = 'APKPure';
+      
+      sourceCounts[source] = (sourceCounts[source] ?? 0) + 1;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDistributionBar(
+            context, 
+            title: tr('categoryDistribution'), 
+            counts: categoryCounts,
+            total: apps.length,
+          ),
+          const SizedBox(height: 24),
+          _buildDistributionBar(
+            context, 
+            title: tr('sourceDistribution'), 
+            counts: sourceCounts,
+            total: apps.length,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistributionBar(
+    BuildContext context, {
+    required String title,
+    required Map<String, int> counts,
+    required int total,
+  }) {
+    final sortedEntries = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    // Take top 4 and group rest as others
+    final topEntries = sortedEntries.take(4).toList();
+    if (sortedEntries.length > 4) {
+      final othersCount = sortedEntries.skip(4).fold(0, (sum, e) => sum + e.value);
+      topEntries.add(MapEntry(tr('others'), othersCount));
+    }
+
+    final colors = [
+      Theme.of(context).colorScheme.primary,
+      Theme.of(context).colorScheme.secondary,
+      Theme.of(context).colorScheme.tertiary,
+      Theme.of(context).colorScheme.error,
+      Theme.of(context).colorScheme.outline,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            height: 12,
+            child: Row(
+              children: topEntries.asMap().entries.map((e) {
+                final weight = e.value.value / total;
+                if (weight <= 0) return const SizedBox.shrink();
+                return Expanded(
+                  flex: (weight * 1000).toInt(),
+                  child: Container(color: colors[e.key % colors.length]),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: topEntries.asMap().entries.map((e) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: colors[e.key % colors.length],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${e.value.key} (${(e.value.value / total * 100).toInt()}%)',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 

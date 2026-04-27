@@ -15,6 +15,7 @@ import 'package:obtainium/components/settings/app_behavior_section.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
+import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -249,6 +250,17 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     Widget Function(BuildContext) _hubBuilderStats = (_) => StatisticsPage();
+    Widget Function(BuildContext) _hubBuilderNotifications = (_) => _SettingsSubMenuPage(
+      title: tr('notifications'),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(children: [
+            const NotificationSettingsSection(),
+          ]),
+        ),
+      ),
+    );
     Widget Function(BuildContext) _hubBuilderAdvanced = (_) => _SettingsSubMenuPage(
       title: tr('advanced'),
       child: SingleChildScrollView(
@@ -403,6 +415,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildHubCard(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), subtitle: tr('updatesDescription'), builder: _hubBuilderUpdates),
                     _buildHubCard(context, icon: Icons.palette_outlined, title: tr('theming'), subtitle: tr('themingDescription'), builder: _hubBuilderTheming),
                     _buildHubCard(context, icon: Icons.grid_view_outlined, title: tr('layout'), subtitle: tr('layoutDescription'), builder: _hubBuilderLayout),
+                    _buildHubCard(context, icon: Icons.notifications_none_outlined, title: tr('notifications'), subtitle: tr('notificationsDescription'), builder: _hubBuilderNotifications),
                     _buildHubCard(context, icon: Icons.install_mobile_outlined, title: tr('installation'), subtitle: tr('installationDescription'), builder: _hubBuilderInstallation),
                     _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
                     if (settingsProvider.plusDeveloperMode)
@@ -427,6 +440,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         _buildSubMenuTile(context, icon: Icons.palette_outlined, title: tr('theming'), builder: _hubBuilderTheming, subtitle: tr('themingDescription')),
                         _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: tr('layout'), builder: _hubBuilderLayout, subtitle: tr('layoutDescription')),
+                        _buildSubMenuTile(context, icon: Icons.notifications_none_outlined, title: tr('notifications'), builder: _hubBuilderNotifications, subtitle: tr('notificationsDescription')),
                       ],
                     ),
                     const SizedBox(height: 16),

@@ -580,11 +580,31 @@ class SettingsProvider with ChangeNotifier {
   set plusFabShowGithubPersonalRepos(bool val) {
     plusSettings.plusFabShowGithubPersonalRepos = val;
     notifyListeners();
-  }
-
   bool get plusFabShowImportInstalled => _plus(plusSettings.plusFabShowImportInstalled);
   set plusFabShowImportInstalled(bool val) {
     plusSettings.plusFabShowImportInstalled = val;
+  }
+
+  bool get plusEnableNotificationDigest => _plus(plusSettings.plusEnableNotificationDigest);
+  set plusEnableNotificationDigest(bool val) {
+    plusSettings.plusEnableNotificationDigest = val;
+  }
+
+  bool get plusEnableNotificationQuietHours => _plus(plusSettings.plusEnableNotificationQuietHours);
+  set plusEnableNotificationQuietHours(bool val) {
+    plusSettings.plusEnableNotificationQuietHours = val;
+  }
+
+  int get plusNotificationQuietHoursStart => plusSettings.plusNotificationQuietHoursStart;
+  set plusNotificationQuietHoursStart(int val) {
+    plusSettings.plusNotificationQuietHoursStart = val;
+  }
+
+  int get plusNotificationQuietHoursEnd => plusSettings.plusNotificationQuietHoursEnd;
+  set plusNotificationQuietHoursEnd(int val) {
+    plusSettings.plusNotificationQuietHoursEnd = val;
+  }
+  }
     notifyListeners();
   }
 

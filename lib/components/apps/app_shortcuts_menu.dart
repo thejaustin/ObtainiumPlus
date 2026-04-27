@@ -131,6 +131,15 @@ void showAppShortcutsMenu(
               ),
 
               ListTile(
+                leading: const Icon(Icons.label_outline),
+                title: Text(tr('tags')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showTagEditorStandalone(context, appInMemory);
+                },
+              ),
+
+              ListTile(
                 leading: const Icon(Icons.settings_outlined),
                 title: Text(tr('editAppSettings')),
                 onTap: () {
@@ -189,4 +198,22 @@ void showAppShortcutsMenu(
       );
     },
   );
+}
+
+void _showTagEditorStandalone(BuildContext context, AppInMemory appInMemory) async {
+  final appsProvider = context.read<AppsProvider>();
+  final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+  allTags.sort();
+
+  final newTags = await showTagEditor(
+    context: context,
+    currentTags: appInMemory.app.tags,
+    allTags: allTags,
+  );
+
+  if (newTags != null) {
+    final app = appInMemory.app;
+    app.tags = newTags;
+    await appsProvider.saveApps([app]);
+  }
 }

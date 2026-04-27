@@ -226,6 +226,57 @@ class AppInstallService {
     return true;
   }
 
+  static Future<bool> installApkStandalone(
+    File file,
+    BuildContext context,
+    SettingsProvider settingsProvider,
+    LogsProvider logs, {
+    bool shizukuPretendToBeGooglePlay = false,
+  }) async {
+    PackageInfo? newInfo;
+    try {
+      newInfo = await pm.getPackageArchiveInfo(
+        archiveFilePath: file.path,
+      );
+    } catch (e) {
+      talker.error('Error getting package archive info during installApkStandalone: ${e.toString()}');
+    }
+    
+    if (newInfo == null) {
+      throw Exception('Invalid APK file');
+    }
+
+    PackageInfo? appInfo = await getInstalledInfo(newInfo.packageName);
+    logs.add(
+      'Standalone Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
+    );
+
+    int? code;
+    if (!settingsProvider.useShizuku) {
+      code = await AndroidPackageInstaller.installApk(
+        apkFilePath: file.path,
+      );
+    } else {
+      code = await ShizukuApkInstaller.installAPK(
+        file.uri.toString(),
+        shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
+      );
+    }
+
+    if (code == 0) {
+      return true;
+    } else if (code == 3) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(tr('installationCancelled'))),
+      );
+    } else if (code != null) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text('Installation failed with code: $code')),
+      );
+    }
+    return false;
+  }
+
   static Future<bool> installApk(
     DownloadedApk file,
     BuildContext? firstTimeWithContext,

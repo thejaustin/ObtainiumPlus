@@ -196,6 +196,7 @@ class NotificationsProvider {
       FlutterLocalNotificationsPlugin();
 
   bool isInitialized = false;
+  SettingsProvider? settings;
 
   Map<Importance, Priority> importanceToPriority = {
     Importance.defaultImportance: Priority.defaultPriority,
@@ -207,7 +208,8 @@ class NotificationsProvider {
     Importance.unspecified: Priority.defaultPriority,
   };
 
-  Future<void> initialize() async {
+  Future<void> initialize({SettingsProvider? sp}) async {
+    settings = sp;
     isInitialized =
         await notifications.initialize(
           const InitializationSettings(
@@ -218,6 +220,20 @@ class NotificationsProvider {
           },
         ) ??
         false;
+  }
+
+  bool _isQuietHours() {
+    if (settings == null || !settings!.plusEnableNotificationQuietHours) return false;
+    final now = DateTime.now();
+    final hour = now.hour;
+    final start = settings!.plusNotificationQuietHoursStart;
+    final end = settings!.plusNotificationQuietHoursEnd;
+
+    if (start <= end) {
+      return hour >= start && hour < end;
+    } else {
+      return hour >= start || hour < end;
+    }
   }
 
   Future<void> checkLaunchByNotif() async {
@@ -263,21 +279,25 @@ class NotificationsProvider {
     }
     await notifications.cancel(id);
   }
+Future<void> notifyRaw(
+  int id,
+  String title,
+  String message,
+  String channelCode,
+  String channelName,
+  String channelDescription,
+  Importance importance, {
+  bool cancelExisting = false,
+  int? progPercent,
+  bool onlyAlertOnce = false,
+  String? payload,
+}) async {
+  if (_isQuietHours() && importance != Importance.max) {
+    return; // Skip non-critical notifications during quiet hours
+  }
 
-  Future<void> notifyRaw(
-    int id,
-    String title,
-    String message,
-    String channelCode,
-    String channelName,
-    String channelDescription,
-    Importance importance, {
-    bool cancelExisting = false,
-    int? progPercent,
-    bool onlyAlertOnce = false,
-    String? payload,
-  }) async {
-    if (cancelExisting) {
+  if (cancelExisting) {
+...
       await cancel(id);
     }
     if (!isInitialized) {

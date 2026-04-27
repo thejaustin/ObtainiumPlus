@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';
 import 'package:flutter/material.dart';
@@ -230,6 +231,21 @@ class UpdateSettingsProvider with ChangeNotifier {
 
   set obtainiumReleaseChannel(String channel) {
     prefs?.setString('obtainiumReleaseChannel', channel);
+    notifyListeners();
+  }
+
+  Map<String, dynamic> get autoUpdateRules {
+    String? stored = prefs?.getString('autoUpdateRules');
+    if (stored == null) return {};
+    try {
+      return jsonDecode(stored) as Map<String, dynamic>;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  set autoUpdateRules(Map<String, dynamic> val) {
+    prefs?.setString('autoUpdateRules', jsonEncode(val));
     notifyListeners();
   }
 }
