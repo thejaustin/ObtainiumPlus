@@ -204,7 +204,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget _buildInfoCard(ColorScheme cs) {
     return Card(
       elevation: 0,
-      color: cs.secondaryContainer.withOpacity(0.3),
+      color: cs.secondaryContainer.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: cs.secondaryContainer),
@@ -239,7 +239,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: cs.surfaceVariant.withOpacity(0.3),
+            color: cs.surfaceVariant.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: cs.outlineVariant),
           ),
