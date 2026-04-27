@@ -421,6 +421,25 @@ class AppListTile extends StatelessWidget {
                     ),
                     subtitle: Row(
                       children: [
+                        if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: appInMemory.app.tags.take(2).map((tag) => Container(
+                                margin: const EdgeInsets.only(right: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  tag,
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9),
+                                ),
+                              )).toList(),
+                            ),
+                          ),
                         if (settingsProvider.displayShowAuthor)
                           Expanded(
                             child: Text(

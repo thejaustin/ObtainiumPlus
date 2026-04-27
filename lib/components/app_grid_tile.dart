@@ -228,6 +228,26 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                           widget.appInMemory.app.pinned ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
+                  if (settingsProvider.plusShowTagsInList && widget.appInMemory.app.tags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            tag,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 8),
+                          ),
+                        )).toList(),
+                      ),
+                    ),
                   // Checking for update indicator
                   Builder(builder: (ctx) {
                     final isChecking = ctx.select<AppsProvider, bool>(
@@ -294,6 +314,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
 
     if (widget.appInMemory.app.pinned) {
       label.write(', pinned');
+    }
+
+    if (widget.appInMemory.app.tags.isNotEmpty) {
+      label.write(', tags: ${widget.appInMemory.app.tags.join(", ")}');
     }
 
     if (widget.isSelected) {

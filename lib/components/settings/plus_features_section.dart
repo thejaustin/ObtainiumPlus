@@ -82,6 +82,26 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) => settings.plusEnableSystemUpdateScanner = val,
                       experimental: true,
                     ),
+                  if (_matches(tr('plusEnableMicroGHub')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.hub_outlined,
+                      title: tr('plusEnableMicroGHub'),
+                      subtitle: tr('plusEnableMicroGHubDescription'),
+                      value: settings.plusEnableMicroGHub,
+                      onChanged: (val) => settings.plusEnableMicroGHub = val,
+                    ),
+                  if (_matches(tr('plusEnableStandaloneInstaller')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.install_mobile_outlined,
+                      title: tr('plusEnableStandaloneInstaller'),
+                      subtitle: tr('plusEnableStandaloneInstallerDescription'),
+                      value: settings.plusEnableStandaloneInstaller,
+                      onChanged: (val) => settings.plusEnableStandaloneInstaller = val,
+                    ),
                   if (_matches(tr('plusUpdateSchedule')))
                     _buildFeatureToggle(
                       context,
@@ -202,6 +222,16 @@ class PlusFeaturesSection extends StatelessWidget {
                       subtitle: tr('plusQuickFiltersDescription'),
                       value: settings.plusEnableQuickFilters,
                       onChanged: (val) => settings.plusEnableQuickFilters = val,
+                    ),
+                  if (_matches(tr('plusShowTagsInList')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.label_outline,
+                      title: tr('plusShowTagsInList'),
+                      subtitle: tr('plusShowTagsInListDescription'),
+                      value: settings.plusShowTagsInList,
+                      onChanged: (val) => settings.plusShowTagsInList = val,
                     ),
                   if (_matches(tr('plusAdvancedSorting')))
                     _buildFeatureToggle(

@@ -964,6 +964,7 @@
   "tagAlreadyExists": "Tag already exists",
   "tagNameCannotBeEmpty": "Tag name cannot be empty",
   "noTags": "No tags",
+  "allTags": "All Tags",
   "tagDeleted": "Tag deleted",
   "existingTags": "Existing Tags",
   "selectedTags": "Selected Tags",
@@ -993,5 +994,11 @@
   "quickActionsMenu": "Quick Actions",
   "quickActionsMenuSubtitle": "Long-press any app for a quick context menu",
   "autoUpdateRulesOnboarding": "Smart Updates",
-  "autoUpdateRulesOnboardingSubtitle": "Set per-tag or per-category background update rules"
+  "autoUpdateRulesOnboardingSubtitle": "Set per-tag or per-category background update rules",
+  "plusEnableMicroGHub": "microG Deployment Hub",
+  "plusEnableMicroGHubDescription": "Enable the direct microG component download hub in Developer settings",
+  "plusEnableStandaloneInstaller": "Standalone APK Installer",
+  "plusEnableStandaloneInstallerDescription": "Enable the local APK sideloading tool in Developer settings",
+  "plusShowTagsInList": "Show Tags in App List",
+  "plusShowTagsInListDescription": "Display custom tags directly on app list and grid cards"
 }

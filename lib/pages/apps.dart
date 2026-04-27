@@ -102,6 +102,7 @@ class AppsPageState extends State<AppsPage> {
   late final ScrollController scrollController = ScrollController();
 
   var sourceProvider = SourceProvider();
+  String? _activeTag;
 
   @override
   void initState() {
@@ -226,6 +227,52 @@ class AppsPageState extends State<AppsPage> {
     );
   }
 
+  Widget _buildTagFilterBar(BuildContext context, AppsProvider appsProvider) {
+    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    allTags.sort();
+
+    if (allTags.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.only(bottom: 8),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(tr('allTags')),
+                  selected: _activeTag == null,
+                  onSelected: (selected) {
+                    if (selected) {
+                      AppHaptics.selectionClick();
+                      setState(() => _activeTag = null);
+                    }
+                  },
+                ),
+              ),
+              ...allTags.map((tag) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(tag),
+                  selected: _activeTag == tag,
+                  onSelected: (selected) {
+                    AppHaptics.selectionClick();
+                    setState(() => _activeTag = selected ? tag : null);
+                  },
+                ),
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
@@ -241,6 +288,10 @@ class AppsPageState extends State<AppsPage> {
       groupByCategory: viewSettings.groupByCategory,
       buryNonInstalled: viewSettings.buryNonInstalled,
     );
+
+    if (_activeTag != null) {
+      listedApps = listedApps.where((a) => a.app.tags.contains(_activeTag)).toList();
+    }
 
     refresh() {
       AppHaptics.lightImpact();
@@ -527,6 +578,7 @@ class AppsPageState extends State<AppsPage> {
                   ),
                 ),
                 _buildDashboard(context, appsProvider, onRefresh),
+                _buildTagFilterBar(context, appsProvider),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),
                 ...loadingWidgets,

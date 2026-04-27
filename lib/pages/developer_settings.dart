@@ -84,22 +84,24 @@ class DeveloperSettingsPage extends StatelessWidget {
                 subtitle: const Text('Spoof GSF ID / device profile for regional app compatibility'),
                 onTap: () => _showSpoofingManager(context),
               ),
-              ListTile(
-                leading: const Icon(Icons.hub_outlined),
-                title: const Text('microG Deployment Hub'),
-                subtitle: const Text('Directly download and install microG / GmsCore components'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const MicroGHubPage()),
+              if (settingsProvider.plusEnableMicroGHub)
+                ListTile(
+                  leading: const Icon(Icons.hub_outlined),
+                  title: const Text('microG Deployment Hub'),
+                  subtitle: const Text('Directly download and install microG / GmsCore components'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const MicroGHubPage()),
+                  ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.install_mobile_outlined),
-                title: const Text('Standalone APK Installer'),
-                subtitle: const Text('Install any APK from storage using Shizuku / System'),
-                trailing: const Icon(Icons.file_open_outlined),
-                onTap: () => _handleStandaloneInstall(context),
-              ),
+              if (settingsProvider.plusEnableStandaloneInstaller)
+                ListTile(
+                  leading: const Icon(Icons.install_mobile_outlined),
+                  title: const Text('Standalone APK Installer'),
+                  subtitle: const Text('Install any APK from storage using Shizuku / System'),
+                  trailing: const Icon(Icons.file_open_outlined),
+                  onTap: () => _handleStandaloneInstall(context),
+                ),
             ],
           ),
           _buildSection(
