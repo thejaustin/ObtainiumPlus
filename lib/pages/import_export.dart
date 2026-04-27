@@ -21,8 +21,10 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
 import 'package:obtainium/utils/language_utils.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
 
@@ -145,6 +147,31 @@ class _ImportExportPageState extends State<ImportExportPage> {
         if (e is! PlatformException || e.toString().contains('No activity')) {
           showError(e, context);
         }
+      }
+    }
+
+    shareBackup() async {
+      AppHaptics.selectionClick();
+      setState(() => importInProgress = true);
+      try {
+        final exportData = AppExportService.generateExportJSON(
+          apps: appsProvider.apps,
+          settingsProvider: settingsProvider,
+        );
+        final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
+        final tempDir = await getTemporaryDirectory();
+        final fileName = 'Obtainium_Backup_${DateTime.now().millisecondsSinceEpoch}.json';
+        final file = File('${tempDir.path}/$fileName');
+        await file.writeAsString(jsonStr);
+        
+        await Share.shareXFiles(
+          [XFile(file.path, name: fileName, mimeType: 'application/json')],
+          subject: fileName,
+        );
+      } catch (e) {
+        if (mounted) showError(e, context);
+      } finally {
+        if (mounted) setState(() => importInProgress = false);
       }
     }
 
@@ -496,6 +523,19 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                       : runObtainiumImport,
                                   child: Text(
                                     tr('obtainiumImport'),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextButton(
+                                  style: outlineButtonStyle,
+                                  onPressed: importInProgress
+                                      ? null
+                                      : shareBackup,
+                                  child: Text(
+                                    tr('shareBackup'),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),

@@ -623,6 +623,7 @@ class AppsProvider with ChangeNotifier {
     List<String>? specificIds,
     SettingsProvider? sp,
     bool ignoreCache = false,
+    bool isBackground = false,
   }) async {
     return AppUpdateService.checkUpdates(
       apps: apps,
@@ -634,6 +635,7 @@ class AppsProvider with ChangeNotifier {
       gettingUpdates: gettingUpdates,
       setGettingUpdates: (val) => gettingUpdates = val,
       ignoreCache: ignoreCache,
+      isBackground: isBackground,
     );
   }
 
