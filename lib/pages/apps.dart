@@ -20,6 +20,7 @@ import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/contextual_tip.dart';
 
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
@@ -517,6 +518,13 @@ class AppsPageState extends State<AppsPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
                 _buildAppBar(context, viewSettings, listedApps, isFilterOff),
+                SliverToBoxAdapter(
+                  child: ContextualTip(
+                    title: tr('advancedFeatures'),
+                    message: tr('quickActionsMenuSubtitle'),
+                    icon: Icons.touch_app_outlined,
+                  ),
+                ),
                 _buildDashboard(context, appsProvider, onRefresh),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),

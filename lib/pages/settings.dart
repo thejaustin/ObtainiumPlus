@@ -17,6 +17,7 @@ import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
+import 'package:obtainium/components/common/contextual_tip.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -320,6 +321,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
                 ),
+                if (!isSearching)
+                  ContextualTip(
+                    title: tr('advancedFeatures'),
+                    message: tr('plusFeaturesDescription'),
+                    icon: Icons.auto_awesome_outlined,
+                  ),
                 if (!isSearching) const SetupAssistantSection(),
                 if (!isSearching)
                   SingleChildScrollView(
