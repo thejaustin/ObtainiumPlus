@@ -612,6 +612,24 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableMicroGHub => plusSettings.plusEnableMicroGHub;
+  set plusEnableMicroGHub(bool val) {
+    plusSettings.plusEnableMicroGHub = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableStandaloneInstaller => plusSettings.plusEnableStandaloneInstaller;
+  set plusEnableStandaloneInstaller(bool val) {
+    plusSettings.plusEnableStandaloneInstaller = val;
+    notifyListeners();
+  }
+
+  bool get plusShowTagsInList => plusSettings.plusShowTagsInList;
+  set plusShowTagsInList(bool val) {
+    plusSettings.plusShowTagsInList = val;
+    notifyListeners();
+  }
+
   Map<String, dynamic> get autoUpdateRules => updateSettings.autoUpdateRules;
   set autoUpdateRules(Map<String, dynamic> val) {
     updateSettings.autoUpdateRules = val;

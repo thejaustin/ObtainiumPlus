@@ -291,4 +291,22 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setInt('plusNotificationQuietHoursEnd', val);
     notifyListeners();
   }
+
+  bool get plusEnableMicroGHub => _prefs?.getBool('plusEnableMicroGHub') ?? true;
+  set plusEnableMicroGHub(bool val) {
+    _prefs?.setBool('plusEnableMicroGHub', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableStandaloneInstaller => _prefs?.getBool('plusEnableStandaloneInstaller') ?? true;
+  set plusEnableStandaloneInstaller(bool val) {
+    _prefs?.setBool('plusEnableStandaloneInstaller', val);
+    notifyListeners();
+  }
+
+  bool get plusShowTagsInList => _prefs?.getBool('plusShowTagsInList') ?? true;
+  set plusShowTagsInList(bool val) {
+    _prefs?.setBool('plusShowTagsInList', val);
+    notifyListeners();
+  }
 }
