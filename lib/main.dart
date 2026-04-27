@@ -151,19 +151,26 @@ void main() async {
 
       try {
         await EasyLocalization.ensureInitialized();
+        talker.info('Startup: Localization initialized');
+
         final sp = await SharedPreferences.getInstance();
+        talker.info('Startup: SharedPreferences acquired');
         
         final settingsProvider = SettingsProvider();
         settingsProvider.prefs = sp;
         await settingsProvider.initializeSettings();
+        talker.info('Startup: SettingsProvider initialized');
         
         final pluginProvider = PluginProvider();
         await pluginProvider.initialize(sp);
+        talker.info('Startup: PluginProvider initialized');
 
         final authProvider = AuthProvider();
         await authProvider.initialize(sp);
+        talker.info('Startup: AuthProvider initialized');
 
         final androidInfo = await DeviceInfoPlugin().androidInfo;
+        talker.info('Startup: Device info acquired (${androidInfo.model})');
         
         final manufacturer = androidInfo.manufacturer.toLowerCase();
         final isSamsung = manufacturer == 'samsung';
@@ -194,40 +201,46 @@ void main() async {
         }
         final np = NotificationsProvider();
         await np.initialize(sp: settingsProvider);
+        talker.info('Startup: NotificationsProvider initialized');
+        
         FlutterForegroundTask.initCommunicationPort();
 
         BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
+        talker.info('Startup: Headless tasks registered');
 
         // Zone guard catches unhandled async errors that escape the widget tree
         // (mirrors hexodus's zone-level error boundary pattern)
         runZonedGuarded(
-          () => runApp(
-            MultiProvider(
-              providers: [
-                ChangeNotifierProvider.value(value: settingsProvider),
-                ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
-                  create: (ctx) => AppsProvider(settings: settingsProvider),
-                  update: (ctx, settings, apps) => apps!..settingsProvider = settings,
+          () {
+            talker.info('Startup: Launching MultiProvider root');
+            runApp(
+              MultiProvider(
+                providers: [
+                  ChangeNotifierProvider.value(value: settingsProvider),
+                  ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
+                    create: (ctx) => AppsProvider(settings: settingsProvider),
+                    update: (ctx, settings, apps) => apps!..settingsProvider = settings,
+                  ),
+                  ChangeNotifierProvider.value(value: settingsProvider.updateSettings),
+                  ChangeNotifierProvider.value(value: settingsProvider.viewSettings),
+                  ChangeNotifierProvider.value(value: settingsProvider.behaviorSettings),
+                  ChangeNotifierProvider.value(value: settingsProvider.plusSettings),
+                  ChangeNotifierProvider.value(value: settingsProvider.sourceConfig),
+                  ChangeNotifierProvider.value(value: pluginProvider),
+                  ChangeNotifierProvider.value(value: authProvider),
+                  Provider(create: (context) => np),
+                  Provider(create: (context) => LogsProvider()),
+                ],
+                child: EasyLocalization(
+                  supportedLocales: supportedLocales.map((e) => e.key).toList(),
+                  path: localeDir,
+                  fallbackLocale: fallbackLocale,
+                  useOnlyLangCode: false,
+                  child: const Obtainium(),
                 ),
-                ChangeNotifierProvider.value(value: settingsProvider.updateSettings),
-                ChangeNotifierProvider.value(value: settingsProvider.viewSettings),
-                ChangeNotifierProvider.value(value: settingsProvider.behaviorSettings),
-                ChangeNotifierProvider.value(value: settingsProvider.plusSettings),
-                ChangeNotifierProvider.value(value: settingsProvider.sourceConfig),
-                ChangeNotifierProvider.value(value: pluginProvider),
-                ChangeNotifierProvider.value(value: authProvider),
-                Provider(create: (context) => np),
-                Provider(create: (context) => LogsProvider()),
-              ],
-              child: EasyLocalization(
-                supportedLocales: supportedLocales.map((e) => e.key).toList(),
-                path: localeDir,
-                fallbackLocale: fallbackLocale,
-                useOnlyLangCode: false,
-                child: const Obtainium(),
               ),
-            ),
-          ),
+            );
+          },
           (error, stack) {
             talker.handle(error, stack, 'Unhandled Zone Error');
             // Expected ObtainiumErrors are user-facing (e.g. bad dispenser URL,
@@ -254,7 +267,7 @@ void main() async {
           },
         );
       } catch (e, stackTrace) {
-        talker.handle(e, stackTrace, 'Main Catch Error');
+        talker.handle(e, stackTrace, 'Main Catch Error (Startup Guard)');
         if (e is ObtainiumError && !e.unexpected) {
           runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
           return;
