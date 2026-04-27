@@ -7,6 +7,7 @@ import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/unsupported_source_dialog.dart';
+import 'package:obtainium/components/common/contextual_tip.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
@@ -807,6 +808,13 @@ class AddAppPageState extends State<AddAppPage> {
     if (pickedSource == null) return const SizedBox.shrink();
     return CustomScrollView(
       slivers: [
+        SliverToBoxAdapter(
+          child: ContextualTip(
+            title: tr('advancedFeatures'),
+            message: tr('autoUpdateRulesOnboardingSubtitle'),
+            icon: Icons.rule_outlined,
+          ),
+        ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
