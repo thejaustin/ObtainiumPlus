@@ -297,7 +297,6 @@ Future<void> notifyRaw(
   }
 
   if (cancelExisting) {
-...
       await cancel(id);
     }
     if (!isInitialized) {
