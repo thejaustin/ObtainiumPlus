@@ -193,7 +193,7 @@ void main() async {
           SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
         }
         final np = NotificationsProvider();
-        await np.initialize();
+        await np.initialize(sp: settingsProvider);
         FlutterForegroundTask.initCommunicationPort();
 
         BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);

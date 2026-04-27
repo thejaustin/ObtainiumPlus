@@ -718,6 +718,52 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
             },
           ),
         ),
+
+        // ── 8. Advanced Features ─────────────────────────────────────────────
+        PageViewModel(
+          title: tr('advancedFeatures'),
+          image: Icon(Icons.auto_awesome_motion_outlined, size: 80, color: colorScheme.secondary),
+          decoration: pageDecoration,
+          bodyWidget: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                tr('advancedFeaturesSubtitle'),
+                textAlign: TextAlign.center,
+                style: pageDecoration.bodyTextStyle,
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureCard(
+                context,
+                icon: Icons.label_outline,
+                title: tr('tagSystem'),
+                subtitle: tr('tagSystemSubtitle'),
+                iconColor: colorScheme.primary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.library_add_check_outlined,
+                title: tr('bulkOperations'),
+                subtitle: tr('bulkOperationsSubtitle'),
+                iconColor: colorScheme.secondary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.touch_app_outlined,
+                title: tr('quickActionsMenu'),
+                subtitle: tr('quickActionsMenuSubtitle'),
+                iconColor: colorScheme.tertiary,
+              ),
+              _buildFeatureCard(
+                context,
+                icon: Icons.rule_outlined,
+                title: tr('autoUpdateRulesOnboarding'),
+                subtitle: tr('autoUpdateRulesOnboardingSubtitle'),
+                iconColor: colorScheme.error,
+              ),
+            ],
+          ),
+        ),
       ],
 
       onDone: _finishOnboarding,

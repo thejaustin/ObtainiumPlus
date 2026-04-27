@@ -92,9 +92,15 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       await Future.wait(batch.map((pkg) async {
         try {
           final iconBytes = await pkg.applicationInfo?.getAppIcon();
-          if (iconBytes == null || !mounted) return;
+          final appName = await pkg.applicationInfo?.getAppLabel();
+          if (!mounted) return;
           final idx = _apps.indexWhere((a) => a.packageName == pkg.packageName);
-          if (idx != -1) setState(() => _apps[idx].icon = iconBytes);
+          if (idx != -1) {
+            setState(() {
+              if (iconBytes != null) _apps[idx].icon = iconBytes;
+              if (appName != null) _apps[idx].appName = appName;
+            });
+          }
         } catch (_) {}
       }));
     }
@@ -428,7 +434,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: ExpressiveCircularProgressIndicator())
+          ? const Center(child: SizedBox(width: 48, height: 48, child: ExpressiveCircularProgressIndicator()))
           : Padding(
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + kToolbarHeight + bottomHeight,
@@ -723,7 +729,7 @@ class _EnhancedPackageInfo {
   factory _EnhancedPackageInfo.fromPackageInfo(PackageInfo pkg) {
     return _EnhancedPackageInfo(
       packageName: pkg.packageName,
-      appName: pkg.applicationInfo?.getAppLabel()?.toString() ?? pkg.packageName,
+      appName: pkg.packageName, // Set asynchronously in _loadIcons
       versionName: pkg.versionName,
       icon: null,
       isSystemApp: (pkg.applicationInfo?.flags ?? 0) & 1 != 0,

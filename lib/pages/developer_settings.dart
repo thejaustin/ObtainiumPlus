@@ -14,9 +14,12 @@ import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
+import 'package:obtainium/pages/microg_hub.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 class DeveloperSettingsPage extends StatelessWidget {
   const DeveloperSettingsPage({super.key});
@@ -77,6 +80,22 @@ class DeveloperSettingsPage extends StatelessWidget {
                 title: const Text('Device Spoofing (microG)'),
                 subtitle: const Text('Spoof GSF ID / device profile for regional app compatibility'),
                 onTap: () => _showSpoofingManager(context),
+              ),
+              ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: const Text('microG Deployment Hub'),
+                subtitle: const Text('Directly download and install microG / GmsCore components'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const MicroGHubPage()),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.install_mobile_outlined),
+                title: const Text('Standalone APK Installer'),
+                subtitle: const Text('Install any APK from storage using Shizuku / System'),
+                trailing: const Icon(Icons.file_open_outlined),
+                onTap: () => _handleStandaloneInstall(context),
               ),
             ],
           ),
@@ -474,6 +493,42 @@ class DeveloperSettingsPage extends StatelessWidget {
       elevation: 0,
       builder: (context) => const _DispenserManagerSheet(),
     );
+  }
+
+  void _handleStandaloneInstall(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['apk'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        if (context.mounted) {
+          final settings = context.read<SettingsProvider>();
+          final logs = context.read<LogsProvider>();
+          
+          final success = await AppInstallService.installApkStandalone(
+            file,
+            context,
+            settings,
+            logs,
+          );
+
+          if (success && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Installation completed successfully')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   void _showSpoofingManager(BuildContext context) {

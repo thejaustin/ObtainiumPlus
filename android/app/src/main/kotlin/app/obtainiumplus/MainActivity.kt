@@ -14,6 +14,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import java.io.File
 import java.io.IOException
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -85,9 +86,31 @@ class MainActivity : FlutterActivity() {
                 "isUsageAccessGranted" -> {
                     result.success(isUsageAccessGranted())
                 }
+                "isRooted" -> {
+                    result.success(isRooted())
+                }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun isRooted(): Boolean {
+        val paths = arrayOf(
+            "/system/app/Superuser.apk",
+            "/sbin/su",
+            "/system/bin/su",
+            "/system/xbin/su",
+            "/data/local/xbin/su",
+            "/data/local/bin/su",
+            "/system/sd/xbin/su",
+            "/system/bin/failsafe/su",
+            "/data/local/su",
+            "/su/bin/su"
+        )
+        for (path in paths) {
+            if (File(path).exists()) return true
+        }
+        return false
     }
 
     private fun isUsageAccessGranted(): Boolean {

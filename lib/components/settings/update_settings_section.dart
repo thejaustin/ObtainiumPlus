@@ -326,6 +326,13 @@ class UpdateSettingsSection extends StatelessWidget {
                 value: settings.allowThirdPartySources,
                 onChanged: (value) => settings.allowThirdPartySources = value,
               ),
+            if (_matches(tr('autoUpdateRules')))
+              ListTile(
+                leading: const Icon(Icons.rule_outlined),
+                title: Text(tr('autoUpdateRules'), style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(tr('autoUpdateRulesDescription')),
+                onTap: () => _showAutoUpdateRulesDialog(context, updateSettings, settings),
+              ),
             if (_matches(tr('usePlayStoreAppLinks')))
               SwitchListTile.adaptive(
                 secondary: const Icon(Icons.android_outlined),
@@ -443,6 +450,113 @@ class UpdateSettingsSection extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showAutoUpdateRulesDialog(
+    BuildContext context, 
+    UpdateSettingsProvider updateSettings,
+    SettingsProvider settings,
+  ) {
+    final appsProvider = context.read<AppsProvider>();
+    final categories = settings.categories.keys.toList();
+    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    allTags.sort();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return GlassDialog(
+          title: tr('autoUpdateRules'),
+          icon: Icons.rule_outlined,
+          content: StatefulBuilder(
+            builder: (context, setDialogState) {
+              final rules = updateSettings.autoUpdateRules;
+              
+              Widget buildRuleItem(String key, String title, bool isCategory) {
+                final ruleKey = isCategory ? 'cat_$key' : 'tag_$key';
+                final rule = rules[ruleKey] ?? {'wifiOnly': false, 'disabled': false};
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    CheckboxListTile(
+                      title: Text(tr('wifiOnly')),
+                      value: rule['wifiOnly'] == true,
+                      onChanged: (val) {
+                        setDialogState(() {
+                          rules[ruleKey] = {...rule, 'wifiOnly': val ?? false};
+                          updateSettings.autoUpdateRules = rules;
+                        });
+                      },
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    CheckboxListTile(
+                      title: Text(tr('disableBackgroundUpdates')),
+                      value: rule['disabled'] == true,
+                      onChanged: (val) {
+                        setDialogState(() {
+                          rules[ruleKey] = {...rule, 'disabled': val ?? false};
+                          updateSettings.autoUpdateRules = rules;
+                        });
+                      },
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const Divider(),
+                  ],
+                );
+              }
+
+              return SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (categories.isNotEmpty) ...[
+                        _sectionHeader(context, tr('perCategoryRules')),
+                        const SizedBox(height: 8),
+                        ...categories.map((c) => buildRuleItem(c, c, true)),
+                      ],
+                      if (allTags.isNotEmpty) ...[
+                        _sectionHeader(context, tr('perTagRules')),
+                        const SizedBox(height: 8),
+                        ...allTags.map((t) => buildRuleItem(t, t, false)),
+                      ],
+                      if (categories.isEmpty && allTags.isEmpty)
+                        Text(tr('noCategoriesOrTags'), style: const TextStyle(fontStyle: FontStyle.italic)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('done')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 }

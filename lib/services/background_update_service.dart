@@ -29,6 +29,7 @@ class BackgroundUpdateService {
     NotificationsProvider notificationsProvider = NotificationsProvider();
     AppsProvider appsProvider = AppsProvider(isBg: true);
     await appsProvider.initializationDone; // Ensure directories and apps are loaded
+    await notificationsProvider.initialize(sp: appsProvider.settingsProvider);
 
     Map<String, dynamic>? currentParams = initialParams;
     bool isFirstIteration = true;
@@ -86,6 +87,41 @@ class BackgroundUpdateService {
           }
         }
       }
+
+      // --- Per-app/tag/category rule filtering ---
+      final rules = appsProvider.settingsProvider.autoUpdateRules;
+      final bool isWifi = netResult.contains(ConnectivityResult.wifi) || 
+                          netResult.contains(ConnectivityResult.ethernet);
+
+      toCheck.removeWhere((entry) {
+        final app = appsProvider.apps[entry.key]?.app;
+        if (app == null) return false;
+
+        // Collect all relevant rule keys for this app
+        final List<String> ruleKeys = [];
+        for (var cat in app.categories) {
+          ruleKeys.add('cat_$cat');
+        }
+        for (var tag in app.tags) {
+          ruleKeys.add('tag_$tag');
+        }
+
+        for (var key in ruleKeys) {
+          final rule = rules[key];
+          if (rule != null) {
+            if (rule['disabled'] == true) {
+              logs.add('BG update task: Skipping ${app.id} (disabled by rule: $key)');
+              return true;
+            }
+            if (rule['wifiOnly'] == true && !isWifi) {
+              logs.add('BG update task: Skipping ${app.id} (WiFi only rule: $key)');
+              return true;
+            }
+          }
+        }
+        return false;
+      });
+      // ------------------------------------------
 
       List<MapEntry<String, int>> toInstall = <MapEntry<String, int>>[
         ...(currentParams['toInstall']
@@ -216,7 +252,15 @@ class BackgroundUpdateService {
           }
         }
 
-        if (toNotify.isNotEmpty) notificationsProvider.notify(UpdateNotification(toNotify));
+        if (toNotify.isNotEmpty) {
+          if (appsProvider.settingsProvider.plusEnableNotificationDigest) {
+            notificationsProvider.notify(UpdateNotification(toNotify));
+          } else {
+            for (var app in toNotify) {
+              notificationsProvider.notify(UpdateNotification([app], id: app.id.hashCode));
+            }
+          }
+        }
         if (toThrow.rawErrors.isNotEmpty) {
           for (var element in toThrow.idsByErrorString.entries) {
             notificationsProvider.notify(

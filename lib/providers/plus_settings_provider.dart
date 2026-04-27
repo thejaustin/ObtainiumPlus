@@ -267,4 +267,28 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setBool('plusFabShowImportInstalled', val);
     notifyListeners();
   }
+
+  bool get plusEnableNotificationDigest => _prefs?.getBool('plusEnableNotificationDigest') ?? false;
+  set plusEnableNotificationDigest(bool val) {
+    _prefs?.setBool('plusEnableNotificationDigest', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableNotificationQuietHours => _prefs?.getBool('plusEnableNotificationQuietHours') ?? false;
+  set plusEnableNotificationQuietHours(bool val) {
+    _prefs?.setBool('plusEnableNotificationQuietHours', val);
+    notifyListeners();
+  }
+
+  int get plusNotificationQuietHoursStart => _prefs?.getInt('plusNotificationQuietHoursStart') ?? 22;
+  set plusNotificationQuietHoursStart(int val) {
+    _prefs?.setInt('plusNotificationQuietHoursStart', val);
+    notifyListeners();
+  }
+
+  int get plusNotificationQuietHoursEnd => _prefs?.getInt('plusNotificationQuietHoursEnd') ?? 7;
+  set plusNotificationQuietHoursEnd(int val) {
+    _prefs?.setInt('plusNotificationQuietHoursEnd', val);
+    notifyListeners();
+  }
 }
