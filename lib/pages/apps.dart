@@ -49,6 +49,7 @@ import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/sort_filter_panel.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 
 class AppsPage extends StatefulWidget {
   const AppsPage({super.key, this.initialFilter});
@@ -1065,13 +1066,12 @@ class AppsPageState extends State<AppsPage> {
         activeAppId = app.id;
       });
     } else {
-      showModalBottomSheet(
+      showDraggableModalBottomSheet(
         context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (context) => AppPage(
+        builder: (context, controller) => AppPage(
           appId: app.id,
           isModal: true,
+          scrollController: controller,
         ),
       );
     }

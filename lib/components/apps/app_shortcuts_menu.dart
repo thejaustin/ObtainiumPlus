@@ -11,6 +11,7 @@ import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -145,11 +146,9 @@ void showAppShortcutsMenu(
                 title: Text(tr('editAppSettings')),
                 onTap: () {
                   Navigator.pop(ctx);
-                  showModalBottomSheet(
+                  showDraggableModalBottomSheet(
                     context: context,
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    builder: (context) => AppPage(appId: appId, isModal: true),
+                    builder: (context, controller) => AppPage(appId: appId, isModal: true, scrollController: controller),
                   );
                 },
               ),

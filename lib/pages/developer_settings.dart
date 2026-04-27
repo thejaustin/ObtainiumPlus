@@ -23,7 +23,8 @@ import 'dart:io';
 import 'package:obtainium/services/app_install_service.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
-  const DeveloperSettingsPage({super.key});
+  final ScrollController? scrollController;
+  const DeveloperSettingsPage({super.key, this.scrollController});
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +33,7 @@ class DeveloperSettingsPage extends StatelessWidget {
         title: const Text('Developer & Diagnostics'),
       ),
       body: ListView(
+        controller: scrollController,
         children: [
           _buildSection(
             context,

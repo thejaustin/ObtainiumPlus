@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -295,13 +296,12 @@ class _CommandCenterState extends State<CommandCenter> {
       trailing: const Icon(Icons.chevron_right, size: 16),
       onTap: () {
         Navigator.pop(context);
-        showModalBottomSheet(
+        showDraggableModalBottomSheet(
           context: context,
-          isScrollControlled: true,
-          useSafeArea: true,
-          builder: (context) => AppPage(
+          builder: (context, controller) => AppPage(
             appId: app.app.id,
             isModal: true,
+            scrollController: controller,
           ),
         );
       },
