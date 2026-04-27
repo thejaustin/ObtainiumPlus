@@ -158,7 +158,7 @@ class HomePageState extends State<HomePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showMaterialBanner(
             MaterialBanner(
-              leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              leading: const Icon(Icons.warning_amber_outlined, color: Colors.orange),
               content: Text(tr('crashDetectedFollowOnGitHub')),
               actions: [
                 TextButton(
