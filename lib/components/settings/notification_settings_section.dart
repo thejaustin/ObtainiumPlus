@@ -14,6 +14,12 @@ class NotificationSettingsSection extends StatelessWidget {
       children: [
         Consumer<SettingsProvider>(
           builder: (context, settings, child) {
+            if (!settings.plusEnableNotificationEnhancements) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(tr('noAdvancedNotifications'), style: const TextStyle(fontStyle: FontStyle.italic)),
+              );
+            }
             return Column(
               children: [
                 SwitchListTile.adaptive(

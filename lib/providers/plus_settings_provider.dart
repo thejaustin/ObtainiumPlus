@@ -309,4 +309,22 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setBool('plusShowTagsInList', val);
     notifyListeners();
   }
+
+  bool get plusEnableTags => _prefs?.getBool('plusEnableTags') ?? true;
+  set plusEnableTags(bool val) {
+    _prefs?.setBool('plusEnableTags', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableAutoUpdateRules => _prefs?.getBool('plusEnableAutoUpdateRules') ?? true;
+  set plusEnableAutoUpdateRules(bool val) {
+    _prefs?.setBool('plusEnableAutoUpdateRules', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableNotificationEnhancements => _prefs?.getBool('plusEnableNotificationEnhancements') ?? true;
+  set plusEnableNotificationEnhancements(bool val) {
+    _prefs?.setBool('plusEnableNotificationEnhancements', val);
+    notifyListeners();
+  }
 }

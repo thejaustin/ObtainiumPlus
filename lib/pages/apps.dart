@@ -578,7 +578,7 @@ class AppsPageState extends State<AppsPage> {
                   ),
                 ),
                 _buildDashboard(context, appsProvider, onRefresh),
-                _buildTagFilterBar(context, appsProvider),
+                if (settingsProvider.plusEnableTags) _buildTagFilterBar(context, appsProvider),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),
                 ...loadingWidgets,

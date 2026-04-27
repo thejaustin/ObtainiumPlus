@@ -645,7 +645,14 @@ class _SettingsPageState extends State<SettingsPage> {
       child: ExpansionTile(
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-        leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
+        leading: Container(
+          padding: const EdgeInsets.all(8), 
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12), 
+            borderRadius: BorderRadius.circular(12)
+          ), 
+          child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)
+        ),
         title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
         children: [
           const Divider(height: 1, indent: 56, endIndent: 16),
@@ -657,7 +664,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required Widget Function(BuildContext, ScrollController) builder}) {
     return ListTile(
-      leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
+      leading: Container(
+        padding: const EdgeInsets.all(8), 
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12), 
+          borderRadius: BorderRadius.circular(12)
+        ), 
+        child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)
+      ),
       title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
       subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)) : null,
       trailing: const Icon(Icons.chevron_right, size: 20),

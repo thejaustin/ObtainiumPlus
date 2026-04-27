@@ -630,6 +630,24 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableTags => plusSettings.plusEnableTags;
+  set plusEnableTags(bool val) {
+    plusSettings.plusEnableTags = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableAutoUpdateRules => plusSettings.plusEnableAutoUpdateRules;
+  set plusEnableAutoUpdateRules(bool val) {
+    plusSettings.plusEnableAutoUpdateRules = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableNotificationEnhancements => plusSettings.plusEnableNotificationEnhancements;
+  set plusEnableNotificationEnhancements(bool val) {
+    plusSettings.plusEnableNotificationEnhancements = val;
+    notifyListeners();
+  }
+
   Map<String, dynamic> get autoUpdateRules => updateSettings.autoUpdateRules;
   set autoUpdateRules(Map<String, dynamic> val) {
     updateSettings.autoUpdateRules = val;

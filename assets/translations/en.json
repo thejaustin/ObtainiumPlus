@@ -985,6 +985,7 @@
   "quietHoursDescription": "Suppress non-critical notifications during quiet hours",
   "quietHoursSchedule": "Quiet Hours Schedule",
   "notificationsDescription": "Manage notification preferences and quiet hours",
+  "noAdvancedNotifications": "Advanced notification features are currently disabled in Plus settings.",
   "advancedFeatures": "Advanced Features",
   "advancedFeaturesSubtitle": "Discover powerful new capabilities in Obtainium+",
   "tagSystem": "Tag System",
@@ -1000,5 +1001,11 @@
   "plusEnableStandaloneInstaller": "Standalone APK Installer",
   "plusEnableStandaloneInstallerDescription": "Enable the local APK sideloading tool in Developer settings",
   "plusShowTagsInList": "Show Tags in App List",
-  "plusShowTagsInListDescription": "Display custom tags directly on app list and grid cards"
+  "plusShowTagsInListDescription": "Display custom tags directly on app list and grid cards",
+  "plusEnableTags": "Tag System",
+  "plusEnableTagsDescription": "Enable cross-category app tagging and filtering",
+  "plusEnableAutoUpdateRules": "Auto-Update Rules",
+  "plusEnableAutoUpdateRulesDescription": "Configure per-category and per-tag background update behavior",
+  "plusEnableNotificationEnhancements": "Advanced Notifications",
+  "plusEnableNotificationEnhancementsDescription": "Enable Digest Mode and Quiet Hours for notifications"
 }

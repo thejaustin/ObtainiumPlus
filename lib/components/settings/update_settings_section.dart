@@ -327,7 +327,7 @@ class UpdateSettingsSection extends StatelessWidget {
                 value: settings.allowThirdPartySources,
                 onChanged: (value) => settings.allowThirdPartySources = value,
               ),
-            if (_matches(tr('autoUpdateRules')))
+            if (settings.plusEnableAutoUpdateRules && _matches(tr('autoUpdateRules')))
               ListTile(
                 leading: const Icon(Icons.rule_outlined),
                 title: Text(tr('autoUpdateRules'), style: Theme.of(context).textTheme.bodyLarge),
