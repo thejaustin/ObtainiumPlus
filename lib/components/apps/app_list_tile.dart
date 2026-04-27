@@ -58,28 +58,35 @@ class AppListTile extends StatelessWidget {
           ),
         );
       }
-      return IconButton(
-        visualDensity: VisualDensity.compact,
-        color: Theme.of(context).colorScheme.primary,
-        tooltip: appInMemory.app.additionalSettings['trackOnly'] == true
+      return Semantics(
+        label: appInMemory.app.additionalSettings['trackOnly'] == true
             ? tr('markUpdated')
             : tr('update'),
-        onPressed: appInMemory.downloadProgress != null
-            ? null
-            : () {
-                appsProvider
-                    .downloadAndInstallLatestApps([
-                      appInMemory.app.id,
-                    ], context)
-                    .catchError((e) {
-                      showError(e, context);
-                      return <String>[];
-                    });
-              },
-        icon: Icon(
-          appInMemory.app.additionalSettings['trackOnly'] == true
-              ? Icons.check_circle_outline
-              : Icons.install_mobile,
+        button: true,
+        enabled: appInMemory.downloadProgress == null,
+        child: IconButton(
+          visualDensity: VisualDensity.compact,
+          color: Theme.of(context).colorScheme.primary,
+          tooltip: appInMemory.app.additionalSettings['trackOnly'] == true
+              ? tr('markUpdated')
+              : tr('update'),
+          onPressed: appInMemory.downloadProgress != null
+              ? null
+              : () {
+                  appsProvider
+                      .downloadAndInstallLatestApps([
+                        appInMemory.app.id,
+                      ], context)
+                      .catchError((e) {
+                        showError(e, context);
+                        return <String>[];
+                      });
+                },
+          icon: Icon(
+            appInMemory.app.additionalSettings['trackOnly'] == true
+                ? Icons.check_circle_outline
+                : Icons.install_mobile,
+          ),
         ),
       );
     }
@@ -137,70 +144,73 @@ class AppListTile extends StatelessWidget {
       children: [
         hasUpdate ? getUpdateButton() : const SizedBox.shrink(),
         hasUpdate ? const SizedBox(width: 5) : const SizedBox.shrink(),
-        GestureDetector(
-          onTap: onShowChanges,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color:
-                  settingsProvider.highlightTouchTargets &&
-                      onShowChanges != null
-                  ? (Theme.of(context).brightness == Brightness.light
-                            ? Theme.of(context).primaryColor
-                            : Theme.of(context).primaryColorLight)
-                        .withValues(
-                          alpha: Theme.of(context).brightness == Brightness.light
-                              ? 20 / 255
-                              : 40 / 255,
-                        )
-                  : null,
-            ),
-            padding: settingsProvider.highlightTouchTargets
-                ? const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 0)
-                : const EdgeInsetsDirectional.fromSTEB(24, 0, 0, 0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (settingsProvider.displayShowVersion)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width / 4,
+        Semantics(
+          label: tr('changes'),
+          button: true,
+          child: GestureDetector(
+            onTap: onShowChanges,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color:
+                    settingsProvider.highlightTouchTargets &&
+                        onShowChanges != null
+                    ? (Theme.of(context).brightness == Brightness.light
+                              ? Theme.of(context).primaryColor
+                              : Theme.of(context).primaryColorLight)
+                          .withValues(
+                            alpha: Theme.of(context).brightness == Brightness.light
+                                ? 20 / 255
+                                : 40 / 255,
+                          )
+                    : null,
+              ),
+              padding: settingsProvider.highlightTouchTargets
+                  ? const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 0)
+                  : const EdgeInsetsDirectional.fromSTEB(24, 0, 0, 0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (settingsProvider.displayShowVersion)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width / 4,
+                          ),
+                          child: Text(
+                            getVersionText(),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: SourceUtils.isVersionPseudo(appInMemory.app)
+                                ? const TextStyle(fontStyle: FontStyle.italic)
+                                : null,
+                          ),
                         ),
-                        child: Text(
-                          getVersionText(),
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                          style: SourceUtils.isVersionPseudo(appInMemory.app)
-                              ? const TextStyle(fontStyle: FontStyle.italic)
-                              : null,
+                      ],
+                    ),
+                  if (settingsProvider.displayShowDate)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          getChangesButtonString(),
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            decoration: onShowChanges != null
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                if (settingsProvider.displayShowDate)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        getChangesButtonString(),
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          decoration: onShowChanges != null
-                              ? TextDecoration.underline
-                              : TextDecoration.none,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ),      ],
     );
 
     var transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
@@ -328,18 +338,24 @@ class AppListTile extends StatelessWidget {
     }
 
     // --- MODERN UI ---
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: isCompact ? 4 : 8,
-        vertical: isCompact ? 2 : 4,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onLongPress: onLongPress,
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(radius),
-          child: AnimatedContainer(
+    return Semantics(
+      label: '${appInMemory.name}${settingsProvider.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
+      button: true,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 4 : 8,
+          vertical: isCompact ? 2 : 4,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onLongPress: onLongPress,
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(radius),
+            child: AnimatedContainer(
+...
             duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 200 : 0),
             curve: Curves.easeOutCubic,
             decoration: BoxDecoration(

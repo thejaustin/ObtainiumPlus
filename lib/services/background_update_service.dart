@@ -316,5 +316,19 @@ class BackgroundUpdateService {
       }
     }
     appsProvider.settingsProvider.lastCompletedBGCheckTime = DateTime.now();
+
+    // --- Save status for potential cloud sync ---
+    try {
+      final status = {
+        'timestamp': DateTime.now().toIso8601String(),
+        'appsChecked': toCheck.length,
+        'updatesFound': updates.length,
+        'success': true,
+      };
+      final file = File('${appsProvider.APKDir!.parent.path}/last_update_status.json');
+      await file.writeAsString(jsonEncode(status));
+    } catch (e) {
+      talker.error('Failed to save BG status: $e');
+    }
   }
 }

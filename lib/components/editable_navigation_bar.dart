@@ -293,50 +293,55 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
     bool isDragTarget,
     double itemWidth,
   ) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.isEditMode
-          ? null
-          : () => widget.onDestinationSelected(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: isDragTarget
-            ? BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              )
-            : null,
-        child: widget.isEditMode
-            ? AnimatedBuilder(
-                animation: _wiggleController,
-                builder: (context, child) {
-                  final wiggle = math.sin(
-                        _wiggleController.value * 2 * math.pi +
-                            index * 0.7,
-                      ) *
-                      0.02;
-                  return Transform.rotate(
-                    angle: wiggle,
-                    child: child,
-                  );
-                },
-                child: _buildTabIcon(
+    return Semantics(
+      label: page.title,
+      selected: isSelected,
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.isEditMode
+            ? null
+            : () => widget.onDestinationSelected(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: isDragTarget
+              ? BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                )
+              : null,
+          child: widget.isEditMode
+              ? AnimatedBuilder(
+                  animation: _wiggleController,
+                  builder: (context, child) {
+                    final wiggle = math.sin(
+                          _wiggleController.value * 2 * math.pi +
+                              index * 0.7,
+                        ) *
+                        0.02;
+                    return Transform.rotate(
+                      angle: wiggle,
+                      child: child,
+                    );
+                  },
+                  child: _buildTabIcon(
+                    context,
+                    colorScheme,
+                    page,
+                    isSelected,
+                    showRemoveBadge: true,
+                    index: index,
+                  ),
+                )
+              : _buildTabIcon(
                   context,
                   colorScheme,
                   page,
                   isSelected,
-                  showRemoveBadge: true,
+                  showRemoveBadge: false,
                   index: index,
                 ),
-              )
-            : _buildTabIcon(
-                context,
-                colorScheme,
-                page,
-                isSelected,
-                showRemoveBadge: false,
-                index: index,
-              ),
+        ),
       ),
     );
   }
@@ -433,9 +438,12 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
     ColorScheme colorScheme,
     List<String> availableTabs,
   ) {
-    return SizedBox(
-      width: 48,
-      child: PopupMenuButton<String>(
+    return Semantics(
+      label: tr('add'),
+      button: true,
+      child: SizedBox(
+        width: 48,
+        child: PopupMenuButton<String>(
         onSelected: (id) {
           AppHaptics.lightImpact();
           widget.onAddTab(id);
@@ -487,9 +495,12 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
   }
 
   Widget _buildDoneButton(BuildContext context, ColorScheme colorScheme) {
-    return SizedBox(
-      width: 48,
-      child: GestureDetector(
+    return Semantics(
+      label: tr('ok'),
+      button: true,
+      child: SizedBox(
+        width: 48,
+        child: GestureDetector(
         onTap: () {
           AppHaptics.lightImpact();
           widget.onEditModeChanged(false);
