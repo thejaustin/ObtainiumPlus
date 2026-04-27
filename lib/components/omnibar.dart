@@ -111,7 +111,7 @@ class _OmnibarState extends State<Omnibar> {
   bool _isUrl = false;
   bool _isValidUrl = false;
   String? _urlError;
-  SourceProvider _sourceProvider = SourceProvider();
+  final SourceProvider _sourceProvider = SourceProvider();
 
   @override
   void initState() {
@@ -173,124 +173,135 @@ class _OmnibarState extends State<Omnibar> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Easing.standard,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _isValidUrl
-              ? colorScheme.primary.withValues(alpha: 0.5)
-              : _urlError != null
-                  ? colorScheme.error.withValues(alpha: 0.5)
-                  : colorScheme.outline.withValues(alpha: 0.3),
-          width: 1.5,
+    return Semantics(
+      label: _isUrl ? tr('appURLList') : tr('search'),
+      textField: true,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Easing.standard,
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isValidUrl
+                ? colorScheme.primary.withValues(alpha: 0.5)
+                : _urlError != null
+                    ? colorScheme.error.withValues(alpha: 0.5)
+                    : colorScheme.outline.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Icon indicating input type — AnimatedSwitcher for smooth transitions
-          Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, anim) => FadeTransition(
-                opacity: anim,
-                child: ScaleTransition(scale: anim, child: child),
-              ),
-              child: Icon(
-                _isUrl
-                    ? (_isValidUrl ? Icons.link : Icons.link_off)
-                    : Icons.search,
-                key: ValueKey(
-                    'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}'),
-                color: _isValidUrl
-                    ? colorScheme.primary
-                    : _urlError != null
-                        ? colorScheme.error
-                        : colorScheme.onSurfaceVariant,
-                size: 22,
-              ),
-            ),
-          ),
-          
-          // Input field
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: _isUrl 
-                    ? (_isValidUrl ? tr('validUrlEnterToAdd') : tr('invalidUrl'))
-                    : tr('searchOrEnterUrl'),
-                hintStyle: TextStyle(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        child: Row(
+          children: [
+            // Icon indicating input type — AnimatedSwitcher for smooth transitions
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: ScaleTransition(scale: anim, child: child),
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 14,
-                ),
-              ),
-              onChanged: _handleInput,
-              onSubmitted: (value) {
-                if (_isUrl && _isValidUrl) {
-                  widget.onUrlInput?.call(value);
-                } else if (!_isUrl && value.isNotEmpty) {
-                  widget.onSearchQuery?.call(value);
-                }
-              },
-              keyboardType: _isUrl 
-                  ? TextInputType.url 
-                  : TextInputType.text,
-              textInputAction: TextInputAction.search,
-            ),
-          ),
-          
-          // Clear button
-          if (_controller.text.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.clear, size: 20),
-              onPressed: () {
-                _controller.clear();
-                _handleInput('');
-              },
-              padding: const EdgeInsets.only(right: 8),
-            ),
-          
-          // Add button (for URLs)
-          if (_isUrl)
-            Container(
-              margin: const EdgeInsets.only(right: 6, top: 6, bottom: 6),
-              child: FilledButton.tonal(
-                onPressed: _isValidUrl 
-                    ? () => widget.onUrlInput?.call(_controller.text)
-                    : () {
-                        // Show unsupported source dialog
-                        final supportedSources = _sourceProvider.sources
-                            .where((s) => s.hosts.isNotEmpty)
-                            .map((s) => s.name)
-                            .toList();
-                        
-                        showUnsupportedSourceDialog(
-                          context: context,
-                          suggestedSources: supportedSources.take(8).toList(),
-                          failedUrl: _controller.text,
-                        );
-                      },
-                style: FilledButton.styleFrom(
-                  backgroundColor: _isValidUrl 
+                child: Icon(
+                  _isUrl
+                      ? (_isValidUrl ? Icons.link : Icons.link_off)
+                      : Icons.search,
+                  key: ValueKey(
+                      'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}'),
+                  color: _isValidUrl
                       ? colorScheme.primary
-                      : null,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                      : _urlError != null
+                          ? colorScheme.error
+                          : colorScheme.onSurfaceVariant,
+                  size: 22,
                 ),
-                child: Text(_isValidUrl ? tr('add') : tr('error')),
               ),
             ),
-        ],
+            
+            // Input field
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: _isUrl 
+                      ? (_isValidUrl ? tr('validUrlEnterToAdd') : tr('invalidUrl'))
+                      : tr('searchOrEnterUrl'),
+                  hintStyle: TextStyle(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                ),
+                onChanged: _handleInput,
+                onSubmitted: (value) {
+                  if (_isUrl && _isValidUrl) {
+                    widget.onUrlInput?.call(value);
+                  } else if (!_isUrl && value.isNotEmpty) {
+                    widget.onSearchQuery?.call(value);
+                  }
+                },
+                keyboardType: _isUrl 
+                    ? TextInputType.url 
+                    : TextInputType.text,
+                textInputAction: TextInputAction.search,
+              ),
+            ),
+            
+            // Clear button
+            if (_controller.text.isNotEmpty)
+              Semantics(
+                label: tr('clear'),
+                button: true,
+                child: IconButton(
+                  icon: const Icon(Icons.clear, size: 20),
+                  onPressed: () {
+                    _controller.clear();
+                    _handleInput('');
+                  },
+                  padding: const EdgeInsets.only(right: 8),
+                ),
+              ),
+            
+            // Add button (for URLs)
+            if (_isUrl)
+              Container(
+                margin: const EdgeInsets.only(right: 6, top: 6, bottom: 6),
+                child: Semantics(
+                  label: tr('add'),
+                  button: true,
+                  child: FilledButton.tonal(
+                    onPressed: _isValidUrl 
+                        ? () => widget.onUrlInput?.call(_controller.text)
+                        : () {
+                            // Show unsupported source dialog
+                            final supportedSources = _sourceProvider.sources
+                                .where((s) => s.hosts.isNotEmpty)
+                                .map((s) => s.name)
+                                .toList();
+                            
+                            showUnsupportedSourceDialog(
+                              context: context,
+                              suggestedSources: supportedSources.take(8).toList(),
+                              failedUrl: _controller.text,
+                            );
+                          },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _isValidUrl 
+                          ? colorScheme.primary
+                          : null,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: Text(_isValidUrl ? tr('add') : tr('error')),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -335,9 +346,8 @@ class AppActionsFAB extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Handle
-                      DragHandle(
+                      const DragHandle(
                         width: 40,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 20),
 
@@ -400,7 +410,7 @@ class AppActionsFAB extends StatelessWidget {
                           },
                         ),
 
-                      if (settings.plusFabShowGithubPersonalRepos)
+                      if (settings.plusDeveloperMode && settings.plusFabShowGithubPersonalRepos)
                         _buildMenuItem(
                           context,
                           icon: Icons.person_outline_rounded,
@@ -528,22 +538,30 @@ class AppActionsFAB extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          FloatingActionButton.extended(
-            heroTag: 'fab_add',
-            onPressed: () => _showAddAppMenu(context),
-            icon: const Icon(Icons.add),
-            label: Text(tr('addApp')),
-            elevation: 4,
+          Semantics(
+            label: tr('addApp'),
+            button: true,
+            child: FloatingActionButton.extended(
+              heroTag: 'fab_add',
+              onPressed: () => _showAddAppMenu(context),
+              icon: const Icon(Icons.add),
+              label: Text(tr('addApp')),
+              elevation: 4,
+            ),
           ),
         ],
       );
     }
 
-    return FloatingActionButton.extended(
-      onPressed: () => _showAddAppMenu(context),
-      icon: const Icon(Icons.add),
-      label: Text(tr('addApp')),
-      elevation: 4,
+    return Semantics(
+      label: tr('addApp'),
+      button: true,
+      child: FloatingActionButton.extended(
+        onPressed: () => _showAddAppMenu(context),
+        icon: const Icon(Icons.add),
+        label: Text(tr('addApp')),
+        elevation: 4,
+      ),
     );
   }
 }
