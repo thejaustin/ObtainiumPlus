@@ -20,6 +20,7 @@ import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/common/contextual_tip.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -198,83 +199,80 @@ class _SettingsPageState extends State<SettingsPage> {
     final isSearching = _searchQuery.isNotEmpty;
 
     // --- HUB PAGE BUILDERS ---
-    Widget Function(BuildContext) _hubBuilderPlus = (_) => const _SettingsSubMenuPage(
+    Widget _hubBuilderPlus(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: 'Obtainium+ Features',
-      child: PlusFeaturesSection(),
+      scrollController: controller,
+      child: const PlusFeaturesSection(),
     );
 
-    Widget Function(BuildContext) _hubBuilderUpdates = (_) => _SettingsSubMenuPage(
+    Widget _hubBuilderUpdates(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: 'Updates & Automation',
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: UpdateSettingsSection(
-            showIntervalLabel: showIntervalLabel,
-            onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
-            androidInfoFuture: _androidInfoFuture,
-          ),
+      scrollController: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: UpdateSettingsSection(
+          showIntervalLabel: showIntervalLabel,
+          onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
+          androidInfoFuture: _androidInfoFuture,
         ),
       ),
     );
 
-    Widget Function(BuildContext) _hubBuilderTheming = (_) => _SettingsSubMenuPage(
+    Widget _hubBuilderTheming(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: 'Theming',
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ThemeSettingsSection(
-            androidInfoFuture: _androidInfoFuture,
-            colorsNameMap: colorsNameMap,
-          ),
+      scrollController: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ThemeSettingsSection(
+          androidInfoFuture: _androidInfoFuture,
+          colorsNameMap: colorsNameMap,
         ),
       ),
     );
 
-    Widget Function(BuildContext) _hubBuilderLayout = (_) => _SettingsSubMenuPage(
+    Widget _hubBuilderLayout(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: 'Layout',
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: AppsViewSettingsSection(onSetState: setState),
-        ),
+      scrollController: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: AppsViewSettingsSection(onSetState: setState),
       ),
     );
 
-    Widget Function(BuildContext) _hubBuilderInstallation = (_) => _SettingsSubMenuPage(
+    Widget _hubBuilderInstallation(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: tr('installation'),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: InstallationSection(),
-        ),
+      scrollController: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: const InstallationSection(),
       ),
     );
 
-    Widget Function(BuildContext) _hubBuilderStats = (_) => StatisticsPage();
-    Widget Function(BuildContext) _hubBuilderNotifications = (_) => _SettingsSubMenuPage(
+    Widget _hubBuilderStats(BuildContext ctx, ScrollController controller) => StatisticsPage(scrollController: controller);
+    
+    Widget _hubBuilderNotifications(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: tr('notifications'),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            const NotificationSettingsSection(),
-          ]),
-        ),
+      scrollController: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: const Column(children: [
+          NotificationSettingsSection(),
+        ]),
       ),
     );
-    Widget Function(BuildContext) _hubBuilderAdvanced = (_) => _SettingsSubMenuPage(
+    
+    Widget _hubBuilderAdvanced(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
       title: tr('advanced'),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            AppBehaviorSection(searchQuery: _searchQuery),
-            const SizedBox(height: 24),
-            AdvancedSettingsSection(searchQuery: _searchQuery),
-            const SizedBox(height: 24),
-            TroubleshootingSection(searchQuery: _searchQuery),
-          ]),
-        ),
+      scrollController: controller,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(children: [
+          AppBehaviorSection(searchQuery: _searchQuery),
+          const SizedBox(height: 24),
+          AdvancedSettingsSection(searchQuery: _searchQuery),
+          const SizedBox(height: 24),
+          TroubleshootingSection(searchQuery: _searchQuery),
+        ]),
       ),
     );
 
@@ -657,7 +655,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required Widget Function(BuildContext) builder}) {
+  Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required Widget Function(BuildContext, ScrollController) builder}) {
     return ListTile(
       leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)),
       title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
@@ -665,7 +663,10 @@ class _SettingsPageState extends State<SettingsPage> {
       trailing: const Icon(Icons.chevron_right, size: 20),
       onTap: () {
         AppHaptics.selectionClick();
-        showModalBottomSheet(context: context, isScrollControlled: true, useSafeArea: true, builder: builder);
+        showDraggableModalBottomSheet(
+          context: context,
+          builder: builder,
+        );
       },
     );
   }
@@ -696,13 +697,18 @@ class _SettingsPageState extends State<SettingsPage> {
 class _SettingsSubMenuPage extends StatelessWidget {
   final String title;
   final Widget child;
-  const _SettingsSubMenuPage({required this.title, required this.child});
+  final ScrollController? scrollController;
+  const _SettingsSubMenuPage({required this.title, required this.child, this.scrollController});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title), centerTitle: true),
-      body: child,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(title: Text(title), centerTitle: true, backgroundColor: Colors.transparent, elevation: 0),
+      body: SingleChildScrollView(
+        controller: scrollController,
+        child: child,
+      ),
     );
   }
 }

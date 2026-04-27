@@ -42,11 +42,13 @@ class AppPage extends StatefulWidget {
     required this.appId,
     this.showOppositeOfPreferredView = false,
     this.isModal = false,
+    this.scrollController,
   });
 
   final String appId;
   final bool showOppositeOfPreferredView;
   final bool isModal;
+  final ScrollController? scrollController;
 
   @override
   State<AppPage> createState() => _AppPageState();
@@ -342,6 +344,7 @@ class _AppPageState extends State<AppPage> {
                     : const SizedBox.shrink())
                 : (appsProvider.settingsProvider.plusEnableModernAppPage
                     ? CustomScrollView(
+                        controller: widget.scrollController,
                         slivers: [
                           _buildSliverAppBar(context, app),
                           SliverToBoxAdapter(

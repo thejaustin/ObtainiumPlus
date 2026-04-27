@@ -21,7 +21,8 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class StatisticsPage extends StatefulWidget {
-  const StatisticsPage({super.key});
+  final ScrollController? scrollController;
+  const StatisticsPage({super.key, this.scrollController});
 
   @override
   State<StatisticsPage> createState() => _StatisticsPageState();
@@ -168,6 +169,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           ).length;
 
           return SingleChildScrollView(
+            controller: widget.scrollController,
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
