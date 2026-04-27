@@ -89,7 +89,6 @@ class BackgroundUpdateService {
       }
 
       // --- Per-app/tag/category rule filtering ---
-      final rules = appsProvider.settingsProvider.autoUpdateRules;
       final bool isWifi = netResult.contains(ConnectivityResult.wifi) || 
                           netResult.contains(ConnectivityResult.ethernet);
 
@@ -97,27 +96,14 @@ class BackgroundUpdateService {
         final app = appsProvider.apps[entry.key]?.app;
         if (app == null) return false;
 
-        // Collect all relevant rule keys for this app
-        final List<String> ruleKeys = [];
-        for (var cat in app.categories) {
-          ruleKeys.add('cat_$cat');
-        }
-        for (var tag in app.tags) {
-          ruleKeys.add('tag_$tag');
-        }
-
-        for (var key in ruleKeys) {
-          final rule = rules[key];
-          if (rule != null) {
-            if (rule['disabled'] == true) {
-              logs.add('BG update task: Skipping ${app.id} (disabled by rule: $key)');
-              return true;
-            }
-            if (rule['wifiOnly'] == true && !isWifi) {
-              logs.add('BG update task: Skipping ${app.id} (WiFi only rule: $key)');
-              return true;
-            }
-          }
+        if (AppUpdateService.shouldSkipAppUpdate(
+          app: app,
+          settingsProvider: appsProvider.settingsProvider,
+          netResult: netResult,
+          isBackground: true,
+        )) {
+          logs.add('BG update task: Skipping ${app.id} based on rules');
+          return true;
         }
         return false;
       });
@@ -191,6 +177,7 @@ class BackgroundUpdateService {
           updates = await appsProvider.checkUpdates(
             specificIds: toCheck.map((e) => e.key).toList(),
             sp: appsProvider.settingsProvider,
+            isBackground: true,
           );
           
           for (var update in updates) {

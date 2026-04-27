@@ -117,6 +117,39 @@ class AppUpdateService {
     return appIds;
   }
 
+  static bool shouldSkipAppUpdate({
+    required App app,
+    required SettingsProvider settingsProvider,
+    required List<ConnectivityResult> netResult,
+    bool isBackground = false,
+  }) {
+    // Collect all relevant rule keys for this app
+    final List<String> ruleKeys = [];
+    for (var cat in app.categories) {
+      ruleKeys.add('cat_$cat');
+    }
+    for (var tag in app.tags) {
+      ruleKeys.add('tag_$tag');
+    }
+
+    final rules = settingsProvider.autoUpdateRules;
+    final bool isWifi = netResult.contains(ConnectivityResult.wifi) || 
+                        netResult.contains(ConnectivityResult.ethernet);
+
+    for (var key in ruleKeys) {
+      final rule = rules[key];
+      if (rule != null) {
+        if (rule['disabled'] == true) {
+          return true;
+        }
+        if (rule['wifiOnly'] == true && !isWifi) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   static Future<List<App>> checkUpdates({
     required Map<String, AppInMemory> apps,
     required SettingsProvider settingsProvider,
@@ -127,6 +160,7 @@ class AppUpdateService {
     bool gettingUpdates = false,
     Function(bool)? setGettingUpdates,
     bool ignoreCache = false,
+    bool isBackground = false,
   }) async {
     List<App> updates = [];
     MultiAppMultiError errors = MultiAppMultiError();
@@ -142,6 +176,21 @@ class AppUpdateService {
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
         }
+
+        // --- Per-app/tag/category rule filtering ---
+        final List<ConnectivityResult> netResult = await (Connectivity().checkConnectivity());
+        appIds.removeWhere((id) {
+          final app = apps[id]?.app;
+          if (app == null) return false;
+          return shouldSkipAppUpdate(
+            app: app,
+            settingsProvider: settingsProvider,
+            netResult: netResult,
+            isBackground: isBackground,
+          );
+        });
+        // ------------------------------------------
+
         await Future.wait(
           appIds.map((appId) async {
             App? newApp;

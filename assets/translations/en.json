@@ -976,6 +976,7 @@
   "categoryDistribution": "Category Distribution",
   "sourceDistribution": "Source Distribution",
   "others": "Others",
+  "shareBackup": "Share Backup",
   "notifications": "Notifications",
   "enableNotificationDigest": "Enable Notification Digest",
   "notificationDigestDescription": "Group updates into a single summary notification",
