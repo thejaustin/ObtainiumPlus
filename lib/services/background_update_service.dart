@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -33,6 +35,8 @@ class BackgroundUpdateService {
 
     Map<String, dynamic>? currentParams = initialParams;
     bool isFirstIteration = true;
+    List<MapEntry<String, int>> toCheck = [];
+    List<App> updates = [];
 
     while (true) {
       int maxAttempts = 4; // Immediate retries
@@ -55,7 +59,7 @@ class BackgroundUpdateService {
       final offlineService = OfflineService();
       List<String> dueRetries = offlineService.getDueRetries(appsProvider.settingsProvider);
 
-      List<MapEntry<String, int>> toCheck = <MapEntry<String, int>>[
+      toCheck = <MapEntry<String, int>>[
         ...(currentParams['toCheck']
                 ?.map(
                   (entry) => MapEntry<String, int>(
@@ -163,7 +167,7 @@ class BackgroundUpdateService {
 
         logs.add('BG update task: Started (${toCheck.length}).');
 
-        List<App> updates = [];
+        updates = [];
         List<MapEntry<String, int>> toRetry = [];
         var retryAfterXSeconds = 0;
         MultiAppMultiError? errors;

@@ -152,8 +152,7 @@ class AppListTile extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color:
-                    settingsProvider.highlightTouchTargets &&
+                color: settingsProvider.highlightTouchTargets &&
                         onShowChanges != null
                     ? (Theme.of(context).brightness == Brightness.light
                               ? Theme.of(context).primaryColor
@@ -210,7 +209,8 @@ class AppListTile extends StatelessWidget {
               ),
             ),
           ),
-        ),      ],
+        ),
+      ],
     );
 
     var transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
