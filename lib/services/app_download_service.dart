@@ -597,6 +597,8 @@ class AppDownloadService {
     } else {
       var shizukuPermission = await ShizukuApkInstaller.checkPermission();
       switch (shizukuPermission) {
+        case 'authorized':
+          break;
         case 'binder_not_found':
           throw ObtainiumError(tr('shizukuBinderNotFound'));
         case 'old_shizuku':
