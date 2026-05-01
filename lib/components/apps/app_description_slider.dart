@@ -110,10 +110,10 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                       color: (isDark 
                           ? colorScheme.surfaceContainerHighest 
                           : colorScheme.surface)
-                        .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                        .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        color: colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
                         width: 1,
                       ),
                       boxShadow: AppShadows.smooth(
@@ -136,7 +136,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                                      color: colorScheme.primaryContainer.withOpacity(AppOpacity.half),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -194,7 +194,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                                         ),
                                         styleSheet: MarkdownStyleSheet(
                                           p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            color: colorScheme.onSurface.withValues(alpha: 0.9),
+                                            color: colorScheme.onSurface.withOpacity(0.9),
                                           ),
                                         ),
                                       ),

@@ -21,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
   final ScrollController? scrollController;
@@ -397,12 +398,12 @@ class DeveloperSettingsPage extends StatelessWidget {
         final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
         final sheet = Container(
           decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
-              top: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2)),
-              left: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
-              right: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+              top: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2)),
+              left: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
+              right: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
             ),
           ),
           child: SafeArea(
@@ -565,10 +566,10 @@ class DeveloperSettingsPage extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: color.withValues(alpha: 0.1),
+      color: color.withOpacity(AppOpacity.subtle),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
+        side: BorderSide(color: color.withOpacity(AppOpacity.medium)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -582,7 +583,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ExpressiveProgressIndicator(value: score / 100, backgroundColor: color.withValues(alpha: 0.1), color: color),
+            ExpressiveProgressIndicator(value: score / 100, backgroundColor: color.withOpacity(AppOpacity.subtle), color: color),
             const SizedBox(height: 8),
             Text('Current Protection: $label', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           ],
@@ -663,12 +664,12 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
     final enableGlass = context.select<SettingsProvider, bool>((s) => s.plusEnableGlassmorphism);
     final content = Container(
       decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+        color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2)),
-          left: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
-          right: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+          top: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2)),
+          left: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
+          right: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
         ),
       ),
       padding: const EdgeInsets.all(24),
@@ -752,12 +753,12 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
 
     final content = Container(
       decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+        color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2)),
-          left: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
-          right: BorderSide(color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0)),
+          top: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2)),
+          left: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
+          right: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
         ),
       ),
       padding: EdgeInsets.only(

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class SettingsGroup extends StatelessWidget {
   final String? title;
@@ -45,11 +46,10 @@ class SettingsGroup extends StatelessWidget {
               color: (isDark
                       ? Theme.of(context).colorScheme.surfaceContainerHigh
                       : Theme.of(context).colorScheme.surface)
-                  .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                  .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
               borderRadius: BorderRadius.circular(28.0),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2),
+                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2),
                 width: 1,
               ),
             ),
@@ -67,7 +67,7 @@ class SettingsGroup extends StatelessWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .outlineVariant
-                            .withValues(alpha: 0.2),
+                            .withOpacity(AppOpacity.low),
                       ),
                   ],
                 );

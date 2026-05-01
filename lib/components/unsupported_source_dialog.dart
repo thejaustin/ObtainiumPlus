@@ -36,10 +36,10 @@ Future<void> showUnsupportedSourceDialog({
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+          color: Theme.of(context).colorScheme.surface.withOpacity(enableGlass ? 0.85 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.outline.withOpacity(AppOpacity.subtle),
             width: 1,
             ),
             boxShadow: AppShadows.smooth(
@@ -76,8 +76,8 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
     decoration: BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
-          Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: enableGlass ? 0.15 : 0.25),
+          Theme.of(context).colorScheme.tertiaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+          Theme.of(context).colorScheme.tertiaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -89,7 +89,7 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.tertiary.withOpacity(AppOpacity.low),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -125,10 +125,10 @@ Widget _buildContent(BuildContext context, List<String> sources, String? failedU
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.errorContainer.withOpacity(AppOpacity.medium),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low),
             ),
           ),
           child: Column(
@@ -182,10 +182,10 @@ Widget _buildContent(BuildContext context, List<String> sources, String? failedU
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.medium),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
           ),
         ),
         child: Row(
@@ -215,10 +215,10 @@ Widget _buildSourceChip(BuildContext context, String source) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+      color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.medium),
         width: 1,
       ),
     ),
@@ -270,7 +270,7 @@ Widget _buildActions(BuildContext context) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
     ),
     child: Row(

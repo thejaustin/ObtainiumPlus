@@ -454,10 +454,24 @@ class HomePageState extends State<HomePage> {
         },
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          floatingActionButton: (activePages[currentIndex].id == 'apps' ||
-                  activePages[currentIndex].id == 'updates')
-              ? const AppActionsFAB()
-              : null,
+          floatingActionButton: Builder(builder: (context) {
+            final showFab = activePages[currentIndex].id == 'apps' ||
+                activePages[currentIndex].id == 'updates';
+            return IgnorePointer(
+              ignoring: !showFab,
+              child: AnimatedOpacity(
+                opacity: showFab ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                curve: AppConstants.expressiveStandard,
+                child: AnimatedScale(
+                  scale: showFab ? 1.0 : 0.7,
+                  duration: const Duration(milliseconds: 300),
+                  curve: AppConstants.expressiveDecelerate,
+                  child: const AppActionsFAB(),
+                ),
+              ),
+            );
+          }),
           body: PageView(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),

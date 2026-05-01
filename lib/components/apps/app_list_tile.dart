@@ -157,8 +157,8 @@ class AppListTile extends StatelessWidget {
                     ? (Theme.of(context).brightness == Brightness.light
                               ? Theme.of(context).primaryColor
                               : Theme.of(context).primaryColorLight)
-                          .withValues(
-                            alpha: Theme.of(context).brightness == Brightness.light
+                          .withOpacity(
+                            Theme.of(context).brightness == Brightness.light
                                 ? 20 / 255
                                 : 40 / 255,
                           )
@@ -213,7 +213,7 @@ class AppListTile extends StatelessWidget {
       ],
     );
 
-    var transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
+    var transparent = Theme.of(context).colorScheme.surface.withOpacity(0.0).value;
     List<double> stops = [
       ...appInMemory.app.categories.asMap().entries.map(
         (e) =>
@@ -238,7 +238,7 @@ class AppListTile extends StatelessWidget {
 
     if (!settingsProvider.plusEnableModernAppListTile) {
       // --- LEGACY UI ---
-      var transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
+      var transparent = Theme.of(context).colorScheme.surface.withOpacity(0.0).value;
       List<double> stops = [
         ...appInMemory.app.categories.asMap().entries.map(
           (e) =>
@@ -263,7 +263,7 @@ class AppListTile extends StatelessWidget {
               ...appInMemory.app.categories.map(
                 (e) => Color(
                   settingsProvider.categories[e] ?? transparent,
-                ).withValues(alpha: 1.0),
+                ).withOpacity(1.0),
               ),
               Color(transparent),
             ],
@@ -282,9 +282,9 @@ class AppListTile extends StatelessWidget {
                 contentPadding: isCompact ? const EdgeInsets.symmetric(horizontal: 12) : null,
                 dense: isCompact,
                 tileColor: appInMemory.app.pinned
-                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half)
                     : Colors.transparent,
-                selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: appInMemory.app.pinned ? 0.7 : 0.5,
+                selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(appInMemory.app.pinned ? 0.7 : AppOpacity.half,
                 ),
                 selected: isSelected,
                 shape: RoundedRectangleBorder(
@@ -360,9 +360,9 @@ class AppListTile extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(radius),
                 color: isSelected
-                    ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7)
+                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
                     : appInMemory.app.pinned
-                        ? Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                        ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
                         : Theme.of(context).colorScheme.surface,
                 border: Border.all(
                   color: isSelected
@@ -429,7 +429,7 @@ class AppListTile extends StatelessWidget {
                                   margin: const EdgeInsets.only(right: 4),
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                                    color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

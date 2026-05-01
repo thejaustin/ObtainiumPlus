@@ -22,6 +22,7 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class CommandCenter extends StatefulWidget {
   final String? initialQuery;
@@ -162,22 +163,22 @@ class _CommandCenterState extends State<CommandCenter> {
             color: (isDark
                     ? theme.colorScheme.surfaceContainerHighest
                     : theme.colorScheme.surface)
-                .withValues(alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0),
+                .withOpacity(settings.plusEnableGlassmorphism ? 0.72 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
-                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.1),
+                    ? theme.colorScheme.onSurface.withOpacity(0.18)
+                    : theme.colorScheme.outlineVariant.withOpacity(AppOpacity.subtle),
               ),
               left: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
                     : Colors.transparent,
               ),
               right: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                    ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
                     : Colors.transparent,
               ),
             ),
@@ -405,7 +406,7 @@ class _CommandCenterState extends State<CommandCenter> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       elevation: 0,
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
       child: ListTile(
         leading: const Icon(Icons.link),
         title: Text(tr('addAppFromUrl')),
@@ -434,9 +435,9 @@ class _CommandCenterState extends State<CommandCenter> {
           Center(
             child: Column(
               children: [
-                Icon(Icons.rocket_launch_rounded, size: 64, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+                Icon(Icons.rocket_launch_rounded, size: 64, color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low)),
                 const SizedBox(height: 16),
-                Text(tr('commandCenterPrompt'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
+                Text(tr('commandCenterPrompt'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface.withOpacity(AppOpacity.half))),
               ],
             ),
           ),

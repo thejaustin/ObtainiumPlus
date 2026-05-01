@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 /// A custom AppBar that provides consistent M3 styling across the app.
 /// Returns a standard AppBar for use in plain Scaffold contexts.
@@ -71,7 +72,7 @@ class CustomSliverAppBar extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+      shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(AppOpacity.subtle),
       actions: actions,
       title: Text(
         title,
@@ -117,7 +118,7 @@ class CustomSliverAppBarCompact extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+      shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(AppOpacity.subtle),
       actions: actions,
       title: Text(
         title,

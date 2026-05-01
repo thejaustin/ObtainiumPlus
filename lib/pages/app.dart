@@ -35,6 +35,7 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class AppPage extends StatefulWidget {
   const AppPage({
@@ -73,17 +74,17 @@ class _AppPageState extends State<AppPage> {
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
-                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.18 : 0),
+                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.18 : 0),
               ),
               left: BorderSide(
-                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
               ),
               right: BorderSide(
-                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
               ),
             ),
           ),
@@ -389,7 +390,7 @@ class _AppPageState extends State<AppPage> {
                                       ListTile(
                                         leading: Container(
                                           padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.medium), borderRadius: BorderRadius.circular(12)),
                                           child: Icon(Icons.link_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                                         ),
                                         title: Text(tr('appSourceURL'), style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -400,7 +401,7 @@ class _AppPageState extends State<AppPage> {
                                       ListTile(
                                         leading: Container(
                                           padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.medium), borderRadius: BorderRadius.circular(12)),
                                           child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
                                         ),
                                         title: Text(tr('appId'), style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -723,11 +724,10 @@ class _AppPageState extends State<AppPage> {
         color: (isDark
                 ? Theme.of(context).colorScheme.surfaceContainerLow
                 : Theme.of(context).colorScheme.surface)
-            .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+            .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withValues(
-              alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1),
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1),
         ),
       ),
       padding: const EdgeInsets.all(20.0),
@@ -922,11 +922,10 @@ class _AppPageState extends State<AppPage> {
               color: (isDark
                       ? Theme.of(ctx).colorScheme.surfaceContainerLow
                       : Theme.of(ctx).colorScheme.surface)
-                  .withValues(alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+                  .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
               borderRadius: BorderRadius.circular(aboutRadius),
               border: Border.all(
-                color: Theme.of(ctx).colorScheme.outlineVariant.withValues(
-                    alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1),
+                color: Theme.of(ctx).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1),
               ),
             ),
             child: MarkdownBody(
@@ -938,7 +937,7 @@ class _AppPageState extends State<AppPage> {
               ),
               styleSheet: MarkdownStyleSheet(
                 p: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.9),
+                  color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.9),
                 ),
               ),
             ),
@@ -1276,8 +1275,8 @@ class _AppPageState extends State<AppPage> {
                         ? (Theme.of(context).brightness == Brightness.light
                                   ? Theme.of(context).primaryColor
                                   : Theme.of(context).primaryColorLight)
-                              .withValues(
-                                alpha: Theme.of(context).brightness ==
+                              .withOpacity(
+                                Theme.of(context).brightness ==
                                         Brightness.light
                                     ? 20 / 255
                                     : 40 / 255,

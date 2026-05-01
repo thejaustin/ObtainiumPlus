@@ -23,7 +23,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/services/app_install_service.dart';
-import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/providers/apps_provider.dart';
@@ -40,6 +39,7 @@ import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/pages/statistics.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class SetupAssistantSection extends StatefulWidget {
   const SetupAssistantSection({super.key});
@@ -55,7 +55,7 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
   @override
   void initState() {
     super.initState();
-    _checkStatus();
+    unawaited(_checkStatus());
   }
 
   Future<void> _checkStatus() async {
@@ -77,10 +77,10 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Card(
         elevation: 0,
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+          side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -101,7 +101,7 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
                   label: tr('quickSetupAllowBackground'),
                   onTap: () async {
                     await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-                    _checkStatus();
+                    await _checkStatus();
                   },
                 ),
               if (!_hasNotificationPermission)
@@ -110,7 +110,7 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
                   label: tr('quickSetupEnableNotifications'),
                   onTap: () async {
                     await Permission.notification.request();
-                    _checkStatus();
+                    await _checkStatus();
                   },
                 ),
             ],
@@ -133,7 +133,7 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
               Icon(Icons.add_circle_outline, size: 18, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 12),
               Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.half)),
             ],
           ),
         ),
@@ -154,13 +154,10 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool showIntervalLabel = false;
-  int _aboutTapCount = 0;
-  Timer? _aboutTapTimer;
   bool _useGridView = true;
   int _lastNonZeroUpdateInterval = 360;
 
   late Future<AndroidDeviceInfo> _androidInfoFuture;
-  bool _isIgnoringBatteryOptimizations = false;
 
   final Map<ColorSwatch<Object>, String> colorsNameMap = {};
 
@@ -168,22 +165,8 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
-    _checkBatteryStatus();
     final settings = context.read<SettingsProvider>();
     _useGridView = settings.plusEnableGridView;
-  }
-
-  Future<void> _checkBatteryStatus() async {
-    bool isIgnoring = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
-    if (!mounted) return;
-    setState(() {
-      _isIgnoringBatteryOptimizations = isIgnoring;
-    });
-  }
-
-  bool _matches(String text) {
-    if (_searchQuery.isEmpty) return true;
-    return text.toLowerCase().contains(_searchQuery.toLowerCase());
   }
 
   void _cycleTheme(SettingsProvider sp) {
@@ -359,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           onPressed: () => _cycleTheme(settingsProvider),
-                          shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                          shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.half))),
                         ),
                         const SizedBox(width: 8),
                         _buildQuickToggle(
@@ -488,6 +471,44 @@ class _SettingsPageState extends State<SettingsPage> {
                       _buildAboutIcon(context, icon: Icons.help_outline_rounded, label: tr('wiki'), onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication)),
                       _buildAboutIcon(
                         context,
+                        icon: Icons.favorite_outline_rounded,
+                        label: 'Credits',
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => GlassDialog(
+                              title: 'Open Source Credits',
+                              icon: Icons.favorite_outline_rounded,
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Upstream Fork', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                                    const SizedBox(height: 4),
+                                    _buildCreditTile(ctx, 'Obtainium', 'ImranR98', 'The original app this project is forked from', 'https://github.com/ImranR98/Obtainium'),
+                                    const Divider(height: 24),
+                                    Text('Git Dependencies', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                                    const SizedBox(height: 4),
+                                    _buildCreditTile(ctx, 'android_package_installer', 'ImranR98', 'APK installation via Android PackageInstaller API', 'https://github.com/ImranR98/android_package_installer'),
+                                    _buildCreditTile(ctx, 'android_package_manager', 'ImranR98', 'Android package management bindings', 'https://github.com/ImranR98/android_package_manager'),
+                                    _buildCreditTile(ctx, 'shared_storage', 'AlexBacich', 'Android Scoped Storage / SAF access', 'https://github.com/AlexBacich/shared-storage'),
+                                    _buildCreditTile(ctx, 'android_system_font', 're7gog', 'Read the system font set in Android settings', 'https://github.com/re7gog/android_system_font'),
+                                    _buildCreditTile(ctx, 'shizuku_apk_installer', 'wilver06w', 'Silent APK installation via Shizuku', 'https://github.com/wilver06w/shizuku_apk_installer'),
+                                    const Divider(height: 24),
+                                    Text('Inspiration', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                                    const SizedBox(height: 4),
+                                    _buildCreditTile(ctx, 'Discoverium', 'cygnusx-1-org', 'Inspiration for the app discovery & search feature', 'https://github.com/cygnusx-1-org/Discoverium'),
+                                  ],
+                                ),
+                              ),
+                              actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('close')))],
+                            ),
+                          );
+                        },
+                      ),
+                      _buildAboutIcon(
+                        context,
                         icon: Icons.info_outline_rounded,
                         label: 'App Info',
                         onTap: () async {
@@ -530,9 +551,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void showMessage(dynamic message, BuildContext context) {
+  void showMessage(String message, BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message is ObtainiumError ? message.message : message.toString()), behavior: SnackBarBehavior.floating),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -549,7 +570,7 @@ class _SettingsPageState extends State<SettingsPage> {
       checkmarkColor: Theme.of(context).colorScheme.onPrimary,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5))),
+      shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.half))),
     );
   }
 
@@ -560,7 +581,7 @@ class _SettingsPageState extends State<SettingsPage> {
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium)),
       ),
       child: InkWell(
         onTap: () {
@@ -615,7 +636,7 @@ class _SettingsPageState extends State<SettingsPage> {
           elevation: 0,
           margin: EdgeInsets.zero,
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3))),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium))),
           child: Column(
             children: children.asMap().entries.map((entry) {
               final idx = entry.key;
@@ -624,7 +645,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   child,
                   if (idx < children.length - 1)
-                    Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                    Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium)),
                 ],
               );
             }).toList(),
@@ -639,14 +660,14 @@ class _SettingsPageState extends State<SettingsPage> {
       elevation: 0,
       margin: EdgeInsets.zero,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium))),
       child: ExpansionTile(
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
         leading: Container(
           padding: const EdgeInsets.all(8), 
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12), 
+            color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.hint), 
             borderRadius: BorderRadius.circular(12)
           ), 
           child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)
@@ -665,7 +686,7 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: Container(
         padding: const EdgeInsets.all(8), 
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12), 
+          color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.hint), 
           borderRadius: BorderRadius.circular(12)
         ), 
         child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)
@@ -680,6 +701,32 @@ class _SettingsPageState extends State<SettingsPage> {
           builder: builder,
         );
       },
+    );
+  }
+
+  Widget _buildCreditTile(BuildContext context, String name, String author, String description, String url) {
+    return InkWell(
+      onTap: () => launchUrlString(url, mode: LaunchMode.externalApplication),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(author, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.secondary)),
+                  Text(description, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+            Icon(Icons.open_in_new_rounded, size: 14, color: Theme.of(context).colorScheme.secondary),
+          ],
+        ),
+      ),
     );
   }
 

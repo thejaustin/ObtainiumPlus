@@ -34,12 +34,12 @@ class AppConstants {
   static const Curve standardEmphasized = Curves.easeInOutQuart;
   static const Curve standardSmooth = Curves.easeInOut;
 
-  /// Expressive M3 curves (for tactile/bouncy mode)
-  static const Curve expressiveStandard = Curves.easeOut; 
-  static const Curve expressiveDecelerate = Curves.easeOut;
-  static const Curve expressiveAccelerate = Curves.easeIn;
-  static const Curve expressiveEmphasized = Cubic(0.3, 0.0, 0.7, 1.0);
-  static const Curve expressiveSmooth = Curves.linear;
+  /// Expressive M3E curves — cubic bezier values from Material 3 motion spec
+  static const Curve expressiveStandard = Cubic(0.2, 0.0, 0, 1.0);
+  static const Curve expressiveDecelerate = Cubic(0.05, 0.7, 0.1, 1.0);
+  static const Curve expressiveAccelerate = Cubic(0.3, 0.0, 0.8, 0.15);
+  static const Curve expressiveEmphasized = Cubic(0.2, 0.0, 0, 1.0);
+  static const Curve expressiveSmooth = Cubic(0.4, 0.0, 0.2, 1.0);
 
   // Spring Physics for Micro-interactions
   /// Spring physics for press animations
@@ -120,19 +120,19 @@ class AppShadows {
   }) {
     return [
       BoxShadow(
-        color: color.withValues(alpha: opacity * 0.4),
+        color: color.withOpacity(opacity * 0.4),
         blurRadius: 24 * blurFactor,
         spreadRadius: -2,
         offset: const Offset(0, 8),
       ),
       BoxShadow(
-        color: color.withValues(alpha: opacity * 0.6),
+        color: color.withOpacity(opacity * 0.6),
         blurRadius: 12 * blurFactor,
         spreadRadius: -1,
         offset: const Offset(0, 4),
       ),
       BoxShadow(
-        color: color.withValues(alpha: opacity),
+        color: color.withOpacity(opacity),
         blurRadius: 4 * blurFactor,
         spreadRadius: 0,
         offset: const Offset(0, 1),
@@ -147,12 +147,12 @@ class AppShadows {
   }) {
     return [
       BoxShadow(
-        color: color.withValues(alpha: 0.2 * intensity),
+        color: color.withOpacity(0.2 * intensity),
         blurRadius: 20,
         spreadRadius: 2,
       ),
       BoxShadow(
-        color: color.withValues(alpha: 0.1 * intensity),
+        color: color.withOpacity(0.1 * intensity),
         blurRadius: 40,
         spreadRadius: 4,
       ),

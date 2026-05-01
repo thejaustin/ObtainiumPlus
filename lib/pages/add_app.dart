@@ -24,6 +24,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 enum AddAppMode { add, edit }
 
@@ -901,13 +902,13 @@ class AddAppPageState extends State<AddAppPage> {
             color: Theme.of(context)
                 .colorScheme
                 .primaryContainer
-                .withValues(alpha: 0.3),
+                .withOpacity(AppOpacity.medium),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Theme.of(context)
                   .colorScheme
                   .primary
-                  .withValues(alpha: 0.2),
+                  .withOpacity(AppOpacity.low),
             ),
           ),
           child: Row(

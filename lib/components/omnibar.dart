@@ -22,6 +22,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 /// Directly runs the GitHub mass-source import flow from any context,
 /// without needing to navigate to ImportExportPage first.
@@ -182,14 +183,14 @@ class _OmnibarState extends State<Omnibar> {
         duration: const Duration(milliseconds: 200),
         curve: Easing.standard,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _isValidUrl
-                ? colorScheme.primary.withValues(alpha: 0.5)
+                ? colorScheme.primary.withOpacity(AppOpacity.half)
                 : _urlError != null
-                    ? colorScheme.error.withValues(alpha: 0.5)
-                    : colorScheme.outline.withValues(alpha: 0.3),
+                    ? colorScheme.error.withOpacity(AppOpacity.half)
+                    : colorScheme.outline.withOpacity(AppOpacity.medium),
             width: 1.5,
           ),
         ),
@@ -229,7 +230,7 @@ class _OmnibarState extends State<Omnibar> {
                       ? (_isValidUrl ? tr('validUrlEnterToAdd') : tr('invalidUrl'))
                       : tr('searchOrEnterUrl'),
                   hintStyle: TextStyle(
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -323,19 +324,19 @@ class AppActionsFAB extends StatelessWidget {
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
                 color: enableGlass
-                    ? colorScheme.onSurface.withValues(alpha: 0.18)
-                    : colorScheme.outline.withValues(alpha: 0.12),
+                    ? colorScheme.onSurface.withOpacity(0.18)
+                    : colorScheme.outline.withOpacity(AppOpacity.hint),
               ),
               left: BorderSide(
-                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
               ),
               right: BorderSide(
-                color: colorScheme.onSurface.withValues(alpha: enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
               ),
             ),
           ),
@@ -368,7 +369,7 @@ class AppActionsFAB extends StatelessWidget {
                           title: tr('search'),
                           subtitle: tr('searchOrEnterUrl'),
                           iconColor: colorScheme.tertiary,
-                          containerColor: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
+                          containerColor: colorScheme.tertiaryContainer.withOpacity(AppOpacity.half),
                           onTap: () {
                             Navigator.pop(context);
                             CommandCenter.show(context);
@@ -502,7 +503,7 @@ class AppActionsFAB extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: containerColor ?? colorScheme.primaryContainer.withValues(alpha: 0.5),
+          color: containerColor ?? colorScheme.primaryContainer.withOpacity(AppOpacity.half),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: iconColor ?? colorScheme.primary),

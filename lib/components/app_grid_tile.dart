@@ -120,7 +120,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
               shadowColor: Colors.transparent,
               surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
               color: widget.isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4)
+                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
                   : null,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(cardBorderRadius),
@@ -238,7 +238,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                         children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

@@ -184,6 +184,44 @@ class FDroid extends AppSource {
     }
   }
 
+  Future<({Map<String, List<String>> apps, bool hasMore})> browseCategory(
+    String category, {
+    int page = 1,
+  }) async {
+    final pageSegment = page > 1 ? '$page/' : '';
+    final res = await sourceRequest(
+      'https://f-droid.org/en/categories/$category/${pageSegment}',
+      {},
+    );
+    if (res.statusCode == 200) {
+      final doc = parse(res.body);
+      final Map<String, List<String>> apps = {};
+      for (final e in doc.querySelectorAll('.package-header')) {
+        String? href = e.attributes['href'];
+        if (href == null) continue;
+        if (!href.startsWith('http')) href = 'https://f-droid.org$href';
+        String? url;
+        try {
+          url = standardizeUrl(href);
+        } catch (_) {
+          continue;
+        }
+        apps[url] = [
+          e.querySelector('.package-name')?.text.trim() ?? '',
+          e.querySelector('.package-summary')?.text.trim() ??
+              tr('noDescription'),
+        ];
+      }
+      final nextPage = page + 1;
+      final hasMore = doc.querySelectorAll('a.label').any(
+        (e) => (e.attributes['href'] ?? '').contains('/$nextPage/'),
+      );
+      return (apps: apps, hasMore: hasMore);
+    } else {
+      throw SourceUtils.getObtainiumHttpError(res);
+    }
+  }
+
   APKDetails getAPKUrlsFromFDroidPackagesAPIResponse(
     Response res,
     String apkUrlPrefix,
