@@ -12,6 +12,7 @@ import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class MicroGHubPage extends StatefulWidget {
   const MicroGHubPage({super.key});
@@ -204,7 +205,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget _buildInfoCard(ColorScheme cs) {
     return Card(
       elevation: 0,
-      color: cs.secondaryContainer.withValues(alpha: 0.3),
+      color: cs.secondaryContainer.withOpacity(AppOpacity.medium),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: cs.secondaryContainer),
@@ -236,29 +237,41 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: cs.surfaceVariant.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: cs.outlineVariant),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedProvider,
-              isExpanded: true,
-              items: _providers.keys.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+        ..._providers.keys.map((String value) {
+          final isSelected = _selectedProvider == value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: isSelected 
+                  ? cs.primaryContainer.withOpacity(AppOpacity.low)
+                  : cs.surfaceVariant.withOpacity(AppOpacity.medium),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? cs.primary : cs.outlineVariant,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: RadioListTile<String>(
+              title: Text(
+                value,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+                ),
+              ),
+              value: value,
+              groupValue: _selectedProvider,
               onChanged: (val) {
                 if (val != null) setState(() => _selectedProvider = val);
               },
+              controlAffinity: ListTileControlAffinity.trailing,
+              activeColor: cs.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ),
-        ),
+          );
+        }).toList(),
       ],
     );
   }

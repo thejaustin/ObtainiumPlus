@@ -121,7 +121,7 @@ class CategorySections extends StatelessWidget {
               end: const Alignment(-0.97, 0),
               colors: [
                 categoryColor ?? Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.surface.withValues(alpha: 0.0),
+                Theme.of(context).colorScheme.surface.withOpacity(0.0),
               ],
               stops: const [0.99, 1],
             ),
@@ -177,7 +177,7 @@ class CategorySections extends StatelessWidget {
     final String? categoryName = listedCategories[index];
     final categoryColorInt = categoryName != null ? settingsProvider.categories[categoryName] : null;
     final categoryColor = categoryColorInt != null ? getCachedCategoryColor(categoryColorInt) : null;
-    final transparent = Theme.of(context).colorScheme.surface.withValues(alpha: 0.0).value;
+    final transparent = Theme.of(context).colorScheme.surface.withOpacity(0.0).value;
 
     final appsInCategory = listedApps
         .where((e) =>

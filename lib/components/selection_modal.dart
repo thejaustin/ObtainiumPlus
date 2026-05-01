@@ -130,12 +130,12 @@ class _SelectionModalState extends State<SelectionModal> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withValues(alpha: 0.18)
-                : colorScheme.outline.withValues(alpha: 0.1),
+                ? colorScheme.onSurface.withOpacity(0.18)
+                : colorScheme.outline.withOpacity(AppOpacity.subtle),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -172,8 +172,8 @@ class _SelectionModalState extends State<SelectionModal> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
-            Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: enableGlass ? 0.15 : 0.25),
+            Theme.of(context).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+            Theme.of(context).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -185,7 +185,7 @@ class _SelectionModalState extends State<SelectionModal> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -214,7 +214,7 @@ class _SelectionModalState extends State<SelectionModal> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
             borderRadius: BorderRadius.circular(12),
           ),
           child: GeneratedForm(
@@ -345,7 +345,7 @@ class _SelectionModalState extends State<SelectionModal> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -398,7 +398,7 @@ class _SelectionModalState extends State<SelectionModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(

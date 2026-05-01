@@ -14,6 +14,7 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 /// Context menu sheet shown on long-press of an app in grid or list view.
 void showAppShortcutsMenu(
@@ -38,13 +39,13 @@ void showAppShortcutsMenu(
     builder: (ctx) {
       final sheet = Container(
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: enableGlass
               ? Border(
-                  top: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.18)),
-                  left: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.12)),
-                  right: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.12)),
+                  top: BorderSide(color: colorScheme.onSurface.withOpacity(0.18)),
+                  left: BorderSide(color: colorScheme.onSurface.withOpacity(AppOpacity.hint)),
+                  right: BorderSide(color: colorScheme.onSurface.withOpacity(AppOpacity.hint)),
                 )
               : null,
         ),

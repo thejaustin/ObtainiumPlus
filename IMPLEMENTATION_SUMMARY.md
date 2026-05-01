@@ -198,6 +198,7 @@ This document summarizes all features implemented to enhance Obtainium+.
 14. **Repair Mode** - Built-in recovery tools for crash loops
 
 ### Code Quality Improvements:
+- ✅ **Transparency Migration**: Replaced all deprecated `.withValues(alpha: ...)` and `.withAlpha(...)` with `.withOpacity(...)` (lib-wide).
 - ✅ Null safety throughout
 - ✅ Error handling utilities
 - ✅ Crash analytics integration
@@ -207,6 +208,7 @@ This document summarizes all features implemented to enhance Obtainium+.
 - ✅ Accessibility (Semantics widgets integrated throughout)
 
 ### UX Enhancements:
+- ✅ **MicroG Hub**: Refactored to use Radio Toggles for provider selection.
 - ✅ Unified search/URL input (omnibar)
 - ✅ FAB for quick actions
 - ✅ Enhanced import from device
@@ -226,7 +228,7 @@ This document summarizes all features implemented to enhance Obtainium+.
 
 ---
 
-*Last Updated: April 27, 2026*
+*Last Updated: May 1, 2026*
 *Total Features: 14*
 *Completion: 100%*
 *Status: Ready for Release*

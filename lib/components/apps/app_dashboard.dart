@@ -7,6 +7,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
+import 'package:obtainium/utils/app_constants.dart';
 
 class AppDashboard extends StatefulWidget {
   final String currentFilterMode;
@@ -209,9 +210,7 @@ class _AppDashboardState extends State<AppDashboard>
                   selectedForegroundColor: colorScheme.onSecondaryContainer,
                   selectedBackgroundColor: colorScheme.secondaryContainer,
                   side: BorderSide(
-                    color: colorScheme.outline.withValues(
-                        alpha:
-                            settings.plusEnableGlassmorphism ? 0.3 : 0.15),
+                    color: colorScheme.outline.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.15),
                   ),
                 ),
               ),
@@ -295,11 +294,10 @@ class _AppDashboardState extends State<AppDashboard>
       width: 130,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+        color: color.withOpacity(isDark ? 0.15 : 0.08),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: color.withValues(
-              alpha: settings.plusEnableGlassmorphism ? 0.3 : 0.1),
+          color: color.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.1),
           width: 1,
         ),
       ),
@@ -354,7 +352,7 @@ class _AppDashboardState extends State<AppDashboard>
             color: Theme.of(context)
                 .colorScheme
                 .error
-                .withValues(alpha: 0.3),
+                .withOpacity(AppOpacity.medium),
             width: 1.5,
           ),
         ),
@@ -373,7 +371,7 @@ class _AppDashboardState extends State<AppDashboard>
                   color: Theme.of(context)
                       .colorScheme
                       .primary
-                      .withValues(alpha: 0.5),
+                      .withOpacity(AppOpacity.half),
                 ),
               ),
             Positioned(

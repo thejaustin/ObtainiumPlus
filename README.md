@@ -488,6 +488,36 @@ This is a fork of [Obtainium](https://github.com/ImranR98/Obtainium) by ImranR98
 
 ---
 
+## 🙏 Acknowledgments
+
+Obtainium+ builds on top of several open-source projects. Full credit to the authors of each:
+
+### Upstream Fork
+| Project | Author | Description |
+|---------|--------|-------------|
+| [Obtainium](https://github.com/ImranR98/Obtainium) | ImranR98 | The original app this project is forked from |
+
+### Integrated Libraries (Git Dependencies)
+These packages are pinned directly from their source repositories:
+
+| Package | Author / Repo | Purpose |
+|---------|---------------|---------|
+| [android_package_installer](https://github.com/ImranR98/android_package_installer) | ImranR98 | APK installation via Android PackageInstaller API |
+| [android_package_manager](https://github.com/ImranR98/android_package_manager) | ImranR98 | Android package management bindings |
+| [shared_storage](https://github.com/AlexBacich/shared-storage) | AlexBacich (fork of lakscastro) | Android Scoped Storage / SAF access |
+| [android_system_font](https://github.com/re7gog/android_system_font) | re7gog | Read the system font family set in Android settings |
+| [shizuku_apk_installer](https://github.com/wilver06w/shizuku_apk_installer) | wilver06w | Silent APK installation via the Shizuku API |
+
+### Inspiration
+| Project | Author | What we took |
+|---------|--------|-------------|
+| [Discoverium](https://github.com/cygnusx-1-org/Discoverium) | cygnusx-1-org | Inspiration for the app discovery / search feature and curated app catalog concept |
+
+### Notable pub.dev Packages
+`provider` · `go_router` · `flutter_local_notifications` · `background_fetch` · `cached_network_image` · `sentry_flutter` · `talker_flutter` · `flutter_secure_storage` · `easy_localization` · `dynamic_color` · `animations` · `sqflite`
+
+---
+
 ## 📄 License
 
 Same as original Obtainium - see [LICENSE.md](LICENSE.md)

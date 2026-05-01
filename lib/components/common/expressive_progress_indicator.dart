@@ -33,10 +33,13 @@ class ExpressiveProgressIndicator extends StatelessWidget {
       );
     }
 
+    // M3E spec: WaveHeight = ActiveThickness(4dp) + 2×ActiveWaveAmplitude(3dp) = 10dp
+    // Extra canvas = 2 × amplitude = 6dp so the wave never clips
     return SizedBox(
-      height: height + 4, // Extra space for amplitude
+      height: height + 6,
       child: SquigglyProgressIndicator(
         value: value,
+        trackHeight: height,
         color: color ?? Theme.of(context).colorScheme.primary,
         backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
@@ -85,12 +88,14 @@ class SquigglyProgressIndicator extends StatefulWidget {
   final double? value;
   final Color? color;
   final Color backgroundColor;
+  final double trackHeight;
 
   const SquigglyProgressIndicator({
     super.key,
     this.value,
     this.color,
     required this.backgroundColor,
+    this.trackHeight = 4.0,
   });
 
   @override
@@ -104,9 +109,10 @@ class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator>
   @override
   void initState() {
     super.initState();
+    // M3E spec: waveSpeed = wavelength/s → one full wave cycle per second
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1000),
     )..repeat();
   }
 
@@ -127,6 +133,7 @@ class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator>
             animationValue: _controller.value,
             color: widget.color ?? Theme.of(context).colorScheme.primary,
             backgroundColor: widget.backgroundColor,
+            trackHeight: widget.trackHeight,
           ),
           child: const SizedBox.expand(),
         );
@@ -140,80 +147,75 @@ class _SquigglyPainter extends CustomPainter {
   final double animationValue;
   final Color color;
   final Color backgroundColor;
+  final double trackHeight;
 
   _SquigglyPainter({
     required this.progress,
     required this.animationValue,
     required this.color,
     required this.backgroundColor,
+    required this.trackHeight,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = backgroundColor
-      ..strokeWidth = size.height / 2
-      ..strokeCap = StrokeCap.round;
-
+    // M3E tokens: ActiveWaveAmplitude=3dp, ActiveWaveWavelength=40dp,
+    // IndeterminateActiveWaveWavelength=20dp, WaveHeight=10dp, ActiveThickness=4dp
+    const double amplitude = 3.0;
+    final double strokeWidth = trackHeight;
     final centerY = size.height / 2;
 
-    // Draw background track
-    canvas.drawLine(
-      Offset(0, centerY),
-      Offset(size.width, centerY),
-      paint,
-    );
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(Offset(0, centerY), Offset(size.width, centerY), bgPaint);
 
     final activePaint = Paint()
       ..color = color
-      ..strokeWidth = size.height / 2
+      ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    // M3 Expressive Specs:
-    const double amplitude = 3.0;
-    const double wavelength = 40.0; // Fixed wavelength in pixels
-    final double frequency = (2 * math.pi) / wavelength;
-    
+
     if (progress != null) {
-      // Determinate state
+      // Determinate: wavelength=40dp, ramp amplitude in/out at 0-10% and 90-100%
       if (progress! <= 0.0) return;
       final double activeWidth = progress! * size.width;
-      
+      const double frequency = (2 * math.pi) / 40.0;
+
       path.moveTo(0, centerY);
-      for (double x = 0; x <= activeWidth; x += 2.0) {
-        // Wave shifts based on animationValue
-        final double y = centerY + 
-            math.sin((x * frequency) - (animationValue * math.pi * 2)) * amplitude;
+      for (double x = 0; x <= activeWidth; x += 1.0) {
+        final double progressAtX = x / size.width;
+        final double ramp = progressAtX < 0.1
+            ? progressAtX / 0.1
+            : progressAtX > 0.95
+                ? (1.0 - progressAtX) / 0.05
+                : 1.0;
+        final double y = centerY +
+            math.sin((x * frequency) - (animationValue * math.pi * 2)) *
+                amplitude *
+                ramp;
         path.lineTo(x, y);
       }
       canvas.drawPath(path, activePaint);
 
-      // End stop indicator (M3 Spec)
+      // M3E stop indicator at progress end
       final stopPaint = Paint()
         ..color = color
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(activeWidth, centerY), size.height / 2.5, stopPaint);
+      canvas.drawCircle(Offset(activeWidth, centerY), strokeWidth / 2, stopPaint);
 
     } else {
-      // Indeterminate state - moving wavy segment
-      final double segmentWidth = size.width * 0.4;
-      final double startX = (animationValue * (size.width + segmentWidth)) - segmentWidth;
-      final double endX = startX + segmentWidth;
-      
-      bool first = true;
-      for (double x = startX; x <= endX; x += 2.0) {
-        if (x < -amplitude || x > size.width + amplitude) continue;
-        final double clampedX = x.clamp(0.0, size.width);
-        final double y = centerY + 
-            math.sin((x * frequency) - (animationValue * math.pi * 4)) * amplitude;
-        if (first) {
-          path.moveTo(clampedX, y);
-          first = false;
-        } else {
-          path.lineTo(clampedX, y);
-        }
+      // Indeterminate: wavelength=20dp (more energetic), full-width traveling wave
+      const double frequency = (2 * math.pi) / 20.0;
+      path.moveTo(0, centerY);
+      for (double x = 0; x <= size.width; x += 1.0) {
+        final double y = centerY +
+            math.sin((x * frequency) - (animationValue * math.pi * 2)) * amplitude;
+        path.lineTo(x, y);
       }
       canvas.drawPath(path, activePaint);
     }
@@ -224,7 +226,8 @@ class _SquigglyPainter extends CustomPainter {
       oldDelegate.progress != progress ||
       oldDelegate.animationValue != animationValue ||
       oldDelegate.color != color ||
-      oldDelegate.backgroundColor != backgroundColor;
+      oldDelegate.backgroundColor != backgroundColor ||
+      oldDelegate.trackHeight != trackHeight;
 }
 
 class WavyCircularProgressIndicator extends StatefulWidget {

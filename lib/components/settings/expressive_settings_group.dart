@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class ExpressiveSettingsGroup extends StatelessWidget {
   final String? title;
@@ -44,7 +45,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                 height: 1,
                 indent: 56,
                 endIndent: 16,
-                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
+                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.low),
               ),
           ],
         );
@@ -92,12 +93,11 @@ class ExpressiveSettingsGroup extends StatelessWidget {
           color: (isDark 
               ? Theme.of(context).colorScheme.surfaceContainerLow 
               : Theme.of(context).colorScheme.surface)
-            .withValues(alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+            .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2
-              ),
+              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2),
               width: 1,
             ),
           ),

@@ -29,6 +29,7 @@ class ThemeBuilder {
       chipTheme: _buildChipTheme(colorScheme),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(colorScheme),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
       iconTheme: IconThemeData(
         color: colorScheme.onSurface,
         opacity: 1.0,
@@ -54,14 +55,14 @@ class ThemeBuilder {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          color: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.half),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          color: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.half),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
@@ -211,7 +212,7 @@ class ThemeBuilder {
       activeTrackColor: colorScheme.primary,
       inactiveTrackColor: colorScheme.surfaceContainerHighest,
       thumbColor: colorScheme.primary,
-      overlayColor: colorScheme.primary.withValues(alpha: 0.12),
+      overlayColor: colorScheme.primary.withOpacity(AppOpacity.hint),
       valueIndicatorColor: colorScheme.primaryContainer,
       valueIndicatorTextStyle: TextStyle(
         color: colorScheme.onPrimaryContainer,
@@ -248,7 +249,7 @@ class ThemeBuilder {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      dragHandleColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+      dragHandleColor: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.moderate),
       dragHandleSize: const Size(32, 4),
       showDragHandle: true,
     );
@@ -257,11 +258,10 @@ class ThemeBuilder {
   /// Builds NavigationBarThemeData with proper M3 icon/label theming
   static NavigationBarThemeData _buildNavigationBarTheme(ColorScheme colorScheme) {
     return NavigationBarThemeData(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: colorScheme.surfaceContainer,
+      elevation: 3,
       indicatorColor: colorScheme.secondaryContainer,
-      indicatorShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      indicatorShape: const StadiumBorder(),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return IconThemeData(color: colorScheme.onSecondaryContainer);
@@ -323,13 +323,13 @@ class ThemeBuilder {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.secondaryContainer,
-      disabledColor: colorScheme.onSurface.withValues(alpha: 0.12),
+      disabledColor: colorScheme.onSurface.withOpacity(AppOpacity.hint),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
       secondaryLabelStyle: TextStyle(color: colorScheme.onSecondaryContainer),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
-      side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.5)),
+      side: BorderSide(color: colorScheme.outline.withOpacity(AppOpacity.half)),
     );
   }
 

@@ -15,6 +15,7 @@ import 'package:obtainium/main.dart';
 
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 class OnboardingPage extends StatefulWidget {
   final VoidCallback onDone;
@@ -237,7 +238,7 @@ class _OnboardingPageState extends State<OnboardingPage> with WidgetsBindingObse
         label: Text(label),
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
-          side: isGranted ? BorderSide(color: Colors.green.withValues(alpha: 0.5)) : null,
+          side: isGranted ? BorderSide(color: Colors.green.withOpacity(AppOpacity.half)) : null,
         ),
       ),
     );

@@ -602,7 +602,7 @@ class AppsPageState extends State<AppsPage> {
           Icon(
             Icons.apps_rounded,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
           ),
           const SizedBox(height: 16),
           Text(
@@ -642,7 +642,7 @@ class AppsPageState extends State<AppsPage> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                   child: Container(
-                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
+                    color: Theme.of(context).colorScheme.surface.withOpacity(0.72),
                   ),
                 ),
               )
@@ -706,7 +706,7 @@ class AppsPageState extends State<AppsPage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                 child: Container(
-                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.72),
                 ),
               ),
             )
@@ -923,12 +923,12 @@ class AppsPageState extends State<AppsPage> {
 
     final pill = Container(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh.withValues(alpha: enableGlass ? 0.72 : 0.96),
+        color: colorScheme.surfaceContainerHigh.withOpacity(enableGlass ? 0.72 : 0.96),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: enableGlass
-              ? colorScheme.onSurface.withValues(alpha: 0.15)
-              : colorScheme.outline.withValues(alpha: 0.2),
+              ? colorScheme.onSurface.withOpacity(0.15)
+              : colorScheme.outline.withOpacity(AppOpacity.low),
         ),
         boxShadow: AppShadows.smooth(
           color: Colors.black,
@@ -969,7 +969,7 @@ class AppsPageState extends State<AppsPage> {
                 Container(
                   width: 1,
                   height: 24,
-                  color: colorScheme.onSurface.withValues(alpha: 0.15),
+                  color: colorScheme.onSurface.withOpacity(0.15),
                 ),
               // Filter/Sort with active badge
               Tooltip(

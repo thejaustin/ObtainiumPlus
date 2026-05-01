@@ -40,12 +40,12 @@ class CriticalIssueDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 450),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withValues(alpha: 0.18)
-                : colorScheme.outline.withValues(alpha: 0.1),
+                ? colorScheme.onSurface.withOpacity(0.18)
+                : colorScheme.outline.withOpacity(AppOpacity.subtle),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -83,8 +83,8 @@ class CriticalIssueDialog extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            accentColor.withValues(alpha: enableGlass ? 0.2 : 0.15),
-            accentColor.withValues(alpha: enableGlass ? 0.1 : 0.05),
+            accentColor.withOpacity(enableGlass ? 0.2 : 0.15),
+            accentColor.withOpacity(enableGlass ? 0.1 : 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -96,7 +96,7 @@ class CriticalIssueDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.2),
+              color: accentColor.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
@@ -149,7 +149,7 @@ class CriticalIssueDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Column(
@@ -219,10 +219,10 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withOpacity(AppOpacity.medium),
           width: 1,
         ),
       ),

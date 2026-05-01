@@ -11,6 +11,7 @@ import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 /// Theme & Colors settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -108,9 +109,9 @@ class ThemeSettingsSection extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
+                    color: Theme.of(context).colorScheme.errorContainer.withOpacity(AppOpacity.medium),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.2)),
+                    border: Border.all(color: Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low)),
                   ),
                   child: Row(
                     children: [

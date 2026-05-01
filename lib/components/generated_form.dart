@@ -8,6 +8,7 @@ import 'package:hsluv/hsluv.dart';
 
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 abstract class GeneratedFormItem {
   late String key;
@@ -558,7 +559,7 @@ class _FormSwitchFieldState extends State<_FormSwitchField> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withValues(alpha: 0.65),
+                                    .withOpacity(AppOpacity.muted),
                               ),
                               child: w,
                             ),
@@ -904,7 +905,7 @@ class _FormTagInputFieldState extends State<_FormTagInputField> {
                           e2.key,
                           style: const TextStyle(fontSize: 12),
                         ),
-                        backgroundColor: Color(e2.value.key).withValues(alpha: 50 / 255),
+                        backgroundColor: Color(e2.value.key).withOpacity(50 / 255),
                         selectedColor: Color(e2.value.key),
                         visualDensity: VisualDensity.compact,
                         selected: e2.value.value,

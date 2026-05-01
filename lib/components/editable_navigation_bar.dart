@@ -112,14 +112,15 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
                   decoration: BoxDecoration(
-                    color: colorScheme.surface.withValues(alpha: 0.75),
+                    color: colorScheme.surfaceContainer.withOpacity(0.75),
                     border: Border(
                       top: BorderSide(
                         color: widget.isEditMode
-                            ? colorScheme.primary.withValues(alpha: 0.4)
-                            : colorScheme.outlineVariant.withValues(alpha: 0.35),
+                            ? colorScheme.primary.withOpacity(AppOpacity.moderate)
+                            : colorScheme.outlineVariant.withOpacity(0.35),
                         width: widget.isEditMode ? 2 : 1,
                       ),
                     ),
@@ -129,22 +130,18 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               ),
             )
           : AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
-                color: colorScheme.surface,
-                boxShadow: AppShadows.smooth(
-                  color: colorScheme.shadow,
-                  opacity: 0.08,
-                  blurFactor: 0.8,
+                color: colorScheme.surfaceContainer,
+                border: Border(
+                  top: BorderSide(
+                    color: widget.isEditMode
+                        ? colorScheme.primary.withOpacity(AppOpacity.moderate)
+                        : colorScheme.outlineVariant.withOpacity(0.35),
+                    width: widget.isEditMode ? 2 : 1,
+                  ),
                 ),
-                border: widget.isEditMode
-                    ? Border(
-                        top: BorderSide(
-                          color: colorScheme.primary.withValues(alpha: 0.4),
-                          width: 2,
-                        ),
-                      )
-                    : null,
               ),
               child: navContent,
             ),
@@ -297,20 +294,23 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       label: page.title,
       selected: isSelected,
       button: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.isEditMode
-            ? null
-            : () => widget.onDestinationSelected(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: isDragTarget
-              ? BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                )
-              : null,
-          child: widget.isEditMode
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(100),
+          onTap: widget.isEditMode
+              ? null
+              : () => widget.onDestinationSelected(index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            decoration: isDragTarget
+                ? BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(16),
+                  )
+                : null,
+            child: widget.isEditMode
               ? AnimatedBuilder(
                   animation: _wiggleController,
                   builder: (context, child) {
@@ -341,6 +341,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                   showRemoveBadge: false,
                   index: index,
                 ),
+          ),
         ),
       ),
     );
@@ -369,39 +370,59 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? colorScheme.secondaryContainer
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(100),
                 ),
-                child: Icon(
-                  isSelected ? page.selectedIcon : page.icon,
-                  color: isSelected
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.onSurfaceVariant,
-                  size: 24,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: Tween<double>(begin: 0.75, end: 1.0)
+                        .animate(animation),
+                    child: child,
+                  ),
+                  child: Icon(
+                    isSelected ? page.selectedIcon : page.icon,
+                    key: ValueKey('${page.id}_$isSelected'),
+                    color: isSelected
+                        ? colorScheme.onSecondaryContainer
+                        : colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
                 ),
               ),
-              if (showLabels) ...[
-                const SizedBox(height: 4),
-                Text(
-                  page.title,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: isSelected
-                            ? colorScheme.onSurface
-                            : colorScheme.onSurfaceVariant,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.fade,
-                ),
-              ],
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                child: showLabels
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          page.title,
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: isSelected
+                                        ? colorScheme.onSurface
+                                        : colorScheme.onSurfaceVariant,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
           if (showRemoveBadge && widget.activePages.length > 2)
