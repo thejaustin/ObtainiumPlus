@@ -101,7 +101,9 @@ class ViewSettingsProvider with ChangeNotifier {
           .getAppValues(deepCopy: false)
           .map((a) {
             var n1 = a.app.categories.length;
-            a.app.categories.removeWhere((c) => !cats.keys.contains(c));
+            // categories may be const/unmodifiable; copy before mutating
+            a.app.categories = List<String>.from(a.app.categories)
+              ..removeWhere((c) => !cats.keys.contains(c));
             return n1 > a.app.categories.length ? a.app : null;
           })
           .where((element) => element != null)
