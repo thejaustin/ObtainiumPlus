@@ -15,6 +15,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_archive/flutter_archive.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class AppFileService {
   AppFileService._();
@@ -70,15 +71,25 @@ class AppFileService {
 
     var cacheDirs = await getExternalCacheDirectories();
     if (cacheDirs?.isNotEmpty ?? false) {
-      APKDir = cacheDirs!.first;
+      Sentry.addBreadcrumb(Breadcrumb(message: 'initAppDirectories: using external cache path ${cacheDirs!.first.path}'));
+      APKDir = cacheDirs.first;
       iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
       if (!iconsCacheDir.existsSync()) {
         iconsCacheDir.createSync(recursive: true);
       }
     } else {
+      Sentry.addBreadcrumb(Breadcrumb(message: 'initAppDirectories: external cache unavailable, falling back to app storage'));
       APKDir = Directory('${(await getAppStorageDir()).path}/apks');
       if (!APKDir.existsSync()) {
-        APKDir.createSync(recursive: true);
+        try {
+          APKDir.createSync(recursive: true);
+        } on FileSystemException catch (e, st) {
+          Sentry.captureException(e, stackTrace: st, withScope: (scope) {
+            scope.setTag('storage_path', APKDir.path);
+            scope.setTag('error_code', e.osError?.errorCode.toString() ?? 'unknown');
+          });
+          rethrow;
+        }
       }
       iconsCacheDir = Directory('${(await getAppStorageDir()).path}/icons');
       if (!iconsCacheDir.existsSync()) {
