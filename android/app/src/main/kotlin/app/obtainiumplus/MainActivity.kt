@@ -89,6 +89,15 @@ class MainActivity : FlutterActivity() {
                 "isRooted" -> {
                     result.success(isRooted())
                 }
+                "isMicroGAvailable" -> {
+                    val available = try {
+                        packageManager.getPackageInfo("com.google.android.gms", 0)
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
+                    result.success(available)
+                }
                 else -> result.notImplemented()
             }
         }

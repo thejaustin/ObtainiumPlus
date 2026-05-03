@@ -1,3 +1,8 @@
+### (pending) - fix: prevent Google login dialog from appearing on first launch
+- **Date**: 2026-05-03
+- **Author**: Gemini CLI
+- **Details**: Fixed an issue where the Google login dialog would pop up automatically during the onboarding sequence. The `isMicroGAvailable` check in `AuthService` was previously using the `pickGoogleAccount` intent, which triggered the UI. Replaced this with a new native platform channel method `isMicroGAvailable` that silently checks if the `com.google.android.gms` package is installed.
+
 ### (pending) - fix: resolve Sentry crash issues regarding downloads and platform exceptions
 - **Date**: 2026-03-23
 - **Author**: Gemini CLI
