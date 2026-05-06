@@ -44,9 +44,10 @@ class AppListView extends StatelessWidget {
     final appsProvider = context.read<AppsProvider>();
     final width = MediaQuery.of(context).size.width;
     final horizontalPadding = width > 800 ? (width - 800) / 2 : 0.0;
+    final double verticalPadding = apps.length <= 3 ? 24.0 : 8.0;
 
     return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
@@ -140,25 +141,28 @@ class AppListView extends StatelessWidget {
               }
             },
             child: RepaintBoundary(
-              child: AppListTile(
-                appInMemory: app,
-                isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
-                hasUpdate: hasUpdate,
-                onTap: () {
-                  if (selectedAppIds.isNotEmpty) {
-                    toggleAppSelected(app.app);
-                  } else {
-                    onAppTap(app.app);
-                  }
-                },
-                onLongPress: () {
-                  if (selectedAppIds.isEmpty) {
-                    _showAppShortcuts();
-                  } else {
-                    toggleAppSelected(app.app);
-                  }
-                },
-                onShowChanges: getChangeLogFn(context, app.app),
+              child: Transform.scale(
+                scale: apps.length <= 2 ? 1.02 : 1.0,
+                child: AppListTile(
+                  appInMemory: app,
+                  isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
+                  hasUpdate: hasUpdate,
+                  onTap: () {
+                    if (selectedAppIds.isNotEmpty) {
+                      toggleAppSelected(app.app);
+                    } else {
+                      onAppTap(app.app);
+                    }
+                  },
+                  onLongPress: () {
+                    if (selectedAppIds.isEmpty) {
+                      _showAppShortcuts();
+                    } else {
+                      toggleAppSelected(app.app);
+                    }
+                  },
+                  onShowChanges: getChangeLogFn(context, app.app),
+                ),
               ),
             ),
           );
