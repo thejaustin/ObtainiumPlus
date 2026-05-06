@@ -78,6 +78,21 @@ class AppConstants {
 
   /// Vertical padding for input fields
   static const double inputVerticalPadding = 16.0;
+
+  // Package IDs for thejaustin's "Plus" apps
+  /// ObtainiumPlus Package ID
+  static const String obtainiumPlusId = 'app.obtainiumplus';
+  /// ShizukuPlus Package ID
+  static const String shizukuPlusId = 'af.shizuku.plus.api';
+  /// AppManager (thejaustin fork) Package ID
+  static const String appManagerId = 'io.github.muntashirakon.AppManager';
+
+  /// List of all thejaustin's apps that require special version reconciliation
+  static const Set<String> plusAppIds = {
+    obtainiumPlusId,
+    shizukuPlusId,
+    appManagerId,
+  };
 }
 
 /// Centralised opacity values used across the app.

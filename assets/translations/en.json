@@ -1020,5 +1020,9 @@
   "plusEnableAutoUpdateRules": "Auto-Update Rules",
   "plusEnableAutoUpdateRulesDescription": "Configure per-category and per-tag background update behavior",
   "plusEnableNotificationEnhancements": "Advanced Notifications",
-  "plusEnableNotificationEnhancementsDescription": "Enable Digest Mode and Quiet Hours for notifications"
+  "plusEnableNotificationEnhancementsDescription": "Enable Digest Mode and Quiet Hours for notifications",
+  "aggressiveVersionReconciliation": "Aggressive version reconciliation",
+  "aggressiveVersionReconciliationTooltip": "Force the installed version to match the OS reported version regardless of formatting. Useful for apps with inconsistent version strings.",
+  "persistentVersionTracking": "Persistent version tracking",
+  "persistentVersionTrackingTooltip": "Always save the latest version to the database before installation. Helps apps that self-update or are killed during the update process."
 }

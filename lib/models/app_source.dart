@@ -234,6 +234,20 @@ abstract class AppSource {
         label: tr('refreshBeforeDownload'),
       ),
     ],
+    [
+      GeneratedFormSwitch(
+        'aggressiveVersionReconciliation',
+        label: tr('aggressiveVersionReconciliation'),
+        tooltip: tr('aggressiveVersionReconciliationTooltip'),
+      ),
+    ],
+    [
+      GeneratedFormSwitch(
+        'persistentVersionTracking',
+        label: tr('persistentVersionTracking'),
+        tooltip: tr('persistentVersionTrackingTooltip'),
+      ),
+    ],
   ];
 
   // Previous 2 variables combined into one at runtime for convenient usage + additional processing

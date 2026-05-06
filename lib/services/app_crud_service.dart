@@ -16,6 +16,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/version_utils.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/app_utils.dart';
 
 // Data class to store removed apps for undo functionality
@@ -278,6 +279,16 @@ class AppCRUDService {
         app.additionalSettings['useVersionCodeAsOSVersion'] == true
         ? installedInfo?.versionCode.toString()
         : installedInfo?.versionName;
+    
+    // For ObtainiumPlus and other "Plus" apps, we want to be more aggressive about reconciliation
+    // to ensure these apps don't show a stale version after an update.
+    bool aggressiveRec = AppConstants.plusAppIds.contains(app.id) || 
+        app.additionalSettings['aggressiveVersionReconciliation'] == true;
+    if (aggressiveRec && realInstalledVersion != null && realInstalledVersion != app.installedVersion) {
+      app.installedVersion = realInstalledVersion;
+      modded = true;
+    }
+
     if (installedInfo == null && app.installedVersion != null && !trackOnly) {
       app.installedVersion = null;
       modded = true;
