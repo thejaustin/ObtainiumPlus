@@ -96,8 +96,7 @@ Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>> sourceRequest
 
 class SourceUtils {
   static Future<Response> httpRequest(
-    String url,
-    {
+    String url, {
     String method = 'GET',
     Map<String, String>? headers,
     Object? body,
@@ -105,47 +104,87 @@ class SourceUtils {
     bool followRedirects = true,
     int maxRedirects = 5,
     bool allowInsecure = false,
+    int maxRetries = 3,
   }) async {
-    var httpClient = createHttpClient(allowInsecure: allowInsecure);
-    var currentUrl = url;
-    for (var i = 0; i <= maxRedirects; i++) {
-      var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
-      request.followRedirects = false;
-      if (headers != null) {
-        headers.forEach((key, value) {
-          request.headers.set(key, value);
-        });
-      }
-      if (body != null) {
-        request.write(body);
-      }
-      var response = await request.close();
-      if (followRedirects &&
-          (
-              response.statusCode == 301 ||
-              response.statusCode == 302 ||
-              response.statusCode == 303 ||
-              response.statusCode == 307 ||
-              response.statusCode == 308)) {
-        var location = response.headers.value('location');
-        if (location != null) {
-          if (location.startsWith('/')) {
-            var uri = Uri.parse(currentUrl);
-            currentUrl = '${uri.scheme}://${uri.host}$location';
-          } else {
-            currentUrl = location;
+    int retryCount = 0;
+    Duration retryDelay = const Duration(seconds: 2);
+    final sp = SettingsProvider();
+    await sp.initializeSettings();
+
+    while (true) {
+      try {
+        var httpClient = createHttpClient(allowInsecure: allowInsecure);
+        var currentUrl = url;
+        Response? finalResponse;
+
+        for (var i = 0; i <= maxRedirects; i++) {
+          var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
+          request.followRedirects = false;
+          if (headers != null) {
+            headers.forEach((key, value) {
+              request.headers.set(key, value);
+            });
           }
+          if (body != null) {
+            request.write(body);
+          }
+          var response = await request.close();
+          if (followRedirects &&
+              (response.statusCode == 301 ||
+                  response.statusCode == 302 ||
+                  response.statusCode == 303 ||
+                  response.statusCode == 307 ||
+                  response.statusCode == 308)) {
+            var location = response.headers.value('location');
+            if (location != null) {
+              if (location.startsWith('/')) {
+                var uri = Uri.parse(currentUrl);
+                currentUrl = '${uri.scheme}://${uri.host}$location';
+              } else {
+                currentUrl = location;
+              }
+              continue;
+            }
+          }
+          finalResponse = await httpClientResponseStreamToFinalResponse(
+            httpClient,
+            method,
+            currentUrl,
+            response,
+          );
+          break;
+        }
+
+        if (finalResponse == null) {
+          throw ObtainiumError('Failed to get response');
+        }
+
+        // Check if we should retry based on status code and user settings
+        if (sp.plusEnableSmartRetries && retryCount < maxRetries &&
+            (finalResponse.statusCode == 429 ||
+                (finalResponse.statusCode >= 500 && finalResponse.statusCode < 600))) {
+          
+          // Exponential backoff
+          talker.warning('HTTP ${finalResponse.statusCode} for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)');
+          await Future.delayed(retryDelay);
+          retryCount++;
+          retryDelay *= 2;
           continue;
         }
+
+        return finalResponse;
+      } catch (e) {
+        if (sp.plusEnableSmartRetries && retryCount < maxRetries && 
+            (e is SocketException || e is HttpException || e is HandshakeException)) {
+          talker.warning('Network error ($e) for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)');
+          await Future.delayed(retryDelay);
+          retryCount++;
+          retryDelay *= 2;
+          continue;
+        }
+        rethrow;
       }
-      return await httpClientResponseStreamToFinalResponse(
-        httpClient,
-        method,
-        currentUrl,
-        response,
-      );
     }
-    throw ObtainiumError('Too many redirects ($maxRedirects)');
   }
 
   static Future<Response> httpClientResponseStreamToFinalResponse(

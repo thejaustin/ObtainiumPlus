@@ -65,7 +65,7 @@ class AppConstants {
 
   // UI Layout Constants
   /// Default border radius for cards and containers
-  static const double defaultBorderRadius = 12.0;
+  static const double defaultBorderRadius = 24.0;
 
   /// Border width for focused input fields
   static const double focusedBorderWidth = 2.5;

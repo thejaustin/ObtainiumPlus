@@ -9,24 +9,26 @@ class ThemeBuilder {
   static ThemeData buildTheme({
     required ColorScheme colorScheme,
     required bool useSystemFont,
+    bool plusEnableMaterialExpressive = true,
+    double? cornerRadius,
   }) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       fontFamily: useSystemFont ? 'SystemFont' : 'Roboto',
-      inputDecorationTheme: _buildInputDecorationTheme(colorScheme),
+      inputDecorationTheme: _buildInputDecorationTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
       dropdownMenuTheme: _buildDropdownMenuTheme(colorScheme),
-      textTheme: _buildTextTheme(useSystemFont, colorScheme),
-      cardTheme: _buildCardTheme(colorScheme),
-      listTileTheme: _buildListTileTheme(colorScheme),
+      textTheme: _buildTextTheme(useSystemFont, colorScheme, plusEnableMaterialExpressive),
+      cardTheme: _buildCardTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
+      listTileTheme: _buildListTileTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
       switchTheme: _buildSwitchTheme(colorScheme),
       sliderTheme: _buildSliderTheme(colorScheme),
-      dialogTheme: _buildDialogTheme(colorScheme),
-      bottomSheetTheme: _buildBottomSheetTheme(colorScheme),
+      dialogTheme: _buildDialogTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
+      bottomSheetTheme: _buildBottomSheetTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
       navigationBarTheme: _buildNavigationBarTheme(colorScheme),
       appBarTheme: _buildAppBarTheme(colorScheme),
       searchBarTheme: _buildSearchBarTheme(colorScheme),
-      chipTheme: _buildChipTheme(colorScheme),
+      chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(colorScheme),
       progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
@@ -39,35 +41,39 @@ class ThemeBuilder {
         color: colorScheme.onPrimary,
         opacity: 1.0,
       ),
-      pageTransitionsTheme: const PageTransitionsTheme(
+      pageTransitionsTheme: PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.android: plusEnableMaterialExpressive 
+              ? const ZoomPageTransitionsBuilder() 
+              : const PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
         },
       ),
     );
   }
 
   /// Builds InputDecorationTheme with enhanced contrast and Material 3 styling
-  static InputDecorationTheme _buildInputDecorationTheme(ColorScheme colorScheme) {
+  static InputDecorationTheme _buildInputDecorationTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
+    final borderRadius = cornerRadius ?? (expressive ? AppConstants.defaultBorderRadius : 12.0);
     return InputDecorationTheme(
       filled: true,
       fillColor: colorScheme.surfaceContainerHigh,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
           color: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.half),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
           color: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.half),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
           color: colorScheme.primary,
           width: AppConstants.focusedBorderWidth,
@@ -89,60 +95,86 @@ class ThemeBuilder {
   }
 
   /// Builds custom text theme with improved readability and spacing
-  static TextTheme _buildTextTheme(bool useSystemFont, ColorScheme colorScheme) {
+  static TextTheme _buildTextTheme(bool useSystemFont, ColorScheme colorScheme, bool expressive) {
     final baseTextTheme = colorScheme.brightness == Brightness.dark
         ? Typography.material2021().white
         : Typography.material2021().black;
     final fontFamily = useSystemFont ? 'SystemFont' : 'Roboto';
 
+    if (!expressive) {
+      return baseTextTheme.copyWith(
+        headlineLarge: baseTextTheme.headlineLarge?.copyWith(fontFamily: fontFamily),
+        headlineMedium: baseTextTheme.headlineMedium?.copyWith(fontFamily: fontFamily),
+        headlineSmall: baseTextTheme.headlineSmall?.copyWith(fontFamily: fontFamily),
+        titleLarge: baseTextTheme.titleLarge?.copyWith(fontFamily: fontFamily),
+        titleMedium: baseTextTheme.titleMedium?.copyWith(fontFamily: fontFamily),
+        titleSmall: baseTextTheme.titleSmall?.copyWith(fontFamily: fontFamily),
+        bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontFamily: fontFamily),
+        bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontFamily: fontFamily),
+        bodySmall: baseTextTheme.bodySmall?.copyWith(fontFamily: fontFamily),
+        labelLarge: baseTextTheme.labelLarge?.copyWith(fontFamily: fontFamily),
+        labelMedium: baseTextTheme.labelMedium?.copyWith(fontFamily: fontFamily),
+        labelSmall: baseTextTheme.labelSmall?.copyWith(fontFamily: fontFamily),
+      );
+    }
+
     return baseTextTheme.copyWith(
       headlineLarge: baseTextTheme.headlineLarge?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.2, // Increased letter spacing for better readability
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.5,
       ),
       headlineMedium: baseTextTheme.headlineMedium?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.15,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.25,
       ),
       headlineSmall: baseTextTheme.headlineSmall?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
       ),
       titleLarge: baseTextTheme.titleLarge?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.15,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.1,
       ),
       titleMedium: baseTextTheme.titleMedium?.copyWith(
         fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
       titleSmall: baseTextTheme.titleSmall?.copyWith(
         fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.15, // Improved letter spacing for body text
+        letterSpacing: 0.25,
       ),
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.15,
+        letterSpacing: 0.25,
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.1,
+        letterSpacing: 0.4,
       ),
       labelLarge: baseTextTheme.labelLarge?.copyWith(
         fontFamily: fontFamily,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
       ),
       labelSmall: baseTextTheme.labelSmall?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
       ),
     );
   }
@@ -158,26 +190,26 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds CardThemeData with M3 tonal elevation
-  static CardThemeData _buildCardTheme(ColorScheme colorScheme) {
+  /// CardThemeData with M3 tonal elevation and configurable radius
+  static CardThemeData _buildCardTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
     return CardThemeData(
       color: colorScheme.surfaceContainerLow,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(cornerRadius ?? (expressive ? 24 : 12)),
       ),
       clipBehavior: Clip.antiAlias,
     );
   }
 
-  /// Builds ListTileThemeData with proper M3 styling
-  static ListTileThemeData _buildListTileTheme(ColorScheme colorScheme) {
+  /// ListTileThemeData with proper M3 styling and configurable radius
+  static ListTileThemeData _buildListTileTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
     return ListTileThemeData(
       iconColor: colorScheme.onSurfaceVariant,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       visualDensity: VisualDensity.standard,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(cornerRadius != null ? (cornerRadius * 0.66).clamp(8.0, 16.0) : (expressive ? 16 : 12)),
       ),
     );
   }
@@ -220,18 +252,18 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds DialogThemeData with M3 surface container high and rounded corners
-  static DialogThemeData _buildDialogTheme(ColorScheme colorScheme) {
+  /// DialogThemeData with M3 surface container high and configurable radius
+  static DialogThemeData _buildDialogTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
     return DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
       elevation: 6,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(cornerRadius ?? (expressive ? 32 : 28)),
       ),
       titleTextStyle: TextStyle(
         color: colorScheme.onSurface,
         fontSize: 24,
-        fontWeight: FontWeight.w400,
+        fontWeight: expressive ? FontWeight.w600 : FontWeight.w400,
       ),
       contentTextStyle: TextStyle(
         color: colorScheme.onSurfaceVariant,
@@ -240,17 +272,18 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds BottomSheetThemeData with M3 surface container low and rounded top
-  static BottomSheetThemeData _buildBottomSheetTheme(ColorScheme colorScheme) {
+  /// BottomSheetThemeData with M3 surface container low and configurable radius
+  static BottomSheetThemeData _buildBottomSheetTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
+    final radius = cornerRadius ?? (expressive ? 32 : 28);
     return BottomSheetThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       modalBackgroundColor: colorScheme.surfaceContainerLow,
       elevation: 1,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       ),
       dragHandleColor: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.moderate),
-      dragHandleSize: const Size(32, 4),
+      dragHandleSize: Size(expressive ? 40 : 32, 4),
       showDragHandle: true,
     );
   }
@@ -319,16 +352,14 @@ class ThemeBuilder {
   }
 
   /// Builds ChipThemeData for consistent chip styling
-  static ChipThemeData _buildChipTheme(ColorScheme colorScheme) {
+  static ChipThemeData _buildChipTheme(ColorScheme colorScheme, bool expressive) {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.secondaryContainer,
       disabledColor: colorScheme.onSurface.withOpacity(AppOpacity.hint),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
       secondaryLabelStyle: TextStyle(color: colorScheme.onSecondaryContainer),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: expressive ? const StadiumBorder() : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       side: BorderSide(color: colorScheme.outline.withOpacity(AppOpacity.half)),
     );
   }

@@ -18,6 +18,8 @@ import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
+import 'dart:ui';
 
 class AppListTile extends StatelessWidget {
   final AppInMemory appInMemory;
@@ -52,290 +54,82 @@ class AppListTile extends StatelessWidget {
         return const Padding(
           padding: EdgeInsets.all(8.0),
           child: SizedBox(
-            width: 24,
-            height: 24,
+            width: 20,
+            height: 20,
             child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
           ),
         );
       }
-      return Semantics(
-        label: appInMemory.app.additionalSettings['trackOnly'] == true
-            ? tr('markUpdated')
-            : tr('update'),
-        button: true,
-        enabled: appInMemory.downloadProgress == null,
-        child: IconButton(
-          visualDensity: VisualDensity.compact,
-          color: Theme.of(context).colorScheme.primary,
-          tooltip: appInMemory.app.additionalSettings['trackOnly'] == true
-              ? tr('markUpdated')
-              : tr('update'),
-          onPressed: appInMemory.downloadProgress != null
-              ? null
-              : () {
-                  appsProvider
-                      .downloadAndInstallLatestApps([
-                        appInMemory.app.id,
-                      ], context)
-                      .catchError((e) {
-                        showError(e, context);
-                        return <String>[];
-                      });
-                },
-          icon: Icon(
-            appInMemory.app.additionalSettings['trackOnly'] == true
-                ? Icons.check_circle_outline
-                : Icons.install_mobile,
-          ),
-        ),
-      );
-    }
-
-    Widget getAppIcon() {
-      if (appInMemory.icon == null) {
-        appsProvider.updateAppIcon(appInMemory.app.id);
-      }
-
-      return GestureDetector(
-        child: Hero(
-          tag: 'app_icon_${appInMemory.app.id}',
-          child: appInMemory.icon != null
-              ? Image.memory(
-                  appInMemory.icon!,
-                  gaplessPlayback: true,
-                  opacity: AlwaysStoppedAnimation(
-                    appInMemory.installedInfo == null ? 0.6 : 1,
-                  ),
-                )
-              : const AppIconShimmer(size: 48),
-        ),
-        onDoubleTap: () {
-          AppInstallService.openApp(appInMemory.app.id);
+      return IconButton(
+        icon: const Icon(Icons.download_rounded),
+        onPressed: () {
+          AppHaptics.selectionClick();
+          appsProvider.downloadAndInstallLatestApps(
+              [appInMemory.app.id], context);
         },
-        onLongPress: () {
-          pushRoute(context, AppPage(
-            appId: appInMemory.app.id,
-            showOppositeOfPreferredView: true,
-          ));
-        },
+        tooltip: tr('installUpdate'),
       );
     }
 
     String getVersionText() {
-      if (hasUpdate && appInMemory.app.installedVersion != null) {
-        return '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}';
-      }
-      return appInMemory.app.installedVersion ?? tr('notInstalled');
+      if (appInMemory.app.installedVersion == null) return tr('notInstalled');
+      if (hasUpdate) return '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}';
+      return appInMemory.app.installedVersion!;
     }
 
-    String getChangesButtonString() {
-      return appInMemory.app.releaseDate == null
-          ? onShowChanges != null
-                ? tr('changes')
-                : ''
-          : DateFormat(
-              'MMM d, yyyy',
-            ).format(appInMemory.app.releaseDate!.toLocal());
-    }
-
-    Widget trailingRow = Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        hasUpdate ? getUpdateButton() : const SizedBox.shrink(),
-        hasUpdate ? const SizedBox(width: 5) : const SizedBox.shrink(),
-        Semantics(
-          label: tr('changes'),
-          button: true,
-          child: GestureDetector(
-            onTap: onShowChanges,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: settingsProvider.highlightTouchTargets &&
-                        onShowChanges != null
-                    ? (Theme.of(context).brightness == Brightness.light
-                              ? Theme.of(context).primaryColor
-                              : Theme.of(context).primaryColorLight)
-                          .withOpacity(
-                            Theme.of(context).brightness == Brightness.light
-                                ? 20 / 255
-                                : 40 / 255,
-                          )
-                    : null,
-              ),
-              padding: settingsProvider.highlightTouchTargets
-                  ? const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 0)
-                  : const EdgeInsetsDirectional.fromSTEB(24, 0, 0, 0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (settingsProvider.displayShowVersion)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width / 4,
-                          ),
-                          child: Text(
-                            getVersionText(),
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.end,
-                            style: SourceUtils.isVersionPseudo(appInMemory.app)
-                                ? const TextStyle(fontStyle: FontStyle.italic)
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (settingsProvider.displayShowDate)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          getChangesButtonString(),
-                          style: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            decoration: onShowChanges != null
-                                ? TextDecoration.underline
-                                : TextDecoration.none,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
+    Widget getAppIcon() {
+      final itemRadius = (settingsProvider.plusOverrideIndividualCornerRadius
+              ? settingsProvider.plusHomeCornerRadius
+              : settingsProvider.plusGlobalCornerRadius) * 0.5;
+      
+      return Hero(
+        tag: 'icon_${appInMemory.app.id}',
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(itemRadius),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
           ),
-        ),
-      ],
-    );
-
-    var transparent = Theme.of(context).colorScheme.surface.withOpacity(0.0).value;
-    List<double> stops = [
-      ...appInMemory.app.categories.asMap().entries.map(
-        (e) =>
-            ((e.key / (appInMemory.app.categories.length - 1)) -
-            0.0001),
-      ),
-      1,
-    ];
-    if (stops.length == 2) {
-      stops[0] = 0.9999;
-    }
-
-    final isCompact = settingsProvider.appListDensity == AppListDensity.compact;
-    final categoryColorVal = appInMemory.app.categories.isNotEmpty 
-        ? settingsProvider.categories[appInMemory.app.categories.first] 
-        : null;
-    final displayCategoryColor = categoryColorVal != null ? Color(categoryColorVal) : null;
-
-    final radius = settingsProvider.plusOverrideIndividualCornerRadius 
-        ? settingsProvider.plusHomeCornerRadius 
-        : settingsProvider.plusGlobalCornerRadius;
-
-    if (!settingsProvider.plusEnableModernAppListTile) {
-      // --- LEGACY UI ---
-      var transparent = Theme.of(context).colorScheme.surface.withOpacity(0.0).value;
-      List<double> stops = [
-        ...appInMemory.app.categories.asMap().entries.map(
-          (e) =>
-              ((e.key / (appInMemory.app.categories.length - 1)) -
-              0.0001),
-        ),
-        1,
-      ];
-      if (stops.length == 2) {
-        stops[0] = 0.9999;
-      }
-
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            stops: stops,
-            begin: const Alignment(-1, 0),
-            end: const Alignment(-0.97, 0),
-            colors: [
-              ...appInMemory.app.categories.map(
-                (e) => Color(
-                  settingsProvider.categories[e] ?? transparent,
-                ).withOpacity(1.0),
-              ),
-              Color(transparent),
-            ],
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onLongPress: onLongPress,
-            onTap: onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              child: ListTile(
-                visualDensity: isCompact ? VisualDensity.compact : null,
-                contentPadding: isCompact ? const EdgeInsets.symmetric(horizontal: 12) : null,
-                dense: isCompact,
-                tileColor: appInMemory.app.pinned
-                    ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half)
-                    : Colors.transparent,
-                selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(appInMemory.app.pinned ? 0.7 : AppOpacity.half,
-                ),
-                selected: isSelected,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(radius),
-                ),
-                leading: getAppIcon(),
-                title: Text(
-                  maxLines: 1,
-                  appInMemory.name,
-                  style: TextStyle(
-                    overflow: TextOverflow.ellipsis,
-                    fontWeight: appInMemory.app.pinned
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-                subtitle: settingsProvider.displayShowAuthor ? Text(
-                  tr('byX', args: [appInMemory.author]),
-                  maxLines: 1,
-                  style: TextStyle(
-                    overflow: TextOverflow.ellipsis,
-                    fontWeight: appInMemory.app.pinned
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ) : null,
-                trailing: appInMemory.downloadProgress != null
-                    ? SizedBox(
-                        child: Text(
-                          appInMemory.downloadProgress! >= 0
-                              ? tr(
-                                  'percentProgress',
-                                  args: [
-                                    appInMemory.downloadProgress!
-                                        .toInt()
-                                        .toString(),
-                                  ],
-                                )
-                              : tr('installing'),
-                          textAlign: (appInMemory.downloadProgress! >= 0)
-                              ? TextAlign.start
-                              : TextAlign.end,
-                        ),
-                      )
-                    : trailingRow,
-              ),
-            ),
-          ),
+          child: appInMemory.icon != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(itemRadius),
+                  child: Image.memory(appInMemory.icon!, fit: BoxFit.cover),
+                )
+              : Icon(Icons.apps_rounded,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
         ),
       );
     }
+
+    final Color? displayCategoryColor = categoryColor ?? 
+        (appInMemory.app.categories.isNotEmpty && settingsProvider.viewSettings.categoryIconPosition != CategoryIconPosition.disabled
+            ? settingsProvider.viewSettings.categories[appInMemory.app.categories.first] != null
+                ? Color(settingsProvider.viewSettings.categories[appInMemory.app.categories.first]!)
+                : null
+            : null);
+
+    final isCompact = settingsProvider.viewSettings.appListDensity == AppListDensity.compact;
+    final radius = settingsProvider.plusOverrideIndividualCornerRadius
+        ? settingsProvider.plusHomeCornerRadius
+        : settingsProvider.plusGlobalCornerRadius;
+
+    final trailingRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasUpdate) getUpdateButton(),
+        if (onShowChanges != null && hasUpdate)
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            onPressed: onShowChanges,
+            tooltip: tr('viewChanges'),
+          ),
+        if (!hasUpdate && !isCheckingUpdate)
+           Icon(Icons.chevron_right_rounded, 
+             size: 20, 
+             color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
+      ],
+    );
 
     // --- MODERN UI ---
     return Semantics(
@@ -346,153 +140,190 @@ class AppListTile extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: isCompact ? 4 : 8,
-          vertical: isCompact ? 2 : 4,
+          vertical: isCompact ? 2 : 6,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onLongPress: onLongPress,
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(radius),
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 200 : 0),
-              curve: Curves.easeOutCubic,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(radius),
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
-                    : appInMemory.app.pinned
-                        ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
-                        : Theme.of(context).colorScheme.surface,
-                border: Border.all(
+        child: ConditionalBlur(
+          enabled: settingsProvider.plusEnableGlassmorphism,
+          sigma: 12,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onLongPress: onLongPress,
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(radius),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 250 : 0),
+                curve: AppConstants.expressiveStandard,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(radius),
                   color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : appInMemory.app.pinned
-                          ? Theme.of(context).colorScheme.outlineVariant
-                          : Colors.transparent,
-                  width: isSelected || appInMemory.app.pinned ? 1.5 : 0,
+                      ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
+                      : hasUpdate
+                          ? Theme.of(context).colorScheme.errorContainer.withOpacity(isCompact ? 0.08 : 0.15)
+                          : appInMemory.app.pinned
+                              ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
+                              : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
+                  border: Border.all(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : hasUpdate
+                            ? Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low)
+                            : appInMemory.app.pinned
+                                ? Theme.of(context).colorScheme.outlineVariant
+                                : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
+                    width: isSelected || appInMemory.app.pinned || (hasUpdate && !isCompact) ? 1.5 : 0.8,
+                  ),
+                  boxShadow: isSelected
+                      ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
+                      : hasUpdate && !isCompact
+                          ? AppShadows.smooth(color: Theme.of(context).colorScheme.error, opacity: 0.1)
+                          : null,
                 ),
-                boxShadow: isSelected
-                    ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.5)
-                    : null,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(radius),
-                child: Stack(
-                  children: [
-                    // Modern Category Indicator (Vertical bar)
-                    if (displayCategoryColor != null)
-                      Positioned(
-                        left: 0,
-                        top: 12,
-                        bottom: 12,
-                        child: Container(
-                          width: 4,
-                          decoration: BoxDecoration(
-                            color: displayCategoryColor,
-                            borderRadius: const BorderRadius.horizontal(
-                              right: Radius.circular(4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(radius),
+                  child: Stack(
+                    children: [
+                      if (settingsProvider.plusEnableGlassmorphism)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withOpacity(0.08),
+                                  Colors.transparent,
+                                  Colors.black.withOpacity(0.02),
+                                ],
+                                stops: const [0.0, 0.4, 1.0],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    
-                    ListTile(
-                      visualDensity: isCompact ? VisualDensity.compact : null,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 12 : 16,
-                        vertical: isCompact ? 0 : 4,
-                      ),
-                      dense: isCompact,
-                      leading: Padding(
-                        padding: EdgeInsets.only(left: displayCategoryColor != null ? 4 : 0),
-                        child: getAppIcon(),
-                      ),
-                      title: Text(
-                        appInMemory.name,
-                        maxLines: 1,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              overflow: TextOverflow.ellipsis,
-                              fontWeight: appInMemory.app.pinned
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                            ),
-                      ),
-                      subtitle: Row(
-                        children: [
-                          if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: appInMemory.app.tags.take(2).map((tag) => Container(
-                                  margin: const EdgeInsets.only(right: 4),
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    tag,
-                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9),
-                                  ),
-                                )).toList(),
+
+                      if (displayCategoryColor != null)
+                        Positioned(
+                          left: 0,
+                          top: 14,
+                          bottom: 14,
+                          child: Container(
+                            width: 5,
+                            decoration: BoxDecoration(
+                              color: displayCategoryColor,
+                              borderRadius: const BorderRadius.horizontal(
+                                right: Radius.circular(4),
                               ),
                             ),
-                          if (settingsProvider.displayShowAuthor)
-                            Expanded(
-                              child: Text(
-                                appInMemory.author,
-                                maxLines: 1,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      overflow: TextOverflow.ellipsis,
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    ),
+                          ),
+                        ),
+                      
+                      ListTile(
+                        visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 12 : 18,
+                          vertical: isCompact ? 0 : 6,
+                        ),
+                        dense: isCompact,
+                        leading: Padding(
+                          padding: EdgeInsets.only(left: displayCategoryColor != null ? 6 : 0),
+                          child: Transform.scale(
+                            scale: isCompact ? 0.9 : 1.0,
+                            child: getAppIcon(),
+                          ),
+                        ),
+                        title: Text(
+                          appInMemory.name,
+                          maxLines: 1,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                overflow: TextOverflow.ellipsis,
+                                fontWeight: appInMemory.app.pinned || hasUpdate
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                letterSpacing: -0.2,
                               ),
-                            ),
-                          if (settingsProvider.displayShowVersion && !isCompact)
-                            Text(
-                              ' • ${getVersionText()}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
-                                        ? FontStyle.italic
-                                        : null,
-                                  ),
-                            ),
-                        ],
-                      ),
-                      trailing: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: appInMemory.downloadProgress != null
-                            ? SizedBox(
-                                key: const ValueKey('download'),
-                                width: 60,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      appInMemory.downloadProgress! >= 0
-                                          ? '${appInMemory.downloadProgress!.toInt()}%'
-                                          : tr('installing'),
-                                      style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        subtitle: Row(
+                          children: [
+                            if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: appInMemory.app.tags.take(2).map((tag) => Container(
+                                    margin: const EdgeInsets.only(right: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
-                                    const SizedBox(height: 4),
-                                    ExpressiveProgressIndicator(
-                                      value: appInMemory.downloadProgress! >= 0
-                                          ? appInMemory.downloadProgress! / 100
-                                          : null,
-                                      height: 4,
+                                    child: Text(
+                                      tag,
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ],
+                                  )).toList(),
                                 ),
-                              )
-                            : KeyedSubtree(
-                                key: const ValueKey('info'),
-                                child: trailingRow,
                               ),
+                            if (settingsProvider.displayShowAuthor)
+                              Expanded(
+                                child: Text(
+                                  appInMemory.author,
+                                  maxLines: 1,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        overflow: TextOverflow.ellipsis,
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                ),
+                              ),
+                            if (settingsProvider.displayShowVersion && !isCompact)
+                              Text(
+                                ' • ${getVersionText()}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: hasUpdate ? Theme.of(context).colorScheme.error : null,
+                                      fontWeight: hasUpdate ? FontWeight.bold : null,
+                                      fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
+                                          ? FontStyle.italic
+                                          : null,
+                                    ),
+                              ),
+                          ],
+                        ),
+                        trailing: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: appInMemory.downloadProgress != null
+                              ? SizedBox(
+                                  key: const ValueKey('download'),
+                                  width: 65,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        appInMemory.downloadProgress! >= 0
+                                            ? '${appInMemory.downloadProgress!.toInt()}%'
+                                            : tr('installing'),
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      ExpressiveProgressIndicator(
+                                        value: appInMemory.downloadProgress! >= 0
+                                            ? appInMemory.downloadProgress! / 100
+                                            : null,
+                                        height: 5,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : KeyedSubtree(
+                                  key: const ValueKey('info'),
+                                  child: trailingRow,
+                                ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

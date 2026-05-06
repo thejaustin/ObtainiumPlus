@@ -79,6 +79,15 @@ class AppsViewSettingsSection extends StatelessWidget {
       ),
       _buildFeatureToggle<SettingsProvider>(
         context,
+        icon: Icons.auto_awesome_mosaic_outlined,
+        title: tr('plusDeduplicateRecents'),
+        subtitle: tr('plusDeduplicateRecentsDescription'),
+        value: (s) => s.plusDeduplicateRecents,
+        onChanged: (s, v) => onSetState(() => s.plusDeduplicateRecents = v),
+        visible: (s) => _matches(tr('plusDeduplicateRecents')),
+      ),
+      _buildFeatureToggle<SettingsProvider>(
+        context,
         icon: Icons.gesture_rounded,
         title: tr('plusExpressiveProgress'),
         subtitle: tr('plusExpressiveProgressDescription'),

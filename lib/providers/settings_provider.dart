@@ -473,6 +473,36 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableUpdateOwnership => _plus(plusSettings.plusEnableUpdateOwnership);
+  set plusEnableUpdateOwnership(bool val) {
+    plusSettings.plusEnableUpdateOwnership = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableUserPreapproval => _plus(plusSettings.plusEnableUserPreapproval);
+  set plusEnableUserPreapproval(bool val) {
+    plusSettings.plusEnableUserPreapproval = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableSmartRetries => _plus(plusSettings.plusEnableSmartRetries);
+  set plusEnableSmartRetries(bool val) {
+    plusSettings.plusEnableSmartRetries = val;
+    notifyListeners();
+  }
+
+  bool get plusDeduplicateRecents => _plus(plusSettings.plusDeduplicateRecents);
+  set plusDeduplicateRecents(bool val) {
+    plusSettings.plusDeduplicateRecents = val;
+    notifyListeners();
+  }
+
+  bool get plusEnableBouncyPhysics => _plus(plusSettings.plusEnableBouncyPhysics);
+  set plusEnableBouncyPhysics(bool val) {
+    plusSettings.plusEnableBouncyPhysics = val;
+    notifyListeners();
+  }
+
   bool get plusEnableGlassmorphism => _plus(plusSettings.plusEnableGlassmorphism);
   set plusEnableGlassmorphism(bool val) {
     plusSettings.plusEnableGlassmorphism = val;

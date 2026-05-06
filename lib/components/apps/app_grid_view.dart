@@ -38,18 +38,27 @@ class AppGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
-    final columnCount = viewSettings.gridColumnCount == 0
+    
+    // Adaptive column count: If very few apps, make them larger
+    int columnCount = viewSettings.gridColumnCount == 0
         ? _calculateAdaptiveColumns(context)
         : viewSettings.gridColumnCount;
+    
+    double childAspectRatio = 0.8;
+    
+    if (apps.length <= 2 && viewSettings.gridColumnCount == 0) {
+      columnCount = apps.length == 1 ? 1 : 2;
+      childAspectRatio = apps.length == 1 ? 2.5 : 1.0; // Wide for 1 app, square for 2
+    }
 
     return SliverPadding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12), // Slightly more padding
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columnCount,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 0.8,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: childAspectRatio,
         ),
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {

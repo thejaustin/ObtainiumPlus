@@ -532,6 +532,8 @@ class HomePageState extends State<HomePage> {
             },
             labelBehavior: labelBehavior,
           ) : null,
+          extendBody: true,
+          extendBodyBehindAppBar: true,
         ),
       ),
     );

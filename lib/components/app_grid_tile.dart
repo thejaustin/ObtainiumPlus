@@ -8,6 +8,8 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
+import 'dart:ui';
 
 class AppGridTile extends StatefulWidget {
   final AppInMemory appInMemory;
@@ -70,26 +72,22 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // --- ADAPTIVE LAYOUT DETECTION ---
+        final bool isHorizontal = constraints.maxWidth / constraints.maxHeight > 1.5;
+        
         // Calculate responsive sizes based on available width
         double availableWidth = constraints.maxWidth - 24; // Account for padding
 
-        // Icon size: 60-70% of available width (min 40, max 80)
-        double iconSize = (availableWidth * 0.65).clamp(40.0, 80.0);
+        // Icon size: adaptive
+        double iconSize = isHorizontal 
+            ? (constraints.maxHeight * 0.7).clamp(40.0, 100.0)
+            : (availableWidth * 0.65).clamp(40.0, 80.0);
 
-        // Border radius: proportional to icon size for consistent appearance
+        // ... (existing radius/padding logic)
         double iconBorderRadius = (iconSize * 0.18).clamp(8.0, 14.0);
-
-        // Card border radius: slightly larger for card container
         double cardBorderRadius = (iconSize * 0.21).clamp(10.0, 16.0);
-
-        // Padding: scale with grid size (min 8, max 12)
         double padding = (availableWidth * 0.1).clamp(8.0, 12.0);
-
-        // Badge size: proportional to icon size (min 12, max 18)
         double badgeSize = (iconSize * 0.25).clamp(12.0, 18.0);
-
-        // Placeholder icon size: proportional to icon size
-        double placeholderIconSize = (iconSize * 0.57).clamp(24.0, 48.0);
 
         if (widget.appInMemory.icon == null) {
           context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
@@ -106,194 +104,250 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
           scale: _isPressed ? 0.95 : 1.0,
           duration: const Duration(milliseconds: 100),
           curve: curve,
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? AppConstants.shortAnimationMs : 200),
-            curve: settingsProvider.plusEnableEnhancedAnimations ? Curves.easeOutCubic : Curves.easeInOut,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(cardBorderRadius),
-              boxShadow: widget.isSelected 
-                  ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
-                  : null,
-            ),
-            child: Card(
-              elevation: widget.isSelected ? 0 : 1,
-              shadowColor: Colors.transparent,
-              surfaceTintColor: widget.isSelected ? Theme.of(context).colorScheme.primary : null,
-              color: widget.isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
-                  : null,
-              shape: RoundedRectangleBorder(
+          child: ConditionalBlur(
+            enabled: settingsProvider.plusEnableGlassmorphism,
+            sigma: 10,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? AppConstants.shortAnimationMs : 200),
+              curve: settingsProvider.plusEnableEnhancedAnimations ? Curves.easeOutCubic : Curves.easeInOut,
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(cardBorderRadius),
-                side: widget.appInMemory.app.pinned
-                    ? BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      )
-                    : BorderSide.none,
+                color: widget.isSelected
+                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
+                    : widget.hasUpdate
+                        ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.12)
+                        : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
+                border: Border.all(
+                  color: widget.isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : widget.hasUpdate
+                          ? Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low)
+                          : widget.appInMemory.app.pinned
+                              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                              : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
+                  width: widget.isSelected || widget.appInMemory.app.pinned || widget.hasUpdate ? 1.5 : 0.8,
+                ),
+                boxShadow: widget.isSelected
+                    ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
+                    : null,
               ),
-              child: Semantics(
-                label: _buildSemanticLabel(),
-                button: true,
-                selected: widget.isSelected,
-                child: GestureDetector(
-                  onTapDown: (_) => setState(() => _isPressed = true),
-                  onTapUp: (_) {
-                    setState(() => _isPressed = false);
-                    widget.onTap();
-                  },
-                  onTapCancel: () => setState(() => _isPressed = false),
-                  onLongPressStart: (_) {
-                    setState(() => _isPressed = true);
-                    AppHaptics.mediumImpact();
-                  },
-                  onLongPressEnd: (_) {
-                    setState(() => _isPressed = false);
-                    widget.onLongPress();
-                  },
-                  child: InkWell(
-                    onTap: null, // Handled by GestureDetector
-                    onLongPress: null, // Handled by GestureDetector
-                    borderRadius: BorderRadius.circular(cardBorderRadius),
-                    child: Padding(
-                      padding: EdgeInsets.all(padding),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // App Icon
-                          Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Hero(
-                        tag: 'app_icon_${widget.appInMemory.app.id}',
-                        child: SizedBox(
-                          width: iconSize,
-                          height: iconSize,
-                          child: widget.appInMemory.icon != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(iconBorderRadius),
-                                  child: Image.memory(
-                                    widget.appInMemory.icon!,
-                                    fit: BoxFit.contain,
-                                    gaplessPlayback: true,
-                                  ),
-                                )
-                              : AppIconShimmer(
-                                  size: iconSize,
-                                  borderRadius: iconBorderRadius,
-                                ),
-                        ),
-                      ),
-                      // Update indicator badge with pulsing animation
-                      if (widget.hasUpdate)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _pulseAnimation.value,
-                                child: Container(
-                                  width: badgeSize,
-                                  height: badgeSize,
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Theme.of(context).colorScheme.surface,
-                                      width: 2,
-                                    ),
-                                    boxShadow: AppShadows.glow(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      intensity: (_pulseAnimation.value - 1.0) * 2,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // App Name
-                  Text(
-                    widget.appInMemory.name,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight:
-                          widget.appInMemory.app.pinned ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                  if (settingsProvider.plusShowTagsInList && widget.appInMemory.app.tags.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(cardBorderRadius),
+                child: Stack(
+                  children: [
+                    // Glass sheen
+                    if (settingsProvider.plusEnableGlassmorphism)
+                      Positioned.fill(
+                        child: Container(
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
-                            borderRadius: BorderRadius.circular(4),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.08),
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.02),
+                              ],
+                              stops: const [0.0, 0.4, 1.0],
+                            ),
                           ),
-                          child: Text(
-                            tag,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 8),
-                          ),
-                        )).toList(),
-                      ),
-                    ),
-                  // Checking for update indicator
-                  Builder(builder: (ctx) {
-                    final isChecking = ctx.select<AppsProvider, bool>(
-                      (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
-                    );
-                    if (isChecking && widget.appInMemory.downloadProgress == null) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: ExpressiveProgressIndicator(value: null, height: 2),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-                  // Download progress
-                  if (widget.appInMemory.downloadProgress != null) ...[
-                    if (widget.appInMemory.downloadProgress! < 0)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          tr('installing'),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: ExpressiveProgressIndicator(
-                        value: widget.appInMemory.downloadProgress! >= 0
-                            ? widget.appInMemory.downloadProgress! / 100
-                            : null,
-                        height: 2,
+                    
+                    Semantics(
+                      label: _buildSemanticLabel(),
+                      button: true,
+                      selected: widget.isSelected,
+                      child: GestureDetector(
+                        onTapDown: (_) => setState(() => _isPressed = true),
+                        onTapUp: (_) {
+                          setState(() => _isPressed = false);
+                          widget.onTap();
+                        },
+                        onTapCancel: () => setState(() => _isPressed = false),
+                        onLongPressStart: (_) {
+                          setState(() => _isPressed = true);
+                          AppHaptics.mediumImpact();
+                        },
+                        onLongPressEnd: (_) {
+                          setState(() => _isPressed = false);
+                          widget.onLongPress();
+                        },
+                        child: InkWell(
+                          onTap: null, // Handled by GestureDetector
+                          onLongPress: null, // Handled by GestureDetector
+                          borderRadius: BorderRadius.circular(cardBorderRadius),
+                          child: Padding(
+                            padding: EdgeInsets.all(padding),
+                            child: isHorizontal ? _buildHorizontalContent(iconSize, iconBorderRadius, badgeSize, settingsProvider) : _buildVerticalContent(iconSize, iconBorderRadius, badgeSize, settingsProvider),
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
         ),
+      );
+    },
+  );
+}
+
+Widget _buildVerticalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+      const SizedBox(height: 10),
+      _buildAppInfo(settingsProvider, TextAlign.center),
+    ],
+  );
+}
+
+Widget _buildHorizontalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
+  return Row(
+    children: [
+      _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+      const SizedBox(width: 20),
+      Expanded(child: _buildAppInfo(settingsProvider, TextAlign.start)),
+      const Icon(Icons.chevron_right_rounded, opacity: 0.5),
+    ],
+  );
+}
+
+Widget _buildIconStack(double iconSize, double iconBorderRadius, double badgeSize) {
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Hero(
+        tag: 'app_icon_${widget.appInMemory.app.id}',
+        child: Container(
+          width: iconSize,
+          height: iconSize,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(iconBorderRadius),
+            boxShadow: widget.hasUpdate 
+                ? AppShadows.smooth(color: Theme.of(context).colorScheme.error, opacity: 0.1)
+                : null,
+          ),
+          child: widget.appInMemory.icon != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(iconBorderRadius),
+                  child: Image.memory(
+                    widget.appInMemory.icon!,
+                    fit: BoxFit.contain,
+                    gaplessPlayback: true,
+                  ),
+                )
+              : AppIconShimmer(
+                  size: iconSize,
+                  borderRadius: iconBorderRadius,
+                ),
+        ),
       ),
-    ),
-  ),
-);
+      if (widget.hasUpdate)
+        Positioned(
+          right: -4,
+          top: -4,
+          child: AnimatedBuilder(
+            animation: _pulseAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _pulseAnimation.value,
+                child: Container(
+                  width: badgeSize,
+                  height: badgeSize,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.surface,
+                      width: 2,
+                    ),
+                    boxShadow: AppShadows.glow(
+                      color: Theme.of(context).colorScheme.primary,
+                      intensity: (_pulseAnimation.value - 1.0) * 2,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+    ],
+  );
+}
+
+Widget _buildAppInfo(SettingsProvider settingsProvider, TextAlign textAlign) {
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: textAlign == TextAlign.start ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+    children: [
+      Text(
+        widget.appInMemory.name,
+        maxLines: 2,
+        textAlign: textAlign,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight:
+              widget.appInMemory.app.pinned || widget.hasUpdate ? FontWeight.bold : FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
+      ),
+      if (settingsProvider.plusShowTagsInList && widget.appInMemory.app.tags.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Wrap(
+            alignment: textAlign == TextAlign.start ? WrapAlignment.start : WrapAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
+            children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                tag,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold),
+              ),
+            )).toList(),
+          ),
+        ),
+      // Checking / Progress logic...
+      _buildProgressIndicator(),
+    ],
+  );
+}
+
+Widget _buildProgressIndicator() {
+  return Builder(builder: (ctx) {
+    final isChecking = ctx.select<AppsProvider, bool>(
+      (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
+    );
+    if (widget.appInMemory.downloadProgress != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: ExpressiveProgressIndicator(
+          value: widget.appInMemory.downloadProgress! >= 0
+              ? widget.appInMemory.downloadProgress! / 100
+              : null,
+          height: 4,
+        ),
+      );
+    }
+    if (isChecking) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: ExpressiveProgressIndicator(value: null, height: 2),
+      );
+    }
+    return const SizedBox.shrink();
+  });
+}
       },
     );
   }

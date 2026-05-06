@@ -14,6 +14,48 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class FDroid extends AppSource {
+  static final Map<String, ({dynamic body, DateTime expiry})> _apiCache = {};
+
+  @override
+  Future<Response> sourceRequest(
+    String url,
+    Map<String, dynamic> additionalSettings, {
+    bool followRedirects = true,
+    Object? postBody,
+  }) async {
+    var sp = SettingsProvider();
+    await sp.initializeSettings();
+
+    // Cache F-Droid API and Gitlab metadata requests only if enabled
+    bool isCacheable = sp.plusEnableSmartRetries && 
+        (url.contains('f-droid.org/api/') || url.contains('gitlab.com/fdroid/fdroiddata')) && 
+        postBody == null;
+    
+    if (isCacheable) {
+      final cached = _apiCache[url];
+      if (cached != null && cached.expiry.isAfter(DateTime.now())) {
+        return Response(cached.body is String ? cached.body : jsonEncode(cached.body), 200, headers: {'x-from-obtainium-cache': 'true'});
+      }
+    }
+
+    final res = await super.sourceRequest(url, additionalSettings, followRedirects: followRedirects, postBody: postBody);
+
+    if (isCacheable && res.statusCode == 200) {
+      try {
+        dynamic body = res.body;
+        if (url.endsWith('.json') || url.contains('/api/')) {
+          body = jsonDecode(res.body);
+        }
+        _apiCache[url] = (
+          body: body,
+          expiry: DateTime.now().add(const Duration(minutes: 10)) // F-Droid data updates infrequently
+        );
+      } catch (_) {}
+    }
+
+    return res;
+  }
+
   FDroid() {
     hosts = ['f-droid.org'];
     name = tr('fdroid');
@@ -132,8 +174,8 @@ class FDroid extends AppSource {
           } catch (e) {
             //
           }
-          if ((isGitHub || isGitLab) &&
-              (details.changeLog?.indexOf('/blob/') ?? -1) >= 0) {
+          if (details.changeLog != null && (isGitHub || isGitLab) &&
+              (details.changeLog!.indexOf('/blob/') >= 0)) {
             details.changeLog = (await sourceRequest(
               details.changeLog!.replaceFirst('/blob/', '/raw/'),
               additionalSettings,
@@ -143,7 +185,7 @@ class FDroid extends AppSource {
       } catch (e) {
         // Fail silently
       }
-      if ((details.changeLog?.length ?? 0) > 2048) {
+      if (details.changeLog != null && details.changeLog!.length > 2048) {
         details.changeLog = '${details.changeLog!.substring(0, 2048)}...';
       }
     }

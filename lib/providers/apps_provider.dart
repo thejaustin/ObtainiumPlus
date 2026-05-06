@@ -153,6 +153,7 @@ class AppsProvider with ChangeNotifier {
       if (oldChannel != null && apps.containsKey(obtainiumId)) {
         checkObtainiumUpdate(ignoreCache: true).catchError((e) {
           logs.add('Error checking Obtainium+ update after channel change: $e');
+          return null;
         });
       }
     }
