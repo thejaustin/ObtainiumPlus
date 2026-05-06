@@ -277,17 +277,23 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildLocalResult(AppInMemory app) {
+    final settings = context.read<SettingsProvider>();
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
+
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(itemRadius * 0.75),
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
         child: app.icon != null 
           ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(itemRadius * 0.75),
               child: Image.memory(app.icon!, fit: BoxFit.cover),
             )
           : const Icon(Icons.apps),
@@ -295,6 +301,7 @@ class _CommandCenterState extends State<CommandCenter> {
       title: Text(app.name),
       subtitle: Text(app.app.latestVersion, style: const TextStyle(fontSize: 12)),
       trailing: const Icon(Icons.chevron_right, size: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
       onTap: () {
         Navigator.pop(context);
         showDraggableModalBottomSheet(
@@ -356,6 +363,10 @@ class _CommandCenterState extends State<CommandCenter> {
           final result = entry.value;
           final name = result.value.isNotEmpty ? result.value[0] : 'Unknown';
           final source = result.key;
+          final radius = settings.plusOverrideIndividualCornerRadius
+              ? settings.plusHomeCornerRadius
+              : settings.plusGlobalCornerRadius;
+          final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
 
           return ListTile(
             leading: CircleAvatar(
@@ -395,6 +406,7 @@ class _CommandCenterState extends State<CommandCenter> {
               ],
             ),
             trailing: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
             onTap: () => _openAddApp(url),
           );
         }),
@@ -487,12 +499,18 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildActionChip(IconData icon, String label, VoidCallback onPressed) {
+    final settings = context.read<SettingsProvider>();
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final chipRadius = (radius * 0.5).clamp(8.0, 16.0);
+
     return ActionChip(
       avatar: Icon(icon, size: 16),
       label: Text(label),
       onPressed: onPressed,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(chipRadius)),
     );
   }
 }

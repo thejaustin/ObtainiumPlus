@@ -79,13 +79,13 @@ class App {
     Map.from(additionalSettings),
     lastUpdateCheck,
     pinned,
-    categories: categories,
-    tags: tags,  // NEW: Copy tags
+    categories: List<String>.from(categories),
+    tags: List<String>.from(tags),  // NEW: Deep copy tags
     changeLog: changeLog,
     releaseDate: releaseDate,
     overrideSource: overrideSource,
     allowIdChange: allowIdChange,
-    otherAssetUrls: otherAssetUrls,
+    otherAssetUrls: List.from(otherAssetUrls),
   );
 
   factory App.fromJson(Map<String, dynamic> json, {Map<String, dynamic> Function(Map<String, dynamic>)? migrator}) {

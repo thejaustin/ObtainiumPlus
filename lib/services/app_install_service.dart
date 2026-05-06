@@ -135,6 +135,44 @@ class AppInstallService {
     await pm.openApp(appId);
   }
 
+  static const _nativeChannel = MethodChannel('app.obtainiumplus/native');
+
+  static Future<bool> setUpdateOwnership(String packageName) async {
+    try {
+      final bool? result = await _nativeChannel.invokeMethod<bool>(
+        'setUpdateOwnership',
+        {'packageName': packageName},
+      );
+      return result ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> checkInstallConstraints(String packageName) async {
+    try {
+      final bool? result = await _nativeChannel.invokeMethod<bool>(
+        'checkInstallConstraints',
+        {'packageName': packageName},
+      );
+      return result ?? true;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  static Future<bool> requestUserPreapproval(String packageName) async {
+    try {
+      final bool? result = await _nativeChannel.invokeMethod<bool>(
+        'requestUserPreapproval',
+        {'packageName': packageName},
+      );
+      return result ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   static Future<void> openXiaomiAutostartSettings() async {
     final AndroidIntent intent = AndroidIntent(
       action: 'miui.intent.action.OP_AUTO_START',
@@ -211,6 +249,15 @@ class AppInstallService {
 
     if (settingsProvider.useShizuku) {
       return true;
+    }
+
+    // Android 14+ Install Constraints check
+    if (osInfo.version.sdkInt >= 34) {
+      bool constraintsMet = await checkInstallConstraints(app.id);
+      if (!constraintsMet) {
+        logs.add('Install constraints not met (app in use or device busy): ${app.id}');
+        return false;
+      }
     }
 
     if (app.id == 'app.obtainiumplus') { // obtainiumId
@@ -371,6 +418,13 @@ class AppInstallService {
       installed = true;
       apps[file.appId]!.app.installedVersion =
           apps[file.appId]!.app.latestVersion;
+      
+      // Android 14+ Update Ownership
+      var osInfo = await DeviceInfoPlugin().androidInfo;
+      if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUpdateOwnership) {
+        await setUpdateOwnership(apps[file.appId]!.app.id);
+      }
+
       file.file.delete(recursive: true);
     } else if (code == 3 && firstTimeWithContext != null && firstTimeWithContext.mounted) {
       ScaffoldMessenger.of(firstTimeWithContext).showSnackBar(

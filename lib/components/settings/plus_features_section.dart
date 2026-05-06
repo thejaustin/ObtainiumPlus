@@ -150,7 +150,7 @@ class PlusFeaturesSection extends StatelessWidget {
                     _buildFeatureToggle(
                       context,
                       settings,
-                      icon: Icons.animation_outlined,
+                      icon: Icons.auto_awesome_motion_rounded,
                       title: tr('plusEnhancedAnimations'),
                       subtitle: tr('plusEnhancedAnimationsDescription'),
                       value: settings.plusEnableEnhancedAnimations,
@@ -313,7 +313,7 @@ class PlusFeaturesSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                'BETA',
+                tr('beta'),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: Theme.of(context).colorScheme.onTertiaryContainer,
                   fontWeight: FontWeight.bold,

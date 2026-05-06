@@ -170,6 +170,30 @@ class _AppDashboardState extends State<AppDashboard>
                     color: colorScheme.tertiary,
                   ),
                 ),
+                
+                // Adaptive 'Get Started' Card for new/sparse users
+                if (totalApps < 3) ...[
+                  const SizedBox(width: 12),
+                  _animated(
+                    _updatesAnim,
+                    _buildSummaryCard(
+                      context,
+                      icon: Icons.auto_awesome_rounded,
+                      label: tr('discover'),
+                      value: tr('new'),
+                      color: colorScheme.secondary,
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddAppPage(initialTab: 1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -217,11 +241,11 @@ class _AppDashboardState extends State<AppDashboard>
             ),
           ),
 
-          // Recent updates — AnimatedSize so it expands/collapses smoothly
+          // Recent updates — Adaptive Hide + AnimatedSize
           AnimatedSize(
             duration: const Duration(milliseconds: 320),
             curve: Easing.emphasizedDecelerate,
-            child: updatesAvailable > 0
+            child: (updatesAvailable > 0 && (totalApps >= 5 || updatesAvailable > 1))
                 ? _animated(
                     _updatesAnim,
                     Column(
@@ -298,33 +322,54 @@ class _AppDashboardState extends State<AppDashboard>
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
           color: color.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.1),
-          width: 1,
+          width: 1.5, // Thicker border for M3E
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
+          // Subtle Sheen for Glass effect
+          if (settings.plusEnableGlassmorphism)
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      color.withOpacity(0.15),
+                      color.withOpacity(0),
+                    ],
+                  ),
                 ),
-          ),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              ),
+            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 24, color: color),
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
           ),
         ],
       ),
     );
 
-    // Conditional BackdropFilter — only instantiate when glass is ON
-    // (zero-blur BackdropFilter still creates an expensive compositing layer)
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(radius),
@@ -332,7 +377,7 @@ class _AppDashboardState extends State<AppDashboard>
         borderRadius: BorderRadius.circular(radius),
         child: settings.plusEnableGlassmorphism
             ? BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16), // Deeper blur
                 child: cardContent,
               )
             : cardContent,

@@ -20,6 +20,66 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/app_sources/git_source.dart';
 
 class GitHub extends GitSource {
+  static final Map<String, ({String etag, dynamic body, DateTime expiry})> _apiCache = {};
+
+  @override
+  Future<Response> sourceRequest(
+    String url,
+    Map<String, dynamic> additionalSettings, {
+    bool followRedirects = true,
+    Object? postBody,
+  }) async {
+    var sp = SettingsProvider();
+    await sp.initializeSettings();
+
+    // Only cache GET requests to the API if smart retries/caching is enabled
+    if (postBody != null || !url.contains('api.github.com') || !sp.plusEnableSmartRetries) {
+      return super.sourceRequest(url, additionalSettings, followRedirects: followRedirects, postBody: postBody);
+    }
+
+    final cached = _apiCache[url];
+    if (cached != null && cached.expiry.isAfter(DateTime.now())) {
+      // Use cached response if still fresh (GitHub suggests 60s for frequent checks)
+      return Response(jsonEncode(cached.body), 200, headers: {'x-from-obtainium-cache': 'true'});
+    }
+
+    var sourceConfigSettingValues = await getSourceConfigValues(additionalSettings, sp);
+    Map<String, String> headers = await getRequestHeaders(additionalSettings, url) ?? {};
+    
+    if (cached != null) {
+      headers['If-None-Match'] = cached.etag;
+    }
+
+    final res = await SourceUtils.httpRequest(
+      url,
+      method: 'GET',
+      headers: headers,
+      sourceConfigSettingValues: sourceConfigSettingValues,
+      followRedirects: followRedirects,
+      allowInsecure: additionalSettings['allowInsecure'] == true,
+    );
+
+    if (res.statusCode == 304 && cached != null) {
+      // Not modified, refresh expiry and return cached body
+      _apiCache[url] = (etag: cached.etag, body: cached.body, expiry: DateTime.now().add(const Duration(minutes: 5)));
+      return Response(jsonEncode(cached.body), 200, headers: res.headers);
+    }
+
+    if (res.statusCode == 200 && res.headers.containsKey('etag')) {
+      // Success, cache the new response
+      try {
+        final body = jsonDecode(res.body);
+        _apiCache[url] = (
+          etag: res.headers['etag']!,
+          body: body,
+          expiry: DateTime.now().add(const Duration(minutes: 5))
+        );
+      } catch (_) {}
+    }
+
+    return res;
+  }
+
   GitHub({bool hostChanged = false}) : super(hostChanged: hostChanged) {
     hosts = ['github.com'];
     appIdInferIsOptional = true;
@@ -466,11 +526,11 @@ class GitHub extends GitSource {
                   ? tryParseDateTime(e['updated_at'])
                   : null;
             })
-            .where((e) => e != null)
+            .whereType<DateTime>()
             .toList();
-        t?.sort((a, b) => b!.compareTo(a!));
-        if (t?.isNotEmpty == true) {
-          return t!.first;
+        if (t != null && t.isNotEmpty) {
+          t.sort((a, b) => b.compareTo(a));
+          return t.first;
         }
         return null;
       }
@@ -518,10 +578,14 @@ class GitHub extends GitSource {
                 var reg = RegExp(stdFormats.last);
                 var matchA = reg.firstMatch(nameA);
                 var matchB = reg.firstMatch(nameB);
-                return compareAlphaNumeric(
-                  (nameA as String).substring(matchA!.start, matchA.end),
-                  (nameB as String).substring(matchB!.start, matchB.end),
-                );
+                if (matchA != null && matchB != null) {
+                  return compareAlphaNumeric(
+                    (nameA as String).substring(matchA.start, matchA.end),
+                    (nameB as String).substring(matchB.start, matchB.end),
+                  );
+                } else {
+                  return compareAlphaNumeric(nameA as String, nameB as String);
+                }
               } else {
                 // 'name'
                 return compareAlphaNumeric(

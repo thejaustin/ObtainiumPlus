@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -27,7 +27,7 @@ class InstallationSection extends StatelessWidget {
 
     List<Widget> children = [
       // Parallel Downloads
-      _buildBehaviorToggle(
+      _buildToggle(
         context,
         icon: Icons.file_download_outlined,
         title: tr('parallelDownloads'),
@@ -38,7 +38,7 @@ class InstallationSection extends StatelessWidget {
       ),
 
       // App Verifier
-      _buildBehaviorToggle(
+      _buildToggle(
         context,
         icon: Icons.verified_user_outlined,
         title: tr('beforeNewInstallsShareToAppVerifier'),
@@ -48,8 +48,41 @@ class InstallationSection extends StatelessWidget {
         visible: (s) => _matches(tr('beforeNewInstallsShareToAppVerifier')),
       ),
 
+      // Smart Retries & Caching
+      _buildToggle(
+        context,
+        icon: Icons.bolt_outlined,
+        title: tr('plusSmartRetries'),
+        subtitle: tr('plusSmartRetriesDescription'),
+        value: (s) => s.plusEnableSmartRetries,
+        onChanged: (s, v) => s.plusEnableSmartRetries = v,
+        visible: (s) => _matches(tr('plusSmartRetries')),
+      ),
+
+      // Update Ownership (Android 14+)
+      _buildToggle(
+        context,
+        icon: Icons.security_update_good_rounded,
+        title: tr('plusUpdateOwnership'),
+        subtitle: tr('plusUpdateOwnershipDescription'),
+        value: (s) => s.plusEnableUpdateOwnership,
+        onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
+        visible: (s) => _matches(tr('plusUpdateOwnership')),
+      ),
+
+      // User Pre-approval (Android 14+)
+      _buildToggle(
+        context,
+        icon: Icons.touch_app_outlined,
+        title: tr('plusUserPreapproval'),
+        subtitle: tr('plusUserPreapprovalDescription'),
+        value: (s) => s.plusEnableUserPreapproval,
+        onChanged: (s, v) => s.plusEnableUserPreapproval = v,
+        visible: (s) => _matches(tr('plusUserPreapproval')),
+      ),
+
       // Remove on External Uninstall
-      _buildBehaviorToggle(
+      _buildToggle(
         context,
         icon: Icons.delete_sweep_outlined,
         title: tr('removeOnExternalUninstall'),
@@ -61,7 +94,7 @@ class InstallationSection extends StatelessWidget {
 
       // Shizuku / Sui (with full permission check and error feedback)
       if (_matches(tr('useShizuku')))
-        Consumer<BehaviorSettingsProvider>(
+        Consumer<SettingsProvider>(
           builder: (context, settings, child) => SwitchListTile.adaptive(
             secondary: const Icon(Icons.terminal_outlined),
             title: Text(tr('useShizuku'), style: Theme.of(context).textTheme.bodyLarge),
@@ -77,7 +110,7 @@ class InstallationSection extends StatelessWidget {
                   _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
                   return;
                 }
-                settings.useShizuku = resCode.startsWith('granted');
+                settings.useShizuku = resCode.startsWith('authorized') || resCode.startsWith('granted');
                 switch (resCode) {
                   case 'binder_not_found':
                     _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
@@ -89,9 +122,6 @@ class InstallationSection extends StatelessWidget {
                     _showError(context, ObtainiumError(tr('cancelled')));
                 }
               }).catchError((e) {
-                // Swallow PlatformException from Shizuku plugin (e.g. "Reply
-                // already submitted" when the user toggles rapidly). The switch
-                // value stays unchanged so no silent state change occurs.
                 talker.warning('Shizuku checkPermission error: $e');
               });
             },
@@ -100,7 +130,7 @@ class InstallationSection extends StatelessWidget {
 
       // Shizuku Pretend to be Google Play (only visible when Shizuku is on)
       if (_matches(tr('shizukuPretendToBeGooglePlay')))
-        Consumer<BehaviorSettingsProvider>(
+        Consumer<SettingsProvider>(
           builder: (context, settings, child) {
             if (!settings.useShizuku) return const SizedBox.shrink();
             return SwitchListTile.adaptive(
@@ -121,22 +151,21 @@ class InstallationSection extends StatelessWidget {
   }
 
   void _showError(BuildContext context, ObtainiumError error) {
-    // Use maybeOf so stale contexts from async .then() callbacks don't crash.
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(content: Text(error.message), behavior: SnackBarBehavior.floating),
     );
   }
 
-  Widget _buildBehaviorToggle(
+  Widget _buildToggle(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required bool Function(BehaviorSettingsProvider) value,
-    required void Function(BehaviorSettingsProvider, bool) onChanged,
-    required bool Function(BehaviorSettingsProvider) visible,
+    required bool Function(SettingsProvider) value,
+    required void Function(SettingsProvider, bool) onChanged,
+    required bool Function(SettingsProvider) visible,
   }) {
-    return Consumer<BehaviorSettingsProvider>(
+    return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(

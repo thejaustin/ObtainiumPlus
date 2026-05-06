@@ -213,6 +213,16 @@ void main() async {
         runZonedGuarded(
           () {
             talker.info('Startup: Launching MultiProvider root');
+            
+            // Enable true edge-to-edge layout for Android
+            SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarDividerColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.dark,
+              systemNavigationBarIconBrightness: Brightness.dark,
+            ));
+            
             runApp(
               MultiProvider(
                 providers: [
@@ -263,6 +273,7 @@ void main() async {
               // Swallow — never let crash-recording failures recurse back into
               // the zone error handler and create an infinite reporting loop.
               talker.warning('Crash reporting pipeline failed: $e');
+              return null;
             });
           },
         );
@@ -331,6 +342,7 @@ class _ObtainiumState extends State<Obtainium> {
         );
       }).catchError((e) {
         talker.warning('Build error reporting pipeline failed: $e');
+        return null;
       });
       return BuildErrorWidget(error: details.exceptionAsString(), stackTrace: details.stack?.toString() ?? '');
     };
@@ -452,6 +464,7 @@ class _ObtainiumState extends State<Obtainium> {
               })
               .catchError((err) {
                 talker.handle(err, null, 'Locale change error');
+                return null;
               });
         }
       }
@@ -523,36 +536,47 @@ class _ObtainiumState extends State<Obtainium> {
 
           if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();
 
-          return MaterialApp(
-            title: 'Obtainium',
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
-            navigatorKey: globalNavigatorKey,
-            debugShowCheckedModeBanner: false,
-            navigatorObservers: [
-              SentryNavigatorObserver(),
-              TalkerRouteObserver(talker),
-            ],
-            theme: ThemeBuilder.buildTheme(
-              colorScheme: settingsProvider.theme == ThemeSettings.dark
-                  ? darkColorScheme
-                  : lightColorScheme,
-              useSystemFont: settingsProvider.useSystemFont,
-            ),
-            darkTheme: ThemeBuilder.buildTheme(
-              colorScheme: settingsProvider.theme == ThemeSettings.light
-                  ? lightColorScheme
-                  : darkColorScheme,
-              useSystemFont: settingsProvider.useSystemFont,
-            ),
-            home: Shortcuts(
-                shortcuts: <LogicalKeySet, Intent>{
-                  LogicalKeySet(LogicalKeyboardKey.select):
-                      const ActivateIntent(),
-                },
-                child: const HomePage(),
+          return ScrollConfiguration(
+            behavior: settingsProvider.plusEnableBouncyPhysics
+                ? const ScrollBehavior().copyWith(
+                    physics: const BouncingScrollPhysics(),
+                  )
+                : const ScrollBehavior(),
+            child: MaterialApp(
+              title: 'Obtainium',
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              navigatorKey: globalNavigatorKey,
+              debugShowCheckedModeBanner: false,
+              navigatorObservers: [
+                SentryNavigatorObserver(),
+                TalkerRouteObserver(talker),
+              ],
+              theme: ThemeBuilder.buildTheme(
+                colorScheme: settingsProvider.theme == ThemeSettings.dark
+                    ? darkColorScheme
+                    : lightColorScheme,
+                useSystemFont: settingsProvider.useSystemFont,
+                plusEnableMaterialExpressive: settingsProvider.plusEnableMaterialExpressive,
+                cornerRadius: settingsProvider.plusGlobalCornerRadius,
               ),
+              darkTheme: ThemeBuilder.buildTheme(
+                colorScheme: settingsProvider.theme == ThemeSettings.light
+                    ? lightColorScheme
+                    : darkColorScheme,
+                useSystemFont: settingsProvider.useSystemFont,
+                plusEnableMaterialExpressive: settingsProvider.plusEnableMaterialExpressive,
+                cornerRadius: settingsProvider.plusGlobalCornerRadius,
+              ),
+              home: Shortcuts(
+                  shortcuts: <LogicalKeySet, Intent>{
+                    LogicalKeySet(LogicalKeyboardKey.select):
+                        const ActivateIntent(),
+                  },
+                  child: const HomePage(),
+                ),
+            ),
           );
         },
       ),

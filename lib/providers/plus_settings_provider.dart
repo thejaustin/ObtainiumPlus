@@ -53,6 +53,36 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableUpdateOwnership => _prefs?.getBool('plusEnableUpdateOwnership') ?? true;
+  set plusEnableUpdateOwnership(bool val) {
+    _prefs?.setBool('plusEnableUpdateOwnership', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableUserPreapproval => _prefs?.getBool('plusEnableUserPreapproval') ?? true;
+  set plusEnableUserPreapproval(bool val) {
+    _prefs?.setBool('plusEnableUserPreapproval', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableSmartRetries => _prefs?.getBool('plusEnableSmartRetries') ?? true;
+  set plusEnableSmartRetries(bool val) {
+    _prefs?.setBool('plusEnableSmartRetries', val);
+    notifyListeners();
+  }
+
+  bool get plusDeduplicateRecents => _prefs?.getBool('plusDeduplicateRecents') ?? true;
+  set plusDeduplicateRecents(bool val) {
+    _prefs?.setBool('plusDeduplicateRecents', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableBouncyPhysics => _prefs?.getBool('plusEnableBouncyPhysics') ?? true;
+  set plusEnableBouncyPhysics(bool val) {
+    _prefs?.setBool('plusEnableBouncyPhysics', val);
+    notifyListeners();
+  }
+
   bool get plusEnableGlassmorphism => _prefs?.getBool('plusEnableGlassmorphism') ?? true;
   set plusEnableGlassmorphism(bool val) {
     _prefs?.setBool('plusEnableGlassmorphism', val);

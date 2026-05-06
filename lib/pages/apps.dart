@@ -289,6 +289,26 @@ class AppsPageState extends State<AppsPage> {
       buryNonInstalled: viewSettings.buryNonInstalled,
     );
 
+    // Adaptive Deduplication: Hide apps from main list if shown in Dashboard Recents
+    if (settingsProvider.plusEnableHomeDashboard && 
+        settingsProvider.plusDeduplicateRecents && 
+        selectedAppIds.isEmpty && 
+        filter.nameFilter.isEmpty) {
+      final allApps = appsProvider.getAppValues();
+      final updateApps = allApps
+          .where((app) =>
+              app.app.installedVersion != null &&
+              app.app.installedVersion != app.app.latestVersion)
+          .toList();
+      
+      // Mirror the adaptive hide logic from AppDashboard:
+      // Recents section is shown if updates exist AND (total apps >= 5 OR updates > 1)
+      if (updateApps.isNotEmpty && (allApps.length >= 5 || updateApps.length > 1)) {
+        final recentUpdateIds = updateApps.take(10).map((e) => e.app.id).toSet();
+        listedApps = listedApps.where((a) => !recentUpdateIds.contains(a.app.id)).toList();
+      }
+    }
+
     if (_activeTag != null) {
       listedApps = listedApps.where((a) => a.app.tags.contains(_activeTag)).toList();
     }
@@ -801,6 +821,8 @@ class AppsPageState extends State<AppsPage> {
             _bulkCategorize(context, listedApps);
           } else if (value == 'tag') {
             _bulkTag(context, listedApps);
+          } else if (value == 'refresh') {
+            _bulkRefresh(context, listedApps);
           }
         },
         itemBuilder: (context) => [
@@ -828,9 +850,33 @@ class AppsPageState extends State<AppsPage> {
               contentPadding: EdgeInsets.zero,
             ),
           ),
+          PopupMenuItem(
+            value: 'refresh',
+            child: ListTile(
+              leading: const Icon(Icons.refresh_outlined),
+              title: Text(tr('refresh')),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
         ],
       ),
     ];
+  }
+
+  void _bulkRefresh(BuildContext context, List<AppInMemory> listedApps) async {
+    final appsProvider = context.read<AppsProvider>();
+    final selectedApps = listedApps
+        .where((e) => selectedAppIds.contains(e.app.id))
+        .map((e) => e.app.id)
+        .toList();
+
+    if (selectedApps.isEmpty) return;
+
+    AppHaptics.selectionClick();
+    clearSelected();
+    
+    // Trigger background update checks for selected apps
+    await appsProvider.checkAppsUpdates(appIds: selectedApps);
   }
 
   List<Widget> _buildNormalActions(

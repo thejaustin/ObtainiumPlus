@@ -170,7 +170,10 @@ class _AppPageState extends State<AppPage> {
             appsProvider.apps[id]?.app.installedVersion =
                 appsProvider.apps[id]?.app.latestVersion;
           }
-          appsProvider.saveApps([appsProvider.apps[id]!.app]);
+          final appToSave = appsProvider.apps[id]?.app;
+          if (appToSave != null) {
+            appsProvider.saveApps([appToSave]);
+          }
         }
       } catch (err) {
         if (mounted) {
