@@ -430,6 +430,11 @@ class _StatisticsPageState extends State<StatisticsPage>
 
   Widget _buildMetricsGrid(BuildContext context, List<_MetricItem> items) {
     final settings = context.watch<SettingsProvider>();
+    final theme = Theme.of(context);
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final itemRadius = (radius * 0.75).clamp(12.0, 24.0);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -439,9 +444,9 @@ class _StatisticsPageState extends State<StatisticsPage>
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.4,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: 1.45,
           ),
           itemCount: items.length,
           itemBuilder: (context, index) {
@@ -454,12 +459,12 @@ class _StatisticsPageState extends State<StatisticsPage>
               curve: Interval(start, end, curve: Curves.easeOut),
             );
             final slide = Tween<Offset>(
-              begin: const Offset(0, 0.18),
+              begin: const Offset(0, 0.2),
               end: Offset.zero,
             ).animate(
               CurvedAnimation(
                 parent: _entranceController,
-                curve: Interval(start, end, curve: Curves.easeOutBack),
+                curve: Interval(start, end, curve: Curves.easeOutCubic),
               ),
             );
 
@@ -468,27 +473,21 @@ class _StatisticsPageState extends State<StatisticsPage>
               child: SlideTransition(
                 position: slide,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(itemRadius),
                   child: ConditionalBlur(
-                    sigma: 10,
+                    sigma: 12,
                     enabled: settings.plusEnableGlassmorphism,
-                    child: Card(
-                      elevation: 0,
-                      margin: EdgeInsets.zero,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerLow
-                          .withOpacity(
-                            settings.plusEnableGlassmorphism ? AppOpacity.muted : 1.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerLow.withOpacity(
+                          settings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                        ),
+                        borderRadius: BorderRadius.circular(itemRadius),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withOpacity(
+                            settings.plusEnableGlassmorphism ? 0.12 : 0.08,
                           ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.outlineVariant.withOpacity(
-                            settings.plusEnableGlassmorphism ? AppOpacity.moderate : 0.15,
-                          ),
+                          width: 1.2,
                         ),
                       ),
                       child: Padding(
@@ -497,31 +496,32 @@ class _StatisticsPageState extends State<StatisticsPage>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(item.icon, color: item.color, size: 22),
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: item.color.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(item.icon, color: item.color, size: 18),
+                            ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   item.value,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
+                                  style: theme.textTheme.headlineSmall?.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurface,
+                                        color: theme.colorScheme.onSurface,
                                         height: 1.1,
+                                        letterSpacing: -0.5,
                                       ),
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
                                   item.label,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -543,6 +543,7 @@ class _StatisticsPageState extends State<StatisticsPage>
   }
 
   Widget _buildActivityChart(BuildContext context, List<Log> events) {
+    final theme = Theme.of(context);
     final now = DateTime.now();
     final Map<int, int> dailyCounts = {};
     for (int i = 0; i < 30; i++) {
@@ -559,26 +560,24 @@ class _StatisticsPageState extends State<StatisticsPage>
     final counts = List<int>.generate(30, (i) => dailyCounts[29 - i] ?? 0);
     final maxCount =
         counts.isEmpty ? 0 : counts.reduce((a, b) => a > b ? a : b);
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final bgColor = Theme.of(context)
-        .colorScheme
-        .secondaryContainer
-        .withOpacity(0.15);
+    final primaryColor = theme.colorScheme.primary;
+    final bgColor = theme.colorScheme.surfaceContainerHighest.withOpacity(0.3);
 
     return AnimatedBuilder(
       animation: _entranceController,
       builder: (context, _) {
         final progress = CurvedAnimation(
           parent: _entranceController,
-          curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+          curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
         ).value;
         return Container(
-          height: 100,
+          height: 120,
           margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: theme.colorScheme.outline.withOpacity(0.05)),
           ),
           child: CustomPaint(
             size: Size.infinite,
