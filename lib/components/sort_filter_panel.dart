@@ -90,82 +90,125 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     final sourceProvider = SourceProvider();
     final isDark = theme.brightness == Brightness.dark;
 
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final sheetRadius = radius.clamp(28.0, 48.0);
+
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: ConditionalBlur(sigma: 24, enabled: settings.plusEnableGlassmorphism, child: Container(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+      child: ConditionalBlur(
+        sigma: 16,
+        enabled: settings.plusEnableGlassmorphism,
+        child: Container(
           decoration: BoxDecoration(
             color: (isDark
                     ? theme.colorScheme.surfaceContainerHigh
                     : theme.colorScheme.surface)
-                .withOpacity(settings.plusEnableGlassmorphism ? 0.72 : 1.0),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                .withOpacity(settings.plusEnableGlassmorphism ? 0.75 : 1.0),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
             border: Border(
               top: BorderSide(
                 color: settings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withOpacity(0.18)
                     : theme.colorScheme.outlineVariant.withOpacity(AppOpacity.subtle),
-                width: 1,
+                width: 1.5,
               ),
               left: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                    ? theme.colorScheme.onSurface.withOpacity(0.12)
                     : Colors.transparent,
               ),
               right: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                    ? theme.colorScheme.onSurface.withOpacity(0.12)
                     : Colors.transparent,
               ),
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const DragHandle(),
+          child: Stack(
+            children: [
+              // Glass sheen
+              if (settings.plusEnableGlassmorphism)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.08),
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.02),
+                        ],
+                        stops: const [0.0, 0.4, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
 
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              SafeArea(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Sort section (gated by plusEnableAdvancedSorting)
-                    if (settings.plusEnableAdvancedSorting) ...[
-                      _buildAnimatedSection(0, _buildSortSection(settingsProvider, theme)),
-                      const SizedBox(height: 20),
-                    ],
+                    const DragHandle(margin: EdgeInsets.only(top: 10, bottom: 6)),
+                    
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header
+                            _buildAnimatedSection(0, Padding(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: Text(
+                                tr('filterApps'),
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            )),
 
-                    // View mode section
-                    _buildAnimatedSection(1, _buildViewModeSection(settingsProvider, theme)),
-                    const SizedBox(height: 20),
+                            // Sort section
+                            if (settings.plusEnableAdvancedSorting) ...[
+                              _buildAnimatedSection(1, _buildSortSection(settingsProvider, theme, radius)),
+                              const SizedBox(height: 28),
+                            ],
 
-                    // Quick filters section
-                    _buildAnimatedSection(2, _buildQuickFilterSection(theme)),
-                    const SizedBox(height: 20),
+                            // View mode section
+                            _buildAnimatedSection(2, _buildViewModeSection(settingsProvider, theme, radius)),
+                            const SizedBox(height: 28),
 
-                    // Category filter section
-                    if (widget.categories.isNotEmpty) ...[
-                      _buildAnimatedSection(3, _buildCategorySection(theme)),
-                      const SizedBox(height: 20),
-                    ],
+                            // Quick filters section
+                            _buildAnimatedSection(3, _buildQuickFilterSection(theme, radius)),
+                            const SizedBox(height: 28),
 
-                    // Tag filter section
-                    _buildAnimatedSection(3, _buildTagSection(theme)),
-                    const SizedBox(height: 20),
+                            // Category filter section
+                            if (widget.categories.isNotEmpty) ...[
+                              _buildAnimatedSection(4, _buildCategorySection(theme, radius)),
+                              const SizedBox(height: 28),
+                            ],
 
-                    // Advanced filters section
-                    _buildAnimatedSection(4, _buildAdvancedSection(sourceProvider, theme)),
+                            // Tag filter section
+                            _buildAnimatedSection(4, _buildTagSection(theme, radius)),
+                            const SizedBox(height: 28),
+
+                            // Advanced filters section
+                            _buildAnimatedSection(4, _buildAdvancedSection(sourceProvider, theme, radius)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildAnimatedSection(int index, Widget child) {
@@ -174,7 +217,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
       opacity: _sectionAnimations[index],
       child: SlideTransition(
         position: Tween<Offset>(
-          begin: const Offset(0, 0.15),
+          begin: const Offset(0, 0.1), // Subtle slide
           end: Offset.zero,
         ).animate(_sectionAnimations[index]),
         child: child,
@@ -184,27 +227,29 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
   Widget _buildSectionHeader(String title, ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
+        style: theme.textTheme.labelMedium?.copyWith(
           color: theme.colorScheme.primary,
           letterSpacing: 1.2,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
 
-  Widget _buildSortSection(ViewSettingsProvider sp, ThemeData theme) {
+  Widget _buildSortSection(ViewSettingsProvider sp, ThemeData theme, double radius) {
     final currentSort = sp.appSortMethod;
+    final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(tr('sortOptions'), theme),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: AppSortMethod.values.map((method) {
             final selected = currentSort == method;
             return ChoiceChip(
@@ -216,6 +261,8 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                   sp.appSortMethod = method;
                 }
               },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             );
           }).toList(),
         ),
@@ -223,131 +270,120 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     );
   }
 
-  Widget _buildViewModeSection(ViewSettingsProvider sp, ThemeData theme) {
+  Widget _buildViewModeSection(ViewSettingsProvider sp, ThemeData theme, double radius) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(tr('viewMode'), theme),
-        SegmentedButton<ViewMode>(
-          segments: [
-            ButtonSegment(
-              value: ViewMode.list,
-              icon: const Icon(Icons.view_list, size: 18),
-              label: Text(tr('listView')),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<ViewMode>(
+            segments: [
+              ButtonSegment(
+                value: ViewMode.list,
+                icon: const Icon(Icons.view_list_rounded, size: 20),
+                label: Text(tr('listView')),
+              ),
+              ButtonSegment(
+                value: ViewMode.grid,
+                icon: const Icon(Icons.grid_view_rounded, size: 20),
+                label: Text(tr('gridView')),
+              ),
+            ],
+            selected: {sp.globalViewMode},
+            onSelectionChanged: (modes) {
+              AppHaptics.selectionClick();
+              sp.globalViewMode = modes.first;
+            },
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              visualDensity: VisualDensity.comfortable,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius * 0.5)),
             ),
-            ButtonSegment(
-              value: ViewMode.grid,
-              icon: const Icon(Icons.grid_view, size: 18),
-              label: Text(tr('gridView')),
-            ),
-          ],
-          selected: {sp.globalViewMode},
-          onSelectionChanged: (modes) {
-            AppHaptics.selectionClick();
-            sp.globalViewMode = modes.first;
-          },
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickFilterSection(ThemeData theme) {
+  Widget _buildQuickFilterSection(ThemeData theme, double radius) {
     final statusFilter = widget.filter.statusFilter;
+    final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
+
+    Widget buildChip(String label, bool selected, Function(bool) onSelected) {
+      return FilterChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (v) {
+          AppHaptics.selectionClick();
+          onSelected(v);
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(tr('filter'), theme),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: [
-            FilterChip(
-              label: Text(tr('installed')),
-              selected: statusFilter.contains('installed'),
-              onSelected: (val) {
-                AppHaptics.selectionClick();
-                setState(() {
-                  if (val) {
-                    statusFilter.add('installed');
-                  } else {
-                    statusFilter.remove('installed');
-                  }
-                });
-                widget.onFilterChanged();
-              },
-            ),
-            FilterChip(
-              label: Text(tr('trackOnly')),
-              selected: statusFilter.contains('trackonly'),
-              onSelected: (val) {
-                AppHaptics.selectionClick();
-                setState(() {
-                  if (val) {
-                    statusFilter.add('trackonly');
-                  } else {
-                    statusFilter.remove('trackonly');
-                  }
-                });
-                widget.onFilterChanged();
-              },
-            ),
-            FilterChip(
-              label: Text(tr('upToDateApps')),
-              selected: !widget.filter.includeUptodate,
-              onSelected: (val) {
-                AppHaptics.selectionClick();
-                setState(() {
-                  widget.filter.includeUptodate = !val;
-                });
-                widget.onFilterChanged();
-              },
-            ),
-            FilterChip(
-              label: Text(tr('nonInstalledApps')),
-              selected: !widget.filter.includeNonInstalled,
-              onSelected: (val) {
-                AppHaptics.selectionClick();
-                setState(() {
-                  widget.filter.includeNonInstalled = !val;
-                });
-                widget.onFilterChanged();
-              },
-            ),
+            buildChip(tr('installed'), statusFilter.contains('installed'), (val) {
+              setState(() {
+                if (val) statusFilter.add('installed'); else statusFilter.remove('installed');
+              });
+              widget.onFilterChanged();
+            }),
+            buildChip(tr('trackOnly'), statusFilter.contains('trackonly'), (val) {
+              setState(() {
+                if (val) statusFilter.add('trackonly'); else statusFilter.remove('trackonly');
+              });
+              widget.onFilterChanged();
+            }),
+            buildChip(tr('upToDateApps'), !widget.filter.includeUptodate, (val) {
+              setState(() { widget.filter.includeUptodate = !val; });
+              widget.onFilterChanged();
+            }),
+            buildChip(tr('nonInstalledApps'), !widget.filter.includeNonInstalled, (val) {
+              setState(() { widget.filter.includeNonInstalled = !val; });
+              widget.onFilterChanged();
+            }),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildCategorySection(ThemeData theme) {
+  Widget _buildCategorySection(ThemeData theme, double radius) {
     final cats = widget.categories;
     final selectedCats = widget.filter.categoryFilter;
+    final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(tr('categories'), theme),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: cats.keys.map((cat) {
             final selected = selectedCats.contains(cat);
             final color = Color(cats[cat]!);
             return FilterChip(
               label: Text(cat),
               selected: selected,
-              selectedColor: color.withOpacity(AppOpacity.low),
+              selectedColor: color.withOpacity(0.2),
               checkmarkColor: color,
               onSelected: (val) {
                 AppHaptics.selectionClick();
                 setState(() {
-                  if (val) {
-                    selectedCats.add(cat);
-                  } else {
-                    selectedCats.remove(cat);
-                  }
+                  if (val) selectedCats.add(cat); else selectedCats.remove(cat);
                 });
                 widget.onFilterChanged();
               },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
             );
           }).toList(),
         ),
@@ -355,12 +391,13 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     );
   }
 
-  Widget _buildTagSection(ThemeData theme) {
+  Widget _buildTagSection(ThemeData theme, double radius) {
     final appsProvider = context.read<AppsProvider>();
     final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
     allTags.sort();
     
     final selectedTags = widget.filter.tagFilter;
+    final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
 
     if (allTags.isEmpty) return const SizedBox.shrink();
 
@@ -369,8 +406,8 @@ class _SortFilterPanelState extends State<SortFilterPanel>
       children: [
         _buildSectionHeader(tr('tags'), theme),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: allTags.map((tag) {
             final selected = selectedTags.contains(tag);
             return FilterChip(
@@ -379,14 +416,11 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               onSelected: (val) {
                 AppHaptics.selectionClick();
                 setState(() {
-                  if (val) {
-                    selectedTags.add(tag);
-                  } else {
-                    selectedTags.remove(tag);
-                  }
+                  if (val) selectedTags.add(tag); else selectedTags.remove(tag);
                 });
                 widget.onFilterChanged();
               },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
             );
           }).toList(),
         ),
@@ -395,7 +429,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   }
 
   Widget _buildAdvancedSection(
-      SourceProvider sourceProvider, ThemeData theme) {
+      SourceProvider sourceProvider, ThemeData theme, double radius) {
     final hasAdvancedFilters = widget.filter.nameFilter.isNotEmpty ||
         widget.filter.authorFilter.isNotEmpty ||
         widget.filter.idFilter.isNotEmpty ||
@@ -406,59 +440,41 @@ class _SortFilterPanelState extends State<SortFilterPanel>
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
         initiallyExpanded: hasAdvancedFilters,
-        leading: Icon(Icons.tune, size: 20, color: theme.colorScheme.onSurfaceVariant),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(Icons.tune_rounded, size: 20, color: theme.colorScheme.primary),
+        ),
         title: Text(
           tr('filterApps'),
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
           ),
         ),
         children: [
-          const SizedBox(height: 8),
-          TextField(
-            decoration: InputDecoration(
-              labelText: tr('appName'),
-              border: const OutlineInputBorder(),
-              isDense: true,
-            ),
-            controller: TextEditingController(text: widget.filter.nameFilter),
-            onChanged: (val) {
-              widget.filter.nameFilter = val;
-              widget.onFilterChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            decoration: InputDecoration(
-              labelText: tr('author'),
-              border: const OutlineInputBorder(),
-              isDense: true,
-            ),
-            controller: TextEditingController(text: widget.filter.authorFilter),
-            onChanged: (val) {
-              widget.filter.authorFilter = val;
-              widget.onFilterChanged();
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            decoration: InputDecoration(
-              labelText: tr('appId'),
-              border: const OutlineInputBorder(),
-              isDense: true,
-            ),
-            controller: TextEditingController(text: widget.filter.idFilter),
-            onChanged: (val) {
-              widget.filter.idFilter = val;
-              widget.onFilterChanged();
-            },
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          _buildTextField(tr('appName'), widget.filter.nameFilter, (v) {
+            widget.filter.nameFilter = v;
+            widget.onFilterChanged();
+          }, theme),
+          const SizedBox(height: 16),
+          _buildTextField(tr('author'), widget.filter.authorFilter, (v) {
+            widget.filter.authorFilter = v;
+            widget.onFilterChanged();
+          }, theme),
+          const SizedBox(height: 16),
+          _buildTextField(tr('appId'), widget.filter.idFilter, (v) {
+            widget.filter.idFilter = v;
+            widget.onFilterChanged();
+          }, theme),
+          const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
               labelText: tr('appSource'),
-              border: const OutlineInputBorder(),
-              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             value: widget.filter.sourceFilter.isEmpty
                 ? null
@@ -480,9 +496,20 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               widget.onFilterChanged();
             },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+
+  Widget _buildTextField(String label, String initialValue, Function(String) onChanged, ThemeData theme) {
+    return TextField(
+      decoration: InputDecoration(
+        labelText: label,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      controller: TextEditingController(text: initialValue),
+      onChanged: onChanged,
     );
   }
 
