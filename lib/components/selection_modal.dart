@@ -345,64 +345,69 @@ class _SelectionModalState extends State<SelectionModal> {
               .where((e) => e.value)
               .toList();
 
-          Widget tile;
           if (widget.onlyOneSelectionAllowed) {
-            tile = ListTile(
-              title: GestureDetector(
-                onTap: widget.titlesAreLinks
-                    ? null
-                    : () {
-                        selectThis(!(entrySelections[entry] ?? false));
-                      },
-                child: urlLink,
+            tile = Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: entrySelections[entry] == true
+                    ? colorScheme.primaryContainer.withOpacity(0.3)
+                    : colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(itemRadius),
+                border: Border.all(
+                  color: entrySelections[entry] == true
+                      ? colorScheme.primary.withOpacity(0.4)
+                      : colorScheme.outline.withOpacity(0.05),
+                  width: 1.5,
+                ),
               ),
-              subtitle: entry.value.length <= 1
-                  ? null
-                  : GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectOnlyOne(entry.key);
-                        });
-                      },
-                      child: descriptionText,
-                    ),
-              leading: Radio<String>(
+              child: RadioListTile<String>(
                 value: entry.key,
-                groupValue: selectedEntries.isEmpty
-                    ? null
-                    : selectedEntries.first.key.key,
+                groupValue: selectedEntries.isEmpty ? null : selectedEntries.first.key.key,
                 onChanged: (value) {
+                  AppHaptics.selectionClick();
                   setState(() {
                     selectOnlyOne(entry.key);
                   });
                 },
+                title: urlLink,
+                subtitle: entry.value.length <= 1 ? null : descriptionText,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+                activeColor: colorScheme.primary,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
             );
           } else {
-            tile = Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            tile = AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: entrySelections[entry] == true
+                    ? colorScheme.primaryContainer.withOpacity(0.4)
+                    : colorScheme.surfaceContainerHighest.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(itemRadius),
                 border: Border.all(
                   color: entrySelections[entry] == true
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                      : Colors.transparent,
-                  width: 1,
+                      ? colorScheme.primary.withOpacity(0.5)
+                      : colorScheme.outline.withOpacity(0.08),
+                  width: 1.5,
                 ),
+                boxShadow: entrySelections[entry] == true
+                    ? [BoxShadow(color: colorScheme.primary.withOpacity(0.1), blurRadius: 8, spreadRadius: -2)]
+                    : null,
               ),
               child: CheckboxListTile(
                 value: entrySelections[entry],
                 onChanged: (value) {
+                  AppHaptics.selectionClick();
                   selectThis(value);
                 },
                 title: urlLink,
                 subtitle: entry.value.length <= 1 ? null : descriptionText,
                 controlAffinity: ListTileControlAffinity.leading,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
-                contentPadding: EdgeInsets.zero,
+                activeColor: colorScheme.primary,
+                checkColor: colorScheme.onPrimary,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               ),
             );
           }
