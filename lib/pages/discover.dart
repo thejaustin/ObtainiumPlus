@@ -304,97 +304,118 @@ class DiscoverPageState extends State<DiscoverPage> {
     final result = results[url]!;
     final name = result.value.isNotEmpty ? result.value[0] : '';
     final sourceName = result.key;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final cardRadius = (radius * 0.75).clamp(12.0, 24.0);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(cardRadius),
       child: ConditionalBlur(
-        sigma: 10,
+        sigma: 12,
         enabled: settings.plusEnableGlassmorphism,
-        child: Card(
-          elevation: settings.plusEnableGlassmorphism ? 0 : 2,
-          margin: EdgeInsets.zero,
-          color: (isDark
-                  ? Theme.of(context).colorScheme.surfaceContainerHighest
-                  : Theme.of(context).colorScheme.surface)
-              .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(
-                settings.plusEnableGlassmorphism ? AppOpacity.moderate : AppOpacity.subtle,
+        child: Container(
+          decoration: BoxDecoration(
+            color: (isDark
+                    ? theme.colorScheme.surfaceContainerHigh
+                    : theme.colorScheme.surface)
+                .withOpacity(settings.plusEnableGlassmorphism ? 0.65 : 1.0),
+            borderRadius: BorderRadius.circular(cardRadius),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(
+                settings.plusEnableGlassmorphism ? 0.15 : 0.08,
               ),
+              width: 1.2,
             ),
           ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {
-              final addAppState =
-                  context.findAncestorStateOfType<AddAppPageState>();
-              if (addAppState != null) addAppState.linkFn(url);
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withOpacity(AppOpacity.half),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                          ),
-                        ),
+          child: Stack(
+            children: [
+              if (settings.plusEnableGlassmorphism)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.06),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              InkWell(
+                borderRadius: BorderRadius.circular(cardRadius),
+                onTap: () {
+                  AppHaptics.selectionClick();
+                  final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                  if (addAppState != null) addAppState.linkFn(url);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: Container(
+                            width: 68,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(cardRadius * 0.5),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: -0.2),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        sourceName,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      FilledButton.tonal(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                          if (addAppState != null) addAppState.linkFn(url);
+                        },
+                        style: FilledButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cardRadius * 0.5)),
+                        ),
+                        child: Text(tr('add')),
+                      ),
+                    ],
                   ),
-                  Text(
-                    sourceName,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton.tonal(
-                    onPressed: () {
-                      final addAppState =
-                          context.findAncestorStateOfType<AddAppPageState>();
-                      if (addAppState != null) addAppState.linkFn(url);
-                    },
-                    style: FilledButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    child: Text(tr('add')),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
