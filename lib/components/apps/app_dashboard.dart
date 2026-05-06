@@ -103,6 +103,8 @@ class _AppDashboardState extends State<AppDashboard>
         .toList();
     final updatesAvailable = updateApps.length;
 
+    final pinnedApps = apps.where((app) => app.app.pinned).toList();
+
     DateTime? lastCheck;
     for (var app in apps) {
       if (app.app.lastUpdateCheck != null) {
@@ -112,6 +114,10 @@ class _AppDashboardState extends State<AppDashboard>
         }
       }
     }
+
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -200,6 +206,35 @@ class _AppDashboardState extends State<AppDashboard>
 
           const SizedBox(height: 24),
 
+          // Pinned Apps Quick Access (Horizontal Scroll)
+          if (pinnedApps.isNotEmpty)
+            _animated(
+              _updatesAnim,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('pinnedApps'),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 56,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: pinnedApps.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) => _buildPinnedIcon(context, pinnedApps[index], radius),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+
           // Filter mode segmented button — slides in after cards
           _animated(
             _segmentedAnim,
@@ -233,6 +268,9 @@ class _AppDashboardState extends State<AppDashboard>
                   visualDensity: VisualDensity.compact,
                   selectedForegroundColor: colorScheme.onSecondaryContainer,
                   selectedBackgroundColor: colorScheme.secondaryContainer,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(radius * 0.66),
+                  ),
                   side: BorderSide(
                     color: colorScheme.outline.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.15),
                   ),
@@ -286,7 +324,7 @@ class _AppDashboardState extends State<AppDashboard>
                                 const SizedBox(width: 12),
                             itemBuilder: (context, index) =>
                                 _buildRecentUpdateIcon(
-                                    context, updateApps[index]),
+                                    context, updateApps[index], radius),
                           ),
                         ),
                       ],
@@ -299,143 +337,117 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    final settings = context.read<SettingsProvider>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
-
-    final cardContent = Container(
-      width: 130,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.15 : 0.08),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: color.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.1),
-          width: 1.5, // Thicker border for M3E
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Subtle Sheen for Glass effect
-          if (settings.plusEnableGlassmorphism)
-            Positioned(
-              top: -20,
-              right: -20,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      color.withOpacity(0.15),
-                      color.withOpacity(0),
-                    ],
-                  ),
-                ),
-              ),
+  Widget _buildPinnedIcon(BuildContext context, AppInMemory app, double radius) {
+    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
+    return Tooltip(
+      message: app.name,
+      child: InkWell(
+        onTap: () {
+          AppHaptics.selectionClick();
+          showDraggableModalBottomSheet(
+            context: context,
+            builder: (context, controller) => AppPage(
+              appId: app.app.id,
+              isModal: true,
+              scrollController: controller,
             ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 24, color: color),
-              const SizedBox(height: 12),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-              ),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
+          );
+        },
+        borderRadius: BorderRadius.circular(itemRadius),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(itemRadius),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              width: 1.5,
+            ),
           ),
-        ],
-      ),
-    );
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(radius),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: settings.plusEnableGlassmorphism
-            ? BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16), // Deeper blur
-                child: cardContent,
-              )
-            : cardContent,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: app.icon != null
+                ? Image.memory(app.icon!, fit: BoxFit.contain)
+                : const Icon(Icons.apps_rounded, size: 24),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildRecentUpdateIcon(BuildContext context, AppInMemory app) {
+  Widget _buildRecentUpdateIcon(BuildContext context, AppInMemory app, double radius) {
+    final itemRadius = (radius * 0.5).clamp(10.0, 24.0);
     return Tooltip(
       message: app.name,
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context)
-                .colorScheme
-                .error
-                .withOpacity(AppOpacity.medium),
-            width: 1.5,
-          ),
-        ),
-        child: Stack(
-          children: [
-            if (app.icon != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.memory(app.icon!,
-                    fit: BoxFit.cover, width: 64, height: 64),
-              )
-            else
-              Center(
-                child: Icon(
-                  Icons.apps_rounded,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withOpacity(AppOpacity.half),
-                ),
+      child: GestureDetector(
+        onTap: () {
+          AppHaptics.selectionClick();
+          showDraggableModalBottomSheet(
+            context: context,
+            builder: (context, controller) => AppPage(
+              appId: app.app.id,
+              isModal: true,
+              scrollController: controller,
+            ),
+          );
+        },
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(itemRadius),
+            border: Border.all(
+              color: Theme.of(context)
+                  .colorScheme
+                  .error
+                  .withOpacity(AppOpacity.medium),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                blurRadius: 8,
+                spreadRadius: -2,
               ),
-            Positioned(
-              right: 4,
-              top: 4,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.error,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.surface,
-                    width: 1.5,
+            ],
+          ),
+          child: Stack(
+            children: [
+              if (app.icon != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(itemRadius - 2),
+                  child: Image.memory(app.icon!,
+                      fit: BoxFit.cover, width: 64, height: 64),
+                )
+              else
+                Center(
+                  child: Icon(
+                    Icons.apps_rounded,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withOpacity(AppOpacity.half),
+                  ),
+                ),
+              Positioned(
+                right: 4,
+                top: 4,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.surface,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
