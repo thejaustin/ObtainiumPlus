@@ -1467,259 +1467,386 @@ class _AppBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final barRadius = radius.clamp(24.0, 48.0);
+
     return Consumer<AppsProvider>(
       builder: (context, appsProvider, _) {
         final currentApp = app != null ? appsProvider.apps[app!.app.id] : null;
         final busy = currentApp?.downloadProgress != null || updating;
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            0,
-            0,
-            0,
-            MediaQuery.of(context).padding.bottom,
+
+        final barContent = Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withOpacity(enableGlass ? 0.75 : 1.0),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(barRadius)),
+            border: Border(
+              top: BorderSide(
+                color: enableGlass
+                    ? colorScheme.onSurface.withOpacity(0.18)
+                    : colorScheme.outline.withOpacity(AppOpacity.subtle),
+                width: 1.5,
+              ),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              // Source selector row
-              if (allowThirdPartySources && !trackOnly)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.store_outlined, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        tr('preferredUpdateSource'),
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
-                      const Spacer(),
-                      DropdownButton<String>(
-                        value: preferredSource,
-                        underline: const SizedBox.shrink(),
-                        onChanged: busy
-                            ? null
-                            : (String? newValue) {
-                                if (newValue != null) {
-                                  onSourceSelected(newValue);
-                                }
-                              },
-                        items: [
-                          DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
-                          DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
-                          DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
+              // Glass sheen
+              if (enableGlass)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.08),
+                          Colors.transparent,
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              // Tags row
-              if (app != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.label_outline, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: app!.app.tags.isEmpty
-                                ? [Text(tr('noTags'), style: Theme.of(context).textTheme.labelMedium?.copyWith(fontStyle: FontStyle.italic))]
-                                : app!.app.tags.map((tag) => Padding(
-                                    padding: const EdgeInsets.only(right: 4.0),
-                                    child: Chip(
-                                      label: Text(tag, style: const TextStyle(fontSize: 10)),
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                      labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-                                    ),
-                                  )).toList(),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        onPressed: onEditTags,
-                        visualDensity: VisualDensity.compact,
-                        tooltip: tr('editTags'),
-                      ),
-                    ],
-                  ),
-                ),
+              
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Row(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  MediaQuery.of(context).padding.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                    // Source selector row
+                    if (allowThirdPartySources && !trackOnly)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (source != null &&
-                                source!
-                                    .combinedAppSpecificSettingFormItems
-                                    .isNotEmpty)
-                              IconButton(
-                                onPressed: busy ? null : onAdditionalOptions,
-                                tooltip: tr('additionalOptions'),
-                                icon: const Icon(Icons.edit),
+                            Icon(Icons.store_outlined, size: 20, color: colorScheme.primary),
+                            const SizedBox(width: 10),
+                            Text(
+                              tr('preferredUpdateSource'),
+                              style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: colorScheme.outline.withOpacity(0.1),
+                                  width: 1,
+                                ),
                               ),
-                            if (app != null &&
-                                currentApp?.installedInfo != null)
-                              IconButton(
-                                onPressed: () =>
-                                    appsProvider.openAppSettings(app!.app.id),
-                                icon: const Icon(Icons.settings),
-                                tooltip: tr('settings'),
+                              child: DropdownButton<String>(
+                                value: preferredSource,
+                                underline: const SizedBox.shrink(),
+                                icon: const Icon(Icons.arrow_drop_down_rounded),
+                                dropdownColor: colorScheme.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(12),
+                                onChanged: busy
+                                    ? null
+                                    : (String? newValue) {
+                                        if (newValue != null) {
+                                          onSourceSelected(newValue);
+                                        }
+                                      },
+                                items: [
+                                  DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
+                                  DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
+                                  DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
+                                ],
                               ),
-                            if (app != null && showAppWebpageFinal)
-                              IconButton(
-                                onPressed: onMore,
-                                icon: const Icon(Icons.more_horiz),
-                                tooltip: tr('more'),
-                              ),
-                            if (_appNeedsUpdate(app) &&
-                                !isVersionDetectionStandard &&
-                                !trackOnly)
-                              IconButton(
-                                onPressed: busy ? null : onMarkUpdated,
-                                tooltip: tr('markUpdated'),
-                                icon: const Icon(Icons.done),
-                              ),
-                            if ((!isVersionDetectionStandard || trackOnly) &&
-                                app?.app.installedVersion != null &&
-                                app?.app.installedVersion ==
-                                    app?.app.latestVersion)
-                              IconButton(
-                                onPressed: busy ? null : onResetInstallStatus,
-                                icon: const Icon(Icons.restore_rounded),
-                                tooltip: tr('resetInstallStatus'),
-                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    // Expanded update/install button - takes available space
-                    Expanded(
-                      flex: 3,
-                      child: FilledButton(
-                        onPressed: !busy && _appNeedsUpdate(app)
-                            ? onInstallUpdate
-                            : null,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(0, 48),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: updating
-                              ? SizedBox(
-                                  key: const ValueKey('btn_spinner'),
-                                  width: 22,
-                                  height: 22,
-                                  child: ExpressiveCircularProgressIndicator(
-                                    value: currentApp?.downloadProgress != null &&
-                                            currentApp!.downloadProgress! >= 0
-                                        ? currentApp.downloadProgress! / 100
-                                        : null,
-                                  ),
-                                )
-                              : Row(
-                                  key: const ValueKey('btn_content'),
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      preferredSource == 'play_store' || preferredSource == 'aurora'
-                                          ? Icons.open_in_new
-                                          : app?.app.installedVersion == null
-                                              ? Icons.download_outlined
-                                              : Icons.system_update_outlined,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        preferredSource == 'play_store'
-                                            ? tr('playStore')
-                                            : preferredSource == 'aurora'
-                                            ? 'Aurora Store'
-                                            : app?.app.installedVersion == null
-                                                ? !trackOnly
-                                                      ? tr('install')
-                                                      : tr('markInstalled')
-                                                : !trackOnly
-                                                ? tr('update')
-                                                : tr('markUpdated'),
-                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
+                    // Tags row
+                    if (app != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.label_outline, size: 20, color: colorScheme.secondary),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: app!.app.tags.isEmpty
+                                      ? [Text(tr('noTags'), style: theme.textTheme.labelMedium?.copyWith(fontStyle: FontStyle.italic, opacity: 0.6))]
+                                      : app!.app.tags.map((tag) => Padding(
+                                            padding: const EdgeInsets.only(right: 6),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: colorScheme.secondaryContainer.withOpacity(0.3),
+                                                borderRadius: BorderRadius.circular(20),
+                                              ),
+                                              child: Text(tag, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                            ),
+                                          )).toList(),
                                 ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: busy ? null : onEditTags,
+                              icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: tr('addTags'),
+                            ),
+                          ],
                         ),
                       ),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (source != null &&
+                                    source!
+                                        .combinedAppSpecificSettingFormItems
+                                        .isNotEmpty)
+                                  _buildCircularAction(
+                                    icon: Icons.edit_rounded,
+                                    onPressed: busy ? null : onAdditionalOptions,
+                                    tooltip: tr('additionalOptions'),
+                                    colorScheme: colorScheme,
+                                  ),
+                                if (app != null &&
+                                    currentApp?.installedInfo != null)
+                                  _buildCircularAction(
+                                    icon: Icons.settings_rounded,
+                                    onPressed: () =>
+                                        appsProvider.openAppSettings(app!.app.id),
+                                    tooltip: tr('settings'),
+                                    colorScheme: colorScheme,
+                                  ),
+                                if (app != null && showAppWebpageFinal)
+                                  _buildCircularAction(
+                                    icon: Icons.more_horiz_rounded,
+                                    onPressed: onMore,
+                                    tooltip: tr('more'),
+                                    colorScheme: colorScheme,
+                                  ),
+                                if (_appNeedsUpdate(app) &&
+                                    !isVersionDetectionStandard &&
+                                    !trackOnly)
+                                  _buildCircularAction(
+                                    icon: Icons.done_rounded,
+                                    onPressed: busy ? null : onMarkUpdated,
+                                    tooltip: tr('markUpdated'),
+                                    colorScheme: colorScheme,
+                                  ),
+                                if ((!isVersionDetectionStandard || trackOnly) &&
+                                    app?.app.installedVersion != null &&
+                                    app?.app.installedVersion ==
+                                        app?.app.latestVersion)
+                                  _buildCircularAction(
+                                    icon: Icons.restore_rounded,
+                                    onPressed: busy ? null : onResetInstallStatus,
+                                    tooltip: tr('resetInstallStatus'),
+                                    colorScheme: colorScheme,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8.0),
+                        // Expanded update/install button
+                        Expanded(
+                          flex: 3,
+                          child: FilledButton(
+                            onPressed: !busy && _appNeedsUpdate(app)
+                                ? onInstallUpdate
+                                : null,
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(0, 52),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 0,
+                            ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: updating
+                                  ? SizedBox(
+                                      key: const ValueKey('btn_spinner'),
+                                      width: 24,
+                                      height: 24,
+                                      child: ExpressiveCircularProgressIndicator(
+                                        value: currentApp?.downloadProgress != null &&
+                                                currentApp!.downloadProgress! >= 0
+                                            ? currentApp.downloadProgress! / 100
+                                            : null,
+                                        strokeWidth: 3,
+                                      ),
+                                    )
+                                  : Row(
+                                      key: const ValueKey('btn_content'),
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          preferredSource == 'play_store' || preferredSource == 'aurora'
+                                              ? Icons.open_in_new_rounded
+                                              : app?.app.installedVersion == null
+                                                  ? Icons.download_rounded
+                                                  : Icons.system_update_rounded,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Flexible(
+                                          child: Text(
+                                            preferredSource == 'play_store'
+                                                ? tr('playStore')
+                                                : preferredSource == 'aurora'
+                                                ? 'Aurora Store'
+                                                : app?.app.installedVersion == null
+                                                    ? !trackOnly
+                                                          ? tr('install')
+                                                          : tr('markInstalled')
+                                                    : !trackOnly
+                                                    ? tr('update')
+                                                    : tr('markUpdated'),
+                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: -0.2),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8.0),
+                        _buildCircularAction(
+                          icon: Icons.delete_outline_rounded,
+                          onPressed: busy ? null : onRemove,
+                          tooltip: tr('remove'),
+                          colorScheme: colorScheme,
+                          color: colorScheme.error,
+                          containerColor: colorScheme.errorContainer.withOpacity(0.3),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8.0),
-                    IconButton(
-                      onPressed: busy ? null : onRemove,
-                      tooltip: tr('remove'),
-                      icon: const Icon(Icons.delete_outline),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: SizeTransition(
+                          sizeFactor: anim,
+                          axis: Axis.vertical,
+                          child: child,
+                        ),
+                      ),
+                      child: currentApp?.downloadProgress != null && currentApp!.downloadProgress! >= 0
+                          ? Padding(
+                              key: const ValueKey('progress_bar'),
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: ExpressiveProgressIndicator(
+                                      value: currentApp.downloadProgress! / 100,
+                                      height: 6,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  TextButton(
+                                    onPressed: () => appsProvider.cancelDownload(app!.app.id),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    child: Text(tr('cancel'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : currentApp?.downloadProgress != null
+                              ? Padding(
+                                  key: const ValueKey('installing_bar'),
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Row(
+                                    children: [
+                                      const Expanded(
+                                        child: ExpressiveProgressIndicator(
+                                          value: null,
+                                          height: 6,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        tr('installing'),
+                                        style: TextStyle(
+                                          color: colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(key: ValueKey('no_progress')),
                     ),
                   ],
                 ),
               ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: SizeTransition(
-                    sizeFactor: anim,
-                    axis: Axis.vertical,
-                    child: child,
-                  ),
-                ),
-                child: currentApp?.downloadProgress != null && currentApp!.downloadProgress! >= 0
-                    ? Padding(
-                        key: const ValueKey('progress_bar'),
-                        padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ExpressiveProgressIndicator(
-                                value: currentApp.downloadProgress! / 100,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton(
-                              onPressed: () => appsProvider.cancelDownload(app!.app.id),
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(tr('cancel'), style: const TextStyle(fontSize: 12)),
-                            ),
-                          ],
-                        ),
-                      )
-                    : currentApp?.downloadProgress != null
-                        ? Padding(
-                            key: const ValueKey('installing_bar'),
-                            padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
-                            child: ExpressiveProgressIndicator(value: null),
-                          )
-                        : const SizedBox.shrink(key: ValueKey('no_progress')),
-              ),
             ],
           ),
         );
+
+        return ConditionalBlur(
+          enabled: enableGlass,
+          sigma: 24,
+          child: barContent,
+        );
       },
+    );
+  }
+
+  Widget _buildCircularAction({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required ColorScheme colorScheme,
+    Color? color,
+    Color? containerColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: containerColor ?? colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: color ?? colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

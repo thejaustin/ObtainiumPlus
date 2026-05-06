@@ -121,6 +121,11 @@ class _SelectionModalState extends State<SelectionModal> {
     final enableGlass = settings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
 
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final dialogRadius = radius.clamp(24.0, 48.0);
+
     _updateFilteredEntries();
 
     return Dialog(
@@ -131,33 +136,62 @@ class _SelectionModalState extends State<SelectionModal> {
         constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
         decoration: BoxDecoration(
           color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(dialogRadius),
           border: Border.all(
             color: enableGlass
                 ? colorScheme.onSurface.withOpacity(0.18)
                 : colorScheme.outline.withOpacity(AppOpacity.subtle),
-            width: 1,
+            width: 1.5,
           ),
-          boxShadow: AppShadows.smooth(
-            color: Colors.black,
-            opacity: enableGlass ? 0.28 : 0.1,
-            blurFactor: enableGlass ? 1.5 : 1.0,
-          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(enableGlass ? 0.2 : 0.1),
+              blurRadius: 20,
+              spreadRadius: -5,
+            ),
+          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
-              mainAxisSize: MainAxisSize.min,
+          borderRadius: BorderRadius.circular(dialogRadius),
+          child: ConditionalBlur(
+            sigma: 20,
+            enabled: enableGlass,
+            child: Stack(
               children: [
-                _buildHeader(context, enableGlass),
-                const Divider(height: 1),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: _buildContent(context),
+                // Glass sheen
+                if (enableGlass)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.08),
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.02),
+                          ],
+                          stops: const [0.0, 0.4, 1.0],
+                        ),
+                      ),
+                    ),
                   ),
+
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildHeader(context, enableGlass, dialogRadius),
+                    const Divider(height: 1, thickness: 0.5),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                        child: _buildContent(context, radius),
+                      ),
+                    ),
+                    const Divider(height: 1, thickness: 0.5),
+                    _buildActions(context, dialogRadius),
+                  ],
                 ),
-                _buildActions(context),
               ],
             ),
           ),
@@ -166,31 +200,31 @@ class _SelectionModalState extends State<SelectionModal> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool enableGlass) {
+  Widget _buildHeader(BuildContext context, bool enableGlass, double radius) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-            Theme.of(context).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
+            Theme.of(context).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+            Theme.of(context).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.low),
+              color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              Icons.list_alt_outlined,
-              color: Theme.of(context).colorScheme.secondary,
+              Icons.list_alt_rounded,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(width: 16),
@@ -198,8 +232,9 @@ class _SelectionModalState extends State<SelectionModal> {
             child: Text(
               widget.title ?? tr('pick'),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
             ),
           ),
         ],
@@ -207,15 +242,16 @@ class _SelectionModalState extends State<SelectionModal> {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(BuildContext context, double radius) {
+    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
     return Column(
       children: [
         // Filter field
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
-            borderRadius: BorderRadius.circular(12),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(itemRadius),
           ),
           child: GeneratedForm(
             items: [
@@ -243,7 +279,7 @@ class _SelectionModalState extends State<SelectionModal> {
             },
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         // Entry list
         ...filteredEntrySelections.keys.map((entry) {
           selectThis(bool? value) {
@@ -285,6 +321,7 @@ class _SelectionModalState extends State<SelectionModal> {
                     style: const TextStyle(
                       decoration: TextDecoration.underline,
                       fontSize: 12,
+                      opacity: 0.8,
                     ),
                   ),
               ],
@@ -300,6 +337,7 @@ class _SelectionModalState extends State<SelectionModal> {
                   style: const TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 12,
+                    opacity: 0.7,
                   ),
                 );
 
@@ -339,51 +377,32 @@ class _SelectionModalState extends State<SelectionModal> {
                   });
                 },
               ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
             );
           } else {
             tile = Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
-                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(itemRadius),
+                border: Border.all(
+                  color: entrySelections[entry] == true
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                      : Colors.transparent,
+                  width: 1,
+                ),
               ),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: entrySelections[entry],
-                    onChanged: (value) {
-                      selectThis(value);
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: widget.titlesAreLinks
-                              ? null
-                              : () {
-                                  selectThis(!(entrySelections[entry] ?? false));
-                                },
-                          child: urlLink,
-                        ),
-                        entry.value.length <= 1
-                            ? const SizedBox.shrink()
-                            : GestureDetector(
-                                onTap: () {
-                                  selectThis(!(entrySelections[entry] ?? false));
-                                },
-                                child: descriptionText,
-                              ),
-                        const SizedBox(height: 4),
-                      ],
-                    ),
-                  ),
-                ],
+              child: CheckboxListTile(
+                value: entrySelections[entry],
+                onChanged: (value) {
+                  selectThis(value);
+                },
+                title: urlLink,
+                subtitle: entry.value.length <= 1 ? null : descriptionText,
+                controlAffinity: ListTileControlAffinity.leading,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+                contentPadding: EdgeInsets.zero,
               ),
             );
           }
@@ -394,12 +413,12 @@ class _SelectionModalState extends State<SelectionModal> {
     );
   }
 
-  Widget _buildActions(BuildContext context) {
+  Widget _buildActions(BuildContext context, double radius) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(radius)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -411,7 +430,8 @@ class _SelectionModalState extends State<SelectionModal> {
             },
             child: Text(tr('cancel')),
           ),
-          TextButton(
+          const SizedBox(width: 8),
+          FilledButton.tonal(
             onPressed: entrySelections.values.where((b) => b).isEmpty
                 ? null
                 : () {
