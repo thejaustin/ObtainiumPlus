@@ -1428,7 +1428,7 @@ bool _appNeedsUpdate(AppInMemory? app) {
   return reconcileVersionDifferences(inst, latest)?.key != true;
 }
 
-class _AppBottomBar extends StatelessWidget {
+class _AppBottomBar extends StatefulWidget {
   const _AppBottomBar({
     required this.app,
     required this.source,
@@ -1466,6 +1466,13 @@ class _AppBottomBar extends StatelessWidget {
   final bool allowThirdPartySources;
 
   @override
+  State<_AppBottomBar> createState() => _AppBottomBarState();
+}
+
+class _AppBottomBarState extends State<_AppBottomBar> {
+  bool _isButtonPressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final enableGlass = settings.plusEnableGlassmorphism;
@@ -1478,8 +1485,8 @@ class _AppBottomBar extends StatelessWidget {
 
     return Consumer<AppsProvider>(
       builder: (context, appsProvider, _) {
-        final currentApp = app != null ? appsProvider.apps[app!.app.id] : null;
-        final busy = currentApp?.downloadProgress != null || updating;
+        final currentApp = widget.app != null ? appsProvider.apps[widget.app!.app.id] : null;
+        final busy = currentApp?.downloadProgress != null || widget.updating;
 
         final barContent = Container(
           decoration: BoxDecoration(
@@ -1524,7 +1531,7 @@ class _AppBottomBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Source selector row
-                    if (allowThirdPartySources && !trackOnly)
+                    if (widget.allowThirdPartySources && !widget.trackOnly)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
@@ -1547,7 +1554,7 @@ class _AppBottomBar extends StatelessWidget {
                                 ),
                               ),
                               child: DropdownButton<String>(
-                                value: preferredSource,
+                                value: widget.preferredSource,
                                 underline: const SizedBox.shrink(),
                                 icon: const Icon(Icons.arrow_drop_down_rounded),
                                 dropdownColor: colorScheme.surfaceContainerHigh,
@@ -1556,7 +1563,7 @@ class _AppBottomBar extends StatelessWidget {
                                     ? null
                                     : (String? newValue) {
                                         if (newValue != null) {
-                                          onSourceSelected(newValue);
+                                          widget.onSourceSelected(newValue);
                                         }
                                       },
                                 items: [
@@ -1570,7 +1577,7 @@ class _AppBottomBar extends StatelessWidget {
                         ),
                       ),
                     // Tags row
-                    if (app != null)
+                    if (widget.app != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Row(
@@ -1581,9 +1588,9 @@ class _AppBottomBar extends StatelessWidget {
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: Row(
-                                  children: app!.app.tags.isEmpty
+                                  children: widget.app!.app.tags.isEmpty
                                       ? [Text(tr('noTags'), style: theme.textTheme.labelMedium?.copyWith(fontStyle: FontStyle.italic, opacity: 0.6))]
-                                      : app!.app.tags.map((tag) => Padding(
+                                      : widget.app!.app.tags.map((tag) => Padding(
                                             padding: const EdgeInsets.only(right: 6),
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1598,7 +1605,7 @@ class _AppBottomBar extends StatelessWidget {
                               ),
                             ),
                             IconButton(
-                              onPressed: busy ? null : onEditTags,
+                              onPressed: busy ? null : widget.onEditTags,
                               icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
@@ -1617,48 +1624,48 @@ class _AppBottomBar extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (source != null &&
-                                    source!
+                                if (widget.source != null &&
+                                    widget.source!
                                         .combinedAppSpecificSettingFormItems
                                         .isNotEmpty)
                                   _buildCircularAction(
                                     icon: Icons.edit_rounded,
-                                    onPressed: busy ? null : onAdditionalOptions,
+                                    onPressed: busy ? null : widget.onAdditionalOptions,
                                     tooltip: tr('additionalOptions'),
                                     colorScheme: colorScheme,
                                   ),
-                                if (app != null &&
+                                if (widget.app != null &&
                                     currentApp?.installedInfo != null)
                                   _buildCircularAction(
                                     icon: Icons.settings_rounded,
                                     onPressed: () =>
-                                        appsProvider.openAppSettings(app!.app.id),
+                                        appsProvider.openAppSettings(widget.app!.app.id),
                                     tooltip: tr('settings'),
                                     colorScheme: colorScheme,
                                   ),
-                                if (app != null && showAppWebpageFinal)
+                                if (widget.app != null && widget.showAppWebpageFinal)
                                   _buildCircularAction(
                                     icon: Icons.more_horiz_rounded,
-                                    onPressed: onMore,
+                                    onPressed: widget.onMore,
                                     tooltip: tr('more'),
                                     colorScheme: colorScheme,
                                   ),
-                                if (_appNeedsUpdate(app) &&
-                                    !isVersionDetectionStandard &&
-                                    !trackOnly)
+                                if (_appNeedsUpdate(widget.app) &&
+                                    !widget.isVersionDetectionStandard &&
+                                    !widget.trackOnly)
                                   _buildCircularAction(
                                     icon: Icons.done_rounded,
-                                    onPressed: busy ? null : onMarkUpdated,
+                                    onPressed: busy ? null : widget.onMarkUpdated,
                                     tooltip: tr('markUpdated'),
                                     colorScheme: colorScheme,
                                   ),
-                                if ((!isVersionDetectionStandard || trackOnly) &&
-                                    app?.app.installedVersion != null &&
-                                    app?.app.installedVersion ==
-                                        app?.app.latestVersion)
+                                if ((!widget.isVersionDetectionStandard || widget.trackOnly) &&
+                                    widget.app?.app.installedVersion != null &&
+                                    widget.app?.app.installedVersion ==
+                                        widget.app?.app.latestVersion)
                                   _buildCircularAction(
                                     icon: Icons.restore_rounded,
-                                    onPressed: busy ? null : onResetInstallStatus,
+                                    onPressed: busy ? null : widget.onResetInstallStatus,
                                     tooltip: tr('resetInstallStatus'),
                                     colorScheme: colorScheme,
                                   ),
@@ -1670,71 +1677,81 @@ class _AppBottomBar extends StatelessWidget {
                         // Expanded update/install button
                         Expanded(
                           flex: 3,
-                          child: FilledButton(
-                            onPressed: !busy && _appNeedsUpdate(app)
-                                ? onInstallUpdate
-                                : null,
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size(0, 52),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              elevation: 0,
-                            ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 200),
-                              child: updating
-                                  ? SizedBox(
-                                      key: const ValueKey('btn_spinner'),
-                                      width: 24,
-                                      height: 24,
-                                      child: ExpressiveCircularProgressIndicator(
-                                        value: currentApp?.downloadProgress != null &&
-                                                currentApp!.downloadProgress! >= 0
-                                            ? currentApp.downloadProgress! / 100
-                                            : null,
-                                        strokeWidth: 3,
-                                      ),
-                                    )
-                                  : Row(
-                                      key: const ValueKey('btn_content'),
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          preferredSource == 'play_store' || preferredSource == 'aurora'
-                                              ? Icons.open_in_new_rounded
-                                              : app?.app.installedVersion == null
-                                                  ? Icons.download_rounded
-                                                  : Icons.system_update_rounded,
-                                          size: 22,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Flexible(
-                                          child: Text(
-                                            preferredSource == 'play_store'
-                                                ? tr('playStore')
-                                                : preferredSource == 'aurora'
-                                                ? 'Aurora Store'
-                                                : app?.app.installedVersion == null
-                                                    ? !trackOnly
-                                                          ? tr('install')
-                                                          : tr('markInstalled')
-                                                    : !trackOnly
-                                                    ? tr('update')
-                                                    : tr('markUpdated'),
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: -0.2),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                          child: GestureDetector(
+                            onTapDown: (_) => setState(() => _isButtonPressed = true),
+                            onTapUp: (_) => setState(() => _isButtonPressed = false),
+                            onTapCancel: () => setState(() => _isButtonPressed = false),
+                            child: AnimatedScale(
+                              scale: _isButtonPressed ? 0.94 : 1.0,
+                              duration: const Duration(milliseconds: 100),
+                              curve: Curves.easeOutCubic,
+                              child: FilledButton(
+                                onPressed: !busy && _appNeedsUpdate(widget.app)
+                                    ? widget.onInstallUpdate
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(0, 52),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 0,
+                                ),
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  child: widget.updating
+                                      ? SizedBox(
+                                          key: const ValueKey('btn_spinner'),
+                                          width: 24,
+                                          height: 24,
+                                          child: ExpressiveCircularProgressIndicator(
+                                            value: currentApp?.downloadProgress != null &&
+                                                    currentApp!.downloadProgress! >= 0
+                                                ? currentApp.downloadProgress! / 100
+                                                : null,
+                                            strokeWidth: 3,
                                           ),
+                                        )
+                                      : Row(
+                                          key: const ValueKey('btn_content'),
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              widget.preferredSource == 'play_store' || widget.preferredSource == 'aurora'
+                                                  ? Icons.open_in_new_rounded
+                                                  : widget.app?.app.installedVersion == null
+                                                      ? Icons.download_rounded
+                                                      : Icons.system_update_rounded,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Flexible(
+                                              child: Text(
+                                                widget.preferredSource == 'play_store'
+                                                    ? tr('playStore')
+                                                    : widget.preferredSource == 'aurora'
+                                                    ? 'Aurora Store'
+                                                    : widget.app?.app.installedVersion == null
+                                                        ? !widget.trackOnly
+                                                              ? tr('install')
+                                                              : tr('markInstalled')
+                                                        : !widget.trackOnly
+                                                        ? tr('update')
+                                                        : tr('markUpdated'),
+                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: -0.2),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8.0),
                         _buildCircularAction(
                           icon: Icons.delete_outline_rounded,
-                          onPressed: busy ? null : onRemove,
+                          onPressed: busy ? null : widget.onRemove,
                           tooltip: tr('remove'),
                           colorScheme: colorScheme,
                           color: colorScheme.error,
@@ -1766,7 +1783,7 @@ class _AppBottomBar extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 12),
                                   TextButton(
-                                    onPressed: () => appsProvider.cancelDownload(app!.app.id),
+                                    onPressed: () => appsProvider.cancelDownload(widget.app!.app.id),
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

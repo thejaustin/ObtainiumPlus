@@ -162,12 +162,41 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                             // Header
                             _buildAnimatedSection(0, Padding(
                               padding: const EdgeInsets.only(bottom: 24),
-                              child: Text(
-                                tr('filterApps'),
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.5,
-                                ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      tr('filterApps'),
+                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      AppHaptics.mediumImpact();
+                                      setState(() {
+                                        widget.filter.statusFilter.clear();
+                                        widget.filter.categoryFilter.clear();
+                                        widget.filter.tagFilter.clear();
+                                        widget.filter.nameFilter = '';
+                                        widget.filter.authorFilter = '';
+                                        widget.filter.idFilter = '';
+                                        widget.filter.sourceFilter = '';
+                                        widget.filter.includeUptodate = true;
+                                        widget.filter.includeNonInstalled = true;
+                                      });
+                                      widget.onFilterChanged();
+                                    },
+                                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                                    label: Text(tr('reset')),
+                                    style: TextButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      foregroundColor: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             )),
 
@@ -241,7 +270,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
   Widget _buildSortSection(ViewSettingsProvider sp, ThemeData theme, double radius) {
     final currentSort = sp.appSortMethod;
-    final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
+    final itemRadius = (radius * 0.45).clamp(10.0, 16.0);
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,8 +281,14 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           runSpacing: 10,
           children: AppSortMethod.values.map((method) {
             final selected = currentSort == method;
+            final details = _sortMethodDetails(method);
             return ChoiceChip(
-              label: Text(_sortMethodLabel(method)),
+              avatar: Icon(
+                details.$2, 
+                size: 16, 
+                color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant
+              ),
+              label: Text(details.$1),
               selected: selected,
               onSelected: (val) {
                 if (val) {
@@ -262,12 +297,35 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 }
               },
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              selectedColor: theme.colorScheme.primary,
+              labelStyle: TextStyle(
+                color: selected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
+              showCheckmark: false,
             );
           }).toList(),
         ),
       ],
     );
+  }
+
+  (String, IconData) _sortMethodDetails(AppSortMethod method) {
+    switch (method) {
+      case AppSortMethod.latestUpdates:
+        return (tr('latestUpdates'), Icons.update_rounded);
+      case AppSortMethod.nameAZ:
+        return (tr('nameAZ'), Icons.sort_by_alpha_rounded);
+      case AppSortMethod.nameZA:
+        return (tr('nameZA'), Icons.sort_by_alpha_rounded);
+      case AppSortMethod.recentlyAdded:
+        return (tr('recentlyAdded'), Icons.history_rounded);
+      case AppSortMethod.installStatus:
+        return (tr('installStatus'), Icons.install_mobile_rounded);
+      case AppSortMethod.defaultSort:
+        return (tr('defaultSort'), Icons.sort_rounded);
+    }
   }
 
   Widget _buildViewModeSection(ViewSettingsProvider sp, ThemeData theme, double radius) {
@@ -514,19 +572,6 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   }
 
   String _sortMethodLabel(AppSortMethod method) {
-    switch (method) {
-      case AppSortMethod.latestUpdates:
-        return tr('latestUpdates');
-      case AppSortMethod.nameAZ:
-        return tr('nameAZ');
-      case AppSortMethod.nameZA:
-        return tr('nameZA');
-      case AppSortMethod.recentlyAdded:
-        return tr('recentlyAdded');
-      case AppSortMethod.installStatus:
-        return tr('installStatus');
-      case AppSortMethod.defaultSort:
-        return tr('defaultSort');
-    }
+    return _sortMethodDetails(method).$1;
   }
 }
