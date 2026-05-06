@@ -301,7 +301,8 @@ class DiscoverPageState extends State<DiscoverPage> {
   }
 
   Widget _buildAppGrid(String url, SettingsProvider settings) {
-    final result = results[url]!;
+    final result = results[url];
+    if (result == null) return const SizedBox.shrink();
     final name = result.value.isNotEmpty ? result.value[0] : '';
     final sourceName = result.key;
     final theme = Theme.of(context);
@@ -623,7 +624,8 @@ class DiscoverPageState extends State<DiscoverPage> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final url = results.keys.elementAt(index);
-                        final result = results[url]!;
+                        final result = results[url];
+                        if (result == null) return const SizedBox.shrink();
                         final name =
                             result.value.isNotEmpty ? result.value[0] : '';
                         final description =
