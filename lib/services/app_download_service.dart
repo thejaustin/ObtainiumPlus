@@ -17,6 +17,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
@@ -641,7 +642,9 @@ class AppDownloadService {
     try {
       bool sayInstalled = true;
       var contextIfNewInstall = apps[id]?.installedInfo == null ? context : null;
-      bool needBGWorkaround = willBeSilent && context == null && !settingsProvider.useShizuku;
+      bool needBGWorkaround = (willBeSilent && context == null && !settingsProvider.useShizuku) || 
+          AppConstants.plusAppIds.contains(id) ||
+          apps[id]!.app.additionalSettings['persistentVersionTracking'] == true;
       bool shizukuPretendToBeGooglePlay = settingsProvider.shizukuPretendToBeGooglePlay ||
           apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] == true;
 
@@ -674,18 +677,8 @@ class AppDownloadService {
           saveApps: saveApps,
         );
       }
-      if (willBeSilent && context == null) {
-        if (!settingsProvider.useShizuku) {
-          notificationsProvider?.notify(
-            SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
-          );
-        } else {
-          notificationsProvider?.notify(
-            SilentUpdateNotification([apps[id]!.app], sayInstalled, id: id.hashCode),
-          );
-        }
-      }
       if (sayInstalled) {
+        AppUpdateService.invalidateCache(id);
         // Re-evaluate remaining updates — update the notification if some apps
         // still need updates, cancel it if all are now up-to-date.
         final remaining = apps.values
@@ -702,6 +695,17 @@ class AppDownloadService {
           notificationsProvider?.cancel(UpdateNotification([]).id);
         } else {
           notificationsProvider?.notify(UpdateNotification(remaining));
+        }
+      }
+      if (willBeSilent && context == null) {
+        if (!settingsProvider.useShizuku) {
+          notificationsProvider?.notify(
+            SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
+          );
+        } else {
+          notificationsProvider?.notify(
+            SilentUpdateNotification([apps[id]!.app], sayInstalled, id: id.hashCode),
+          );
         }
       }
       logs.logEvent('InstallCompleted', {'appId': id, 'success': sayInstalled});

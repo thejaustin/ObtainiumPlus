@@ -7,10 +7,10 @@ List<String> generateStandardVersionRegExStrings() {
     '[0-9]+\\.[0-9]+\\.[0-9]+',
     '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+',
   ];
-  var prefixes = ['[vV]?', '[pP]?'];
-  var preSuffixes = ['-', '\\+'];
-  var suffixes = ['alpha', 'beta', 'ose', '[0-9]+'];
-  var finals = ['\\+[0-9]+', '[0-9]+'];
+  var prefixes = ['[vV]?', '[pP]?', 'dev-', 'stable-'];
+  var preSuffixes = ['-', '\\.r', '\\.', '_'];
+  var suffixes = ['alpha', 'beta', 'ose', '[0-9]+', '[pP][0-9]+', '[vV][0-9]+', 'shizukuplus', 'fork', 'plus'];
+  var finals = ['\\+[0-9]+', '[0-9]+', '-shizukuplus', '-plus', '-fork'];
   List<String> results = [];
   for (var b in basics) {
     for (var pre in prefixes) {
@@ -52,8 +52,15 @@ Set<String> findStandardFormatsForVersion(String version, bool strict) {
 
 MapEntry<bool, String>? reconcileVersionDifferences(
   String templateVersion,
-  String comparisonVersion,
-) {
+  String comparisonVersion, {
+  bool aggressive = false,
+}) {
+  if (aggressive) {
+    if (templateVersion == comparisonVersion) return MapEntry(true, comparisonVersion);
+    if (normalizeVersion(templateVersion) == normalizeVersion(comparisonVersion)) {
+      return MapEntry(true, comparisonVersion);
+    }
+  }
   // Returns null if the versions don't share a common standard format
   // Returns <true, comparisonVersion> if they share a common format and are equal
   // Returns <false, templateVersion> if they share a common format but are not equal

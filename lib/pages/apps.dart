@@ -471,6 +471,7 @@ class AppsPageState extends State<AppsPage> {
               if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
             }).catchError((e) {
               if (mounted) showError(e, context);
+              return <String>[];
             });
           }
         });
@@ -1236,6 +1237,7 @@ class AppsPageState extends State<AppsPage> {
             if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
           }).catchError((e) {
             if (mounted) showError(e, context);
+            return <String>[];
           });
         }
       });

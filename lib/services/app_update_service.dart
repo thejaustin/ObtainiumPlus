@@ -20,6 +20,7 @@ import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_utils.dart';
 
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/version_utils.dart';
 
 class AppUpdateService {
@@ -28,10 +29,16 @@ class AppUpdateService {
   static final Map<String, (App, DateTime)> _updateCache = {};
   static const Duration _cacheTtl = Duration(minutes: 5);
 
-  static bool _areVersionsDifferent(String? installed, String latest) {
+  static void invalidateCache(String appId) {
+    _updateCache.remove(appId);
+  }
+
+  static bool _areVersionsDifferent(App app, String? installed, String latest) {
     if (installed == null) return true;
     if (installed == latest) return false;
-    final reconciliation = reconcileVersionDifferences(installed, latest);
+    final aggressive = app.additionalSettings['aggressiveVersionReconciliation'] == true ||
+        AppConstants.plusAppIds.contains(app.id);
+    final reconciliation = reconcileVersionDifferences(installed, latest, aggressive: aggressive);
     if (reconciliation != null && reconciliation.key == true) {
       return false; // Reconciled as equal
     }
@@ -52,7 +59,7 @@ class AppUpdateService {
     if (!ignoreCache && _updateCache.containsKey(appId)) {
       var (cachedApp, timestamp) = _updateCache[appId]!;
       if (DateTime.now().difference(timestamp) < _cacheTtl) {
-        return _areVersionsDifferent(currentApp.installedVersion, cachedApp.latestVersion)
+        return _areVersionsDifferent(currentApp, currentApp.installedVersion, cachedApp.latestVersion)
             ? cachedApp
             : null;
       }
@@ -80,7 +87,7 @@ class AppUpdateService {
     // Update cache
     _updateCache[appId] = (newApp, DateTime.now());
 
-    return _areVersionsDifferent(newApp.installedVersion, newApp.latestVersion) ? newApp : null;
+    return _areVersionsDifferent(newApp, newApp.installedVersion, newApp.latestVersion) ? newApp : null;
   }
 
   static List<String> getAppsSortedByUpdateCheckTime(
