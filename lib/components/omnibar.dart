@@ -457,7 +457,7 @@ class AppActionsFAB extends StatelessWidget {
                           },
                         ),
 
-                      if (settings.plusDeveloperMode && settings.plusFabShowGithubPersonalRepos)
+                      if (settings.plusFabShowGithubPersonalRepos)
                         _buildMenuItem(
                           context,
                           icon: Icons.person_outline_rounded,

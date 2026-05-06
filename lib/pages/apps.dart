@@ -602,6 +602,8 @@ class AppsPageState extends State<AppsPage> {
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),
                 ...loadingWidgets,
+                if (filter.statusFilter.contains('updates') && selectedAppIds.isEmpty)
+                  _buildUpdateAllBanner(context),
                 _buildContent(context, viewSettings, listedApps, listedCategories),
                 // Bottom padding to prevent FAB / quick-filter strip from
                 // obscuring the last list item.
@@ -1419,6 +1421,62 @@ class AppsPageState extends State<AppsPage> {
           ExpressiveProgressIndicator(value: aggProgress),
           const SizedBox(height: 4),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUpdateAllBanner(BuildContext context) {
+    final fn = _getMassObtainFunction(context);
+    if (fn == null) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    final appsProvider = context.read<AppsProvider>();
+    final updateCount = appsProvider.findExistingUpdates(installedOnly: true).length;
+    if (updateCount == 0) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.secondaryContainer.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colorScheme.secondary.withOpacity(0.2)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Icon(Icons.system_update_rounded, color: colorScheme.secondary, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    tr('updateX', args: [plural('apps', updateCount).toLowerCase()]),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: () {
+                    AppHaptics.heavyImpact();
+                    fn();
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.secondary,
+                    foregroundColor: colorScheme.onSecondary,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  child: Text(tr('update')),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
