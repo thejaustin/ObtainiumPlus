@@ -60,7 +60,7 @@ class AppListTile extends StatelessWidget {
           ),
         );
       }
-      return IconButton(
+      return IconButton.filled(
         icon: const Icon(Icons.download_rounded),
         onPressed: () {
           AppHaptics.selectionClick();
@@ -68,6 +68,10 @@ class AppListTile extends StatelessWidget {
               [appInMemory.app.id], context);
         },
         tooltip: tr('installUpdate'),
+        style: IconButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+        ),
       );
     }
 
@@ -117,16 +121,16 @@ class AppListTile extends StatelessWidget {
     final trailingRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (hasUpdate) getUpdateButton(),
         if (onShowChanges != null && hasUpdate)
           IconButton(
             icon: const Icon(Icons.history_rounded),
             onPressed: onShowChanges,
             tooltip: tr('viewChanges'),
           ),
+        if (hasUpdate) getUpdateButton(),
         if (!hasUpdate && !isCheckingUpdate)
-           Icon(Icons.chevron_right_rounded, 
-             size: 20, 
+           Icon(Icons.chevron_right_rounded,
+             size: 20,
              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
       ],
     );
@@ -159,7 +163,7 @@ class AppListTile extends StatelessWidget {
                   color: isSelected
                       ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
                       : hasUpdate
-                          ? Theme.of(context).colorScheme.errorContainer.withOpacity(isCompact ? 0.08 : 0.15)
+                          ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(isCompact ? 0.1 : 0.2)
                           : appInMemory.app.pinned
                               ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
                               : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
@@ -167,7 +171,7 @@ class AppListTile extends StatelessWidget {
                     color: isSelected
                         ? Theme.of(context).colorScheme.primary
                         : hasUpdate
-                            ? Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low)
+                            ? Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.hint)
                             : appInMemory.app.pinned
                                 ? Theme.of(context).colorScheme.outlineVariant
                                 : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
@@ -176,7 +180,7 @@ class AppListTile extends StatelessWidget {
                   boxShadow: isSelected
                       ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
                       : hasUpdate && !isCompact
-                          ? AppShadows.smooth(color: Theme.of(context).colorScheme.error, opacity: 0.1)
+                          ? AppShadows.smooth(color: Theme.of(context).colorScheme.secondary, opacity: 0.1)
                           : null,
                 ),
                 child: ClipRRect(
@@ -282,7 +286,7 @@ class AppListTile extends StatelessWidget {
                               Text(
                                 ' • ${getVersionText()}',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: hasUpdate ? Theme.of(context).colorScheme.error : null,
+                                      color: hasUpdate ? Theme.of(context).colorScheme.secondary : null,
                                       fontWeight: hasUpdate ? FontWeight.bold : null,
                                       fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
                                           ? FontStyle.italic

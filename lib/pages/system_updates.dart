@@ -82,9 +82,17 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
           children: [
             const ExpressiveCircularProgressIndicator(),
             const SizedBox(height: 24),
-            Text(tr('scanningXApps', args: [_scanTotal.toString()])),
-            const SizedBox(height: 8),
-            Text('$_scanCurrent / $_scanTotal', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              tr('scanningXApps', args: [_scanTotal.toString()]),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$_scanCurrent / $_scanTotal',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
               child: ExpressiveProgressIndicator(
@@ -131,11 +139,22 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ExpansionTile(
         leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Text(update.name.isNotEmpty ? update.name[0].toUpperCase() : '?'),
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+          child: Text(
+            update.name.isNotEmpty ? update.name[0].toUpperCase() : '?',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         title: Text(update.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${update.currentVersion} ➔ ${update.latestVersion}', style: const TextStyle(fontSize: 12)),
+        subtitle: Text(
+          '${update.currentVersion} → ${update.latestVersion}',
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.secondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         children: [
           Consumer<SettingsProvider>(
             builder: (context, settings, _) {
