@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -159,7 +158,6 @@ class _SelectionModalState extends State<SelectionModal> {
             enabled: enableGlass,
             child: Stack(
               children: [
-                // Glass sheen
                 if (enableGlass)
                   Positioned.fill(
                     child: Container(
@@ -177,40 +175,79 @@ class _SelectionModalState extends State<SelectionModal> {
                       ),
                     ),
                   ),
-
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildHeader(context, enableGlass, dialogRadius),
+                    _buildHeader(context, enableGlass, dialogRadius, colorScheme),
                     const Divider(height: 1, thickness: 0.5),
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                        child: _buildContent(context, radius),
+                        child: _buildContent(context, radius, colorScheme),
                       ),
                     ),
                     const Divider(height: 1, thickness: 0.5),
-                    _buildActions(context, dialogRadius),
-                    ],
-                    ),
-                    ],
-                    ),
-                    ),
-                    ),
-                    ),
-                    );
-                    }
+                    _buildActions(context, dialogRadius, colorScheme),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-                    Widget _buildActions(BuildContext context, double radius) {
-                    final colorScheme = Theme.of(context).colorScheme;
-                    final colorScheme = Theme.of(context).colorScheme;
-                    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);    return Column(
+  Widget _buildHeader(BuildContext context, bool enableGlass, double radius, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+            colorScheme.primaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(AppOpacity.low),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.list_alt_rounded,
+              color: colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              widget.title ?? tr('pick'),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, double radius, ColorScheme colorScheme) {
+    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
+    return Column(
       children: [
-        // Filter field
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+            color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
             borderRadius: BorderRadius.circular(itemRadius),
           ),
           child: GeneratedForm(
@@ -220,11 +257,7 @@ class _SelectionModalState extends State<SelectionModal> {
                   'filter',
                   label: tr('filter'),
                   required: false,
-                  additionalValidators: [
-                    (value) {
-                      return SourceUtils.regExValidator(value);
-                    },
-                  ],
+                  additionalValidators: [(value) => SourceUtils.regExValidator(value)],
                 ),
               ],
             ],
@@ -240,7 +273,6 @@ class _SelectionModalState extends State<SelectionModal> {
           ),
         ),
         const SizedBox(height: 20),
-        // Entry list
         ...filteredEntrySelections.keys.map((entry) {
           selectThis(bool? value) {
             setState(() {
@@ -268,9 +300,7 @@ class _SelectionModalState extends State<SelectionModal> {
                 Text(
                   entry.value.isEmpty ? entry.key : entry.value[0],
                   style: TextStyle(
-                    decoration: widget.titlesAreLinks
-                        ? TextDecoration.underline
-                        : null,
+                    decoration: widget.titlesAreLinks ? TextDecoration.underline : null,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.start,
@@ -278,10 +308,10 @@ class _SelectionModalState extends State<SelectionModal> {
                 if (widget.titlesAreLinks)
                   Text(
                     Uri.parse(entry.key).host,
-                    style: const TextStyle(
+                    style: TextStyle(
                       decoration: TextDecoration.underline,
                       fontSize: 12,
-                      opacity: 0.8,
+                      color: colorScheme.onSurface.withOpacity(0.8),
                     ),
                   ),
               ],
@@ -291,99 +321,78 @@ class _SelectionModalState extends State<SelectionModal> {
           var descriptionText = entry.value.length <= 1
               ? const SizedBox.shrink()
               : Text(
-                  entry.value[1].length > 128
-                      ? '${entry.value[1].substring(0, 128)}...'
-                      : entry.value[1],
-                  style: const TextStyle(
+                  entry.value[1].length > 128 ? '${entry.value[1].substring(0, 128)}...' : entry.value[1],
+                  style: TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 12,
-                    opacity: 0.7,
+                    color: colorScheme.onSurface.withOpacity(0.7),
                   ),
                 );
 
-          var selectedEntries = entrySelections.entries
-              .where((e) => e.value)
-              .toList();
+          var selectedEntries = entrySelections.entries.where((e) => e.value).toList();
 
-          Widget tile;
-          if (widget.onlyOneSelectionAllowed) {
-            tile = Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: entrySelections[entry] == true
-                    ? colorScheme.primaryContainer.withOpacity(0.3)
-                    : colorScheme.surfaceContainerHighest.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(itemRadius),
-                border: Border.all(
-                  color: entrySelections[entry] == true
-                      ? colorScheme.primary.withOpacity(0.4)
-                      : colorScheme.outline.withOpacity(0.05),
-                  width: 1.5,
-                ),
-              ),
-              child: RadioListTile<String>(
-                value: entry.key,
-                groupValue: selectedEntries.isEmpty ? null : selectedEntries.first.key.key,
-                onChanged: (value) {
-                  AppHaptics.selectionClick();
-                  setState(() {
-                    selectOnlyOne(entry.key);
-                  });
-                },
-                title: urlLink,
-                subtitle: entry.value.length <= 1 ? null : descriptionText,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
-                activeColor: colorScheme.primary,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              ),
-            );
-          } else {
-            tile = AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: entrySelections[entry] == true
-                    ? colorScheme.primaryContainer.withOpacity(0.4)
-                    : colorScheme.surfaceContainerHighest.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(itemRadius),
-                border: Border.all(
-                  color: entrySelections[entry] == true
-                      ? colorScheme.primary.withOpacity(0.5)
-                      : colorScheme.outline.withOpacity(0.08),
-                  width: 1.5,
-                ),
-                boxShadow: entrySelections[entry] == true
-                    ? [BoxShadow(color: colorScheme.primary.withOpacity(0.1), blurRadius: 8, spreadRadius: -2)]
-                    : null,
-              ),
-              child: CheckboxListTile(
-                value: entrySelections[entry],
-                onChanged: (value) {
-                  AppHaptics.selectionClick();
-                  selectThis(value);
-                },
-                title: urlLink,
-                subtitle: entry.value.length <= 1 ? null : descriptionText,
-                controlAffinity: ListTileControlAffinity.leading,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
-                activeColor: colorScheme.primary,
-                checkColor: colorScheme.onPrimary,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              ),
-            );
-          }
-
-          return tile;
+          return entrySelections[entry] == true && widget.onlyOneSelectionAllowed
+              ? Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(itemRadius),
+                    border: Border.all(color: colorScheme.primary.withOpacity(0.4), width: 1.5),
+                  ),
+                  child: RadioListTile<String>(
+                    value: entry.key,
+                    groupValue: selectedEntries.isEmpty ? null : selectedEntries.first.key.key,
+                    onChanged: (value) {
+                      AppHaptics.selectionClick();
+                      setState(() => selectOnlyOne(entry.key));
+                    },
+                    title: urlLink,
+                    subtitle: entry.value.length <= 1 ? null : descriptionText,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+                    activeColor: colorScheme.primary,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  ),
+                )
+              : AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: entrySelections[entry] == true
+                        ? colorScheme.primaryContainer.withOpacity(0.4)
+                        : colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(itemRadius),
+                    border: Border.all(
+                      color: entrySelections[entry] == true
+                          ? colorScheme.primary.withOpacity(0.5)
+                          : colorScheme.outline.withOpacity(0.08),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: CheckboxListTile(
+                    value: entrySelections[entry],
+                    onChanged: (value) {
+                      AppHaptics.selectionClick();
+                      selectThis(value);
+                    },
+                    title: urlLink,
+                    subtitle: entry.value.length <= 1 ? null : descriptionText,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+                    activeColor: colorScheme.primary,
+                    checkColor: colorScheme.onPrimary,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ),
+                );
         }),
       ],
     );
   }
 
-  Widget _buildActions(BuildContext context, double radius) {
+  Widget _buildActions(BuildContext context, double radius, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.2),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(radius)),
       ),
       child: Row(
@@ -391,9 +400,7 @@ class _SelectionModalState extends State<SelectionModal> {
         children: [
           _getSelectAllButton(),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+            onPressed: () => Navigator.of(context).pop(),
             child: Text(tr('cancel')),
           ),
           const SizedBox(width: 8),
@@ -411,12 +418,7 @@ class _SelectionModalState extends State<SelectionModal> {
             child: Text(
               widget.onlyOneSelectionAllowed
                   ? tr('pick')
-                  : tr(
-                      'selectX',
-                      args: [
-                        entrySelections.values.where((b) => b).length.toString(),
-                      ],
-                    ),
+                  : tr('selectX', args: [entrySelections.values.where((b) => b).length.toString()]),
             ),
           ),
         ],
