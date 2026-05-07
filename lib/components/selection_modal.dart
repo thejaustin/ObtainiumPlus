@@ -186,11 +186,11 @@ class _SelectionModalState extends State<SelectionModal> {
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                        child: _buildContent(context, radius, colorScheme),
+                        child: _buildContent(context, radius),
                       ),
                     ),
                     const Divider(height: 1, thickness: 0.5),
-                    _buildActions(context, dialogRadius, colorScheme),
+                    _buildActions(context, dialogRadius),
                     ],
                     ),
                     ],
@@ -201,51 +201,10 @@ class _SelectionModalState extends State<SelectionModal> {
                     );
                     }
 
-                    Widget _buildContent(BuildContext context, double radius, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.list_alt_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              widget.title ?? tr('pick'),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, double radius) {
-    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
-    return Column(
+                    Widget _buildActions(BuildContext context, double radius) {
+                    final colorScheme = Theme.of(context).colorScheme;
+                    final colorScheme = Theme.of(context).colorScheme;
+                    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);    return Column(
       children: [
         // Filter field
         Container(
