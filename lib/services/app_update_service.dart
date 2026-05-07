@@ -265,7 +265,7 @@ class AppUpdateService {
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
       App? app = apps[appIds[i]]!.app;
-      if (_areVersionsDifferent(app.installedVersion, app.latestVersion) &&
+      if (_areVersionsDifferent(app, app.installedVersion, app.latestVersion) &&
           (!installedOnly || !nonInstalledOnly)) {
         if ((app.installedVersion == null &&
                 (nonInstalledOnly || !installedOnly) ||

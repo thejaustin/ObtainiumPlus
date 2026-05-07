@@ -260,7 +260,6 @@ class AppDownloadService {
         downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
-        headers: headers,
         (double? progress) {
           int? prog = progress?.ceil();
           if (apps[app.id] != null) {
@@ -275,9 +274,11 @@ class AppDownloadService {
         },
         APKDir.path,
         useExisting: useExisting,
+        headers: headers,
         allowInsecure: app.additionalSettings['allowInsecure'] == true,
         logs: logs,
         isCancelled: isCancelled != null ? () => isCancelled!(app.id) : null,
+        useSmartRetries: settingsProvider.plusEnableSmartRetries,
       );
       
       logs.logEvent('DownloadCompleted', {

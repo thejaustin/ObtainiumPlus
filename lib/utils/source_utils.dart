@@ -11,6 +11,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:equations/equations.dart';
 import 'package:crypto/crypto.dart';
 

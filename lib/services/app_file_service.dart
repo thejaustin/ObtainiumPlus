@@ -226,6 +226,7 @@ class AppFileService {
     bool allowInsecure = false,
     LogsProvider? logs,
     bool Function()? isCancelled,
+    bool useSmartRetries = true,
   }) async {
     try {
       return await downloadFile(
@@ -247,7 +248,17 @@ class AppFileService {
               e is HttpException ||
               e is SocketException ||
               e is HandshakeException)) {
-        await Future.delayed(const Duration(seconds: 5));
+        
+        // Exponential backoff: 2^retry_count * 5 seconds
+        // retry_count starts at 3, so we use (4 - retries)
+        int attempt = 4 - retries;
+        int delaySeconds = useSmartRetries 
+            ? (5 * (1 << (attempt - 1))) // 5, 10, 20
+            : 5;
+
+        logs?.add('Download failed ($e). Retrying in $delaySeconds seconds... (Attempt $attempt)');
+        await Future.delayed(Duration(seconds: delaySeconds));
+
         if (isCancelled?.call() == true) throw DownloadCancelledError();
         return await downloadFileWithRetry(
           url,
@@ -261,6 +272,7 @@ class AppFileService {
           allowInsecure: allowInsecure,
           logs: logs,
           isCancelled: isCancelled,
+          useSmartRetries: useSmartRetries,
         );
       } else {
         rethrow;

@@ -41,14 +41,16 @@ jobs:
         id: bump_version
         if: steps.detect_build.outputs.is_dev != 'true'
         run: |
-          # Extract current version
-          CURRENT_VERSION=$(grep -oP "^version: \K[^\+]+" pubspec.yaml)
-          CURRENT_BUILD=$(grep -oP "^version: .*\+\K.*" pubspec.yaml)
+          # Extract current version and build number using a more robust regex
+          # Matches "version: 1.2.9-p24+107" -> version=1.2.9-p24, build=107
+          FULL_VERSION=$(grep "^version: " pubspec.yaml | cut -d' ' -f2)
+          CURRENT_VERSION=$(echo "$FULL_VERSION" | cut -d'+' -f1)
+          CURRENT_BUILD=$(echo "$FULL_VERSION" | cut -d'+' -f2)
 
           echo "Current version: $CURRENT_VERSION (build $CURRENT_BUILD)"
 
-          # Extract base version and patch number (e.g., 1.2.9-p24 -> base=1.2.9, patch=24)
-          if [[ $CURRENT_VERSION =~ ^(.+)-p([0-9]+)$ ]]; then
+          # Handle cases where patch number might be missing
+          if [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
             BASE_VERSION="${BASH_REMATCH[1]}"
             PATCH_NUM="${BASH_REMATCH[2]}"
           else
@@ -63,10 +65,10 @@ jobs:
 
           echo "New version: $NEW_VERSION (build $NEW_BUILD)"
 
-          # Update pubspec.yaml
+          # Update pubspec.yaml with clean replacement
           sed -i "s/^version: .*/version: ${NEW_VERSION}+${NEW_BUILD}/" pubspec.yaml
 
-          # Check if version actually changed
+          # Verify change
           if git diff --quiet pubspec.yaml; then
             echo "version_changed=false" >> $GITHUB_OUTPUT
             echo "⚠️ Version already up to date"
@@ -119,11 +121,6 @@ jobs:
           has_secrets=true
           if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ]; then
             echo "⚠️ WARNING: Signing secrets are missing. Building unsigned APK."
-            echo "To enable signing, configure these secrets:"
-            echo "- KEYSTORE_BASE64"
-            echo "- KEYSTORE_PASSWORD"
-            echo "- KEY_PASSWORD"
-            echo "- KEY_ALIAS"
             has_secrets=false
           else
             echo "✅ Signing secrets found"
@@ -135,20 +132,17 @@ jobs:
         run: |
           echo "Creating keystore from secret..."
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-keystore.jks
-          echo "Keystore created successfully"
-
+          
           echo "Creating key.properties file..."
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release-keystore.jks\n' \
             '${{ secrets.KEYSTORE_PASSWORD }}' \
             '${{ secrets.KEY_PASSWORD }}' \
             '${{ secrets.KEY_ALIAS }}' \
             > android/key.properties
-          echo "key.properties created successfully"
 
       - name: Build APK
         run: |
           echo "Building universal APK (Obtainium Plus)..."
-          # Using --no-pub since we already ran it
           flutter build apk --flavor normal --no-pub --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
 
           echo "Renaming APK to remove flavor suffix..."
@@ -161,9 +155,6 @@ jobs:
 
           echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
-
-          echo "Built APKs:"
-          ls -lh ./build/app/outputs/flutter-apk/
 
       - name: Check Sentry Token
         id: check_sentry
@@ -187,7 +178,6 @@ jobs:
             sentry-cli upload-proguard "$MAPPING_FILE"
           else
             echo "⚠️ Sentry mapping file not found at $MAPPING_FILE - skipping upload."
-            ls -R build/app/outputs/ || true
           fi
 
       - name: Generate Changelog
@@ -197,15 +187,12 @@ jobs:
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
           if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous tag found. Using last commit only."
             COMMIT_RANGE="HEAD~1..HEAD"
           else
             echo "Generating changelog since $PREVIOUS_TAG"
             COMMIT_RANGE="$PREVIOUS_TAG..HEAD"
           fi
 
-          # Generate detailed changelog with full commit body (like AutoCat)
-          # This includes co-authorship info from commit messages
           CHANGELOG=""
           while IFS= read -r commit_hash; do
             if [ -n "$commit_hash" ]; then
@@ -251,19 +238,13 @@ jobs:
           git push origin HEAD:main
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-      - name: List Built APKs
-        run: |
-          echo "=== Built APK Files ==="
-          ls -lh build/app/outputs/flutter-apk/ || true
-          echo "========================"
-
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || format('build-{0}', github.run_number) }}
           name: "${{ (steps.detect_build.outputs.is_dev == 'true' && format('Obtainium+ Dev Build #{0}', github.run_number)) || format('Obtainium+ {0}', steps.bump_version.outputs.version) }}"
-          commit: ${{ github.sha }}
+          commit: ${{ steps.commit_bump.outputs.sha || github.sha }}
           draft: false
           prerelease: ${{ steps.detect_build.outputs.is_dev == 'true' }}
           generateReleaseNotes: false
@@ -276,10 +257,14 @@ jobs:
             **Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
             
             - **Build #:** ${{ github.run_number }}
-            - **Commit:** ${{ github.sha }}
+            - **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}
             - **Date:** ${{ github.event.head_commit.timestamp }}
             - **Branch:** ${{ github.ref_name }}
             
+            ### Changelog
+            ${{ steps.build_changelog.outputs.changelog }}
+            
+            ---
             Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch.
 
   sync-sentry-issues:

@@ -2,9 +2,13 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:obtainium/components/omnibar.dart';
+import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import 'package:obtainium/utils/app_constants.dart';
@@ -193,7 +197,7 @@ class _AppDashboardState extends State<AppDashboard>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AddAppPage(initialTab: 1),
+                            builder: (context) => AddAppPage(initialTab: 1),
                           ),
                         );
                       },
@@ -448,6 +452,55 @@ class _AppDashboardState extends State<AppDashboard>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    final settings = context.watch<SettingsProvider>();
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final itemRadius = (radius * 0.7).clamp(12.0, 24.0);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(itemRadius),
+      child: Container(
+        width: 110,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(itemRadius),
+          border: Border.all(color: color.withOpacity(0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+            ),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
         ),
       ),
     );
