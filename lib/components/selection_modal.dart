@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -345,6 +346,7 @@ class _SelectionModalState extends State<SelectionModal> {
               .where((e) => e.value)
               .toList();
 
+          Widget tile;
           if (widget.onlyOneSelectionAllowed) {
             tile = Container(
               margin: const EdgeInsets.only(bottom: 10),
