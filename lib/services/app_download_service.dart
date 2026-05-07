@@ -15,7 +15,9 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -515,8 +517,8 @@ class AppDownloadService {
 
           // Android 14+ User Pre-approval for non-silent installs
           var osInfo = await DeviceInfoPlugin().androidInfo;
-          final settingsProvider = context.read<SettingsProvider>();
-          if (osInfo.version.sdkInt >= 34 && context != null && settingsProvider.plusEnableUserPreapproval) {
+          final settingsProvider = Provider.of<SettingsProvider>(context!, listen: false);
+          if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUserPreapproval) {
             // Trigger pre-approval in the background while preparing/downloading
             AppInstallService.requestUserPreapproval(apps[id]!.app.id);
           }
