@@ -186,22 +186,22 @@ class _SelectionModalState extends State<SelectionModal> {
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                        child: _buildContent(context, radius),
+                        child: _buildContent(context, radius, colorScheme),
                       ),
                     ),
                     const Divider(height: 1, thickness: 0.5),
-                    _buildActions(context, dialogRadius),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+                    _buildActions(context, dialogRadius, colorScheme),
+                    ],
+                    ),
+                    ],
+                    ),
+                    ),
+                    ),
+                    ),
+                    );
+                    }
 
-  Widget _buildHeader(BuildContext context, bool enableGlass, double radius) {
+                    Widget _buildContent(BuildContext context, double radius, ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
