@@ -15,6 +15,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -136,197 +137,199 @@ class AppListTile extends StatelessWidget {
     );
 
     // --- MODERN UI ---
-    return Semantics(
-      label: '${appInMemory.name}${settingsProvider.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
-      button: true,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 4 : 8,
-          vertical: isCompact ? 2 : 6,
-        ),
-        child: ConditionalBlur(
-          enabled: settingsProvider.plusEnableGlassmorphism,
-          sigma: 12,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onLongPress: onLongPress,
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(radius),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 250 : 0),
-                curve: AppConstants.expressiveStandard,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(radius),
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
-                      : hasUpdate
-                          ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(isCompact ? 0.1 : 0.2)
-                          : appInMemory.app.pinned
-                              ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
-                              : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
-                  border: Border.all(
+    return RepaintBoundary(
+      child: Semantics(
+        label: '${appInMemory.name}${settingsProvider.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
+        button: true,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 8,
+            vertical: isCompact ? 2 : 6,
+          ),
+          child: ConditionalBlur(
+            enabled: settingsProvider.plusEnableGlassmorphism,
+            sigma: 12,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onLongPress: onLongPress,
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(radius),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 250 : 0),
+                  curve: AppConstants.expressiveStandard,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(radius),
                     color: isSelected
-                        ? Theme.of(context).colorScheme.primary
+                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
                         : hasUpdate
-                            ? Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.hint)
+                            ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(isCompact ? 0.1 : 0.2)
                             : appInMemory.app.pinned
-                                ? Theme.of(context).colorScheme.outlineVariant
-                                : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
-                    width: isSelected || appInMemory.app.pinned || (hasUpdate && !isCompact) ? 1.5 : 0.8,
+                                ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
+                                : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : hasUpdate
+                              ? Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.hint)
+                              : appInMemory.app.pinned
+                                  ? Theme.of(context).colorScheme.outlineVariant
+                                  : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
+                      width: isSelected || appInMemory.app.pinned || (hasUpdate && !isCompact) ? 1.5 : 0.8,
+                    ),
+                    boxShadow: isSelected
+                        ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
+                        : hasUpdate && !isCompact
+                            ? AppShadows.smooth(color: Theme.of(context).colorScheme.secondary, opacity: 0.1)
+                            : null,
                   ),
-                  boxShadow: isSelected
-                      ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
-                      : hasUpdate && !isCompact
-                          ? AppShadows.smooth(color: Theme.of(context).colorScheme.secondary, opacity: 0.1)
-                          : null,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(radius),
-                  child: Stack(
-                    children: [
-                      if (settingsProvider.plusEnableGlassmorphism)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.white.withOpacity(0.08),
-                                  Colors.transparent,
-                                  Colors.black.withOpacity(0.02),
-                                ],
-                                stops: const [0.0, 0.4, 1.0],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(radius),
+                    child: Stack(
+                      children: [
+                        if (settingsProvider.plusEnableGlassmorphism)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white.withOpacity(0.08),
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.02),
+                                  ],
+                                  stops: const [0.0, 0.4, 1.0],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-
-                      if (displayCategoryColor != null)
-                        Positioned(
-                          left: 0,
-                          top: 14,
-                          bottom: 14,
-                          child: Container(
-                            width: 5,
-                            decoration: BoxDecoration(
-                              color: displayCategoryColor,
-                              borderRadius: const BorderRadius.horizontal(
-                                right: Radius.circular(4),
+  
+                        if (displayCategoryColor != null)
+                          Positioned(
+                            left: 0,
+                            top: 14,
+                            bottom: 14,
+                            child: Container(
+                              width: 5,
+                              decoration: BoxDecoration(
+                                color: displayCategoryColor,
+                                borderRadius: const BorderRadius.horizontal(
+                                  right: Radius.circular(4),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      
-                      ListTile(
-                        visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: isCompact ? 12 : 18,
-                          vertical: isCompact ? 0 : 6,
-                        ),
-                        dense: isCompact,
-                        leading: Padding(
-                          padding: EdgeInsets.only(left: displayCategoryColor != null ? 6 : 0),
-                          child: Transform.scale(
-                            scale: isCompact ? 0.9 : 1.0,
-                            child: getAppIcon(),
+                        
+                        ListTile(
+                          visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 12 : 18,
+                            vertical: isCompact ? 0 : 6,
                           ),
-                        ),
-                        title: Text(
-                          appInMemory.name,
-                          maxLines: 1,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                overflow: TextOverflow.ellipsis,
-                                fontWeight: appInMemory.app.pinned || hasUpdate
-                                    ? FontWeight.bold
-                                    : FontWeight.w600,
-                                letterSpacing: -0.2,
-                              ),
-                        ),
-                        subtitle: Row(
-                          children: [
-                            if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: appInMemory.app.tags.take(2).map((tag) => Container(
-                                    margin: const EdgeInsets.only(right: 4),
-                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      tag,
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  )).toList(),
+                          dense: isCompact,
+                          leading: Padding(
+                            padding: EdgeInsets.only(left: displayCategoryColor != null ? 6 : 0),
+                            child: Transform.scale(
+                              scale: isCompact ? 0.9 : 1.0,
+                              child: getAppIcon(),
+                            ),
+                          ),
+                          title: Text(
+                            appInMemory.name,
+                            maxLines: 1,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  overflow: TextOverflow.ellipsis,
+                                  fontWeight: appInMemory.app.pinned || hasUpdate
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                  letterSpacing: -0.2,
                                 ),
-                              ),
-                            if (settingsProvider.displayShowAuthor)
-                              Expanded(
-                                child: Text(
-                                  appInMemory.author,
-                                  maxLines: 1,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        overflow: TextOverflow.ellipsis,
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
-                                        fontWeight: FontWeight.w500,
+                          ),
+                          subtitle: Row(
+                            children: [
+                              if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: appInMemory.app.tags.take(2).map((tag) => Container(
+                                      margin: const EdgeInsets.only(right: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
-                                ),
-                              ),
-                            if (settingsProvider.displayShowVersion && !isCompact)
-                              Text(
-                                ' • ${getVersionText()}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: hasUpdate ? Theme.of(context).colorScheme.secondary : null,
-                                      fontWeight: hasUpdate ? FontWeight.bold : null,
-                                      fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
-                                          ? FontStyle.italic
-                                          : null,
-                                    ),
-                              ),
-                          ],
-                        ),
-                        trailing: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: appInMemory.downloadProgress != null
-                              ? SizedBox(
-                                  key: const ValueKey('download'),
-                                  width: 65,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        appInMemory.downloadProgress! >= 0
-                                            ? '${appInMemory.downloadProgress!.toInt()}%'
-                                            : tr('installing'),
-                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                                      child: Text(
+                                        tag,
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      ExpressiveProgressIndicator(
-                                        value: appInMemory.downloadProgress! >= 0
-                                            ? appInMemory.downloadProgress! / 100
-                                            : null,
-                                        height: 5,
-                                      ),
-                                    ],
+                                    )).toList(),
                                   ),
-                                )
-                              : KeyedSubtree(
-                                  key: const ValueKey('info'),
-                                  child: trailingRow,
                                 ),
+                              if (settingsProvider.displayShowAuthor)
+                                Expanded(
+                                  child: Text(
+                                    appInMemory.author,
+                                    maxLines: 1,
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          overflow: TextOverflow.ellipsis,
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ),
+                              if (settingsProvider.displayShowVersion && !isCompact)
+                                Text(
+                                  ' • ${getVersionText()}',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: hasUpdate ? Theme.of(context).colorScheme.secondary : null,
+                                        fontWeight: hasUpdate ? FontWeight.bold : null,
+                                        fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
+                                            ? FontStyle.italic
+                                            : null,
+                                      ),
+                                ),
+                            ],
+                          ),
+                          trailing: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: appInMemory.downloadProgress != null
+                                ? SizedBox(
+                                    key: const ValueKey('download'),
+                                    width: 65,
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          appInMemory.downloadProgress! >= 0
+                                              ? '${appInMemory.downloadProgress!.toInt()}%'
+                                              : tr('installing'),
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        ExpressiveProgressIndicator(
+                                          value: appInMemory.downloadProgress! >= 0
+                                              ? appInMemory.downloadProgress! / 100
+                                              : null,
+                                          height: 5,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : KeyedSubtree(
+                                    key: const ValueKey('info'),
+                                    child: trailingRow,
+                                  ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

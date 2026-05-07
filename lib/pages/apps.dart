@@ -879,7 +879,7 @@ class AppsPageState extends State<AppsPage> {
     clearSelected();
     
     // Trigger background update checks for selected apps
-    await appsProvider.checkAppsUpdates(appIds: selectedApps);
+    await appsProvider.checkUpdates(specificIds: selectedApps);
   }
 
   List<Widget> _buildNormalActions(

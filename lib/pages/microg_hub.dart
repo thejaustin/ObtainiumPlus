@@ -124,6 +124,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final appsProvider = context.watch<AppsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
     
     // Calculate overall progress from selected components
     double overallProgress = 0;
@@ -155,49 +156,74 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       appBar: AppBar(
         title: Text(tr('microGHub')),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildInfoCard(cs),
-          const SizedBox(height: 24),
-          _buildProviderSection(cs),
-          const SizedBox(height: 24),
-          _buildComponentsSection(cs),
-          const SizedBox(height: 24),
-          _buildOptionsSection(cs),
-          const SizedBox(height: 32),
-          if (_isDownloading)
-            Column(
-              children: [
-                Text('${tr('deployingComponents')} ${(overallProgress * 100).toInt()}%'),
-                const SizedBox(height: 8),
-                ExpressiveProgressIndicator(
-                  value: overallProgress > 0 ? overallProgress : null,
-                  color: cs.primary,
-                ),
-                if (overallProgress >= 1.0 || (trackedCount > 0 && overallProgress == 0))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: TextButton(
-                      onPressed: () => setState(() => _isDownloading = false),
-                      child: Text(tr('done')),
+      body: ConditionalBlur(
+        enabled: settingsProvider.plusEnableGlassmorphism,
+        sigma: 15,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildInfoCard(cs),
+            const SizedBox(height: 24),
+            _buildProviderSection(cs),
+            const SizedBox(height: 24),
+            _buildComponentsSection(cs),
+            const SizedBox(height: 24),
+            _buildOptionsSection(cs),
+            const SizedBox(height: 32),
+            if (_isDownloading)
+              _buildProgressSection(cs, overallProgress, trackedCount)
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: FilledButton.icon(
+                  onPressed: _startDeployment,
+                  icon: const Icon(Icons.download_for_offline_outlined),
+                  label: Text(tr('startDeployment')),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
+                    elevation: 4,
                   ),
-              ],
-            )
-          else
-            FilledButton.icon(
-              onPressed: _startDeployment,
-              icon: const Icon(Icons.download_for_offline_outlined),
-              label: Text(tr('startDeployment')),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressSection(ColorScheme cs, double overallProgress, int trackedCount) {
+    return Card(
+      elevation: 0,
+      color: cs.primaryContainer.withOpacity(0.3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Text(
+              '${tr('deployingComponents')} ${(overallProgress * 100).toInt()}%',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-        ],
+            const SizedBox(height: 16),
+            ExpressiveProgressIndicator(
+              value: overallProgress > 0 ? overallProgress : null,
+              height: 8,
+              color: cs.primary,
+            ),
+            if (overallProgress >= 1.0 || (trackedCount > 0 && overallProgress == 0))
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: FilledButton(
+                  onPressed: () => setState(() => _isDownloading = false),
+                  child: Text(tr('done')),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -207,19 +233,36 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       elevation: 0,
       color: cs.secondaryContainer.withOpacity(AppOpacity.medium),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: cs.secondaryContainer),
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: cs.secondaryContainer.withOpacity(0.5)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            Icon(Icons.info_outline, color: cs.primary),
+            Icon(Icons.hub_outlined, color: cs.primary, size: 28),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                tr('microGHubInfo'),
-                style: const TextStyle(fontSize: 13),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('microGHub'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: cs.onSecondaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tr('microGHubInfo'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: cs.onSecondaryContainer.withOpacity(0.8),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -232,32 +275,43 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          tr('selectProvider'),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        Padding(
+          padding: const EdgeInsets.left(8.0),
+          child: Text(
+            tr('selectProvider'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         ..._providers.keys.map((String value) {
           final isSelected = _selectedProvider == value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: isSelected 
-                  ? cs.primaryContainer.withOpacity(AppOpacity.low)
-                  : cs.surfaceVariant.withOpacity(AppOpacity.medium),
-              borderRadius: BorderRadius.circular(12),
+                  ? cs.primaryContainer.withOpacity(0.5)
+                  : cs.surfaceContainerHighest.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? cs.primary : cs.outlineVariant,
+                color: isSelected ? cs.primary : cs.outline.withOpacity(0.1),
                 width: isSelected ? 2 : 1,
               ),
+              boxShadow: isSelected 
+                  ? [BoxShadow(color: cs.primary.withOpacity(0.1), blurRadius: 10, spreadRadius: 1)]
+                  : null,
             ),
             child: RadioListTile<String>(
               title: Text(
                 value,
                 style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
                 ),
+              ),
+              subtitle: Text(
+                value.contains('Official') ? 'github.com/microg' : 'github.com/ReVanced',
+                style: TextStyle(fontSize: 11, color: isSelected ? cs.onPrimaryContainer.withOpacity(0.7) : cs.onSurfaceVariant.withOpacity(0.5)),
               ),
               value: value,
               groupValue: _selectedProvider,
@@ -267,7 +321,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
               controlAffinity: ListTileControlAffinity.trailing,
               activeColor: cs.primary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
           );
@@ -280,33 +334,37 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          tr('componentsToInstall'),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        Padding(
+          padding: const EdgeInsets.left(8.0),
+          child: Text(
+            tr('componentsToInstall'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
+          ),
         ),
-        const SizedBox(height: 8),
-        CheckboxListTile(
-          title: Text(tr('gmsCore')),
-          subtitle: Text(tr('gmsCoreDescription')),
-          value: _installGmsCore,
-          onChanged: (val) => setState(() => _installGmsCore = val ?? false),
-          contentPadding: EdgeInsets.zero,
-        ),
-        CheckboxListTile(
-          title: Text(tr('gsfProxy')),
-          subtitle: Text(tr('gsfProxyDescription')),
-          value: _installGsfProxy,
-          onChanged: (val) => setState(() => _installGsfProxy = val ?? false),
-          contentPadding: EdgeInsets.zero,
-        ),
-        CheckboxListTile(
-          title: Text(tr('fakeStore')),
-          subtitle: Text(tr('fakeStoreDescription')),
-          value: _installFakeStore,
-          onChanged: (val) => setState(() => _installFakeStore = val ?? false),
-          contentPadding: EdgeInsets.zero,
-        ),
+        const SizedBox(height: 12),
+        _buildComponentTile(cs, tr('gmsCore'), tr('gmsCoreDescription'), _installGmsCore, (v) => setState(() => _installGmsCore = v!)),
+        _buildComponentTile(cs, tr('gsfProxy'), tr('gsfProxyDescription'), _installGsfProxy, (v) => setState(() => _installGsfProxy = v!)),
+        _buildComponentTile(cs, tr('fakeStore'), tr('fakeStoreDescription'), _installFakeStore, (v) => setState(() => _installFakeStore = v!)),
       ],
+    );
+  }
+
+  Widget _buildComponentTile(ColorScheme cs, String title, String subtitle, bool value, ValueChanged<bool?> onChanged) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: cs.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: CheckboxListTile(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        value: value,
+        onChanged: onChanged,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
     );
   }
 
@@ -314,17 +372,27 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          tr('deploymentOptions'),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        Padding(
+          padding: const EdgeInsets.left(8.0),
+          child: Text(
+            tr('deploymentOptions'),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
+          ),
         ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          title: Text(tr('officialMicroGRoot')),
-          subtitle: Text(_isRooted ? tr('rootAvailable') : tr('rootNotDetected')),
-          value: _isRooted,
-          onChanged: _isRooted ? (val) {} : null,
-          contentPadding: EdgeInsets.zero,
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surface.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SwitchListTile(
+            title: Text(tr('officialMicroGRoot'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(_isRooted ? tr('rootAvailable') : tr('rootNotDetected')),
+            value: _isRooted,
+            onChanged: _isRooted ? (val) {} : null,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            secondary: Icon(_isRooted ? Icons.verified_user : Icons.no_encryption_gmailerrorred, color: _isRooted ? cs.primary : cs.error),
+          ),
         ),
       ],
     );

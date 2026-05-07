@@ -2,6 +2,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';

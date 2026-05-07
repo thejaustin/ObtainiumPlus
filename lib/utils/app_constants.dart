@@ -86,12 +86,27 @@ class AppConstants {
   static const String shizukuPlusId = 'af.shizuku.plus.api';
   /// AppManager (thejaustin fork) Package ID
   static const String appManagerId = 'io.github.muntashirakon.AppManager';
+  /// ContactsPlus Package ID
+  static const String contactsPlusId = 'com.contactsplus.app';
+  /// TermuxPlus Package ID
+  static const String termuxPlusId = 'com.termux.plus';
+  /// SimWeather Package ID
+  static const String simWeatherId = 'com.thejaustin.simweather';
+  /// ShareMove Package ID
+  static const String shareMoveId = 'com.thejaustin.sharemove';
+  /// Pearity Package ID
+  static const String pearityId = 'com.thejaustin.pearity';
 
   /// List of all thejaustin's apps that require special version reconciliation
   static const Set<String> plusAppIds = {
     obtainiumPlusId,
     shizukuPlusId,
     appManagerId,
+    contactsPlusId,
+    termuxPlusId,
+    simWeatherId,
+    shareMoveId,
+    pearityId,
   };
 }
 

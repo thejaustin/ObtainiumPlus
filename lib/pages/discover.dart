@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 

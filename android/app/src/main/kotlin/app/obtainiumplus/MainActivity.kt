@@ -104,8 +104,8 @@ class MainActivity : FlutterActivity() {
                         if (packageName != null) {
                             try {
                                 val installer = packageManager.packageInstaller
-                                // In Android 14, this is usually set during session creation
-                                // but we can also use setUpdateOwner for existing apps if we are the installer
+                                // In Android 14, this can be used to claim ownership if we are the installer
+                                installer.setUpdateOwner(packageName, this.packageName)
                                 result.success(true)
                             } catch (e: Exception) {
                                 result.error("ERROR", e.message, null)
@@ -121,10 +121,29 @@ class MainActivity : FlutterActivity() {
                     if (Build.VERSION.SDK_INT >= 34) {
                         val packageName = call.argument<String>("packageName")
                         if (packageName != null) {
-                            val installer = packageManager.packageInstaller
-                            // Check if the app is currently in use or if the device is in a call
-                            // This is a simplified check as true InstallConstraints requires a more complex API
-                            result.success(true) 
+                            try {
+                                val installer = packageManager.packageInstaller
+                                val constraints = android.content.pm.PackageInstaller.InstallConstraints.Builder()
+                                    .setAppNotForegroundRequired(true)
+                                    .setAppNotInteractingRequired(true)
+                                    .setDeviceIdleRequired(false)
+                                    .setNotInCallRequired(true)
+                                    .build()
+                                
+                                val packages = listOf(packageName)
+                                installer.checkInstallConstraints(
+                                    packages,
+                                    constraints,
+                                    { command -> command.run() },
+                                    { resultStatus ->
+                                        runOnUiThread {
+                                            result.success(resultStatus.areAllConstraintsSatisfied())
+                                        }
+                                    }
+                                )
+                            } catch (e: Exception) {
+                                result.error("ERROR", e.message, null)
+                            }
                         } else {
                             result.error("INVALID_ARGUMENT", "Package name is required", null)
                         }
@@ -136,8 +155,25 @@ class MainActivity : FlutterActivity() {
                     if (Build.VERSION.SDK_INT >= 34) {
                         val packageName = call.argument<String>("packageName")
                         if (packageName != null) {
-                            // Launch pre-approval session
-                            result.success(true)
+                            try {
+                                val installer = packageManager.packageInstaller
+                                val params = android.content.pm.PackageInstaller.SessionParams(
+                                    android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
+                                )
+                                params.setAppPackageName(packageName)
+                                
+                                // Create a dummy pending intent for the confirmation
+                                val intent = Intent("app.obtainiumplus.PREAPPROVAL_CONFIRMATION")
+                                val pendingIntent = PendingIntent.getBroadcast(
+                                    this, 0, intent, 
+                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                                )
+                                
+                                installer.requestUserPreapproval(params, pendingIntent.intentSender)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                result.error("ERROR", e.message, null)
+                            }
                         } else {
                             result.error("INVALID_ARGUMENT", "Package name is required", null)
                         }

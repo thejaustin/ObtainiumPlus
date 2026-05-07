@@ -296,8 +296,13 @@ Future<void> notifyRaw(
     return; // Skip non-critical notifications during quiet hours
   }
 
-  if (cancelExisting) {
-      await cancel(id);
+  if (settings != null && settings!.plusEnableNotificationDigest && channelCode == 'UPDATES_AVAILABLE') {
+    // For Digest, we use a single fixed ID and group multiple updates
+    id = 999;
+    onlyAlertOnce = true;
+  }
+
+  if (cancelExisting) {      await cancel(id);
     }
     if (!isInitialized) {
       await initialize();

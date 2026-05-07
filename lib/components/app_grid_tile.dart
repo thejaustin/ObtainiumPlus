@@ -189,167 +189,163 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildVerticalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      _buildIconStack(iconSize, iconBorderRadius, badgeSize),
-      const SizedBox(height: 10),
-      _buildAppInfo(settingsProvider, TextAlign.center),
-    ],
-  );
-}
-
-Widget _buildHorizontalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
-  return Row(
-    children: [
-      _buildIconStack(iconSize, iconBorderRadius, badgeSize),
-      const SizedBox(width: 20),
-      Expanded(child: _buildAppInfo(settingsProvider, TextAlign.start)),
-      const Icon(Icons.chevron_right_rounded, opacity: 0.5),
-    ],
-  );
-}
-
-Widget _buildIconStack(double iconSize, double iconBorderRadius, double badgeSize) {
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-      Hero(
-        tag: 'app_icon_${widget.appInMemory.app.id}',
-        child: Container(
-          width: iconSize,
-          height: iconSize,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(iconBorderRadius),
-            boxShadow: widget.hasUpdate 
-                ? AppShadows.smooth(color: Theme.of(context).colorScheme.error, opacity: 0.1)
-                : null,
-          ),
-          child: widget.appInMemory.icon != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(iconBorderRadius),
-                  child: Image.memory(
-                    widget.appInMemory.icon!,
-                    fit: BoxFit.contain,
-                    gaplessPlayback: true,
-                  ),
-                )
-              : AppIconShimmer(
-                  size: iconSize,
-                  borderRadius: iconBorderRadius,
-                ),
-        ),
-      ),
-      if (widget.hasUpdate)
-        Positioned(
-          right: -4,
-          top: -4,
-          child: AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _pulseAnimation.value,
-                child: Container(
-                  width: badgeSize,
-                  height: badgeSize,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.surface,
-                      width: 2,
-                    ),
-                    boxShadow: AppShadows.glow(
-                      color: Theme.of(context).colorScheme.primary,
-                      intensity: (_pulseAnimation.value - 1.0) * 2,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-    ],
-  );
-}
-
-Widget _buildAppInfo(SettingsProvider settingsProvider, TextAlign textAlign) {
-  return Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    crossAxisAlignment: textAlign == TextAlign.start ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-    children: [
-      Text(
-        widget.appInMemory.name,
-        maxLines: 2,
-        textAlign: textAlign,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight:
-              widget.appInMemory.app.pinned || widget.hasUpdate ? FontWeight.bold : FontWeight.w600,
-          letterSpacing: -0.2,
-        ),
-      ),
-      if (settingsProvider.plusShowTagsInList && widget.appInMemory.app.tags.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Wrap(
-            alignment: textAlign == TextAlign.start ? WrapAlignment.start : WrapAlignment.center,
-            spacing: 4,
-            runSpacing: 4,
-            children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                tag,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold),
-              ),
-            )).toList(),
-          ),
-        ),
-      // Checking / Progress logic...
-      _buildProgressIndicator(),
-    ],
-  );
-}
-
-Widget _buildProgressIndicator() {
-  return Builder(builder: (ctx) {
-    final isChecking = ctx.select<AppsProvider, bool>(
-      (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
-    );
-    if (widget.appInMemory.downloadProgress != null) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: ExpressiveProgressIndicator(
-          value: widget.appInMemory.downloadProgress! >= 0
-              ? widget.appInMemory.downloadProgress! / 100
-              : null,
-          height: 4,
-        ),
-      );
-    }
-    if (isChecking) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: ExpressiveProgressIndicator(value: null, height: 2),
-      );
-    }
-    return const SizedBox.shrink();
-  });
-}
+        );
       },
     );
+  }
+
+  Widget _buildVerticalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+        const SizedBox(height: 10),
+        _buildAppInfo(settingsProvider, TextAlign.center),
+      ],
+    );
+  }
+
+  Widget _buildHorizontalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
+    return Row(
+      children: [
+        _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+        const SizedBox(width: 20),
+        Expanded(child: _buildAppInfo(settingsProvider, TextAlign.start)),
+        const Icon(Icons.chevron_right_rounded, opacity: 0.5),
+      ],
+    );
+  }
+
+  Widget _buildIconStack(double iconSize, double iconBorderRadius, double badgeSize) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Hero(
+          tag: 'app_icon_${widget.appInMemory.app.id}',
+          child: Container(
+            width: iconSize,
+            height: iconSize,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(iconBorderRadius),
+              boxShadow: widget.hasUpdate 
+                  ? AppShadows.smooth(color: Theme.of(context).colorScheme.error, opacity: 0.1)
+                  : null,
+            ),
+            child: widget.appInMemory.icon != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(iconBorderRadius),
+                    child: Image.memory(
+                      widget.appInMemory.icon!,
+                      fit: BoxFit.contain,
+                      gaplessPlayback: true,
+                    ),
+                  )
+                : AppIconShimmer(
+                    size: iconSize,
+                    borderRadius: iconBorderRadius,
+                  ),
+          ),
+        ),
+        if (widget.hasUpdate)
+          Positioned(
+            right: -4,
+            top: -4,
+            child: AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _pulseAnimation.value,
+                  child: Container(
+                    width: badgeSize,
+                    height: badgeSize,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                        width: 2,
+                      ),
+                      boxShadow: AppShadows.glow(
+                        color: Theme.of(context).colorScheme.primary,
+                        intensity: (_pulseAnimation.value - 1.0) * 2,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAppInfo(SettingsProvider settingsProvider, TextAlign textAlign) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: textAlign == TextAlign.start ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      children: [
+        Text(
+          widget.appInMemory.name,
+          maxLines: 2,
+          textAlign: textAlign,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight:
+                widget.appInMemory.app.pinned || widget.hasUpdate ? FontWeight.bold : FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
+        ),
+        if (settingsProvider.plusShowTagsInList && widget.appInMemory.app.tags.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Wrap(
+              alignment: textAlign == TextAlign.start ? WrapAlignment.start : WrapAlignment.center,
+              spacing: 4,
+              runSpacing: 4,
+              children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  tag,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold),
+                ),
+              )).toList(),
+            ),
+          ),
+        // Checking / Progress logic...
+        _buildProgressIndicator(),
+      ],
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Builder(builder: (ctx) {
+      final isChecking = ctx.select<AppsProvider, bool>(
+        (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
+      );
+      if (widget.appInMemory.downloadProgress != null) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: ExpressiveProgressIndicator(
+            value: widget.appInMemory.downloadProgress! >= 0
+                ? widget.appInMemory.downloadProgress! / 100
+                : null,
+            height: 4,
+          ),
+        );
+      }
+      if (isChecking) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: ExpressiveProgressIndicator(value: null, height: 2),
+        );
+      }
+      return const SizedBox.shrink();
+    });
   }
 
   /// Builds a semantic label for screen readers

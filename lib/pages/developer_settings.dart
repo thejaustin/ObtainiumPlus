@@ -92,9 +92,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                   title: const Text('microG Deployment Hub'),
                   subtitle: const Text('Directly download and install microG / GmsCore components'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const MicroGHubPage()),
-                  ),
+                  onTap: () => pushRoute(context, const MicroGHubPage()),
                 ),
               if (settingsProvider.plusEnableStandaloneInstaller)
                 ListTile(
@@ -515,17 +513,47 @@ class DeveloperSettingsPage extends StatelessWidget {
           final settings = context.read<SettingsProvider>();
           final logs = context.read<LogsProvider>();
           
-          final success = await AppInstallService.installApkStandalone(
-            file,
-            context,
-            settings,
-            logs,
-          );
+          // Get APK info before installing
+          final PackageInfo? info = await pm.getPackageArchiveInfo(archiveFilePath: file.path);
+          if (info == null) throw Exception('Could not read APK info');
 
-          if (success && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Installation completed successfully')),
+          if (context.mounted) {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (context) => GlassDialog(
+                title: 'Install Standalone APK',
+                icon: Icons.install_mobile_outlined,
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Package: ${info.packageName}'),
+                    Text('Version: ${info.versionName} (${info.versionCode})'),
+                    const SizedBox(height: 12),
+                    const Text('Do you want to proceed with the installation?'),
+                  ],
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                  FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Install')),
+                ],
+              ),
             );
+
+            if (confirm == true) {
+              final success = await AppInstallService.installApkStandalone(
+                file,
+                context,
+                settings,
+                logs,
+              );
+
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Installation completed successfully')),
+                );
+              }
+            }
           }
         }
       }
