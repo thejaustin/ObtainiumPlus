@@ -11,6 +11,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class FDroid extends AppSource {
