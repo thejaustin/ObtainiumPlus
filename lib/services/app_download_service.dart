@@ -515,12 +515,13 @@ class AppDownloadService {
         if (context != null || await canInstallSilently(apps[id]!.app)) {
           appsToInstall.add(id);
 
-          // Android 14+ User Pre-approval for non-silent installs
-          var osInfo = await DeviceInfoPlugin().androidInfo;
-          final settingsProvider = Provider.of<SettingsProvider>(context!, listen: false);
-          if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUserPreapproval) {
-            // Trigger pre-approval in the background while preparing/downloading
-            AppInstallService.requestUserPreapproval(apps[id]!.app.id);
+          // Android 14+ User Pre-approval for non-silent installs (context required)
+          if (context != null) {
+            var osInfo = await DeviceInfoPlugin().androidInfo;
+            final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+            if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUserPreapproval) {
+              AppInstallService.requestUserPreapproval(apps[id]!.app.id);
+            }
           }
         }
       }
