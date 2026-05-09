@@ -311,9 +311,9 @@ class SourceUtils {
 
   static String? replaceMatchGroupsInString(RegExpMatch match, String matchGroupString) {
     if (RegExp(r'^\d+$').hasMatch(matchGroupString)) {
-      matchGroupString = r'\' + matchGroupString;
+      matchGroupString = r'$' + matchGroupString;
     }
-    final numberRegex = RegExp(r'\\$\d+');
+    final numberRegex = RegExp(r'\$\d+');
     final numbers = numberRegex.allMatches(matchGroupString);
     if (numbers.isEmpty) {
       return null;
