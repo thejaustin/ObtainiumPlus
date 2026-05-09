@@ -100,30 +100,30 @@ class _ImportExportPageState extends State<ImportExportPage> {
           });
           appsProvider
               .addAppsByURL(urls)
-              .then((errors) {
-                if (errors.isEmpty) {
-                  showMessage(
-                    tr(
-                      'importedX',
-                      args: [plural('apps', urls.length).toLowerCase()],
-                    ),
-                    context,
-                  );
-                } else {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext ctx) {
-                      return ImportErrorDialog(
-                        urlsLength: urls.length,
-                        errors: errors,
-                      );
-                    },
-                  );
-                }
-              })
-              .catchError((e) {
-                showError(e, context);
-              })
+              .then(
+                (errors) {
+                  if (errors.isEmpty) {
+                    showMessage(
+                      tr(
+                        'importedX',
+                        args: [plural('apps', urls.length).toLowerCase()],
+                      ),
+                      context,
+                    );
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext ctx) {
+                        return ImportErrorDialog(
+                          urlsLength: urls.length,
+                          errors: errors,
+                        );
+                      },
+                    );
+                  }
+                },
+                onError: (e) { showError(e, context); },
+              )
               .whenComplete(() {
                 setState(() {
                   importInProgress = false;

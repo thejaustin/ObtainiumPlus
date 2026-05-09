@@ -467,12 +467,12 @@ class AppsPageState extends State<AppsPage> {
             if (values['updates'] == true) toInstall.addAll(existingUpdateIds);
             if (values['installs'] == true) toInstall.addAll(newInstallIds);
             if (values['trackonlies'] == true) toInstall.addAll(trackOnlyUpdateIds);
-            appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then((value) {
-              if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
-            }).catchError((e) {
-              if (mounted) showError(e, context);
-              return <String>[];
-            });
+            appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then(
+              (value) {
+                if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
+              },
+              onError: (e) { if (mounted) showError(e, context); },
+            );
           }
         });
       };
@@ -1233,12 +1233,12 @@ class AppsPageState extends State<AppsPage> {
           if (values['updates'] == true) toInstall.addAll(existingUpdateIds);
           if (values['installs'] == true) toInstall.addAll(newInstallIds);
           if (values['trackonlies'] == true) toInstall.addAll(trackOnlyUpdateIds);
-          appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then((value) {
-            if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
-          }).catchError((e) {
-            if (mounted) showError(e, context);
-            return <String>[];
-          });
+          appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then(
+            (value) {
+              if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
+            },
+            onError: (e) { if (mounted) showError(e, context); },
+          );
         }
       });
     };

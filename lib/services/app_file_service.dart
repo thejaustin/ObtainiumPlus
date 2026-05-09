@@ -49,6 +49,7 @@ class AppFileService {
   }
 
   static void deleteFile(File file) {
+    if (!file.existsSync()) return;
     try {
       file.deleteSync(recursive: true);
     } on PathAccessException catch (e) {
@@ -74,10 +75,19 @@ class AppFileService {
       Sentry.addBreadcrumb(Breadcrumb(message: 'initAppDirectories: using external cache path ${cacheDirs!.first.path}'));
       APKDir = cacheDirs.first;
       iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
-      if (!iconsCacheDir.existsSync()) {
-        iconsCacheDir.createSync(recursive: true);
+      try {
+        if (!APKDir.existsSync()) {
+          APKDir.createSync(recursive: true);
+        }
+        if (!iconsCacheDir.existsSync()) {
+          iconsCacheDir.createSync(recursive: true);
+        }
+      } on FileSystemException {
+        // External cache unavailable at runtime; fall through to internal storage
+        cacheDirs = null;
       }
-    } else {
+    }
+    if (cacheDirs == null || cacheDirs.isEmpty) {
       Sentry.addBreadcrumb(Breadcrumb(message: 'initAppDirectories: external cache unavailable, falling back to app storage'));
       APKDir = Directory('${(await getAppStorageDir()).path}/apks');
       if (!APKDir.existsSync()) {
