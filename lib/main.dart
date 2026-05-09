@@ -388,27 +388,31 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Future<void> initPlatformState() async {
-    await BackgroundFetch.configure(
-      BackgroundFetchConfig(
-        minimumFetchInterval: 15,
-        stopOnTerminate: false,
-        startOnBoot: true,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.ANY,
-      ),
-      (String taskId) async {
-        await BackgroundUpdateService.bgUpdateCheck(taskId, null);
-        BackgroundFetch.finish(taskId);
-      },
-      (String taskId) async {
-        context.read<LogsProvider>().add('BG update task timed out.');
-        BackgroundFetch.finish(taskId);
-      },
-    );
+    try {
+      await BackgroundFetch.configure(
+        BackgroundFetchConfig(
+          minimumFetchInterval: 15,
+          stopOnTerminate: false,
+          startOnBoot: true,
+          enableHeadless: true,
+          requiresBatteryNotLow: false,
+          requiresCharging: false,
+          requiresStorageNotLow: false,
+          requiresDeviceIdle: false,
+          requiredNetworkType: NetworkType.ANY,
+        ),
+        (String taskId) async {
+          await BackgroundUpdateService.bgUpdateCheck(taskId, null);
+          try { BackgroundFetch.finish(taskId); } catch (_) {}
+        },
+        (String taskId) async {
+          context.read<LogsProvider>().add('BG update task timed out.');
+          try { BackgroundFetch.finish(taskId); } catch (_) {}
+        },
+      );
+    } catch (e) {
+      talker.warning('BackgroundFetch.configure failed (unsupported on this device/OS): $e');
+    }
     if (!mounted) return;
   }
 
@@ -420,14 +424,14 @@ class _ObtainiumState extends State<Obtainium> {
     NotificationsProvider notifs = context.read<NotificationsProvider>();
     if (settingsProvider.updateInterval == 0) {
       BackgroundService.stopForegroundService();
-      BackgroundFetch.stop();
+      try { BackgroundFetch.stop(); } catch (e) { talker.warning('BackgroundFetch.stop failed: $e'); }
     } else {
       if (settingsProvider.useFGService) {
-        BackgroundFetch.stop();
+        try { BackgroundFetch.stop(); } catch (e) { talker.warning('BackgroundFetch.stop failed: $e'); }
         BackgroundService.startForegroundService(false);
       } else {
         BackgroundService.stopForegroundService();
-        BackgroundFetch.start();
+        try { BackgroundFetch.start(); } catch (e) { talker.warning('BackgroundFetch.start failed: $e'); }
       }
     }
     if (settingsProvider.prefs == null) {
