@@ -232,9 +232,10 @@ class AppDownloadService {
           settingsProvider,
         )),
       };
+      final apkIndex = app.preferredApkIndex < app.apkUrls.length ? app.preferredApkIndex : 0;
       String downloadUrl = await source.assetUrlPrefetchModifier(
         await source.generalReqPrefetchModifier(
-          app.apkUrls[app.preferredApkIndex].value,
+          app.apkUrls[apkIndex].value,
           additionalSettingsPlusSourceConfig,
         ),
         app.url,
@@ -253,7 +254,7 @@ class AppDownloadService {
       var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
       if (source.urlsAlwaysHaveExtension) {
         fileNameNoExt =
-            '$fileNameNoExt.${app.apkUrls[app.preferredApkIndex].key.split('.').last}';
+            '$fileNameNoExt.${app.apkUrls[apkIndex].key.split('.').last}';
       }
       var headers = await source.getRequestHeaders(
         app.additionalSettings,
