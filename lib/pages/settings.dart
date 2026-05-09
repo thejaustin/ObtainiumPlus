@@ -767,6 +767,7 @@ class _SettingsSubMenuPage extends StatelessWidget {
       appBar: AppBar(title: Text(title), centerTitle: true, backgroundColor: Colors.transparent, elevation: 0),
       body: SingleChildScrollView(
         controller: scrollController,
+        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
         child: child,
       ),
     );

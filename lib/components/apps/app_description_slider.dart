@@ -83,7 +83,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
         return Positioned(
           left: 16,
           right: 16,
-          bottom: 16 + _dragOffset,
+          bottom: MediaQuery.viewPaddingOf(context).bottom + 100 + _dragOffset,
           child: GestureDetector(
             onVerticalDragUpdate: (details) {
               setState(() {
