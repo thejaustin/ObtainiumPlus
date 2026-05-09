@@ -425,17 +425,20 @@ class AppInstallService {
       } catch (e) {
         //
       } finally {
-        throw InstallError(code, appId: apps[file.appId]!.app.id);
+        throw InstallError(code, appId: file.appId);
       }
     } else if (code == 0) {
       installed = true;
-      apps[file.appId]!.app.installedVersion =
-          apps[file.appId]!.app.latestVersion;
-      
-      // Android 14+ Update Ownership
-      var osInfo = await DeviceInfoPlugin().androidInfo;
-      if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUpdateOwnership) {
-        await setUpdateOwnership(apps[file.appId]!.app.id);
+      // App may have been removed while the install dialog was shown; skip update.
+      if (apps[file.appId] != null) {
+        apps[file.appId]!.app.installedVersion =
+            apps[file.appId]!.app.latestVersion;
+
+        // Android 14+ Update Ownership
+        var osInfo = await DeviceInfoPlugin().androidInfo;
+        if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUpdateOwnership) {
+          await setUpdateOwnership(apps[file.appId]!.app.id);
+        }
       }
 
       file.file.delete(recursive: true);

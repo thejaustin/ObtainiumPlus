@@ -57,7 +57,9 @@ class AppDownloadService {
     required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
   }) async {
     var isTempIdBool = SourceUtils.isTempId(app);
-    if (app.id != newInfo.packageName) {
+    // newInfo.packageName is String? — null means the APK archive couldn't report
+    // its package name; treat it as "no ID change" to avoid a null crash.
+    if (newInfo.packageName != null && app.id != newInfo.packageName) {
       if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
         throw IDChangedError(newInfo.packageName!);
       }
