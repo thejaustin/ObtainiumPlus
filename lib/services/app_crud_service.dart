@@ -138,7 +138,7 @@ class AppCRUDService {
                 )
                 .forEach((element) {
                   try {
-                    element.delete(recursive: true);
+                    unawaited(element.delete(recursive: true));
                   } catch (e) {
                     logs.add('Error deleting APK file ${element.path}: $e');
                   }
@@ -157,7 +157,7 @@ class AppCRUDService {
 
     if (appIds.isNotEmpty) {
       notifyListeners();
-      export(isAuto: true);
+      unawaited(export(isAuto: true));
       settingsProvider.prefs?.setInt('trackedAppCount', apps.length);
     }
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,7 +9,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
 
   ThemeSettingsProvider() {
-    _initialize();
+    unawaited(_initialize());
   }
 
   Future<void> _initialize() async {

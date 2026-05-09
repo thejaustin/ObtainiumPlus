@@ -576,7 +576,7 @@ class AppDownloadService {
       apks.removeWhere((apk) {
         var shouldDelete = !reg.hasMatch(apk.uri.pathSegments.last);
         if (shouldDelete) {
-          apk.delete();
+          unawaited(apk.delete());
         }
         return shouldDelete;
       });

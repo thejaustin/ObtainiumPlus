@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -13,7 +14,7 @@ class BackgroundService {
   factory BackgroundService() => _instance;
 
   @pragma('vm:entry-point')
-  static void backgroundFetchHeadlessTask(HeadlessTask task) async {
+  static Future<void> backgroundFetchHeadlessTask(HeadlessTask task) async {
     String taskId = task.taskId;
     bool isTimeout = task.timeout;
     if (isTimeout) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -48,7 +49,7 @@ class Log {
 
 class LogsProvider {
   LogsProvider({bool runDefaultClear = true}) {
-    clear(before: DateTime.now().subtract(const Duration(days: 7)));
+    unawaited(clear(before: DateTime.now().subtract(const Duration(days: 7))));
   }
 
   Database? db;
@@ -124,14 +125,14 @@ create table if not exists $logTable (
       whereArgs: where.value,
     );
     if (res > 0) {
-      add(
+      unawaited(add(
         plural(
           'clearedNLogsBeforeXAfterY',
           res,
           namedArgs: {'before': before.toString(), 'after': after.toString()},
           name: 'n',
         ),
-      );
+      ));
     }
     return res;
   }

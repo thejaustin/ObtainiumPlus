@@ -118,6 +118,6 @@ class OfflineService {
   }
 
   void dispose() {
-    _subscription?.cancel();
+    unawaited(_subscription?.cancel() ?? Future.value());
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
@@ -60,7 +61,7 @@ class AppInstallService {
     return null;
   }
 
-  static void uninstallApp(String appId) async {
+  static Future<void> uninstallApp(String appId) async {
     var intent = AndroidIntent(
       action: 'android.intent.action.DELETE',
       data: 'package:$appId',
@@ -193,7 +194,7 @@ class AppInstallService {
       try {
         await fallback.launch();
       } catch (e2) {
-        openAppSettings('app.obtainiumplus');
+        unawaited(openAppSettings('app.obtainiumplus'));
       }
     }
   }

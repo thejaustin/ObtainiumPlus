@@ -151,10 +151,10 @@ class AppsProvider with ChangeNotifier {
       
       // If the channel changed and we've already initialized (meaning we have an old value to compare against)
       if (oldChannel != null && apps.containsKey(obtainiumId)) {
-        checkObtainiumUpdate(ignoreCache: true).catchError((e) {
+        unawaited(checkObtainiumUpdate(ignoreCache: true).catchError((e) {
           logs.add('Error checking Obtainium+ update after channel change: $e');
           return null;
-        });
+        }));
       }
     }
   }
@@ -162,7 +162,7 @@ class AppsProvider with ChangeNotifier {
   @override
   void dispose() {
     settingsProvider.removeListener(_onSettingsChanged);
-    foregroundSubscription?.cancel();
+    unawaited(foregroundSubscription?.cancel() ?? Future.value());
     super.dispose();
   }
 
@@ -349,7 +349,7 @@ class AppsProvider with ChangeNotifier {
         },
       );
     }
-    getHost(String url) {
+    String? getHost(String url) {
       if (url == 'placeholder') {
         return null;
       }
