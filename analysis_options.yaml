@@ -13,6 +13,7 @@ analyzer:
   exclude:
     - "build/**"
     - ".dart_tool/**"
+    - "flutter/**"
     - "**/*.g.dart"
     - "**/*.freezed.dart"
 
