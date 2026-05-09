@@ -125,9 +125,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 onError: (e) { showError(e, context); },
               )
               .whenComplete(() {
-                setState(() {
-                  importInProgress = false;
-                });
+                if (mounted) setState(() { importInProgress = false; });
               });
         }
       });
@@ -386,12 +384,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
-            showError(e, context);
+            if (mounted) showError(e, context);
           })
           .whenComplete(() {
-            setState(() {
-              importInProgress = false;
-            });
+            if (mounted) setState(() { importInProgress = false; });
           });
     }
 
@@ -453,9 +449,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             showError(e, context);
           })
           .whenComplete(() {
-            setState(() {
-              importInProgress = false;
-            });
+            if (mounted) setState(() { importInProgress = false; });
           });
     }
 
