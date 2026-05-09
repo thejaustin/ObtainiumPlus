@@ -18,11 +18,11 @@ class BackgroundService {
     bool isTimeout = task.timeout;
     if (isTimeout) {
       talker.warning('BG update task timed out.');
-      BackgroundFetch.finish(taskId);
+      try { BackgroundFetch.finish(taskId); } catch (e) { talker.warning('BackgroundFetch.finish failed: $e'); }
       return;
     }
     await BackgroundUpdateService.bgUpdateCheck(taskId, null);
-    BackgroundFetch.finish(taskId);
+    try { BackgroundFetch.finish(taskId); } catch (e) { talker.warning('BackgroundFetch.finish failed: $e'); }
   }
 
   @pragma('vm:entry-point')
@@ -55,29 +55,37 @@ class BackgroundService {
   }
 
   static Future<ServiceRequestResult?> startForegroundService(bool restart) async {
-    initForegroundService();
-    if (await FlutterForegroundTask.isRunningService) {
-      if (restart) {
-        return FlutterForegroundTask.restartService();
+    try {
+      initForegroundService();
+      if (await FlutterForegroundTask.isRunningService) {
+        if (restart) {
+          return await FlutterForegroundTask.restartService();
+        }
+      } else {
+        return await FlutterForegroundTask.startService(
+          serviceTypes: [ForegroundServiceTypes.specialUse],
+          serviceId: AppConstants.foregroundServiceId,
+          notificationTitle: tr('foregroundService'),
+          notificationText: tr('fgServiceNotice'),
+          notificationIcon: NotificationIcon(
+            metaDataName: 'app.obtainiumplus.service.NOTIFICATION_ICON',
+          ),
+          callback: startCallback,
+        );
       }
-    } else {
-      return FlutterForegroundTask.startService(
-        serviceTypes: [ForegroundServiceTypes.specialUse],
-        serviceId: AppConstants.foregroundServiceId,
-        notificationTitle: tr('foregroundService'),
-        notificationText: tr('fgServiceNotice'),
-        notificationIcon: NotificationIcon(
-          metaDataName: 'app.obtainiumplus.service.NOTIFICATION_ICON',
-        ),
-        callback: startCallback,
-      );
+    } catch (e) {
+      talker.warning('startForegroundService failed: $e');
     }
     return null;
   }
 
   static Future<ServiceRequestResult?> stopForegroundService() async {
-    if (await FlutterForegroundTask.isRunningService) {
-      return FlutterForegroundTask.stopService();
+    try {
+      if (await FlutterForegroundTask.isRunningService) {
+        return await FlutterForegroundTask.stopService();
+      }
+    } catch (e) {
+      talker.warning('stopForegroundService failed: $e');
     }
     return null;
   }
@@ -92,7 +100,9 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    BackgroundUpdateService.bgUpdateCheck('bg_check', null);
+    BackgroundUpdateService.bgUpdateCheck('bg_check', null).catchError(
+      (e) { talker.warning('onRepeatEvent bgUpdateCheck failed: $e'); },
+    );
   }
 
   @override
