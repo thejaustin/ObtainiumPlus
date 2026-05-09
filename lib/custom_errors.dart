@@ -150,8 +150,12 @@ class MultiAppMultiError extends ObtainiumError {
   MultiAppMultiError() : super(tr('placeholder'), unexpected: false);
 
   void add(String appId, dynamic error, {String? appName, StackTrace? stackTrace}) {
+    // Normalize common network exceptions to ObtainiumError(unexpected:false) so
+    // transient connectivity failures don't get reported to Sentry as crashes.
     if (error is SocketException) {
-      error = error.message;
+      error = ObtainiumError(error.message);
+    } else if (error is HttpException) {
+      error = ObtainiumError(error.message);
     }
     // Propagate appId to IDChangedError if missing
     if (error is IDChangedError && error.appId == null) {
