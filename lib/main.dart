@@ -208,6 +208,10 @@ void main() async {
         BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
         talker.info('Startup: Headless tasks registered');
 
+        // Reset crash-loop counter on successful startup so user-facing errors
+        // (e.g. UnsupportedURLError) don't falsely trigger the repair screen.
+        await CrashAnalytics.resetStats();
+
         // Zone guard catches unhandled async errors that escape the widget tree
         // (mirrors hexodus's zone-level error boundary pattern)
         runZonedGuarded(
