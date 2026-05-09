@@ -80,7 +80,8 @@ class LiteAPKs extends AppSource {
       throw SourceUtils.getObtainiumHttpError(res1);
     }
 
-    var liteAppId = jsonDecode(res1.body)[0]['id'];
+    final res1Decoded = jsonDecode(res1.body) as List<dynamic>;
+    var liteAppId = res1Decoded.isNotEmpty ? res1Decoded[0]['id'] : null;
     if (liteAppId == null) {
       throw NoReleasesError();
     }
