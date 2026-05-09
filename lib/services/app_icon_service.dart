@@ -174,7 +174,7 @@ class AppIconService {
         }
       }
 
-      if (icon != null) {
+      if (icon != null && apps.containsKey(appId)) {
         _iconsFailed.remove(appId);
         // Add to LRU cache
         _iconCache.put(appId, icon);
@@ -184,12 +184,6 @@ class AppIconService {
             value.app,
             value.downloadProgress,
             value.installedInfo,
-            icon,
-          ),
-          ifAbsent: () => AppInMemory(
-            apps[appId]!.app,
-            null,
-            apps[appId]?.installedInfo,
             icon,
           ),
         );
