@@ -130,15 +130,14 @@ class DiscoverPageState extends State<DiscoverPage> {
         });
       }
 
+      if (!mounted) return;
       setState(() {
         results = aggregatedResults;
       });
     } catch (e) {
       talker.warning('Discover search error: $e');
     } finally {
-      setState(() {
-        searching = false;
-      });
+      if (mounted) setState(() { searching = false; });
     }
   }
 
