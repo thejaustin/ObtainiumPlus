@@ -372,9 +372,8 @@ class AppInstallService {
         }
       } catch (e) {
         //
-      } finally {
-        throw BadDownloadError(appId: file.appId);
       }
+      throw BadDownloadError(appId: file.appId);
     }
     if (apps[file.appId] == null) {
       throw ObtainiumError(tr('appNotFound'));
@@ -424,9 +423,8 @@ class AppInstallService {
         AppFileService.deleteFile(file.file);
       } catch (e) {
         //
-      } finally {
-        throw InstallError(code, appId: file.appId);
       }
+      throw InstallError(code, appId: file.appId);
     } else if (code == 0) {
       installed = true;
       // App may have been removed while the install dialog was shown; skip update.
