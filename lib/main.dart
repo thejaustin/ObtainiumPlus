@@ -256,25 +256,25 @@ void main() async {
             // Expected ObtainiumErrors are user-facing (e.g. bad dispenser URL,
             // microG misconfiguration) — show to user but don't pollute Sentry.
             if (error is ObtainiumError && !error.unexpected) return;
-            Sentry.captureException(error, stackTrace: stack).then((id) {
-              CrashTracker.recordCrash(id.toString());
-              CrashAnalytics.recordCrash(
-                errorType: error.runtimeType.toString(),
-                errorMessage: error.toString(),
-                eventId: id.toString(),
-              );
-              CrashFileHandler.writeCrashLog(
-                errorType: error.runtimeType.toString(),
-                message: error.toString(),
-                stackTrace: stack.toString(),
-                sentryEventId: id.toString(),
-              );
-            }).catchError((e) {
+            Sentry.captureException(error, stackTrace: stack).then(
+              (id) {
+                CrashTracker.recordCrash(id.toString());
+                CrashAnalytics.recordCrash(
+                  errorType: error.runtimeType.toString(),
+                  errorMessage: error.toString(),
+                  eventId: id.toString(),
+                );
+                CrashFileHandler.writeCrashLog(
+                  errorType: error.runtimeType.toString(),
+                  message: error.toString(),
+                  stackTrace: stack.toString(),
+                  sentryEventId: id.toString(),
+                );
+              },
               // Swallow — never let crash-recording failures recurse back into
               // the zone error handler and create an infinite reporting loop.
-              talker.warning('Crash reporting pipeline failed: $e');
-              return null;
-            });
+              onError: (e) { talker.warning('Crash reporting pipeline failed: $e'); },
+            );
           },
         );
       } catch (e, stackTrace) {
@@ -327,23 +327,23 @@ class _ObtainiumState extends State<Obtainium> {
       talker.handle(details.exception, details.stack, 'Build Error');
       _buildError = details.exceptionAsString();
       _buildStackTrace = details.stack?.toString();
-      Sentry.captureException(details.exception, stackTrace: details.stack).then((id) {
-        CrashTracker.recordCrash(id.toString());
-        CrashAnalytics.recordCrash(
-          errorType: details.exception.runtimeType.toString(),
-          errorMessage: details.exceptionAsString(),
-          eventId: id.toString(),
-        );
-        CrashFileHandler.writeCrashLog(
-          errorType: details.exception.runtimeType.toString(),
-          message: details.exceptionAsString(),
-          stackTrace: details.stack?.toString() ?? '',
-          sentryEventId: id.toString(),
-        );
-      }).catchError((e) {
-        talker.warning('Build error reporting pipeline failed: $e');
-        return null;
-      });
+      Sentry.captureException(details.exception, stackTrace: details.stack).then(
+        (id) {
+          CrashTracker.recordCrash(id.toString());
+          CrashAnalytics.recordCrash(
+            errorType: details.exception.runtimeType.toString(),
+            errorMessage: details.exceptionAsString(),
+            eventId: id.toString(),
+          );
+          CrashFileHandler.writeCrashLog(
+            errorType: details.exception.runtimeType.toString(),
+            message: details.exceptionAsString(),
+            stackTrace: details.stack?.toString() ?? '',
+            sentryEventId: id.toString(),
+          );
+        },
+        onError: (e) { talker.warning('Build error reporting pipeline failed: $e'); },
+      );
       return BuildErrorWidget(error: details.exceptionAsString(), stackTrace: details.stack?.toString() ?? '');
     };
     initPlatformState();
@@ -438,34 +438,32 @@ class _ObtainiumState extends State<Obtainium> {
         logs.add('This is the first ever run of Obtainium.');
         // If this is the first run, add Obtainium to the Apps list
         if (!fdroid) {
-          AppInstallService.getInstalledInfo(obtainiumId)
-              .then((value) {
-                if (value?.versionName != null) {
-                  appsProvider.saveApps([
-                    App(
-                      obtainiumId,
-                      obtainiumUrl,
-                      'thejaustin',
-                      'Obtainium+',
-                      value!.versionName,
-                      value.versionName!,
-                      [],
-                      0,
-                      {
-                        'versionDetection': true,
-                        'apkFilterRegEx': 'fdroid',
-                        'invertAPKFilter': true,
-                      },
-                      null,
-                      false,
-                    ),
-                  ], onlyIfExists: false);
-                }
-              })
-              .catchError((err) {
-                talker.handle(err, null, 'Locale change error');
-                return null;
-              });
+          AppInstallService.getInstalledInfo(obtainiumId).then(
+            (value) {
+              if (value?.versionName != null) {
+                appsProvider.saveApps([
+                  App(
+                    obtainiumId,
+                    obtainiumUrl,
+                    'thejaustin',
+                    'Obtainium+',
+                    value!.versionName,
+                    value.versionName!,
+                    [],
+                    0,
+                    {
+                      'versionDetection': true,
+                      'apkFilterRegEx': 'fdroid',
+                      'invertAPKFilter': true,
+                    },
+                    null,
+                    false,
+                  ),
+                ], onlyIfExists: false);
+              }
+            },
+            onError: (err) { talker.handle(err, null, 'First run Obtainium+ init error'); },
+          );
         }
       }
       if (!supportedLocales.map((e) => e.key).contains(context.locale) ||

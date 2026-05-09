@@ -105,25 +105,26 @@ class InstallationSection extends StatelessWidget {
                 settings.useShizuku = false;
                 return;
               }
-              ShizukuApkInstaller.checkPermission().then((resCode) {
-                if (resCode == null) {
-                  _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
-                  return;
-                }
-                settings.useShizuku = resCode.startsWith('authorized') || resCode.startsWith('granted');
-                switch (resCode) {
-                  case 'binder_not_found':
+              ShizukuApkInstaller.checkPermission().then(
+                (resCode) {
+                  if (resCode == null) {
                     _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
-                  case 'old_shizuku':
-                    _showError(context, ObtainiumError(tr('shizukuOld')));
-                  case 'old_android_with_adb':
-                    _showError(context, ObtainiumError(tr('shizukuOldAndroidWithADB')));
-                  case 'denied':
-                    _showError(context, ObtainiumError(tr('cancelled')));
-                }
-              }).catchError((e) {
-                talker.warning('Shizuku checkPermission error: $e');
-              });
+                    return;
+                  }
+                  settings.useShizuku = resCode.startsWith('authorized') || resCode.startsWith('granted');
+                  switch (resCode) {
+                    case 'binder_not_found':
+                      _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
+                    case 'old_shizuku':
+                      _showError(context, ObtainiumError(tr('shizukuOld')));
+                    case 'old_android_with_adb':
+                      _showError(context, ObtainiumError(tr('shizukuOldAndroidWithADB')));
+                    case 'denied':
+                      _showError(context, ObtainiumError(tr('cancelled')));
+                  }
+                },
+                onError: (e) { talker.warning('Shizuku checkPermission error: $e'); },
+              );
             },
           ),
         ),

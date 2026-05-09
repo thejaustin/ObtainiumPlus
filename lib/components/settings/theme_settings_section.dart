@@ -576,11 +576,10 @@ class ThemeSettingsSection extends StatelessWidget {
               onChanged: (useSystemFont) {
                 AppHaptics.selectionClick();
                 if (useSystemFont) {
-                  NativeFeatures.loadSystemFont().then((val) {
-                    settings.useSystemFont = true;
-                  }).catchError((e) {
-                    talker.warning('loadSystemFont failed: $e');
-                  });
+                  NativeFeatures.loadSystemFont().then(
+                    (val) { settings.useSystemFont = true; },
+                    onError: (e) { talker.warning('loadSystemFont failed: $e'); },
+                  );
                 } else {
                   settings.useSystemFont = false;
                 }

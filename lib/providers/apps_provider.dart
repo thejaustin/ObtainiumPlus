@@ -328,6 +328,7 @@ class AppsProvider with ChangeNotifier {
     if (pickAnyAsset) {
       urlsToSelectFrom = [...urlsToSelectFrom, ...app.otherAssetUrls];
     }
+    if (urlsToSelectFrom.isEmpty) return null;
     MapEntry<String, String>? appFileUrl =
         urlsToSelectFrom[app.preferredApkIndex >= 0
             ? app.preferredApkIndex

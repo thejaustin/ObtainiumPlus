@@ -363,22 +363,23 @@ class _SettingsPageState extends State<SettingsPage> {
                               settingsProvider.useShizuku = false;
                               return;
                             }
-                            ShizukuApkInstaller.checkPermission().then((resCode) {
-                              if (resCode == null || !resCode.startsWith('granted')) {
-                                ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-                                  content: Text(resCode == 'binder_not_found' || resCode == null
-                                      ? tr('shizukuBinderNotFound')
-                                      : resCode == 'old_shizuku'
-                                          ? tr('shizukuOld')
-                                          : tr('shizukuBinderNotFound')),
-                                  behavior: SnackBarBehavior.floating,
-                                ));
-                                return;
-                              }
-                              settingsProvider.useShizuku = true;
-                            }).catchError((e) {
-                              talker.warning('Shizuku checkPermission error: $e');
-                            });
+                            ShizukuApkInstaller.checkPermission().then(
+                              (resCode) {
+                                if (resCode == null || !resCode.startsWith('granted')) {
+                                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+                                    content: Text(resCode == 'binder_not_found' || resCode == null
+                                        ? tr('shizukuBinderNotFound')
+                                        : resCode == 'old_shizuku'
+                                            ? tr('shizukuOld')
+                                            : tr('shizukuBinderNotFound')),
+                                    behavior: SnackBarBehavior.floating,
+                                  ));
+                                  return;
+                                }
+                                settingsProvider.useShizuku = true;
+                              },
+                              onError: (e) { talker.warning('Shizuku checkPermission error: $e'); },
+                            );
                           },
                         ),
                       ],
