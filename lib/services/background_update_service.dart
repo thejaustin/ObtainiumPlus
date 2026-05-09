@@ -198,7 +198,7 @@ class BackgroundUpdateService {
             updates = e['updates'] ?? [];
             errors = e['errors'];
             
-            for (var entry in errors!.rawErrors.entries) {
+            for (var entry in (errors?.rawErrors.entries ?? <MapEntry<String, dynamic>>[])) {
               var key = entry.key;
               var err = entry.value;
               logs.add('BG update task: Got error on checking for $key "${err.toString()}"');
@@ -256,7 +256,7 @@ class BackgroundUpdateService {
           for (var element in toThrow.idsByErrorString.entries) {
             notificationsProvider.notify(
               ErrorCheckingUpdatesNotification(
-                errors!.errorsAppsString(element.key, element.value),
+                (errors ?? toThrow).errorsAppsString(element.key, element.value),
                 id: Random().nextInt(10000),
               ),
             );
@@ -292,7 +292,7 @@ class BackgroundUpdateService {
             if (canInstallFlags[i]) toInstall.add(MapEntry(temp[i], 0));
           }
         }
-        if (toInstall.isNotEmpty) {
+        if (toInstall.isNotEmpty && appsProvider.APKDir != null) {
           try {
             await AppDownloadService.downloadAndInstallLatestApps(
               appIds: toInstall.map((e) => e.key).toList(),
@@ -329,6 +329,7 @@ class BackgroundUpdateService {
         'updatesFound': updates.length,
         'success': true,
       };
+      if (appsProvider.APKDir == null) return;
       final file = File('${appsProvider.APKDir!.parent.path}/last_update_status.json');
       await file.writeAsString(jsonEncode(status));
     } catch (e) {
