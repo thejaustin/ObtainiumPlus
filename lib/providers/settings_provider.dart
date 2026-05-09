@@ -250,7 +250,8 @@ class SettingsProvider with ChangeNotifier {
     if (context.supportedLocales.contains(context.deviceLocale)) {
       context.resetLocale();
     } else {
-      context.setLocale(context.fallbackLocale!);
+      final fallback = context.fallbackLocale;
+      if (fallback != null) context.setLocale(fallback);
       context.deleteSaveLocale();
     }
   }
