@@ -376,14 +376,23 @@ class AppInstallService {
         throw BadDownloadError(appId: file.appId);
       }
     }
+    if (apps[file.appId] == null) {
+      throw ObtainiumError(tr('appNotFound'));
+    }
     PackageInfo? appInfo = await getInstalledInfo(apps[file.appId]!.app.id);
     logs.add(
       'Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
     );
+    // versionCode is int? in the plugin — null on Android 15 for apps using
+    // longVersionCode > Integer.MAX_VALUE. Fall back to 0 to skip downgrade check.
+    final newVersionCode = newInfo.versionCode ?? 0;
+    final existingVersionCode = appInfo?.versionCode ?? 0;
     if (appInfo != null &&
-        newInfo.versionCode! < appInfo.versionCode! &&
+        newVersionCode > 0 &&
+        existingVersionCode > 0 &&
+        newVersionCode < existingVersionCode &&
         !(await canDowngradeApps())) {
-      throw DowngradeError(appInfo.versionCode!, newInfo.versionCode!, appId: apps[file.appId]!.app.id);
+      throw DowngradeError(existingVersionCode, newVersionCode, appId: apps[file.appId]!.app.id);
     }
     if (needsBGWorkaround) {
       // In a background process, the await on AndroidPackageInstaller.installApk
