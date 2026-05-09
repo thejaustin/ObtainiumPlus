@@ -501,9 +501,11 @@ class AppDownloadService {
               apps[id]!.app.apkUrls.first.value == 'placeholder';
       if (refreshBeforeDownload) {
         await checkUpdate(apps[id]!.app.id, ignoreCache: true);
+        if (apps[id] == null) continue;
       }
       if (!trackOnly) {
         apkUrl = await confirmAppFileUrl(apps[id]!.app, context, false);
+        if (apps[id] == null) continue;
       }
       if (apkUrl != null) {
         int urlInd = apps[id]!.app.apkUrls
@@ -646,9 +648,10 @@ class AppDownloadService {
     apps[id]?.downloadProgress = -1;
     notifyListeners();
     try {
+      if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       bool sayInstalled = true;
       var contextIfNewInstall = apps[id]?.installedInfo == null ? context : null;
-      bool needBGWorkaround = (willBeSilent && context == null && !settingsProvider.useShizuku) || 
+      bool needBGWorkaround = (willBeSilent && context == null && !settingsProvider.useShizuku) ||
           AppConstants.plusAppIds.contains(id) ||
           apps[id]!.app.additionalSettings['persistentVersionTracking'] == true;
       bool shizukuPretendToBeGooglePlay = settingsProvider.shizukuPretendToBeGooglePlay ||
@@ -703,7 +706,7 @@ class AppDownloadService {
           notificationsProvider?.notify(UpdateNotification(remaining));
         }
       }
-      if (willBeSilent && context == null) {
+      if (willBeSilent && context == null && apps[id] != null) {
         if (!settingsProvider.useShizuku) {
           notificationsProvider?.notify(
             SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
@@ -771,6 +774,7 @@ class AppDownloadService {
         downloadedDir = DownloadedDir(id, downloadedArtifact['downloadedFile'] as File, downloadedArtifact['apkDir'] as Directory, downloadedArtifact['isXAPK'] ? DownloadedDirType.XAPK : DownloadedDirType.ZIP);
       }
 
+      if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       willBeSilent = await canInstallSilently(apps[id]!.app);
       await _checkInstallPermissions(settingsProvider, willBeSilent);
       
