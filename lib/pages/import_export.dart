@@ -187,6 +187,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           // User cancelled
           return;
         }
+        if (!mounted) return;
 
         setState(() {
           importInProgress = true;
@@ -245,6 +246,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           // User cancelled
           return;
         }
+        if (!mounted) return;
 
         setState(() {
           importInProgress = true;
@@ -404,7 +406,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 );
               },
             );
-            if (values != null) {
+            if (values != null && mounted) {
               setState(() {
                 importInProgress = true;
               });
