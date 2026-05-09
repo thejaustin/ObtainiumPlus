@@ -562,7 +562,7 @@ class AppsPageState extends State<AppsPage> {
           if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty && !settingsProvider.plusTopUILayout)
             Positioned(
               left: 16,
-              bottom: 16,
+              bottom: 16 + MediaQuery.of(context).viewPadding.bottom,
               child: _buildQuickActionStrip(context, viewSettings, isFilterOff),
             ),
         ],
@@ -607,8 +607,12 @@ class AppsPageState extends State<AppsPage> {
                   _buildUpdateAllBanner(context),
                 _buildContent(context, viewSettings, listedApps, listedCategories),
                 // Bottom padding to prevent FAB / quick-filter strip from
-                // obscuring the last list item.
-                const SliverToBoxAdapter(child: SizedBox(height: 88)),
+                // obscuring the last list item — includes system nav bar height.
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 88 + MediaQuery.of(context).viewPadding.bottom,
+                  ),
+                ),
               ],
             ),
           ),
