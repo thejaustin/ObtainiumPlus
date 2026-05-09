@@ -90,10 +90,16 @@ class RuStore extends AppSource {
       postBody: {"appId": appDetails['appId'], "firstInstall": true},
     );
     var downloadDetails = (await decodeJsonBody(res1.bodyBytes))['body'];
+    String? downloadUrl;
     try {
-      if (res1.statusCode != 200 || downloadDetails['downloadUrls'][0]['url'] == null) {
+      final downloadUrls = downloadDetails['downloadUrls'];
+      if (res1.statusCode != 200 ||
+          downloadUrls == null ||
+          (downloadUrls as List).isEmpty ||
+          downloadUrls[0]['url'] == null) {
         throw NoAPKError();
       }
+      downloadUrl = downloadUrls[0]['url'] as String;
     } catch (e) {
       throw NoAPKError();
     }
@@ -101,7 +107,7 @@ class RuStore extends AppSource {
     return APKDetails(
       version,
       getApkUrlsFromUrls([
-        (downloadDetails['downloadUrls'][0]['url'] as String).replaceAll(
+        downloadUrl!.replaceAll(
           RegExp('\\.zip\$'),
           '.apk',
         ),
