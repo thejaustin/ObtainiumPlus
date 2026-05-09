@@ -453,7 +453,7 @@ class AppActionsFAB extends StatelessWidget {
                             Navigator.pop(context);
                             _runMassImport(
                               context,
-                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubStars),
+                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubStars, orElse: () => GitHubStars()),
                             );
                           },
                         ),
@@ -468,7 +468,7 @@ class AppActionsFAB extends StatelessWidget {
                             Navigator.pop(context);
                             _runMassImport(
                               context,
-                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubPersonalRepos),
+                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubPersonalRepos, orElse: () => GitHubPersonalRepos()),
                             );
                           },
                         ),

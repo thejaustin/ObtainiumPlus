@@ -603,7 +603,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     onPressed: importInProgress
                         ? null
                         : () {
-                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubStars().runtimeType));
+                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubStars().runtimeType, orElse: () => GitHubStars()));
                           },
                     child: Text(tr('importGithubStarredRepos')),
                   ),
@@ -620,7 +620,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     onPressed: importInProgress
                         ? null
                         : () {
-                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubPersonalRepos().runtimeType));
+                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubPersonalRepos().runtimeType, orElse: () => GitHubPersonalRepos()));
                           },
                     child: Text(tr('importX', args: [tr('githubPersonalRepos')])),
                   ),
