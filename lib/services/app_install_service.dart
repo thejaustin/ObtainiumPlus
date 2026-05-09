@@ -132,7 +132,11 @@ class AppInstallService {
   }
 
   static Future<void> openApp(String appId) async {
-    await pm.openApp(appId);
+    try {
+      await pm.openApp(appId);
+    } catch (e) {
+      talker.warning('openApp failed for $appId: $e');
+    }
   }
 
   static const _nativeChannel = MethodChannel('app.obtainiumplus/native');
