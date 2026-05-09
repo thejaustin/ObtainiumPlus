@@ -386,37 +386,6 @@ class _AppPageState extends State<AppPage> {
                                     ],
                                   ),
 
-                                  // 2. Metadata Group
-                                  ExpressiveSettingsGroup(
-                                    title: 'App Details',
-                                    children: [
-                                      ListTile(
-                                        leading: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.medium), borderRadius: BorderRadius.circular(12)),
-                                          child: Icon(Icons.link_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
-                                        ),
-                                        title: Text(tr('appSourceURL'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        subtitle: Text(app?.app.url ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                                        trailing: const Icon(Icons.open_in_new, size: 18),
-                                        onTap: () => launchUrlString(app?.app.url ?? '', mode: LaunchMode.externalApplication),
-                                      ),
-                                      ListTile(
-                                        leading: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.medium), borderRadius: BorderRadius.circular(12)),
-                                          child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
-                                        ),
-                                        title: Text(tr('appId'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        subtitle: Text(app?.app.id ?? ''),
-                                        onTap: () {
-                                          Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
-                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
-                                        },
-                                      ),
-                                    ],
-                                  ),
-
                                   // 3. Category Group
                                   ExpressiveSettingsGroup(
                                     title: tr('categories'),
@@ -449,8 +418,8 @@ class _AppPageState extends State<AppPage> {
                                       ],
                                     ),
 
-                                  // 4. About Group
-                                  if (app?.app.additionalSettings['about'] != null && app!.app.additionalSettings['about'].toString().isNotEmpty)
+                                  // 4. About Group — only when popup slider is disabled to avoid duplicate
+                                  if (app?.app.additionalSettings['about'] != null && app!.app.additionalSettings['about'].toString().isNotEmpty && !appsProvider.settingsProvider.plusEnablePopupSlider)
                                     ExpressiveSettingsGroup(
                                       title: tr('about'),
                                       children: [
