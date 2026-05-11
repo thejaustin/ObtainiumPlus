@@ -95,10 +95,14 @@ class _CommandCenterState extends State<CommandCenter> {
     // Search local apps
     final appsProvider = context.read<AppsProvider>();
     setState(() {
-      _localResults = appsProvider.getAppValues().where((app) {
-        return app.name.toLowerCase().contains(value.toLowerCase()) ||
-               app.app.id.toLowerCase().contains(value.toLowerCase());
-      }).take(5).toList();
+      _localResults = appsProvider
+          .getAppValues()
+          .where((app) {
+            return app.name.toLowerCase().contains(value.toLowerCase()) ||
+                app.app.id.toLowerCase().contains(value.toLowerCase());
+          })
+          .take(5)
+          .toList();
     });
 
     // Check if it's a URL
@@ -116,8 +120,10 @@ class _CommandCenterState extends State<CommandCenter> {
     setState(() => _isSearching = true);
     try {
       final settings = context.read<SettingsProvider>();
-      final searchableSources = _sourceProvider.sources.where((e) => e.canSearch).toList();
-      
+      final searchableSources = _sourceProvider.sources
+          .where((e) => e.canSearch)
+          .toList();
+
       final results = await Future.wait(
         searchableSources.map((source) async {
           if (settings.searchDeselected.contains(source.name)) return null;
@@ -157,19 +163,25 @@ class _CommandCenterState extends State<CommandCenter> {
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: ConditionalBlur(sigma: 24, enabled: settings.plusEnableGlassmorphism, child: Container(
+      child: ConditionalBlur(
+        sigma: 24,
+        enabled: settings.plusEnableGlassmorphism,
+        child: Container(
           height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
-            color: (isDark
-                    ? theme.colorScheme.surfaceContainerHighest
-                    : theme.colorScheme.surface)
-                .withOpacity(settings.plusEnableGlassmorphism ? 0.72 : 1.0),
+            color:
+                (isDark
+                        ? theme.colorScheme.surfaceContainerHighest
+                        : theme.colorScheme.surface)
+                    .withOpacity(settings.plusEnableGlassmorphism ? 0.72 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
                 color: settings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withOpacity(0.18)
-                    : theme.colorScheme.outlineVariant.withOpacity(AppOpacity.subtle),
+                    : theme.colorScheme.outlineVariant.withOpacity(
+                        AppOpacity.subtle,
+                      ),
               ),
               left: BorderSide(
                 color: settings.plusEnableGlassmorphism
@@ -197,69 +209,69 @@ class _CommandCenterState extends State<CommandCenter> {
                   ),
                 ),
               ),
-          
-          // Search Input
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              style: theme.textTheme.titleMedium,
-              decoration: InputDecoration(
-                hintText: tr('searchOrPasteUrl'),
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isNotEmpty 
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _controller.clear();
-                        _onSearchChanged('');
-                      },
-                    )
-                  : null,
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHigh,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+
+              // Search Input
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  style: theme.textTheme.titleMedium,
+                  decoration: InputDecoration(
+                    hintText: tr('searchOrPasteUrl'),
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _query.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _controller.clear();
+                              _onSearchChanged('');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerHigh,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  onChanged: _onSearchChanged,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onChanged: _onSearchChanged,
-            ),
-          ),
 
-          const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-          // Content
-          Expanded(
-            child: _query.isEmpty 
-              ? _buildInitialState()
-              : ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  children: [
-                    if (_localResults.isNotEmpty) ...[
-                      _buildSectionHeader(tr('myApps')),
-                      ..._localResults.map(_buildLocalResult),
-                      const SizedBox(height: 16),
-                    ],
-                    if (isUrl) ...[
-                      _buildSectionHeader(tr('actions')),
-                      _buildUrlActionContent(),
-                      const SizedBox(height: 16),
-                    ],
-                    if (_query.isNotEmpty && !isUrl) ...[
-                      _buildSectionHeader(tr('discover')),
-                      _buildSearchResultsList(),
-                    ],
-                  ],
-                ),
+              // Content
+              Expanded(
+                child: _query.isEmpty
+                    ? _buildInitialState()
+                    : ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        children: [
+                          if (_localResults.isNotEmpty) ...[
+                            _buildSectionHeader(tr('myApps')),
+                            ..._localResults.map(_buildLocalResult),
+                            const SizedBox(height: 16),
+                          ],
+                          if (isUrl) ...[
+                            _buildSectionHeader(tr('actions')),
+                            _buildUrlActionContent(),
+                            const SizedBox(height: 16),
+                          ],
+                          if (_query.isNotEmpty && !isUrl) ...[
+                            _buildSectionHeader(tr('discover')),
+                            _buildSearchResultsList(),
+                          ],
+                        ],
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildSectionHeader(String title) {
@@ -291,17 +303,22 @@ class _CommandCenterState extends State<CommandCenter> {
           borderRadius: BorderRadius.circular(itemRadius * 0.75),
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
         ),
-        child: app.icon != null 
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(itemRadius * 0.75),
-              child: Image.memory(app.icon!, fit: BoxFit.cover),
-            )
-          : const Icon(Icons.apps),
+        child: app.icon != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                child: Image.memory(app.icon!, fit: BoxFit.cover),
+              )
+            : const Icon(Icons.apps),
       ),
       title: Text(app.name),
-      subtitle: Text(app.app.latestVersion, style: const TextStyle(fontSize: 12)),
+      subtitle: Text(
+        app.app.latestVersion,
+        style: const TextStyle(fontSize: 12),
+      ),
       trailing: const Icon(Icons.chevron_right, size: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(itemRadius),
+      ),
       onTap: () {
         Navigator.pop(context);
         showDraggableModalBottomSheet(
@@ -320,14 +337,14 @@ class _CommandCenterState extends State<CommandCenter> {
     Navigator.pop(context);
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AddAppPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const AddAppPage()),
     ).then((_) {
       // Small delay to ensure AddAppPage state is initialized
       Future.delayed(const Duration(milliseconds: 200), () {
-        final homeState = globalNavigatorKey.currentContext?.findAncestorStateOfType<HomePageState>();
-        final addAppKey = homeState?.addAppPage.key as GlobalKey<AddAppPageState>?;
+        final homeState = globalNavigatorKey.currentContext
+            ?.findAncestorStateOfType<HomePageState>();
+        final addAppKey =
+            homeState?.addAppPage.key as GlobalKey<AddAppPageState>?;
         if (addAppKey?.currentState != null) {
           addAppKey!.currentState!.linkFn(url);
         }
@@ -353,7 +370,7 @@ class _CommandCenterState extends State<CommandCenter> {
 
     return Column(
       children: [
-        if (_isSearching) 
+        if (_isSearching)
           const Padding(
             padding: EdgeInsets.only(bottom: 8.0),
             child: const ExpressiveProgressIndicator(),
@@ -374,14 +391,25 @@ class _CommandCenterState extends State<CommandCenter> {
               backgroundColor: theme.colorScheme.primaryContainer,
               child: Text(
                 name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodyLarge),
+            title: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge,
+            ),
             subtitle: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(4),
@@ -405,8 +433,13 @@ class _CommandCenterState extends State<CommandCenter> {
                 ),
               ],
             ),
-            trailing: Icon(Icons.add_circle_outline, color: theme.colorScheme.primary),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+            trailing: Icon(
+              Icons.add_circle_outline,
+              color: theme.colorScheme.primary,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(itemRadius),
+            ),
             onTap: () => _openAddApp(url),
           );
         }),
@@ -418,7 +451,9 @@ class _CommandCenterState extends State<CommandCenter> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       elevation: 0,
-      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
+      color: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
       child: ListTile(
         leading: const Icon(Icons.link),
         title: Text(tr('addAppFromUrl')),
@@ -431,7 +466,12 @@ class _CommandCenterState extends State<CommandCenter> {
 
   Widget _buildInitialState() {
     final appsProvider = context.read<AppsProvider>();
-    final recentlyAdded = appsProvider.getAppValues().toList().reversed.take(5).toList();
+    final recentlyAdded = appsProvider
+        .getAppValues()
+        .toList()
+        .reversed
+        .take(5)
+        .toList();
 
     return SingleChildScrollView(
       child: Column(
@@ -447,9 +487,23 @@ class _CommandCenterState extends State<CommandCenter> {
           Center(
             child: Column(
               children: [
-                Icon(Icons.rocket_launch_rounded, size: 64, color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low)),
+                Icon(
+                  Icons.rocket_launch_rounded,
+                  size: 64,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(AppOpacity.low),
+                ),
                 const SizedBox(height: 16),
-                Text(tr('commandCenterPrompt'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface.withOpacity(AppOpacity.half))),
+                Text(
+                  tr('commandCenterPrompt'),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(AppOpacity.half),
+                  ),
+                ),
               ],
             ),
           ),
@@ -472,13 +526,15 @@ class _CommandCenterState extends State<CommandCenter> {
             children: [
               _buildActionChip(Icons.sync, tr('checkUpdates'), () {
                 Navigator.pop(context);
-                context.read<AppsProvider>().checkUpdates(ignoreCache: true)
+                context
+                    .read<AppsProvider>()
+                    .checkUpdates(ignoreCache: true)
                     .catchError((e) {
-                  if (mounted) {
-                    showError(e is Map ? e['errors'] : e, context);
-                  }
-                  return <App>[];
-                });
+                      if (mounted) {
+                        showError(e is Map ? e['errors'] : e, context);
+                      }
+                      return <App>[];
+                    });
               }),
               _buildActionChip(Icons.import_export, tr('importExport'), () {
                 Navigator.pop(context);
@@ -511,7 +567,9 @@ class _CommandCenterState extends State<CommandCenter> {
       label: Text(label),
       onPressed: onPressed,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(chipRadius)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(chipRadius),
+      ),
     );
   }
 }

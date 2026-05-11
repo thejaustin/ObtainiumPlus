@@ -26,13 +26,16 @@ class LogsDialog extends StatefulWidget {
 class _LogsDialogState extends State<LogsDialog> {
   String? logString;
   List<int> days = [7, 5, 4, 3, 2, 1];
-  final Future<AndroidDeviceInfo> _androidInfoFuture = DeviceInfoPlugin().androidInfo;
+  final Future<AndroidDeviceInfo> _androidInfoFuture =
+      DeviceInfoPlugin().androidInfo;
   late Future<List<Log>> _logsFuture;
 
   @override
   void initState() {
     super.initState();
-    _logsFuture = context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7)));
+    _logsFuture = context.read<LogsProvider>().get(
+      after: DateTime.now().subtract(const Duration(days: 7)),
+    );
   }
 
   Future<void> _reportIssue() async {
@@ -45,7 +48,8 @@ class _LogsDialogState extends State<LogsDialog> {
     var deviceInfo = _cachedDeviceInfo;
     var androidInfo = await _androidInfoFuture;
 
-    var body = '''${tr('reportIssue')}
+    var body =
+        '''${tr('reportIssue')}
 
 App: $appInfo
 Device: $deviceInfo
@@ -57,10 +61,7 @@ $logs''';
       'https://github.com/thejaustin/ObtainiumPlus/issues/new?body=${Uri.encodeComponent(body)}',
     );
     if (await canLaunchUrl(url)) {
-      await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
-      );
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       Clipboard.setData(ClipboardData(text: url.toString()));
       showMessage(tr('copiedToClipboard'), context);
@@ -96,14 +97,15 @@ $logs''';
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
+          child: ConditionalBlur(
+            sigma: 24,
+            enabled: enableGlass,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(context, enableGlass),
                 const Divider(height: 1),
-                Flexible(
-                  child: _buildContent(context),
-                ),
+                Flexible(child: _buildContent(context)),
                 _buildActions(context),
               ],
             ),
@@ -119,8 +121,12 @@ $logs''';
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
+            Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+            Theme.of(context).colorScheme.primaryContainer.withOpacity(
+              enableGlass ? 0.15 : 0.25,
+            ),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -132,7 +138,9 @@ $logs''';
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -144,9 +152,9 @@ $logs''';
           Expanded(
             child: Text(
               tr('appLogs'),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -164,14 +172,15 @@ $logs''';
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withOpacity(AppOpacity.half),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     logString!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                   ),
                 ),
               ),
@@ -182,7 +191,12 @@ $logs''';
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 final logs = snapshot.data!;
-                logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
+                logString = logs
+                    .map(
+                      (log) =>
+                          '[${log.level.name}] ${log.timestamp}: ${log.message}',
+                    )
+                    .join('\n');
                 return Container(
                   padding: const EdgeInsets.all(16),
                   child: Scrollbar(
@@ -191,14 +205,16 @@ $logs''';
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withOpacity(AppOpacity.half),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           logString ?? '',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontFamily: 'monospace'),
                         ),
                       ),
                     ),
@@ -222,7 +238,9 @@ $logs''';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(

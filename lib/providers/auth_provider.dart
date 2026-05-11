@@ -40,16 +40,36 @@ class DeviceProfile {
 
 class AuthProvider with ChangeNotifier {
   static const List<DeviceProfile> deviceProfiles = [
-    DeviceProfile(name: 'Pixel 8 Pro', model: 'husky', manufacturer: 'Google', sdkVersion: 34),
-    DeviceProfile(name: 'Galaxy S24 Ultra', model: 'SM-S928B', manufacturer: 'Samsung', sdkVersion: 34),
-    DeviceProfile(name: 'Nothing Phone (2)', model: 'Pong', manufacturer: 'Nothing', sdkVersion: 33),
-    DeviceProfile(name: 'Xiaomi 14', model: '23127PN0CC', manufacturer: 'Xiaomi', sdkVersion: 34),
+    DeviceProfile(
+      name: 'Pixel 8 Pro',
+      model: 'husky',
+      manufacturer: 'Google',
+      sdkVersion: 34,
+    ),
+    DeviceProfile(
+      name: 'Galaxy S24 Ultra',
+      model: 'SM-S928B',
+      manufacturer: 'Samsung',
+      sdkVersion: 34,
+    ),
+    DeviceProfile(
+      name: 'Nothing Phone (2)',
+      model: 'Pong',
+      manufacturer: 'Nothing',
+      sdkVersion: 33,
+    ),
+    DeviceProfile(
+      name: 'Xiaomi 14',
+      model: '23127PN0CC',
+      manufacturer: 'Xiaomi',
+      sdkVersion: 34,
+    ),
   ];
 
   // Secure storage keys — all sensitive data lives here, not in SharedPreferences
-  static const _kAnonBundle     = 'anonymous_auth_bundle';
+  static const _kAnonBundle = 'anonymous_auth_bundle';
   static const _kPersonalBundle = 'personal_auth_bundle';
-  static const _kMicroGEmail    = 'microg_email';
+  static const _kMicroGEmail = 'microg_email';
 
   final _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -66,12 +86,12 @@ class AuthProvider with ChangeNotifier {
 
   // ── Getters ──────────────────────────────────────────────────────────────
 
-  AuthBundle? get personalBundle  => _personalBundle;
+  AuthBundle? get personalBundle => _personalBundle;
   AuthBundle? get anonymousBundle => _anonymousBundle;
-  List<String> get dispensers     => _dispensers;
-  AuthMode     get authMode       => _authMode;
-  String?      get microGEmail    => _microGEmail;
-  String?      get spoofedAndroidId => _spoofedAndroidId;
+  List<String> get dispensers => _dispensers;
+  AuthMode get authMode => _authMode;
+  String? get microGEmail => _microGEmail;
+  String? get spoofedAndroidId => _spoofedAndroidId;
   DeviceProfile get selectedProfile => _selectedProfile;
   bool get hasActiveToken => activeBundle != null;
 
@@ -103,13 +123,17 @@ class AuthProvider with ChangeNotifier {
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
 
-    _dispensers   = _prefs?.getStringList('play_store_dispensers') ?? ['https://auroraoss.com/api/auth'];
-    _authMode     = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
+    _dispensers =
+        _prefs?.getStringList('play_store_dispensers') ??
+        ['https://auroraoss.com/api/auth'];
+    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
     _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
 
     final profileJson = _prefs?.getString('selected_device_profile');
     if (profileJson != null) {
-      try { _selectedProfile = DeviceProfile.fromJson(jsonDecode(profileJson)); } catch (_) {}
+      try {
+        _selectedProfile = DeviceProfile.fromJson(jsonDecode(profileJson));
+      } catch (_) {}
     }
 
     // One-time migration: move email from SharedPreferences → secure storage.
@@ -129,12 +153,16 @@ class AuthProvider with ChangeNotifier {
 
     final anonJson = await _storage.read(key: _kAnonBundle);
     if (anonJson != null) {
-      try { _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson)); } catch (_) {}
+      try {
+        _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson));
+      } catch (_) {}
     }
 
     final personalJson = await _storage.read(key: _kPersonalBundle);
     if (personalJson != null) {
-      try { _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson)); } catch (_) {}
+      try {
+        _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson));
+      } catch (_) {}
     }
 
     notifyListeners();
@@ -157,12 +185,13 @@ class AuthProvider with ChangeNotifier {
 
   /// Fetches a fresh microG OAuth2 token and stores it with a timestamp.
   Future<void> refreshMicroGToken() async {
-    if (_microGEmail == null) throw ObtainiumError('No microG account selected');
+    if (_microGEmail == null)
+      throw ObtainiumError('No microG account selected');
 
     final token = await AuthService.getMicroGToken(_microGEmail!);
     _personalBundle = AuthBundle(
       email: _microGEmail!,
-      aasToken: '',       // empty = OAuth2 Bearer flow, not AAS
+      aasToken: '', // empty = OAuth2 Bearer flow, not AAS
       authToken: token,
       deviceConfig: {},
       tokenIssuedAt: DateTime.now(),
@@ -193,7 +222,9 @@ class AuthProvider with ChangeNotifier {
   /// then immediately re-fetches.
   Future<void> handleTokenRejected() async {
     if (_microGEmail == null || _personalBundle == null) return;
-    talker.warning('microG token rejected (401) — invalidating and re-fetching');
+    talker.warning(
+      'microG token rejected (401) — invalidating and re-fetching',
+    );
     await AuthService.invalidateMicroGToken(_personalBundle!.authToken);
     await refreshMicroGToken();
   }
@@ -231,7 +262,7 @@ class AuthProvider with ChangeNotifier {
       await AuthService.invalidateMicroGToken(_personalBundle!.authToken);
     }
     _anonymousBundle = null;
-    _personalBundle  = null;
+    _personalBundle = null;
     await _storage.delete(key: _kAnonBundle);
     await _storage.delete(key: _kPersonalBundle);
     notifyListeners();
@@ -242,7 +273,10 @@ class AuthProvider with ChangeNotifier {
   Future<void> rotateDeviceId() async {
     const chars = '0123456789abcdef';
     final random = math.Random.secure();
-    _spoofedAndroidId = List.generate(16, (_) => chars[random.nextInt(chars.length)]).join();
+    _spoofedAndroidId = List.generate(
+      16,
+      (_) => chars[random.nextInt(chars.length)],
+    ).join();
     await _prefs?.setString('spoofed_android_id', _spoofedAndroidId!);
     notifyListeners();
   }
@@ -262,7 +296,10 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> setDeviceProfile(DeviceProfile profile) async {
     _selectedProfile = profile;
-    await _prefs?.setString('selected_device_profile', jsonEncode(profile.toJson()));
+    await _prefs?.setString(
+      'selected_device_profile',
+      jsonEncode(profile.toJson()),
+    );
     notifyListeners();
   }
 }

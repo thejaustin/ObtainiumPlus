@@ -29,342 +29,463 @@ class DeveloperSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Developer & Diagnostics'),
-      ),
+      appBar: AppBar(title: const Text('Developer & Diagnostics')),
       body: ListView(
         controller: scrollController,
         children: [
-          _buildSection(
-            context,
-            'Play Store & Plugins (Experimental)',
-            [
-              ListTile(
-                leading: const Icon(Icons.security_outlined),
-                title: const Text('Authentication Mode'),
-                subtitle: Text(context.watch<AuthProvider>().authMode == AuthMode.anonymous 
-                    ? 'Anonymous (Dispenser)' 
-                    : (context.watch<AuthProvider>().authMode == AuthMode.hybrid ? 'Hybrid (Safety First)' : 'Personal (microG)')),
-                onTap: () => _showAuthModePicker(context),
+          _buildSection(context, 'Play Store & Plugins (Experimental)', [
+            ListTile(
+              leading: const Icon(Icons.security_outlined),
+              title: const Text('Authentication Mode'),
+              subtitle: Text(
+                context.watch<AuthProvider>().authMode == AuthMode.anonymous
+                    ? 'Anonymous (Dispenser)'
+                    : (context.watch<AuthProvider>().authMode == AuthMode.hybrid
+                          ? 'Hybrid (Safety First)'
+                          : 'Personal (microG)'),
               ),
-              ListTile(
-                leading: const Icon(Icons.token_outlined),
-                title: const Text('Manage Token Dispensers'),
-                subtitle: const Text('Anonymous login tokens (AAS) for Google Play Store access'),
-                trailing: const Icon(Icons.chevron_right),
-                enabled: context.watch<AuthProvider>().authMode != AuthMode.microG,
-                onTap: () => _showDispenserManager(context),
+              onTap: () => _showAuthModePicker(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.token_outlined),
+              title: const Text('Manage Token Dispensers'),
+              subtitle: const Text(
+                'Anonymous login tokens (AAS) for Google Play Store access',
               ),
-              if (context.watch<AuthProvider>().authMode != AuthMode.anonymous)
-                ListTile(
-                  leading: const Icon(Icons.account_circle_outlined),
-                  title: const Text('microG Account'),
-                  subtitle: Text(context.watch<AuthProvider>().microGEmail ?? 'None selected'),
-                  trailing: context.watch<AuthProvider>().microGEmail != null
-                      ? IconButton(
-                          icon: const Icon(Icons.link_off),
-                          tooltip: 'Remove linked account',
-                          onPressed: () async {
-                            await context.read<AuthProvider>().setMicroGEmail(null);
-                          },
-                        )
-                      : const Icon(Icons.chevron_right),
-                  onTap: () => _showMicroGAccountPicker(context),
+              trailing: const Icon(Icons.chevron_right),
+              enabled:
+                  context.watch<AuthProvider>().authMode != AuthMode.microG,
+              onTap: () => _showDispenserManager(context),
+            ),
+            if (context.watch<AuthProvider>().authMode != AuthMode.anonymous)
+              ListTile(
+                leading: const Icon(Icons.account_circle_outlined),
+                title: const Text('microG Account'),
+                subtitle: Text(
+                  context.watch<AuthProvider>().microGEmail ?? 'None selected',
                 ),
-              ListTile(
-                leading: const Icon(Icons.extension_outlined),
-                title: const Text('Plugin Manager'),
-                subtitle: const Text('JS "Recipes" that add new sources without a full app update'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => pushRoute(context, const PluginManagerPage()),
+                trailing: context.watch<AuthProvider>().microGEmail != null
+                    ? IconButton(
+                        icon: const Icon(Icons.link_off),
+                        tooltip: 'Remove linked account',
+                        onPressed: () async {
+                          await context.read<AuthProvider>().setMicroGEmail(
+                            null,
+                          );
+                        },
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: () => _showMicroGAccountPicker(context),
               ),
-              ListTile(
-                leading: const Icon(Icons.phonelink_setup_outlined),
-                title: const Text('Device Spoofing (microG)'),
-                subtitle: const Text('Spoof GSF ID / device profile for regional app compatibility'),
-                onTap: () => _showSpoofingManager(context),
+            ListTile(
+              leading: const Icon(Icons.extension_outlined),
+              title: const Text('Plugin Manager'),
+              subtitle: const Text(
+                'JS "Recipes" that add new sources without a full app update',
               ),
-              if (settingsProvider.plusEnableMicroGHub)
-                ListTile(
-                  leading: const Icon(Icons.hub_outlined),
-                  title: const Text('microG Deployment Hub'),
-                  subtitle: const Text('Directly download and install microG / GmsCore components'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => pushRoute(context, const MicroGHubPage()),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => pushRoute(context, const PluginManagerPage()),
+            ),
+            ListTile(
+              leading: const Icon(Icons.phonelink_setup_outlined),
+              title: const Text('Device Spoofing (microG)'),
+              subtitle: const Text(
+                'Spoof GSF ID / device profile for regional app compatibility',
+              ),
+              onTap: () => _showSpoofingManager(context),
+            ),
+            if (plusSettings.plusEnableMicroGHub)
+              ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: const Text('microG Deployment Hub'),
+                subtitle: const Text(
+                  'Directly download and install microG / GmsCore components',
                 ),
-              if (settingsProvider.plusEnableStandaloneInstaller)
-                ListTile(
-                  leading: const Icon(Icons.install_mobile_outlined),
-                  title: const Text('Standalone APK Installer'),
-                  subtitle: const Text('Install any APK from storage using Shizuku / System'),
-                  trailing: const Icon(Icons.file_open_outlined),
-                  onTap: () => _handleStandaloneInstall(context),
-                ),
-            ],
-          ),
-          _buildSection(
-            context,
-            'Play Store Safety & Filters',
-            [
-              _buildSafetyScoreCard(context),
-              const SizedBox(height: 12),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.verified_user_outlined),
-                title: const Text('Verified Apps Only'),
-                subtitle: const Text('Only show apps verified by Play Protect in search results.'),
-                value: context.watch<PlusSettingsProvider>().playStoreVerifiedOnly,
-                onChanged: (val) => context.read<PlusSettingsProvider>().playStoreVerifiedOnly = val,
-              ),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.block_outlined),
-                title: const Text('No Ads Filter'),
-                subtitle: const Text('Exclude apps that contain advertisements from search.'),
-                value: context.watch<PlusSettingsProvider>().playStoreNoAdsFilter,
-                onChanged: (val) => context.read<PlusSettingsProvider>().playStoreNoAdsFilter = val,
-              ),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.system_security_update_warning_outlined),
-                title: const Text('Exclude System Apps'),
-                subtitle: const Text('Prevents updating critical system components via the native bridge.'),
-                value: context.watch<PlusSettingsProvider>().playStoreExcludeSystemApps,
-                onChanged: (val) => context.read<PlusSettingsProvider>().playStoreExcludeSystemApps = val,
-              ),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.vpn_lock_outlined),
-                title: const Text('Require VPN (Strict IP Privacy)'),
-                subtitle: const Text('Block all native Play Store traffic unless connected to a VPN/Proxy.'),
-                value: context.watch<PlusSettingsProvider>().requireVPNForPlayStore,
-                onChanged: (val) => context.read<PlusSettingsProvider>().requireVPNForPlayStore = val,
-              ),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.auto_delete_outlined),
-                title: const Text('Auto-Discard Tokens'),
-                subtitle: const Text('Immediately clear authentication tokens after each successful request.'),
-                value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
-                onChanged: (val) => context.read<PlusSettingsProvider>().autoDiscardTokens = val,
-              ),
-            ],
-          ),
-          _buildSection(
-            context,
-            'Diagnostics',
-            [
-              ListTile(
-                leading: const Icon(Icons.receipt_long_outlined),
-                title: const Text('View Talker Logs'),
-                subtitle: const Text('Real-time network requests, UI events, and errors'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => pushRoute(context, TalkerScreen(talker: talker)),
+                onTap: () => pushRoute(context, const MicroGHubPage()),
               ),
+            if (plusSettings.plusEnableStandaloneInstaller)
               ListTile(
-                leading: const Icon(Icons.analytics_outlined),
-                title: const Text('Crash Statistics'),
-                subtitle: const Text('Local crash frequency and error type breakdown'),
-                onTap: () async {
-                  final stats = await CrashAnalytics.getStats();
-                  if (context.mounted) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => GlassDialog(
-                        title: 'Local Crash Stats',
-                        icon: Icons.analytics_outlined,
-                        content: Text(
-                          'Total Crashes: ${stats.totalCrashes}\n'
-                          'Last Crash: ${stats.lastCrashTime ?? "Never"}\n'
-                          'Types: ${stats.crashTypes.join(", ")}',
+                leading: const Icon(Icons.install_mobile_outlined),
+                title: const Text('Standalone APK Installer'),
+                subtitle: const Text(
+                  'Install any APK from storage using Shizuku / System',
+                ),
+                trailing: const Icon(Icons.file_open_outlined),
+                onTap: () => _handleStandaloneInstall(context),
+              ),
+          ]),
+          _buildSection(context, 'Play Store Safety & Filters', [
+            _buildSafetyScoreCard(context),
+            const SizedBox(height: 12),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.verified_user_outlined),
+              title: const Text('Verified Apps Only'),
+              subtitle: const Text(
+                'Only show apps verified by Play Protect in search results.',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .playStoreVerifiedOnly,
+              onChanged: (val) =>
+                  context.read<PlusSettingsProvider>().playStoreVerifiedOnly =
+                      val,
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.block_outlined),
+              title: const Text('No Ads Filter'),
+              subtitle: const Text(
+                'Exclude apps that contain advertisements from search.',
+              ),
+              value: context.watch<PlusSettingsProvider>().playStoreNoAdsFilter,
+              onChanged: (val) =>
+                  context.read<PlusSettingsProvider>().playStoreNoAdsFilter =
+                      val,
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(
+                Icons.system_security_update_warning_outlined,
+              ),
+              title: const Text('Exclude System Apps'),
+              subtitle: const Text(
+                'Prevents updating critical system components via the native bridge.',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .playStoreExcludeSystemApps,
+              onChanged: (val) =>
+                  context
+                          .read<PlusSettingsProvider>()
+                          .playStoreExcludeSystemApps =
+                      val,
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.vpn_lock_outlined),
+              title: const Text('Require VPN (Strict IP Privacy)'),
+              subtitle: const Text(
+                'Block all native Play Store traffic unless connected to a VPN/Proxy.',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .requireVPNForPlayStore,
+              onChanged: (val) =>
+                  context.read<PlusSettingsProvider>().requireVPNForPlayStore =
+                      val,
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.auto_delete_outlined),
+              title: const Text('Auto-Discard Tokens'),
+              subtitle: const Text(
+                'Immediately clear authentication tokens after each successful request.',
+              ),
+              value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
+              onChanged: (val) =>
+                  context.read<PlusSettingsProvider>().autoDiscardTokens = val,
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.download_for_offline_outlined),
+              title: const Text('Minimum Downloads Filter'),
+              subtitle: Text(
+                'Exclude apps with fewer than ${context.watch<PlusSettingsProvider>().playStoreMinDownloads} downloads',
+              ),
+            ),
+            Slider(
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .playStoreMinDownloads
+                  .toDouble(),
+              min: 0,
+              max: 1000000,
+              divisions: 100,
+              label: context
+                  .watch<PlusSettingsProvider>()
+                  .playStoreMinDownloads
+                  .toString(),
+              onChanged: (val) =>
+                  context.read<PlusSettingsProvider>().playStoreMinDownloads =
+                      val.toInt(),
+            ),
+          ]),
+          _buildSection(context, 'Diagnostics', [
+            ListTile(
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: const Text('View Talker Logs'),
+              subtitle: const Text(
+                'Real-time network requests, UI events, and errors',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => pushRoute(context, TalkerScreen(talker: talker)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.analytics_outlined),
+              title: const Text('Crash Statistics'),
+              subtitle: const Text(
+                'Local crash frequency and error type breakdown',
+              ),
+              onTap: () async {
+                final stats = await CrashAnalytics.getStats();
+                if (context.mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => GlassDialog(
+                      title: 'Local Crash Stats',
+                      icon: Icons.analytics_outlined,
+                      content: Text(
+                        'Total Crashes: ${stats.totalCrashes}\n'
+                        'Last Crash: ${stats.lastCrashTime ?? "Never"}\n'
+                        'Types: ${stats.crashTypes.join(", ")}',
+                      ),
+                      actions: [
+                        FilledButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
                         ),
-                        actions: [
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.bug_report_outlined),
-                title: const Text('Standard App Logs'),
-                subtitle: const Text('Legacy obtainium logs'),
-                onTap: () => context.read<LogsProvider>().get().then((logs) {
-                  if (logs.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('No logs found')),
-                    );
-                  } else {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => TalkerScreen(talker: talker),
-                      ),
-                    );
-                  }
-                }),
-              ),
-              ListTile(
-                leading: const Icon(Icons.upload_file_outlined),
-                title: const Text('Upload Logs to New Issue'),
-                subtitle: const Text('Opens a pre-filled GitHub issue with current diagnostic logs'),
-                onTap: () async {
-                  final history = talker.history.reversed.take(200).toList().reversed;
-                  final logText = history.map((e) => '[${e.title}] ${e.message}').join('\n');
-                  
-                  final body = Uri.encodeComponent(
-                    "## Diagnostic Logs Report\n\n"
-                    "**Device info:** (Include manually or check Sentry)\n\n"
-                    "### Logs:\n```\n$logText\n```"
+                      ],
+                    ),
                   );
-                  
-                  final url = 'https://github.com/thejaustin/ObtainiumPlus/issues/new?title=[Bug]+Diagnostic+Report&body=$body';
-                  
-                  if (await canLaunchUrlString(url)) {
-                    await launchUrlString(url, mode: LaunchMode.externalApplication);
-                  }
-                },
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bug_report_outlined),
+              title: const Text('Standard App Logs'),
+              subtitle: const Text('Legacy obtainium logs'),
+              onTap: () => context.read<LogsProvider>().get().then((logs) {
+                if (logs.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No logs found')),
+                  );
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TalkerScreen(talker: talker),
+                    ),
+                  );
+                }
+              }),
+            ),
+            ListTile(
+              leading: const Icon(Icons.upload_file_outlined),
+              title: const Text('Upload Logs to New Issue'),
+              subtitle: const Text(
+                'Opens a pre-filled GitHub issue with current diagnostic logs',
               ),
-            ],
-          ),
-          _buildSection(
-            context,
-            'Expressive Design & Shapes',
-            [
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.gesture_rounded),
-                title: const Text('Squiggly Progress Bars'),
-                subtitle: const Text('Use Play Store-style sinusoidal animations for loading and downloads.'),
-                value: context.watch<PlusSettingsProvider>().plusEnableExpressiveProgress,
-                onChanged: (val) => context.read<PlusSettingsProvider>().plusEnableExpressiveProgress = val,
+              onTap: () async {
+                final history = talker.history.reversed
+                    .take(200)
+                    .toList()
+                    .reversed;
+                final logText = history
+                    .map((e) => '[${e.title}] ${e.message}')
+                    .join('\n');
+
+                final body = Uri.encodeComponent(
+                  "## Diagnostic Logs Report\n\n"
+                  "**Device info:** (Include manually or check Sentry)\n\n"
+                  "### Logs:\n```\n$logText\n```",
+                );
+
+                final url =
+                    'https://github.com/thejaustin/ObtainiumPlus/issues/new?title=[Bug]+Diagnostic+Report&body=$body';
+
+                if (await canLaunchUrlString(url)) {
+                  await launchUrlString(
+                    url,
+                    mode: LaunchMode.externalApplication,
+                  );
+                }
+              },
+            ),
+          ]),
+          _buildSection(context, 'Expressive Design & Shapes', [
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.gesture_rounded),
+              title: const Text('Squiggly Progress Bars'),
+              subtitle: const Text(
+                'Use Play Store-style sinusoidal animations for loading and downloads.',
               ),
-              const Divider(),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .plusEnableExpressiveProgress,
+              onChanged: (val) =>
+                  context
+                          .read<PlusSettingsProvider>()
+                          .plusEnableExpressiveProgress =
+                      val,
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.rounded_corner_rounded),
+              title: const Text('Global Corner Radius'),
+              subtitle: Text(
+                'Default roundedness for cards and containers (${context.watch<PlusSettingsProvider>().plusGlobalCornerRadius.toInt()}px)',
+              ),
+            ),
+            Slider(
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .plusGlobalCornerRadius,
+              min: 0,
+              max: 40,
+              divisions: 40,
+              onChanged: (val) =>
+                  context.read<PlusSettingsProvider>().plusGlobalCornerRadius =
+                      val,
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.tune_rounded),
+              title: const Text('Override Individual Radii'),
+              subtitle: const Text(
+                'Fine-tune roundedness for specific areas of the app.',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .plusOverrideIndividualCornerRadius,
+              onChanged: (val) =>
+                  context
+                          .read<PlusSettingsProvider>()
+                          .plusOverrideIndividualCornerRadius =
+                      val,
+            ),
+            if (context
+                .watch<PlusSettingsProvider>()
+                .plusOverrideIndividualCornerRadius) ...[
               ListTile(
-                leading: const Icon(Icons.rounded_corner_rounded),
-                title: const Text('Global Corner Radius'),
-                subtitle: Text('Default roundedness for cards and containers (${context.watch<PlusSettingsProvider>().plusGlobalCornerRadius.toInt()}px)'),
+                leading: const Icon(Icons.home_max_rounded),
+                title: const Text('Home Screen Radius'),
+                subtitle: Text(
+                  'Roundedness for dashboard and app list elements (${context.watch<PlusSettingsProvider>().plusHomeCornerRadius.toInt()}px)',
+                ),
               ),
               Slider(
-                value: context.watch<PlusSettingsProvider>().plusGlobalCornerRadius,
+                value: context
+                    .watch<PlusSettingsProvider>()
+                    .plusHomeCornerRadius,
                 min: 0,
                 max: 40,
                 divisions: 40,
-                onChanged: (val) => context.read<PlusSettingsProvider>().plusGlobalCornerRadius = val,
-              ),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.tune_rounded),
-                title: const Text('Override Individual Radii'),
-                subtitle: const Text('Fine-tune roundedness for specific areas of the app.'),
-                value: context.watch<PlusSettingsProvider>().plusOverrideIndividualCornerRadius,
-                onChanged: (val) => context.read<PlusSettingsProvider>().plusOverrideIndividualCornerRadius = val,
-              ),
-              if (context.watch<PlusSettingsProvider>().plusOverrideIndividualCornerRadius) ...[
-                ListTile(
-                  leading: const Icon(Icons.home_max_rounded),
-                  title: const Text('Home Screen Radius'),
-                  subtitle: Text('Roundedness for dashboard and app list elements (${context.watch<PlusSettingsProvider>().plusHomeCornerRadius.toInt()}px)'),
-                ),
-                Slider(
-                  value: context.watch<PlusSettingsProvider>().plusHomeCornerRadius,
-                  min: 0,
-                  max: 40,
-                  divisions: 40,
-                  onChanged: (val) => context.read<PlusSettingsProvider>().plusHomeCornerRadius = val,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.settings_suggest_rounded),
-                  title: const Text('Settings Radius'),
-                  subtitle: Text('Roundedness for settings groups and cards (${context.watch<PlusSettingsProvider>().plusSettingsCornerRadius.toInt()}px)'),
-                ),
-                Slider(
-                  value: context.watch<PlusSettingsProvider>().plusSettingsCornerRadius,
-                  min: 0,
-                  max: 40,
-                  divisions: 40,
-                  onChanged: (val) => context.read<PlusSettingsProvider>().plusSettingsCornerRadius = val,
-                ),
-              ],
-            ],
-          ),
-          _buildSection(
-            context,
-            'Experimental Features',
-            [
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.compare_arrows_outlined),
-                title: const Text('Legacy UI Comparison'),
-                subtitle: const Text('Injects FABs on the app list, app detail, and add-app pages to preview the old UI side-by-side.'),
-                value: context.watch<PlusSettingsProvider>().plusShowLegacyUIComparison,
-                onChanged: (val) => context.read<PlusSettingsProvider>().plusShowLegacyUIComparison = val,
-              ),
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.science_outlined),
-                title: const Text('Advanced Theming'),
-                subtitle: const Text('Unlocks the experimental Advanced Theming section in Settings → Appearance. May have visual regressions.'),
-                value: context.watch<PlusSettingsProvider>().plusEnableExperimentalCustomization,
-                onChanged: (val) => context.read<PlusSettingsProvider>().plusEnableExperimentalCustomization = val,
-              ),
-            ],
-          ),
-          _buildSection(
-            context,
-            'Testing',
-            [
-              ListTile(
-                leading: const Icon(Icons.flash_on_outlined),
-                iconColor: Colors.red,
-                title: const Text('Trigger Test Crash'),
-                subtitle: const Text('Forces a crash to verify Sentry and Talker are capturing errors'),
-                onTap: () {
-                  talker.warning('User triggered a test crash');
-                  throw Exception('Obtainium+ Test Crash');
-                },
+                onChanged: (val) =>
+                    context.read<PlusSettingsProvider>().plusHomeCornerRadius =
+                        val,
               ),
               ListTile(
-                leading: const Icon(Icons.network_check_outlined),
-                title: const Text('Test Network Logging'),
-                subtitle: const Text('Sends a dummy request to verify network interception logging'),
-                onTap: () async {
-                  talker.info('Triggering test network request...');
-                  try {
-                    // ignore: unused_local_variable
-                    final response = await SentryHttpClient().get(Uri.parse('https://api.github.com/zen'));
-                    talker.info('Test network request successful');
-                  } catch (e, st) {
-                    talker.handle(e, st, 'Test network request failed');
-                  }
-                },
-              ),
-            ],
-          ),
-          _buildSection(
-            context,
-            'External Links',
-            [
-              ListTile(
-                leading: const Icon(Icons.cloud_outlined),
-                title: const Text('View Sentry Project'),
-                onTap: () => launchUrlString(
-                  'https://sentry.io/organizations/af-developments/projects/obtainiumplus/',
-                  mode: LaunchMode.externalApplication,
+                leading: const Icon(Icons.settings_suggest_rounded),
+                title: const Text('Settings Radius'),
+                subtitle: Text(
+                  'Roundedness for settings groups and cards (${context.watch<PlusSettingsProvider>().plusSettingsCornerRadius.toInt()}px)',
                 ),
               ),
-              ListTile(
-                leading: const Icon(Icons.list_alt_outlined),
-                title: const Text('GitHub Issue Tracker'),
-                onTap: () => launchUrlString(
-                  CrashTracker.issueTrackerUrl,
-                  mode: LaunchMode.externalApplication,
-                ),
+              Slider(
+                value: context
+                    .watch<PlusSettingsProvider>()
+                    .plusSettingsCornerRadius,
+                min: 0,
+                max: 40,
+                divisions: 40,
+                onChanged: (val) =>
+                    context
+                            .read<PlusSettingsProvider>()
+                            .plusSettingsCornerRadius =
+                        val,
               ),
             ],
-          ),
+          ]),
+          _buildSection(context, 'Experimental Features', [
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.compare_arrows_outlined),
+              title: const Text('Legacy UI Comparison'),
+              subtitle: const Text(
+                'Injects FABs on the app list, app detail, and add-app pages to preview the old UI side-by-side.',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .plusShowLegacyUIComparison,
+              onChanged: (val) =>
+                  context
+                          .read<PlusSettingsProvider>()
+                          .plusShowLegacyUIComparison =
+                      val,
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.science_outlined),
+              title: const Text('Advanced Theming'),
+              subtitle: const Text(
+                'Unlocks the experimental Advanced Theming section in Settings → Appearance. May have visual regressions.',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .plusEnableExperimentalCustomization,
+              onChanged: (val) =>
+                  context
+                          .read<PlusSettingsProvider>()
+                          .plusEnableExperimentalCustomization =
+                      val,
+            ),
+          ]),
+          _buildSection(context, 'Testing', [
+            ListTile(
+              leading: const Icon(Icons.flash_on_outlined),
+              iconColor: Colors.red,
+              title: const Text('Trigger Test Crash'),
+              subtitle: const Text(
+                'Forces a crash to verify Sentry and Talker are capturing errors',
+              ),
+              onTap: () {
+                talker.warning('User triggered a test crash');
+                throw Exception('Obtainium+ Test Crash');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.network_check_outlined),
+              title: const Text('Test Network Logging'),
+              subtitle: const Text(
+                'Sends a dummy request to verify network interception logging',
+              ),
+              onTap: () async {
+                talker.info('Triggering test network request...');
+                try {
+                  // ignore: unused_local_variable
+                  final response = await SentryHttpClient().get(
+                    Uri.parse('https://api.github.com/zen'),
+                  );
+                  talker.info('Test network request successful');
+                } catch (e, st) {
+                  talker.handle(e, st, 'Test network request failed');
+                }
+              },
+            ),
+          ]),
+          _buildSection(context, 'External Links', [
+            ListTile(
+              leading: const Icon(Icons.cloud_outlined),
+              title: const Text('View Sentry Project'),
+              onTap: () => launchUrlString(
+                'https://sentry.io/organizations/af-developments/projects/obtainiumplus/',
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.list_alt_outlined),
+              title: const Text('GitHub Issue Tracker'),
+              onTap: () => launchUrlString(
+                CrashTracker.issueTrackerUrl,
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+          ]),
         ],
       ),
     );
   }
 
-  Widget _buildSection(BuildContext context, String title, List<Widget> children) {
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    List<Widget> children,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -393,15 +514,22 @@ class DeveloperSettingsPage extends StatelessWidget {
       elevation: 0,
       builder: (context) {
         final cs = Theme.of(context).colorScheme;
-        final enableGlass = context.read<SettingsProvider>().plusEnableGlassmorphism;
+        final plusSettings = context.read<PlusSettingsProvider>();
+        final enableGlass = plusSettings.plusEnableGlassmorphism;
         final sheet = Container(
           decoration: BoxDecoration(
             color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
-              top: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2)),
-              left: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
-              right: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
+              top: BorderSide(
+                color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2),
+              ),
+              left: BorderSide(
+                color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+              ),
+              right: BorderSide(
+                color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+              ),
             ),
           ),
           child: SafeArea(
@@ -411,23 +539,44 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.group_outlined),
                   title: const Text('Anonymous (Dispenser)'),
-                  subtitle: const Text('Use throwaway accounts only. Safest for your personal account.'),
-                  trailing: authProvider.authMode == AuthMode.anonymous ? const Icon(Icons.check, color: Colors.green) : null,
-                  onTap: () { authProvider.setAuthMode(AuthMode.anonymous); Navigator.pop(context); },
+                  subtitle: const Text(
+                    'Use throwaway accounts only. Safest for your personal account.',
+                  ),
+                  trailing: authProvider.authMode == AuthMode.anonymous
+                      ? const Icon(Icons.check, color: Colors.green)
+                      : null,
+                  onTap: () {
+                    authProvider.setAuthMode(AuthMode.anonymous);
+                    Navigator.pop(context);
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.person_outline),
                   title: const Text('Personal (microG)'),
-                  subtitle: const Text('Use your real account for all actions. Highest risk.'),
-                  trailing: authProvider.authMode == AuthMode.microG ? const Icon(Icons.check, color: Colors.green) : null,
-                  onTap: () { authProvider.setAuthMode(AuthMode.microG); Navigator.pop(context); },
+                  subtitle: const Text(
+                    'Use your real account for all actions. Highest risk.',
+                  ),
+                  trailing: authProvider.authMode == AuthMode.microG
+                      ? const Icon(Icons.check, color: Colors.green)
+                      : null,
+                  onTap: () {
+                    authProvider.setAuthMode(AuthMode.microG);
+                    Navigator.pop(context);
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.security_outlined),
                   title: const Text('Hybrid (Safety First)'),
-                  subtitle: const Text('Anonymous for search/browsing, Personal only for paid apps.'),
-                  trailing: authProvider.authMode == AuthMode.hybrid ? const Icon(Icons.check, color: Colors.green) : null,
-                  onTap: () { authProvider.setAuthMode(AuthMode.hybrid); Navigator.pop(context); },
+                  subtitle: const Text(
+                    'Anonymous for search/browsing, Personal only for paid apps.',
+                  ),
+                  trailing: authProvider.authMode == AuthMode.hybrid
+                      ? const Icon(Icons.check, color: Colors.green)
+                      : null,
+                  onTap: () {
+                    authProvider.setAuthMode(AuthMode.hybrid);
+                    Navigator.pop(context);
+                  },
                 ),
               ],
             ),
@@ -463,11 +612,13 @@ class DeveloperSettingsPage extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (_) => const AlertDialog(
-        content: Row(children: [
-          ExpressiveCircularProgressIndicator(),
-          SizedBox(width: 16),
-          Flexible(child: Text('Linking account…')),
-        ]),
+        content: Row(
+          children: [
+            ExpressiveCircularProgressIndicator(),
+            SizedBox(width: 16),
+            Flexible(child: Text('Linking account…')),
+          ],
+        ),
       ),
     );
 
@@ -476,15 +627,17 @@ class DeveloperSettingsPage extends StatelessWidget {
       await authProvider.refreshMicroGToken();
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Linked $email successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Linked $email successfully')));
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('ObtainiumError: ', ''))),
+          SnackBar(
+            content: Text(e.toString().replaceFirst('ObtainiumError: ', '')),
+          ),
         );
       }
     }
@@ -511,10 +664,14 @@ class DeveloperSettingsPage extends StatelessWidget {
         final file = File(result.files.single.path!);
         if (context.mounted) {
           final settings = context.read<SettingsProvider>();
+          final plusSettings = context.read<PlusSettingsProvider>();
+          final behaviorSettings = context.read<BehaviorSettingsProvider>();
           final logs = context.read<LogsProvider>();
-          
+
           // Get APK info before installing
-          final PackageInfo? info = await pm.getPackageArchiveInfo(archiveFilePath: file.path);
+          final PackageInfo? info = await pm.getPackageArchiveInfo(
+            archiveFilePath: file.path,
+          );
           if (info == null) throw Exception('Could not read APK info');
 
           if (context.mounted) {
@@ -534,8 +691,14 @@ class DeveloperSettingsPage extends StatelessWidget {
                   ],
                 ),
                 actions: [
-                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                  FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Install')),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Install'),
+                  ),
                 ],
               ),
             );
@@ -545,12 +708,16 @@ class DeveloperSettingsPage extends StatelessWidget {
                 file,
                 context,
                 settings,
+                plusSettings,
+                behaviorSettings,
                 logs,
               );
 
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Installation completed successfully')),
+                  const SnackBar(
+                    content: Text('Installation completed successfully'),
+                  ),
                 );
               }
             }
@@ -559,9 +726,9 @@ class DeveloperSettingsPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -579,17 +746,19 @@ class DeveloperSettingsPage extends StatelessWidget {
   Widget _buildSafetyScoreCard(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final authProvider = context.watch<AuthProvider>();
-    
+
     int score = 0;
     if (authProvider.authMode == AuthMode.hybrid) score += 30;
     if (authProvider.authMode == AuthMode.anonymous) score += 40;
     if (plusSettings.playStoreVerifiedOnly) score += 10;
     if (plusSettings.requireVPNForPlayStore) score += 30;
     if (plusSettings.autoDiscardTokens) score += 20;
-    
+
     if (score > 100) score = 100;
 
-    final color = score > 80 ? Colors.green : (score > 50 ? Colors.orange : Colors.red);
+    final color = score > 80
+        ? Colors.green
+        : (score > 50 ? Colors.orange : Colors.red);
     final label = score > 80 ? 'Excellent' : (score > 50 ? 'Moderate' : 'Low');
 
     return Card(
@@ -606,14 +775,35 @@ class DeveloperSettingsPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Account Safety Score', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('$score%', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
+                const Text(
+                  'Account Safety Score',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '$score%',
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            ExpressiveProgressIndicator(value: score / 100, backgroundColor: color.withOpacity(AppOpacity.subtle), color: color),
+            ExpressiveProgressIndicator(
+              value: score / 100,
+              backgroundColor: color.withOpacity(AppOpacity.subtle),
+              color: color,
+            ),
             const SizedBox(height: 8),
-            Text('Current Protection: $label', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              'Current Protection: $label',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -636,22 +826,27 @@ void showDeviceProfilePicker(BuildContext context) {
         children: [
           const Padding(
             padding: EdgeInsets.all(16.0),
-            child: Text('Select Device Profile',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              'Select Device Profile',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
-          ...AuthProvider.deviceProfiles.map((p) => ListTile(
-                leading: const Icon(Icons.phone_android_rounded),
-                title: Text(p.name),
-                subtitle: Text(
-                    '${p.manufacturer} ${p.model} (Android ${p.sdkVersion - 21 + 5})'),
-                trailing: authProvider.selectedProfile.name == p.name
-                    ? const Icon(Icons.check, color: Colors.green)
-                    : null,
-                onTap: () {
-                  authProvider.setDeviceProfile(p);
-                  Navigator.pop(context);
-                },
-              )),
+          ...AuthProvider.deviceProfiles.map(
+            (p) => ListTile(
+              leading: const Icon(Icons.phone_android_rounded),
+              title: Text(p.name),
+              subtitle: Text(
+                '${p.manufacturer} ${p.model} (Android ${p.sdkVersion - 21 + 5})',
+              ),
+              trailing: authProvider.selectedProfile.name == p.name
+                  ? const Icon(Icons.check, color: Colors.green)
+                  : null,
+              onTap: () {
+                authProvider.setDeviceProfile(p);
+                Navigator.pop(context);
+              },
+            ),
+          ),
         ],
       ),
     ),
@@ -689,15 +884,22 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final enableGlass = context.select<SettingsProvider, bool>((s) => s.plusEnableGlassmorphism);
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
     final content = Container(
       decoration: BoxDecoration(
         color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2)),
-          left: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
-          right: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
+          top: BorderSide(
+            color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2),
+          ),
+          left: BorderSide(
+            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+          ),
+          right: BorderSide(
+            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+          ),
         ),
       ),
       padding: const EdgeInsets.all(24),
@@ -706,7 +908,10 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
         children: [
           const Icon(Icons.phonelink_setup_outlined, size: 48),
           const SizedBox(height: 16),
-          Text('Device Identifier Spoofing', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Device Identifier Spoofing',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 16),
           ListTile(
             title: const Text('Current GSF ID'),
@@ -719,7 +924,10 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
           ListTile(
             leading: const Icon(Icons.shuffle_rounded),
             title: const Text('Anonymous Device ID'),
-            subtitle: Text(context.watch<AuthProvider>().spoofedAndroidId ?? 'None generated'),
+            subtitle: Text(
+              context.watch<AuthProvider>().spoofedAndroidId ??
+                  'None generated',
+            ),
             trailing: TextButton(
               onPressed: () => context.read<AuthProvider>().rotateDeviceId(),
               child: const Text('ROTATE'),
@@ -777,16 +985,23 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final cs = Theme.of(context).colorScheme;
-    final enableGlass = context.select<SettingsProvider, bool>((s) => s.plusEnableGlassmorphism);
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
 
     final content = Container(
       decoration: BoxDecoration(
         color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2)),
-          left: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
-          right: BorderSide(color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0)),
+          top: BorderSide(
+            color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2),
+          ),
+          left: BorderSide(
+            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+          ),
+          right: BorderSide(
+            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+          ),
         ),
       ),
       padding: EdgeInsets.only(
@@ -811,7 +1026,11 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Chip(
-                avatar: const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                avatar: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 16,
+                ),
                 label: Text('Active Token Ready'),
                 onDeleted: () => authProvider.clearBundle(),
                 deleteIcon: const Icon(Icons.close, size: 16),
@@ -821,21 +1040,33 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
           Flexible(
             child: ListView(
               shrinkWrap: true,
-              children: authProvider.dispensers.map((d) => ListTile(
-                title: Text(d),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_isLoading)
-                      const SizedBox(width: 20, height: 20, child: ExpressiveCircularProgressIndicator(strokeWidth: 2)),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => authProvider.removeDispenser(d),
+              children: authProvider.dispensers
+                  .map(
+                    (d) => ListTile(
+                      title: Text(d),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_isLoading)
+                            const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: ExpressiveCircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => authProvider.removeDispenser(d),
+                          ),
+                        ],
+                      ),
+                      onTap: _isLoading
+                          ? null
+                          : () => _testDispenser(context, authProvider, d),
                     ),
-                  ],
-                ),
-                onTap: _isLoading ? null : () => _testDispenser(context, authProvider, d),
-              )).toList(),
+                  )
+                  .toList(),
             ),
           ),
           TextField(
@@ -871,7 +1102,11 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
     );
   }
 
-  Future<void> _testDispenser(BuildContext context, AuthProvider authProvider, String url) async {
+  Future<void> _testDispenser(
+    BuildContext context,
+    AuthProvider authProvider,
+    String url,
+  ) async {
     setState(() => _isLoading = true);
     try {
       await authProvider.refreshBundle(url);
@@ -882,9 +1117,9 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

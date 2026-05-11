@@ -11,11 +11,7 @@ final talker = TalkerFlutter.init(
     useHistory: true,
     maxHistoryItems: 1000,
   ),
-  logger: TalkerLogger(
-    settings: TalkerLoggerSettings(
-      enableColors: true,
-    ),
-  ),
+  logger: TalkerLogger(settings: TalkerLoggerSettings(enableColors: true)),
 );
 
 /// Helper extension for easier logging

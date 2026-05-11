@@ -24,9 +24,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Plugin Manager'),
-      ),
+      appBar: AppBar(title: const Text('Plugin Manager')),
       body: ConditionalBlur(
         enabled: settingsProvider.plusEnableGlassmorphism,
         sigma: 15,
@@ -40,7 +38,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
               child: Text(
                 'Installed Plugins',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold, 
+                  fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: cs.onSurface,
                   letterSpacing: -0.5,
@@ -50,7 +48,9 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
             if (pluginProvider.plugins.isEmpty)
               _buildEmptyState(cs)
             else
-              ...pluginProvider.plugins.map((plugin) => _buildPluginTile(cs, plugin, pluginProvider)),
+              ...pluginProvider.plugins.map(
+                (plugin) => _buildPluginTile(cs, plugin, pluginProvider),
+              ),
           ],
         ),
       ),
@@ -83,7 +83,10 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
             const SizedBox(height: 12),
             Text(
               'Enter a direct URL to a JavaScript plugin file (e.g. from GitHub Raw). Plugins can extend Obtainium\'s source support.',
-              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant.withOpacity(0.8)),
+              style: TextStyle(
+                fontSize: 13,
+                color: cs.onSurfaceVariant.withOpacity(0.8),
+              ),
             ),
             const SizedBox(height: 24),
             TextField(
@@ -91,7 +94,9 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
               decoration: InputDecoration(
                 labelText: 'Plugin URL',
                 hintText: 'https://raw.githubusercontent.com/.../plugin.js',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 filled: true,
                 fillColor: cs.surface.withOpacity(0.5),
                 suffixIcon: Padding(
@@ -121,11 +126,18 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
         padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
-            Icon(Icons.extension_off_outlined, size: 64, color: cs.outline.withOpacity(0.3)),
+            Icon(
+              Icons.extension_off_outlined,
+              size: 64,
+              color: cs.outline.withOpacity(0.3),
+            ),
             const SizedBox(height: 16),
             Text(
               'No plugins installed',
-              style: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.5), fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: cs.onSurfaceVariant.withOpacity(0.5),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -133,7 +145,11 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     );
   }
 
-  Widget _buildPluginTile(ColorScheme cs, dynamic plugin, PluginProvider pluginProvider) {
+  Widget _buildPluginTile(
+    ColorScheme cs,
+    dynamic plugin,
+    PluginProvider pluginProvider,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -151,8 +167,17 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
           ),
           child: Icon(Icons.extension_rounded, color: cs.secondary),
         ),
-        title: Text(plugin.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(plugin.description, style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant.withOpacity(0.7))),
+        title: Text(
+          plugin.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          plugin.description,
+          style: TextStyle(
+            fontSize: 12,
+            color: cs.onSurfaceVariant.withOpacity(0.7),
+          ),
+        ),
         trailing: IconButton.filledTonal(
           icon: Icon(Icons.delete_outline_rounded, color: cs.error),
           onPressed: () => pluginProvider.removePlugin(plugin.id),

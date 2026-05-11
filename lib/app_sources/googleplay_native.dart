@@ -40,7 +40,10 @@ class GooglePlayNative extends AppSource {
         // Discard AFTER reading details — clears memory + invalidates AccountManager cache.
         // Awaiting ensures the APK download headers pipeline still has a valid bundle
         // if getRequestHeaders is called synchronously after this returns.
-        if (Provider.of<PlusSettingsProvider>(ctx, listen: false).autoDiscardTokens) {
+        if (Provider.of<PlusSettingsProvider>(
+          ctx,
+          listen: false,
+        ).autoDiscardTokens) {
           await authProvider.clearBundle();
           talker.info('AuthBundle discarded after request (autoDiscardTokens)');
         }
@@ -73,7 +76,8 @@ class GooglePlayNative extends AppSource {
     String url, {
     bool forAPKDownload = false,
   }) async {
-    if (!forAPKDownload || !url.contains('android.clients.google.com')) return null;
+    if (!forAPKDownload || !url.contains('android.clients.google.com'))
+      return null;
 
     final ctx = globalNavigatorKey.currentContext;
     if (ctx == null) return null;
@@ -84,7 +88,8 @@ class GooglePlayNative extends AppSource {
     var deviceId = authProvider.effectiveDeviceId;
     if (deviceId == 'native') {
       const platform = MethodChannel('app.obtainiumplus/native');
-      deviceId = await platform.invokeMethod<String>('getGsfId') ?? '0000000000000000';
+      deviceId =
+          await platform.invokeMethod<String>('getGsfId') ?? '0000000000000000';
     }
 
     final authHeader = bundle.aasToken.isNotEmpty
@@ -93,7 +98,8 @@ class GooglePlayNative extends AppSource {
 
     return {
       'Authorization': authHeader,
-      'User-Agent': 'Android-Finsky/38.5.18-29 [0] [PR] 561633513 '
+      'User-Agent':
+          'Android-Finsky/38.5.18-29 [0] [PR] 561633513 '
           '(api=3,build=561633513,is_tablet=false)',
       'X-DFE-Device-Id': deviceId,
     };

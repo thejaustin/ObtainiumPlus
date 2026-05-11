@@ -13,7 +13,8 @@ class UpdatesPage extends StatefulWidget {
   State<UpdatesPage> createState() => _UpdatesPageState();
 }
 
-class _UpdatesPageState extends State<UpdatesPage> with SingleTickerProviderStateMixin {
+class _UpdatesPageState extends State<UpdatesPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -56,10 +57,7 @@ class _UpdatesPageState extends State<UpdatesPage> with SingleTickerProviderStat
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildTrackedUpdates(),
-          const SystemUpdatesPage(),
-        ],
+        children: [_buildTrackedUpdates(), const SystemUpdatesPage()],
       ),
     );
   }

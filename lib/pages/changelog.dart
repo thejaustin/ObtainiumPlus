@@ -24,9 +24,7 @@ class _ChangelogPageState extends State<ChangelogPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tr('viewChangelog')),
-      ),
+      appBar: AppBar(title: Text(tr('viewChangelog'))),
       body: FutureBuilder<String>(
         future: _changelogFuture,
         builder: (context, snapshot) {
@@ -52,8 +50,11 @@ class _ChangelogPageState extends State<ChangelogPage> {
   }
 
   Future<String> _fetchChangelog() async {
-    final response = await get(Uri.parse(
-        'https://raw.githubusercontent.com/thejaustin/ObtainiumPlus/main/CHANGELOG_DETAILED.md'));
+    final response = await get(
+      Uri.parse(
+        'https://raw.githubusercontent.com/thejaustin/ObtainiumPlus/main/CHANGELOG_DETAILED.md',
+      ),
+    );
     if (response.statusCode == 200) {
       return response.body;
     } else {

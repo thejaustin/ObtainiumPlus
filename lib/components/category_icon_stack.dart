@@ -19,8 +19,10 @@ class CategoryIconStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Filter out null icons and limit to maxIcons
-    final validIcons =
-        icons.where((icon) => icon != null).take(maxIcons).toList();
+    final validIcons = icons
+        .where((icon) => icon != null)
+        .take(maxIcons)
+        .toList();
 
     if (validIcons.isEmpty) {
       return const SizedBox.shrink();

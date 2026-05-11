@@ -24,7 +24,8 @@ class _ContextualTipState extends State<ContextualTip> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    if (!settings.enableContextualTips || _dismissed) return const SizedBox.shrink();
+    if (!settings.enableContextualTips || _dismissed)
+      return const SizedBox.shrink();
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -36,7 +37,10 @@ class _ContextualTipState extends State<ContextualTip> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(widget.icon, color: Theme.of(context).colorScheme.onTertiaryContainer),
+            Icon(
+              widget.icon,
+              color: Theme.of(context).colorScheme.onTertiaryContainer,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

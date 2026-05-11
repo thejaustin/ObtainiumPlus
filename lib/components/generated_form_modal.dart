@@ -58,12 +58,16 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          color: Theme.of(
+            context,
+          ).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass
                 ? Theme.of(context).colorScheme.onSurface.withOpacity(0.18)
-                : Theme.of(context).colorScheme.outline.withOpacity(AppOpacity.subtle),
+                : Theme.of(
+                    context,
+                  ).colorScheme.outline.withOpacity(AppOpacity.subtle),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -74,7 +78,10 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
+          child: ConditionalBlur(
+            sigma: 24,
+            enabled: enableGlass,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
@@ -124,10 +131,13 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(enableGlass ? 0.5 : 1.0),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest
+            .withOpacity(enableGlass ? 0.5 : 1.0),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(AppOpacity.subtle),
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withOpacity(AppOpacity.subtle),
             width: 1,
           ),
         ),
@@ -138,19 +148,24 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.half),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withOpacity(AppOpacity.half),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(widget.icon, color: Theme.of(context).colorScheme.primary),
+              child: Icon(
+                widget.icon,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 16),
           ],
           Expanded(
             child: Text(
               widget.title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -162,10 +177,14 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(AppOpacity.subtle),
+            color: Theme.of(
+              context,
+            ).colorScheme.outline.withOpacity(AppOpacity.subtle),
             width: 1,
           ),
         ),

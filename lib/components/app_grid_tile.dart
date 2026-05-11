@@ -31,7 +31,8 @@ class AppGridTile extends StatefulWidget {
   State<AppGridTile> createState() => _AppGridTileState();
 }
 
-class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStateMixin {
+class _AppGridTileState extends State<AppGridTile>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   bool _isPressed = false;
@@ -73,13 +74,15 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
     return LayoutBuilder(
       builder: (context, constraints) {
         // --- ADAPTIVE LAYOUT DETECTION ---
-        final bool isHorizontal = constraints.maxWidth / constraints.maxHeight > 1.5;
-        
+        final bool isHorizontal =
+            constraints.maxWidth / constraints.maxHeight > 1.5;
+
         // Calculate responsive sizes based on available width
-        double availableWidth = constraints.maxWidth - 24; // Account for padding
+        double availableWidth =
+            constraints.maxWidth - 24; // Account for padding
 
         // Icon size: adaptive
-        double iconSize = isHorizontal 
+        double iconSize = isHorizontal
             ? (constraints.maxHeight * 0.7).clamp(40.0, 100.0)
             : (availableWidth * 0.65).clamp(40.0, 80.0);
 
@@ -94,10 +97,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
         }
 
         final settingsProvider = context.watch<SettingsProvider>();
-        final curve = settingsProvider.plusEnableEnhancedAnimations 
-            ? (settingsProvider.plusEnableMaterialExpressive 
-                ? AppConstants.expressiveStandard 
-                : AppConstants.standardStandard)
+        final curve = settingsProvider.plusEnableEnhancedAnimations
+            ? (settingsProvider.plusEnableMaterialExpressive
+                  ? AppConstants.expressiveStandard
+                  : AppConstants.standardStandard)
             : Curves.easeInOut;
 
         return AnimatedScale(
@@ -108,27 +111,51 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
             enabled: settingsProvider.plusEnableGlassmorphism,
             sigma: 10,
             child: AnimatedContainer(
-              duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? AppConstants.shortAnimationMs : 200),
-              curve: settingsProvider.plusEnableEnhancedAnimations ? Curves.easeOutCubic : Curves.easeInOut,
+              duration: Duration(
+                milliseconds: settingsProvider.plusEnableEnhancedAnimations
+                    ? AppConstants.shortAnimationMs
+                    : 200,
+              ),
+              curve: settingsProvider.plusEnableEnhancedAnimations
+                  ? Curves.easeOutCubic
+                  : Curves.easeInOut,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(cardBorderRadius),
                 color: widget.isSelected
-                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withOpacity(0.7)
                     : widget.hasUpdate
-                        ? Theme.of(context).colorScheme.errorContainer.withOpacity(0.12)
-                        : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.errorContainer.withOpacity(0.12)
+                    : Theme.of(context).colorScheme.surface.withOpacity(
+                        settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0,
+                      ),
                 border: Border.all(
                   color: widget.isSelected
                       ? Theme.of(context).colorScheme.primary
                       : widget.hasUpdate
-                          ? Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low)
-                          : widget.appInMemory.app.pinned
-                              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                              : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
-                  width: widget.isSelected || widget.appInMemory.app.pinned || widget.hasUpdate ? 1.5 : 0.8,
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.error.withOpacity(AppOpacity.low)
+                      : widget.appInMemory.app.pinned
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                      : Theme.of(context).colorScheme.outline.withOpacity(
+                          settingsProvider.plusEnableGlassmorphism ? 0.1 : 0,
+                        ),
+                  width:
+                      widget.isSelected ||
+                          widget.appInMemory.app.pinned ||
+                          widget.hasUpdate
+                      ? 1.5
+                      : 0.8,
                 ),
                 boxShadow: widget.isSelected
-                    ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
+                    ? AppShadows.glow(
+                        color: Theme.of(context).colorScheme.primary,
+                        intensity: 0.6,
+                      )
                     : null,
               ),
               child: ClipRRect(
@@ -153,7 +180,7 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                           ),
                         ),
                       ),
-                    
+
                     Semantics(
                       label: _buildSemanticLabel(),
                       button: true,
@@ -179,7 +206,19 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
                           borderRadius: BorderRadius.circular(cardBorderRadius),
                           child: Padding(
                             padding: EdgeInsets.all(padding),
-                            child: isHorizontal ? _buildHorizontalContent(iconSize, iconBorderRadius, badgeSize, settingsProvider) : _buildVerticalContent(iconSize, iconBorderRadius, badgeSize, settingsProvider),
+                            child: isHorizontal
+                                ? _buildHorizontalContent(
+                                    iconSize,
+                                    iconBorderRadius,
+                                    badgeSize,
+                                    settingsProvider,
+                                  )
+                                : _buildVerticalContent(
+                                    iconSize,
+                                    iconBorderRadius,
+                                    badgeSize,
+                                    settingsProvider,
+                                  ),
                           ),
                         ),
                       ),
@@ -194,7 +233,12 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildVerticalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
+  Widget _buildVerticalContent(
+    double iconSize,
+    double iconBorderRadius,
+    double badgeSize,
+    SettingsProvider settingsProvider,
+  ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -205,7 +249,12 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildHorizontalContent(double iconSize, double iconBorderRadius, double badgeSize, SettingsProvider settingsProvider) {
+  Widget _buildHorizontalContent(
+    double iconSize,
+    double iconBorderRadius,
+    double badgeSize,
+    SettingsProvider settingsProvider,
+  ) {
     return Row(
       children: [
         _buildIconStack(iconSize, iconBorderRadius, badgeSize),
@@ -216,7 +265,11 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildIconStack(double iconSize, double iconBorderRadius, double badgeSize) {
+  Widget _buildIconStack(
+    double iconSize,
+    double iconBorderRadius,
+    double badgeSize,
+  ) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -227,8 +280,11 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
             height: iconSize,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(iconBorderRadius),
-              boxShadow: widget.hasUpdate 
-                  ? AppShadows.smooth(color: Theme.of(context).colorScheme.error, opacity: 0.1)
+              boxShadow: widget.hasUpdate
+                  ? AppShadows.smooth(
+                      color: Theme.of(context).colorScheme.error,
+                      opacity: 0.1,
+                    )
                   : null,
             ),
             child: widget.appInMemory.icon != null
@@ -282,7 +338,9 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
   Widget _buildAppInfo(SettingsProvider settingsProvider, TextAlign textAlign) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: textAlign == TextAlign.start ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: textAlign == TextAlign.start
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         Text(
           widget.appInMemory.name,
@@ -291,29 +349,46 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 14,
-            fontWeight:
-                widget.appInMemory.app.pinned || widget.hasUpdate ? FontWeight.bold : FontWeight.w600,
+            fontWeight: widget.appInMemory.app.pinned || widget.hasUpdate
+                ? FontWeight.bold
+                : FontWeight.w600,
             letterSpacing: -0.2,
           ),
         ),
-        if (settingsProvider.plusShowTagsInList && widget.appInMemory.app.tags.isNotEmpty)
+        if (settingsProvider.plusShowTagsInList &&
+            widget.appInMemory.app.tags.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Wrap(
-              alignment: textAlign == TextAlign.start ? WrapAlignment.start : WrapAlignment.center,
+              alignment: textAlign == TextAlign.start
+                  ? WrapAlignment.start
+                  : WrapAlignment.center,
               spacing: 4,
               runSpacing: 4,
-              children: widget.appInMemory.app.tags.take(2).map((tag) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  tag,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold),
-                ),
-              )).toList(),
+              children: widget.appInMemory.app.tags
+                  .take(2)
+                  .map(
+                    (tag) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondaryContainer.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        tag,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         // Checking / Progress logic...
@@ -323,29 +398,31 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
   }
 
   Widget _buildProgressIndicator() {
-    return Builder(builder: (ctx) {
-      final isChecking = ctx.select<AppsProvider, bool>(
-        (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
-      );
-      if (widget.appInMemory.downloadProgress != null) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: ExpressiveProgressIndicator(
-            value: widget.appInMemory.downloadProgress! >= 0
-                ? widget.appInMemory.downloadProgress! / 100
-                : null,
-            height: 4,
-          ),
+    return Builder(
+      builder: (ctx) {
+        final isChecking = ctx.select<AppsProvider, bool>(
+          (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
         );
-      }
-      if (isChecking) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: ExpressiveProgressIndicator(value: null, height: 2),
-        );
-      }
-      return const SizedBox.shrink();
-    });
+        if (widget.appInMemory.downloadProgress != null) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: ExpressiveProgressIndicator(
+              value: widget.appInMemory.downloadProgress! >= 0
+                  ? widget.appInMemory.downloadProgress! / 100
+                  : null,
+              height: 4,
+            ),
+          );
+        }
+        if (isChecking) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: ExpressiveProgressIndicator(value: null, height: 2),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 
   /// Builds a semantic label for screen readers
@@ -376,7 +453,10 @@ class _AppGridTileState extends State<AppGridTile> with SingleTickerProviderStat
 
     if (widget.appInMemory.downloadProgress != null) {
       final progress = widget.appInMemory.downloadProgress! >= 0
-          ? tr('percentProgress', args: [widget.appInMemory.downloadProgress!.toInt().toString()])
+          ? tr(
+              'percentProgress',
+              args: [widget.appInMemory.downloadProgress!.toInt().toString()],
+            )
           : tr('installing');
       label.write(', $progress');
     }

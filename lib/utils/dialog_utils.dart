@@ -12,19 +12,21 @@ Future<T?> showAnimatedDialog<T>({
 }) {
   final settings = context.read<SettingsProvider>();
   final speedMultiplier = settings.animationSpeedMultiplier;
-  
+
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierLabel: barrierLabel ??
+    barrierLabel:
+        barrierLabel ??
         MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black54,
     transitionDuration: Duration(milliseconds: (200 * speedMultiplier).round()),
     pageBuilder: (_, __, ___) => builder(context),
     transitionBuilder: (_, anim, __, child) => ScaleTransition(
-      scale: Tween<double>(begin: 0.85, end: 1.0).animate(
-        CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-      ),
+      scale: Tween<double>(
+        begin: 0.85,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
       child: FadeTransition(opacity: anim, child: child),
     ),
   );

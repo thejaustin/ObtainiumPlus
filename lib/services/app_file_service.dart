@@ -72,7 +72,12 @@ class AppFileService {
 
     var cacheDirs = await getExternalCacheDirectories();
     if (cacheDirs?.isNotEmpty ?? false) {
-      Sentry.addBreadcrumb(Breadcrumb(message: 'initAppDirectories: using external cache path ${cacheDirs!.first.path}'));
+      Sentry.addBreadcrumb(
+        Breadcrumb(
+          message:
+              'initAppDirectories: using external cache path ${cacheDirs!.first.path}',
+        ),
+      );
       APKDir = cacheDirs.first;
       iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
       try {
@@ -88,16 +93,28 @@ class AppFileService {
       }
     }
     if (cacheDirs == null || cacheDirs.isEmpty) {
-      Sentry.addBreadcrumb(Breadcrumb(message: 'initAppDirectories: external cache unavailable, falling back to app storage'));
+      Sentry.addBreadcrumb(
+        Breadcrumb(
+          message:
+              'initAppDirectories: external cache unavailable, falling back to app storage',
+        ),
+      );
       APKDir = Directory('${(await getAppStorageDir()).path}/apks');
       if (!APKDir.existsSync()) {
         try {
           APKDir.createSync(recursive: true);
         } on FileSystemException catch (e, st) {
-          Sentry.captureException(e, stackTrace: st, withScope: (scope) {
-            scope.setTag('storage_path', APKDir.path);
-            scope.setTag('error_code', e.osError?.errorCode.toString() ?? 'unknown');
-          });
+          Sentry.captureException(
+            e,
+            stackTrace: st,
+            withScope: (scope) {
+              scope.setTag('storage_path', APKDir.path);
+              scope.setTag(
+                'error_code',
+                e.osError?.errorCode.toString() ?? 'unknown',
+              );
+            },
+          );
           rethrow;
         }
       }
@@ -107,18 +124,13 @@ class AppFileService {
       }
     }
 
-    return {
-      'APKDir': APKDir,
-      'iconsCacheDir': iconsCacheDir,
-    };
+    return {'APKDir': APKDir, 'iconsCacheDir': iconsCacheDir};
   }
 
   static void clearAppCache(String appId, Directory APKDir) {
     var apkFiles = APKDir.listSync();
     apkFiles
-        .where(
-          (element) => element.path.split('/').last.startsWith('$appId-'),
-        )
+        .where((element) => element.path.split('/').last.startsWith('$appId-'))
         .forEach((element) {
           try {
             element.deleteSync(recursive: true);
@@ -258,15 +270,16 @@ class AppFileService {
               e is HttpException ||
               e is SocketException ||
               e is HandshakeException)) {
-        
         // Exponential backoff: 2^retry_count * 5 seconds
         // retry_count starts at 3, so we use (4 - retries)
         int attempt = 4 - retries;
-        int delaySeconds = useSmartRetries 
+        int delaySeconds = useSmartRetries
             ? (5 * (1 << (attempt - 1))) // 5, 10, 20
             : 5;
 
-        logs?.add('Download failed ($e). Retrying in $delaySeconds seconds... (Attempt $attempt)');
+        logs?.add(
+          'Download failed ($e). Retrying in $delaySeconds seconds... (Attempt $attempt)',
+        );
         await Future.delayed(Duration(seconds: delaySeconds));
 
         if (isCancelled?.call() == true) throw DownloadCancelledError();
@@ -305,7 +318,9 @@ class AppFileService {
     var reqHeaders = headers ?? {};
     var req = Request('GET', Uri.parse(url));
     req.headers.addAll(reqHeaders);
-    var headersClient = IOClient(createHttpClient(allowInsecure: allowInsecure));
+    var headersClient = IOClient(
+      createHttpClient(allowInsecure: allowInsecure),
+    );
     StreamedResponse headersResponse = await headersClient.send(req);
     var resHeaders = headersResponse.headers;
 
@@ -318,9 +333,7 @@ class AppFileService {
         ext != 'apk') {
       ext = 'apk';
     }
-    fileName = fileNameHasExt
-        ? fileName
-        : fileName.split('/').last;
+    fileName = fileNameHasExt ? fileName : fileName.split('/').last;
     File downloadedFile = File('$destDir/$fileName.$ext');
     if (fileNameHasExt) {
       downloadedFile = File('$destDir/$fileName');
@@ -397,7 +410,9 @@ class AppFileService {
     req = Request('GET', Uri.parse(url));
     req.headers.addAll(reqHeaders);
     if (rangeFeatureEnabled && fullContentLength != null && rangeStart > 0) {
-      reqHeaders.addAll({'range': 'bytes=$rangeStart-${fullContentLength - 1}'});
+      reqHeaders.addAll({
+        'range': 'bytes=$rangeStart-${fullContentLength - 1}',
+      });
       sink = tempDownloadedFile.openWrite(mode: FileMode.writeOnlyAppend);
     } else if (tempDownloadedFile.existsSync()) {
       deleteFile(tempDownloadedFile);

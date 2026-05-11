@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/pages/home.dart';
-import 'package:obtainium/providers/apps_provider.dart' hide obtainiumId, obtainiumTempId;
+import 'package:obtainium/providers/apps_provider.dart'
+    hide obtainiumId, obtainiumTempId;
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -155,12 +156,12 @@ void main() async {
 
         final sp = await SharedPreferences.getInstance();
         talker.info('Startup: SharedPreferences acquired');
-        
+
         final settingsProvider = SettingsProvider();
         settingsProvider.prefs = sp;
         await settingsProvider.initializeSettings();
         talker.info('Startup: SettingsProvider initialized');
-        
+
         final pluginProvider = PluginProvider();
         await pluginProvider.initialize(sp);
         talker.info('Startup: PluginProvider initialized');
@@ -171,7 +172,7 @@ void main() async {
 
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         talker.info('Startup: Device info acquired (${androidInfo.model})');
-        
+
         final manufacturer = androidInfo.manufacturer.toLowerCase();
         final isSamsung = manufacturer == 'samsung';
         final isFoldable =
@@ -195,17 +196,21 @@ void main() async {
 
         if (androidInfo.version.sdkInt >= 29) {
           SystemChrome.setSystemUIOverlayStyle(
-            const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
+            const SystemUiOverlayStyle(
+              systemNavigationBarColor: Colors.transparent,
+            ),
           );
           SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
         }
         final np = NotificationsProvider();
         await np.initialize(sp: settingsProvider);
         talker.info('Startup: NotificationsProvider initialized');
-        
+
         FlutterForegroundTask.initCommunicationPort();
 
-        BackgroundFetch.registerHeadlessTask(BackgroundService.backgroundFetchHeadlessTask);
+        BackgroundFetch.registerHeadlessTask(
+          BackgroundService.backgroundFetchHeadlessTask,
+        );
         talker.info('Startup: Headless tasks registered');
 
         // Reset crash-loop counter on successful startup so user-facing errors
@@ -217,33 +222,49 @@ void main() async {
         runZonedGuarded(
           () {
             talker.info('Startup: Launching MultiProvider root');
-            
+
             // Enable true edge-to-edge layout for Android
-            SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              systemNavigationBarColor: Colors.transparent,
-              systemNavigationBarDividerColor: Colors.transparent,
-              statusBarIconBrightness: Brightness.dark,
-              systemNavigationBarIconBrightness: Brightness.dark,
-            ));
-            
+            SystemChrome.setSystemUIOverlayStyle(
+              const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarDividerColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                systemNavigationBarIconBrightness: Brightness.dark,
+              ),
+            );
+
             runApp(
               MultiProvider(
                 providers: [
                   ChangeNotifierProvider.value(value: settingsProvider),
                   ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
                     create: (ctx) => AppsProvider(settings: settingsProvider),
-                    update: (ctx, settings, apps) => apps!..settingsProvider = settings,
+                    update: (ctx, settings, apps) =>
+                        apps!..settingsProvider = settings,
                   ),
                   ChangeNotifierProxyProvider<AppsProvider, TagProvider>(
                     create: (ctx) => TagProvider(ctx.read<AppsProvider>()),
                     update: (ctx, apps, prev) => prev ?? TagProvider(apps),
                   ),
-                  ChangeNotifierProvider.value(value: settingsProvider.updateSettings),
-                  ChangeNotifierProvider.value(value: settingsProvider.viewSettings),
-                  ChangeNotifierProvider.value(value: settingsProvider.behaviorSettings),
-                  ChangeNotifierProvider.value(value: settingsProvider.plusSettings),
-                  ChangeNotifierProvider.value(value: settingsProvider.sourceConfig),
+                  ChangeNotifierProvider.value(
+                    value: settingsProvider.updateSettings,
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: settingsProvider.viewSettings,
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: settingsProvider.behaviorSettings,
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: settingsProvider.plusSettings,
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: settingsProvider.themeSettings,
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: settingsProvider.sourceConfig,
+                  ),
                   ChangeNotifierProvider.value(value: pluginProvider),
                   ChangeNotifierProvider.value(value: authProvider),
                   Provider(create: (context) => np),
@@ -281,17 +302,24 @@ void main() async {
               },
               // Swallow — never let crash-recording failures recurse back into
               // the zone error handler and create an infinite reporting loop.
-              onError: (e) { talker.warning('Crash reporting pipeline failed: $e'); },
+              onError: (e) {
+                talker.warning('Crash reporting pipeline failed: $e');
+              },
             );
           },
         );
       } catch (e, stackTrace) {
         talker.handle(e, stackTrace, 'Main Catch Error (Startup Guard)');
         if (e is ObtainiumError && !e.unexpected) {
-          runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
+          runApp(
+            ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()),
+          );
           return;
         }
-        final sentryId = await Sentry.captureException(e, stackTrace: stackTrace);
+        final sentryId = await Sentry.captureException(
+          e,
+          stackTrace: stackTrace,
+        );
         await CrashTracker.recordCrash(sentryId.toString());
         await CrashAnalytics.recordCrash(
           errorType: e.runtimeType.toString(),
@@ -304,7 +332,9 @@ void main() async {
           stackTrace: stackTrace.toString(),
           sentryEventId: sentryId.toString(),
         );
-        runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
+        runApp(
+          ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()),
+        );
       }
     },
   );
@@ -335,7 +365,10 @@ class _ObtainiumState extends State<Obtainium> {
       talker.handle(details.exception, details.stack, 'Build Error');
       _buildError = details.exceptionAsString();
       _buildStackTrace = details.stack?.toString();
-      Sentry.captureException(details.exception, stackTrace: details.stack).then(
+      Sentry.captureException(
+        details.exception,
+        stackTrace: details.stack,
+      ).then(
         (id) {
           CrashTracker.recordCrash(id.toString());
           CrashAnalytics.recordCrash(
@@ -350,9 +383,14 @@ class _ObtainiumState extends State<Obtainium> {
             sentryEventId: id.toString(),
           );
         },
-        onError: (e) { talker.warning('Build error reporting pipeline failed: $e'); },
+        onError: (e) {
+          talker.warning('Build error reporting pipeline failed: $e');
+        },
       );
-      return BuildErrorWidget(error: details.exceptionAsString(), stackTrace: details.stack?.toString() ?? '');
+      return BuildErrorWidget(
+        error: details.exceptionAsString(),
+        stackTrace: details.stack?.toString() ?? '',
+      );
     };
     initPlatformState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -411,15 +449,21 @@ class _ObtainiumState extends State<Obtainium> {
         ),
         (String taskId) async {
           await BackgroundUpdateService.bgUpdateCheck(taskId, null);
-          try { BackgroundFetch.finish(taskId); } catch (_) {}
+          try {
+            BackgroundFetch.finish(taskId);
+          } catch (_) {}
         },
         (String taskId) async {
           context.read<LogsProvider>().add('BG update task timed out.');
-          try { BackgroundFetch.finish(taskId); } catch (_) {}
+          try {
+            BackgroundFetch.finish(taskId);
+          } catch (_) {}
         },
       );
     } catch (e) {
-      talker.warning('BackgroundFetch.configure failed (unsupported on this device/OS): $e');
+      talker.warning(
+        'BackgroundFetch.configure failed (unsupported on this device/OS): $e',
+      );
     }
     if (!mounted) return;
   }
@@ -430,16 +474,28 @@ class _ObtainiumState extends State<Obtainium> {
     AppsProvider appsProvider = context.read<AppsProvider>();
     LogsProvider logs = context.read<LogsProvider>();
     NotificationsProvider notifs = context.read<NotificationsProvider>();
-    if (settingsProvider.updateInterval == 0) {
+    if (settingsProvider.updateSettings.updateInterval == 0) {
       BackgroundService.stopForegroundService();
-      try { BackgroundFetch.stop(); } catch (e) { talker.warning('BackgroundFetch.stop failed: $e'); }
+      try {
+        BackgroundFetch.stop();
+      } catch (e) {
+        talker.warning('BackgroundFetch.stop failed: $e');
+      }
     } else {
-      if (settingsProvider.useFGService) {
-        try { BackgroundFetch.stop(); } catch (e) { talker.warning('BackgroundFetch.stop failed: $e'); }
+      if (settingsProvider.updateSettings.useFGService) {
+        try {
+          BackgroundFetch.stop();
+        } catch (e) {
+          talker.warning('BackgroundFetch.stop failed: $e');
+        }
         BackgroundService.startForegroundService(false);
       } else {
         BackgroundService.stopForegroundService();
-        try { BackgroundFetch.start(); } catch (e) { talker.warning('BackgroundFetch.start failed: $e'); }
+        try {
+          BackgroundFetch.start();
+        } catch (e) {
+          talker.warning('BackgroundFetch.start failed: $e');
+        }
       }
     }
     if (settingsProvider.prefs == null) {
@@ -474,7 +530,9 @@ class _ObtainiumState extends State<Obtainium> {
                 ], onlyIfExists: false);
               }
             },
-            onError: (err) { talker.handle(err, null, 'First run Obtainium+ init error'); },
+            onError: (err) {
+              talker.handle(err, null, 'First run Obtainium+ init error');
+            },
           );
         }
       }
@@ -568,7 +626,8 @@ class _ObtainiumState extends State<Obtainium> {
                     ? darkColorScheme
                     : lightColorScheme,
                 useSystemFont: settingsProvider.useSystemFont,
-                plusEnableMaterialExpressive: settingsProvider.plusEnableMaterialExpressive,
+                plusEnableMaterialExpressive:
+                    settingsProvider.plusEnableMaterialExpressive,
                 cornerRadius: settingsProvider.plusGlobalCornerRadius,
               ),
               darkTheme: ThemeBuilder.buildTheme(
@@ -576,16 +635,17 @@ class _ObtainiumState extends State<Obtainium> {
                     ? lightColorScheme
                     : darkColorScheme,
                 useSystemFont: settingsProvider.useSystemFont,
-                plusEnableMaterialExpressive: settingsProvider.plusEnableMaterialExpressive,
+                plusEnableMaterialExpressive:
+                    settingsProvider.plusEnableMaterialExpressive,
                 cornerRadius: settingsProvider.plusGlobalCornerRadius,
               ),
               home: Shortcuts(
-                  shortcuts: <LogicalKeySet, Intent>{
-                    LogicalKeySet(LogicalKeyboardKey.select):
-                        const ActivateIntent(),
-                  },
-                  child: const HomePage(),
-                ),
+                shortcuts: <LogicalKeySet, Intent>{
+                  LogicalKeySet(LogicalKeyboardKey.select):
+                      const ActivateIntent(),
+                },
+                child: const HomePage(),
+              ),
             ),
           );
         },

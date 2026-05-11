@@ -43,9 +43,15 @@ void showAppShortcutsMenu(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: enableGlass
               ? Border(
-                  top: BorderSide(color: colorScheme.onSurface.withOpacity(0.18)),
-                  left: BorderSide(color: colorScheme.onSurface.withOpacity(AppOpacity.hint)),
-                  right: BorderSide(color: colorScheme.onSurface.withOpacity(AppOpacity.hint)),
+                  top: BorderSide(
+                    color: colorScheme.onSurface.withOpacity(0.18),
+                  ),
+                  left: BorderSide(
+                    color: colorScheme.onSurface.withOpacity(AppOpacity.hint),
+                  ),
+                  right: BorderSide(
+                    color: colorScheme.onSurface.withOpacity(AppOpacity.hint),
+                  ),
                 )
               : null,
         ),
@@ -57,12 +63,15 @@ void showAppShortcutsMenu(
 
               // Header with App Name
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Text(
                   appInMemory.name,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -81,7 +90,9 @@ void showAppShortcutsMenu(
               ListTile(
                 leading: const Icon(Icons.system_update_outlined),
                 title: Text(tr('update')),
-                enabled: appInMemory.app.installedVersion != appInMemory.app.latestVersion,
+                enabled:
+                    appInMemory.app.installedVersion !=
+                    appInMemory.app.latestVersion,
                 onTap: () {
                   Navigator.pop(ctx);
                   appsProvider.downloadAndInstallLatestApps([appId], context);
@@ -89,7 +100,11 @@ void showAppShortcutsMenu(
               ),
 
               ListTile(
-                leading: Icon(appInMemory.app.pinned ? Icons.push_pin_outlined : Icons.push_pin),
+                leading: Icon(
+                  appInMemory.app.pinned
+                      ? Icons.push_pin_outlined
+                      : Icons.push_pin,
+                ),
                 title: Text(appInMemory.app.pinned ? tr('unpin') : tr('pin')),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -114,7 +129,8 @@ void showAppShortcutsMenu(
                           child: CategoryEditorSelector(
                             alignment: WrapAlignment.start,
                             preselected: appInMemory.app.categories.toSet(),
-                            onSelected: (categories) => Navigator.pop(dCtx, categories),
+                            onSelected: (categories) =>
+                                Navigator.pop(dCtx, categories),
                           ),
                         ),
                       ),
@@ -149,7 +165,11 @@ void showAppShortcutsMenu(
                   Navigator.pop(ctx);
                   showDraggableModalBottomSheet(
                     context: context,
-                    builder: (context, controller) => AppPage(appId: appId, isModal: true, scrollController: controller),
+                    builder: (context, controller) => AppPage(
+                      appId: appId,
+                      isModal: true,
+                      scrollController: controller,
+                    ),
                   );
                 },
               ),
@@ -176,7 +196,10 @@ void showAppShortcutsMenu(
 
               ListTile(
                 leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: Text(tr('remove'), style: const TextStyle(color: Colors.red)),
+                title: Text(
+                  tr('remove'),
+                  style: const TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   appsProvider.removeAppsWithModal(context, [appInMemory.app]);
@@ -201,9 +224,16 @@ void showAppShortcutsMenu(
   );
 }
 
-void _showTagEditorStandalone(BuildContext context, AppInMemory appInMemory) async {
+void _showTagEditorStandalone(
+  BuildContext context,
+  AppInMemory appInMemory,
+) async {
   final appsProvider = context.read<AppsProvider>();
-  final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+  final allTags = appsProvider
+      .getAppValues()
+      .expand((a) => a.app.tags)
+      .toSet()
+      .toList();
   allTags.sort();
 
   final newTags = await showTagEditor(

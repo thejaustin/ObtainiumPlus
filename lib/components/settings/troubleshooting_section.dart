@@ -23,21 +23,58 @@ class TroubleshootingSection extends StatelessWidget {
 
     final items = [
       if (_matches(tr('openAppInfo')))
-        _buildSystemShortcutTile(context, icon: Icons.info_outlined, title: tr('openAppInfo'), onTap: () => AppInstallService.openAppSettings(obtainiumId)),
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.info_outlined,
+          title: tr('openAppInfo'),
+          onTap: () => AppInstallService.openAppSettings(obtainiumId),
+        ),
       if (_matches(tr('notificationSettings')))
-        _buildSystemShortcutTile(context, icon: Icons.notifications_active_outlined, title: tr('notificationSettings'), onTap: () => AppInstallService.openNotificationSettings(obtainiumId)),
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.notifications_active_outlined,
+          title: tr('notificationSettings'),
+          onTap: () => AppInstallService.openNotificationSettings(obtainiumId),
+        ),
       if (_matches(tr('batteryOptimizationSettings')))
-        _buildSystemShortcutTile(context, icon: Icons.battery_saver_outlined, title: tr('batteryOptimizationSettings'), onTap: () => AppInstallService.openBatteryOptimizationSettings()),
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.battery_saver_outlined,
+          title: tr('batteryOptimizationSettings'),
+          onTap: () => AppInstallService.openBatteryOptimizationSettings(),
+        ),
       if (_matches(tr('installUnknownApps')))
-        _buildSystemShortcutTile(context, icon: Icons.install_mobile_outlined, title: tr('installUnknownApps'), onTap: () => AppInstallService.openInstallUnknownAppsSettings(obtainiumId)),
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.install_mobile_outlined,
+          title: tr('installUnknownApps'),
+          onTap: () =>
+              AppInstallService.openInstallUnknownAppsSettings(obtainiumId),
+        ),
       if (_matches(tr('overlaySettings')))
-        _buildSystemShortcutTile(context, icon: Icons.layers_outlined, title: tr('overlaySettings'), onTap: () => AppInstallService.openOverlaySettings(obtainiumId)),
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.layers_outlined,
+          title: tr('overlaySettings'),
+          onTap: () => AppInstallService.openOverlaySettings(obtainiumId),
+        ),
       if (_matches(tr('usageAccessSettings')))
-        _buildSystemShortcutTile(context, icon: Icons.insights_outlined, title: tr('usageAccessSettings'), onTap: () => AppInstallService.openUsageAccessSettings()),
+        _buildSystemShortcutTile(
+          context,
+          icon: Icons.insights_outlined,
+          title: tr('usageAccessSettings'),
+          onTap: () => AppInstallService.openUsageAccessSettings(),
+        ),
       if (!context.watch<SettingsProvider>().plusDeveloperMode)
         ListTile(
-          leading: Icon(Icons.help_outline, color: Theme.of(context).colorScheme.primary),
-          title: Text(tr('lookingForDevOptions'), style: Theme.of(context).textTheme.bodyLarge),
+          leading: Icon(
+            Icons.help_outline,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: Text(
+            tr('lookingForDevOptions'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('devOptionsHint')),
         ),
     ];
@@ -57,7 +94,10 @@ class TroubleshootingSection extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+      leading: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
       title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
       trailing: const Icon(Icons.open_in_new, size: 18),
       onTap: () {

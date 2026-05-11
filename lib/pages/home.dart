@@ -52,7 +52,13 @@ class NavigationPageItem {
   final IconData selectedIcon;
   final Widget widget;
 
-  NavigationPageItem(this.id, this.title, this.icon, this.selectedIcon, this.widget);
+  NavigationPageItem(
+    this.id,
+    this.title,
+    this.icon,
+    this.selectedIcon,
+    this.widget,
+  );
 }
 
 class HomePageState extends State<HomePage> {
@@ -104,8 +110,7 @@ class HomePageState extends State<HomePage> {
           ),
         );
       }
-      if (!sp.googleVerificationWarningShown &&
-          DateTime.now().year >= 2026) {
+      if (!sp.googleVerificationWarningShown && DateTime.now().year >= 2026) {
         await showDialog(
           context: context,
           builder: (BuildContext ctx) {
@@ -158,7 +163,10 @@ class HomePageState extends State<HomePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showMaterialBanner(
             MaterialBanner(
-              leading: const Icon(Icons.warning_amber_outlined, color: Colors.orange),
+              leading: const Icon(
+                Icons.warning_amber_outlined,
+                color: Colors.orange,
+              ),
               content: Text(tr('crashDetectedFollowOnGitHub')),
               actions: [
                 TextButton(
@@ -208,8 +216,9 @@ class HomePageState extends State<HomePage> {
                   issue: issue,
                   onCheckForUpdates: () {
                     Navigator.of(context).pop();
-                    final idx =
-                        activePages.indexWhere((p) => p.id == 'updates');
+                    final idx = activePages.indexWhere(
+                      (p) => p.id == 'updates',
+                    );
                     if (idx != -1) switchToPage(idx);
                   },
                 ),
@@ -221,7 +230,10 @@ class HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _showXiaomiSetupDialogIfNeeded(BuildContext context, SettingsProvider sp) async {
+  Future<void> _showXiaomiSetupDialogIfNeeded(
+    BuildContext context,
+    SettingsProvider sp,
+  ) async {
     try {
       final isXiaomi = await DeviceUtils.isXiaomiDevice();
       if (!isXiaomi) return;
@@ -288,12 +300,16 @@ class HomePageState extends State<HomePage> {
       if (index != -1) {
         switchToPage(index);
         int attempts = 0;
-        while ((addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState == null && attempts < 300) {
+        while ((addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState ==
+                null &&
+            attempts < 300) {
           await Future.delayed(const Duration(milliseconds: 10));
           attempts++;
           if (!mounted) return;
         }
-        (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(data);
+        (addAppPage.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(
+          data,
+        );
       } else {
         if (!mounted) return;
         showModalBottomSheet(
@@ -378,17 +394,56 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     // Use select to avoid rebuilding the root Scaffold when unrelated provider
     // fields change (e.g. sort order, glass setting, app list updates).
-    final bottomTabs = context.select<ViewSettingsProvider, List<String>>((v) => List.from(v.bottomTabs));
-    final labelBehavior = context.select<ViewSettingsProvider, NavigationDestinationLabelBehavior>((v) => v.navigationLabelBehavior);
-    final plusDeveloperMode = context.select<SettingsProvider, bool>((s) => s.plusDeveloperMode);
-    final plusEnableMaterialExpressive = context.select<SettingsProvider, bool>((s) => s.plusEnableMaterialExpressive);
+    final bottomTabs = context.select<ViewSettingsProvider, List<String>>(
+      (v) => List.from(v.bottomTabs),
+    );
+    final labelBehavior = context
+        .select<ViewSettingsProvider, NavigationDestinationLabelBehavior>(
+          (v) => v.navigationLabelBehavior,
+        );
+    final plusDeveloperMode = context.select<SettingsProvider, bool>(
+      (s) => s.plusDeveloperMode,
+    );
+    final plusEnableMaterialExpressive = context.select<SettingsProvider, bool>(
+      (s) => s.plusEnableMaterialExpressive,
+    );
 
     allPages = {
-      'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
-      'updates': NavigationPageItem('updates', tr('updates'), Icons.update_outlined, Icons.update, updatesPage),
-      'discover': NavigationPageItem('discover', tr('discover'), Icons.explore_outlined, Icons.explore, discoverPage),
-      'settings': NavigationPageItem('settings', tr('settings'), Icons.settings_outlined, Icons.settings, settingsPage),
-      'more': NavigationPageItem('more', tr('more'), Icons.more_horiz_outlined, Icons.more_horiz, settingsPage), // Placeholder for submenu
+      'apps': NavigationPageItem(
+        'apps',
+        tr('appsString'),
+        Icons.apps_outlined,
+        Icons.apps,
+        appsPage,
+      ),
+      'updates': NavigationPageItem(
+        'updates',
+        tr('updates'),
+        Icons.update_outlined,
+        Icons.update,
+        updatesPage,
+      ),
+      'discover': NavigationPageItem(
+        'discover',
+        tr('discover'),
+        Icons.explore_outlined,
+        Icons.explore,
+        discoverPage,
+      ),
+      'settings': NavigationPageItem(
+        'settings',
+        tr('settings'),
+        Icons.settings_outlined,
+        Icons.settings,
+        settingsPage,
+      ),
+      'more': NavigationPageItem(
+        'more',
+        tr('more'),
+        Icons.more_horiz_outlined,
+        Icons.more_horiz,
+        settingsPage,
+      ), // Placeholder for submenu
     };
 
     activePages = bottomTabs
@@ -399,7 +454,9 @@ class HomePageState extends State<HomePage> {
       activePages.insert(0, allPages['apps']!);
     }
 
-    int currentIndex = selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
+    int currentIndex = selectedIndexHistory.isEmpty
+        ? 0
+        : selectedIndexHistory.last;
     if (currentIndex >= activePages.length) {
       currentIndex = 0;
       selectedIndexHistory = [0];
@@ -451,84 +508,91 @@ class HomePageState extends State<HomePage> {
         },
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          floatingActionButton: Builder(builder: (context) {
-            final showFab = activePages[currentIndex].id == 'apps' ||
-                activePages[currentIndex].id == 'updates';
-            return IgnorePointer(
-              ignoring: !showFab,
-              child: AnimatedOpacity(
-                opacity: showFab ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 250),
-                curve: AppConstants.expressiveStandard,
-                child: AnimatedScale(
-                  scale: showFab ? 1.0 : 0.7,
-                  duration: const Duration(milliseconds: 300),
-                  curve: AppConstants.expressiveDecelerate,
-                  child: const AppActionsFAB(),
+          floatingActionButton: Builder(
+            builder: (context) {
+              final showFab =
+                  activePages[currentIndex].id == 'apps' ||
+                  activePages[currentIndex].id == 'updates';
+              return IgnorePointer(
+                ignoring: !showFab,
+                child: AnimatedOpacity(
+                  opacity: showFab ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: AppConstants.expressiveStandard,
+                  child: AnimatedScale(
+                    scale: showFab ? 1.0 : 0.7,
+                    duration: const Duration(milliseconds: 300),
+                    curve: AppConstants.expressiveDecelerate,
+                    child: const AppActionsFAB(),
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
           body: PageView(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             children: activePages.map((p) => p.widget).toList(),
           ),
-          bottomNavigationBar: activePages.length > 1 ? EditableNavigationBar(
-            activePages: activePages,
-            allPages: allPages,
-            selectedIndex: currentIndex,
-            isEditMode: _isEditMode,
-            onEditModeChanged: (editing) {
-              setState(() => _isEditMode = editing);
-            },
-            onDestinationSelected: (int index) {
-              AppHaptics.selectionClick();
-              if (index == currentIndex) {
-                if (activePages[index].widget == appsPage) {
-                  (appsPage.key as GlobalKey<AppsPageState>?)
-                      ?.currentState
-                      ?.scrollController
-                      .animateTo(0,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut);
-                }
-              } else {
-                switchToPage(index);
-              }
-            },
-            onReorder: (oldIndex, newIndex) {
-              final vs = context.read<ViewSettingsProvider>();
-              final tabs = List<String>.from(vs.bottomTabs);
-              // Map from activePages indices to tab IDs
-              final movedId = activePages[oldIndex].id;
-              final targetId = activePages[newIndex].id;
-              final fromIdx = tabs.indexOf(movedId);
-              final toIdx = tabs.indexOf(targetId);
-              if (fromIdx != -1 && toIdx != -1) {
-                tabs.removeAt(fromIdx);
-                tabs.insert(toIdx, movedId);
-                vs.bottomTabs = tabs;
-              }
-            },
-            onRemoveTab: (String id) {
-              final vs = context.read<ViewSettingsProvider>();
-              final tabs = List<String>.from(vs.bottomTabs);
-              tabs.remove(id);
-              vs.bottomTabs = tabs;
-              // Adjust selected index if needed
-              if (currentIndex >= tabs.length) {
-                switchToPage(tabs.length - 1);
-              }
-            },
-            onAddTab: (String id) {
-              final vs = context.read<ViewSettingsProvider>();
-              final tabs = List<String>.from(vs.bottomTabs);
-              tabs.add(id);
-              vs.bottomTabs = tabs;
-            },
-            labelBehavior: labelBehavior,
-          ) : null,
+          bottomNavigationBar: activePages.length > 1
+              ? EditableNavigationBar(
+                  activePages: activePages,
+                  allPages: allPages,
+                  selectedIndex: currentIndex,
+                  isEditMode: _isEditMode,
+                  onEditModeChanged: (editing) {
+                    setState(() => _isEditMode = editing);
+                  },
+                  onDestinationSelected: (int index) {
+                    AppHaptics.selectionClick();
+                    if (index == currentIndex) {
+                      if (activePages[index].widget == appsPage) {
+                        (appsPage.key as GlobalKey<AppsPageState>?)
+                            ?.currentState
+                            ?.scrollController
+                            .animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            );
+                      }
+                    } else {
+                      switchToPage(index);
+                    }
+                  },
+                  onReorder: (oldIndex, newIndex) {
+                    final vs = context.read<ViewSettingsProvider>();
+                    final tabs = List<String>.from(vs.bottomTabs);
+                    // Map from activePages indices to tab IDs
+                    final movedId = activePages[oldIndex].id;
+                    final targetId = activePages[newIndex].id;
+                    final fromIdx = tabs.indexOf(movedId);
+                    final toIdx = tabs.indexOf(targetId);
+                    if (fromIdx != -1 && toIdx != -1) {
+                      tabs.removeAt(fromIdx);
+                      tabs.insert(toIdx, movedId);
+                      vs.bottomTabs = tabs;
+                    }
+                  },
+                  onRemoveTab: (String id) {
+                    final vs = context.read<ViewSettingsProvider>();
+                    final tabs = List<String>.from(vs.bottomTabs);
+                    tabs.remove(id);
+                    vs.bottomTabs = tabs;
+                    // Adjust selected index if needed
+                    if (currentIndex >= tabs.length) {
+                      switchToPage(tabs.length - 1);
+                    }
+                  },
+                  onAddTab: (String id) {
+                    final vs = context.read<ViewSettingsProvider>();
+                    final tabs = List<String>.from(vs.bottomTabs);
+                    tabs.add(id);
+                    vs.bottomTabs = tabs;
+                  },
+                  labelBehavior: labelBehavior,
+                )
+              : null,
           extendBody: true,
           extendBodyBehindAppBar: true,
         ),

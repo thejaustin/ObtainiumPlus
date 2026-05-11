@@ -33,7 +33,13 @@ class AddAppPage extends StatefulWidget {
   final String? appId;
   final String? initialUrl;
   final int? initialTab;
-  const AddAppPage({super.key, this.mode = AddAppMode.add, this.appId, this.initialUrl, this.initialTab});
+  const AddAppPage({
+    super.key,
+    this.mode = AddAppMode.add,
+    this.appId,
+    this.initialUrl,
+    this.initialTab,
+  });
 
   @override
   State<AddAppPage> createState() => AddAppPageState();
@@ -53,7 +59,8 @@ class AddAppPageState extends State<AddAppPage> {
   List<String> pickedCategories = [];
   String? _urlValidationError;
   SourceProvider sourceProvider = SourceProvider();
-  final GlobalKey<DiscoverPageState> _discoverPageKey = GlobalKey<DiscoverPageState>();
+  final GlobalKey<DiscoverPageState> _discoverPageKey =
+      GlobalKey<DiscoverPageState>();
   Timer? _discoverSearchDebounce;
 
   bool get _isUrlMode => userInput.trim().startsWith('http');
@@ -105,7 +112,7 @@ class AddAppPageState extends State<AddAppPage> {
             .where((s) => s.hosts.isNotEmpty)
             .map((s) => s.name)
             .toList();
-        
+
         showUnsupportedSourceDialog(
           context: context,
           suggestedSources: supportedSources.take(8).toList(),
@@ -135,8 +142,9 @@ class AddAppPageState extends State<AddAppPage> {
         previousPickedSourceOverride = pickedSourceOverride;
         if (updateUrlInput && _inputController.text != input) {
           _inputController.text = input;
-          _inputController.selection =
-              TextSelection.collapsed(offset: input.length);
+          _inputController.selection = TextSelection.collapsed(
+            offset: input.length,
+          );
         }
         var prevHost = pickedSource?.hosts.isNotEmpty == true
             ? pickedSource?.hosts[0]
@@ -158,8 +166,8 @@ class AddAppPageState extends State<AddAppPage> {
               _urlValidationError = e is ObtainiumError
                   ? e.toString()
                   : e is String
-                      ? e
-                      : tr('error');
+                  ? e
+                  : tr('error');
             }
           }
         }
@@ -198,9 +206,7 @@ class AddAppPageState extends State<AddAppPage> {
             initValid: true,
             title: tr(
               'xIsTrackOnly',
-              args: [
-                pickedSource!.enforceTrackOnly ? tr('source') : tr('app'),
-              ],
+              args: [pickedSource!.enforceTrackOnly ? tr('source') : tr('app')],
             ),
             items: [
               [GeneratedFormSwitch('hide', label: tr('dontShowAgain'))],
@@ -304,10 +310,7 @@ class AddAppPageState extends State<AddAppPage> {
           context: globalNavigatorKey.currentContext ?? context,
           isScrollControlled: true,
           useSafeArea: true,
-          builder: (context) => AppPage(
-            appId: app!.id,
-            isModal: true,
-          ),
+          builder: (context) => AppPage(appId: app!.id, isModal: true),
         );
       }
     } catch (e) {
@@ -355,9 +358,9 @@ class AddAppPageState extends State<AddAppPage> {
                   void fn() {
                     pickedSourceOverride =
                         (values['overrideSource'] == null ||
-                                values['overrideSource'] == '')
-                            ? null
-                            : values['overrideSource'];
+                            values['overrideSource'] == '')
+                        ? null
+                        : values['overrideSource'];
                   }
 
                   if (!isBuilding) {
@@ -613,7 +616,8 @@ class AddAppPageState extends State<AddAppPage> {
               final result = await Navigator.push<String>(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SystemAppSelector(returnUrlOnSelect: true),
+                  builder: (context) =>
+                      const SystemAppSelector(returnUrlOnSelect: true),
                 ),
               );
               if (result != null) {
@@ -650,11 +654,14 @@ class AddAppPageState extends State<AddAppPage> {
                 if (discoverEnabled && !value.trim().startsWith('http')) {
                   _discoverPageKey.currentState?.searchQuery = value;
                   _discoverSearchDebounce?.cancel();
-                  _discoverSearchDebounce = Timer(const Duration(milliseconds: 800), () {
-                    if (mounted && value.trim().isNotEmpty) {
-                      _discoverPageKey.currentState?.runSearch();
-                    }
-                  });
+                  _discoverSearchDebounce = Timer(
+                    const Duration(milliseconds: 800),
+                    () {
+                      if (mounted && value.trim().isNotEmpty) {
+                        _discoverPageKey.currentState?.runSearch();
+                      }
+                    },
+                  );
                 }
               },
               onSubmitted: (_) {
@@ -666,7 +673,9 @@ class AddAppPageState extends State<AddAppPage> {
                 }
               },
               trailing: [
-                if (discoverEnabled && !_isUrlMode && userInput.trim().isNotEmpty)
+                if (discoverEnabled &&
+                    !_isUrlMode &&
+                    userInput.trim().isNotEmpty)
                   IconButton(
                     icon: const Icon(Icons.tune_outlined),
                     onPressed: () =>
@@ -689,7 +698,9 @@ class AddAppPageState extends State<AddAppPage> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                            child: ExpressiveCircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
                           )
                         : FilledButton.tonal(
                             onPressed: _canAddUrl
@@ -744,22 +755,25 @@ class AddAppPageState extends State<AddAppPage> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Consumer<SettingsProvider>(
                 builder: (context, sp, _) {
-                  final searchableSrcs =
-                      sourceProvider.sources.where((e) => e.canSearch).toList();
+                  final searchableSrcs = sourceProvider.sources
+                      .where((e) => e.canSearch)
+                      .toList();
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: searchableSrcs.map((source) {
-                        final isSelected =
-                            !sp.searchDeselected.contains(source.name);
+                        final isSelected = !sp.searchDeselected.contains(
+                          source.name,
+                        );
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: FilterChip(
                             label: Text(source.name),
                             selected: isSelected,
                             onSelected: (selected) {
-                              final current =
-                                  List<String>.from(sp.searchDeselected);
+                              final current = List<String>.from(
+                                sp.searchDeselected,
+                              );
                               if (selected) {
                                 current.remove(source.name);
                               } else {
@@ -800,8 +814,8 @@ class AddAppPageState extends State<AddAppPage> {
       ),
       bottomNavigationBar:
           (_isUrlMode || userInput.trim().isEmpty) && pickedSource == null
-              ? _getSourcesListWidget()
-              : null,
+          ? _getSourcesListWidget()
+          : null,
     );
   }
 
@@ -880,8 +894,8 @@ class AddAppPageState extends State<AddAppPage> {
             Text(
               tr('basics'),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 16),
             _getHTMLSourceOverrideDropdown(),
@@ -895,20 +909,19 @@ class AddAppPageState extends State<AddAppPage> {
     return FutureBuilder(
       future: pickedSource?.getSourceNote(),
       builder: (ctx, val) {
-        if (val.data == null || val.data!.isEmpty) return const SizedBox.shrink();
+        if (val.data == null || val.data!.isEmpty)
+          return const SizedBox.shrink();
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withOpacity(AppOpacity.medium),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(AppOpacity.medium),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context)
-                  .colorScheme
-                  .primary
-                  .withOpacity(AppOpacity.low),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withOpacity(AppOpacity.low),
             ),
           ),
           child: Row(
@@ -941,8 +954,8 @@ class AddAppPageState extends State<AddAppPage> {
         title: Text(
           tr('additionalOptions'),
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         leading: const Icon(Icons.tune_rounded),
         childrenPadding: const EdgeInsets.all(16),
@@ -1010,8 +1023,8 @@ class AddAppPageState extends State<AddAppPage> {
             Text(
               tr('categories'),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 12),
             CategoryEditorSelector(

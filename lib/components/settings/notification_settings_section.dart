@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class NotificationSettingsSection extends StatelessWidget {
@@ -12,35 +12,51 @@ class NotificationSettingsSection extends StatelessWidget {
     return SettingsGroup(
       title: tr('notifications'),
       children: [
-        Consumer<SettingsProvider>(
+        Consumer<PlusSettingsProvider>(
           builder: (context, settings, child) {
             if (!settings.plusEnableNotificationEnhancements) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(tr('noAdvancedNotifications'), style: const TextStyle(fontStyle: FontStyle.italic)),
+                child: Text(
+                  tr('noAdvancedNotifications'),
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
               );
             }
             return Column(
               children: [
                 SwitchListTile.adaptive(
                   secondary: const Icon(Icons.mark_email_unread_outlined),
-                  title: Text(tr('enableNotificationDigest'), style: Theme.of(context).textTheme.bodyLarge),
+                  title: Text(
+                    tr('enableNotificationDigest'),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                   subtitle: Text(tr('notificationDigestDescription')),
                   value: settings.plusEnableNotificationDigest,
-                  onChanged: (val) => settings.plusEnableNotificationDigest = val,
+                  onChanged: (val) =>
+                      settings.plusEnableNotificationDigest = val,
                 ),
                 SwitchListTile.adaptive(
                   secondary: const Icon(Icons.do_not_disturb_on_outlined),
-                  title: Text(tr('enableQuietHours'), style: Theme.of(context).textTheme.bodyLarge),
+                  title: Text(
+                    tr('enableQuietHours'),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                   subtitle: Text(tr('quietHoursDescription')),
                   value: settings.plusEnableNotificationQuietHours,
-                  onChanged: (val) => settings.plusEnableNotificationQuietHours = val,
+                  onChanged: (val) =>
+                      settings.plusEnableNotificationQuietHours = val,
                 ),
                 if (settings.plusEnableNotificationQuietHours)
                   ListTile(
                     leading: const Icon(Icons.schedule_outlined),
-                    title: Text(tr('quietHoursSchedule'), style: Theme.of(context).textTheme.bodyLarge),
-                    subtitle: Text('${settings.plusNotificationQuietHoursStart}:00 - ${settings.plusNotificationQuietHoursEnd}:00'),
+                    title: Text(
+                      tr('quietHoursSchedule'),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    subtitle: Text(
+                      '${settings.plusNotificationQuietHoursStart}:00 - ${settings.plusNotificationQuietHoursEnd}:00',
+                    ),
                     onTap: () => _showQuietHoursDialog(context, settings),
                   ),
               ],
@@ -51,7 +67,10 @@ class NotificationSettingsSection extends StatelessWidget {
     );
   }
 
-  void _showQuietHoursDialog(BuildContext context, SettingsProvider settings) {
+  void _showQuietHoursDialog(
+    BuildContext context,
+    PlusSettingsProvider settings,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
@@ -72,11 +91,18 @@ class NotificationSettingsSection extends StatelessWidget {
                               value: settings.plusNotificationQuietHoursStart,
                               onChanged: (val) {
                                 if (val != null) {
-                                  settings.plusNotificationQuietHoursStart = val;
+                                  settings.plusNotificationQuietHoursStart =
+                                      val;
                                   setDialogState(() {});
                                 }
                               },
-                              items: List.generate(24, (i) => DropdownMenuItem(value: i, child: Text('$i:00'))),
+                              items: List.generate(
+                                24,
+                                (i) => DropdownMenuItem(
+                                  value: i,
+                                  child: Text('$i:00'),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -93,7 +119,13 @@ class NotificationSettingsSection extends StatelessWidget {
                                   setDialogState(() {});
                                 }
                               },
-                              items: List.generate(24, (i) => DropdownMenuItem(value: i, child: Text('$i:00'))),
+                              items: List.generate(
+                                24,
+                                (i) => DropdownMenuItem(
+                                  value: i,
+                                  child: Text('$i:00'),
+                                ),
+                              ),
                             ),
                           ],
                         ),

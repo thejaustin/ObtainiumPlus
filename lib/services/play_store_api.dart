@@ -61,7 +61,9 @@ class PlayStoreApi {
   /// token refreshed mid-request (e.g. after a 401) is picked up on retry.
   Map<String, String> _buildHeaders() {
     final authProvider = Provider.of<AuthProvider>(
-        globalNavigatorKey.currentContext!, listen: false);
+      globalNavigatorKey.currentContext!,
+      listen: false,
+    );
     final bundle = authProvider.activeBundle;
     if (bundle == null) throw ObtainiumError('No active auth bundle');
 
@@ -101,29 +103,32 @@ class PlayStoreApi {
   }
 
   Future<void> _humanDelay() async {
-    await Future.delayed(
-        Duration(milliseconds: 500 + _rng.nextInt(1500)));
+    await Future.delayed(Duration(milliseconds: 500 + _rng.nextInt(1500)));
   }
 
   /// Validates that [uri] targets an allowed host.
   void _assertAllowedHost(Uri uri) {
     if (!_allowedHosts.contains(uri.host)) {
       throw ObtainiumError(
-          'Play Store request blocked: unexpected host "${uri.host}"');
+        'Play Store request blocked: unexpected host "${uri.host}"',
+      );
     }
   }
 
   /// Checks the VPN requirement and throws if it is not met.
   Future<void> _assertVPNIfRequired() async {
     final plusSettings = Provider.of<PlusSettingsProvider>(
-        globalNavigatorKey.currentContext!, listen: false);
+      globalNavigatorKey.currentContext!,
+      listen: false,
+    );
     if (!plusSettings.requireVPNForPlayStore) return;
 
     final vpnActive = await AuthService.isVPNActive();
     if (!vpnActive) {
       throw ObtainiumError(
-          'Play Store request blocked: "Require VPN" is enabled but no VPN '
-          'is currently active. Connect to a VPN and try again.');
+        'Play Store request blocked: "Require VPN" is enabled but no VPN '
+        'is currently active. Connect to a VPN and try again.',
+      );
     }
   }
 
@@ -137,7 +142,9 @@ class PlayStoreApi {
     await _humanDelay();
 
     final authProvider = Provider.of<AuthProvider>(
-        globalNavigatorKey.currentContext!, listen: false);
+      globalNavigatorKey.currentContext!,
+      listen: false,
+    );
 
     // Silently refresh if the token has passed its 55-min safe window.
     await authProvider.ensureValidPersonalToken();
@@ -156,8 +163,9 @@ class PlayStoreApi {
 
     if (response.bodyBytes.length > _maxResponseBytes) {
       throw ObtainiumError(
-          'Play Store response too large (${response.bodyBytes.length} bytes) '
-          '— request aborted for safety.');
+        'Play Store response too large (${response.bodyBytes.length} bytes) '
+        '— request aborted for safety.',
+      );
     }
 
     return response;
@@ -168,8 +176,7 @@ class PlayStoreApi {
       final response = await _get('$_baseUrl/details?doc=$appId');
       talker.info('Play Store Details: $appId → ${response.statusCode}');
       if (response.statusCode == 200) {
-        talker.debug(
-            'Play Store Details: ${response.bodyBytes.length} bytes');
+        talker.debug('Play Store Details: ${response.bodyBytes.length} bytes');
         return {'appId': appId, 'status': 'fetched'};
       }
       talker.warning('Play Store Details failed: ${response.statusCode}');
@@ -182,16 +189,18 @@ class PlayStoreApi {
     }
   }
 
-  Future<List<Map<String, dynamic>>> search(String query,
-      {bool verifiedOnly = false}) async {
+  Future<List<Map<String, dynamic>>> search(
+    String query, {
+    bool verifiedOnly = false,
+  }) async {
     try {
       final spParam = verifiedOnly ? '&sp=CAU%3D' : '';
       final response = await _get(
-          '$_baseUrl/search?c=3&q=${Uri.encodeComponent(query)}$spParam');
+        '$_baseUrl/search?c=3&q=${Uri.encodeComponent(query)}$spParam',
+      );
       talker.info('Play Store Search: $query → ${response.statusCode}');
       if (response.statusCode == 200) {
-        talker.debug(
-            'Play Store Search: ${response.bodyBytes.length} bytes');
+        talker.debug('Play Store Search: ${response.bodyBytes.length} bytes');
       }
     } on ObtainiumError {
       rethrow;
@@ -204,24 +213,26 @@ class PlayStoreApi {
   Future<List<String>> getDeliveryUrls(String appId, int versionCode) async {
     try {
       final response = await _get(
-          '$_baseUrl/delivery?doc=$appId&vc=$versionCode&ot=1');
+        '$_baseUrl/delivery?doc=$appId&vc=$versionCode&ot=1',
+      );
 
       if (response.statusCode == 200) {
         final body = utf8.decode(response.bodyBytes, allowMalformed: true);
         final urls = _urlRegex
             .allMatches(body)
             .map((m) => m.group(0)!)
-            .where((u) =>
-                u.contains('android.clients.google.com') ||
-                u.contains('play.googleapis.com'))
+            .where(
+              (u) =>
+                  u.contains('android.clients.google.com') ||
+                  u.contains('play.googleapis.com'),
+            )
             .toList();
         if (urls.isNotEmpty) {
           talker.info('Extracted ${urls.length} delivery URLs for $appId');
           return urls;
         }
       } else {
-        talker.warning(
-            'Play Store Delivery failed: ${response.statusCode}');
+        talker.warning('Play Store Delivery failed: ${response.statusCode}');
       }
     } on ObtainiumError {
       rethrow;

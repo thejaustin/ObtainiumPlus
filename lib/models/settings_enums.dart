@@ -1,8 +1,24 @@
-enum SortColumnSettings { added, nameAuthor, authorName, releaseDate, lastUpdated, source, installDate, lastCheckDate }
+enum SortColumnSettings {
+  added,
+  nameAuthor,
+  authorName,
+  releaseDate,
+  lastUpdated,
+  source,
+  installDate,
+  lastCheckDate,
+}
 
 enum SortOrderSettings { ascending, descending }
 
-enum AppSortMethod { latestUpdates, nameAZ, nameZA, recentlyAdded, installStatus, defaultSort }
+enum AppSortMethod {
+  latestUpdates,
+  nameAZ,
+  nameZA,
+  recentlyAdded,
+  installStatus,
+  defaultSort,
+}
 
 enum CategoryIconPosition { leading, trailing, below, disabled }
 

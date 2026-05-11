@@ -89,7 +89,9 @@ class ViewSettingsProvider with ChangeNotifier {
 
   Map<String, int> get categories {
     try {
-      return Map<String, int>.from(jsonDecode(prefs?.getString('categories') ?? '{}'));
+      return Map<String, int>.from(
+        jsonDecode(prefs?.getString('categories') ?? '{}'),
+      );
     } catch (e) {
       return {};
     }
@@ -142,7 +144,8 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  ViewMode get globalViewMode => ViewMode.values[prefs?.getInt('globalViewMode') ?? ViewMode.list.index];
+  ViewMode get globalViewMode =>
+      ViewMode.values[prefs?.getInt('globalViewMode') ?? ViewMode.list.index];
   set globalViewMode(ViewMode mode) {
     prefs?.setInt('globalViewMode', mode.index);
     notifyListeners();
@@ -160,7 +163,8 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get displayShowFilterChips => prefs?.getBool('displayShowFilterChips') ?? true;
+  bool get displayShowFilterChips =>
+      prefs?.getBool('displayShowFilterChips') ?? true;
   set displayShowFilterChips(bool val) {
     prefs?.setBool('displayShowFilterChips', val);
     notifyListeners();
@@ -184,7 +188,9 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  CategoryIconPosition get categoryIconPosition => CategoryIconPosition.values[prefs?.getInt('categoryIconPosition') ?? CategoryIconPosition.leading.index];
+  CategoryIconPosition get categoryIconPosition =>
+      CategoryIconPosition.values[prefs?.getInt('categoryIconPosition') ??
+          CategoryIconPosition.leading.index];
   set categoryIconPosition(CategoryIconPosition val) {
     prefs?.setInt('categoryIconPosition', val.index);
     notifyListeners();
@@ -196,20 +202,27 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  AppListDensity get appListDensity => AppListDensity.values[prefs?.getInt('appListDensity') ?? AppListDensity.comfortable.index];
+  AppListDensity get appListDensity =>
+      AppListDensity.values[prefs?.getInt('appListDensity') ??
+          AppListDensity.comfortable.index];
   set appListDensity(AppListDensity val) {
     prefs?.setInt('appListDensity', val.index);
     notifyListeners();
   }
 
-  GridCategoryMode get gridCategoryMode => GridCategoryMode.values[prefs?.getInt('gridCategoryMode') ?? GridCategoryMode.sections.index];
+  GridCategoryMode get gridCategoryMode =>
+      GridCategoryMode.values[prefs?.getInt('gridCategoryMode') ??
+          GridCategoryMode.sections.index];
   set gridCategoryMode(GridCategoryMode val) {
     prefs?.setInt('gridCategoryMode', val.index);
     notifyListeners();
   }
 
   NavigationDestinationLabelBehavior get navigationLabelBehavior =>
-      NavigationDestinationLabelBehavior.values[prefs?.getInt('navigationLabelBehavior') ?? 0];
+      NavigationDestinationLabelBehavior.values[prefs?.getInt(
+            'navigationLabelBehavior',
+          ) ??
+          0];
   set navigationLabelBehavior(NavigationDestinationLabelBehavior val) {
     prefs?.setInt('navigationLabelBehavior', val.index);
     notifyListeners();

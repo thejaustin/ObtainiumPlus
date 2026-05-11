@@ -3,17 +3,15 @@ import 'package:obtainium/utils/app_constants.dart';
 
 class UpdateBadge extends StatefulWidget {
   final double size;
-  
-  const UpdateBadge({
-    super.key,
-    required this.size,
-  });
+
+  const UpdateBadge({super.key, required this.size});
 
   @override
   State<UpdateBadge> createState() => _UpdateBadgeState();
 }
 
-class _UpdateBadgeState extends State<UpdateBadge> with SingleTickerProviderStateMixin {
+class _UpdateBadgeState extends State<UpdateBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -24,7 +22,7 @@ class _UpdateBadgeState extends State<UpdateBadge> with SingleTickerProviderStat
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );

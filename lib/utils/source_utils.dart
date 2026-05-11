@@ -17,43 +17,47 @@ import 'package:crypto/crypto.dart';
 
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
-  
+
   // Pinning for Google Play Store domains (android.clients.google.com)
   // Hardcoded fingerprint for GTS CA 1C3 (valid until 2027)
-  const googlePin = '23ecb03eec17338c4e33a6b48a41dc3cda12281bbc3ff813c0589d6cc2387522';
+  const googlePin =
+      '23ecb03eec17338c4e33a6b48a41dc3cda12281bbc3ff813c0589d6cc2387522';
 
-  client.badCertificateCallback = ((X509Certificate cert, String host, int port) {
-    if (host.contains('android.clients.google.com') || host.contains('play.googleapis.com')) {
+  client
+      .badCertificateCallback = ((X509Certificate cert, String host, int port) {
+    if (host.contains('android.clients.google.com') ||
+        host.contains('play.googleapis.com')) {
       final fingerprint = sha256.convert(cert.der).toString();
       if (fingerprint == googlePin) {
         talker.info('Certificate Pinning Verified for $host');
         return true;
       } else {
-        talker.error('SECURITY ALERT: Certificate Pinning FAILED for $host! Expected $googlePin but got $fingerprint');
+        talker.error(
+          'SECURITY ALERT: Certificate Pinning FAILED for $host! Expected $googlePin but got $fingerprint',
+        );
         return false; // Terminate connection - possible MITM attack
       }
     }
 
     if (allowInsecure) {
-      final warning = 'WARNING: Accepting insecure certificate for $host:$port '
+      final warning =
+          'WARNING: Accepting insecure certificate for $host:$port '
           '(subject: ${cert.subject}, issuer: ${cert.issuer}, '
           'sha1: ${cert.sha1.map((b) => b.toRadixString(16).padLeft(2, '0')).join(':')})';
 
       talker.warning(warning);
 
-      LogsProvider().add(
-        warning,
-        level: LogLevels.warning,
-      );
+      LogsProvider().add(warning, level: LogLevels.warning);
       return true;
     }
     return false;
   });
-  
+
   return client;
 }
 
-Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>> sourceRequestStreamResponse(
+Future<MapEntry<String, MapEntry<HttpClient, HttpClientResponse>>>
+sourceRequestStreamResponse(
   String method,
   String url,
   Map<String, String> headers,
@@ -161,12 +165,15 @@ class SourceUtils {
         }
 
         // Check if we should retry based on status code and user settings
-        if (sp.plusEnableSmartRetries && retryCount < maxRetries &&
+        if (sp.plusEnableSmartRetries &&
+            retryCount < maxRetries &&
             (finalResponse.statusCode == 429 ||
-                (finalResponse.statusCode >= 500 && finalResponse.statusCode < 600))) {
-          
+                (finalResponse.statusCode >= 500 &&
+                    finalResponse.statusCode < 600))) {
           // Exponential backoff
-          talker.warning('HTTP ${finalResponse.statusCode} for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)');
+          talker.warning(
+            'HTTP ${finalResponse.statusCode} for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)',
+          );
           await Future.delayed(retryDelay);
           retryCount++;
           retryDelay *= 2;
@@ -175,9 +182,14 @@ class SourceUtils {
 
         return finalResponse;
       } catch (e) {
-        if (sp.plusEnableSmartRetries && retryCount < maxRetries && 
-            (e is SocketException || e is HttpException || e is HandshakeException)) {
-          talker.warning('Network error ($e) for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)');
+        if (sp.plusEnableSmartRetries &&
+            retryCount < maxRetries &&
+            (e is SocketException ||
+                e is HttpException ||
+                e is HandshakeException)) {
+          talker.warning(
+            'Network error ($e) for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)',
+          );
           await Future.delayed(retryDelay);
           retryCount++;
           retryDelay *= 2;
@@ -309,7 +321,10 @@ class SourceUtils {
     return RegExp(r'^[0-9]+$').hasMatch(app.id);
   }
 
-  static String? replaceMatchGroupsInString(RegExpMatch match, String matchGroupString) {
+  static String? replaceMatchGroupsInString(
+    RegExpMatch match,
+    String matchGroupString,
+  ) {
     if (RegExp(r'^\d+$').hasMatch(matchGroupString)) {
       matchGroupString = r'$' + matchGroupString;
     }
@@ -332,7 +347,10 @@ class SourceUtils {
     return outputString;
   }
 
-  static T? safeRegex<T>(T Function() operation, {Duration timeout = const Duration(seconds: 5)}) {
+  static T? safeRegex<T>(
+    T Function() operation, {
+    Duration timeout = const Duration(seconds: 5),
+  }) {
     try {
       return operation();
     } on FormatException {
@@ -353,7 +371,9 @@ class SourceUtils {
       if (version.length > 10000) {
         version = version.substring(0, 10000);
       }
-      var match = safeRegex(() => RegExp(versionExtractionRegEx!).allMatches(version!).toList());
+      var match = safeRegex(
+        () => RegExp(versionExtractionRegEx!).allMatches(version!).toList(),
+      );
       if (match == null || match.isEmpty) {
         throw NoVersionError();
       }

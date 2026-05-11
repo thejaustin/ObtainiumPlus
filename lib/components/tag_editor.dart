@@ -16,7 +16,7 @@ Future<List<String>?> showTagEditor({
 }) async {
   final settings = context.read<SettingsProvider>();
   final enableGlass = settings.plusEnableGlassmorphism;
-  
+
   final selectedTags = Set<String>.from(currentTags);
   final TextEditingController _controller = TextEditingController();
 
@@ -27,14 +27,21 @@ Future<List<String>?> showTagEditor({
         return Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           child: Container(
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(enableGlass ? 0.85 : 1.0),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withOpacity(enableGlass ? 0.85 : 1.0),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(AppOpacity.subtle),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withOpacity(AppOpacity.subtle),
                 width: 1,
               ),
               boxShadow: AppShadows.smooth(
@@ -45,7 +52,10 @@ Future<List<String>?> showTagEditor({
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: ConditionalBlur(sigma: 15, enabled: enableGlass, child: Column(
+              child: ConditionalBlur(
+                sigma: 15,
+                enabled: enableGlass,
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildHeader(context, enableGlass),
@@ -67,8 +77,14 @@ Future<List<String>?> showTagEditor({
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      prefixIcon: const Icon(Icons.tag_outlined),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
+                                      prefixIcon: const Icon(
+                                        Icons.tag_outlined,
+                                      ),
                                     ),
                                     onSubmitted: (value) {
                                       if (value.trim().isNotEmpty) {
@@ -86,7 +102,9 @@ Future<List<String>?> showTagEditor({
                                   onPressed: () {
                                     if (_controller.text.trim().isNotEmpty) {
                                       setSheetState(() {
-                                        selectedTags.add(_controller.text.trim());
+                                        selectedTags.add(
+                                          _controller.text.trim(),
+                                        );
                                         _controller.clear();
                                       });
                                     }
@@ -94,9 +112,9 @@ Future<List<String>?> showTagEditor({
                                 ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 20),
-                            
+
                             // Existing tags
                             if (allTags.isNotEmpty) ...[
                               Text(
@@ -126,7 +144,7 @@ Future<List<String>?> showTagEditor({
                               ),
                               const SizedBox(height: 16),
                             ],
-                            
+
                             // Selected tags
                             if (selectedTags.isNotEmpty) ...[
                               Text(
@@ -140,7 +158,10 @@ Future<List<String>?> showTagEditor({
                                 children: selectedTags.map((tag) {
                                   return Chip(
                                     label: Text(tag),
-                                    deleteIcon: const Icon(Icons.close, size: 18),
+                                    deleteIcon: const Icon(
+                                      Icons.close,
+                                      size: 18,
+                                    ),
                                     onDeleted: () {
                                       setSheetState(() {
                                         selectedTags.remove(tag);
@@ -172,8 +193,12 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
     decoration: BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          Theme.of(context).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-          Theme.of(context).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
+          Theme.of(
+            context,
+          ).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+          Theme.of(context).colorScheme.secondaryContainer.withOpacity(
+            enableGlass ? 0.15 : 0.25,
+          ),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -185,7 +210,9 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.low),
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withOpacity(AppOpacity.low),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -197,9 +224,9 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
         Expanded(
           child: Text(
             tr('editTags'),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
       ],
@@ -211,7 +238,9 @@ Widget _buildActions(BuildContext context, List<String> selectedTags) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
     ),
     child: Row(

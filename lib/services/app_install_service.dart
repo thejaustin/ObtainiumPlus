@@ -85,9 +85,7 @@ class AppInstallService {
   static Future<void> openNotificationSettings(String appId) async {
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.APP_NOTIFICATION_SETTINGS',
-      arguments: <String, dynamic>{
-        'android.provider.extra.APP_PACKAGE': appId,
-      },
+      arguments: <String, dynamic>{'android.provider.extra.APP_PACKAGE': appId},
     );
     await intent.launch();
   }
@@ -124,8 +122,9 @@ class AppInstallService {
 
   static Future<bool> isUsageAccessGranted() async {
     try {
-      final bool? granted = await const MethodChannel('app.obtainiumplus/native')
-          .invokeMethod<bool>('isUsageAccessGranted');
+      final bool? granted = await const MethodChannel(
+        'app.obtainiumplus/native',
+      ).invokeMethod<bool>('isUsageAccessGranted');
       return granted ?? false;
     } catch (e) {
       return false;
@@ -181,7 +180,8 @@ class AppInstallService {
   static Future<void> openXiaomiAutostartSettings() async {
     final AndroidIntent intent = AndroidIntent(
       action: 'miui.intent.action.OP_AUTO_START',
-      componentName: 'com.miui.securitycenter/com.miui.permcenter.autostart.AutoStartManagementActivity',
+      componentName:
+          'com.miui.securitycenter/com.miui.permcenter.autostart.AutoStartManagementActivity',
     );
     try {
       await intent.launch();
@@ -204,7 +204,8 @@ class AppInstallService {
     // but we can try to open the power center
     final AndroidIntent intent = AndroidIntent(
       action: 'miui.intent.action.POWER_HIDE_MODE_LIST',
-      componentName: 'com.miui.securitycenter/com.miui.powercenter.PowerSettings',
+      componentName:
+          'com.miui.securitycenter/com.miui.powercenter.PowerSettings',
     );
     try {
       await intent.launch();
@@ -213,7 +214,11 @@ class AppInstallService {
     }
   }
 
-  static Future<bool> canInstallSilently(App app, SettingsProvider settingsProvider, LogsProvider logs) async {
+  static Future<bool> canInstallSilently(
+    App app,
+    SettingsProvider settingsProvider,
+    LogsProvider logs,
+  ) async {
     if (!settingsProvider.enableBackgroundUpdates) {
       return false;
     }
@@ -260,12 +265,15 @@ class AppInstallService {
     if (osInfo.version.sdkInt >= 34) {
       bool constraintsMet = await checkInstallConstraints(app.id);
       if (!constraintsMet) {
-        logs.add('Install constraints not met (app in use or device busy): ${app.id}');
+        logs.add(
+          'Install constraints not met (app in use or device busy): ${app.id}',
+        );
         return false;
       }
     }
 
-    if (app.id == 'app.obtainiumplus') { // obtainiumId
+    if (app.id == 'app.obtainiumplus') {
+      // obtainiumId
       return false;
     }
     if (installerPackageName != 'app.obtainiumplus') {
@@ -287,13 +295,13 @@ class AppInstallService {
   }) async {
     PackageInfo? newInfo;
     try {
-      newInfo = await pm.getPackageArchiveInfo(
-        archiveFilePath: file.path,
-      );
+      newInfo = await pm.getPackageArchiveInfo(archiveFilePath: file.path);
     } catch (e) {
-      talker.error('Error getting package archive info during installApkStandalone: ${e.toString()}');
+      talker.error(
+        'Error getting package archive info during installApkStandalone: ${e.toString()}',
+      );
     }
-    
+
     if (newInfo == null) {
       throw Exception('Invalid APK file');
     }
@@ -305,9 +313,7 @@ class AppInstallService {
 
     int? code;
     if (!settingsProvider.useShizuku) {
-      code = await AndroidPackageInstaller.installApk(
-        apkFilePath: file.path,
-      );
+      code = await AndroidPackageInstaller.installApk(apkFilePath: file.path);
     } else {
       code = await ShizukuApkInstaller.installAPK(
         file.uri.toString(),
@@ -318,9 +324,9 @@ class AppInstallService {
     if (code == 0) {
       return true;
     } else if (code == 3) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(tr('installationCancelled'))),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text(tr('installationCancelled'))));
     } else if (code != null) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(content: Text('Installation failed with code: $code')),
@@ -359,11 +365,11 @@ class AppInstallService {
     }
     PackageInfo? newInfo;
     try {
-      newInfo = await pm.getPackageArchiveInfo(
-        archiveFilePath: file.file.path,
-      );
+      newInfo = await pm.getPackageArchiveInfo(archiveFilePath: file.file.path);
     } catch (e) {
-      talker.error('Error getting package archive info during installApk: ${e.toString()}');
+      talker.error(
+        'Error getting package archive info during installApk: ${e.toString()}',
+      );
     }
     if (newInfo == null) {
       try {
@@ -392,7 +398,11 @@ class AppInstallService {
         existingVersionCode > 0 &&
         newVersionCode < existingVersionCode &&
         !(await canDowngradeApps())) {
-      throw DowngradeError(existingVersionCode, newVersionCode, appId: apps[file.appId]!.app.id);
+      throw DowngradeError(
+        existingVersionCode,
+        newVersionCode,
+        appId: apps[file.appId]!.app.id,
+      );
     }
     if (needsBGWorkaround) {
       // In a background process, the await on AndroidPackageInstaller.installApk
@@ -435,16 +445,19 @@ class AppInstallService {
 
         // Android 14+ Update Ownership
         var osInfo = await DeviceInfoPlugin().androidInfo;
-        if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUpdateOwnership) {
+        if (osInfo.version.sdkInt >= 34 &&
+            settingsProvider.plusEnableUpdateOwnership) {
           await setUpdateOwnership(apps[file.appId]!.app.id);
         }
       }
 
       file.file.delete(recursive: true);
-    } else if (code == 3 && firstTimeWithContext != null && firstTimeWithContext.mounted) {
-      ScaffoldMessenger.of(firstTimeWithContext).showSnackBar(
-        SnackBar(content: Text(tr('installationCancelled'))),
-      );
+    } else if (code == 3 &&
+        firstTimeWithContext != null &&
+        firstTimeWithContext.mounted) {
+      ScaffoldMessenger.of(
+        firstTimeWithContext,
+      ).showSnackBar(SnackBar(content: Text(tr('installationCancelled'))));
     }
     return installed;
   }

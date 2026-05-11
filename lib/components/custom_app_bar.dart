@@ -7,16 +7,20 @@ import 'package:obtainium/utils/app_constants.dart';
 /// A custom AppBar that provides consistent M3 styling across the app.
 /// Returns a standard AppBar for use in plain Scaffold contexts.
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key, required this.title, this.actions, this.bottom});
+  const CustomAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.bottom,
+  });
 
   final String title;
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
 
   @override
-  Size get preferredSize => Size.fromHeight(
-    kToolbarHeight + (bottom?.preferredSize.height ?? 0),
-  );
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +76,9 @@ class CustomSliverAppBar extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(AppOpacity.subtle),
+      shadowColor: Theme.of(
+        context,
+      ).colorScheme.shadow.withOpacity(AppOpacity.subtle),
       actions: actions,
       title: Text(
         title,
@@ -118,7 +124,9 @@ class CustomSliverAppBarCompact extends StatelessWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       backgroundColor: Theme.of(context).colorScheme.surface,
-      shadowColor: Theme.of(context).colorScheme.shadow.withOpacity(AppOpacity.subtle),
+      shadowColor: Theme.of(
+        context,
+      ).colorScheme.shadow.withOpacity(AppOpacity.subtle),
       actions: actions,
       title: Text(
         title,

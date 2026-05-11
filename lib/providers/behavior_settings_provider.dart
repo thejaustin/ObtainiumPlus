@@ -162,6 +162,15 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get highlightTouchTargets {
+    return prefs?.getBool('highlightTouchTargets') ?? false;
+  }
+
+  set highlightTouchTargets(bool val) {
+    prefs?.setBool('highlightTouchTargets', val);
+    notifyListeners();
+  }
+
   bool get enableHapticFeedback {
     return prefs?.getBool('enableHapticFeedback') ?? true;
   }
@@ -190,13 +199,17 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  AppSwipeAction get swipeRightAction => AppSwipeAction.values[prefs?.getInt('swipeRightAction') ?? AppSwipeAction.update.index];
+  AppSwipeAction get swipeRightAction =>
+      AppSwipeAction.values[prefs?.getInt('swipeRightAction') ??
+          AppSwipeAction.update.index];
   set swipeRightAction(AppSwipeAction val) {
     prefs?.setInt('swipeRightAction', val.index);
     notifyListeners();
   }
 
-  AppSwipeAction get swipeLeftAction => AppSwipeAction.values[prefs?.getInt('swipeLeftAction') ?? AppSwipeAction.togglePin.index];
+  AppSwipeAction get swipeLeftAction =>
+      AppSwipeAction.values[prefs?.getInt('swipeLeftAction') ??
+          AppSwipeAction.togglePin.index];
   set swipeLeftAction(AppSwipeAction val) {
     prefs?.setInt('swipeLeftAction', val.index);
     notifyListeners();

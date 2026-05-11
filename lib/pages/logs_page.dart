@@ -20,7 +20,8 @@ class LogsPage extends StatefulWidget {
 
 class _LogsPageState extends State<LogsPage> {
   String? logString;
-  final Future<AndroidDeviceInfo> _androidInfoFuture = DeviceInfoPlugin().androidInfo;
+  final Future<AndroidDeviceInfo> _androidInfoFuture =
+      DeviceInfoPlugin().androidInfo;
   // Use a variable to store cached device info if needed, similar to settings page
   AndroidDeviceInfo? _cachedDeviceInfo;
   late Future<List<Log>> _logsFuture;
@@ -29,7 +30,9 @@ class _LogsPageState extends State<LogsPage> {
   void initState() {
     super.initState();
     _androidInfoFuture.then((info) => _cachedDeviceInfo = info);
-    _logsFuture = context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7)));
+    _logsFuture = context.read<LogsProvider>().get(
+      after: DateTime.now().subtract(const Duration(days: 7)),
+    );
   }
 
   Future<void> _reportIssue() async {
@@ -42,7 +45,8 @@ class _LogsPageState extends State<LogsPage> {
     var deviceInfo = _cachedDeviceInfo ?? await _androidInfoFuture;
     var androidInfo = await _androidInfoFuture;
 
-    var body = '''${tr('reportIssue')}
+    var body =
+        '''${tr('reportIssue')}
     
 App: $appInfo
 Device: $deviceInfo
@@ -54,10 +58,7 @@ $logs''';
       'https://github.com/thejaustin/ObtainiumPlus/issues/new?body=${Uri.encodeComponent(body)}',
     );
     if (await canLaunchUrl(url)) {
-      await launchUrl(
-        url,
-        mode: LaunchMode.externalApplication,
-      );
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       Clipboard.setData(ClipboardData(text: url.toString()));
       showMessage(tr('copiedToClipboard'), context);
@@ -65,9 +66,9 @@ $logs''';
   }
 
   void showMessage(String message, BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -96,7 +97,9 @@ $logs''';
                   context.read<LogsProvider>().clear();
                   setState(() {
                     logString = null;
-                    _logsFuture = context.read<LogsProvider>().get(after: DateTime.now().subtract(const Duration(days: 7)));
+                    _logsFuture = context.read<LogsProvider>().get(
+                      after: DateTime.now().subtract(const Duration(days: 7)),
+                    );
                   });
                 },
               ),
@@ -123,10 +126,17 @@ $logs''';
                         subtitle: tr('noRecentActivity'),
                       );
                     }
-                    logString = logs.map((log) => '[${log.level.name}] ${log.timestamp}: ${log.message}').join('\n');
+                    logString = logs
+                        .map(
+                          (log) =>
+                              '[${log.level.name}] ${log.timestamp}: ${log.message}',
+                        )
+                        .join('\n');
                     return SelectableText(logString ?? '');
                   } else {
-                    return const Center(child: ExpressiveCircularProgressIndicator());
+                    return const Center(
+                      child: ExpressiveCircularProgressIndicator(),
+                    );
                   }
                 },
               ),

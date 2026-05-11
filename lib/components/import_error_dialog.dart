@@ -51,7 +51,10 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
+          child: ConditionalBlur(
+            sigma: 24,
+            enabled: enableGlass,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(context, enableGlass),
@@ -75,7 +78,9 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.errorContainer.withOpacity(enableGlass ? 0.3 : 0.5),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Row(
@@ -83,7 +88,9 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low),
+              color: Theme.of(
+                context,
+              ).colorScheme.error.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -95,9 +102,9 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
           Expanded(
             child: Text(
               tr('importErrors'),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -112,10 +119,14 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.medium),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(AppOpacity.medium),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withOpacity(AppOpacity.low),
             ),
           ),
           child: Text(
@@ -132,9 +143,9 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
         const SizedBox(height: 20),
         Text(
           tr('followingURLsHadErrors'),
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         ...widget.errors.map((e) {
@@ -142,7 +153,8 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest
+                  .withOpacity(AppOpacity.half),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -150,16 +162,18 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
               children: [
                 Text(
                   e[0],
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   e[1],
                   style: TextStyle(
                     fontStyle: FontStyle.italic,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -175,7 +189,9 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(

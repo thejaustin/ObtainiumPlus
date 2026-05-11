@@ -61,7 +61,10 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   ]);
   Map<String, dynamic> originalAdditionalSettings = {};
   if (json['additionalSettings'] != null) {
-    var decoded = safeJsonDecode(json['additionalSettings'], <String, dynamic>{});
+    var decoded = safeJsonDecode(
+      json['additionalSettings'],
+      <String, dynamic>{},
+    );
     if (decoded is Map) {
       originalAdditionalSettings = Map<String, dynamic>.from(decoded);
       additionalSettings.addEntries(originalAdditionalSettings.entries);
@@ -92,7 +95,11 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   }
 
   if (source.runtimeType == HTML().runtimeType) {
-    _migrateHtmlSourceSettings(additionalSettings, originalAdditionalSettings, json);
+    _migrateHtmlSourceSettings(
+      additionalSettings,
+      originalAdditionalSettings,
+      json,
+    );
   }
 
   json['additionalSettings'] = jsonEncode(additionalSettings);
@@ -102,7 +109,11 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   return json;
 }
 
-void _migrateV1Settings(Map<String, dynamic> json, Map<String, dynamic> additionalSettings, List<GeneratedFormItem> formItems) {
+void _migrateV1Settings(
+  Map<String, dynamic> json,
+  Map<String, dynamic> additionalSettings,
+  List<GeneratedFormItem> formItems,
+) {
   if (json['additionalData'] != null) {
     var decoded = safeJsonDecode(json['additionalData'], <dynamic>[]);
     if (decoded is! List) return;
@@ -147,7 +158,10 @@ void _migrateVersionDetection(Map<String, dynamic> additionalSettings) {
   }
 }
 
-void _migratePseudoVersioning(Map<String, dynamic> originalSettings, Map<String, dynamic> additionalSettings) {
+void _migratePseudoVersioning(
+  Map<String, dynamic> originalSettings,
+  Map<String, dynamic> additionalSettings,
+) {
   if (originalSettings['supportFixedAPKURL'] == true) {
     additionalSettings['defaultPseudoVersioningMethod'] = 'partialAPKHash';
   } else if (originalSettings['supportFixedAPKURL'] == false) {
@@ -177,15 +191,23 @@ String _getStandardizedApkUrls(Map<String, dynamic> json) {
   return '[]';
 }
 
-void _migrateHtmlSourceSettings(Map<String, dynamic> additionalSettings, Map<String, dynamic> originalAdditionalSettings, Map<String, dynamic> json) {
+void _migrateHtmlSourceSettings(
+  Map<String, dynamic> additionalSettings,
+  Map<String, dynamic> originalAdditionalSettings,
+  Map<String, dynamic> json,
+) {
   if (originalAdditionalSettings['sortByFileNamesNotLinks'] != null) {
-    additionalSettings['sortByLastLinkSegment'] = originalAdditionalSettings['sortByFileNamesNotLinks'];
+    additionalSettings['sortByLastLinkSegment'] =
+        originalAdditionalSettings['sortByFileNamesNotLinks'];
   }
-  if (originalAdditionalSettings['intermediateLinkRegex'] != null && additionalSettings['intermediateLinkRegex']?.isNotEmpty != true) {
+  if (originalAdditionalSettings['intermediateLinkRegex'] != null &&
+      additionalSettings['intermediateLinkRegex']?.isNotEmpty != true) {
     additionalSettings['intermediateLink'] = [
       {
-        'customLinkFilterRegex': originalAdditionalSettings['intermediateLinkRegex'],
-        'filterByLinkText': originalAdditionalSettings['intermediateLinkByText'],
+        'customLinkFilterRegex':
+            originalAdditionalSettings['intermediateLinkRegex'],
+        'filterByLinkText':
+            originalAdditionalSettings['intermediateLinkByText'],
       },
     ];
   }
@@ -199,18 +221,25 @@ void _migrateHtmlSourceSettings(Map<String, dynamic> additionalSettings, Map<Str
   _migrateLegacyHtmlApps(additionalSettings, json);
 }
 
-void _migrateLegacyHtmlApps(Map<String, dynamic> additionalSettings, Map<String, dynamic> json) {
+void _migrateLegacyHtmlApps(
+  Map<String, dynamic> additionalSettings,
+  Map<String, dynamic> json,
+) {
   var legacySteamSourceApps = ['steam', 'steam-chat-app'];
   if (legacySteamSourceApps.contains(additionalSettings['app'] ?? '')) {
     json['url'] = '${json['url']}/mobile';
-    var replacementAdditionalSettings = getDefaultValuesFromFormItems(HTML().combinedAppSpecificSettingFormItems);
+    var replacementAdditionalSettings = getDefaultValuesFromFormItems(
+      HTML().combinedAppSpecificSettingFormItems,
+    );
     for (var s in replacementAdditionalSettings.keys) {
       if (additionalSettings.containsKey(s)) {
         replacementAdditionalSettings[s] = additionalSettings[s];
       }
     }
-    replacementAdditionalSettings['customLinkFilterRegex'] = '/${additionalSettings['app']}-(([0-9]+\.?){1,})\.apk';
-    replacementAdditionalSettings['versionExtractionRegEx'] = replacementAdditionalSettings['customLinkFilterRegex'];
+    replacementAdditionalSettings['customLinkFilterRegex'] =
+        '/${additionalSettings['app']}-(([0-9]+\.?){1,})\.apk';
+    replacementAdditionalSettings['versionExtractionRegEx'] =
+        replacementAdditionalSettings['customLinkFilterRegex'];
     replacementAdditionalSettings['matchGroupToUse'] = '\$1';
     additionalSettings.clear();
     additionalSettings.addAll(replacementAdditionalSettings);
@@ -219,31 +248,49 @@ void _migrateLegacyHtmlApps(Map<String, dynamic> additionalSettings, Map<String,
   const legacyApps = {
     'org.thoughtcrime.securesms': {
       'url': 'https://updates.signal.org/android/latest.json',
-      'settings': {'versionExtractionRegEx': '\\d+.\\d+.\\d+'}
+      'settings': {'versionExtractionRegEx': '\\d+.\\d+.\\d+'},
     },
     'com.whatsapp': {
       'url': 'https://whatsapp.com/android',
-      'settings': {'refreshBeforeDownload': true}
+      'settings': {'refreshBeforeDownload': true},
     },
     'org.videolan.vlc': {
       'url': 'https://www.videolan.org/vlc/download-android.html',
       'settings': {
         'refreshBeforeDownload': true,
         'intermediateLink': [
-          {'customLinkFilterRegex': 'APK', 'filterByLinkText': true, 'skipSort': false, 'reverseSort': false, 'sortByLastLinkSegment': false},
-          {'customLinkFilterRegex': 'arm64-v8a\\.apk\$', 'filterByLinkText': false, 'skipSort': false, 'reverseSort': false, 'sortByLastLinkSegment': false},
+          {
+            'customLinkFilterRegex': 'APK',
+            'filterByLinkText': true,
+            'skipSort': false,
+            'reverseSort': false,
+            'sortByLastLinkSegment': false,
+          },
+          {
+            'customLinkFilterRegex': 'arm64-v8a\\.apk\$',
+            'filterByLinkText': false,
+            'skipSort': false,
+            'reverseSort': false,
+            'sortByLastLinkSegment': false,
+          },
         ],
         'versionExtractionRegEx': '/vlc-android/([^/]+)/',
-        'matchGroupToUse': "1"
-      }
-    }
+        'matchGroupToUse': "1",
+      },
+    },
   };
 
-  if (legacyApps.containsKey(json['id']) && json['overrideSource'] == null && (json['lastUpdateCheck'] != null)) {
+  if (legacyApps.containsKey(json['id']) &&
+      json['overrideSource'] == null &&
+      (json['lastUpdateCheck'] != null)) {
     var appConfig = legacyApps[json['id']]!;
     json['url'] = appConfig['url'];
-    var replacementAdditionalSettings = getDefaultValuesFromFormItems(HTML().combinedAppSpecificSettingFormItems);
-    replacementAdditionalSettings.addAll(appConfig['settings'] as Map<String, dynamic>);
+    var replacementAdditionalSettings = getDefaultValuesFromFormItems(
+      HTML().combinedAppSpecificSettingFormItems,
+    );
+    replacementAdditionalSettings.addAll(
+      appConfig['settings'] as Map<String, dynamic>,
+    );
     additionalSettings.clear();
     additionalSettings.addAll(replacementAdditionalSettings);
   }
@@ -254,7 +301,9 @@ void _migrateFDroidSource(Map<String, dynamic> json) {
   if ((json['url'] as String).startsWith('https://cloudflare.f-droid.org')) {
     json['overrideSource'] = FDroid().runtimeType.toString();
   } else if (overrideSourceWasUndefined) {
-    RegExpMatch? match = RegExp(r'^https?://.+/fdroid/([^/]+(/|\?)|[^/]+)').firstMatch(json['url'] as String);
+    RegExpMatch? match = RegExp(
+      r'^https?://.+/fdroid/([^/]+(/|\?)|[^/]+)',
+    ).firstMatch(json['url'] as String);
     if (match != null) {
       json['overrideSource'] = FDroidRepo().runtimeType.toString();
     }
@@ -296,7 +345,10 @@ class SourceProvider {
   List<AppSource> get sources => _cachedSources;
 
   // Add more mass url source classes here so they are available via the service
-  List<MassAppUrlSource> massUrlSources = [GitHubStars(), GitHubPersonalRepos()];
+  List<MassAppUrlSource> massUrlSources = [
+    GitHubStars(),
+    GitHubPersonalRepos(),
+  ];
 
   AppSource getSource(String url, {String? overrideSource}) {
     url = GitHub().preStandardizeUrl(url); // Any AppSource can provide this
@@ -321,7 +373,7 @@ class SourceProvider {
     for (var s in sources.where((element) => element.hosts.isNotEmpty)) {
       try {
         if (RegExp(
-          '^${s.allowSubDomains ? r'([^\.]+\.)*' : r'(www\.)?'}(${getSourceRegex(s.hosts)})'
+          '^${s.allowSubDomains ? r'([^\.]+\.)*' : r'(www\.)?'}(${getSourceRegex(s.hosts)})',
         ).hasMatch(Uri.parse(url).host)) {
           source = s;
           break;
@@ -349,7 +401,7 @@ class SourceProvider {
           .where((s) => s.hosts.isNotEmpty)
           .map((s) => s.name)
           .toList();
-      
+
       throw UnsupportedURLError(
         suggestedSources: supportedSources.take(8).toList(),
         failedUrl: url,
@@ -379,7 +431,9 @@ class SourceProvider {
     // We check if it exists on the mirror first
     try {
       final GooglePlay gp = GooglePlay();
-      final url = gp.standardizeUrl('https://play.google.com/store/apps/details?id=$appId');
+      final url = gp.standardizeUrl(
+        'https://play.google.com/store/apps/details?id=$appId',
+      );
       // Verify it exists by trying to get details
       await gp.getLatestAPKDetails(url, {'autoApkFilterByArch': true});
       return gp;
@@ -391,7 +445,10 @@ class SourceProvider {
     try {
       final FDroid fd = FDroid();
       // F-Droid usually has a predictable API for package names
-      await fd.getLatestAPKDetails('https://f-droid.org/en/packages/$appId', {});
+      await fd.getLatestAPKDetails(
+        'https://f-droid.org/en/packages/$appId',
+        {},
+      );
       return fd;
     } catch (e) {
       // Not on F-Droid

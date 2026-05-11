@@ -45,9 +45,10 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       duration: const Duration(milliseconds: 500),
     );
     _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _scale = Tween<double>(begin: 0.88, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scale = Tween<double>(
+      begin: 0.88,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
   }
 
@@ -78,14 +79,20 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(
-                          settings.plusEnableGlassmorphism ? AppOpacity.moderate : AppOpacity.low,
-                        ),
+                        color: Theme.of(context).colorScheme.primaryContainer
+                            .withOpacity(
+                              settings.plusEnableGlassmorphism
+                                  ? AppOpacity.moderate
+                                  : AppOpacity.low,
+                            ),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(
-                            settings.plusEnableGlassmorphism ? AppOpacity.low : 0.0,
-                          ),
+                          color: Theme.of(context).colorScheme.primary
+                              .withOpacity(
+                                settings.plusEnableGlassmorphism
+                                    ? AppOpacity.low
+                                    : 0.0,
+                              ),
                         ),
                       ),
                       child: Icon(
@@ -113,14 +120,20 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                if (widget.onActionPressed != null && widget.actionLabel != null) ...[
+                if (widget.onActionPressed != null &&
+                    widget.actionLabel != null) ...[
                   const SizedBox(height: 48),
                   FilledButton.icon(
                     onPressed: widget.onActionPressed,
                     style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.defaultBorderRadius,
+                        ),
                       ),
                     ),
                     icon: const Icon(Icons.add_rounded),
@@ -130,14 +143,20 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                     ),
                   ),
                 ],
-                if (widget.onSecondaryActionPressed != null && widget.secondaryActionLabel != null) ...[
+                if (widget.onSecondaryActionPressed != null &&
+                    widget.secondaryActionLabel != null) ...[
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
                     onPressed: widget.onSecondaryActionPressed,
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.defaultBorderRadius,
+                        ),
                       ),
                     ),
                     icon: const Icon(Icons.explore_rounded),

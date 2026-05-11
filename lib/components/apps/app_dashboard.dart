@@ -53,20 +53,25 @@ class _AppDashboardState extends State<AppDashboard>
     // M3 Expressive: emphasizedDecelerate for enter animations (fast start, soft settle)
     const curve = Easing.emphasizedDecelerate;
     _card0Anim = CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.0, 0.55, curve: curve));
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.55, curve: curve),
+    );
     _card1Anim = CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.08, 0.63, curve: curve));
+      parent: _entranceController,
+      curve: const Interval(0.08, 0.63, curve: curve),
+    );
     _card2Anim = CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.16, 0.71, curve: curve));
+      parent: _entranceController,
+      curve: const Interval(0.16, 0.71, curve: curve),
+    );
     _segmentedAnim = CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.28, 0.83, curve: curve));
+      parent: _entranceController,
+      curve: const Interval(0.28, 0.83, curve: curve),
+    );
     _updatesAnim = CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.38, 1.0, curve: curve));
+      parent: _entranceController,
+      curve: const Interval(0.38, 1.0, curve: curve),
+    );
 
     _entranceController.forward();
   }
@@ -101,9 +106,11 @@ class _AppDashboardState extends State<AppDashboard>
     final totalApps = apps.length;
 
     final updateApps = apps
-        .where((app) =>
-            app.app.installedVersion != null &&
-            app.app.installedVersion != app.app.latestVersion)
+        .where(
+          (app) =>
+              app.app.installedVersion != null &&
+              app.app.installedVersion != app.app.latestVersion,
+        )
         .toList();
     final updatesAvailable = updateApps.length;
 
@@ -112,8 +119,7 @@ class _AppDashboardState extends State<AppDashboard>
     DateTime? lastCheck;
     for (var app in apps) {
       if (app.app.lastUpdateCheck != null) {
-        if (lastCheck == null ||
-            app.app.lastUpdateCheck!.isAfter(lastCheck)) {
+        if (lastCheck == null || app.app.lastUpdateCheck!.isAfter(lastCheck)) {
           lastCheck = app.app.lastUpdateCheck;
         }
       }
@@ -180,7 +186,7 @@ class _AppDashboardState extends State<AppDashboard>
                     color: colorScheme.tertiary,
                   ),
                 ),
-                
+
                 // Adaptive 'Get Started' Card for new/sparse users
                 if (totalApps < 3) ...[
                   const SizedBox(width: 12),
@@ -220,9 +226,9 @@ class _AppDashboardState extends State<AppDashboard>
                   Text(
                     tr('pinnedApps'),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -231,7 +237,8 @@ class _AppDashboardState extends State<AppDashboard>
                       scrollDirection: Axis.horizontal,
                       itemCount: pinnedApps.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) => _buildPinnedIcon(context, pinnedApps[index], radius),
+                      itemBuilder: (context, index) =>
+                          _buildPinnedIcon(context, pinnedApps[index], radius),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -276,7 +283,9 @@ class _AppDashboardState extends State<AppDashboard>
                     borderRadius: BorderRadius.circular(radius * 0.66),
                   ),
                   side: BorderSide(
-                    color: colorScheme.outline.withOpacity(settings.plusEnableGlassmorphism ? 0.3 : 0.15),
+                    color: colorScheme.outline.withOpacity(
+                      settings.plusEnableGlassmorphism ? 0.3 : 0.15,
+                    ),
                   ),
                 ),
               ),
@@ -287,7 +296,9 @@ class _AppDashboardState extends State<AppDashboard>
           AnimatedSize(
             duration: const Duration(milliseconds: 320),
             curve: Easing.emphasizedDecelerate,
-            child: (updatesAvailable > 0 && (totalApps >= 5 || updatesAvailable > 1))
+            child:
+                (updatesAvailable > 0 &&
+                    (totalApps >= 5 || updatesAvailable > 1))
                 ? _animated(
                     _updatesAnim,
                     Column(
@@ -298,9 +309,7 @@ class _AppDashboardState extends State<AppDashboard>
                           children: [
                             Text(
                               tr('recentUpdates'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: colorScheme.onSurfaceVariant,
@@ -309,11 +318,11 @@ class _AppDashboardState extends State<AppDashboard>
                             const Spacer(),
                             if (updatesAvailable > 5)
                               Text(
-                                tr('plural_apps',
-                                    args: [updatesAvailable.toString()]),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
+                                tr(
+                                  'plural_apps',
+                                  args: [updatesAvailable.toString()],
+                                ),
+                                style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(color: colorScheme.primary),
                               ),
                           ],
@@ -328,7 +337,10 @@ class _AppDashboardState extends State<AppDashboard>
                                 const SizedBox(width: 12),
                             itemBuilder: (context, index) =>
                                 _buildRecentUpdateIcon(
-                                    context, updateApps[index], radius),
+                                  context,
+                                  updateApps[index],
+                                  radius,
+                                ),
                           ),
                         ),
                       ],
@@ -341,7 +353,11 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
-  Widget _buildPinnedIcon(BuildContext context, AppInMemory app, double radius) {
+  Widget _buildPinnedIcon(
+    BuildContext context,
+    AppInMemory app,
+    double radius,
+  ) {
     final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
     return Tooltip(
       message: app.name,
@@ -363,7 +379,9 @@ class _AppDashboardState extends State<AppDashboard>
           height: 56,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(itemRadius),
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withOpacity(0.4),
             border: Border.all(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
               width: 1.5,
@@ -380,7 +398,11 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
-  Widget _buildRecentUpdateIcon(BuildContext context, AppInMemory app, double radius) {
+  Widget _buildRecentUpdateIcon(
+    BuildContext context,
+    AppInMemory app,
+    double radius,
+  ) {
     final itemRadius = (radius * 0.5).clamp(10.0, 24.0);
     return Tooltip(
       message: app.name,
@@ -402,10 +424,9 @@ class _AppDashboardState extends State<AppDashboard>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(itemRadius),
             border: Border.all(
-              color: Theme.of(context)
-                  .colorScheme
-                  .error
-                  .withOpacity(AppOpacity.medium),
+              color: Theme.of(
+                context,
+              ).colorScheme.error.withOpacity(AppOpacity.medium),
               width: 1.5,
             ),
             boxShadow: [
@@ -421,17 +442,20 @@ class _AppDashboardState extends State<AppDashboard>
               if (app.icon != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(itemRadius - 2),
-                  child: Image.memory(app.icon!,
-                      fit: BoxFit.cover, width: 64, height: 64),
+                  child: Image.memory(
+                    app.icon!,
+                    fit: BoxFit.cover,
+                    width: 64,
+                    height: 64,
+                  ),
                 )
               else
                 Center(
                   child: Icon(
                     Icons.apps_rounded,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withOpacity(AppOpacity.half),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(AppOpacity.half),
                   ),
                 ),
               Positioned(
@@ -490,15 +514,15 @@ class _AppDashboardState extends State<AppDashboard>
             Text(
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

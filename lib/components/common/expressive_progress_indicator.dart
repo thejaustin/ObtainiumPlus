@@ -21,7 +21,7 @@ class ExpressiveProgressIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
+
     if (!settings.plusEnableExpressiveProgress) {
       return SizedBox(
         height: height,
@@ -41,7 +41,9 @@ class ExpressiveProgressIndicator extends StatelessWidget {
         value: value,
         trackHeight: height,
         color: color ?? Theme.of(context).colorScheme.primary,
-        backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerHighest,
+        backgroundColor:
+            backgroundColor ??
+            Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
     );
   }
@@ -65,7 +67,7 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    
+
     if (!settings.plusEnableExpressiveProgress) {
       return CircularProgressIndicator(
         value: value,
@@ -78,7 +80,9 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
     return WavyCircularProgressIndicator(
       value: value,
       color: color ?? Theme.of(context).colorScheme.primary,
-      backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerHighest,
+      backgroundColor:
+          backgroundColor ??
+          Theme.of(context).colorScheme.surfaceContainerHighest,
       strokeWidth: strokeWidth,
     );
   }
@@ -99,10 +103,11 @@ class SquigglyProgressIndicator extends StatefulWidget {
   });
 
   @override
-  State<SquigglyProgressIndicator> createState() => _SquigglyProgressIndicatorState();
+  State<SquigglyProgressIndicator> createState() =>
+      _SquigglyProgressIndicatorState();
 }
 
-class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator> 
+class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -192,9 +197,10 @@ class _SquigglyPainter extends CustomPainter {
         final double ramp = progressAtX < 0.1
             ? progressAtX / 0.1
             : progressAtX > 0.95
-                ? (1.0 - progressAtX) / 0.05
-                : 1.0;
-        final double y = centerY +
+            ? (1.0 - progressAtX) / 0.05
+            : 1.0;
+        final double y =
+            centerY +
             math.sin((x * frequency) - (animationValue * math.pi * 2)) *
                 amplitude *
                 ramp;
@@ -206,15 +212,20 @@ class _SquigglyPainter extends CustomPainter {
       final stopPaint = Paint()
         ..color = color
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(Offset(activeWidth, centerY), strokeWidth / 2, stopPaint);
-
+      canvas.drawCircle(
+        Offset(activeWidth, centerY),
+        strokeWidth / 2,
+        stopPaint,
+      );
     } else {
       // Indeterminate: wavelength=20dp (more energetic), full-width traveling wave
       const double frequency = (2 * math.pi) / 20.0;
       path.moveTo(0, centerY);
       for (double x = 0; x <= size.width; x += 1.0) {
-        final double y = centerY +
-            math.sin((x * frequency) - (animationValue * math.pi * 2)) * amplitude;
+        final double y =
+            centerY +
+            math.sin((x * frequency) - (animationValue * math.pi * 2)) *
+                amplitude;
         path.lineTo(x, y);
       }
       canvas.drawPath(path, activePaint);
@@ -245,10 +256,12 @@ class WavyCircularProgressIndicator extends StatefulWidget {
   });
 
   @override
-  State<WavyCircularProgressIndicator> createState() => _WavyCircularProgressIndicatorState();
+  State<WavyCircularProgressIndicator> createState() =>
+      _WavyCircularProgressIndicatorState();
 }
 
-class _WavyCircularProgressIndicatorState extends State<WavyCircularProgressIndicator> 
+class _WavyCircularProgressIndicatorState
+    extends State<WavyCircularProgressIndicator>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -325,14 +338,17 @@ class _WavyCircularPainter extends CustomPainter {
     const int waveCount = 12; // Number of waves around the circle
 
     final path = Path();
-    
+
     if (progress != null) {
       // Determinate circular wavy
       final double sweepAngle = progress! * 2 * math.pi;
       if (sweepAngle <= 0) return;
 
       for (double a = 0; a <= sweepAngle; a += 0.05) {
-        final double currentRadius = radius + math.sin(a * waveCount - (animationValue * 2 * math.pi)) * amplitude;
+        final double currentRadius =
+            radius +
+            math.sin(a * waveCount - (animationValue * 2 * math.pi)) *
+                amplitude;
         final x = center.dx + currentRadius * math.cos(a - math.pi / 2);
         final y = center.dy + currentRadius * math.sin(a - math.pi / 2);
         if (a == 0) {
@@ -342,26 +358,38 @@ class _WavyCircularPainter extends CustomPainter {
         }
       }
       canvas.drawPath(path, activePaint);
-      
+
       // End stop dot
       final endAngle = sweepAngle - math.pi / 2;
-      final endRadius = radius + math.sin(sweepAngle * waveCount - (animationValue * 2 * math.pi)) * amplitude;
+      final endRadius =
+          radius +
+          math.sin(sweepAngle * waveCount - (animationValue * 2 * math.pi)) *
+              amplitude;
       canvas.drawCircle(
-        Offset(center.dx + endRadius * math.cos(endAngle), center.dy + endRadius * math.sin(endAngle)),
+        Offset(
+          center.dx + endRadius * math.cos(endAngle),
+          center.dy + endRadius * math.sin(endAngle),
+        ),
         strokeWidth / 1.5,
-        Paint()..color = color..style = PaintingStyle.fill,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill,
       );
-
     } else {
       // Indeterminate circular wavy
       const double segmentAngle = math.pi * 0.6;
       final double startAngle = animationValue * 2 * math.pi;
-      
+
       for (double a = 0; a <= segmentAngle; a += 0.05) {
         final double totalAngle = startAngle + a;
-        final double currentRadius = radius + math.sin(totalAngle * waveCount - (animationValue * 4 * math.pi)) * amplitude;
-        final x = center.dx + currentRadius * math.cos(totalAngle - math.pi / 2);
-        final y = center.dy + currentRadius * math.sin(totalAngle - math.pi / 2);
+        final double currentRadius =
+            radius +
+            math.sin(totalAngle * waveCount - (animationValue * 4 * math.pi)) *
+                amplitude;
+        final x =
+            center.dx + currentRadius * math.cos(totalAngle - math.pi / 2);
+        final y =
+            center.dy + currentRadius * math.sin(totalAngle - math.pi / 2);
         if (a == 0) {
           path.moveTo(x, y);
         } else {

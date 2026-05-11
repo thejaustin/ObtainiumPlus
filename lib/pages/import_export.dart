@@ -17,9 +17,12 @@ import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
+import 'package:obtainium/providers/source_provider.dart'
+    hide isEnglish, lowerCaseIfEnglish;
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/services/app_export_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -46,6 +49,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
     final sourceProvider = _sourceProvider;
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
+    var plusSettings = context.watch<PlusSettingsProvider>();
+    var behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     var outlineButtonStyle = ButtonStyle(
       shape: WidgetStateProperty.all(
@@ -57,6 +62,34 @@ class _ImportExportPageState extends State<ImportExportPage> {
         ),
       ),
     );
+
+    Future<String?> _promptForPassword() async {
+      final TextEditingController passwordController = TextEditingController();
+      return showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(tr('enterBackupPassword')),
+          content: TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: tr('password'),
+              prefixIcon: const Icon(Icons.lock_outline),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, passwordController.text),
+              child: Text(tr('ok')),
+            ),
+          ],
+        ),
+      );
+    }
 
     urlListImport({String? initValue, bool overrideInitValid = false}) {
       showDialog<Map<String, dynamic>?>(
@@ -122,10 +155,15 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     );
                   }
                 },
-                onError: (e) { showError(e, context); },
+                onError: (e) {
+                  showError(e, context);
+                },
               )
               .whenComplete(() {
-                if (mounted) setState(() { importInProgress = false; });
+                if (mounted)
+                  setState(() {
+                    importInProgress = false;
+                  });
               });
         }
       });
@@ -134,10 +172,16 @@ class _ImportExportPageState extends State<ImportExportPage> {
     runObtainiumExport({bool pickOnly = false}) async {
       AppHaptics.selectionClick();
       try {
+        String? password;
+        if (plusSettings.backupEncryptionEnabled && !pickOnly) {
+          password = await _promptForPassword();
+          if (password == null || password.isEmpty) return;
+        }
+
         final result = await appsProvider.export(
-          pickOnly:
-              pickOnly || (await settingsProvider.getExportDir()) == null,
+          pickOnly: pickOnly || (await behaviorSettings.getExportDir()) == null,
           sp: settingsProvider,
+          password: password,
         );
         if (result != null) {
           showMessage(tr('exportedTo', args: [result]), context);
@@ -153,20 +197,30 @@ class _ImportExportPageState extends State<ImportExportPage> {
       AppHaptics.selectionClick();
       setState(() => importInProgress = true);
       try {
-        final exportData = AppExportService.generateExportJSON(
+        String? password;
+        if (plusSettings.backupEncryptionEnabled) {
+          password = await _promptForPassword();
+          if (password == null || password.isEmpty) {
+            setState(() => importInProgress = false);
+            return;
+          }
+        }
+
+        final bytes = await AppExportService.getExportBytes(
           apps: appsProvider.apps,
           settingsProvider: settingsProvider,
+          password: password,
         );
-        final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
+
         final tempDir = await getTemporaryDirectory();
-        final fileName = 'Obtainium_Backup_${DateTime.now().millisecondsSinceEpoch}.json';
+        final fileName =
+            'Obtainium_Backup_${DateTime.now().millisecondsSinceEpoch}.json';
         final file = File('${tempDir.path}/$fileName');
-        await file.writeAsString(jsonStr);
-        
-        await Share.shareXFiles(
-          [XFile(file.path, name: fileName, mimeType: 'application/json')],
-          subject: fileName,
-        );
+        await file.writeAsBytes(bytes);
+
+        await Share.shareXFiles([
+          XFile(file.path, name: fileName, mimeType: 'application/json'),
+        ], subject: fileName);
       } catch (e) {
         if (mounted) showError(e, context);
       } finally {
@@ -183,7 +237,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
           allowMultiple: false,
         );
 
-        if (result == null || result.files.isEmpty || result.files.first.path == null) {
+        if (result == null ||
+            result.files.isEmpty ||
+            result.files.first.path == null) {
           // User cancelled
           return;
         }
@@ -195,7 +251,23 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
         // Read file asynchronously
         final file = File(result.files.first.path!);
-        final data = await file.readAsString();
+        String data = await file.readAsString();
+
+        // Check if encrypted
+        try {
+          final decodedData = jsonDecode(data);
+          if (decodedData is Map && decodedData['encrypted'] == true) {
+            String? password = await _promptForPassword();
+            if (password == null || password.isEmpty) {
+              setState(() => importInProgress = false);
+              return;
+            }
+            data = await AppExportService.decryptBackup(data, password);
+          }
+        } catch (e) {
+          if (e is ObtainiumError) rethrow;
+          // Not JSON or other error, fallback to standard import which handles invalid input
+        }
 
         // Decode JSON in a background isolate if it's large
         try {
@@ -242,7 +314,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
           allowMultiple: false,
         );
 
-        if (result == null || result.files.isEmpty || result.files.first.path == null) {
+        if (result == null ||
+            result.files.isEmpty ||
+            result.files.first.path == null) {
           // User cancelled
           return;
         }
@@ -265,20 +339,19 @@ class _ImportExportPageState extends State<ImportExportPage> {
         }, content);
 
         // Filter valid sources - this might also be heavy
-        final validUrls = urls.where((url) {
-          try {
-            sourceProvider.getSource(url);
-            return true;
-          } catch (e) {
-            return false;
-          }
-        }).join('\n');
+        final validUrls = urls
+            .where((url) {
+              try {
+                sourceProvider.getSource(url);
+                return true;
+              } catch (e) {
+                return false;
+              }
+            })
+            .join('\n');
 
         if (mounted) {
-          urlListImport(
-            overrideInitValid: true,
-            initValue: validUrls,
-          );
+          urlListImport(overrideInitValid: true, initValue: validUrls);
         }
       } catch (e) {
         if (e is! PlatformException || e.toString().contains('No activity')) {
@@ -389,7 +462,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
             if (mounted) showError(e, context);
           })
           .whenComplete(() {
-            if (mounted) setState(() { importInProgress = false; });
+            if (mounted)
+              setState(() {
+                importInProgress = false;
+              });
           });
     }
 
@@ -451,7 +527,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
             showError(e, context);
           })
           .whenComplete(() {
-            if (mounted) setState(() { importInProgress = false; });
+            if (mounted)
+              setState(() {
+                importInProgress = false;
+              });
           });
     }
 
@@ -473,7 +552,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 children: [
                   _sectionHeader(context, tr('exportAndImport')),
                   FutureBuilder(
-                    future: settingsProvider.getExportDir(),
+                    future: behaviorSettings.getExportDir(),
                     builder: (context, snapshot) {
                       return Column(
                         children: [
@@ -549,7 +628,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                       GeneratedFormSwitch(
                                         'autoExportOnChanges',
                                         label: tr('autoExportOnChanges'),
-                                        defaultValue: settingsProvider
+                                        defaultValue: behaviorSettings
                                             .autoExportOnChanges,
                                       ),
                                     ],
@@ -562,7 +641,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                           MapEntry('2', tr('all')),
                                         ],
                                         label: tr('includeSettings'),
-                                        defaultValue: settingsProvider
+                                        defaultValue: behaviorSettings
                                             .exportSettings
                                             .toString(),
                                       ),
@@ -572,12 +651,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                     if (valid && !isBuilding) {
                                       if (value['autoExportOnChanges'] !=
                                           null) {
-                                        settingsProvider.autoExportOnChanges =
+                                        behaviorSettings.autoExportOnChanges =
                                             value['autoExportOnChanges'] ==
                                             true;
                                       }
                                       if (value['exportSettings'] != null) {
-                                        settingsProvider.exportSettings =
+                                        behaviorSettings.exportSettings =
                                             int.parse(value['exportSettings']);
                                       }
                                     }
@@ -603,7 +682,13 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     onPressed: importInProgress
                         ? null
                         : () {
-                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubStars().runtimeType, orElse: () => GitHubStars()));
+                            runMassSourceImport(
+                              sourceProvider.massUrlSources.firstWhere(
+                                (s) =>
+                                    s.runtimeType == GitHubStars().runtimeType,
+                                orElse: () => GitHubStars(),
+                              ),
+                            );
                           },
                     child: Text(tr('importGithubStarredRepos')),
                   ),
@@ -620,9 +705,18 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     onPressed: importInProgress
                         ? null
                         : () {
-                              runMassSourceImport(sourceProvider.massUrlSources.firstWhere((s) => s.runtimeType == GitHubPersonalRepos().runtimeType, orElse: () => GitHubPersonalRepos()));
+                            runMassSourceImport(
+                              sourceProvider.massUrlSources.firstWhere(
+                                (s) =>
+                                    s.runtimeType ==
+                                    GitHubPersonalRepos().runtimeType,
+                                orElse: () => GitHubPersonalRepos(),
+                              ),
+                            );
                           },
-                    child: Text(tr('importX', args: [tr('githubPersonalRepos')])),
+                    child: Text(
+                      tr('importX', args: [tr('githubPersonalRepos')]),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   _sectionHeader(context, tr('importApps')),

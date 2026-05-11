@@ -66,7 +66,10 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
+          child: ConditionalBlur(
+            sigma: 24,
+            enabled: enableGlass,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -76,23 +79,28 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        colorScheme.primaryContainer
-                            .withOpacity(enableGlass ? 0.3 : 0.5),
-                        colorScheme.primaryContainer
-                            .withOpacity(enableGlass ? 0.15 : 0.25),
+                        colorScheme.primaryContainer.withOpacity(
+                          enableGlass ? 0.3 : 0.5,
+                        ),
+                        colorScheme.primaryContainer.withOpacity(
+                          enableGlass ? 0.15 : 0.25,
+                        ),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(AppOpacity.low),
+                          color: colorScheme.primary.withOpacity(
+                            AppOpacity.low,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -107,17 +115,13 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                           children: [
                             Text(
                               tr('updateRecommended'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
+                              style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             if (widget.issue.fixedInVersion != null)
                               Text(
                                 '${tr('fixedIn')} ${widget.issue.fixedInVersion}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
                                     ),
@@ -137,17 +141,15 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                     children: [
                       Text(
                         widget.issue.title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
+                        style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         widget.issue.description,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -155,8 +157,10 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
 
                 // Don't show again toggle
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
                   child: CheckboxListTile.adaptive(
                     value: _dontShowAgain,
                     onChanged: (v) =>
@@ -175,18 +179,17 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withOpacity(AppOpacity.medium),
+                    color: colorScheme.surfaceContainerHighest.withOpacity(
+                      AppOpacity.medium,
+                    ),
                     borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(24)),
+                      bottom: Radius.circular(24),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: _skip,
-                        child: Text(tr('skip')),
-                      ),
+                      TextButton(onPressed: _skip, child: Text(tr('skip'))),
                       const SizedBox(width: 8),
                       FilledButton.icon(
                         onPressed: _openReleasesPage,

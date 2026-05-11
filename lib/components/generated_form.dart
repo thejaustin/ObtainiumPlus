@@ -1,5 +1,5 @@
 import 'dart:math';
- 
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -312,9 +312,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
       }
     }
     formInputs = widget.items
-        .map((row) => row
-            .map((_) => const SizedBox.shrink() as Widget)
-            .toList())
+        .map(
+          (row) => row.map((_) => const SizedBox.shrink() as Widget).toList(),
+        )
         .toList();
     someValueChanged(isBuilding: true);
   }
@@ -339,7 +339,11 @@ class _GeneratedFormState extends State<GeneratedForm> {
       initForm();
     }
     for (var r = 0; r < formInputs.length && r < widget.items.length; r++) {
-      for (var e = 0; e < formInputs[r].length && e < widget.items[r].length; e++) {
+      for (
+        var e = 0;
+        e < formInputs[r].length && e < widget.items[r].length;
+        e++
+      ) {
         final item = widget.items[r][e];
         final fieldKey = item.key;
         if (item is GeneratedFormSwitch) {
@@ -377,7 +381,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
           formInputs[r][e] = _FormTagInputField(
             key: ValueKey(fieldKey),
             item: item,
-            value: (values[fieldKey] as Map<String, MapEntry<int, bool>>?) ?? {},
+            value:
+                (values[fieldKey] as Map<String, MapEntry<int, bool>>?) ?? {},
             onChanged: (v) {
               values[fieldKey] = v;
               someValueChanged();
@@ -403,8 +408,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
       if (rowInputs.key > 0) {
         rows.add([
           SizedBox(
-            height: (widget.items[rowInputs.key - 1].isNotEmpty &&
-                        widget.items[rowInputs.key - 1][0] is GeneratedFormSwitch)
+            height:
+                (widget.items[rowInputs.key - 1].isNotEmpty &&
+                    widget.items[rowInputs.key - 1][0] is GeneratedFormSwitch)
                 ? 8
                 : 25,
           ),
@@ -432,9 +438,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
     });
 
     final bool hasRequiredFields = widget.items.any(
-      (row) => row.any(
-        (item) => item is GeneratedFormTextField && item.required,
-      ),
+      (row) =>
+          row.any((item) => item is GeneratedFormTextField && item.required),
     );
 
     return Form(
@@ -454,8 +459,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
             Text(
               '* ${tr('requiredInBrackets')}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],
@@ -513,10 +518,11 @@ class _FormSwitchFieldState extends State<_FormSwitchField> {
                     Expanded(
                       child: Text(
                         widget.item.label,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
                       ),
                     ),
                     if (widget.item.tooltip != null)
@@ -550,21 +556,20 @@ class _FormSwitchFieldState extends State<_FormSwitchField> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: widget.item.belowWidgets
-                      .map((w) => Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: DefaultTextStyle(
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall!.copyWith(
-                                fontSize: 13,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(AppOpacity.muted),
-                              ),
-                              child: w,
-                            ),
-                          ))
+                      .map(
+                        (w) => Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: DefaultTextStyle(
+                            style: Theme.of(context).textTheme.bodySmall!
+                                .copyWith(
+                                  fontSize: 13,
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withOpacity(AppOpacity.muted),
+                                ),
+                            child: w,
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -758,8 +763,9 @@ class _FormDropdownFieldState extends State<_FormDropdownField> {
                     )
                   : null,
             ),
-            dropdownColor:
-                Theme.of(context).colorScheme.surfaceContainerHighest,
+            dropdownColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
@@ -906,13 +912,18 @@ class _FormTagInputFieldState extends State<_FormTagInputField> {
                           e2.key,
                           style: const TextStyle(fontSize: 12),
                         ),
-                        backgroundColor: Color(e2.value.key).withOpacity(50 / 255),
+                        backgroundColor: Color(
+                          e2.value.key,
+                        ).withOpacity(50 / 255),
                         selectedColor: Color(e2.value.key),
                         visualDensity: VisualDensity.compact,
                         selected: e2.value.value,
                         onSelected: (selected) {
                           setState(() {
-                            _tags[e2.key] = MapEntry(_tags[e2.key]!.key, selected);
+                            _tags[e2.key] = MapEntry(
+                              _tags[e2.key]!.key,
+                              selected,
+                            );
                             if (widget.item.singleSelect && selected) {
                               for (final key in _tags.keys) {
                                 if (key != e2.key) {
@@ -931,15 +942,18 @@ class _FormTagInputFieldState extends State<_FormTagInputField> {
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: IconButton(
                         onPressed: () {
-                          final oldEntry =
-                              _tags.entries.firstWhere((e) => e.value.value);
+                          final oldEntry = _tags.entries.firstWhere(
+                            (e) => e.value.value,
+                          );
                           int newColor = oldEntry.value.key;
                           while (newColor == oldEntry.value.key) {
                             newColor = generateRandomLightColor().value;
                           }
                           setState(() {
-                            _tags[oldEntry.key] =
-                                MapEntry(newColor, oldEntry.value.value);
+                            _tags[oldEntry.key] = MapEntry(
+                              newColor,
+                              oldEntry.value.value,
+                            );
                           });
                           widget.onChanged(Map.from(_tags));
                         },
@@ -957,7 +971,9 @@ class _FormTagInputFieldState extends State<_FormTagInputField> {
                       child: IconButton(
                         onPressed: () {
                           fn() {
-                            setState(() => _tags.removeWhere((k, v) => v.value));
+                            setState(
+                              () => _tags.removeWhere((k, v) => v.value),
+                            );
                             widget.onChanged(Map.from(_tags));
                           }
 
@@ -1014,10 +1030,8 @@ class _FormTagInputFieldState extends State<_FormTagInputField> {
   }
 }
 
-typedef _OnSubFormChanged = void Function(
-  List<Map<String, dynamic>> values, {
-  bool? forceInvalid,
-});
+typedef _OnSubFormChanged =
+    void Function(List<Map<String, dynamic>> values, {bool? forceInvalid});
 
 class _FormSubFormField extends StatefulWidget {
   const _FormSubFormField({
@@ -1055,8 +1069,8 @@ class _FormSubFormFieldState extends State<_FormSubFormField> {
 
   @override
   Widget build(BuildContext context) {
-    final compact = widget.item.items.length == 1 &&
-        widget.item.items[0].length == 1;
+    final compact =
+        widget.item.items.length == 1 && widget.item.items[0].length == 1;
     final subformColumn = <Widget>[];
 
     for (int i = 0; i < _values.length; i++) {
@@ -1080,21 +1094,20 @@ class _FormSubFormFieldState extends State<_FormSubFormField> {
             GeneratedForm(
               key: internalFormKey,
               items: cloneFormItems(widget.item.items)
-                  .map((x) => x.map((y) {
-                        y.defaultValue = _values[i][y.key];
-                        y.key = '${y.key},$internalFormKey';
-                        return y;
-                      }).toList())
+                  .map(
+                    (x) => x.map((y) {
+                      y.defaultValue = _values[i][y.key];
+                      y.key = '${y.key},$internalFormKey';
+                      return y;
+                    }).toList(),
+                  )
                   .toList(),
               onValueChanges: (subValues, valid, isBuilding) {
                 final mapped = subValues.map(
                   (key, value) => MapEntry(key.split(',')[0], value),
                 );
                 if (valid) _values[i] = mapped;
-                widget.onChanged(
-                  List.from(_values),
-                  forceInvalid: !valid,
-                );
+                widget.onChanged(List.from(_values), forceInvalid: !valid);
               },
             ),
             Row(

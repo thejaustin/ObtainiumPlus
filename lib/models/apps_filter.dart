@@ -14,20 +14,34 @@ class AppsFilter {
   AppsFilter();
 
   Map<String, dynamic> toFormValuesMap() => {
-    'appName': nameFilter, 'author': authorFilter, 'appId': idFilter,
-    'upToDateApps': includeUptodate, 'nonInstalledApps': includeNonInstalled, 'sourceFilter': sourceFilter,
+    'appName': nameFilter,
+    'author': authorFilter,
+    'appId': idFilter,
+    'upToDateApps': includeUptodate,
+    'nonInstalledApps': includeNonInstalled,
+    'sourceFilter': sourceFilter,
   };
 
   void setFormValuesFromMap(Map<String, dynamic> values) {
-    nameFilter = values['appName']!; authorFilter = values['author']!; idFilter = values['appId']!;
-    includeUptodate = values['upToDateApps']; includeNonInstalled = values['nonInstalledApps']; sourceFilter = values['sourceFilter'];
+    nameFilter = values['appName']!;
+    authorFilter = values['author']!;
+    idFilter = values['appId']!;
+    includeUptodate = values['upToDateApps'];
+    includeNonInstalled = values['nonInstalledApps'];
+    sourceFilter = values['sourceFilter'];
   }
 
   bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
-      authorFilter == other.authorFilter && nameFilter == other.nameFilter && idFilter == other.idFilter &&
-      includeUptodate == other.includeUptodate && includeNonInstalled == other.includeNonInstalled &&
+      authorFilter == other.authorFilter &&
+      nameFilter == other.nameFilter &&
+      idFilter == other.idFilter &&
+      includeUptodate == other.includeUptodate &&
+      includeNonInstalled == other.includeNonInstalled &&
       settingsProvider.setEqual(categoryFilter, other.categoryFilter) &&
-      settingsProvider.setEqual(tagFilter, other.tagFilter) && // Check tag filter
+      settingsProvider.setEqual(
+        tagFilter,
+        other.tagFilter,
+      ) && // Check tag filter
       sourceFilter == other.sourceFilter &&
       settingsProvider.setEqual(statusFilter, other.statusFilter);
 }

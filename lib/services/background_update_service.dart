@@ -21,7 +21,10 @@ import 'package:obtainium/utils/logger.dart';
 class BackgroundUpdateService {
   BackgroundUpdateService._();
 
-  static Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? initialParams) async {
+  static Future<void> bgUpdateCheck(
+    String taskId,
+    Map<String, dynamic>? initialParams,
+  ) async {
     talker.debug('BG task started $taskId: ${initialParams.toString()}');
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
@@ -30,7 +33,8 @@ class BackgroundUpdateService {
     LogsProvider logs = LogsProvider();
     NotificationsProvider notificationsProvider = NotificationsProvider();
     AppsProvider appsProvider = AppsProvider(isBg: true);
-    await appsProvider.initializationDone; // Ensure directories and apps are loaded
+    await appsProvider
+        .initializationDone; // Ensure directories and apps are loaded
     await notificationsProvider.initialize(sp: appsProvider.settingsProvider);
 
     Map<String, dynamic>? currentParams = initialParams;
@@ -45,7 +49,8 @@ class BackgroundUpdateService {
       var netResult = await (Connectivity().checkConnectivity());
       if (netResult.contains(ConnectivityResult.none) ||
           netResult.isEmpty ||
-          (netResult.contains(ConnectivityResult.vpn) && netResult.length == 1)) {
+          (netResult.contains(ConnectivityResult.vpn) &&
+              netResult.length == 1)) {
         logs.add('BG update task: No network.');
         return;
       }
@@ -53,11 +58,19 @@ class BackgroundUpdateService {
       currentParams ??= {};
 
       bool firstEverUpdateTask =
-          DateTime.fromMillisecondsSinceEpoch(0).compareTo(appsProvider.settingsProvider.lastCompletedBGCheckTime) == 0;
+          DateTime.fromMillisecondsSinceEpoch(0).compareTo(
+            appsProvider
+                .settingsProvider
+                .updateSettings
+                .lastCompletedBGCheckTime,
+          ) ==
+          0;
 
       // Load Retry Queue and add due items using OfflineService
       final offlineService = OfflineService();
-      List<String> dueRetries = offlineService.getDueRetries(appsProvider.settingsProvider);
+      List<String> dueRetries = offlineService.getDueRetries(
+        appsProvider.settingsProvider,
+      );
 
       toCheck = <MapEntry<String, int>>[
         ...(currentParams['toCheck']
@@ -70,22 +83,28 @@ class BackgroundUpdateService {
                 .toList() ??
             (isFirstIteration
                 ? AppUpdateService.getAppsSortedByUpdateCheckTime(
-                      appsProvider.apps,
-                      ignoreAppsCheckedAfter: currentParams['toCheck'] == null
-                          ? firstEverUpdateTask
-                                ? null
-                                : appsProvider.settingsProvider.lastCompletedBGCheckTime
-                          : null,
-                      onlyCheckInstalledOrTrackOnlyApps:
-                          appsProvider.settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
-                    ).map((e) => MapEntry(e, 0))
+                    appsProvider.apps,
+                    ignoreAppsCheckedAfter: currentParams['toCheck'] == null
+                        ? firstEverUpdateTask
+                              ? null
+                              : appsProvider
+                                    .settingsProvider
+                                    .updateSettings
+                                    .lastCompletedBGCheckTime
+                        : null,
+                    onlyCheckInstalledOrTrackOnlyApps: appsProvider
+                        .settingsProvider
+                        .updateSettings
+                        .onlyCheckInstalledOrTrackOnlyApps,
+                  ).map((e) => MapEntry(e, 0))
                 : <MapEntry<String, int>>[])),
       ];
 
       // Add due retries if not already in toCheck (only on first iteration)
       if (isFirstIteration) {
         for (var appId in dueRetries) {
-          if (!toCheck.any((e) => e.key == appId) && appsProvider.apps.containsKey(appId)) {
+          if (!toCheck.any((e) => e.key == appId) &&
+              appsProvider.apps.containsKey(appId)) {
             toCheck.add(MapEntry(appId, 0));
             logs.add('BG update task: Including queued retry for $appId');
           }
@@ -93,8 +112,9 @@ class BackgroundUpdateService {
       }
 
       // --- Per-app/tag/category rule filtering ---
-      final bool isWifi = netResult.contains(ConnectivityResult.wifi) || 
-                          netResult.contains(ConnectivityResult.ethernet);
+      final bool isWifi =
+          netResult.contains(ConnectivityResult.wifi) ||
+          netResult.contains(ConnectivityResult.ethernet);
 
       toCheck.removeWhere((entry) {
         final app = appsProvider.apps[entry.key]?.app;
@@ -126,27 +146,36 @@ class BackgroundUpdateService {
       ];
 
       var networkRestricted =
-          appsProvider.settingsProvider.bgUpdatesOnWiFiOnly &&
+          appsProvider.settingsProvider.updateSettings.bgUpdatesOnWiFiOnly &&
           !netResult.contains(ConnectivityResult.wifi) &&
           !netResult.contains(ConnectivityResult.ethernet);
 
       var chargingRestricted =
-          appsProvider.settingsProvider.bgUpdatesWhileChargingOnly &&
+          appsProvider
+              .settingsProvider
+              .updateSettings
+              .bgUpdatesWhileChargingOnly &&
           (await Battery().batteryState) != BatteryState.charging;
 
       var scheduleRestricted =
-          appsProvider.settingsProvider.useUpdateSchedule &&
-          !appsProvider.settingsProvider.isWithinUpdateSchedule();
+          appsProvider.settingsProvider.updateSettings.useUpdateSchedule &&
+          !appsProvider.settingsProvider.updateSettings
+              .isWithinUpdateSchedule();
 
       if (isFirstIteration) {
-        if (networkRestricted) logs.add('BG update task: Network restriction in effect.');
-        if (chargingRestricted) logs.add('BG update task: Charging restriction in effect.');
-        if (scheduleRestricted) logs.add('BG update task: Outside scheduled update window.');
+        if (networkRestricted)
+          logs.add('BG update task: Network restriction in effect.');
+        if (chargingRestricted)
+          logs.add('BG update task: Charging restriction in effect.');
+        if (scheduleRestricted)
+          logs.add('BG update task: Outside scheduled update window.');
       }
 
       // Skip update if any restriction is active (except for forced retries)
-      if (isFirstIteration && (networkRestricted || chargingRestricted || scheduleRestricted) &&
-          currentParams['toCheck'] == null && dueRetries.isEmpty) {
+      if (isFirstIteration &&
+          (networkRestricted || chargingRestricted || scheduleRestricted) &&
+          currentParams['toCheck'] == null &&
+          dueRetries.isEmpty) {
         logs.add('BG update task: Skipped due to restrictions.');
         return;
       }
@@ -154,12 +183,25 @@ class BackgroundUpdateService {
       if (toCheck.isNotEmpty) {
         if (isFirstIteration) {
           var enoughTimePassed =
-              appsProvider.settingsProvider.updateInterval != 0 &&
-              appsProvider.settingsProvider.lastCompletedBGCheckTime
-                  .add(Duration(minutes: appsProvider.settingsProvider.updateInterval))
+              appsProvider.settingsProvider.updateSettings.updateInterval !=
+                  0 &&
+              appsProvider
+                  .settingsProvider
+                  .updateSettings
+                  .lastCompletedBGCheckTime
+                  .add(
+                    Duration(
+                      minutes: appsProvider
+                          .settingsProvider
+                          .updateSettings
+                          .updateInterval,
+                    ),
+                  )
                   .isBefore(DateTime.now());
-          
-          if (!enoughTimePassed && currentParams['toCheck'] == null && dueRetries.isEmpty) {
+
+          if (!enoughTimePassed &&
+              currentParams['toCheck'] == null &&
+              dueRetries.isEmpty) {
             talker.debug('BG update task: Too early for another check.');
             return;
           }
@@ -172,9 +214,13 @@ class BackgroundUpdateService {
         var retryAfterXSeconds = 0;
         MultiAppMultiError? errors;
         MultiAppMultiError toThrow = MultiAppMultiError();
-        CheckingUpdatesNotification notif = CheckingUpdatesNotification(
-          () { try { return plural('apps', toCheck.length); } catch (_) { return '${toCheck.length} apps'; } }(),
-        );
+        CheckingUpdatesNotification notif = CheckingUpdatesNotification(() {
+          try {
+            return plural('apps', toCheck.length);
+          } catch (_) {
+            return '${toCheck.length} apps';
+          }
+        }());
 
         try {
           notificationsProvider.notify(notif, cancelExisting: true);
@@ -183,43 +229,62 @@ class BackgroundUpdateService {
             sp: appsProvider.settingsProvider,
             isBackground: true,
           );
-          
+
           for (var update in updates) {
-            offlineService.clearAppFromRetryQueue(update.id, appsProvider.settingsProvider);
+            offlineService.clearAppFromRetryQueue(
+              update.id,
+              appsProvider.settingsProvider,
+            );
           }
           for (var entry in toCheck) {
-            if (!updates.any((u) => u.id == entry.key) && 
-                (errors == null || !errors.idsByErrorString.containsKey(entry.key))) {
-               offlineService.clearAppFromRetryQueue(entry.key, appsProvider.settingsProvider);
+            if (!updates.any((u) => u.id == entry.key) &&
+                (errors == null ||
+                    !errors.idsByErrorString.containsKey(entry.key))) {
+              offlineService.clearAppFromRetryQueue(
+                entry.key,
+                appsProvider.settingsProvider,
+              );
             }
           }
         } catch (e) {
           if (e is Map) {
             updates = e['updates'] ?? [];
             errors = e['errors'];
-            
-            for (var entry in (errors?.rawErrors.entries ?? <MapEntry<String, dynamic>>[])) {
+
+            for (var entry
+                in (errors?.rawErrors.entries ??
+                    <MapEntry<String, dynamic>>[])) {
               var key = entry.key;
               var err = entry.value;
-              logs.add('BG update task: Got error on checking for $key "${err.toString()}"');
-              
-              var toCheckAppMatch = toCheck.where((element) => element.key == key);
+              logs.add(
+                'BG update task: Got error on checking for $key "${err.toString()}"',
+              );
+
+              var toCheckAppMatch = toCheck.where(
+                (element) => element.key == key,
+              );
               if (toCheckAppMatch.isEmpty) continue;
               var toCheckApp = toCheckAppMatch.first;
-              
+
               if (toCheckApp.value < maxAttempts) {
                 toRetry.add(MapEntry(toCheckApp.key, toCheckApp.value + 1));
                 int minRetryIntervalForThisApp = err is RateLimitError
                     ? (err.remainingMinutes * 60)
                     : (15 * 60);
-                if (minRetryIntervalForThisApp > maxRetryWaitSeconds) minRetryIntervalForThisApp = maxRetryWaitSeconds;
-                if (minRetryIntervalForThisApp > retryAfterXSeconds) retryAfterXSeconds = minRetryIntervalForThisApp;
+                if (minRetryIntervalForThisApp > maxRetryWaitSeconds)
+                  minRetryIntervalForThisApp = maxRetryWaitSeconds;
+                if (minRetryIntervalForThisApp > retryAfterXSeconds)
+                  retryAfterXSeconds = minRetryIntervalForThisApp;
               } else {
                 if (err is! RateLimitError) {
-                   offlineService.addAppToRetryQueue(key, appsProvider.settingsProvider, reason: err.toString());
-                   logs.add('BG update task: Queued $key for persistent retry');
+                  offlineService.addAppToRetryQueue(
+                    key,
+                    appsProvider.settingsProvider,
+                    reason: err.toString(),
+                  );
+                  logs.add('BG update task: Queued $key for persistent retry');
                 } else {
-                   toThrow.add(key, err, appName: errors?.appIdNames[key]);
+                  toThrow.add(key, err, appName: errors?.appIdNames[key]);
                 }
               }
             }
@@ -237,18 +302,24 @@ class BackgroundUpdateService {
         List<App> toNotify = [];
         for (var i = 0; i < updates.length; i++) {
           if (networkRestricted || chargingRestricted || !silentFlags[i]) {
-            if (updates[i].additionalSettings['skipUpdateNotifications'] != true) {
+            if (updates[i].additionalSettings['skipUpdateNotifications'] !=
+                true) {
               toNotify.add(updates[i]);
             }
           }
         }
 
         if (toNotify.isNotEmpty) {
-          if (appsProvider.settingsProvider.plusEnableNotificationDigest) {
+          if (appsProvider
+              .settingsProvider
+              .plusSettings
+              .plusEnableNotificationDigest) {
             notificationsProvider.notify(UpdateNotification(toNotify));
           } else {
             for (var app in toNotify) {
-              notificationsProvider.notify(UpdateNotification([app], id: app.id.hashCode));
+              notificationsProvider.notify(
+                UpdateNotification([app], id: app.id.hashCode),
+              );
             }
           }
         }
@@ -256,7 +327,10 @@ class BackgroundUpdateService {
           for (var element in toThrow.idsByErrorString.entries) {
             notificationsProvider.notify(
               ErrorCheckingUpdatesNotification(
-                (errors ?? toThrow).errorsAppsString(element.key, element.value),
+                (errors ?? toThrow).errorsAppsString(
+                  element.key,
+                  element.value,
+                ),
                 id: Random().nextInt(10000),
               ),
             );
@@ -264,18 +338,26 @@ class BackgroundUpdateService {
         }
 
         if (toRetry.isNotEmpty) {
-          logs.add('BG update task: Will retry in $retryAfterXSeconds seconds.');
+          logs.add(
+            'BG update task: Will retry in $retryAfterXSeconds seconds.',
+          );
           await Future.delayed(Duration(seconds: retryAfterXSeconds));
           currentParams = {
-            'toCheck': toRetry.map((entry) => {'key': entry.key, 'value': entry.value}).toList(),
-            'toInstall': toInstall.map((entry) => {'key': entry.key, 'value': entry.value}).toList(),
+            'toCheck': toRetry
+                .map((entry) => {'key': entry.key, 'value': entry.value})
+                .toList(),
+            'toInstall': toInstall
+                .map((entry) => {'key': entry.key, 'value': entry.value})
+                .toList(),
           };
           isFirstIteration = false;
           continue; // Loop for retries
         } else {
           currentParams = {
             'toCheck': [],
-            'toInstall': toInstall.map((entry) => {'key': entry.key, 'value': entry.value}).toList(),
+            'toInstall': toInstall
+                .map((entry) => {'key': entry.key, 'value': entry.value})
+                .toList(),
           };
           isFirstIteration = false;
           continue; // Loop for installs
@@ -286,7 +368,10 @@ class BackgroundUpdateService {
         if (toInstall.isEmpty && !networkRestricted && !chargingRestricted) {
           var temp = appsProvider.findExistingUpdates(installedOnly: true);
           final canInstallFlags = await Future.wait(
-            temp.map((id) => appsProvider.canInstallSilently(appsProvider.apps[id]!.app)),
+            temp.map(
+              (id) =>
+                  appsProvider.canInstallSilently(appsProvider.apps[id]!.app),
+            ),
           );
           for (var i = 0; i < temp.length; i++) {
             if (canInstallFlags[i]) toInstall.add(MapEntry(temp[i], 0));
@@ -306,7 +391,8 @@ class BackgroundUpdateService {
               checkUpdate: appsProvider.checkUpdate,
               confirmAppFileUrl: appsProvider.confirmAppFileUrl,
               canInstallSilently: appsProvider.canInstallSilently,
-              waitForUserToReturnToForeground: appsProvider.waitForUserToReturnToForeground,
+              waitForUserToReturnToForeground:
+                  appsProvider.waitForUserToReturnToForeground,
               notificationsProvider: notificationsProvider,
               forceParallelDownloads: true,
             );
@@ -319,7 +405,8 @@ class BackgroundUpdateService {
         break; // Finished both phases
       }
     }
-    appsProvider.settingsProvider.lastCompletedBGCheckTime = DateTime.now();
+    appsProvider.settingsProvider.updateSettings.lastCompletedBGCheckTime =
+        DateTime.now();
 
     // --- Save status for potential cloud sync ---
     try {
@@ -330,7 +417,9 @@ class BackgroundUpdateService {
         'success': true,
       };
       if (appsProvider.APKDir == null) return;
-      final file = File('${appsProvider.APKDir!.parent.path}/last_update_status.json');
+      final file = File(
+        '${appsProvider.APKDir!.parent.path}/last_update_status.json',
+      );
       await file.writeAsString(jsonEncode(status));
     } catch (e) {
       talker.error('Failed to save BG status: $e');

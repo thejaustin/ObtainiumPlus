@@ -42,20 +42,20 @@ class KnownIssue {
   });
 
   factory KnownIssue.fromJson(Map<String, dynamic> json) => KnownIssue(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        description: json['description'] as String,
-        severity: (json['severity'] as String?) ?? 'warning',
-        affectedVersions:
-            (json['affectedVersions'] as List<dynamic>?)?.cast<String>() ?? [],
-        minBuild: (json['affectedBuildRange'] as Map<String, dynamic>?)?['min']
-            as int?,
-        maxBuild: (json['affectedBuildRange'] as Map<String, dynamic>?)?['max']
-            as int?,
-        githubIssueUrl: json['githubIssueUrl'] as String,
-        fixedInVersion: json['fixedInVersion'] as String?,
-        forceUpdate: (json['forceUpdate'] as bool?) ?? false,
-      );
+    id: json['id'] as String,
+    title: json['title'] as String,
+    description: json['description'] as String,
+    severity: (json['severity'] as String?) ?? 'warning',
+    affectedVersions:
+        (json['affectedVersions'] as List<dynamic>?)?.cast<String>() ?? [],
+    minBuild:
+        (json['affectedBuildRange'] as Map<String, dynamic>?)?['min'] as int?,
+    maxBuild:
+        (json['affectedBuildRange'] as Map<String, dynamic>?)?['max'] as int?,
+    githubIssueUrl: json['githubIssueUrl'] as String,
+    fixedInVersion: json['fixedInVersion'] as String?,
+    forceUpdate: (json['forceUpdate'] as bool?) ?? false,
+  );
 
   bool affects(String versionName, int buildNumber) {
     if (affectedVersions.isNotEmpty) {
@@ -104,8 +104,7 @@ class KnownIssuesService {
     return issues
         .where(
           (i) =>
-              i.affects(versionName, buildNumber) &&
-              !dismissed.contains(i.id),
+              i.affects(versionName, buildNumber) && !dismissed.contains(i.id),
         )
         .toList();
   }
@@ -125,8 +124,9 @@ class KnownIssuesService {
   static Future<String?> _fetchWithCache(SharedPreferences prefs) async {
     final cacheTs = prefs.getInt(_cacheTimestampKey);
     if (cacheTs != null) {
-      final age = DateTime.now()
-          .difference(DateTime.fromMillisecondsSinceEpoch(cacheTs));
+      final age = DateTime.now().difference(
+        DateTime.fromMillisecondsSinceEpoch(cacheTs),
+      );
       if (age.inHours < _cacheTtlHours) {
         return prefs.getString(_cacheKey);
       }

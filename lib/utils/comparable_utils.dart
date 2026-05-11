@@ -6,7 +6,9 @@ int compareAlphaNumeric(String a, String b) {
   final List<String> partsA = matchesA.map((m) => m.group(0)!).toList();
   final List<String> partsB = matchesB.map((m) => m.group(0)!).toList();
 
-  final int length = partsA.length < partsB.length ? partsA.length : partsB.length;
+  final int length = partsA.length < partsB.length
+      ? partsA.length
+      : partsB.length;
 
   for (int i = 0; i < length; i++) {
     final String partA = partsA[i];

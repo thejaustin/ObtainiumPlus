@@ -8,17 +8,10 @@ class URLValidator {
   static final LogsProvider _logs = LogsProvider();
 
   /// List of allowed deep link hosts for Obtainium
-  static const List<String> _allowedDeepLinkHosts = [
-    'add',
-    'app',
-    'apps',
-  ];
+  static const List<String> _allowedDeepLinkHosts = ['add', 'app', 'apps'];
 
   /// List of allowed URL schemes for app sources
-  static const List<String> _allowedSourceSchemes = [
-    'http',
-    'https',
-  ];
+  static const List<String> _allowedSourceSchemes = ['http', 'https'];
 
   /// Expected deep link scheme for Obtainium
   static const String _deepLinkScheme = 'obtainium';

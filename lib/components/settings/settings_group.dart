@@ -15,7 +15,7 @@ class SettingsGroup extends StatelessWidget {
     // Use listen: false to avoid type mismatch issues when nested in specialized Consumers
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Robustly filter out hidden/empty widgets
     final visibleChildren = children.where((child) {
       if (child is SizedBox && child.child == null) return false;
@@ -34,60 +34,66 @@ class SettingsGroup extends StatelessWidget {
             child: Text(
               title!,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-        Builder(builder: (context) {
-          final container = Container(
-            margin: const EdgeInsets.symmetric(vertical: 4.0),
-            decoration: BoxDecoration(
-              color: (isDark
-                      ? Theme.of(context).colorScheme.surfaceContainerHigh
-                      : Theme.of(context).colorScheme.surface)
-                  .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
-              borderRadius: BorderRadius.circular(28.0),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2),
-                width: 1,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: List.generate(visibleChildren.length, (index) {
-                return Column(
-                  children: [
-                    visibleChildren[index],
-                    if (index < visibleChildren.length - 1)
-                      Divider(
-                        height: 1,
-                        indent: 56,
-                        endIndent: 16,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outlineVariant
-                            .withOpacity(AppOpacity.low),
+          ),
+        Builder(
+          builder: (context) {
+            final container = Container(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              decoration: BoxDecoration(
+                color:
+                    (isDark
+                            ? Theme.of(context).colorScheme.surfaceContainerHigh
+                            : Theme.of(context).colorScheme.surface)
+                        .withOpacity(
+                          settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                        ),
+                borderRadius: BorderRadius.circular(28.0),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant
+                      .withOpacity(
+                        settings.plusEnableGlassmorphism ? 0.4 : 0.2,
                       ),
-                  ],
-                );
-              }),
-            ),
-          );
-          if (!settings.plusEnableGlassmorphism) {
+                  width: 1,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: List.generate(visibleChildren.length, (index) {
+                  return Column(
+                    children: [
+                      visibleChildren[index],
+                      if (index < visibleChildren.length - 1)
+                        Divider(
+                          height: 1,
+                          indent: 56,
+                          endIndent: 16,
+                          color: Theme.of(context).colorScheme.outlineVariant
+                              .withOpacity(AppOpacity.low),
+                        ),
+                    ],
+                  );
+                }),
+              ),
+            );
+            if (!settings.plusEnableGlassmorphism) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(28.0),
+                child: container,
+              );
+            }
             return ClipRRect(
               borderRadius: BorderRadius.circular(28.0),
-              child: container,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: container,
+              ),
             );
-          }
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(28.0),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: container,
-            ),
-          );
-        }),
+          },
+        ),
       ],
     );
   }

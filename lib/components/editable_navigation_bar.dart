@@ -119,7 +119,9 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                     border: Border(
                       top: BorderSide(
                         color: widget.isEditMode
-                            ? colorScheme.primary.withOpacity(AppOpacity.moderate)
+                            ? colorScheme.primary.withOpacity(
+                                AppOpacity.moderate,
+                              )
                             : colorScheme.outlineVariant.withOpacity(0.35),
                         width: widget.isEditMode ? 2 : 1,
                       ),
@@ -158,7 +160,8 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
           children: List.generate(itemCount, (index) {
             final page = widget.activePages[index];
             final isSelected = index == widget.selectedIndex;
-            final isDragTarget = _dragOverIndex == index && _dragFromIndex != index;
+            final isDragTarget =
+                _dragOverIndex == index && _dragFromIndex != index;
 
             return AnimatedPositioned(
               duration: _dragFromIndex != null
@@ -248,10 +251,7 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
           ),
         ),
       ),
-      childWhenDragging: Opacity(
-        opacity: 0.3,
-        child: tabContent,
-      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: tabContent),
       child: DragTarget<int>(
         onWillAcceptWithDetails: (details) {
           if (details.data != index) {
@@ -311,36 +311,33 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                   )
                 : null,
             child: widget.isEditMode
-              ? AnimatedBuilder(
-                  animation: _wiggleController,
-                  builder: (context, child) {
-                    final wiggle = math.sin(
-                          _wiggleController.value * 2 * math.pi +
-                              index * 0.7,
-                        ) *
-                        0.02;
-                    return Transform.rotate(
-                      angle: wiggle,
-                      child: child,
-                    );
-                  },
-                  child: _buildTabIcon(
+                ? AnimatedBuilder(
+                    animation: _wiggleController,
+                    builder: (context, child) {
+                      final wiggle =
+                          math.sin(
+                            _wiggleController.value * 2 * math.pi + index * 0.7,
+                          ) *
+                          0.02;
+                      return Transform.rotate(angle: wiggle, child: child);
+                    },
+                    child: _buildTabIcon(
+                      context,
+                      colorScheme,
+                      page,
+                      isSelected,
+                      showRemoveBadge: true,
+                      index: index,
+                    ),
+                  )
+                : _buildTabIcon(
                     context,
                     colorScheme,
                     page,
                     isSelected,
-                    showRemoveBadge: true,
+                    showRemoveBadge: false,
                     index: index,
                   ),
-                )
-              : _buildTabIcon(
-                  context,
-                  colorScheme,
-                  page,
-                  isSelected,
-                  showRemoveBadge: false,
-                  index: index,
-                ),
           ),
         ),
       ),
@@ -355,8 +352,8 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
     required bool showRemoveBadge,
     required int index,
   }) {
-    final showLabels = widget.labelBehavior ==
-            NavigationDestinationLabelBehavior.alwaysShow ||
+    final showLabels =
+        widget.labelBehavior == NavigationDestinationLabelBehavior.alwaysShow ||
         (widget.labelBehavior ==
                 NavigationDestinationLabelBehavior.onlyShowSelected &&
             isSelected);
@@ -372,8 +369,10 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? colorScheme.secondaryContainer
@@ -385,8 +384,10 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                   switchInCurve: Curves.easeOutBack,
                   switchOutCurve: Curves.easeIn,
                   transitionBuilder: (child, animation) => ScaleTransition(
-                    scale: Tween<double>(begin: 0.75, end: 1.0)
-                        .animate(animation),
+                    scale: Tween<double>(
+                      begin: 0.75,
+                      end: 1.0,
+                    ).animate(animation),
                     child: child,
                   ),
                   child: Icon(
@@ -407,15 +408,15 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           page.title,
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: isSelected
-                                        ? colorScheme.onSurface
-                                        : colorScheme.onSurfaceVariant,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: isSelected
+                                    ? colorScheme.onSurface
+                                    : colorScheme.onSurfaceVariant,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
                           maxLines: 1,
                           softWrap: false,
                           overflow: TextOverflow.fade,
@@ -504,9 +505,9 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               const SizedBox(height: 4),
               Text(
                 tr('add'),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.primary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: colorScheme.primary),
                 maxLines: 1,
               ),
             ],
@@ -546,9 +547,9 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
               const SizedBox(height: 4),
               Text(
                 tr('ok'),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.primary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: colorScheme.primary),
                 maxLines: 1,
               ),
             ],
@@ -557,5 +558,4 @@ class _EditableNavigationBarState extends State<EditableNavigationBar>
       ),
     );
   }
-
 }

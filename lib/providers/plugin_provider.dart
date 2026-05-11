@@ -30,14 +30,15 @@ class ObtainiumPlugin {
     'enabled': enabled,
   };
 
-  factory ObtainiumPlugin.fromJson(Map<String, dynamic> json) => ObtainiumPlugin(
-    id: json['id'],
-    name: json['name'],
-    description: json['description'],
-    githubUrl: json['githubUrl'],
-    jsCode: json['jsCode'],
-    enabled: json['enabled'] ?? true,
-  );
+  factory ObtainiumPlugin.fromJson(Map<String, dynamic> json) =>
+      ObtainiumPlugin(
+        id: json['id'],
+        name: json['name'],
+        description: json['description'],
+        githubUrl: json['githubUrl'],
+        jsCode: json['jsCode'],
+        enabled: json['enabled'] ?? true,
+      );
 }
 
 class PluginProvider with ChangeNotifier {

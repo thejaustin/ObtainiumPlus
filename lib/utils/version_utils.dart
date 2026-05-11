@@ -9,7 +9,17 @@ List<String> generateStandardVersionRegExStrings() {
   ];
   var prefixes = ['[vV]?', '[pP]?', 'dev-', 'stable-'];
   var preSuffixes = ['-', '\\.r', '\\.', '_'];
-  var suffixes = ['alpha', 'beta', 'ose', '[0-9]+', '[pP][0-9]+', '[vV][0-9]+', 'shizukuplus', 'fork', 'plus'];
+  var suffixes = [
+    'alpha',
+    'beta',
+    'ose',
+    '[0-9]+',
+    '[pP][0-9]+',
+    '[vV][0-9]+',
+    'shizukuplus',
+    'fork',
+    'plus',
+  ];
   var finals = ['\\+[0-9]+', '[0-9]+', '-shizukuplus', '-plus', '-fork'];
   List<String> results = [];
   for (var b in basics) {
@@ -30,7 +40,8 @@ List<String> generateStandardVersionRegExStrings() {
   return results;
 }
 
-List<String> standardVersionRegExStrings = generateStandardVersionRegExStrings();
+List<String> standardVersionRegExStrings =
+    generateStandardVersionRegExStrings();
 
 Set<String> findStandardFormatsForVersion(String version, bool strict) {
   // If !strict, even a substring match is valid
@@ -56,8 +67,10 @@ MapEntry<bool, String>? reconcileVersionDifferences(
   bool aggressive = false,
 }) {
   if (aggressive) {
-    if (templateVersion == comparisonVersion) return MapEntry(true, comparisonVersion);
-    if (normalizeVersion(templateVersion) == normalizeVersion(comparisonVersion)) {
+    if (templateVersion == comparisonVersion)
+      return MapEntry(true, comparisonVersion);
+    if (normalizeVersion(templateVersion) ==
+        normalizeVersion(comparisonVersion)) {
       return MapEntry(true, comparisonVersion);
     }
   }
@@ -86,11 +99,7 @@ MapEntry<bool, String>? reconcileVersionDifferences(
     return null;
   }
   for (String pattern in commonStandardFormats) {
-    if (doStringsMatchUnderRegEx(
-      pattern,
-      comparisonVersion,
-      templateVersion,
-    )) {
+    if (doStringsMatchUnderRegEx(pattern, comparisonVersion, templateVersion)) {
       return MapEntry(true, comparisonVersion);
     }
   }

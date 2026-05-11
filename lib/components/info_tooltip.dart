@@ -19,7 +19,11 @@ class InfoTooltip extends StatelessWidget {
       child: Tooltip(
         message: message,
         triggerMode: TooltipTriggerMode.tap,
-        child: Icon(Icons.info_outline, size: size, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        child: Icon(
+          Icons.info_outline,
+          size: size,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

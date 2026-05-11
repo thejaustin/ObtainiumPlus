@@ -10,18 +10,18 @@ import 'package:obtainium/utils/app_constants.dart';
 /// Control Grid for Boolean Settings
 /// Displays boolean settings in a compact 2-column grid layout
 class BooleanControlGrid extends StatelessWidget {
-  final List<({
-    String key,
-    String label,
-    String? description,
-    bool Function(SettingsProvider) getValue,
-    void Function(SettingsProvider, bool) setValue,
-  })> settings;
+  final List<
+    ({
+      String key,
+      String label,
+      String? description,
+      bool Function(SettingsProvider) getValue,
+      void Function(SettingsProvider, bool) setValue,
+    })
+  >
+  settings;
 
-  const BooleanControlGrid({
-    super.key,
-    required this.settings,
-  });
+  const BooleanControlGrid({super.key, required this.settings});
 
   @override
   Widget build(BuildContext context) {
@@ -32,17 +32,28 @@ class BooleanControlGrid extends StatelessWidget {
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(24.0),
-          child: ConditionalBlur(sigma: 10, enabled: settings.plusEnableGlassmorphism, child: Container(
+          child: ConditionalBlur(
+            sigma: 10,
+            enabled: settings.plusEnableGlassmorphism,
+            child: Container(
               padding: const EdgeInsets.all(16.0),
               margin: EdgeInsets.zero,
               decoration: BoxDecoration(
-                color: (isDark 
-                    ? Theme.of(context).colorScheme.surfaceContainerHighest 
-                    : Theme.of(context).colorScheme.surface)
-                  .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+                color:
+                    (isDark
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest
+                            : Theme.of(context).colorScheme.surface)
+                        .withOpacity(
+                          settings.plusEnableGlassmorphism ? 0.6 : 1.0,
+                        ),
                 borderRadius: BorderRadius.circular(24.0),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1),
+                  color: Theme.of(context).colorScheme.outlineVariant
+                      .withOpacity(
+                        settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                      ),
                 ),
                 boxShadow: AppShadows.smooth(
                   color: Theme.of(context).colorScheme.shadow,
@@ -56,25 +67,26 @@ class BooleanControlGrid extends StatelessWidget {
                   Text(
                     tr('quickToggles'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 2.2,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 2.2,
+                        ),
                     itemCount: this.settings.length,
                     itemBuilder: (context, index) {
                       final setting = this.settings[index];
                       final currentValue = setting.getValue(settingsProvider);
-                      
+
                       return _buildBooleanControlItem(
                         context: context,
                         label: setting.label,
@@ -106,9 +118,7 @@ class BooleanControlGrid extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Material(
         color: Colors.transparent,
@@ -127,9 +137,9 @@ class BooleanControlGrid extends StatelessWidget {
                       Text(
                         label,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -137,8 +147,11 @@ class BooleanControlGrid extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

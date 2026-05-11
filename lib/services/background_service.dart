@@ -19,11 +19,19 @@ class BackgroundService {
     bool isTimeout = task.timeout;
     if (isTimeout) {
       talker.warning('BG update task timed out.');
-      try { BackgroundFetch.finish(taskId); } catch (e) { talker.warning('BackgroundFetch.finish failed: $e'); }
+      try {
+        BackgroundFetch.finish(taskId);
+      } catch (e) {
+        talker.warning('BackgroundFetch.finish failed: $e');
+      }
       return;
     }
     await BackgroundUpdateService.bgUpdateCheck(taskId, null);
-    try { BackgroundFetch.finish(taskId); } catch (e) { talker.warning('BackgroundFetch.finish failed: $e'); }
+    try {
+      BackgroundFetch.finish(taskId);
+    } catch (e) {
+      talker.warning('BackgroundFetch.finish failed: $e');
+    }
   }
 
   @pragma('vm:entry-point')
@@ -45,7 +53,9 @@ class BackgroundService {
           playSound: false,
         ),
         foregroundTaskOptions: ForegroundTaskOptions(
-          eventAction: ForegroundTaskEventAction.repeat(AppConstants.defaultUpdateIntervalMs),
+          eventAction: ForegroundTaskEventAction.repeat(
+            AppConstants.defaultUpdateIntervalMs,
+          ),
           autoRunOnBoot: true,
           autoRunOnMyPackageReplaced: true,
           allowWakeLock: true,
@@ -55,7 +65,9 @@ class BackgroundService {
     }
   }
 
-  static Future<ServiceRequestResult?> startForegroundService(bool restart) async {
+  static Future<ServiceRequestResult?> startForegroundService(
+    bool restart,
+  ) async {
     try {
       initForegroundService();
       if (await FlutterForegroundTask.isRunningService) {
@@ -101,9 +113,9 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    BackgroundUpdateService.bgUpdateCheck('bg_check', null).catchError(
-      (e) { talker.warning('onRepeatEvent bgUpdateCheck failed: $e'); },
-    );
+    BackgroundUpdateService.bgUpdateCheck('bg_check', null).catchError((e) {
+      talker.warning('onRepeatEvent bgUpdateCheck failed: $e');
+    });
   }
 
   @override

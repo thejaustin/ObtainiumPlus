@@ -20,7 +20,8 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/app_sources/git_source.dart';
 
 class GitHub extends GitSource {
-  static final Map<String, ({String etag, dynamic body, DateTime expiry})> _apiCache = {};
+  static final Map<String, ({String etag, dynamic body, DateTime expiry})>
+  _apiCache = {};
 
   @override
   Future<Response> sourceRequest(
@@ -33,19 +34,34 @@ class GitHub extends GitSource {
     await sp.initializeSettings();
 
     // Only cache GET requests to the API if smart retries/caching is enabled
-    if (postBody != null || !url.contains('api.github.com') || !sp.plusEnableSmartRetries) {
-      return super.sourceRequest(url, additionalSettings, followRedirects: followRedirects, postBody: postBody);
+    if (postBody != null ||
+        !url.contains('api.github.com') ||
+        !sp.plusEnableSmartRetries) {
+      return super.sourceRequest(
+        url,
+        additionalSettings,
+        followRedirects: followRedirects,
+        postBody: postBody,
+      );
     }
 
     final cached = _apiCache[url];
     if (cached != null && cached.expiry.isAfter(DateTime.now())) {
       // Use cached response if still fresh (GitHub suggests 60s for frequent checks)
-      return Response(jsonEncode(cached.body), 200, headers: {'x-from-obtainium-cache': 'true'});
+      return Response(
+        jsonEncode(cached.body),
+        200,
+        headers: {'x-from-obtainium-cache': 'true'},
+      );
     }
 
-    var sourceConfigSettingValues = await getSourceConfigValues(additionalSettings, sp);
-    Map<String, String> headers = await getRequestHeaders(additionalSettings, url) ?? {};
-    
+    var sourceConfigSettingValues = await getSourceConfigValues(
+      additionalSettings,
+      sp,
+    );
+    Map<String, String> headers =
+        await getRequestHeaders(additionalSettings, url) ?? {};
+
     if (cached != null) {
       headers['If-None-Match'] = cached.etag;
     }
@@ -61,7 +77,11 @@ class GitHub extends GitSource {
 
     if (res.statusCode == 304 && cached != null) {
       // Not modified, refresh expiry and return cached body
-      _apiCache[url] = (etag: cached.etag, body: cached.body, expiry: DateTime.now().add(const Duration(minutes: 5)));
+      _apiCache[url] = (
+        etag: cached.etag,
+        body: cached.body,
+        expiry: DateTime.now().add(const Duration(minutes: 5)),
+      );
       return Response(jsonEncode(cached.body), 200, headers: res.headers);
     }
 
@@ -72,7 +92,7 @@ class GitHub extends GitSource {
         _apiCache[url] = (
           etag: res.headers['etag']!,
           body: body,
-          expiry: DateTime.now().add(const Duration(minutes: 5))
+          expiry: DateTime.now().add(const Duration(minutes: 5)),
         );
       } catch (_) {}
     }
@@ -199,7 +219,13 @@ class GitHub extends GitSource {
           ],
         ),
       ],
-      [GeneratedFormSwitch('verifyLatestTag', label: tr('verifyLatestTag'), tooltip: tr('verifyLatestTagTooltip'))],
+      [
+        GeneratedFormSwitch(
+          'verifyLatestTag',
+          label: tr('verifyLatestTag'),
+          tooltip: tr('verifyLatestTagTooltip'),
+        ),
+      ],
       [
         GeneratedFormDropdown(
           'sortMethodChoice',
@@ -517,6 +543,7 @@ class GitHub extends GitSource {
         }
         return date;
       }
+
       DateTime? getNewestAssetDateFromRelease(dynamic rel) {
         var allAssets = rel['assets'] as List<dynamic>?;
         var filteredAssets = rel['filteredAssets'] as List<dynamic>?;
@@ -841,7 +868,9 @@ class GitHub extends GitSource {
     var sp = SettingsProvider();
     await sp.initializeSettings();
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
-    bool includeForks = querySettings['includeForks'] == true || querySettings['includeForks'] == 'true';
+    bool includeForks =
+        querySettings['includeForks'] == true ||
+        querySettings['includeForks'] == 'true';
     String forkParam = includeForks ? '+fork:true' : '';
     var results = await searchCommon(
       query,

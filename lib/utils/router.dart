@@ -27,14 +27,16 @@ final router = GoRouter(
         GoRoute(
           path: 'settings',
           builder: (context, state) {
-            final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+            final tab =
+                int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
             return SettingsPage(initialTab: tab);
           },
         ),
         GoRoute(
           path: 'add',
           builder: (context, state) {
-            final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+            final tab =
+                int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
             return AddAppPage(initialTab: tab);
           },
         ),
@@ -42,10 +44,7 @@ final router = GoRouter(
           path: 'import_export',
           builder: (context, state) => const ImportExportPage(),
         ),
-        GoRoute(
-          path: 'logs',
-          builder: (context, state) => const LogsPage(),
-        ),
+        GoRoute(path: 'logs', builder: (context, state) => const LogsPage()),
       ],
     ),
   ],

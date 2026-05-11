@@ -22,7 +22,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
   Future<void> _startScan() async {
     if (_isScanning) return;
-    
+
     setState(() {
       _isScanning = true;
       _updates = [];
@@ -53,16 +53,18 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isScanning = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Scan failed: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Scan failed: ${e.toString()}')));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final stateKey = _isScanning ? 'scanning' : (_updates.isEmpty ? 'empty' : 'results');
+    final stateKey = _isScanning
+        ? 'scanning'
+        : (_updates.isEmpty ? 'empty' : 'results');
 
     Widget body;
     if (!_isScanning && _updates.isEmpty) {
@@ -105,28 +107,26 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
     } else {
       body = Scaffold(
         key: const ValueKey('results'),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: _updates.length,
-        itemBuilder: (context, index) {
-          final update = _updates[index];
-          return _buildUpdateCard(update);
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startScan,
-        tooltip: tr('refresh'),
-        child: const Icon(Icons.refresh),
-      ),
-    );
+        body: ListView.builder(
+          padding: const EdgeInsets.all(8),
+          itemCount: _updates.length,
+          itemBuilder: (context, index) {
+            final update = _updates[index];
+            return _buildUpdateCard(update);
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _startScan,
+          tooltip: tr('refresh'),
+          child: const Icon(Icons.refresh),
+        ),
+      );
     }
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      transitionBuilder: (child, anim) => FadeTransition(
-        opacity: anim,
-        child: child,
-      ),
+      transitionBuilder: (child, anim) =>
+          FadeTransition(opacity: anim, child: child),
       child: KeyedSubtree(key: ValueKey(stateKey), child: body),
     );
   }
@@ -146,7 +146,10 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        title: Text(update.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          update.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text(
           '${update.currentVersion} → ${update.latestVersion}',
           style: TextStyle(
@@ -181,10 +184,22 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
                             }
                           },
                           items: [
-                            DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
-                            DropdownMenuItem(value: 'aurora', child: const Text('Aurora Store')),
-                            DropdownMenuItem(value: 'github', child: const Text('GitHub')),
-                            DropdownMenuItem(value: 'apkpure', child: const Text('APKPure')),
+                            DropdownMenuItem(
+                              value: 'play_store',
+                              child: Text(tr('playStore')),
+                            ),
+                            DropdownMenuItem(
+                              value: 'aurora',
+                              child: const Text('Aurora Store'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'github',
+                              child: const Text('GitHub'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'apkpure',
+                              child: const Text('APKPure'),
+                            ),
                           ],
                         ),
                       ],
@@ -207,7 +222,10 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
                           label: tr('updateViaPlayStore'),
                           onPressed: () => PlayStoreMirrorService.openInSource(
                             appId: update.appId,
-                            source: settings.preferredUpdateSource == 'play_store' ? 'play_store' : 'play_store',
+                            source:
+                                settings.preferredUpdateSource == 'play_store'
+                                ? 'play_store'
+                                : 'play_store',
                           ),
                         ),
                         _buildActionButton(
@@ -237,10 +255,15 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
                       subtitle: Text(tr('trackFromGooglePlay')),
                       onTap: () async {
                         final appsProvider = context.read<AppsProvider>();
-                        final url = 'https://play.google.com/store/apps/details?id=${update.appId}';
+                        final url =
+                            'https://play.google.com/store/apps/details?id=${update.appId}';
                         await appsProvider.addAppsByURL([url]);
                         if (mounted) {
-                          setState(() => _updates.removeWhere((u) => u.appId == update.appId));
+                          setState(
+                            () => _updates.removeWhere(
+                              (u) => u.appId == update.appId,
+                            ),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tr('appAlreadyAdded'))),
                           );
@@ -257,13 +280,21 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
     );
   }
 
-  Widget _buildActionButton({required IconData icon, required String label, required VoidCallback onPressed}) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton.filledTonal(onPressed: onPressed, icon: Icon(icon)),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 10), textAlign: TextAlign.center),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

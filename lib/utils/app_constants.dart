@@ -82,18 +82,25 @@ class AppConstants {
   // Package IDs for thejaustin's "Plus" apps
   /// ObtainiumPlus Package ID
   static const String obtainiumPlusId = 'app.obtainiumplus';
+
   /// ShizukuPlus Package ID
   static const String shizukuPlusId = 'af.shizuku.plus.api';
+
   /// AppManager (thejaustin fork) Package ID
   static const String appManagerId = 'io.github.muntashirakon.AppManager';
+
   /// ContactsPlus Package ID
   static const String contactsPlusId = 'com.contactsplus.app';
+
   /// TermuxPlus Package ID
   static const String termuxPlusId = 'com.termux.plus';
+
   /// SimWeather Package ID
   static const String simWeatherId = 'com.thejaustin.simweather';
+
   /// ShareMove Package ID
   static const String shareMoveId = 'com.thejaustin.sharemove';
+
   /// Pearity Package ID
   static const String pearityId = 'com.thejaustin.pearity';
 
@@ -171,10 +178,7 @@ class AppShadows {
   }
 
   /// A diffuse glow effect for selected or highlighted items.
-  static List<BoxShadow> glow({
-    required Color color,
-    double intensity = 1.0,
-  }) {
+  static List<BoxShadow> glow({required Color color, double intensity = 1.0}) {
     return [
       BoxShadow(
         color: color.withOpacity(0.2 * intensity),

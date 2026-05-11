@@ -39,8 +39,7 @@ class GitHubPersonalRepos implements MassAppUrlSource {
       for (final repo in repos) {
         final htmlUrl = repo['html_url'] as String;
         final fullName = repo['full_name'] as String;
-        final description =
-            (repo['description'] as String?)?.trim() ?? '';
+        final description = (repo['description'] as String?)?.trim() ?? '';
         final stars = repo['stargazers_count'] as int? ?? 0;
         final language = (repo['language'] as String?) ?? '';
         final isFork = repo['fork'] as bool? ?? false;
@@ -56,9 +55,10 @@ class GitHubPersonalRepos implements MassAppUrlSource {
           if (isPrivate) tr('private'),
         ].join(' · ');
 
-        final descLine =
-            [if (description.isNotEmpty) description, if (badges.isNotEmpty) badges]
-                .join('\n');
+        final descLine = [
+          if (description.isNotEmpty) description,
+          if (badges.isNotEmpty) badges,
+        ].join('\n');
 
         urlsWithDescriptions[htmlUrl] = [fullName, descLine];
       }
