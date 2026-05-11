@@ -19,6 +19,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
+import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/contextual_tip.dart';
 
@@ -63,7 +64,6 @@ class AppsPage extends StatefulWidget {
 class AppsPageState extends State<AppsPage> {
   AppsFilter filter = AppsFilter();
   final AppsFilter neutralFilter = AppsFilter();
-  Set<String> selectedAppIds = {};
   String? activeAppId;
   DateTime? refreshingSince;
 
@@ -77,22 +77,20 @@ class AppsPageState extends State<AppsPage> {
   }
 
   bool clearSelected() {
-    if (selectedAppIds.isNotEmpty) {
-      setState(() {
-        selectedAppIds.clear();
-      });
+    final appsProvider = context.read<AppsProvider>();
+    if (appsProvider.isSelectionMode) {
+      appsProvider.clearSelection();
       return true;
     }
     return false;
   }
 
   void selectThese(List<App> apps) {
-    if (selectedAppIds.isEmpty) {
-      setState(() {
-        for (var a in apps) {
-          selectedAppIds.add(a.id);
-        }
-      });
+    final appsProvider = context.read<AppsProvider>();
+    if (!appsProvider.isSelectionMode) {
+      for (var a in apps) {
+        appsProvider.toggleAppSelection(a.id);
+      }
     }
   }
 
@@ -478,9 +476,46 @@ class AppsPageState extends State<AppsPage> {
       };
     }
 
+    Widget _buildBulkActionsToolbar(BuildContext context, AppsProvider appsProvider) {
+      return SliverToBoxAdapter(
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: appsProvider.clearSelection,
+                icon: const Icon(Icons.close),
+              ),
+              Text('${appsProvider.selectedAppIds.length} ${tr('selected')}'),
+              const Spacer(),
+              IconButton(
+                onPressed: () {
+                  final selectedApps = appsProvider.getAppValues().where((e) => appsProvider.selectedAppIds.contains(e.app.id)).map((e) => e.app).toList();
+                  appsProvider.removeAppsWithModal(context, selectedApps).then((_) => appsProvider.clearSelection());
+                },
+                icon: const Icon(Icons.delete_outline),
+              ),
+              IconButton(
+                onPressed: () {
+                  final selectedIds = appsProvider.selectedAppIds.toList();
+                  appsProvider.downloadAndInstallLatestApps(selectedIds, context).then((_) => appsProvider.clearSelection());
+                },
+                icon: const Icon(Icons.download_rounded),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     markSelectedAppsUpdated() async {
-      var selectedApps = listedApps
-          .where((e) => selectedAppIds.contains(e.app.id))
+      var selectedApps = appsProvider.getAppValues().toList()
+          .where((e) => appsProvider.selectedAppIds.contains(e.app.id))
           .map((e) => e.app)
           .toList();
       if (selectedApps.isEmpty) return;
@@ -508,7 +543,7 @@ class AppsPageState extends State<AppsPage> {
           app.installedVersion = app.latestVersion;
         }
         await appsProvider.saveApps(selectedApps);
-        clearSelected();
+        appsProvider.clearSelection();
         showMessage(tr('appsUpdated'), context);
       }
     }
@@ -599,7 +634,20 @@ class AppsPageState extends State<AppsPage> {
                   ),
                 ),
                 _buildDashboard(context, appsProvider, onRefresh),
-                if (settingsProvider.plusEnableTags) _buildTagFilterBar(context, appsProvider),
+  String? _activeTag;
+
+  Widget _buildTagFilter(AppsProvider appsProvider) {
+    return TagFilterBar(
+      activeTag: _activeTag,
+      onTagSelected: (tag) => setState(() {
+        _activeTag = tag;
+        filter.tagFilter = tag != null ? {tag} : {};
+      }),
+    );
+  }
+
+  // ... (inside _buildMainContent) ...
+                if (settingsProvider.plusEnableTags) _buildTagFilter(appsProvider),
                 if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
                 if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),
                 ...loadingWidgets,
@@ -789,15 +837,19 @@ class AppsPageState extends State<AppsPage> {
     return [
       IconButton(
         icon: Icon(
-          selectedAppIds.length == listedApps.length
+          appsProvider.selectedAppIds.length == listedApps.length
               ? Icons.deselect_outlined
               : Icons.select_all_outlined,
         ),
         onPressed: () {
-          if (selectedAppIds.length == listedApps.length) {
-            clearSelected();
+          if (appsProvider.selectedAppIds.length == listedApps.length) {
+            appsProvider.clearSelection();
           } else {
-            selectThese(listedApps.map((e) => e.app).toList());
+            for (var a in listedApps) {
+              if (!appsProvider.selectedAppIds.contains(a.app.id)) {
+                appsProvider.toggleAppSelection(a.app.id);
+              }
+            }
           }
         },
         tooltip: tr('selectAll'),
@@ -812,7 +864,7 @@ class AppsPageState extends State<AppsPage> {
         icon: const Icon(Icons.delete_outline),
         onPressed: () {
           var selectedApps = listedApps
-              .where((e) => selectedAppIds.contains(e.app.id))
+              .where((e) => appsProvider.selectedAppIds.contains(e.app.id))
               .map((e) => e.app)
               .toList();
           appsProvider.removeAppsWithModal(context, selectedApps);
@@ -872,18 +924,15 @@ class AppsPageState extends State<AppsPage> {
 
   void _bulkRefresh(BuildContext context, List<AppInMemory> listedApps) async {
     final appsProvider = context.read<AppsProvider>();
-    final selectedApps = listedApps
-        .where((e) => selectedAppIds.contains(e.app.id))
-        .map((e) => e.app.id)
-        .toList();
+    final selectedIds = appsProvider.selectedAppIds.toList();
 
-    if (selectedApps.isEmpty) return;
+    if (selectedIds.isEmpty) return;
 
     AppHaptics.selectionClick();
-    clearSelected();
+    appsProvider.clearSelection();
     
     // Trigger background update checks for selected apps
-    await appsProvider.checkUpdates(specificIds: selectedApps);
+    await appsProvider.checkUpdates(specificIds: selectedIds);
   }
 
   List<Widget> _buildNormalActions(

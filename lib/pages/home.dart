@@ -386,12 +386,9 @@ class HomePageState extends State<HomePage> {
     allPages = {
       'apps': NavigationPageItem('apps', tr('appsString'), Icons.apps_outlined, Icons.apps, appsPage),
       'updates': NavigationPageItem('updates', tr('updates'), Icons.update_outlined, Icons.update, updatesPage),
-      if (plusDeveloperMode)
-        'add': NavigationPageItem('add', tr('addApp'), Icons.add_circle_outline, Icons.add_circle, addAppPage),
       'discover': NavigationPageItem('discover', tr('discover'), Icons.explore_outlined, Icons.explore, discoverPage),
       'settings': NavigationPageItem('settings', tr('settings'), Icons.settings_outlined, Icons.settings, settingsPage),
-      'import_export': NavigationPageItem('import_export', tr('importExport'), Icons.swap_vert_outlined, Icons.swap_vert, importExportPage),
-      'logs': NavigationPageItem('logs', tr('appLogs'), Icons.article_outlined, Icons.article, logsPage),
+      'more': NavigationPageItem('more', tr('more'), Icons.more_horiz_outlined, Icons.more_horiz, settingsPage), // Placeholder for submenu
     };
 
     activePages = bottomTabs

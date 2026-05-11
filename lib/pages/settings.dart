@@ -152,6 +152,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _searchController = TextEditingController();
+  int _tapCount = 0;
   String _searchQuery = '';
   bool showIntervalLabel = false;
   bool _useGridView = true;
@@ -408,7 +409,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     _buildHubCard(context, icon: Icons.install_mobile_outlined, title: tr('installation'), subtitle: tr('installationDescription'), builder: _hubBuilderInstallation),
                     _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
                     if (settingsProvider.plusDeveloperMode)
-                      _buildHubCard(context, icon: Icons.code_rounded, title: tr('devAndLogs'), subtitle: tr('devAndLogsDescription'), builder: (ctx, controller) => DeveloperSettingsPage(scrollController: controller)),
+                      _buildHubCard(context, icon: Icons.code_rounded, title: tr('devAndLogs'), subtitle: tr('devAndLogsDescription'), builder: (ctx, controller) {
+                    _tapCount++;
+                    if (_tapCount >= 7) {
+                      _tapCount = 0;
+                      return DeveloperSettingsPage(scrollController: controller);
+                    }
+                    return const SizedBox.shrink();
+                  }),
                     _buildHubCard(context, icon: Icons.bug_report_outlined, title: tr('advanced'), subtitle: tr('advancedDescription'), builder: _hubBuilderAdvanced),
                   ]),
                 )
@@ -513,6 +521,16 @@ class _SettingsPageState extends State<SettingsPage> {
                         icon: Icons.info_outline_rounded,
                         label: 'App Info',
                         onTap: () async {
+                          _tapCount++;
+                          if (_tapCount == 7) {
+                            settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
+                            AppHaptics.heavyImpact();
+                            showMessage(settingsProvider.plusDeveloperMode ? 'Developer Mode Enabled' : 'Developer Mode Disabled', context);
+                            _tapCount = 0;
+                          } else if (_tapCount >= 3) {
+                             showMessage('${7 - _tapCount} more taps to toggle Dev Mode', context);
+                          }
+                          
                           final info = await DeviceInfoPlugin().androidInfo;
                           if (!mounted) return;
                           showDialog(
@@ -533,11 +551,6 @@ class _SettingsPageState extends State<SettingsPage> {
                               actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('close')))],
                             ),
                           );
-                        },
-                        onLongPress: () {
-                          settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
-                          AppHaptics.heavyImpact();
-                          showMessage(settingsProvider.plusDeveloperMode ? 'Developer Mode Enabled' : 'Developer Mode Disabled', context);
                         },
                       ),
                     ],

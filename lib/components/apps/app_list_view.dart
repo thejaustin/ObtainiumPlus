@@ -19,18 +19,14 @@ import 'package:easy_localization/easy_localization.dart';
 
 class AppListView extends StatelessWidget {
   final List<AppInMemory> apps;
-  final Set<String> selectedAppIds;
   final String? activeAppId;
-  final Function(App) toggleAppSelected;
   final Function(App) onAppTap;
   final Function(BuildContext, App) getChangeLogFn;
 
   const AppListView({
     super.key,
     required this.apps,
-    required this.selectedAppIds,
     this.activeAppId,
-    required this.toggleAppSelected,
     required this.onAppTap,
     required this.getChangeLogFn,
   });
@@ -113,7 +109,7 @@ class AppListView extends StatelessWidget {
                 context,
                 appId: app.app.id,
                 appUrl: app.app.url,
-                onToggleSelected: () => toggleAppSelected(app.app),
+                onToggleSelected: () => appsProvider.toggleAppSelection(app.app.id),
               );
 
           return Dismissible(
@@ -145,20 +141,19 @@ class AppListView extends StatelessWidget {
                 scale: apps.length <= 2 ? 1.02 : 1.0,
                 child: AppListTile(
                   appInMemory: app,
-                  isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
                   hasUpdate: hasUpdate,
                   onTap: () {
-                    if (selectedAppIds.isNotEmpty) {
-                      toggleAppSelected(app.app);
+                    if (appsProvider.isSelectionMode) {
+                      appsProvider.toggleAppSelection(app.app.id);
                     } else {
                       onAppTap(app.app);
                     }
                   },
                   onLongPress: () {
-                    if (selectedAppIds.isEmpty) {
+                    if (!appsProvider.isSelectionMode) {
                       _showAppShortcuts();
                     } else {
-                      toggleAppSelected(app.app);
+                      appsProvider.toggleAppSelection(app.app.id);
                     }
                   },
                   onShowChanges: getChangeLogFn(context, app.app),

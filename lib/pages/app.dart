@@ -418,23 +418,48 @@ class _AppPageState extends State<AppPage> {
                                       ],
                                     ),
 
-                                  // 4. About Group — only when popup slider is disabled to avoid duplicate
-                                  if (app?.app.additionalSettings['about'] != null && app!.app.additionalSettings['about'].toString().isNotEmpty && !appsProvider.settingsProvider.plusEnablePopupSlider)
-                                    ExpressiveSettingsGroup(
-                                      title: tr('about'),
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: MarkdownBody(
-                                            data: app.app.additionalSettings['about'].toString(),
-                                            onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
-                                            styleSheet: MarkdownStyleSheet(
-                                              p: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
-                                            ),
+                                  // 4. Advanced Group
+                                  ExpressiveSettingsGroup(
+                                    title: tr('advanced'),
+                                    children: [
+                                      ExpansionTile(
+                                        title: Text(tr('advancedSettings')),
+                                        leading: const Icon(Icons.tune_rounded),
+                                        children: [
+                                          ListTile(
+                                            title: Text(tr('additionalOptions')),
+                                            leading: const Icon(Icons.settings_input_composite_rounded),
+                                            onTap: () async {
+                                              var values = await showAdditionalOptionsDialog();
+                                              handleAdditionalOptionChanges(values);
+                                            },
                                           ),
-                                        ),
-                                      ],
-                                    ),
+                                          SwitchListTile(
+                                            title: Text(tr('trackOnly')),
+                                            value: trackOnly,
+                                            onChanged: (val) {
+                                              if (app != null) {
+                                                app.app.additionalSettings['trackOnly'] = val;
+                                                appsProvider.saveApps([app.app]);
+                                                setState(() {});
+                                              }
+                                            },
+                                          ),
+                                          SwitchListTile(
+                                            title: Text(tr('versionDetection')),
+                                            value: isVersionDetectionStandard,
+                                            onChanged: (val) {
+                                              if (app != null) {
+                                                app.app.additionalSettings['versionDetection'] = val;
+                                                appsProvider.saveApps([app.app]);
+                                                setState(() {});
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                   const SizedBox(height: 150),
                                 ],
                               ),

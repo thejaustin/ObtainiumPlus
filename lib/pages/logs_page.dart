@@ -80,6 +80,16 @@ $logs''';
             title: Text(tr('appLogs')),
             actions: [
               IconButton(
+                icon: const Icon(Icons.copy_outlined),
+                tooltip: tr('copyToClipboard'),
+                onPressed: () {
+                  if (logString != null) {
+                    Clipboard.setData(ClipboardData(text: logString!));
+                    showMessage(tr('copiedToClipboard'), context);
+                  }
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.delete_outline),
                 tooltip: tr('clearCache'),
                 onPressed: () {

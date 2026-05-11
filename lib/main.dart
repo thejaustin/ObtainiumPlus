@@ -235,6 +235,10 @@ void main() async {
                     create: (ctx) => AppsProvider(settings: settingsProvider),
                     update: (ctx, settings, apps) => apps!..settingsProvider = settings,
                   ),
+                  ChangeNotifierProxyProvider<AppsProvider, TagProvider>(
+                    create: (ctx) => TagProvider(ctx.read<AppsProvider>()),
+                    update: (ctx, apps, prev) => prev ?? TagProvider(apps),
+                  ),
                   ChangeNotifierProvider.value(value: settingsProvider.updateSettings),
                   ChangeNotifierProvider.value(value: settingsProvider.viewSettings),
                   ChangeNotifierProvider.value(value: settingsProvider.behaviorSettings),
