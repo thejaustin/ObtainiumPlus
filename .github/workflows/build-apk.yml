@@ -94,11 +94,11 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - name: Install Android SDK Platform 34
+      - name: Install Android SDK Platform 36
         run: |
           SDKMANAGER=$(find /usr/local/lib/android/sdk -name sdkmanager | head -n 1)
           echo "Using sdkmanager at: $SDKMANAGER"
-          echo "y" | $SDKMANAGER "platforms;android-34"
+          echo "y" | $SDKMANAGER "platforms;android-36"
 
       - name: Get dependencies
         run: flutter pub get
@@ -279,3 +279,6 @@ jobs:
     secrets: inherit
     permissions:
       issues: write
+      - name: Update Compile SDK
+        run: |
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/' android/app/build.gradle.kts
