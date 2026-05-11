@@ -39,6 +39,7 @@ import 'package:obtainium/app_sources/googleplay_native.dart';
 =======
 >>>>>>> upstream/main
 import 'package:obtainium/app_sources/huaweiappgallery.dart';
+import 'package:obtainium/app_sources/itchio.dart';
 import 'package:obtainium/app_sources/izzyondroid.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/app_sources/jenkins.dart';
@@ -1373,6 +1374,7 @@ class SourceProvider {
 >>>>>>> upstream/main
     Aptoide(),
     Uptodown(),
+    ItchIO(),
     HuaweiAppGallery(),
     Tencent(),
 <<<<<<< HEAD
