@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart;
 
 class OfflineService {
   static final OfflineService _instance = OfflineService._internal();
@@ -18,7 +18,7 @@ class OfflineService {
   Function(List<String>)? onOnline;
 
   Future<void> initialize(
-    SettingsProvider settingsProvider,
+    UpdateSettingsProvider settingsProvider,
     Function(List<String>) onOnlineCallback,
   ) async {
     onOnline = onOnlineCallback;
@@ -65,7 +65,7 @@ class OfflineService {
     }
   }
 
-  void addToQueue(String appId, SettingsProvider settingsProvider) {
+  void addToQueue(String appId, UpdateSettingsProvider settingsProvider) {
     final queue = settingsProvider.offlineQueue;
     if (!queue.contains(appId)) {
       queue.add(appId);
@@ -73,7 +73,7 @@ class OfflineService {
     }
   }
 
-  void removeFromQueue(String appId, SettingsProvider settingsProvider) {
+  void removeFromQueue(String appId, UpdateSettingsProvider settingsProvider) {
     final queue = settingsProvider.offlineQueue;
     if (queue.contains(appId)) {
       queue.remove(appId);
@@ -85,7 +85,7 @@ class OfflineService {
 
   void addAppToRetryQueue(
     String appId,
-    SettingsProvider settingsProvider, {
+    UpdateSettingsProvider settingsProvider, {
     String? reason,
   }) {
     final queue = settingsProvider.retryQueue;
@@ -108,7 +108,7 @@ class OfflineService {
     settingsProvider.retryQueue = queue;
   }
 
-  List<String> getDueRetries(SettingsProvider settingsProvider) {
+  List<String> getDueRetries(UpdateSettingsProvider settingsProvider) {
     final queue = settingsProvider.retryQueue;
     int now = DateTime.now().millisecondsSinceEpoch;
     List<String> dueRetries = [];
@@ -122,7 +122,7 @@ class OfflineService {
     return dueRetries;
   }
 
-  void clearAppFromRetryQueue(String appId, SettingsProvider settingsProvider) {
+  void clearAppFromRetryQueue(String appId, UpdateSettingsProvider settingsProvider) {
     final queue = settingsProvider.retryQueue;
     if (queue.containsKey(appId)) {
       queue.remove(appId);
