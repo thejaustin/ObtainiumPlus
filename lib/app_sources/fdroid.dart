@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
+=======
+>>>>>>> upstream/main
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -8,6 +11,7 @@ import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/app_sources/gitlab.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
@@ -70,6 +74,11 @@ class FDroid extends AppSource {
     return res;
   }
 
+=======
+import 'package:obtainium/providers/source_provider.dart';
+
+class FDroid extends AppSource {
+>>>>>>> upstream/main
   FDroid() {
     hosts = ['f-droid.org'];
     name = tr('fdroid');
@@ -83,7 +92,11 @@ class FDroid extends AppSource {
           required: false,
           additionalValidators: [
             (value) {
+<<<<<<< HEAD
               return SourceUtils.regExValidator(value);
+=======
+              return regExValidator(value);
+>>>>>>> upstream/main
             },
           ],
         ),
@@ -188,9 +201,14 @@ class FDroid extends AppSource {
           } catch (e) {
             //
           }
+<<<<<<< HEAD
           if (details.changeLog != null &&
               (isGitHub || isGitLab) &&
               (details.changeLog!.indexOf('/blob/') >= 0)) {
+=======
+          if ((isGitHub || isGitLab) &&
+              (details.changeLog?.indexOf('/blob/') ?? -1) >= 0) {
+>>>>>>> upstream/main
             details.changeLog = (await sourceRequest(
               details.changeLog!.replaceFirst('/blob/', '/raw/'),
               additionalSettings,
@@ -200,7 +218,11 @@ class FDroid extends AppSource {
       } catch (e) {
         // Fail silently
       }
+<<<<<<< HEAD
       if (details.changeLog != null && details.changeLog!.length > 2048) {
+=======
+      if ((details.changeLog?.length ?? 0) > 2048) {
+>>>>>>> upstream/main
         details.changeLog = '${details.changeLog!.substring(0, 2048)}...';
       }
     }
@@ -237,6 +259,7 @@ class FDroid extends AppSource {
       });
       return urlsWithDescriptions;
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
     }
   }
@@ -276,6 +299,9 @@ class FDroid extends AppSource {
       return (apps: apps, hasMore: hasMore);
     } else {
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 
@@ -305,7 +331,11 @@ class FDroid extends AppSource {
       if (apkFilterRegEx != null) {
         releases = releases.where((rel) {
           String apk = '${apkUrlPrefix}_${rel['versionCode']}.apk';
+<<<<<<< HEAD
           return SourceUtils.filterApks(
+=======
+          return filterApks(
+>>>>>>> upstream/main
             [MapEntry(apk, apk)],
             apkFilterRegEx,
             false,
@@ -384,7 +414,11 @@ class FDroid extends AppSource {
         AppNames(sourceName, Uri.parse(standardUrl).pathSegments.last),
       );
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 }

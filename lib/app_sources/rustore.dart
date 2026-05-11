@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
+=======
+>>>>>>> upstream/main
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -6,9 +9,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+=======
+>>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class RuStore extends AppSource {
@@ -63,7 +69,11 @@ class RuStore extends AppSource {
       additionalSettings,
     );
     if (res0.statusCode != 200) {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res0);
+=======
+      throw getObtainiumHttpError(res0);
+>>>>>>> upstream/main
     }
     var appDetails = (await decodeJsonBody(res0.bodyBytes))['body'];
     if (appDetails['appId'] == null) {
@@ -90,6 +100,7 @@ class RuStore extends AppSource {
       postBody: {"appId": appDetails['appId'], "firstInstall": true},
     );
     var downloadDetails = (await decodeJsonBody(res1.bodyBytes))['body'];
+<<<<<<< HEAD
     String? downloadUrl;
     try {
       final downloadUrls = downloadDetails['downloadUrls'];
@@ -100,13 +111,28 @@ class RuStore extends AppSource {
         throw NoAPKError();
       }
       downloadUrl = downloadUrls[0]['url'] as String;
+=======
+    try {
+      if (res1.statusCode != 200 || downloadDetails['downloadUrls'][0]['url'] == null) {
+        throw NoAPKError();
+      }
+>>>>>>> upstream/main
     } catch (e) {
       throw NoAPKError();
     }
 
     return APKDetails(
       version,
+<<<<<<< HEAD
       getApkUrlsFromUrls([downloadUrl!.replaceAll(RegExp('\\.zip\$'), '.apk')]),
+=======
+      getApkUrlsFromUrls([
+        (downloadDetails['downloadUrls'][0]['url'] as String).replaceAll(
+          RegExp('\\.zip\$'),
+          '.apk',
+        ),
+      ]),
+>>>>>>> upstream/main
       AppNames(author, appName),
       releaseDate: relDate,
       changeLog: changeLog,

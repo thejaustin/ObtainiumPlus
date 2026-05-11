@@ -8,6 +8,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+<<<<<<< HEAD
     id("io.sentry.android.gradle")
 }
 
@@ -16,6 +17,8 @@ sentry {
     autoUploadProguardMapping.set(false)
     uploadNativeSymbols.set(false)
     includeNativeSources.set(false)
+=======
+>>>>>>> upstream/main
 }
 
 val localProperties = Properties()
@@ -31,11 +34,17 @@ var flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
+<<<<<<< HEAD
 if (keystorePropertiesFile.exists()) {
+=======
+val keystorePropertiesExists = keystorePropertiesFile.exists()
+if (keystorePropertiesExists) {
+>>>>>>> upstream/main
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
+<<<<<<< HEAD
     namespace = "app.obtainiumplus"
     compileSdk = flutter.compileSdkVersion
 
@@ -54,11 +63,33 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
+=======
+    namespace = "dev.imranr.obtainium"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = "28.2.13676358"
+
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    defaultConfig {
+        applicationId = "dev.imranr.obtainium"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        minSdk = 26
+>>>>>>> upstream/main
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInt()
         versionName = flutterVersionName
     }
 
+<<<<<<< HEAD
     flavorDimensions("flavor")
 
     productFlavors {
@@ -66,26 +97,78 @@ android {
             dimension = "flavor"
             applicationIdSuffix = ""
         }
+=======
+    flavorDimensions += "default"
+
+    productFlavors {
+        create("normal") {
+            dimension = "default"
+            applicationIdSuffix = ""
+        }
+        create("fdroid") {
+            dimension = "default"
+            applicationIdSuffix = ".fdroid"
+        }
+>>>>>>> upstream/main
     }
 
     signingConfigs {
         create("release") {
+<<<<<<< HEAD
             keyAlias = keystoreProperties["keyAlias"].toString()
             keyPassword = keystoreProperties["keyPassword"].toString()
             storeFile = keystoreProperties["storeFile"]?.let { file(it) }
             storePassword = keystoreProperties["storePassword"].toString()
+=======
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+>>>>>>> upstream/main
         }
     }
 
     buildTypes {
         getByName("release") {
+<<<<<<< HEAD
             signingConfig = signingConfigs.getByName("release")
+=======
+            val releaseSigningConfig = signingConfigs.getByName("release")
+            signingConfig = if (keystorePropertiesExists && releaseSigningConfig.storeFile != null) {
+                releaseSigningConfig
+            } else {
+                if (gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }) {
+                    logger.error(
+                        """
+                            WARNING: You are trying to create a release build, but a key.properties file was not found.
+                                     You will need to sign the APKs separately.
+
+                            To sign a release build automatically, a keystore properties file is required.
+
+                            The following is an example configuration.
+                            Create a file named [project]/android/key.properties that contains a reference to your keystore.
+                            Don't include the angle brackets (< >). They indicate that the text serves as a placeholder for your values.
+
+                            storePassword=<keystore password>
+                            keyPassword=<key password>
+                            keyAlias=<key alias>
+                            storeFile=<keystore file location>
+
+                            For more info, see:
+                            * https://docs.flutter.dev/deployment/android#sign-the-app
+                        """.trimIndent()
+                    )
+                }
+                null
+            }
+>>>>>>> upstream/main
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
     }
+<<<<<<< HEAD
 
     lint {
         abortOnError = true
@@ -94,6 +177,8 @@ android {
         showAll = true
         explainIssues = true
     }
+=======
+>>>>>>> upstream/main
 }
 
 val abiCodes = mapOf("x86_64" to 1, "armeabi-v7a" to 2, "arm64-v8a" to 3)
@@ -111,7 +196,10 @@ android.applicationVariants.configureEach {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+<<<<<<< HEAD
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+=======
+>>>>>>> upstream/main
 }
 
 flutter {

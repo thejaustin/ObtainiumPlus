@@ -1,10 +1,14 @@
 import 'dart:io';
+<<<<<<< HEAD
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
+=======
+>>>>>>> upstream/main
 
 import 'package:android_package_installer/android_package_installer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:android_intent_plus/android_intent.dart';
@@ -22,6 +26,12 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+=======
+import 'package:flutter/services.dart';
+import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:provider/provider.dart';
+>>>>>>> upstream/main
 
 class ObtainiumError {
   late String message;
@@ -33,6 +43,7 @@ class ObtainiumError {
   }
 }
 
+<<<<<<< HEAD
 class FixAction {
   final String label;
   final VoidCallback action;
@@ -50,6 +61,8 @@ class DownloadCancelledError extends ObtainiumError {
   DownloadCancelledError() : super(tr('downloadCancelled'), unexpected: false);
 }
 
+=======
+>>>>>>> upstream/main
 class RateLimitError extends ObtainiumError {
   late int remainingMinutes;
   RateLimitError(this.remainingMinutes)
@@ -57,6 +70,7 @@ class RateLimitError extends ObtainiumError {
 }
 
 class InvalidURLError extends ObtainiumError {
+<<<<<<< HEAD
   String? appId;
   final String? detectedSource;
   final List<String>? suggestedSources;
@@ -75,6 +89,10 @@ class InvalidURLError extends ObtainiumError {
     }
     return tr('invalidURLForSource', args: [sourceName]);
   }
+=======
+  InvalidURLError(String sourceName)
+    : super(tr('invalidURLForSource', args: [sourceName]));
+>>>>>>> upstream/main
 }
 
 class CredsNeededError extends ObtainiumError {
@@ -83,14 +101,19 @@ class CredsNeededError extends ObtainiumError {
 }
 
 class NoReleasesError extends ObtainiumError {
+<<<<<<< HEAD
   String? appId;
   NoReleasesError({String? note, this.appId})
+=======
+  NoReleasesError({String? note})
+>>>>>>> upstream/main
     : super(
         '${tr('noReleaseFound')}${note?.isNotEmpty == true ? '\n\n$note' : ''}',
       );
 }
 
 class NoAPKError extends ObtainiumError {
+<<<<<<< HEAD
   String? appId;
   NoAPKError({this.appId}) : super(tr('noAPKFound'));
 }
@@ -118,19 +141,39 @@ class UnsupportedURLError extends ObtainiumError {
 class DowngradeError extends ObtainiumError {
   String? appId;
   DowngradeError(int currentVersionCode, int newVersionCode, {this.appId})
+=======
+  NoAPKError() : super(tr('noAPKFound'));
+}
+
+class NoVersionError extends ObtainiumError {
+  NoVersionError() : super(tr('noVersionFound'));
+}
+
+class UnsupportedURLError extends ObtainiumError {
+  UnsupportedURLError() : super(tr('urlMatchesNoSource'));
+}
+
+class DowngradeError extends ObtainiumError {
+  DowngradeError(int currentVersionCode, int newVersionCode)
+>>>>>>> upstream/main
     : super(
         '${tr('cantInstallOlderVersion')} (versionCode $currentVersionCode ➔ $newVersionCode)',
       );
 }
 
 class InstallError extends ObtainiumError {
+<<<<<<< HEAD
   final int code;
   final String? appId;
   InstallError(this.code, {this.appId})
+=======
+  InstallError(int code)
+>>>>>>> upstream/main
     : super(PackageInstallerStatus.byCode(code).name.substring(7));
 }
 
 class IDChangedError extends ObtainiumError {
+<<<<<<< HEAD
   String? appId;
   String newId;
   IDChangedError(this.newId, {this.appId})
@@ -140,6 +183,15 @@ class IDChangedError extends ObtainiumError {
 class BadDownloadError extends ObtainiumError {
   String? appId;
   BadDownloadError({this.appId}) : super(tr('badDownload'));
+=======
+  IDChangedError(String newId) : super('${tr('appIdMismatch')} - $newId');
+}
+
+class RepositoryRenamedError extends ObtainiumError {
+  final String oldUrl;
+  final String newUrl;
+  RepositoryRenamedError(this.oldUrl, this.newUrl) : super(tr('repoRenamed'));
+>>>>>>> upstream/main
 }
 
 class NotImplementedError extends ObtainiumError {
@@ -148,6 +200,7 @@ class NotImplementedError extends ObtainiumError {
 
 class MultiAppMultiError extends ObtainiumError {
   Map<String, dynamic> rawErrors = {};
+<<<<<<< HEAD
   Map<String, StackTrace?> stackTraces = {};
   Map<String, List<String>> idsByErrorString = {};
   Map<String, String> appIdNames = {};
@@ -185,6 +238,26 @@ class MultiAppMultiError extends ObtainiumError {
     unexpected = rawErrors.values.any(
       (e) => e is! ObtainiumError || e.unexpected,
     );
+=======
+  Map<String, List<String>> idsByErrorString = {};
+  Map<String, String> appIdNames = {};
+
+  MultiAppMultiError() : super(tr('placeholder'), unexpected: true);
+
+  void add(String appId, dynamic error, {String? appName}) {
+    if (error is SocketException) {
+      error = error.message;
+    }
+    rawErrors[appId] = error;
+    var string = error.toString();
+    var tempIds = idsByErrorString.remove(string);
+    tempIds ??= [];
+    tempIds.add(appId);
+    idsByErrorString.putIfAbsent(string, () => tempIds!);
+    if (appName != null) {
+      appIdNames[appId] = appName;
+    }
+>>>>>>> upstream/main
   }
 
   String errorString(String appId, {bool includeIdsWithNames = false}) =>
@@ -203,6 +276,7 @@ class MultiAppMultiError extends ObtainiumError {
       .join('\n\n');
 }
 
+<<<<<<< HEAD
 Future<ErrorResolution?> getResolutionForError(
   dynamic e,
   BuildContext context,
@@ -436,12 +510,52 @@ Future<void> showMessage(
           logMessage: logMessage,
           resolution: resolution,
           multiError: e is MultiAppMultiError ? e : null,
+=======
+void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
+  Provider.of<LogsProvider>(
+    context,
+    listen: false,
+  ).add(e.toString(), level: isError ? LogLevels.error : LogLevels.info);
+  if (e is String || (e is ObtainiumError && !e.unexpected)) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(e.toString())));
+  } else {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          scrollable: true,
+          title: Text(
+            e is MultiAppMultiError
+                ? tr(isError ? 'someErrors' : 'updates')
+                : tr(isError ? 'unexpectedError' : 'unknown'),
+          ),
+          content: GestureDetector(
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: e.toString()));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+            },
+            child: Text(e.toString()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+              child: Text(tr('ok')),
+            ),
+          ],
+>>>>>>> upstream/main
         );
       },
     );
   }
 }
 
+<<<<<<< HEAD
 /// Glassmorphic error dialog widget
 class _GlassErrorDialog extends StatelessWidget {
   final String title;
@@ -748,6 +862,10 @@ Future<void> showError(
   StackTrace? stackTrace,
 }) async {
   await showMessage(e, context, isError: true, stackTrace: stackTrace);
+=======
+void showError(dynamic e, BuildContext context) {
+  showMessage(e, context, isError: true);
+>>>>>>> upstream/main
 }
 
 String list2FriendlyString(List<String> list) {

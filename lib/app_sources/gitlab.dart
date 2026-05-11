@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
+=======
+>>>>>>> upstream/main
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,14 +10,18 @@ import 'package:http/http.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+=======
+>>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+<<<<<<< HEAD
 import 'package:obtainium/app_sources/git_source.dart';
 
 class GitLab extends GitSource {
@@ -22,17 +29,33 @@ class GitLab extends GitSource {
     hosts = ['gitlab.com'];
     canSearch = true;
     showReleaseDateAsVersionToggle = true;
+=======
+class GitLab extends AppSource {
+  GitLab({bool hostChanged = false}) {
+    hosts = ['gitlab.com'];
+    canSearch = true;
+    showReleaseDateAsVersionToggle = true;
+    this.hostChanged = hostChanged;
+>>>>>>> upstream/main
 
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
         'gitlab-creds',
+<<<<<<< HEAD
         label: tr('gitlabToken'),
         tooltip: tr('gitlabTokenTooltip'),
+=======
+        label: tr('gitlabPATLabel'),
+>>>>>>> upstream/main
         password: true,
         required: false,
         belowWidgets: [
           const SizedBox(height: 4),
+<<<<<<< HEAD
           GestureDetector(
+=======
+          InkWell(
+>>>>>>> upstream/main
             onTap: () {
               launchUrlString(
                 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token',
@@ -57,7 +80,10 @@ class GitLab extends GitSource {
         GeneratedFormSwitch(
           'fallbackToOlderReleases',
           label: tr('fallbackToOlderReleases'),
+<<<<<<< HEAD
           tooltip: tr('fallbackToOlderReleasesTooltip'),
+=======
+>>>>>>> upstream/main
           defaultValue: true,
         ),
       ],
@@ -102,7 +128,11 @@ class GitLab extends GitSource {
         'https://${hosts[0]}/api/v4/projects?search=${Uri.encodeQueryComponent(query)}';
     var res = await sourceRequest(url, {});
     if (res.statusCode != 200) {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
     var json = jsonDecode(res.body) as List<dynamic>;
     Map<String, List<String>> results = {};
@@ -167,7 +197,11 @@ class GitLab extends GitSource {
       additionalSettings,
     );
     if (res0.statusCode != 200) {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res0);
+=======
+      throw getObtainiumHttpError(res0);
+>>>>>>> upstream/main
     }
     int? projectId = jsonDecode(res0.body)['id'];
     if (projectId == null) {
@@ -180,7 +214,11 @@ class GitLab extends GitSource {
       additionalSettings,
     );
     if (res.statusCode != 200) {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
 
     // Extract .apk details from received data
@@ -200,15 +238,42 @@ class GitLab extends GitSource {
               (e['direct_asset_url'] ?? e['url'] ?? '') as String,
             );
           })
+<<<<<<< HEAD
           .where((s) => s.key.isNotEmpty)
+=======
+          .where(
+            (s) =>
+                s.key.isNotEmpty &&
+                (s.key.toLowerCase().endsWith('.apk') ||
+                    s.key.toLowerCase().endsWith('.xapk') ||
+                    s.value.toLowerCase().endsWith('.apk') ||
+                    s.value.toLowerCase().endsWith(
+                      '.xapk',
+                    )), // TODO: Supported file types should be centralized somewhere and shared between sources
+          )
+>>>>>>> upstream/main
           .toList();
       var uploadedAPKsFromDescription = ((e['description'] ?? '') as String)
           .split('](')
           .join('\n')
           .split('.apk)')
           .join('.apk\n')
+<<<<<<< HEAD
           .split('\n')
           .where((s) => s.startsWith('/uploads/') && s.endsWith('apk'))
+=======
+          .split('.xapk)')
+          .join('.xapk\n')
+          .split('\n')
+          .where(
+            (s) =>
+                s.startsWith('/uploads/') &&
+                (s.endsWith('apk') ||
+                    s.endsWith(
+                      'xapk',
+                    )), // TODO: Supported file types should be centralized somewhere and shared between sources
+          )
+>>>>>>> upstream/main
           .map((s) => 'https://${hosts[0]}/-/project/$projectId$s')
           .map((l) => MapEntry(Uri.parse(l).pathSegments.last, l))
           .toList();
@@ -243,9 +308,16 @@ class GitLab extends GitSource {
       apkDetailsList = apkDetailsList
           .where((e) => e.apkUrls.isNotEmpty)
           .toList();
+<<<<<<< HEAD
       if (apkDetailsList.isNotEmpty) {
         finalResult = apkDetailsList.first;
       }
+=======
+      if (apkDetailsList.isEmpty) {
+        throw NoReleasesError();
+      }
+      finalResult = apkDetailsList.first;
+>>>>>>> upstream/main
     }
 
     if (finalResult.apkUrls.isEmpty && !trackOnly) {

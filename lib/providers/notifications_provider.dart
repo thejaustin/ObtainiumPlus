@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+<<<<<<< HEAD
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+=======
+>>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class ObtainiumNotification {
@@ -196,7 +199,10 @@ class NotificationsProvider {
       FlutterLocalNotificationsPlugin();
 
   bool isInitialized = false;
+<<<<<<< HEAD
   SettingsProvider? settings;
+=======
+>>>>>>> upstream/main
 
   Map<Importance, Priority> importanceToPriority = {
     Importance.defaultImportance: Priority.defaultPriority,
@@ -208,11 +214,18 @@ class NotificationsProvider {
     Importance.unspecified: Priority.defaultPriority,
   };
 
+<<<<<<< HEAD
   Future<void> initialize({SettingsProvider? sp}) async {
     settings = sp;
     isInitialized =
         await notifications.initialize(
           const InitializationSettings(
+=======
+  Future<void> initialize() async {
+    isInitialized =
+        await notifications.initialize(
+          settings: const InitializationSettings(
+>>>>>>> upstream/main
             android: AndroidInitializationSettings('ic_notification'),
           ),
           onDidReceiveNotificationResponse: (NotificationResponse response) {
@@ -222,6 +235,7 @@ class NotificationsProvider {
         false;
   }
 
+<<<<<<< HEAD
   bool _isQuietHours() {
     if (settings == null || !settings!.plusEnableNotificationQuietHours)
       return false;
@@ -237,6 +251,8 @@ class NotificationsProvider {
     }
   }
 
+=======
+>>>>>>> upstream/main
   Future<void> checkLaunchByNotif() async {
     final NotificationAppLaunchDetails? launchDetails = await notifications
         .getNotificationAppLaunchDetails();
@@ -278,7 +294,11 @@ class NotificationsProvider {
     if (!isInitialized) {
       await initialize();
     }
+<<<<<<< HEAD
     await notifications.cancel(id);
+=======
+    await notifications.cancel(id: id);
+>>>>>>> upstream/main
   }
 
   Future<void> notifyRaw(
@@ -294,6 +314,7 @@ class NotificationsProvider {
     bool onlyAlertOnce = false,
     String? payload,
   }) async {
+<<<<<<< HEAD
     if (_isQuietHours() && importance != Importance.max) {
       return; // Skip non-critical notifications during quiet hours
     }
@@ -306,6 +327,8 @@ class NotificationsProvider {
       onlyAlertOnce = true;
     }
 
+=======
+>>>>>>> upstream/main
     if (cancelExisting) {
       await cancel(id);
     }
@@ -313,10 +336,17 @@ class NotificationsProvider {
       await initialize();
     }
     await notifications.show(
+<<<<<<< HEAD
       id,
       title,
       message,
       NotificationDetails(
+=======
+      id: id,
+      title: title,
+      body: message,
+      notificationDetails: NotificationDetails(
+>>>>>>> upstream/main
         android: AndroidNotificationDetails(
           channelCode,
           channelName,

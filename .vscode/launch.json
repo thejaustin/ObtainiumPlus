@@ -5,24 +5,52 @@
     "version": "0.2.0",
     "configurations": [
         {
+<<<<<<< HEAD
             "name": "Obtainium",
             "request": "launch",
             "type": "dart",
             "args":[ "--flavor", "normal" ]
+=======
+            "name": "Obtainium (debug mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "program": "lib/main.dart",
+            "args": [
+                "--flavor",
+                "normal"
+            ]
+>>>>>>> upstream/main
         },
         {
             "name": "Obtainium (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile",
+<<<<<<< HEAD
             "args":[ "--flavor", "normal" ]
+=======
+            "program": "lib/main.dart",
+            "args": [
+                "--flavor",
+                "normal"
+            ]
+>>>>>>> upstream/main
         },
         {
             "name": "Obtainium (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release",
+<<<<<<< HEAD
             "args":[ "--flavor", "normal" ]
+=======
+            "program": "lib/main.dart",
+            "args": [
+                "--flavor",
+                "normal"
+            ]
+>>>>>>> upstream/main
         }
     ]
 }

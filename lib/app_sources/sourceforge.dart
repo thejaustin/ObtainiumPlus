@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
@@ -5,6 +6,11 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+=======
+import 'package:html/parser.dart';
+import 'package:http/http.dart';
+import 'package:obtainium/custom_errors.dart';
+>>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class SourceForge extends AppSource {
@@ -82,7 +88,11 @@ class SourceForge extends AppSource {
           var version = segments.isNotEmpty ? segments.join('/') : null;
           if (version != null) {
             try {
+<<<<<<< HEAD
               var extractedVersion = SourceUtils.extractVersion(
+=======
+              var extractedVersion = extractVersion(
+>>>>>>> upstream/main
                 additionalSettings['versionExtractionRegEx'] as String?,
                 additionalSettings['matchGroupToUse'] as String?,
                 version,
@@ -127,7 +137,11 @@ class SourceForge extends AppSource {
         AppNames(name, segments[segments.indexOf('files') - 1]),
       );
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 }
