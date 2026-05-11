@@ -1,1283 +1,1213 @@
-import 'package:obtainium/utils/haptic_utils.dart';
-import 'dart:async';
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:equations/equations.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:obtainium/components/glass_dialog.dart';
-import 'package:obtainium/components/settings/advanced_settings_section.dart';
-import 'package:obtainium/components/settings/apps_view_settings_section.dart';
-import 'package:obtainium/components/settings/app_behavior_section.dart';
-import 'package:obtainium/components/settings/theme_settings_section.dart';
-import 'package:obtainium/components/settings/troubleshooting_section.dart';
-import 'package:obtainium/components/settings/update_settings_section.dart';
-import 'package:obtainium/components/settings/notification_settings_section.dart';
-import 'package:obtainium/components/settings/plus_features_section.dart';
-import 'package:obtainium/components/common/contextual_tip.dart';
-import 'package:obtainium/components/settings/installation_section.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:obtainium/utils/modal_utils.dart';
-import 'package:obtainium/utils/logger.dart';
-import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
-import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
-import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/providers/theme_settings_provider.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/update_settings_provider.dart';
-import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:obtainium/pages/changelog.dart';
-import 'package:obtainium/pages/developer_settings.dart';
-import 'package:obtainium/pages/statistics.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:obtainium/utils/app_constants.dart';
-
-class SetupAssistantSection extends StatefulWidget {
-  const SetupAssistantSection({super.key});
-
-  @override
-  State<SetupAssistantSection> createState() => _SetupAssistantSectionState();
-}
-
-class _SetupAssistantSectionState extends State<SetupAssistantSection> {
-  bool _isIgnoringBattery = true;
-  bool _hasNotificationPermission = true;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_checkStatus());
-  }
-
-  Future<void> _checkStatus() async {
-    final battery = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
-    final notifs = await Permission.notification.isGranted;
-    if (mounted) {
-      setState(() {
-        _isIgnoringBattery = battery;
-        _hasNotificationPermission = notifs;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isIgnoringBattery && _hasNotificationPermission)
-      return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Card(
-        elevation: 0,
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withOpacity(AppOpacity.low),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.auto_fix_high,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    tr('quickSetupAssistant'),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (!_isIgnoringBattery)
-                _buildActionRow(
-                  context,
-                  label: tr('quickSetupAllowBackground'),
-                  onTap: () async {
-                    await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-                    await _checkStatus();
-                  },
-                ),
-              if (!_hasNotificationPermission)
-                _buildActionRow(
-                  context,
-                  label: tr('quickSetupEnableNotifications'),
-                  onTap: () async {
-                    await Permission.notification.request();
-                    await _checkStatus();
-                  },
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionRow(
-    BuildContext context, {
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Icon(
-                Icons.add_circle_outline,
-                size: 18,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(label, style: const TextStyle(fontSize: 14)),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withOpacity(AppOpacity.half),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class SettingsPage extends StatefulWidget {
-  final int initialTab;
-  const SettingsPage({super.key, this.initialTab = 0});
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final TextEditingController _searchController = TextEditingController();
-  int _tapCount = 0;
-  String _searchQuery = '';
-  bool showIntervalLabel = false;
-  bool _useGridView = true;
-  int _lastNonZeroUpdateInterval = 360;
+  List<int> updateIntervalNodes = [
+    15,
+    30,
+    60,
+    120,
+    180,
+    360,
+    720,
+    1440,
+    4320,
+    10080,
+    20160,
+    43200,
+  ];
+  int updateInterval = 0;
+  late SplineInterpolation updateIntervalInterpolator; // 🤓
+  String updateIntervalLabel = tr('neverManualOnly');
+  bool showIntervalLabel = true;
+  final Map<ColorSwatch<Object>, String> colorsNameMap =
+      <ColorSwatch<Object>, String>{
+        ColorTools.createPrimarySwatch(obtainiumThemeColor): 'Obtainium',
+      };
 
-  late Future<AndroidDeviceInfo> _androidInfoFuture;
-
-  final Map<ColorSwatch<Object>, String> colorsNameMap = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _androidInfoFuture = DeviceInfoPlugin().androidInfo;
-    final plusSettings = context.read<PlusSettingsProvider>();
-    _useGridView = plusSettings.plusEnableGridView;
+  void initUpdateIntervalInterpolator() {
+    List<InterpolationNode> nodes = [];
+    for (final (index, element) in updateIntervalNodes.indexed) {
+      nodes.add(
+        InterpolationNode(x: index.toDouble() + 1, y: element.toDouble()),
+      );
+    }
+    updateIntervalInterpolator = SplineInterpolation(nodes: nodes);
   }
 
-  void _cycleTheme(ThemeSettingsProvider tsp) {
-    final values = ThemeSettings.values;
-    final next = values[(tsp.theme.index + 1) % values.length];
-    tsp.theme = next;
-    AppHaptics.mediumImpact();
+  void processIntervalSliderValue(double val) {
+    if (val < 0.5) {
+      updateInterval = 0;
+      updateIntervalLabel = tr('neverManualOnly');
+      return;
+    }
+    int valInterpolated = 0;
+    if (val < 1) {
+      valInterpolated = 15;
+    } else {
+      valInterpolated = updateIntervalInterpolator.compute(val).round();
+    }
+    if (valInterpolated < 60) {
+      updateInterval = valInterpolated;
+      updateIntervalLabel = plural('minute', valInterpolated);
+    } else if (valInterpolated < 8 * 60) {
+      int valRounded = (valInterpolated / 15).floor() * 15;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('hour', valRounded ~/ 60);
+      int mins = valRounded % 60;
+      if (mins != 0) updateIntervalLabel += " ${plural('minute', mins)}";
+    } else if (valInterpolated < 24 * 60) {
+      int valRounded = (valInterpolated / 30).floor() * 30;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('hour', valRounded / 60);
+    } else if (valInterpolated < 7 * 24 * 60) {
+      int valRounded = (valInterpolated / (12 * 60)).floor() * 12 * 60;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('day', valRounded / (24 * 60));
+    } else {
+      int valRounded = (valInterpolated / (24 * 60)).floor() * 24 * 60;
+      updateInterval = valRounded;
+      updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
-    final themeSettings = context.watch<ThemeSettingsProvider>();
-    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final updateSettings = context.watch<UpdateSettingsProvider>();
-    final isSearching = _searchQuery.isNotEmpty;
+    SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    SourceProvider sourceProvider = SourceProvider();
+    if (settingsProvider.prefs == null) settingsProvider.initializeSettings();
+    initUpdateIntervalInterpolator();
+    processIntervalSliderValue(settingsProvider.updateIntervalSliderVal);
 
-    // --- HUB PAGE BUILDERS ---
-    Widget _hubBuilderPlus(BuildContext ctx, ScrollController controller) =>
-        _SettingsSubMenuPage(
-          title: 'Obtainium+ Features',
-          scrollController: controller,
-          child: const PlusFeaturesSection(),
-        );
+    var followSystemThemeExplanation = FutureBuilder(
+      builder: (ctx, val) {
+        return ((val.data?.version.sdkInt ?? 30) < 29)
+            ? Text(
+                tr('followSystemThemeExplanation'),
+                style: Theme.of(context).textTheme.labelSmall,
+              )
+            : const SizedBox.shrink();
+      },
+      future: DeviceInfoPlugin().androidInfo,
+    );
 
-    Widget _hubBuilderUpdates(BuildContext ctx, ScrollController controller) =>
-        _SettingsSubMenuPage(
-          title: 'Updates & Automation',
-          scrollController: controller,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: UpdateSettingsSection(
-              showIntervalLabel: showIntervalLabel,
-              onIntervalLabelChange: (value) =>
-                  setState(() => showIntervalLabel = value),
-              androidInfoFuture: _androidInfoFuture,
-            ),
-          ),
-        );
+    Future<bool> colorPickerDialog() async {
+      return ColorPicker(
+        color: settingsProvider.themeColor,
+        onColorChanged: (Color color) =>
+            setState(() => settingsProvider.themeColor = color),
+        actionButtons: const ColorPickerActionButtons(
+          okButton: true,
+          closeButton: true,
+          dialogActionButtons: false,
+        ),
+        pickersEnabled: const <ColorPickerType, bool>{
+          ColorPickerType.both: false,
+          ColorPickerType.primary: false,
+          ColorPickerType.accent: false,
+          ColorPickerType.bw: false,
+          ColorPickerType.custom: true,
+          ColorPickerType.wheel: true,
+        },
+        pickerTypeLabels: <ColorPickerType, String>{
+          ColorPickerType.custom: tr('standard'),
+          ColorPickerType.wheel: tr('custom'),
+        },
+        title: Text(
+          tr('selectX', args: [tr('colour').toLowerCase()]),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        wheelDiameter: 192,
+        wheelSquareBorderRadius: 32,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        spacing: 8,
+        runSpacing: 8,
+        enableShadesSelection: false,
+        customColorSwatchesAndNames: colorsNameMap,
+        showMaterialName: true,
+        showColorName: true,
+        materialNameTextStyle: Theme.of(context).textTheme.bodySmall,
+        colorNameTextStyle: Theme.of(context).textTheme.bodySmall,
+        copyPasteBehavior: const ColorPickerCopyPasteBehavior(
+          longPressMenu: true,
+        ),
+      ).showPickerDialog(
+        context,
+        transitionBuilder:
+            (
+              BuildContext context,
+              Animation<double> a1,
+              Animation<double> a2,
+              Widget widget,
+            ) {
+              final double curvedValue = Curves.easeInCubic.transform(a1.value);
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.diagonal3Values(curvedValue, curvedValue, 1),
+                child: Opacity(opacity: curvedValue, child: widget),
+              );
+            },
+        transitionDuration: const Duration(milliseconds: 250),
+      );
+    }
 
-    Widget _hubBuilderTheming(BuildContext ctx, ScrollController controller) =>
-        _SettingsSubMenuPage(
-          title: 'Theming',
-          scrollController: controller,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ThemeSettingsSection(
-              androidInfoFuture: _androidInfoFuture,
-              colorsNameMap: colorsNameMap,
-            ),
-          ),
-        );
-
-    Widget _hubBuilderLayout(BuildContext ctx, ScrollController controller) =>
-        _SettingsSubMenuPage(
-          title: 'Layout',
-          scrollController: controller,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: AppsViewSettingsSection(onSetState: setState),
-          ),
-        );
-
-    Widget _hubBuilderInstallation(
-      BuildContext ctx,
-      ScrollController controller,
-    ) => _SettingsSubMenuPage(
-      title: tr('installation'),
-      scrollController: controller,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: const InstallationSection(),
+    var colorPicker = ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      title: Text(tr('selectX', args: [tr('colour').toLowerCase()])),
+      subtitle: Text(
+        "${ColorTools.nameThatColor(settingsProvider.themeColor)} "
+        "(${ColorTools.materialNameAndCode(settingsProvider.themeColor, colorSwatchNameMap: colorsNameMap)})",
+      ),
+      trailing: ColorIndicator(
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        color: settingsProvider.themeColor,
+        onSelectFocus: false,
+        onSelect: () async {
+          final Color colorBeforeDialog = settingsProvider.themeColor;
+          if (!(await colorPickerDialog())) {
+            setState(() {
+              settingsProvider.themeColor = colorBeforeDialog;
+            });
+          }
+        },
       ),
     );
 
-    Widget _hubBuilderStats(BuildContext ctx, ScrollController controller) =>
-        StatisticsPage(scrollController: controller);
-
-    Widget _hubBuilderNotifications(
-      BuildContext ctx,
-      ScrollController controller,
-    ) => _SettingsSubMenuPage(
-      title: tr('notifications'),
-      scrollController: controller,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: const Column(children: [NotificationSettingsSection()]),
-      ),
+    var useMaterialThemeSwitch = FutureBuilder(
+      builder: (ctx, val) {
+        return ((val.data?.version.sdkInt ?? 0) >= 31)
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: Text(tr('useMaterialYou'))),
+                  Switch(
+                    value: settingsProvider.useMaterialYou,
+                    onChanged: (value) {
+                      settingsProvider.useMaterialYou = value;
+                    },
+                  ),
+                ],
+              )
+            : const SizedBox.shrink();
+      },
+      future: DeviceInfoPlugin().androidInfo,
     );
 
-    Widget _hubBuilderAdvanced(BuildContext ctx, ScrollController controller) =>
-        _SettingsSubMenuPage(
-          title: tr('advanced'),
-          scrollController: controller,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                AppBehaviorSection(searchQuery: _searchQuery),
-                const SizedBox(height: 24),
-                AdvancedSettingsSection(searchQuery: _searchQuery),
-                const SizedBox(height: 24),
-                TroubleshootingSection(searchQuery: _searchQuery),
-              ],
-            ),
-          ),
+    var sortDropdown = DropdownButtonFormField(
+      isExpanded: true,
+      decoration: InputDecoration(labelText: tr('appSortBy')),
+      value: settingsProvider.sortColumn,
+      items: [
+        DropdownMenuItem(
+          value: SortColumnSettings.authorName,
+          child: Text(tr('authorName')),
+        ),
+        DropdownMenuItem(
+          value: SortColumnSettings.nameAuthor,
+          child: Text(tr('nameAuthor')),
+        ),
+        DropdownMenuItem(
+          value: SortColumnSettings.added,
+          child: Text(tr('asAdded')),
+        ),
+        DropdownMenuItem(
+          value: SortColumnSettings.releaseDate,
+          child: Text(tr('releaseDate')),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          settingsProvider.sortColumn = value;
+        }
+      },
+    );
+
+    var orderDropdown = DropdownButtonFormField(
+      isExpanded: true,
+      decoration: InputDecoration(labelText: tr('appSortOrder')),
+      value: settingsProvider.sortOrder,
+      items: [
+        DropdownMenuItem(
+          value: SortOrderSettings.ascending,
+          child: Text(tr('ascending')),
+        ),
+        DropdownMenuItem(
+          value: SortOrderSettings.descending,
+          child: Text(tr('descending')),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          settingsProvider.sortOrder = value;
+        }
+      },
+    );
+
+    var localeDropdown = DropdownButtonFormField(
+      decoration: InputDecoration(labelText: tr('language')),
+      value: settingsProvider.forcedLocale,
+      items: [
+        DropdownMenuItem(value: null, child: Text(tr('followSystem'))),
+        ...supportedLocales.map(
+          (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+        ),
+      ],
+      onChanged: (value) {
+        settingsProvider.forcedLocale = value;
+        if (value != null) {
+          context.setLocale(value);
+        } else {
+          settingsProvider.resetLocaleSafe(context);
+        }
+      },
+    );
+
+    final rawSlider = Slider(
+      value: settingsProvider.updateIntervalSliderVal,
+      max: updateIntervalNodes.length.toDouble(),
+      divisions: updateIntervalNodes.length * 20,
+      label: updateIntervalLabel,
+      onChanged: (double value) {
+        setState(() {
+          settingsProvider.updateIntervalSliderVal = value;
+          processIntervalSliderValue(value);
+        });
+      },
+      onChangeStart: (double value) {
+        setState(() {
+          showIntervalLabel = false;
+        });
+      },
+      onChangeEnd: (double value) {
+        setState(() {
+          showIntervalLabel = true;
+          settingsProvider.updateInterval = updateInterval;
+        });
+      },
+    );
+
+    final Widget intervalSlider = settingsProvider.isTV
+        ? Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove),
+                onPressed: settingsProvider.updateIntervalSliderVal <= 0
+                    ? null
+                    : () {
+                        setState(() {
+                          final newVal =
+                              (settingsProvider.updateIntervalSliderVal - 1)
+                                  .clamp(
+                                    0.0,
+                                    updateIntervalNodes.length.toDouble(),
+                                  );
+                          settingsProvider.updateIntervalSliderVal = newVal;
+                          processIntervalSliderValue(newVal);
+                          settingsProvider.updateInterval = updateInterval;
+                        });
+                      },
+              ),
+              Expanded(
+                child: Text(
+                  updateIntervalLabel,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed:
+                    settingsProvider.updateIntervalSliderVal >=
+                            updateIntervalNodes.length.toDouble()
+                        ? null
+                        : () {
+                            setState(() {
+                              final newVal =
+                                  (settingsProvider.updateIntervalSliderVal + 1)
+                                      .clamp(
+                                        0.0,
+                                        updateIntervalNodes.length.toDouble(),
+                                      );
+                              settingsProvider.updateIntervalSliderVal = newVal;
+                              processIntervalSliderValue(newVal);
+                              settingsProvider.updateInterval = updateInterval;
+                            });
+                          },
+              ),
+            ],
+          )
+        : rawSlider;
+
+    var sourceSpecificFields = sourceProvider.sources.map((e) {
+      if (e.sourceConfigSettingFormItems.isNotEmpty) {
+        return GeneratedForm(
+          items: e.sourceConfigSettingFormItems.map((e) {
+            if (e is GeneratedFormSwitch) {
+              e.defaultValue = settingsProvider.getSettingBool(e.key);
+            } else {
+              e.defaultValue = settingsProvider.getSettingString(e.key);
+            }
+            return [e];
+          }).toList(),
+          onValueChanges: (values, valid, isBuilding) {
+            if (valid && !isBuilding) {
+              values.forEach((key, value) {
+                var formItem = e.sourceConfigSettingFormItems
+                    .where((i) => i.key == key)
+                    .firstOrNull;
+                if (formItem is GeneratedFormSwitch) {
+                  settingsProvider.setSettingBool(key, value == true);
+                } else {
+                  settingsProvider.setSettingString(key, value ?? '');
+                }
+              });
+            }
+          },
         );
+      } else {
+        return Container();
+      }
+    });
+
+    const height8 = SizedBox(height: 8);
+
+    const height16 = SizedBox(height: 16);
+
+    const height32 = SizedBox(height: 32);
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: isSearching
-                ? const SizedBox.shrink()
-                : Text(
-                    tr('settings'),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-            actions: isSearching
-                ? null
-                : [
-                    IconButton(
-                      icon: Icon(
-                        _useGridView
-                            ? Icons.view_list_outlined
-                            : Icons.grid_view_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _useGridView = !_useGridView),
-                    ),
-                  ],
-          ),
-
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: SearchBar(
-                    controller: _searchController,
-                    hintText: tr('searchSettings'),
-                    leading: const Icon(Icons.search),
-                    elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStateProperty.all(
-                      Theme.of(context).colorScheme.surfaceContainerHigh,
-                    ),
-                    shape: WidgetStateProperty.all(const StadiumBorder()),
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    trailing: [
-                      if (isSearching)
-                        IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            setState(() {
-                              _searchQuery = '';
-                              _searchController.clear();
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-                if (!isSearching)
-                  ContextualTip(
-                    title: tr('advancedFeatures'),
-                    message: tr('plusFeaturesDescription'),
-                    icon: Icons.auto_awesome_outlined,
-                  ),
-                if (!isSearching) const SetupAssistantSection(),
-                if (!isSearching)
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        _buildQuickToggle(
-                          context,
-                          icon: Icons.sync_outlined,
-                          label: tr('updates'),
-                          value: updateSettings.updateInterval > 0,
-                          onChanged: (val) {
-                            if (!val) {
-                              if (updateSettings.updateInterval > 0)
-                                _lastNonZeroUpdateInterval =
-                                    updateSettings.updateInterval;
-                              updateSettings.updateInterval = 0;
-                            } else {
-                              updateSettings.updateInterval =
-                                  _lastNonZeroUpdateInterval;
-                            }
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        ActionChip(
-                          avatar: Icon(
-                            themeSettings.theme == ThemeSettings.system
-                                ? Icons.brightness_auto
-                                : themeSettings.theme == ThemeSettings.light
-                                ? Icons.light_mode
-                                : Icons.dark_mode,
-                            size: 16,
-                          ),
-                          label: Text(
-                            themeSettings.theme == ThemeSettings.system
-                                ? 'System'
-                                : themeSettings.theme == ThemeSettings.light
-                                ? 'Light'
-                                : 'Dark',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          onPressed: () => _cycleTheme(themeSettings),
-                          shape: StadiumBorder(
-                            side: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withOpacity(AppOpacity.half),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickToggle(
-                          context,
-                          icon: Icons.check_circle_outline,
-                          label: tr('installed'),
-                          value: settingsProvider
-                              .onlyCheckInstalledOrTrackOnlyApps,
-                          onChanged: (val) =>
-                              settingsProvider
-                                      .onlyCheckInstalledOrTrackOnlyApps =
-                                  val,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickToggle(
-                          context,
-                          icon: Icons.bolt_outlined,
-                          label: 'Shizuku / Sui',
-                          value: behaviorSettings.useShizuku,
-                          onChanged: (val) {
-                            if (!val) {
-                              behaviorSettings.useShizuku = false;
-                              return;
-                            }
-                            ShizukuApkInstaller.checkPermission().then(
-                              (resCode) {
-                                if (resCode == null ||
-                                    !resCode.startsWith('granted')) {
-                                  ScaffoldMessenger.maybeOf(
-                                    context,
-                                  )?.showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        resCode == 'binder_not_found' ||
-                                                resCode == null
-                                            ? tr('shizukuBinderNotFound')
-                                            : resCode == 'old_shizuku'
-                                            ? tr('shizukuOld')
-                                            : tr('shizukuBinderNotFound'),
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                  return;
-                                }
-                                behaviorSettings.useShizuku = true;
-                              },
-                              onError: (e) {
-                                talker.warning(
-                                  'Shizuku checkPermission error: $e',
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            sliver: _useGridView
-                ? SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 1.05,
-                        ),
-                    delegate: SliverChildListDelegate([
-                      _buildHubCard(
-                        context,
-                        icon: Icons.auto_awesome_outlined,
-                        title: tr('obtainiumPlusFeatures'),
-                        subtitle: tr('plusFeaturesDescription'),
-                        builder: _hubBuilderPlus,
-                      ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.sync_outlined,
-                        title: tr('updatesAndAutomation'),
-                        subtitle: tr('updatesDescription'),
-                        builder: _hubBuilderUpdates,
-                      ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.palette_outlined,
-                        title: tr('theming'),
-                        subtitle: tr('themingDescription'),
-                        builder: _hubBuilderTheming,
-                      ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.grid_view_outlined,
-                        title: tr('layout'),
-                        subtitle: tr('layoutDescription'),
-                        builder: _hubBuilderLayout,
-                      ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.notifications_none_outlined,
-                        title: tr('notifications'),
-                        subtitle: tr('notificationsDescription'),
-                        builder: _hubBuilderNotifications,
-                      ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.install_mobile_outlined,
-                        title: tr('installation'),
-                        subtitle: tr('installationDescription'),
-                        builder: _hubBuilderInstallation,
-                      ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.bar_chart_outlined,
-                        title: tr('statistics'),
-                        subtitle: tr('statisticsDescription'),
-                        builder: _hubBuilderStats,
-                      ),
-                      if (plusSettings.plusDeveloperMode)
-                        _buildHubCard(
-                          context,
-                          icon: Icons.code_rounded,
-                          title: tr('devAndLogs'),
-                          subtitle: tr('devAndLogsDescription'),
-                          builder: (ctx, controller) {
-                            _tapCount++;
-                            if (_tapCount >= 7) {
-                              _tapCount = 0;
-                              return DeveloperSettingsPage(
-                                scrollController: controller,
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      _buildHubCard(
-                        context,
-                        icon: Icons.bug_report_outlined,
-                        title: tr('advanced'),
-                        subtitle: tr('advancedDescription'),
-                        builder: _hubBuilderAdvanced,
-                      ),
-                    ]),
-                  )
-                : SliverList(
-                    delegate: SliverChildListDelegate([
-                      _buildExpressiveGroup(
-                        context,
-                        title: tr('settingsFeatures'),
-                        children: [
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.auto_awesome_outlined,
-                            title: tr('obtainiumPlusFeatures'),
-                            builder: _hubBuilderPlus,
-                            subtitle: tr('plusFeaturesDescription'),
-                          ),
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.sync_outlined,
-                            title: tr('updatesAndAutomation'),
-                            builder: _hubBuilderUpdates,
-                            subtitle: tr('updatesDescription'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildExpressiveGroup(
-                        context,
-                        title: tr('settingsPersonalization'),
-                        children: [
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.palette_outlined,
-                            title: tr('theming'),
-                            builder: _hubBuilderTheming,
-                            subtitle: tr('themingDescription'),
-                          ),
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.grid_view_outlined,
-                            title: tr('layout'),
-                            builder: _hubBuilderLayout,
-                            subtitle: tr('layoutDescription'),
-                          ),
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.notifications_none_outlined,
-                            title: tr('notifications'),
-                            builder: _hubBuilderNotifications,
-                            subtitle: tr('notificationsDescription'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildExpressiveGroup(
-                        context,
-                        title: tr('settingsMaintenance'),
-                        children: [
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.bar_chart_outlined,
-                            title: tr('statistics'),
-                            builder: _hubBuilderStats,
-                            subtitle: tr('statisticsDescription'),
-                          ),
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.install_mobile_outlined,
-                            title: tr('installation'),
-                            builder: _hubBuilderInstallation,
-                            subtitle: tr('installationDescription'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildExpandableExpressiveGroup(
-                        context,
-                        title: tr('settingsSystemAndAdvanced'),
-                        icon: Icons.settings_suggest_outlined,
-                        children: [
-                          _buildSubMenuTile(
-                            context,
-                            icon: Icons.bug_report_outlined,
-                            title: tr('advanced'),
-                            builder: _hubBuilderAdvanced,
-                            subtitle: tr('advancedDescription'),
-                          ),
-                          if (plusSettings.plusDeveloperMode)
-                            _buildSubMenuTile(
-                              context,
-                              icon: Icons.code_rounded,
-                              title: tr('devAndLogs'),
-                              builder: (ctx, controller) =>
-                                  DeveloperSettingsPage(
-                                    scrollController: controller,
-                                  ),
-                              subtitle: tr('devAndLogsDescription'),
-                            ),
-                        ],
-                      ),
-                    ]),
-                  ),
-          ),
-
+        slivers: <Widget>[
+          CustomAppBar(title: tr('settings')),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 32),
-                  Wrap(
-                    alignment: WrapAlignment.spaceEvenly,
-                    spacing: 4,
-                    runSpacing: 8,
-                    children: [
-                      _buildAboutIcon(
-                        context,
-                        icon: Icons.article_outlined,
-                        label: tr('viewChangelog'),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ChangelogPage(),
+              padding: const EdgeInsets.all(16),
+              child: settingsProvider.prefs == null
+                  ? const SizedBox()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr('updates'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                      ),
-                      _buildAboutIcon(
-                        context,
-                        icon: Icons.code_outlined,
-                        label: tr('appSource'),
-                        onTap: () => launchUrlString(
-                          settingsProvider.sourceUrl,
-                          mode: LaunchMode.externalApplication,
-                        ),
-                      ),
-                      _buildAboutIcon(
-                        context,
-                        icon: Icons.help_outline_rounded,
-                        label: tr('wiki'),
-                        onTap: () => launchUrlString(
-                          'https://wiki.obtainium.imranr.dev/',
-                          mode: LaunchMode.externalApplication,
-                        ),
-                      ),
-                      _buildAboutIcon(
-                        context,
-                        icon: Icons.favorite_outline_rounded,
-                        label: 'Credits',
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => GlassDialog(
-                              title: 'Open Source Credits',
-                              icon: Icons.favorite_outline_rounded,
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Upstream Fork',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'Obtainium',
-                                      'ImranR98',
-                                      'The original app this project is forked from',
-                                      'https://github.com/ImranR98/Obtainium',
-                                    ),
-                                    const Divider(height: 24),
-                                    Text(
-                                      'Git Dependencies',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'android_package_installer',
-                                      'ImranR98',
-                                      'APK installation via Android PackageInstaller API',
-                                      'https://github.com/ImranR98/android_package_installer',
-                                    ),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'android_package_manager',
-                                      'ImranR98',
-                                      'Android package management bindings',
-                                      'https://github.com/ImranR98/android_package_manager',
-                                    ),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'shared_storage',
-                                      'AlexBacich',
-                                      'Android Scoped Storage / SAF access',
-                                      'https://github.com/AlexBacich/shared-storage',
-                                    ),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'android_system_font',
-                                      're7gog',
-                                      'Read the system font set in Android settings',
-                                      'https://github.com/re7gog/android_system_font',
-                                    ),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'shizuku_apk_installer',
-                                      'wilver06w',
-                                      'Silent APK installation via Shizuku',
-                                      'https://github.com/wilver06w/shizuku_apk_installer',
-                                    ),
-                                    const Divider(height: 24),
-                                    Text(
-                                      'Inspiration',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _buildCreditTile(
-                                      ctx,
-                                      'Discoverium',
-                                      'cygnusx-1-org',
-                                      'Inspiration for the app discovery & search feature',
-                                      'https://github.com/cygnusx-1-org/Discoverium',
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: Text(tr('close')),
-                                ),
-                              ],
+                        //intervalDropdown,
+                        height16,
+                        if (showIntervalLabel)
+                          SizedBox(
+                            child: Text(
+                              "${tr('bgUpdateCheckInterval')}: $updateIntervalLabel",
                             ),
-                          );
-                        },
-                      ),
-                      _buildAboutIcon(
-                        context,
-                        icon: Icons.info_outline_rounded,
-                        label: 'App Info',
-                        onTap: () async {
-                          _tapCount++;
-                          if (_tapCount == 7) {
-                            plusSettings.plusDeveloperMode =
-                                !plusSettings.plusDeveloperMode;
-                            AppHaptics.heavyImpact();
-                            showMessage(
-                              plusSettings.plusDeveloperMode
-                                  ? 'Developer Mode Enabled'
-                                  : 'Developer Mode Disabled',
-                              context,
-                            );
-                            _tapCount = 0;
-                          } else if (_tapCount >= 3) {
-                            showMessage(
-                              '${7 - _tapCount} more taps to toggle Dev Mode',
-                              context,
-                            );
-                          }
-
-                          final info = await DeviceInfoPlugin().androidInfo;
-                          if (!mounted) return;
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => GlassDialog(
-                              title: 'Obtainium+ Info',
-                              icon: Icons.info_outline,
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
+                          )
+                        else
+                          const SizedBox(height: 16),
+                        intervalSlider,
+                        FutureBuilder(
+                          builder: (ctx, val) {
+                            return (settingsProvider.updateInterval > 0) &&
+                                    (((val.data?.version.sdkInt ?? 0) >= 30) ||
+                                        settingsProvider.useShizuku)
+                                ? Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              tr(
+                                                'foregroundServiceExplanation',
+                                              ),
+                                            ),
+                                          ),
+                                          Switch(
+                                            value:
+                                                settingsProvider.useFGService,
+                                            onChanged: (value) {
+                                              settingsProvider.useFGService =
+                                                  value;
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              tr('enableBackgroundUpdates'),
+                                            ),
+                                          ),
+                                          Switch(
+                                            value: settingsProvider
+                                                .enableBackgroundUpdates,
+                                            onChanged: (value) {
+                                              settingsProvider
+                                                      .enableBackgroundUpdates =
+                                                  value;
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      height8,
+                                      Text(
+                                        tr('backgroundUpdateReqsExplanation'),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelSmall,
+                                      ),
+                                      Text(
+                                        tr('backgroundUpdateLimitsExplanation'),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelSmall,
+                                      ),
+                                      height8,
+                                      if (settingsProvider
+                                          .enableBackgroundUpdates)
+                                        Column(
+                                          children: [
+                                            height16,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    tr('bgUpdatesOnWiFiOnly'),
+                                                  ),
+                                                ),
+                                                Switch(
+                                                  value: settingsProvider
+                                                      .bgUpdatesOnWiFiOnly,
+                                                  onChanged: (value) {
+                                                    settingsProvider
+                                                            .bgUpdatesOnWiFiOnly =
+                                                        value;
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                            height16,
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    tr(
+                                                      'bgUpdatesWhileChargingOnly',
+                                                    ),
+                                                  ),
+                                                ),
+                                                Switch(
+                                                  value: settingsProvider
+                                                      .bgUpdatesWhileChargingOnly,
+                                                  onChanged: (value) {
+                                                    settingsProvider
+                                                            .bgUpdatesWhileChargingOnly =
+                                                        value;
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  )
+                                : const SizedBox.shrink();
+                          },
+                          future: DeviceInfoPlugin().androidInfo,
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('checkOnStart'))),
+                            Switch(
+                              value: settingsProvider.checkOnStart,
+                              onChanged: (value) {
+                                settingsProvider.checkOnStart = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(tr('checkUpdateOnDetailPage')),
+                            ),
+                            Switch(
+                              value: settingsProvider.checkUpdateOnDetailPage,
+                              onChanged: (value) {
+                                settingsProvider.checkUpdateOnDetailPage =
+                                    value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                tr('onlyCheckInstalledOrTrackOnlyApps'),
+                              ),
+                            ),
+                            Switch(
+                              value: settingsProvider
+                                  .onlyCheckInstalledOrTrackOnlyApps,
+                              onChanged: (value) {
+                                settingsProvider
+                                        .onlyCheckInstalledOrTrackOnlyApps =
+                                    value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(tr('removeOnExternalUninstall')),
+                            ),
+                            Switch(
+                              value: settingsProvider.removeOnExternalUninstall,
+                              onChanged: (value) {
+                                settingsProvider.removeOnExternalUninstall =
+                                    value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('parallelDownloads'))),
+                            Switch(
+                              value: settingsProvider.parallelDownloads,
+                              onChanged: (value) {
+                                settingsProvider.parallelDownloads = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('Device: ${info.model}'),
                                   Text(
-                                    'Android: ${info.version.release} (API ${info.version.sdkInt})',
+                                    tr('beforeNewInstallsShareToAppVerifier'),
                                   ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'A modernized source-first app updater.',
+                                  InkWell(
+                                    onTap: () {
+                                      launchUrlString(
+                                        'https://github.com/soupslurpr/AppVerifier',
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    },
+                                    child: Text(
+                                      tr('about'),
+                                      style: const TextStyle(
+                                        decoration: TextDecoration.underline,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: Text(tr('close')),
-                                ),
-                              ],
                             ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 64),
-                ],
-              ),
+                            Switch(
+                              value: settingsProvider
+                                  .beforeNewInstallsShareToAppVerifier,
+                              onChanged: (value) {
+                                settingsProvider
+                                        .beforeNewInstallsShareToAppVerifier =
+                                    value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('useShizuku'))),
+                            Switch(
+                              value: settingsProvider.useShizuku,
+                              onChanged: (useShizuku) {
+                                if (useShizuku) {
+                                  ShizukuApkInstaller().checkPermission().then((
+                                    resCode,
+                                  ) {
+                                    settingsProvider.useShizuku = resCode!.startsWith('granted');
+                                    switch (resCode) {
+                                      case 'services_not_found':
+                                        showError(
+                                          ObtainiumError(tr('shizukuBinderNotFound')),
+                                          context,
+                                        );
+                                      case 'old_shizuku':
+                                        showError(
+                                          ObtainiumError(tr('shizukuOld')),
+                                          context,
+                                        );
+                                      case 'old_android_with_adb':
+                                        showError(
+                                          ObtainiumError(tr('shizukuOldAndroidWithADB')),
+                                          context,
+                                        );
+                                      case 'denied':
+                                        showError(
+                                          ObtainiumError(tr('cancelled')),
+                                          context,
+                                        );
+                                    }
+                                  });
+                                } else {
+                                  settingsProvider.useShizuku = false;
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(tr('shizukuPretendToBeGooglePlay')),
+                            ),
+                            Switch(
+                              value:
+                                  settingsProvider.shizukuPretendToBeGooglePlay,
+                              onChanged: (value) {
+                                settingsProvider.shizukuPretendToBeGooglePlay =
+                                    value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height32,
+                        Text(
+                          tr('sourceSpecific'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        ...sourceSpecificFields,
+                        height32,
+                        Text(
+                          tr('appearance'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        DropdownButtonFormField(
+                          decoration: InputDecoration(labelText: tr('theme')),
+                          value: settingsProvider.theme,
+                          items: [
+                            DropdownMenuItem(
+                              value: ThemeSettings.system,
+                              child: Text(tr('followSystem')),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeSettings.light,
+                              child: Text(tr('light')),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeSettings.dark,
+                              child: Text(tr('dark')),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              settingsProvider.theme = value;
+                            }
+                          },
+                        ),
+                        height8,
+                        if (settingsProvider.theme == ThemeSettings.system)
+                          followSystemThemeExplanation,
+                        height16,
+                        if (settingsProvider.theme != ThemeSettings.light)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(child: Text(tr('useBlackTheme'))),
+                              Switch(
+                                value: settingsProvider.useBlackTheme,
+                                onChanged: (value) {
+                                  settingsProvider.useBlackTheme = value;
+                                },
+                              ),
+                            ],
+                          ),
+                        height8,
+                        useMaterialThemeSwitch,
+                        if (!settingsProvider.useMaterialYou) colorPicker,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: sortDropdown),
+                            const SizedBox(width: 16),
+                            Expanded(child: orderDropdown),
+                          ],
+                        ),
+                        height16,
+                        localeDropdown,
+                        FutureBuilder(
+                          builder: (ctx, val) {
+                            return (val.data?.version.sdkInt ?? 0) >= 29
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      height16,
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Flexible(
+                                            child: Text(tr('useSystemFont')),
+                                          ),
+                                          Switch(
+                                            value: settingsProvider.useSystemFont,
+                                            onChanged: (useSystemFont) {
+                                              if (useSystemFont) {
+                                                NativeFeatures.loadSystemFont()
+                                                    .then((val) {
+                                                      settingsProvider.useSystemFont = true;
+                                                    });
+                                              } else {
+                                                settingsProvider.useSystemFont = false;
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                : const SizedBox.shrink();
+                          },
+                          future: DeviceInfoPlugin().androidInfo,
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('showWebInAppView'))),
+                            Switch(
+                              value: settingsProvider.showAppWebpage,
+                              onChanged: (value) {
+                                settingsProvider.showAppWebpage = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('pinUpdates'))),
+                            Switch(
+                              value: settingsProvider.pinUpdates,
+                              onChanged: (value) {
+                                settingsProvider.pinUpdates = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(tr('moveNonInstalledAppsToBottom')),
+                            ),
+                            Switch(
+                              value: settingsProvider.buryNonInstalled,
+                              onChanged: (value) {
+                                settingsProvider.buryNonInstalled = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('groupByCategory'))),
+                            Switch(
+                              value: settingsProvider.groupByCategory,
+                              onChanged: (value) {
+                                settingsProvider.groupByCategory = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(tr('dontShowTrackOnlyWarnings')),
+                            ),
+                            Switch(
+                              value: settingsProvider.hideTrackOnlyWarning,
+                              onChanged: (value) {
+                                settingsProvider.hideTrackOnlyWarning = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(tr('dontShowAPKOriginWarnings')),
+                            ),
+                            Switch(
+                              value: settingsProvider.hideAPKOriginWarning,
+                              onChanged: (value) {
+                                settingsProvider.hideAPKOriginWarning = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('disablePageTransitions'))),
+                            Switch(
+                              value: settingsProvider.disablePageTransitions,
+                              onChanged: (value) {
+                                settingsProvider.disablePageTransitions = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('reversePageTransitions'))),
+                            Switch(
+                              value: settingsProvider.reversePageTransitions,
+                              onChanged: settingsProvider.disablePageTransitions
+                                  ? null
+                                  : (value) {
+                                      settingsProvider.reversePageTransitions =
+                                          value;
+                                    },
+                            ),
+                          ],
+                        ),
+                        height16,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(child: Text(tr('highlightTouchTargets'))),
+                            Switch(
+                              value: settingsProvider.highlightTouchTargets,
+                              onChanged: (value) {
+                                settingsProvider.highlightTouchTargets = value;
+                              },
+                            ),
+                          ],
+                        ),
+                        height32,
+                        Text(
+                          tr('categories'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        height16,
+                        const CategoryEditorSelector(
+                          showLabelWhenNotEmpty: false,
+                        ),
+                      ],
+                    ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void showMessage(String message, BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-    );
-  }
-
-  Widget _buildQuickToggle(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool value,
-    required Function(bool) onChanged,
-  }) {
-    return FilterChip(
-      avatar: Icon(
-        icon,
-        size: 16,
-        color: value
-            ? Theme.of(context).colorScheme.onPrimary
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: value
-              ? Theme.of(context).colorScheme.onPrimary
-              : Theme.of(context).colorScheme.onSurface,
-        ),
-      ),
-      selected: value,
-      onSelected: (val) {
-        AppHaptics.selectionClick();
-        onChanged(val);
-      },
-      selectedColor: Theme.of(context).colorScheme.primary,
-      checkmarkColor: Theme.of(context).colorScheme.onPrimary,
-      showCheckmark: false,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withOpacity(AppOpacity.half),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHubCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Widget Function(BuildContext, ScrollController) builder,
-  }) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          AppHaptics.selectionClick();
-          showDraggableModalBottomSheet(context: context, builder: builder);
-        },
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(14.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 28,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                const Divider(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        launchUrlString(
+                          settingsProvider.sourceUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                      icon: const Icon(Icons.code),
+                      tooltip: tr('appSource'),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        launchUrlString(
+                          'https://wiki.obtainium.imranr.dev/',
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                      icon: const Icon(Icons.help_outline_rounded),
+                      tooltip: tr('wiki'),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        launchUrlString(
+                          'https://apps.obtainium.imranr.dev/',
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                      icon: const Icon(Icons.apps_rounded),
+                      tooltip: tr('crowdsourcedConfigsLabel'),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        context.read<LogsProvider>().get().then((logs) {
+                          if (logs.isEmpty) {
+                            showMessage(ObtainiumError(tr('noLogs')), context);
+                          } else {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext ctx) {
+                                return const LogsDialog();
+                              },
+                            );
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.bug_report_outlined),
+                      tooltip: tr('appLogs'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpressiveGroup(
-    BuildContext context, {
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Text(
-            title.toUpperCase(),
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+                const SizedBox(height: 16),
+              ],
             ),
           ),
-        ),
-        Card(
-          elevation: 0,
-          margin: EdgeInsets.zero,
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: BorderSide(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
-            ),
-          ),
-          child: Column(
-            children: children.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final child = entry.value;
-              return Column(
-                children: [
-                  child,
-                  if (idx < children.length - 1)
-                    Divider(
-                      height: 1,
-                      indent: 56,
-                      endIndent: 16,
-                      color: Theme.of(context).colorScheme.outlineVariant
-                          .withOpacity(AppOpacity.medium),
-                    ),
-                ],
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExpandableExpressiveGroup(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
-        ),
-      ),
-      child: ExpansionTile(
-        shape: const RoundedRectangleBorder(side: BorderSide.none),
-        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withOpacity(AppOpacity.hint),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        title: Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        children: [
-          const Divider(height: 1, indent: 56, endIndent: 16),
-          ...children,
         ],
-      ),
-    );
-  }
-
-  Widget _buildSubMenuTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    required Widget Function(BuildContext, ScrollController) builder,
-  }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Theme.of(
-            context,
-          ).colorScheme.primary.withOpacity(AppOpacity.hint),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-      title: Text(
-        title,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            )
-          : null,
-      trailing: const Icon(Icons.chevron_right, size: 20),
-      onTap: () {
-        AppHaptics.selectionClick();
-        showDraggableModalBottomSheet(context: context, builder: builder);
-      },
-    );
-  }
-
-  Widget _buildCreditTile(
-    BuildContext context,
-    String name,
-    String author,
-    String description,
-    String url,
-  ) {
-    return InkWell(
-      onTap: () => launchUrlString(url, mode: LaunchMode.externalApplication),
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    author,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                  ),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.open_in_new_rounded,
-              size: 14,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAboutIcon(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    VoidCallback? onLongPress,
-  }) {
-    return SizedBox(
-      width: 76,
-      child: InkWell(
-        onTap: () {
-          AppHaptics.selectionClick();
-          onTap();
-        },
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _SettingsSubMenuPage extends StatelessWidget {
-  final String title;
-  final Widget child;
-  final ScrollController? scrollController;
-  const _SettingsSubMenuPage({
-    required this.title,
-    required this.child,
-    this.scrollController,
-  });
+class LogsDialog extends StatefulWidget {
+  const LogsDialog({super.key});
+
+  @override
+  State<LogsDialog> createState() => _LogsDialogState();
+}
+
+class _LogsDialogState extends State<LogsDialog> {
+  String? logString;
+  List<int> days = [7, 5, 4, 3, 2, 1];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(title),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+    var logsProvider = context.read<LogsProvider>();
+    void filterLogs(int days) {
+      logsProvider
+          .get(after: DateTime.now().subtract(Duration(days: days)))
+          .then((value) {
+            setState(() {
+              String l = value.map((e) => e.toString()).join('\n\n');
+              logString = l.isNotEmpty ? l : tr('noLogs');
+            });
+          });
+    }
+
+    if (logString == null) {
+      filterLogs(days.first);
+    }
+
+    return AlertDialog(
+      scrollable: true,
+      title: Text(tr('appLogs')),
+      content: Column(
+        children: [
+          DropdownButtonFormField(
+            value: days.first,
+            items: days
+                .map(
+                  (e) =>
+                      DropdownMenuItem(value: e, child: Text(plural('day', e))),
+                )
+                .toList(),
+            onChanged: (d) {
+              filterLogs(d ?? 7);
+            },
+          ),
+          const SizedBox(height: 32),
+          Text(logString ?? ''),
+        ],
       ),
-      body: SingleChildScrollView(
-        controller: scrollController,
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewPaddingOf(context).bottom,
+      actions: [
+        TextButton(
+          onPressed: () async {
+            var cont =
+                (await showDialog<Map<String, dynamic>?>(
+                  context: context,
+                  builder: (BuildContext ctx) {
+                    return GeneratedFormModal(
+                      title: tr('appLogs'),
+                      items: const [],
+                      initValid: true,
+                      message: tr('removeFromObtainium'),
+                    );
+                  },
+                )) !=
+                null;
+            if (cont) {
+              logsProvider.clear();
+              Navigator.of(context).pop();
+            }
+          },
+          child: Text(tr('remove')),
         ),
-        child: child,
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(tr('close')),
+        ),
+        TextButton(
+          onPressed: () {
+            Share.share(logString ?? '', subject: tr('appLogs'));
+            Navigator.of(context).pop();
+          },
+          child: Text(tr('share')),
+        ),
+      ],
+    );
+  }
+}
+
+class CategoryEditorSelector extends StatefulWidget {
+  final void Function(List<String> categories)? onSelected;
+  final bool singleSelect;
+  final Set<String> preselected;
+  final WrapAlignment alignment;
+  final bool showLabelWhenNotEmpty;
+  const CategoryEditorSelector({
+    super.key,
+    this.onSelected,
+    this.singleSelect = false,
+    this.preselected = const {},
+    this.alignment = WrapAlignment.start,
+    this.showLabelWhenNotEmpty = true,
+  });
+
+  @override
+  State<CategoryEditorSelector> createState() => _CategoryEditorSelectorState();
+}
+
+class _CategoryEditorSelectorState extends State<CategoryEditorSelector> {
+  Map<String, MapEntry<int, bool>> storedValues = {};
+
+  @override
+  Widget build(BuildContext context) {
+    var settingsProvider = context.watch<SettingsProvider>();
+    var appsProvider = context.watch<AppsProvider>();
+    storedValues = settingsProvider.categories.map(
+      (key, value) => MapEntry(
+        key,
+        MapEntry(
+          value,
+          storedValues[key]?.value ?? widget.preselected.contains(key),
+        ),
       ),
+    );
+    return GeneratedForm(
+      items: [
+        [
+          GeneratedFormTagInput(
+            'categories',
+            label: tr('categories'),
+            emptyMessage: tr('noCategories'),
+            defaultValue: storedValues,
+            alignment: widget.alignment,
+            deleteConfirmationMessage: MapEntry(
+              tr('deleteCategoriesQuestion'),
+              tr('categoryDeleteWarning'),
+            ),
+            singleSelect: widget.singleSelect,
+            showLabelWhenNotEmpty: widget.showLabelWhenNotEmpty,
+          ),
+        ],
+      ],
+      onValueChanges: ((values, valid, isBuilding) {
+        if (!isBuilding) {
+          storedValues =
+              values['categories'] as Map<String, MapEntry<int, bool>>;
+          settingsProvider.setCategories(
+            storedValues.map((key, value) => MapEntry(key, value.key)),
+            appsProvider: appsProvider,
+          );
+          if (widget.onSelected != null) {
+            widget.onSelected!(
+              storedValues.keys.where((k) => storedValues[k]!.value).toList(),
+            );
+          }
+        }
+      }),
     );
   }
 }

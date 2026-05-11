@@ -1,14 +1,5 @@
-<<<<<<< HEAD
-import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/app_sources/fdroid.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-=======
-import 'package:obtainium/app_sources/fdroid.dart';
-import 'package:obtainium/custom_errors.dart';
->>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class IzzyOnDroid extends AppSource {

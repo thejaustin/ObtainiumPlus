@@ -1,31 +1,16 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/pages/home.dart';
-import 'package:obtainium/providers/apps_provider.dart'
-    hide obtainiumId, obtainiumTempId;
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/update_settings_provider.dart';
-import 'package:obtainium/providers/view_settings_provider.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/source_config_provider.dart';
-import 'package:obtainium/providers/plugin_provider.dart';
-import 'package:obtainium/providers/auth_provider.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/app_constants.dart';
-import 'package:obtainium/utils/device_utils.dart';
-import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+import 'package:dynamic_system_colors/dynamic_system_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -34,315 +19,155 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 // ignore: implementation_imports
 import 'package:easy_localization/src/localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:obtainium/services/app_install_service.dart';
-import 'package:obtainium/services/app_update_service.dart';
-import 'package:obtainium/services/background_service.dart';
-import 'package:obtainium/services/background_update_service.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:obtainium/utils/crash_tracker.dart';
-import 'package:obtainium/utils/crash_analytics.dart';
-import 'package:obtainium/utils/crash_file_handler.dart';
-import 'package:obtainium/utils/locale_constants.dart';
-import 'package:obtainium/components/error_app.dart';
-import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/utils/logger.dart';
-import 'package:talker_flutter/talker_flutter.dart';
-import 'package:sentry_talker/sentry_talker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+List<MapEntry<Locale, String>> supportedLocales = const [
+  MapEntry(Locale('en'), 'English'),
+  MapEntry(Locale('zh'), '简体中文'),
+  MapEntry(Locale('zh', 'Hant_TW'), '臺灣話'),
+  MapEntry(Locale('it'), 'Italiano'),
+  MapEntry(Locale('ja'), '日本語'),
+  MapEntry(Locale('hu'), 'Magyar'),
+  MapEntry(Locale('de'), 'Deutsch'),
+  MapEntry(Locale('fa'), 'فارسی'),
+  MapEntry(Locale('fr'), 'Français'),
+  MapEntry(Locale('es'), 'Español'),
+  MapEntry(Locale('pl'), 'Polski'),
+  MapEntry(Locale('ru'), 'Русский'),
+  MapEntry(Locale('bs'), 'Bosanski'),
+  MapEntry(Locale('pt'), 'Português'),
+  MapEntry(Locale('pt', 'BR'), 'Brasileiro'),
+  MapEntry(Locale('cs'), 'Česky'),
+  MapEntry(Locale('sv'), 'Svenska'),
+  MapEntry(Locale('nl'), 'Nederlands'),
+  MapEntry(Locale('vi'), 'Tiếng Việt'),
+  MapEntry(Locale('tr'), 'Türkçe'),
+  MapEntry(Locale('uk'), 'Українська'),
+  MapEntry(Locale('da'), 'Dansk'),
+  MapEntry(
+    Locale('en', 'EO'),
+    'Esperanto',
+  ), // https://github.com/aissat/easy_localization/issues/220#issuecomment-846035493
+  MapEntry(Locale('in'), 'Bahasa Indonesia'),
+  MapEntry(Locale('ko'), '한국어'),
+  MapEntry(Locale('ca'), 'Català'),
+  MapEntry(Locale('ar'), 'العربية'),
+  MapEntry(Locale('ml'), 'മലയാളം'),
+  MapEntry(Locale('gl'), 'Galego'),
+];
+const fallbackLocale = Locale('en');
+const localeDir = 'assets/translations';
 var fdroid = false;
 
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 
-/// Filters out expected Shizuku-related exceptions so they don't pollute
-/// the Sentry dashboard (mirrors hexodus's filterShizukuNoise logic).
-SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
-  final exceptions = event.exceptions;
-  if (exceptions == null || exceptions.isEmpty) return event;
-
-  for (final ex in exceptions) {
-    final type = ex.type ?? '';
-    final value = (ex.value ?? '').toLowerCase();
-
-    // Shizuku binder died — happens whenever Shizuku stops/restarts
-    if (type.contains('DeadObjectException')) return null;
-
-    // Permission denied before Shizuku grants access
-    if (type.contains('SecurityException') && value.contains('shizuku')) {
-      return null;
-    }
-
-    // Shizuku IPC failures — check for shizuku frames in the stack
-    if (type.contains('RemoteException')) {
-      final frames = ex.stackTrace?.frames ?? [];
-      final hasShizukuFrame = frames.any(
-        (f) =>
-            (f.package ?? '').toLowerCase().contains('shizuku') ||
-            (f.absPath ?? '').toLowerCase().contains('shizuku') ||
-            (f.module ?? '').toLowerCase().contains('shizuku'),
-      );
-      if (hasShizukuFrame) return null;
-    }
-
-    // PlatformException from Shizuku channel calls (e.g. PERMISSION_DENIED,
-    // binder not ready) — identified by shizuku in the value or stack frames
-    if (type.contains('PlatformException')) {
-      if (value.contains('shizuku')) return null;
-      final frames = ex.stackTrace?.frames ?? [];
-      final hasShizukuFrame = frames.any(
-        (f) =>
-            (f.package ?? '').toLowerCase().contains('shizuku') ||
-            (f.absPath ?? '').toLowerCase().contains('shizuku') ||
-            (f.module ?? '').toLowerCase().contains('shizuku'),
-      );
-      if (hasShizukuFrame) return null;
-    }
-  }
-
-  return event;
-}
-
-void main() async {
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = const String.fromEnvironment('SENTRY_DSN');
-
-      // Add Talker integration
-      options.addIntegration(TalkerIntegration(talker: talker));
-
-      // Performance — keep sample rates low to avoid overwhelming Sentry
-      options.tracesSampleRate = 0.2;
-      options.profilesSampleRate = 0.1;
-
-      // Session health tracking (mirrors hexodus isEnableAutoSessionTracking)
-      options.enableAutoSessionTracking = true;
-
-      // Always include stack traces
-      options.attachStacktrace = true;
-
-      // Privacy — never send PII or screenshots (hexodus parity)
-      options.sendDefaultPii = false;
-      options.attachScreenshot = false;
-
-      // Flutter-specific breadcrumbs (mirrors hexodus lifecycle/system breadcrumbs)
-      options.enableWindowMetricBreadcrumbs = true;
-      options.enableBrightnessChangeBreadcrumbs = true;
-      options.enableTextScaleChangeBreadcrumbs = true;
-
-      // Environment tag — distinguish production crashes from debug sessions
-      options.environment = kReleaseMode ? 'production' : 'development';
-
-      // Filter out expected Shizuku exceptions (hexodus parity)
-      options.beforeSend = _filterShizukuNoise;
+Future<void> loadTranslations() async {
+  // See easy_localization/issues/210
+  await EasyLocalizationController.initEasyLocation();
+  var s = SettingsProvider();
+  await s.initializeSettings();
+  var forceLocale = s.forcedLocale;
+  final controller = EasyLocalizationController(
+    saveLocale: true,
+    forceLocale: forceLocale,
+    fallbackLocale: fallbackLocale,
+    supportedLocales: supportedLocales.map((e) => e.key).toList(),
+    assetLoader: const RootBundleAssetLoader(),
+    useOnlyLangCode: false,
+    useFallbackTranslations: true,
+    path: localeDir,
+    onLoadError: (FlutterError e) {
+      throw e;
     },
-    appRunner: () async {
-      WidgetsFlutterBinding.ensureInitialized();
-
-      try {
-        ByteData data = await PlatformAssetBundle().load(
-          'assets/ca/lets-encrypt-r3.pem',
-        );
-        SecurityContext.defaultContext.setTrustedCertificatesBytes(
-          data.buffer.asUint8List(),
-        );
-      } catch (e) {
-        // Already added, do nothing (see #375)
-      }
-
-      try {
-        await EasyLocalization.ensureInitialized();
-        talker.info('Startup: Localization initialized');
-
-        final sp = await SharedPreferences.getInstance();
-        talker.info('Startup: SharedPreferences acquired');
-
-        final settingsProvider = SettingsProvider();
-        settingsProvider.prefs = sp;
-        await settingsProvider.initializeSettings();
-        talker.info('Startup: SettingsProvider initialized');
-
-        final pluginProvider = PluginProvider();
-        await pluginProvider.initialize(sp);
-        talker.info('Startup: PluginProvider initialized');
-
-        final authProvider = AuthProvider();
-        await authProvider.initialize(sp);
-        talker.info('Startup: AuthProvider initialized');
-
-        final androidInfo = await DeviceInfoPlugin().androidInfo;
-        talker.info('Startup: Device info acquired (${androidInfo.model})');
-
-        final manufacturer = androidInfo.manufacturer.toLowerCase();
-        final isSamsung = manufacturer == 'samsung';
-        final isFoldable =
-            androidInfo.model.toLowerCase().contains('fold') ||
-            androidInfo.model.toLowerCase().contains('flip');
-
-        Sentry.configureScope((scope) {
-          scope.setTag('android_api', androidInfo.version.sdkInt.toString());
-          scope.setTag('device', androidInfo.model);
-          scope.setTag('manufacturer', manufacturer);
-          scope.setTag('is_samsung', isSamsung.toString());
-          scope.setTag('is_foldable', isFoldable.toString());
-          scope.setContexts('android_device', {
-            'model': androidInfo.model,
-            'brand': androidInfo.brand,
-            'manufacturer': androidInfo.manufacturer,
-            'version': androidInfo.version.release,
-            'sdk': androidInfo.version.sdkInt,
-          });
-        });
-
-        if (androidInfo.version.sdkInt >= 29) {
-          SystemChrome.setSystemUIOverlayStyle(
-            const SystemUiOverlayStyle(
-              systemNavigationBarColor: Colors.transparent,
-            ),
-          );
-          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-        }
-        final np = NotificationsProvider();
-        await np.initialize(sp: settingsProvider);
-        talker.info('Startup: NotificationsProvider initialized');
-
-        FlutterForegroundTask.initCommunicationPort();
-
-        BackgroundFetch.registerHeadlessTask(
-          BackgroundService.backgroundFetchHeadlessTask,
-        );
-        talker.info('Startup: Headless tasks registered');
-
-        // Reset crash-loop counter on successful startup so user-facing errors
-        // (e.g. UnsupportedURLError) don't falsely trigger the repair screen.
-        await CrashAnalytics.resetStats();
-
-        // Zone guard catches unhandled async errors that escape the widget tree
-        // (mirrors hexodus's zone-level error boundary pattern)
-        runZonedGuarded(
-          () {
-            talker.info('Startup: Launching MultiProvider root');
-
-            // Enable true edge-to-edge layout for Android
-            SystemChrome.setSystemUIOverlayStyle(
-              const SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                systemNavigationBarColor: Colors.transparent,
-                systemNavigationBarDividerColor: Colors.transparent,
-                statusBarIconBrightness: Brightness.dark,
-                systemNavigationBarIconBrightness: Brightness.dark,
-              ),
-            );
-
-            runApp(
-              MultiProvider(
-                providers: [
-                  ChangeNotifierProvider.value(value: settingsProvider),
-                  ChangeNotifierProxyProvider<SettingsProvider, AppsProvider>(
-                    create: (ctx) => AppsProvider(settings: settingsProvider),
-                    update: (ctx, settings, apps) =>
-                        apps!..settingsProvider = settings,
-                  ),
-                  ChangeNotifierProxyProvider<AppsProvider, TagProvider>(
-                    create: (ctx) => TagProvider(ctx.read<AppsProvider>()),
-                    update: (ctx, apps, prev) => prev ?? TagProvider(apps),
-                  ),
-                  ChangeNotifierProvider.value(
-                    value: settingsProvider.updateSettings,
-                  ),
-                  ChangeNotifierProvider.value(
-                    value: settingsProvider.viewSettings,
-                  ),
-                  ChangeNotifierProvider.value(
-                    value: settingsProvider.behaviorSettings,
-                  ),
-                  ChangeNotifierProvider.value(
-                    value: settingsProvider.plusSettings,
-                  ),
-                  ChangeNotifierProvider.value(
-                    value: settingsProvider.themeSettings,
-                  ),
-                  ChangeNotifierProvider.value(
-                    value: settingsProvider.sourceConfig,
-                  ),
-                  ChangeNotifierProvider.value(value: pluginProvider),
-                  ChangeNotifierProvider.value(value: authProvider),
-                  Provider(create: (context) => np),
-                  Provider(create: (context) => LogsProvider()),
-                ],
-                child: EasyLocalization(
-                  supportedLocales: supportedLocales.map((e) => e.key).toList(),
-                  path: localeDir,
-                  fallbackLocale: fallbackLocale,
-                  useOnlyLangCode: false,
-                  child: const Obtainium(),
-                ),
-              ),
-            );
-          },
-          (error, stack) {
-            talker.handle(error, stack, 'Unhandled Zone Error');
-            // Expected ObtainiumErrors are user-facing (e.g. bad dispenser URL,
-            // microG misconfiguration) — show to user but don't pollute Sentry.
-            if (error is ObtainiumError && !error.unexpected) return;
-            Sentry.captureException(error, stackTrace: stack).then(
-              (id) {
-                CrashTracker.recordCrash(id.toString());
-                CrashAnalytics.recordCrash(
-                  errorType: error.runtimeType.toString(),
-                  errorMessage: error.toString(),
-                  eventId: id.toString(),
-                );
-                CrashFileHandler.writeCrashLog(
-                  errorType: error.runtimeType.toString(),
-                  message: error.toString(),
-                  stackTrace: stack.toString(),
-                  sentryEventId: id.toString(),
-                );
-              },
-              // Swallow — never let crash-recording failures recurse back into
-              // the zone error handler and create an infinite reporting loop.
-              onError: (e) {
-                talker.warning('Crash reporting pipeline failed: $e');
-              },
-            );
-          },
-        );
-      } catch (e, stackTrace) {
-        talker.handle(e, stackTrace, 'Main Catch Error (Startup Guard)');
-        if (e is ObtainiumError && !e.unexpected) {
-          runApp(
-            ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()),
-          );
-          return;
-        }
-        final sentryId = await Sentry.captureException(
-          e,
-          stackTrace: stackTrace,
-        );
-        await CrashTracker.recordCrash(sentryId.toString());
-        await CrashAnalytics.recordCrash(
-          errorType: e.runtimeType.toString(),
-          errorMessage: e.toString(),
-          eventId: sentryId.toString(),
-        );
-        await CrashFileHandler.writeCrashLog(
-          errorType: e.runtimeType.toString(),
-          message: e.toString(),
-          stackTrace: stackTrace.toString(),
-          sentryEventId: sentryId.toString(),
-        );
-        runApp(
-          ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()),
-        );
-      }
-    },
+  );
+  await controller.loadTranslations();
+  Localization.load(
+    controller.locale,
+    translations: controller.translations,
+    fallbackTranslations: controller.fallbackTranslations,
   );
 }
 
-Future<void> loadTranslations() async {
-  // Ensure localization is initialized - called during startup
+@pragma('vm:entry-point')
+void backgroundFetchHeadlessTask(HeadlessTask task) async {
+  String taskId = task.taskId;
+  bool isTimeout = task.timeout;
+  if (isTimeout) {
+    print('BG update task timed out.');
+    BackgroundFetch.finish(taskId);
+    return;
+  }
+  await bgUpdateCheck(taskId, null);
+  BackgroundFetch.finish(taskId);
+}
+
+@pragma('vm:entry-point')
+void startCallback() {
+  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
+}
+
+class MyTaskHandler extends TaskHandler {
+  static const String incrementCountCommand = 'incrementCount';
+
+  @override
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    print('onStart(starter: ${starter.name})');
+    bgUpdateCheck('bg_check', null);
+  }
+
+  @override
+  void onRepeatEvent(DateTime timestamp) {
+    bgUpdateCheck('bg_check', null);
+  }
+
+  @override
+  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
+    print('Foreground service onDestroy(isTimeout: $isTimeout)');
+  }
+
+  @override
+  void onReceiveData(Object data) {}
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    ByteData data = await PlatformAssetBundle().load(
+      'assets/ca/lets-encrypt-r3.pem',
+    );
+    SecurityContext.defaultContext.setTrustedCertificatesBytes(
+      data.buffer.asUint8List(),
+    );
+  } catch (e) {
+    // Already added, do nothing (see #375)
+  }
   await EasyLocalization.ensureInitialized();
+  if ((await DeviceInfoPlugin().androidInfo).version.sdkInt >= 29) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
+    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+  final np = NotificationsProvider();
+  await np.initialize();
+  FlutterForegroundTask.initCommunicationPort();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AppsProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
+        Provider(create: (context) => np),
+        Provider(create: (context) => LogsProvider()),
+      ],
+      child: EasyLocalization(
+        supportedLocales: supportedLocales.map((e) => e.key).toList(),
+        path: localeDir,
+        fallbackLocale: fallbackLocale,
+        useOnlyLangCode: false,
+        child: const Obtainium(),
+      ),
+    ),
+  );
+  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
 class Obtainium extends StatefulWidget {
@@ -354,44 +179,10 @@ class Obtainium extends StatefulWidget {
 
 class _ObtainiumState extends State<Obtainium> {
   var existingUpdateInterval = -1;
-  String? _buildError;
-  String? _buildStackTrace;
 
   @override
   void initState() {
     super.initState();
-    // Set custom error widget builder to catch build errors
-    ErrorWidget.builder = (FlutterErrorDetails details) {
-      talker.handle(details.exception, details.stack, 'Build Error');
-      _buildError = details.exceptionAsString();
-      _buildStackTrace = details.stack?.toString();
-      Sentry.captureException(
-        details.exception,
-        stackTrace: details.stack,
-      ).then(
-        (id) {
-          CrashTracker.recordCrash(id.toString());
-          CrashAnalytics.recordCrash(
-            errorType: details.exception.runtimeType.toString(),
-            errorMessage: details.exceptionAsString(),
-            eventId: id.toString(),
-          );
-          CrashFileHandler.writeCrashLog(
-            errorType: details.exception.runtimeType.toString(),
-            message: details.exceptionAsString(),
-            stackTrace: details.stack?.toString() ?? '',
-            sentryEventId: id.toString(),
-          );
-        },
-        onError: (e) {
-          talker.warning('Build error reporting pipeline failed: $e');
-        },
-      );
-      return BuildErrorWidget(
-        error: details.exceptionAsString(),
-        stackTrace: details.stack?.toString() ?? '',
-      );
-    };
     initPlatformState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       requestNonOptionalPermissions();
@@ -399,72 +190,101 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Future<void> requestNonOptionalPermissions() async {
-    try {
-      final NotificationPermission notificationPermission =
-          await FlutterForegroundTask.checkNotificationPermission();
-      if (notificationPermission != NotificationPermission.granted) {
-        await FlutterForegroundTask.requestNotificationPermission();
-      }
-    } catch (e) {
-      talker.warning('Failed to request notification permission: $e');
+    final NotificationPermission notificationPermission =
+        await FlutterForegroundTask.checkNotificationPermission();
+    if (notificationPermission != NotificationPermission.granted) {
+      await FlutterForegroundTask.requestNotificationPermission();
     }
-
-    // Check if this is a Xiaomi device (uses shared DeviceUtils)
-    final isXiaomi = await DeviceUtils.isXiaomiDevice();
-
-    if (isXiaomi) {
-      // Skip standard battery optimization on Xiaomi - it causes issues
-      // The Xiaomi setup dialog will handle this instead
-      return;
-    }
-
-    try {
-      if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-      }
-    } catch (e) {
-      // Ignore errors on devices that don't handle this intent correctly
-      talker.warning('Failed to request battery optimization: $e');
+    if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
+      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
     }
   }
 
+  void initForegroundService() {
+    // ignore: invalid_use_of_visible_for_testing_member
+    if (!FlutterForegroundTask.isInitialized) {
+      FlutterForegroundTask.init(
+        androidNotificationOptions: AndroidNotificationOptions(
+          channelId: 'bg_update',
+          channelName: tr('foregroundService'),
+          channelDescription: tr('foregroundService'),
+          onlyAlertOnce: true,
+        ),
+        iosNotificationOptions: const IOSNotificationOptions(
+          showNotification: false,
+          playSound: false,
+        ),
+        foregroundTaskOptions: ForegroundTaskOptions(
+          eventAction: ForegroundTaskEventAction.repeat(900000),
+          autoRunOnBoot: true,
+          autoRunOnMyPackageReplaced: true,
+          allowWakeLock: true,
+          allowWifiLock: true,
+        ),
+      );
+    }
+  }
+
+  Future<ServiceRequestResult?> startForegroundService(bool restart) async {
+    initForegroundService();
+    if (await FlutterForegroundTask.isRunningService) {
+      if (restart) {
+        return FlutterForegroundTask.restartService();
+      }
+    } else {
+      return FlutterForegroundTask.startService(
+        serviceTypes: [ForegroundServiceTypes.specialUse],
+        serviceId: 666,
+        notificationTitle: tr('foregroundService'),
+        notificationText: tr('fgServiceNotice'),
+        notificationIcon: NotificationIcon(
+          metaDataName: 'dev.imranr.obtainium.service.NOTIFICATION_ICON',
+        ),
+        callback: startCallback,
+      );
+    }
+    return null;
+  }
+
+  stopForegroundService() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      return FlutterForegroundTask.stopService();
+    }
+  }
+
+  // void onReceiveForegroundServiceData(Object data) {
+  //   print('onReceiveTaskData: $data');
+  // }
+
   @override
   void dispose() {
+    // Remove a callback to receive data sent from the TaskHandler.
+    // FlutterForegroundTask.removeTaskDataCallback(onReceiveForegroundServiceData);
     super.dispose();
   }
 
   Future<void> initPlatformState() async {
-    try {
-      await BackgroundFetch.configure(
-        BackgroundFetchConfig(
-          minimumFetchInterval: 15,
-          stopOnTerminate: false,
-          startOnBoot: true,
-          enableHeadless: true,
-          requiresBatteryNotLow: false,
-          requiresCharging: false,
-          requiresStorageNotLow: false,
-          requiresDeviceIdle: false,
-          requiredNetworkType: NetworkType.ANY,
-        ),
-        (String taskId) async {
-          await BackgroundUpdateService.bgUpdateCheck(taskId, null);
-          try {
-            BackgroundFetch.finish(taskId);
-          } catch (_) {}
-        },
-        (String taskId) async {
-          context.read<LogsProvider>().add('BG update task timed out.');
-          try {
-            BackgroundFetch.finish(taskId);
-          } catch (_) {}
-        },
-      );
-    } catch (e) {
-      talker.warning(
-        'BackgroundFetch.configure failed (unsupported on this device/OS): $e',
-      );
-    }
+    await BackgroundFetch.configure(
+      BackgroundFetchConfig(
+        minimumFetchInterval: 15,
+        stopOnTerminate: false,
+        startOnBoot: true,
+        enableHeadless: true,
+        requiresBatteryNotLow: false,
+        requiresCharging: false,
+        requiresStorageNotLow: false,
+        requiresDeviceIdle: false,
+        requiredNetworkType: NetworkType.ANY,
+      ),
+      (String taskId) async {
+        await bgUpdateCheck(taskId, null);
+        BackgroundFetch.finish(taskId);
+      },
+      (String taskId) async {
+        context.read<LogsProvider>().add('BG update task timed out.');
+        BackgroundFetch.finish(taskId);
+      },
+    );
     if (!mounted) return;
   }
 
@@ -474,28 +294,16 @@ class _ObtainiumState extends State<Obtainium> {
     AppsProvider appsProvider = context.read<AppsProvider>();
     LogsProvider logs = context.read<LogsProvider>();
     NotificationsProvider notifs = context.read<NotificationsProvider>();
-    if (settingsProvider.updateSettings.updateInterval == 0) {
-      BackgroundService.stopForegroundService();
-      try {
-        BackgroundFetch.stop();
-      } catch (e) {
-        talker.warning('BackgroundFetch.stop failed: $e');
-      }
+    if (settingsProvider.updateInterval == 0) {
+      stopForegroundService();
+      BackgroundFetch.stop();
     } else {
-      if (settingsProvider.updateSettings.useFGService) {
-        try {
-          BackgroundFetch.stop();
-        } catch (e) {
-          talker.warning('BackgroundFetch.stop failed: $e');
-        }
-        BackgroundService.startForegroundService(false);
+      if (settingsProvider.useFGService) {
+        BackgroundFetch.stop();
+        startForegroundService(false);
       } else {
-        BackgroundService.stopForegroundService();
-        try {
-          BackgroundFetch.start();
-        } catch (e) {
-          talker.warning('BackgroundFetch.start failed: $e');
-        }
+        stopForegroundService();
+        BackgroundFetch.start();
       }
     }
     if (settingsProvider.prefs == null) {
@@ -506,34 +314,33 @@ class _ObtainiumState extends State<Obtainium> {
         logs.add('This is the first ever run of Obtainium.');
         // If this is the first run, add Obtainium to the Apps list
         if (!fdroid) {
-          AppInstallService.getInstalledInfo(obtainiumId).then(
-            (value) {
-              if (value?.versionName != null) {
-                appsProvider.saveApps([
-                  App(
-                    obtainiumId,
-                    obtainiumUrl,
-                    'thejaustin',
-                    'Obtainium+',
-                    value!.versionName,
-                    value.versionName!,
-                    [],
-                    0,
-                    {
-                      'versionDetection': true,
-                      'apkFilterRegEx': 'fdroid',
-                      'invertAPKFilter': true,
-                    },
-                    null,
-                    false,
-                  ),
-                ], onlyIfExists: false);
-              }
-            },
-            onError: (err) {
-              talker.handle(err, null, 'First run Obtainium+ init error');
-            },
-          );
+          getInstalledInfo(obtainiumId)
+              .then((value) {
+                if (value?.versionName != null) {
+                  appsProvider.saveApps([
+                    App(
+                      obtainiumId,
+                      obtainiumUrl,
+                      'ImranR98',
+                      'Obtainium',
+                      value!.versionName,
+                      value.versionName!,
+                      [],
+                      0,
+                      {
+                        'versionDetection': true,
+                        'apkFilterRegEx': 'fdroid',
+                        'invertAPKFilter': true,
+                      },
+                      null,
+                      false,
+                    ),
+                  ], onlyIfExists: false);
+                }
+              })
+              .catchError((err) {
+                print(err);
+              });
         }
       }
       if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
@@ -556,96 +363,58 @@ class _ObtainiumState extends State<Obtainium> {
           if (lightDynamic != null &&
               darkDynamic != null &&
               settingsProvider.useMaterialYou) {
-            if (settingsProvider.matchSystemMaterialStyle) {
-              // Match system's complete Material You theme (colors + style)
-              lightColorScheme = lightDynamic.harmonized();
-              darkColorScheme = darkDynamic.harmonized();
-            } else {
-              // Use system color as seed but apply custom selected variant
-              lightColorScheme = ColorScheme.fromSeed(
-                seedColor: lightDynamic.primary,
-                dynamicSchemeVariant: settingsProvider.themeVariant,
-              ).harmonized();
-              darkColorScheme = ColorScheme.fromSeed(
-                seedColor: darkDynamic.primary,
-                brightness: Brightness.dark,
-                dynamicSchemeVariant: settingsProvider.themeVariant,
-              ).harmonized();
-            }
+            lightColorScheme = lightDynamic.harmonized();
+            darkColorScheme = darkDynamic.harmonized();
           } else {
-            // Use custom color with selected variant
             lightColorScheme = ColorScheme.fromSeed(
               seedColor: settingsProvider.themeColor,
-              dynamicSchemeVariant: settingsProvider.themeVariant,
             );
             darkColorScheme = ColorScheme.fromSeed(
               seedColor: settingsProvider.themeColor,
               brightness: Brightness.dark,
-              dynamicSchemeVariant: settingsProvider.themeVariant,
             );
           }
 
-          // Set all M3 surface tokens to near-black values for true AMOLED.
-          // Avoid .harmonized() after this to preserve pure-black surfaces.
+          // set the background and surface colors to pure black in the amoled theme
           if (settingsProvider.useBlackTheme) {
-            darkColorScheme = darkColorScheme.copyWith(
-              surface: Colors.black,
-              surfaceContainerLowest: Colors.black,
-              surfaceContainerLow: const Color(0xFF080808),
-              surfaceContainer: const Color(0xFF0F0F0F),
-              surfaceContainerHigh: const Color(0xFF181818),
-              surfaceContainerHighest: const Color(0xFF212121),
-              surfaceDim: Colors.black,
-              surfaceBright: const Color(0xFF1C1C1C),
-              onSurface: Colors.white,
-              onSurfaceVariant: const Color(0xFFCCCCCC),
-            );
+            darkColorScheme = darkColorScheme
+                .copyWith(surface: Colors.black)
+                .harmonized();
           }
 
           if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();
 
-          return ScrollConfiguration(
-            behavior: settingsProvider.plusEnableBouncyPhysics
-                ? const ScrollBehavior().copyWith(
-                    physics: const BouncingScrollPhysics(),
-                  )
-                : const ScrollBehavior(),
-            child: MaterialApp(
-              title: 'Obtainium',
-              localizationsDelegates: context.localizationDelegates,
-              supportedLocales: context.supportedLocales,
-              locale: context.locale,
-              navigatorKey: globalNavigatorKey,
-              debugShowCheckedModeBanner: false,
-              navigatorObservers: [
-                SentryNavigatorObserver(),
-                TalkerRouteObserver(talker),
-              ],
-              theme: ThemeBuilder.buildTheme(
-                colorScheme: settingsProvider.theme == ThemeSettings.dark
-                    ? darkColorScheme
-                    : lightColorScheme,
-                useSystemFont: settingsProvider.useSystemFont,
-                plusEnableMaterialExpressive:
-                    settingsProvider.plusEnableMaterialExpressive,
-                cornerRadius: settingsProvider.plusGlobalCornerRadius,
-              ),
-              darkTheme: ThemeBuilder.buildTheme(
-                colorScheme: settingsProvider.theme == ThemeSettings.light
-                    ? lightColorScheme
-                    : darkColorScheme,
-                useSystemFont: settingsProvider.useSystemFont,
-                plusEnableMaterialExpressive:
-                    settingsProvider.plusEnableMaterialExpressive,
-                cornerRadius: settingsProvider.plusGlobalCornerRadius,
-              ),
-              home: Shortcuts(
-                shortcuts: <LogicalKeySet, Intent>{
-                  LogicalKeySet(LogicalKeyboardKey.select):
-                      const ActivateIntent(),
-                },
-                child: const HomePage(),
-              ),
+          return MaterialApp(
+            title: 'Obtainium',
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
+            navigatorKey: globalNavigatorKey,
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              useMaterial3: true,
+              colorScheme: settingsProvider.theme == ThemeSettings.dark
+                  ? darkColorScheme
+                  : lightColorScheme,
+              fontFamily: settingsProvider.useSystemFont
+                  ? 'SystemFont'
+                  : 'Montserrat',
+            ),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              colorScheme: settingsProvider.theme == ThemeSettings.light
+                  ? lightColorScheme
+                  : darkColorScheme,
+              fontFamily: settingsProvider.useSystemFont
+                  ? 'SystemFont'
+                  : 'Montserrat',
+            ),
+            home: Shortcuts(
+              shortcuts: <LogicalKeySet, Intent>{
+                LogicalKeySet(LogicalKeyboardKey.select):
+                    const ActivateIntent(),
+              },
+              child: const HomePage(),
             ),
           );
         },

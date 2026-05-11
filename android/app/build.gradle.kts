@@ -8,17 +8,6 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-<<<<<<< HEAD
-    id("io.sentry.android.gradle")
-}
-
-sentry {
-    includeProguardMapping.set(true)
-    autoUploadProguardMapping.set(false)
-    uploadNativeSymbols.set(false)
-    includeNativeSources.set(false)
-=======
->>>>>>> upstream/main
 }
 
 val localProperties = Properties()
@@ -34,36 +23,12 @@ var flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
-<<<<<<< HEAD
-if (keystorePropertiesFile.exists()) {
-=======
 val keystorePropertiesExists = keystorePropertiesFile.exists()
 if (keystorePropertiesExists) {
->>>>>>> upstream/main
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
-<<<<<<< HEAD
-    namespace = "app.obtainiumplus"
-    compileSdk = flutter.compileSdkVersion
-
-    compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
-
-    defaultConfig {
-        applicationId = "app.obtainiumplus"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 24
-=======
     namespace = "dev.imranr.obtainium"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
@@ -83,21 +48,11 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26
->>>>>>> upstream/main
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInt()
         versionName = flutterVersionName
     }
 
-<<<<<<< HEAD
-    flavorDimensions("flavor")
-
-    productFlavors {
-        create("normal") {
-            dimension = "flavor"
-            applicationIdSuffix = ""
-        }
-=======
     flavorDimensions += "default"
 
     productFlavors {
@@ -109,30 +64,19 @@ android {
             dimension = "default"
             applicationIdSuffix = ".fdroid"
         }
->>>>>>> upstream/main
     }
 
     signingConfigs {
         create("release") {
-<<<<<<< HEAD
-            keyAlias = keystoreProperties["keyAlias"].toString()
-            keyPassword = keystoreProperties["keyPassword"].toString()
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
-            storePassword = keystoreProperties["storePassword"].toString()
-=======
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
             storeFile = keystoreProperties["storeFile"]?.let { file(it) }
             storePassword = keystoreProperties["storePassword"] as String?
->>>>>>> upstream/main
         }
     }
 
     buildTypes {
         getByName("release") {
-<<<<<<< HEAD
-            signingConfig = signingConfigs.getByName("release")
-=======
             val releaseSigningConfig = signingConfigs.getByName("release")
             signingConfig = if (keystorePropertiesExists && releaseSigningConfig.storeFile != null) {
                 releaseSigningConfig
@@ -161,24 +105,12 @@ android {
                 }
                 null
             }
->>>>>>> upstream/main
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
     }
-<<<<<<< HEAD
-
-    lint {
-        abortOnError = true
-        checkReleaseBuilds = true
-        warningsAsErrors = true
-        showAll = true
-        explainIssues = true
-    }
-=======
->>>>>>> upstream/main
 }
 
 val abiCodes = mapOf("x86_64" to 1, "armeabi-v7a" to 2, "arm64-v8a" to 3)
@@ -196,10 +128,6 @@ android.applicationVariants.configureEach {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
-<<<<<<< HEAD
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
-=======
->>>>>>> upstream/main
 }
 
 flutter {

@@ -1,38 +1,5 @@
 // Exposes functions used to save/load app settings
 
-<<<<<<< HEAD
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:easy_localization/easy_localization.dart';
-import 'package:equations/equations.dart';
-import 'package:flutter/material.dart';
-import 'package:obtainium/app_sources/github.dart';
-import 'package:obtainium/main.dart';
-import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
-import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/providers/theme_settings_provider.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/source_config_provider.dart';
-import 'package:obtainium/providers/update_settings_provider.dart';
-import 'package:obtainium/providers/view_settings_provider.dart';
-import 'package:obtainium/services/app_file_service.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_storage/shared_storage.dart' as saf;
-
-import 'package:obtainium/models/settings_enums.dart';
-
-String obtainiumTempId = 'thejaustin_obtainiumplus_${GitHub().hosts[0]}';
-String obtainiumId = 'app.obtainiumplus';
-String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
-Color obtainiumThemeColor = const Color(0xFF6438B5);
-
-=======
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -58,56 +25,10 @@ enum SortColumnSettings { added, nameAuthor, authorName, releaseDate }
 
 enum SortOrderSettings { ascending, descending }
 
->>>>>>> upstream/main
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   String? defaultAppDir;
   bool justStarted = true;
-<<<<<<< HEAD
-
-  final UpdateSettingsProvider updateSettings = UpdateSettingsProvider();
-  final ViewSettingsProvider viewSettings = ViewSettingsProvider();
-  final BehaviorSettingsProvider behaviorSettings = BehaviorSettingsProvider();
-  final PlusSettingsProvider plusSettings = PlusSettingsProvider();
-  final ThemeSettingsProvider themeSettings = ThemeSettingsProvider();
-  final SourceConfigProvider sourceConfig = SourceConfigProvider();
-
-  String sourceUrl = 'https://github.com/thejaustin/ObtainiumPlus';
-
-  Completer<void>? _initCompleter;
-
-  // Not done in constructor as we want to be able to await it
-  Future<void> initializeSettings() async {
-    if (_initCompleter != null) {
-      return _initCompleter!.future;
-    }
-    _initCompleter = Completer<void>();
-
-    prefs = await SharedPreferences.getInstance();
-    defaultAppDir = (await AppFileService.getAppStorageDir()).path;
-
-    await updateSettings.initializeSettings(prefs!);
-    await viewSettings.initializeSettings(prefs!);
-    await behaviorSettings.initializeSettings(prefs!);
-    await plusSettings.initializeSettings(prefs!);
-    await themeSettings.initializeSettings(prefs!);
-    await sourceConfig.initializeSettings(prefs!);
-
-    notifyListeners();
-    _initCompleter!.complete();
-  }
-
-  AppBarStyle getAppBarStyleForPage(String? pageId) {
-    if (pageId != null) {
-      int? styleIndex = prefs?.getInt('appBarStyle_$pageId');
-      if (styleIndex != null &&
-          styleIndex >= 0 &&
-          styleIndex < AppBarStyle.values.length) {
-        return AppBarStyle.values[styleIndex];
-      }
-    }
-    return AppBarStyle.large;
-=======
   bool isTV = false;
 
   String sourceUrl = 'https://github.com/ImranR98/Obtainium';
@@ -223,7 +144,6 @@ class SettingsProvider with ChangeNotifier {
   set sortOrder(SortOrderSettings s) {
     prefs?.setInt('sortOrder', s.index);
     notifyListeners();
->>>>>>> upstream/main
   }
 
   bool checkAndFlipFirstRun() {
@@ -255,18 +175,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-<<<<<<< HEAD
-  bool get xiaomiSetupShown {
-    return prefs?.getBool('xiaomiSetupShown') ?? false;
-  }
-
-  set xiaomiSetupShown(bool value) {
-    prefs?.setBool('xiaomiSetupShown', value);
-    notifyListeners();
-  }
-
-=======
->>>>>>> upstream/main
   bool checkJustStarted() {
     if (justStarted) {
       justStarted = false;
@@ -275,8 +183,6 @@ class SettingsProvider with ChangeNotifier {
     return false;
   }
 
-<<<<<<< HEAD
-=======
   Future<bool> getInstallPermission({bool enforce = false}) async {
     while (!(await Permission.requestInstallPackages.isGranted)) {
       // Explicit request as InstallPlugin request sometimes bugged
@@ -331,7 +237,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
->>>>>>> upstream/main
   bool get hideTrackOnlyWarning {
     return prefs?.getBool('hideTrackOnlyWarning') ?? false;
   }
@@ -350,21 +255,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-<<<<<<< HEAD
-  String? getSettingString(String settingId) =>
-      sourceConfig.getSettingString(settingId);
-
-  void setSettingString(String settingId, String value) {
-    sourceConfig.setSettingString(settingId, value);
-    notifyListeners();
-  }
-
-  bool getSettingBool(String settingId) =>
-      sourceConfig.getSettingBool(settingId);
-
-  void setSettingBool(String settingId, bool value) {
-    sourceConfig.setSettingBool(settingId, value);
-=======
   String? getSettingString(String settingId) {
     String? str = prefs?.getString(settingId);
     return str?.isNotEmpty == true ? str : null;
@@ -404,7 +294,6 @@ class SettingsProvider with ChangeNotifier {
       }
     }
     prefs?.setString('categories', jsonEncode(cats));
->>>>>>> upstream/main
     notifyListeners();
   }
 
@@ -437,18 +326,11 @@ class SettingsProvider with ChangeNotifier {
     if (context.supportedLocales.contains(context.deviceLocale)) {
       context.resetLocale();
     } else {
-<<<<<<< HEAD
-      final fallback = context.fallbackLocale;
-      if (fallback != null) context.setLocale(fallback);
-=======
       context.setLocale(context.fallbackLocale!);
->>>>>>> upstream/main
       context.deleteSaveLocale();
     }
   }
 
-<<<<<<< HEAD
-=======
   bool get removeOnExternalUninstall {
     return prefs?.getBool('removeOnExternalUninstall') ?? false;
   }
@@ -524,7 +406,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
->>>>>>> upstream/main
   bool get showDebugOpts {
     return prefs?.getBool('showDebugOpts') ?? false;
   }
@@ -534,10 +415,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-<<<<<<< HEAD
-  List<String> get searchDeselected {
-    return prefs?.getStringList('searchDeselected') ?? [];
-=======
   bool get highlightTouchTargets {
     return prefs?.getBool('highlightTouchTargets') ?? false;
   }
@@ -629,7 +506,6 @@ class SettingsProvider with ChangeNotifier {
   List<String> get searchDeselected {
     return prefs?.getStringList('searchDeselected') ??
         SourceProvider().sources.map((s) => s.name).toList();
->>>>>>> upstream/main
   }
 
   set searchDeselected(List<String> list) {
@@ -637,89 +513,6 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-<<<<<<< HEAD
-  // App icon cache expiration setting
-  int get appIconCacheDays {
-    return prefs?.getInt('appIconCacheDays') ?? 30;
-  }
-
-  set appIconCacheDays(int days) {
-    prefs?.setInt('appIconCacheDays', days);
-    notifyListeners();
-  }
-
-  // Number of apps to preload setting
-  int get appsToPreload {
-    return prefs?.getInt('appsToPreload') ?? 50;
-  }
-
-  set appsToPreload(int count) {
-    prefs?.setInt('appsToPreload', count);
-    notifyListeners();
-  }
-
-  // Predictive feature: Track most commonly used sort method
-  String get mostUsedSortMethod {
-    return prefs?.getString('mostUsedSortMethod') ?? 'default';
-  }
-
-  void setMostUsedSortMethod(String method) {
-    prefs?.setString('mostUsedSortMethod', method);
-  }
-
-  // Predictive feature: Track user's preferred update interval
-  int get preferredUpdateInterval {
-    return prefs?.getInt('preferredUpdateInterval') ?? 0; // Default to manual
-  }
-
-  void setPreferredUpdateInterval(int interval) {
-    prefs?.setInt('preferredUpdateInterval', interval);
-  }
-
-  // Retry Queue persistence
-  Map<String, Map<String, dynamic>> get retryQueue {
-    var str = prefs?.getString('retryQueue');
-    if (str == null) return {};
-    try {
-      return Map<String, Map<String, dynamic>>.from(
-        jsonDecode(
-          str,
-        ).map((key, value) => MapEntry(key, Map<String, dynamic>.from(value))),
-      );
-    } catch (e) {
-      return {};
-    }
-  }
-
-  set retryQueue(Map<String, Map<String, dynamic>> queue) {
-    prefs?.setString('retryQueue', jsonEncode(queue));
-    notifyListeners();
-  }
-
-  // Offline Queue persistence
-  List<String> get offlineQueue {
-    return prefs?.getStringList('offlineQueue') ?? [];
-  }
-
-  set offlineQueue(List<String> queue) {
-    prefs?.setStringList('offlineQueue', queue);
-    notifyListeners();
-  }
-
-  bool get enableDeepLogging {
-    return prefs?.getBool('enableDeepLogging') ?? false;
-  }
-
-  set enableDeepLogging(bool val) {
-    prefs?.setBool('enableDeepLogging', val);
-    notifyListeners();
-  }
-
-  bool get enableContextualTips =>
-      prefs?.getBool('enableContextualTips') ?? true;
-  set enableContextualTips(bool val) {
-    prefs?.setBool('enableContextualTips', val);
-=======
   bool get beforeNewInstallsShareToAppVerifier {
     return prefs?.getBool('beforeNewInstallsShareToAppVerifier') ?? true;
   }
@@ -744,7 +537,6 @@ class SettingsProvider with ChangeNotifier {
 
   set useFGService(bool val) {
     prefs?.setBool('useFGService', val);
->>>>>>> upstream/main
     notifyListeners();
   }
 }

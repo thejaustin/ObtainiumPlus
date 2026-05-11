@@ -1,38 +1,13 @@
-<<<<<<< HEAD
-import 'package:obtainium/app_sources/git_source.dart';
-import 'package:obtainium/app_sources/github.dart';
-import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart';
-
-class Codeberg extends GitSource {
-=======
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class Codeberg extends AppSource {
   GitHub gh = GitHub(hostChanged: true);
->>>>>>> upstream/main
   Codeberg() {
     name = 'Forgejo (Codeberg)';
     hosts = ['codeberg.org'];
 
-<<<<<<< HEAD
-    additionalSourceAppSpecificSettingFormItems = GitHub(
-      hostChanged: true,
-    ).additionalSourceAppSpecificSettingFormItems;
-
-    canSearch = true;
-    searchQuerySettingFormItems = GitHub(
-      hostChanged: true,
-    ).searchQuerySettingFormItems;
-  }
-
-  @override
-=======
     additionalSourceAppSpecificSettingFormItems =
         gh.additionalSourceAppSpecificSettingFormItems;
 
@@ -58,19 +33,10 @@ class Codeberg extends AppSource {
       '$standardUrl/releases';
 
   @override
->>>>>>> upstream/main
   Future<APKDetails> getLatestAPKDetails(
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-<<<<<<< HEAD
-    return await GitHub(
-      hostChanged: true,
-    ).getLatestAPKDetailsCommon2(standardUrl, additionalSettings, (
-      bool useTagUrl,
-    ) async {
-      return 'https://${hosts[0]}/api/v1/repos${standardUrl.substring('https://${hosts[0]}'.length)}/${useTagUrl ? 'tags' : 'releases'}?per_page=100';
-=======
     return await gh.getLatestAPKDetailsCommon2(standardUrl, additionalSettings, (
       bool useTagUrl,
     ) async {
@@ -81,7 +47,6 @@ class Codeberg extends AppSource {
         path: apiPath,
         queryParameters: {'per_page': '100'},
       ).toString();
->>>>>>> upstream/main
     }, null);
   }
 
@@ -96,11 +61,7 @@ class Codeberg extends AppSource {
     String query, {
     Map<String, dynamic> querySettings = const {},
   }) async {
-<<<<<<< HEAD
-    return GitHub(hostChanged: true).searchCommon(
-=======
     return gh.searchCommon(
->>>>>>> upstream/main
       query,
       'https://${hosts[0]}/api/v1/repos/search?q=${Uri.encodeQueryComponent(query)}&limit=100',
       'data',

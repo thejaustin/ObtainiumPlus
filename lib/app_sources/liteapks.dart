@@ -1,17 +1,7 @@
-<<<<<<< HEAD
-import 'package:obtainium/utils/app_utils.dart';
-=======
->>>>>>> upstream/main
 import 'dart:convert';
 
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
-<<<<<<< HEAD
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-=======
->>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class LiteAPKs extends AppSource {
@@ -83,18 +73,10 @@ class LiteAPKs extends AppSource {
       additionalSettings,
     );
     if (res1.statusCode != 200) {
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(res1);
-    }
-
-    final res1Decoded = jsonDecode(res1.body) as List<dynamic>;
-    var liteAppId = res1Decoded.isNotEmpty ? res1Decoded[0]['id'] : null;
-=======
       throw getObtainiumHttpError(res1);
     }
 
     var liteAppId = jsonDecode(res1.body)[0]['id'];
->>>>>>> upstream/main
     if (liteAppId == null) {
       throw NoReleasesError();
     }
@@ -104,11 +86,7 @@ class LiteAPKs extends AppSource {
       additionalSettings,
     );
     if (res2.statusCode != 200) {
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(res2);
-=======
       throw getObtainiumHttpError(res2);
->>>>>>> upstream/main
     }
     var json = jsonDecode(res2.body);
 

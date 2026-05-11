@@ -1,14 +1,6 @@
-<<<<<<< HEAD
-import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-=======
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
->>>>>>> upstream/main
 
 const String logTable = 'logs';
 const String idColumn = '_id';
@@ -39,15 +31,7 @@ class Log {
 
   Log.fromMap(Map<String, Object?> map) {
     id = map[idColumn] as int;
-<<<<<<< HEAD
-    final levelIndex = (map[levelColumn] as int).clamp(
-      0,
-      LogLevels.values.length - 1,
-    );
-    level = LogLevels.values.elementAt(levelIndex);
-=======
     level = LogLevels.values.elementAt(map[levelColumn] as int);
->>>>>>> upstream/main
     message = map[messageColumn] as String;
     timestamp = DateTime.fromMillisecondsSinceEpoch(
       map[timestampColumn] as int,
@@ -62,11 +46,7 @@ class Log {
 
 class LogsProvider {
   LogsProvider({bool runDefaultClear = true}) {
-<<<<<<< HEAD
-    unawaited(clear(before: DateTime.now().subtract(const Duration(days: 7))));
-=======
     clear(before: DateTime.now().subtract(const Duration(days: 7)));
->>>>>>> upstream/main
   }
 
   Database? db;
@@ -91,49 +71,12 @@ create table if not exists $logTable (
   Future<Log> add(String message, {LogLevels level = LogLevels.info}) async {
     Log l = Log(message, level);
     l.id = await (await getDB()).insert(logTable, l.toMap());
-<<<<<<< HEAD
-
-    // Add Sentry breadcrumb
-    SentryLevel sentryLevel;
-    switch (level) {
-      case LogLevels.debug:
-        sentryLevel = SentryLevel.debug;
-        break;
-      case LogLevels.info:
-        sentryLevel = SentryLevel.info;
-        break;
-      case LogLevels.warning:
-        sentryLevel = SentryLevel.warning;
-        break;
-      case LogLevels.error:
-        sentryLevel = SentryLevel.error;
-        break;
-    }
-    Sentry.addBreadcrumb(
-      Breadcrumb(message: message, level: sentryLevel, timestamp: l.timestamp),
-    );
-
-=======
->>>>>>> upstream/main
     if (kDebugMode) {
       print(l);
     }
     return l;
   }
 
-<<<<<<< HEAD
-  Future<Log> logEvent(
-    String event,
-    Map<String, dynamic> params, {
-    LogLevels level = LogLevels.info,
-  }) async {
-    String message =
-        'EVENT: $event | ${params.entries.map((e) => '${e.key}=${e.value}').join(', ')}';
-    return add(message, level: level);
-  }
-
-=======
->>>>>>> upstream/main
   Future<List<Log>> get({DateTime? before, DateTime? after}) async {
     var where = getWhereDates(before: before, after: after);
     return (await (await getDB()).query(
@@ -151,23 +94,12 @@ create table if not exists $logTable (
       whereArgs: where.value,
     );
     if (res > 0) {
-<<<<<<< HEAD
-      unawaited(
-        add(
-          plural(
-            'clearedNLogsBeforeXAfterY',
-            res,
-            namedArgs: {'before': before.toString(), 'after': after.toString()},
-            name: 'n',
-          ),
-=======
       add(
         plural(
           'clearedNLogsBeforeXAfterY',
           res,
           namedArgs: {'before': before.toString(), 'after': after.toString()},
           name: 'n',
->>>>>>> upstream/main
         ),
       );
     }
