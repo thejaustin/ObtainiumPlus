@@ -96,7 +96,9 @@ jobs:
 
       - name: Install Android SDK Platform 34
         run: |
-          echo "y" | sdkmanager "platforms;android-34"
+          SDKMANAGER=$(find /usr/local/lib/android/sdk -name sdkmanager | head -n 1)
+          echo "Using sdkmanager at: $SDKMANAGER"
+          echo "y" | $SDKMANAGER "platforms;android-34"
 
       - name: Get dependencies
         run: flutter pub get
