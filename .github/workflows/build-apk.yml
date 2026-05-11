@@ -94,6 +94,10 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
+      - name: Install Android SDK Platform 34
+        run: |
+          echo "y" | sdkmanager "platforms;android-34"
+
       - name: Get dependencies
         run: flutter pub get
 
