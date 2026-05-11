@@ -13,6 +13,11 @@ import 'package:html/parser.dart';
 class ItchIO extends AppSource {
   ItchIO() {
     hosts = ['itch.io'];
+    // itch.io is currently an experimental source. 
+    // Ensure it is only used if the user has enabled experimental customization. 
+    if (!plusSettings.plusEnableExperimentalCustomization) { 
+      throw ObtainiumError(tr("featureDisabled")); 
+    }
     name = 'itch.io';
     allowSubDomains = true;
   }

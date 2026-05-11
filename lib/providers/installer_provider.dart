@@ -20,6 +20,7 @@ class InstallerAppInfo {
 }
 
 Future<List<InstallerAppInfo>> getApkInstallerApps() async {
+  if (!plusSettings.plusEnableStandaloneInstaller) return [];
   if (!Platform.isAndroid) return [];
   final rawList =
       await _channel.invokeMethod<List<dynamic>>('queryApkInstallerActivities');

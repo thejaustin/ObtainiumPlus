@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart'';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:share_plus/share_plus.dart';
@@ -216,10 +216,10 @@ class AppInstallService {
 
   static Future<bool> canInstallSilently(
     App app,
-    SettingsProvider settingsProvider,
+    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
     LogsProvider logs,
   ) async {
-    if (!settingsProvider.enableBackgroundUpdates) {
+    if (!updateSettings.enableBackgroundUpdates) {
       return false;
     }
     if (app.additionalSettings['exemptFromBackgroundUpdates'] == true) {
@@ -257,7 +257,7 @@ class AppInstallService {
       return false;
     }
 
-    if (settingsProvider.useShizuku) {
+    if (behaviorSettings.useShizuku) {
       return true;
     }
 
@@ -289,7 +289,7 @@ class AppInstallService {
   static Future<bool> installApkStandalone(
     File file,
     BuildContext context,
-    SettingsProvider settingsProvider,
+    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
     LogsProvider logs, {
     bool shizukuPretendToBeGooglePlay = false,
   }) async {
@@ -312,7 +312,7 @@ class AppInstallService {
     );
 
     int? code;
-    if (!settingsProvider.useShizuku) {
+    if (!behaviorSettings.useShizuku) {
       code = await AndroidPackageInstaller.installApk(apkFilePath: file.path);
     } else {
       code = await ShizukuApkInstaller.installAPK(
@@ -338,7 +338,7 @@ class AppInstallService {
   static Future<bool> installApk(
     DownloadedApk file,
     BuildContext? firstTimeWithContext,
-    SettingsProvider settingsProvider,
+    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
     LogsProvider logs,
     Map<String, AppInMemory> apps, {
     bool needsBGWorkaround = false,
@@ -347,7 +347,7 @@ class AppInstallService {
     Future<void> Function(List<App>)? saveApps,
   }) async {
     if (firstTimeWithContext != null &&
-        settingsProvider.beforeNewInstallsShareToAppVerifier &&
+        behaviorSettings.beforeNewInstallsShareToAppVerifier &&
         (await getInstalledInfo('dev.soupslurpr.appverifier')) != null) {
       XFile f = XFile.fromData(
         file.file.readAsBytesSync(),
@@ -416,7 +416,7 @@ class AppInstallService {
       }
     }
     int? code;
-    if (!settingsProvider.useShizuku) {
+    if (!behaviorSettings.useShizuku) {
       var allAPKs = [file.file.path];
       allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
       code = await AndroidPackageInstaller.installApk(
@@ -446,7 +446,7 @@ class AppInstallService {
         // Android 14+ Update Ownership
         var osInfo = await DeviceInfoPlugin().androidInfo;
         if (osInfo.version.sdkInt >= 34 &&
-            settingsProvider.plusEnableUpdateOwnership) {
+            plusSettings.plusEnableUpdateOwnership) {
           await setUpdateOwnership(apps[file.appId]!.app.id);
         }
       }
@@ -465,7 +465,7 @@ class AppInstallService {
   static Future<bool> installApkDir(
     DownloadedDir dir,
     BuildContext? firstTimeWithContext,
-    SettingsProvider settingsProvider,
+    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
     LogsProvider logs,
     Map<String, AppInMemory> apps, {
     bool needsBGWorkaround = false,
@@ -506,7 +506,7 @@ class AppInstallService {
         var wasInstalled = await installApk(
           DownloadedApk(dir.appId, APKFiles[0]),
           firstTimeWithContext,
-          settingsProvider,
+          updateSettings,
           logs,
           apps,
           needsBGWorkaround: needsBGWorkaround,
