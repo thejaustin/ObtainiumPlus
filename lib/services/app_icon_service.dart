@@ -72,7 +72,7 @@ class AppIconService {
   }
 
   static final IconLRUCache _iconCache = IconLRUCache(
-    maxSize: 50, 
+    maxSize: 50,
     onEvict: (appId) => _evictionHandler?.call(appId),
   );
   static final Set<String> _iconsLoading = {};
@@ -127,7 +127,7 @@ class AppIconService {
       }
 
       var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
-      
+
       // Safely check and read cached icon
       Uint8List? icon;
       try {
@@ -142,14 +142,15 @@ class AppIconService {
             cachedIcon.deleteSync();
           }
         } catch (_) {}
-        
+
         talker.warning('Failed to read cached icon for $appId: $e');
         await CrashAnalytics.recordCrash(
           errorType: 'IconCacheReadError',
-          errorMessage: 'Failed to read cached icon for $appId: ${e.toString()}',
+          errorMessage:
+              'Failed to read cached icon for $appId: ${e.toString()}',
         );
         await Sentry.captureException(e);
-        
+
         icon = null;
       }
 
@@ -158,7 +159,7 @@ class AppIconService {
         try {
           final installedInfo = await AppInstallService.getInstalledInfo(appId);
           icon = await installedInfo?.applicationInfo?.getAppIcon();
-          
+
           // Save to cache if successfully fetched
           if (icon != null) {
             try {
@@ -206,11 +207,14 @@ class AppIconService {
     required Function() notifyListeners,
   }) async {
     // Filter to apps that need icons and aren't currently loading
-    final appsNeedingIcons = appIds.where((id) =>
-      apps[id] != null &&
-      apps[id]!.icon == null &&
-      !_iconsLoading.contains(id)
-    ).toList();
+    final appsNeedingIcons = appIds
+        .where(
+          (id) =>
+              apps[id] != null &&
+              apps[id]!.icon == null &&
+              !_iconsLoading.contains(id),
+        )
+        .toList();
 
     if (appsNeedingIcons.isEmpty) return;
 
@@ -218,12 +222,14 @@ class AppIconService {
     final batch = appsNeedingIcons.take(15).toList();
 
     for (final appId in batch) {
-      unawaited(updateAppIcon(
-        appId: appId,
-        apps: apps,
-        iconsCacheDir: iconsCacheDir,
-        notifyListeners: notifyListeners,
-      ));
+      unawaited(
+        updateAppIcon(
+          appId: appId,
+          apps: apps,
+          iconsCacheDir: iconsCacheDir,
+          notifyListeners: notifyListeners,
+        ),
+      );
     }
   }
 }

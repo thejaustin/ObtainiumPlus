@@ -153,8 +153,7 @@ abstract class AppSource {
     [
       GeneratedFormTextField(
         'matchGroupToUse',
-        label: tr('matchGroupToUseForX', args: [tr('trimVersionString')])
-        ,
+        label: tr('matchGroupToUseForX', args: [tr('trimVersionString')]),
         required: false,
         hint: '\$0',
       ),
@@ -260,8 +259,8 @@ abstract class AppSource {
                       (GeneratedFormItem i) => i.key == 'releaseDateAsVersion',
                     ) >=
                     0,
-              )
-          < 0) {
+              ) <
+          0) {
         additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
             .insert(
               additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly

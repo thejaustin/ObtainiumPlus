@@ -9,10 +9,7 @@ import 'package:provider/provider.dart';
 class AppBehaviorSection extends StatelessWidget {
   final String? searchQuery;
 
-  const AppBehaviorSection({
-    super.key,
-    this.searchQuery,
-  });
+  const AppBehaviorSection({super.key, this.searchQuery});
 
   bool _matches(String text) {
     if (searchQuery == null || searchQuery!.isEmpty) return true;
@@ -44,7 +41,7 @@ class AppBehaviorSection extends StatelessWidget {
         onChanged: (s, v) => s.enableHapticFeedback = v,
         visible: (s) => _matches(tr('enableHapticFeedback')),
       ),
-      
+
       // Swipe Gestures
       _buildFeatureToggle(
         context,
@@ -55,7 +52,7 @@ class AppBehaviorSection extends StatelessWidget {
         onChanged: (s, v) => s.enableSwipeGestures = v,
         visible: (s) => _matches(tr('enableSwipeGestures')),
       ),
-      
+
       // Undo App Removal
       _buildFeatureToggle(
         context,
@@ -66,15 +63,20 @@ class AppBehaviorSection extends StatelessWidget {
         onChanged: (s, v) => s.enableUndoForAppRemoval = v,
         visible: (s) => _matches(tr('enableUndoForAppRemoval')),
       ),
-      
+
       // Animation Speed
       if (_matches(tr('animationSpeed')))
         Consumer<BehaviorSettingsProvider>(
           builder: (context, settings, child) {
             return ListTile(
               leading: const Icon(Icons.speed_outlined),
-              title: Text(tr('animationSpeed'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text('${(settings.animationSpeedMultiplier * 100).round()}%'),
+              title: Text(
+                tr('animationSpeed'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                '${(settings.animationSpeedMultiplier * 100).round()}%',
+              ),
               trailing: DropdownButton<double>(
                 value: settings.animationSpeedMultiplier,
                 underline: const SizedBox(),
@@ -109,8 +111,10 @@ class AppBehaviorSection extends StatelessWidget {
               return const SizedBox.shrink();
             }
             final swipeChildren = [
-              if (_matches(tr('swipeRightAction'))) _buildSwipeActionDropdown(context, isRight: true),
-              if (_matches(tr('swipeLeftAction'))) _buildSwipeActionDropdown(context, isRight: false),
+              if (_matches(tr('swipeRightAction')))
+                _buildSwipeActionDropdown(context, isRight: true),
+              if (_matches(tr('swipeLeftAction')))
+                _buildSwipeActionDropdown(context, isRight: false),
             ];
             if (swipeChildren.isEmpty) return const SizedBox.shrink();
             return Opacity(
@@ -129,17 +133,38 @@ class AppBehaviorSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSwipeActionDropdown(BuildContext context, {required bool isRight}) {
+  Widget _buildSwipeActionDropdown(
+    BuildContext context, {
+    required bool isRight,
+  }) {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
         return ListTile(
-          leading: Icon(isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined),
-          title: Text(isRight ? tr('swipeRightAction') : tr('swipeLeftAction'), style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(isRight ? tr('swipeRightActionDescription') : tr('swipeLeftActionDescription')),
+          leading: Icon(
+            isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined,
+          ),
+          title: Text(
+            isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: Text(
+            isRight
+                ? tr('swipeRightActionDescription')
+                : tr('swipeLeftActionDescription'),
+          ),
           trailing: DropdownButton<AppSwipeAction>(
             underline: const SizedBox(),
-            value: isRight ? settings.swipeRightAction : settings.swipeLeftAction,
-            items: AppSwipeAction.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('action_${e.name}')))).toList(),
+            value: isRight
+                ? settings.swipeRightAction
+                : settings.swipeLeftAction,
+            items: AppSwipeAction.values
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(tr('action_${e.name}')),
+                  ),
+                )
+                .toList(),
             onChanged: (value) {
               if (value != null) {
                 if (isRight) {

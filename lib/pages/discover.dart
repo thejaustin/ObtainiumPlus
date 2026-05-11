@@ -27,7 +27,12 @@ class DiscoverPage extends StatefulWidget {
   final bool showAppBar;
   final bool showSearchBar;
   final String initialQuery;
-  const DiscoverPage({super.key, this.showAppBar = true, this.showSearchBar = true, this.initialQuery = ''});
+  const DiscoverPage({
+    super.key,
+    this.showAppBar = true,
+    this.showSearchBar = true,
+    this.initialQuery = '',
+  });
 
   @override
   State<DiscoverPage> createState() => DiscoverPageState();
@@ -72,12 +77,12 @@ class DiscoverPageState extends State<DiscoverPage> {
     super.initState();
     searchQuery = widget.initialQuery;
     _searchController.text = widget.initialQuery;
-    
+
     // Initialize default query settings for searchable sources
     for (var source in searchableSources) {
-      sourceQuerySettings[source.name] = getDefaultValuesFromFormItems(
-        [source.searchQuerySettingFormItems],
-      );
+      sourceQuerySettings[source.name] = getDefaultValuesFromFormItems([
+        source.searchQuerySettingFormItems,
+      ]);
     }
   }
 
@@ -104,22 +109,24 @@ class DiscoverPageState extends State<DiscoverPage> {
 
     try {
       final settingsProvider = context.read<SettingsProvider>();
-      
-      final List<MapEntry<String, Map<String, List<String>>>?> searchResults = await Future.wait(
-        searchableSources.map((source) async {
-          if (settingsProvider.searchDeselected.contains(source.name)) return null;
-          try {
-            final res = await source.search(
-              searchQuery,
-              querySettings: sourceQuerySettings[source.name] ?? {},
-            );
-            return MapEntry(source.name, res);
-          } catch (e) {
-            talker.warning('Discover search failed for ${source.name}: $e');
-            return null;
-          }
-        }),
-      );
+
+      final List<MapEntry<String, Map<String, List<String>>>?> searchResults =
+          await Future.wait(
+            searchableSources.map((source) async {
+              if (settingsProvider.searchDeselected.contains(source.name))
+                return null;
+              try {
+                final res = await source.search(
+                  searchQuery,
+                  querySettings: sourceQuerySettings[source.name] ?? {},
+                );
+                return MapEntry(source.name, res);
+              } catch (e) {
+                talker.warning('Discover search failed for ${source.name}: $e');
+                return null;
+              }
+            }),
+          );
 
       final Map<String, MapEntry<String, List<String>>> aggregatedResults = {};
       for (final result in searchResults) {
@@ -137,12 +144,14 @@ class DiscoverPageState extends State<DiscoverPage> {
     } catch (e) {
       talker.warning('Discover search error: $e');
     } finally {
-      if (mounted) setState(() { searching = false; });
+      if (mounted)
+        setState(() {
+          searching = false;
+        });
     }
   }
 
-  FDroid get _fdroidSource =>
-      sourceProvider.sources.whereType<FDroid>().first;
+  FDroid get _fdroidSource => sourceProvider.sources.whereType<FDroid>().first;
 
   bool get _isBrowseMode => _selectedCategory != null && searchQuery.isEmpty;
 
@@ -160,8 +169,7 @@ class DiscoverPageState extends State<DiscoverPage> {
       if (!mounted) return;
       setState(() {
         results = {
-          for (final e in res.apps.entries)
-            e.key: MapEntry('F-Droid', e.value),
+          for (final e in res.apps.entries) e.key: MapEntry('F-Droid', e.value),
         };
         _browsePage = 1;
         _browseHasMore = res.hasMore;
@@ -217,36 +225,46 @@ class DiscoverPageState extends State<DiscoverPage> {
             builder: (context, setModalState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
-                children: searchableSources.where((s) => s.searchQuerySettingFormItems.isNotEmpty).map((source) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          source.name,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                children: searchableSources
+                    .where((s) => s.searchQuerySettingFormItems.isNotEmpty)
+                    .map((source) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              source.name,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                            ),
                           ),
-                        ),
-                      ),
-                      GeneratedForm(
-                        items: source.searchQuerySettingFormItems.map((e) {
-                          if (sourceQuerySettings[source.name]?.containsKey(e.key) ?? false) {
-                            e.defaultValue = sourceQuerySettings[source.name]![e.key];
-                          }
-                          return [e];
-                        }).toList(),
-                        onValueChanges: (values, valid, isBuilding) {
-                          if (!isBuilding) {
-                            sourceQuerySettings[source.name] = values;
-                          }
-                        },
-                      ),
-                      const Divider(),
-                    ],
-                  );
-                }).toList(),
+                          GeneratedForm(
+                            items: source.searchQuerySettingFormItems.map((e) {
+                              if (sourceQuerySettings[source.name]?.containsKey(
+                                    e.key,
+                                  ) ??
+                                  false) {
+                                e.defaultValue =
+                                    sourceQuerySettings[source.name]![e.key];
+                              }
+                              return [e];
+                            }).toList(),
+                            onValueChanges: (values, valid, isBuilding) {
+                              if (!isBuilding) {
+                                sourceQuerySettings[source.name] = values;
+                              }
+                            },
+                          ),
+                          const Divider(),
+                        ],
+                      );
+                    })
+                    .toList(),
               );
             },
           ),
@@ -261,10 +279,17 @@ class DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
-  Widget _buildListResultTile(String url, String name, String description, String sourceName) {
+  Widget _buildListResultTile(
+    String url,
+    String name,
+    String description,
+    String sourceName,
+  ) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.half),
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withOpacity(AppOpacity.half),
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : '?',
           style: TextStyle(
@@ -273,11 +298,7 @@ class DiscoverPageState extends State<DiscoverPage> {
           ),
         ),
       ),
-      title: Text(
-        name,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         sourceName,
         style: TextStyle(
@@ -287,7 +308,8 @@ class DiscoverPageState extends State<DiscoverPage> {
       ),
       trailing: FilledButton.tonal(
         onPressed: () {
-          final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+          final addAppState = context
+              .findAncestorStateOfType<AddAppPageState>();
           if (addAppState != null) addAppState.linkFn(url);
         },
         style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
@@ -320,10 +342,11 @@ class DiscoverPageState extends State<DiscoverPage> {
         enabled: settings.plusEnableGlassmorphism,
         child: Container(
           decoration: BoxDecoration(
-            color: (isDark
-                    ? theme.colorScheme.surfaceContainerHigh
-                    : theme.colorScheme.surface)
-                .withOpacity(settings.plusEnableGlassmorphism ? 0.65 : 1.0),
+            color:
+                (isDark
+                        ? theme.colorScheme.surfaceContainerHigh
+                        : theme.colorScheme.surface)
+                    .withOpacity(settings.plusEnableGlassmorphism ? 0.65 : 1.0),
             borderRadius: BorderRadius.circular(cardRadius),
             border: Border.all(
               color: theme.colorScheme.outline.withOpacity(
@@ -353,7 +376,8 @@ class DiscoverPageState extends State<DiscoverPage> {
                 borderRadius: BorderRadius.circular(cardRadius),
                 onTap: () {
                   AppHaptics.selectionClick();
-                  final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                  final addAppState = context
+                      .findAncestorStateOfType<AddAppPageState>();
                   if (addAppState != null) addAppState.linkFn(url);
                 },
                 child: Padding(
@@ -367,8 +391,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                             width: 68,
                             height: 64,
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(cardRadius * 0.5),
+                              color: theme.colorScheme.primaryContainer
+                                  .withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(
+                                cardRadius * 0.5,
+                              ),
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -388,7 +415,10 @@ class DiscoverPageState extends State<DiscoverPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: -0.2),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.2,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -403,12 +433,17 @@ class DiscoverPageState extends State<DiscoverPage> {
                       FilledButton.tonal(
                         onPressed: () {
                           AppHaptics.selectionClick();
-                          final addAppState = context.findAncestorStateOfType<AddAppPageState>();
+                          final addAppState = context
+                              .findAncestorStateOfType<AddAppPageState>();
                           if (addAppState != null) addAppState.linkFn(url);
                         },
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cardRadius * 0.5)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              cardRadius * 0.5,
+                            ),
+                          ),
                         ),
                         child: Text(tr('add')),
                       ),
@@ -472,7 +507,8 @@ class DiscoverPageState extends State<DiscoverPage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          if (widget.showAppBar) AdaptiveSliverAppBar(title: tr('discover'), pageId: 'discover'),
+          if (widget.showAppBar)
+            AdaptiveSliverAppBar(title: tr('discover'), pageId: 'discover'),
           if (widget.showSearchBar)
             SliverToBoxAdapter(
               child: Padding(
@@ -505,10 +541,12 @@ class DiscoverPageState extends State<DiscoverPage> {
                           });
                         }
                         _searchDebounce?.cancel();
-                        _searchDebounce =
-                            Timer(const Duration(milliseconds: 800), () {
-                          if (mounted && searchQuery.isNotEmpty) runSearch();
-                        });
+                        _searchDebounce = Timer(
+                          const Duration(milliseconds: 800),
+                          () {
+                            if (mounted && searchQuery.isNotEmpty) runSearch();
+                          },
+                        );
                       },
                       onSubmitted: (_) {
                         _searchDebounce?.cancel();
@@ -580,22 +618,20 @@ class DiscoverPageState extends State<DiscoverPage> {
                     sliver: SliverGrid(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 200,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 0.7,
-                      ),
+                            maxCrossAxisExtent: 200,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: 0.7,
+                          ),
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            const AppTileSkeleton(isGrid: true),
+                        (context, index) => const AppTileSkeleton(isGrid: true),
                         childCount: 6,
                       ),
                     ),
                   )
                 : SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          const AppTileSkeleton(isGrid: false),
+                      (context, index) => const AppTileSkeleton(isGrid: false),
                       childCount: 6,
                     ),
                   )
@@ -606,11 +642,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                     sliver: SliverGrid(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 200,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 0.7,
-                      ),
+                            maxCrossAxisExtent: 200,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: 0.7,
+                          ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _buildAppGrid(
                           results.keys.elementAt(index),
@@ -621,25 +657,24 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                   )
                 : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final url = results.keys.elementAt(index);
-                        final result = results[url];
-                        if (result == null) return const SizedBox.shrink();
-                        final name =
-                            result.value.isNotEmpty ? result.value[0] : '';
-                        final description =
-                            result.value.length > 1 ? result.value[1] : '';
-                        final sourceName = result.key;
-                        return _buildListResultTile(
-                          url,
-                          name,
-                          description,
-                          sourceName,
-                        );
-                      },
-                      childCount: results.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final url = results.keys.elementAt(index);
+                      final result = results[url];
+                      if (result == null) return const SizedBox.shrink();
+                      final name = result.value.isNotEmpty
+                          ? result.value[0]
+                          : '';
+                      final description = result.value.length > 1
+                          ? result.value[1]
+                          : '';
+                      final sourceName = result.key;
+                      return _buildListResultTile(
+                        url,
+                        name,
+                        description,
+                        sourceName,
+                      );
+                    }, childCount: results.length),
                   )
           else if (!searching && searchQuery.isNotEmpty)
             SliverFillRemaining(

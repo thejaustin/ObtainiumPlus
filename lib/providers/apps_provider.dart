@@ -100,7 +100,7 @@ class AppsProvider with ChangeNotifier {
     _selectedAppIds.clear();
     notifyListeners();
   }
-  
+
   Directory? _APKDir;
   Directory? _iconsCacheDir;
 
@@ -112,10 +112,11 @@ class AppsProvider with ChangeNotifier {
 
   // Completer for the overall initialization of the provider
   Completer<void>? _initCompleter;
-  Future<void> get initializationDone => _initCompleter?.future ?? Future.value();
+  Future<void> get initializationDone =>
+      _initCompleter?.future ?? Future.value();
 
   // Optimized: Return values directly unless deep copy is explicitly needed
-  Iterable<AppInMemory> getAppValues({bool deepCopy = true}) => 
+  Iterable<AppInMemory> getAppValues({bool deepCopy = true}) =>
       deepCopy ? apps.values.map((a) => a.deepCopy()) : apps.values;
 
   List<AppInMemory> getFilteredSortedApps({
@@ -143,7 +144,7 @@ class AppsProvider with ChangeNotifier {
   AppsProvider({bool isBg = false, SettingsProvider? settings}) {
     _initCompleter = Completer<void>();
     settingsProvider = settings ?? SettingsProvider();
-    
+
     // Subscribe to changes in the app foreground status
     if (!isBg) {
       foregroundStream = FGBGEvents.instance.stream.asBroadcastStream();
@@ -164,16 +165,21 @@ class AppsProvider with ChangeNotifier {
   }
 
   void _onSettingsChanged() {
-    if (settingsProvider.obtainiumReleaseChannel != _lastObtainiumReleaseChannel) {
+    if (settingsProvider.obtainiumReleaseChannel !=
+        _lastObtainiumReleaseChannel) {
       final oldChannel = _lastObtainiumReleaseChannel;
       _lastObtainiumReleaseChannel = settingsProvider.obtainiumReleaseChannel;
-      
+
       // If the channel changed and we've already initialized (meaning we have an old value to compare against)
       if (oldChannel != null && apps.containsKey(obtainiumId)) {
-        unawaited(checkObtainiumUpdate(ignoreCache: true).catchError((e) {
-          logs.add('Error checking Obtainium+ update after channel change: $e');
-          return null;
-        }));
+        unawaited(
+          checkObtainiumUpdate(ignoreCache: true).catchError((e) {
+            logs.add(
+              'Error checking Obtainium+ update after channel change: $e',
+            );
+            return null;
+          }),
+        );
       }
     }
   }
@@ -189,7 +195,7 @@ class AppsProvider with ChangeNotifier {
   /// This method is called automatically in the constructor for foreground instances.
   Future<void> initialize() async {
     if (_initCompleter != null && _initCompleter!.isCompleted) return;
-    
+
     try {
       await settingsProvider.initializeSettings();
       _lastObtainiumReleaseChannel = settingsProvider.obtainiumReleaseChannel;
@@ -219,12 +225,12 @@ class AppsProvider with ChangeNotifier {
     bool useExisting = true,
   }) async {
     await initializationDone;
-    
+
     // Check if directories are initialized
     if (APKDir == null) {
       throw ObtainiumError('Storage not initialized. Please restart the app.');
     }
-    
+
     Map<String, dynamic> res = await AppDownloadService.downloadApp(
       app: app,
       apps: apps,
@@ -233,7 +239,8 @@ class AppsProvider with ChangeNotifier {
       APKDir: APKDir!,
       notifyListeners: notifyListeners,
       removeApps: removeApps,
-      saveApps: (apps, {bool onlyIfExists = true}) => saveApps(apps, onlyIfExists: onlyIfExists),
+      saveApps: (apps, {bool onlyIfExists = true}) =>
+          saveApps(apps, onlyIfExists: onlyIfExists),
       context: context,
       notificationsProvider: notificationsProvider,
       useExisting: useExisting,
@@ -284,8 +291,7 @@ class AppsProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> canDowngradeApps() async =>
-      AppInstallService.canDowngradeApps();
+  Future<bool> canDowngradeApps() async => AppInstallService.canDowngradeApps();
 
   Future<bool> installApkDir(
     DownloadedDir dir,
@@ -381,8 +387,13 @@ class AppsProvider with ChangeNotifier {
     bool isTrustedRelatedDomain(String? sourceHost, String? apkHost) {
       if (sourceHost == null || apkHost == null) return false;
       if (sourceHost == apkHost) return true;
-      const githubDomains = {'github.com', 'githubusercontent.com', 'github.io'};
-      if (githubDomains.contains(sourceHost) && githubDomains.contains(apkHost)) {
+      const githubDomains = {
+        'github.com',
+        'githubusercontent.com',
+        'github.io',
+      };
+      if (githubDomains.contains(sourceHost) &&
+          githubDomains.contains(apkHost)) {
         return true;
       }
       return false;
@@ -426,24 +437,24 @@ class AppsProvider with ChangeNotifier {
     }
     try {
       return await AppDownloadService.downloadAndInstallLatestApps(
-      appIds: appIds,
-      apps: apps,
-      settingsProvider: settingsProvider,
-      logs: logs,
-      APKDir: APKDir!,
-      notifyListeners: notifyListeners,
-      saveApps: saveApps,
-      removeApps: removeApps,
-      checkUpdate: checkUpdate,
-      confirmAppFileUrl: confirmAppFileUrl,
-      canInstallSilently: canInstallSilently,
-      waitForUserToReturnToForeground: waitForUserToReturnToForeground,
-      context: context,
-      notificationsProvider: notificationsProvider,
-      forceParallelDownloads: forceParallelDownloads,
-      useExisting: useExisting,
-      isCancelled: _isCancelled,
-    );
+        appIds: appIds,
+        apps: apps,
+        settingsProvider: settingsProvider,
+        logs: logs,
+        APKDir: APKDir!,
+        notifyListeners: notifyListeners,
+        saveApps: saveApps,
+        removeApps: removeApps,
+        checkUpdate: checkUpdate,
+        confirmAppFileUrl: confirmAppFileUrl,
+        canInstallSilently: canInstallSilently,
+        waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+        context: context,
+        notificationsProvider: notificationsProvider,
+        forceParallelDownloads: forceParallelDownloads,
+        useExisting: useExisting,
+        isCancelled: _isCancelled,
+      );
     } finally {
       // Clean up cancel flags
       for (final id in appIds) {
@@ -504,7 +515,7 @@ class AppsProvider with ChangeNotifier {
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
     await initializationDone;
     if (iconsCacheDir == null) return;
-    
+
     await AppIconService.updateAppIcon(
       appId: appId,
       apps: apps,
@@ -517,7 +528,7 @@ class AppsProvider with ChangeNotifier {
   Future<void> precacheIcons(List<String> appIds) async {
     await initializationDone;
     if (iconsCacheDir == null) return;
-    
+
     await AppIconService.precacheIcons(
       appIds: appIds,
       apps: apps,
@@ -588,7 +599,10 @@ class AppsProvider with ChangeNotifier {
       context,
       apps,
       removeApps,
-      (apps, {bool attemptToCorrectInstallStatus = true}) => saveApps(apps, attemptToCorrectInstallStatus: attemptToCorrectInstallStatus),
+      (apps, {bool attemptToCorrectInstallStatus = true}) => saveApps(
+        apps,
+        attemptToCorrectInstallStatus: attemptToCorrectInstallStatus,
+      ),
       undoLastRemoval,
       settingsProvider.enableUndoForAppRemoval,
     );
@@ -611,7 +625,12 @@ class AppsProvider with ChangeNotifier {
       if (appId == obtainiumId) {
         return await checkObtainiumUpdate(ignoreCache: ignoreCache);
       }
-      return await AppUpdateService.checkUpdate(appId, apps, saveApps, ignoreCache: ignoreCache);
+      return await AppUpdateService.checkUpdate(
+        appId,
+        apps,
+        saveApps,
+        ignoreCache: ignoreCache,
+      );
     } finally {
       checkingUpdateIds.remove(appId);
       notifyListeners();
@@ -622,7 +641,13 @@ class AppsProvider with ChangeNotifier {
     return AppUpdateService.checkObtainiumUpdate(
       apps: apps,
       settingsProvider: settingsProvider,
-      checkUpdateFn: (id, {bool ignoreCache = false}) => AppUpdateService.checkUpdate(id, apps, saveApps, ignoreCache: ignoreCache),
+      checkUpdateFn: (id, {bool ignoreCache = false}) =>
+          AppUpdateService.checkUpdate(
+            id,
+            apps,
+            saveApps,
+            ignoreCache: ignoreCache,
+          ),
       ignoreCache: ignoreCache,
     );
   }
@@ -687,12 +712,14 @@ class AppsProvider with ChangeNotifier {
     bool pickOnly = false,
     isAuto = false,
     SettingsProvider? sp,
+    String? password,
   }) async {
     return AppExportService.export(
       apps: apps,
       settingsProvider: sp ?? settingsProvider,
       pickOnly: pickOnly,
       isAuto: isAuto,
+      password: password,
     );
   }
 
@@ -706,16 +733,16 @@ class AppsProvider with ChangeNotifier {
     );
   }
 
-    Future<List<List<String>>> addAppsByURL(
-      List<String> urls, {
-      AppSource? sourceOverride,
-    }) async {
-      return AppCRUDService.addAppsByURL(
-        urls: urls,
-        apps: apps,
-        saveApps: (apps, {bool onlyIfExists = true}) => saveApps(apps, onlyIfExists: onlyIfExists),
-        sourceOverride: sourceOverride,
-      );
-    }
+  Future<List<List<String>>> addAppsByURL(
+    List<String> urls, {
+    AppSource? sourceOverride,
+  }) async {
+    return AppCRUDService.addAppsByURL(
+      urls: urls,
+      apps: apps,
+      saveApps: (apps, {bool onlyIfExists = true}) =>
+          saveApps(apps, onlyIfExists: onlyIfExists),
+      sourceOverride: sourceOverride,
+    );
   }
-  
+}

@@ -27,7 +27,11 @@ class UpdateSettingsProvider with ChangeNotifier {
   Future<void> initializeSettings(SharedPreferences p) async {
     prefs = p;
     initUpdateIntervalInterpolator();
-    processIntervalSliderValue(updateIntervalSliderVal, notify: false, skipLabel: true);
+    processIntervalSliderValue(
+      updateIntervalSliderVal,
+      notify: false,
+      skipLabel: true,
+    );
     notifyListeners();
   }
 
@@ -41,7 +45,11 @@ class UpdateSettingsProvider with ChangeNotifier {
     updateIntervalInterpolator = SplineInterpolation(nodes: nodes);
   }
 
-  void processIntervalSliderValue(double val, {bool notify = true, bool skipLabel = false}) {
+  void processIntervalSliderValue(
+    double val, {
+    bool notify = true,
+    bool skipLabel = false,
+  }) {
     if (val < 0.5) {
       prefs?.setInt('updateInterval', 0);
       if (!skipLabel) updateIntervalLabel = tr('neverManualOnly');
@@ -72,11 +80,13 @@ class UpdateSettingsProvider with ChangeNotifier {
     } else if (valInterpolated < 7 * 24 * 60) {
       int valRounded = (valInterpolated / (12 * 60)).floor() * 12 * 60;
       prefs?.setInt('updateInterval', valRounded);
-      if (!skipLabel) updateIntervalLabel = plural('day', valRounded / (24 * 60));
+      if (!skipLabel)
+        updateIntervalLabel = plural('day', valRounded / (24 * 60));
     } else {
       int valRounded = (valInterpolated / (24 * 60)).floor() * 24 * 60;
       prefs?.setInt('updateInterval', valRounded);
-      if (!skipLabel) updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
+      if (!skipLabel)
+        updateIntervalLabel = plural('day', valRounded ~/ (24 * 60));
     }
     if (notify) notifyListeners();
   }
@@ -105,6 +115,15 @@ class UpdateSettingsProvider with ChangeNotifier {
 
   set checkOnStart(bool checkOnStart) {
     prefs?.setBool('checkOnStart', checkOnStart);
+    notifyListeners();
+  }
+
+  bool get onlyCheckInstalledOrTrackOnlyApps {
+    return prefs?.getBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
+  }
+
+  set onlyCheckInstalledOrTrackOnlyApps(bool val) {
+    prefs?.setBool('onlyCheckInstalledOrTrackOnlyApps', val);
     notifyListeners();
   }
 
@@ -189,15 +208,26 @@ class UpdateSettingsProvider with ChangeNotifier {
     final currentDay = now.weekday;
     if (!updateScheduleDays.contains(currentDay)) return false;
     if (updateScheduleStartHour <= updateScheduleEndHour) {
-      return currentHour >= updateScheduleStartHour && currentHour < updateScheduleEndHour;
+      return currentHour >= updateScheduleStartHour &&
+          currentHour < updateScheduleEndHour;
     } else {
-      return currentHour >= updateScheduleStartHour || currentHour < updateScheduleEndHour;
+      return currentHour >= updateScheduleStartHour ||
+          currentHour < updateScheduleEndHour;
     }
   }
 
   String getScheduleDescription() {
     if (!useUpdateSchedule) return tr('always');
-    final dayNames = ['', tr('mon'), tr('tue'), tr('wed'), tr('thu'), tr('fri'), tr('sat'), tr('sun')];
+    final dayNames = [
+      '',
+      tr('mon'),
+      tr('tue'),
+      tr('wed'),
+      tr('thu'),
+      tr('fri'),
+      tr('sat'),
+      tr('sun'),
+    ];
     final days = updateScheduleDays.map((d) => dayNames[d]).join(', ');
     final startHour = updateScheduleStartHour.toString().padLeft(2, '0');
     final endHour = updateScheduleEndHour.toString().padLeft(2, '0');

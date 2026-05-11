@@ -9,7 +9,10 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/native_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -35,91 +38,101 @@ class ThemeSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
-    final settings = context.watch<SettingsProvider>();
+    final themeSettings = context.watch<ThemeSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     List<Widget> advancedWidgets = [
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.blur_on_rounded,
         title: tr('glassmorphismUI'),
         subtitle: tr('glassmorphismUIDescription'),
-        value: (SettingsProvider s) => s.plusEnableGlassmorphism,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableGlassmorphism = v,
-        visible: (SettingsProvider s) => _matches(tr('glassmorphismUI')),
+        value: (s) => s.plusEnableGlassmorphism,
+        onChanged: (s, v) => s.plusEnableGlassmorphism = v,
+        visible: (s) => _matches(tr('glassmorphismUI')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.unfold_more_rounded,
         title: tr('plusPopupSlider'),
         subtitle: tr('plusPopupSliderDescription'),
-        value: (SettingsProvider s) => s.plusEnablePopupSlider,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnablePopupSlider = v,
-        visible: (SettingsProvider s) => _matches(tr('plusPopupSlider')),
+        value: (s) => s.plusEnablePopupSlider,
+        onChanged: (s, v) => s.plusEnablePopupSlider = v,
+        visible: (s) => _matches(tr('plusPopupSlider')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.brush_outlined,
         title: tr('plusMaterialExpressive'),
         subtitle: tr('plusMaterialExpressiveDescription'),
-        value: (SettingsProvider s) => s.plusEnableMaterialExpressive,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableMaterialExpressive = v,
-        visible: (SettingsProvider s) => _matches(tr('plusMaterialExpressive')),
+        value: (s) => s.plusEnableMaterialExpressive,
+        onChanged: (s, v) => s.plusEnableMaterialExpressive = v,
+        visible: (s) => _matches(tr('plusMaterialExpressive')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.auto_mode_rounded,
         title: tr('plusExpressiveProgress'),
         subtitle: tr('plusExpressiveProgressDescription'),
-        value: (SettingsProvider s) => s.plusEnableExpressiveProgress,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableExpressiveProgress = v,
-        visible: (SettingsProvider s) => _matches(tr('plusExpressiveProgress')),
+        value: (s) => s.plusEnableExpressiveProgress,
+        onChanged: (s, v) => s.plusEnableExpressiveProgress = v,
+        visible: (s) => _matches(tr('plusExpressiveProgress')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.unfold_more_rounded,
         title: tr('plusBouncyPhysics'),
         subtitle: tr('plusBouncyPhysicsDescription'),
-        value: (SettingsProvider s) => s.plusEnableBouncyPhysics,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableBouncyPhysics = v,
-        visible: (SettingsProvider s) => _matches(tr('plusBouncyPhysics')),
+        value: (s) => s.plusEnableBouncyPhysics,
+        onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
+        visible: (s) => _matches(tr('plusBouncyPhysics')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.vertical_align_top_rounded,
         title: tr('plusTopUILayout'),
         subtitle: tr('plusTopUILayoutDescription'),
-        value: (SettingsProvider s) => s.plusTopUILayout,
-        onChanged: (SettingsProvider s, bool v) => s.plusTopUILayout = v,
-        visible: (SettingsProvider s) => _matches(tr('plusTopUILayout')),
+        value: (s) => s.plusTopUILayout,
+        onChanged: (s, v) => s.plusTopUILayout = v,
+        visible: (s) => _matches(tr('plusTopUILayout')),
       ),
     ];
 
     List<Widget> themeWidgets = [
       if (_matches(tr('theme'))) _buildThemeSegmented(context),
-      if (_matches(tr('followSystemThemeExplanation'))) _buildFollowSystemExplanation(context),
+      if (_matches(tr('followSystemThemeExplanation')))
+        _buildFollowSystemExplanation(context),
       if (_matches(tr('themePresets'))) _buildThemePresets(context),
-      _buildFeatureToggle(
+      _buildFeatureToggle<ThemeSettingsProvider>(
         context,
         icon: Icons.dark_mode_outlined,
         title: tr('useBlackTheme'),
         subtitle: tr('useBlackThemeDescription'),
-        value: (SettingsProvider s) => s.useBlackTheme,
-        onChanged: (SettingsProvider s, bool v) => s.useBlackTheme = v,
-        visible: (SettingsProvider s) => _matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light,
+        value: (s) => s.useBlackTheme,
+        onChanged: (s, v) => s.useBlackTheme = v,
+        visible: (s) =>
+            _matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light,
       ),
       _buildMaterialYouToggle(context),
       _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
-      if (_matches(tr('navigationLabels'))) _buildNavigationLabelSegmented(context),
-      if (_matches(tr('colour')) || _matches(tr('selectColourShade'))) _buildColorPicker(context),
-      
+      if (_matches(tr('navigationLabels')))
+        _buildNavigationLabelSegmented(context),
+      if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
+        _buildColorPicker(context),
+
       // Advanced/Experimental Section
-      if (settings.plusEnableExperimentalCustomization && advancedWidgets.any((w) => w is! SizedBox))
+      if (plusSettings.plusEnableExperimentalCustomization &&
+          advancedWidgets.any((w) => w is! SizedBox))
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
             leading: const Icon(Icons.science_outlined),
-            title: Text(tr('advancedTheming'), style: Theme.of(context).textTheme.bodyLarge),
+            title: Text(
+              tr('advancedTheming'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
             subtitle: Text(tr('advancedThemingDescription')),
             children: [
               Padding(
@@ -127,20 +140,33 @@ class ThemeSettingsSection extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer.withOpacity(AppOpacity.medium),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.errorContainer.withOpacity(AppOpacity.medium),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.error.withOpacity(AppOpacity.low)),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withOpacity(AppOpacity.low),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, size: 20, color: Theme.of(context).colorScheme.error),
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           tr('experimentalModeInfo'),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onErrorContainer,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onErrorContainer,
+                              ),
                         ),
                       ),
                     ],
@@ -154,45 +180,46 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> typographyWidgets = [
-       if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
+      if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
     ];
 
     List<Widget> animationWidgets = [
-       _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.auto_awesome_motion_rounded,
         title: tr('plusEnhancedAnimations'),
         subtitle: tr('plusEnhancedAnimationsDescription'),
-        value: (SettingsProvider s) => s.plusEnableEnhancedAnimations,
-        onChanged: (SettingsProvider s, bool v) => s.plusEnableEnhancedAnimations = v,
-        visible: (SettingsProvider s) => _matches(tr('plusEnhancedAnimations')),
+        value: (s) => s.plusEnableEnhancedAnimations,
+        onChanged: (s, v) => s.plusEnableEnhancedAnimations = v,
+        visible: (s) => _matches(tr('plusEnhancedAnimations')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<BehaviorSettingsProvider>(
         context,
         icon: Icons.animation_outlined,
         title: tr('disablePageTransitions'),
         subtitle: tr('disablePageTransitionsDescription'),
-        value: (SettingsProvider s) => s.disablePageTransitions,
-        onChanged: (SettingsProvider s, bool v) => s.disablePageTransitions = v,
-        visible: (SettingsProvider s) => _matches(tr('disablePageTransitions')),
+        value: (s) => s.disablePageTransitions,
+        onChanged: (s, v) => s.disablePageTransitions = v,
+        visible: (s) => _matches(tr('disablePageTransitions')),
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<BehaviorSettingsProvider>(
         context,
         icon: Icons.swap_horizontal_circle_outlined,
         title: tr('reversePageTransitions'),
         subtitle: tr('reversePageTransitionsDescription'),
-        value: (SettingsProvider s) => s.reversePageTransitions,
-        onChanged: (SettingsProvider s, bool v) => s.reversePageTransitions = v,
-        visible: (SettingsProvider s) => _matches(tr('reversePageTransitions')) && !s.disablePageTransitions,
+        value: (s) => s.reversePageTransitions,
+        onChanged: (s, v) => s.reversePageTransitions = v,
+        visible: (s) =>
+            _matches(tr('reversePageTransitions')) && !s.disablePageTransitions,
       ),
-      _buildFeatureToggle(
+      _buildFeatureToggle<BehaviorSettingsProvider>(
         context,
         icon: Icons.touch_app_outlined,
         title: tr('highlightTouchTargets'),
         subtitle: tr('highlightTouchTargetsDescription'),
-        value: (SettingsProvider s) => s.highlightTouchTargets,
-        onChanged: (SettingsProvider s, bool v) => s.highlightTouchTargets = v,
-        visible: (SettingsProvider s) => _matches(tr('highlightTouchTargets')),
+        value: (s) => s.highlightTouchTargets,
+        onChanged: (s, v) => s.highlightTouchTargets = v,
+        visible: (s) => _matches(tr('highlightTouchTargets')),
       ),
     ];
 
@@ -200,61 +227,72 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('plusGlobalCornerRadius'))) ...[
         ListTile(
           leading: const Icon(Icons.rounded_corner_rounded),
-          title: Text(tr('plusGlobalCornerRadius'), style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text("${settings.plusGlobalCornerRadius.toInt()}px"),
+          title: Text(
+            tr('plusGlobalCornerRadius'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: Text("${plusSettings.plusGlobalCornerRadius.toInt()}px"),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Slider(
-            value: settings.plusGlobalCornerRadius,
+            value: plusSettings.plusGlobalCornerRadius,
             min: 0,
             max: 40,
             divisions: 40,
-            onChanged: (val) => settings.plusGlobalCornerRadius = val,
+            onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
           ),
         ),
       ],
-      _buildFeatureToggle(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.tune_rounded,
         title: tr('plusOverrideIndividualCornerRadius'),
         subtitle: tr('plusOverrideIndividualCornerRadiusDescription'),
-        value: (SettingsProvider s) => s.plusOverrideIndividualCornerRadius,
-        onChanged: (SettingsProvider s, bool v) => s.plusOverrideIndividualCornerRadius = v,
-        visible: (SettingsProvider s) => _matches(tr('plusOverrideIndividualCornerRadius')),
+        value: (s) => s.plusOverrideIndividualCornerRadius,
+        onChanged: (s, v) => s.plusOverrideIndividualCornerRadius = v,
+        visible: (s) => _matches(tr('plusOverrideIndividualCornerRadius')),
       ),
-      if (settings.plusOverrideIndividualCornerRadius) ...[
+      if (plusSettings.plusOverrideIndividualCornerRadius) ...[
         if (_matches(tr('plusHomeCornerRadius'))) ...[
           ListTile(
             leading: const Icon(Icons.home_max_rounded),
-            title: Text(tr('plusHomeCornerRadius'), style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text("${settings.plusHomeCornerRadius.toInt()}px"),
+            title: Text(
+              tr('plusHomeCornerRadius'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text("${plusSettings.plusHomeCornerRadius.toInt()}px"),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Slider(
-              value: settings.plusHomeCornerRadius,
+              value: plusSettings.plusHomeCornerRadius,
               min: 0,
               max: 40,
               divisions: 40,
-              onChanged: (val) => settings.plusHomeCornerRadius = val,
+              onChanged: (val) => plusSettings.plusHomeCornerRadius = val,
             ),
           ),
         ],
         if (_matches(tr('plusSettingsCornerRadius'))) ...[
           ListTile(
             leading: const Icon(Icons.settings_suggest_rounded),
-            title: Text(tr('plusSettingsCornerRadius'), style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text("${settings.plusSettingsCornerRadius.toInt()}px"),
+            title: Text(
+              tr('plusSettingsCornerRadius'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(
+              "${plusSettings.plusSettingsCornerRadius.toInt()}px",
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Slider(
-              value: settings.plusSettingsCornerRadius,
+              value: plusSettings.plusSettingsCornerRadius,
               min: 0,
               max: 40,
               divisions: 40,
-              onChanged: (val) => settings.plusSettingsCornerRadius = val,
+              onChanged: (val) => plusSettings.plusSettingsCornerRadius = val,
             ),
           ),
         ],
@@ -288,23 +326,38 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildThemeSegmented(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
               leading: const Icon(Icons.palette_outlined),
-              title: Text(tr('theme'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('theme'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('themeDescription')),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: SegmentedButton<ThemeSettings>(
                 segments: [
-                  ButtonSegment(value: ThemeSettings.system, label: Text(tr('followSystem')), icon: const Icon(Icons.settings_suggest_outlined)),
-                  ButtonSegment(value: ThemeSettings.light, label: Text(tr('light')), icon: const Icon(Icons.light_mode_outlined)),
-                  ButtonSegment(value: ThemeSettings.dark, label: Text(tr('dark')), icon: const Icon(Icons.dark_mode_outlined)),
+                  ButtonSegment(
+                    value: ThemeSettings.system,
+                    label: Text(tr('followSystem')),
+                    icon: const Icon(Icons.settings_suggest_outlined),
+                  ),
+                  ButtonSegment(
+                    value: ThemeSettings.light,
+                    label: Text(tr('light')),
+                    icon: const Icon(Icons.light_mode_outlined),
+                  ),
+                  ButtonSegment(
+                    value: ThemeSettings.dark,
+                    label: Text(tr('dark')),
+                    icon: const Icon(Icons.dark_mode_outlined),
+                  ),
                 ],
                 selected: {settings.theme},
                 onSelectionChanged: (Set<ThemeSettings> newSelection) {
@@ -329,16 +382,19 @@ class ThemeSettingsSection extends StatelessWidget {
       ('Midnight', Colors.indigo),
     ];
 
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.useMaterialYou) return const SizedBox.shrink();
-        
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
               leading: const Icon(Icons.color_lens_outlined),
-              title: Text(tr('themePresets'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('themePresets'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('themePresetsDescription')),
             ),
             SingleChildScrollView(
@@ -374,29 +430,42 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildNavigationLabelSegmented(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
               leading: const Icon(Icons.label_important_outlined),
-              title: Text(tr('navigationLabels'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('navigationLabels'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('navigationLabelsDescription')),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: SegmentedButton<NavigationDestinationLabelBehavior>(
                 segments: [
-                  ButtonSegment(value: NavigationDestinationLabelBehavior.alwaysShow, label: Text(tr('alwaysShow'))),
-                  ButtonSegment(value: NavigationDestinationLabelBehavior.onlyShowSelected, label: Text(tr('onlyShowSelected'))),
-                  ButtonSegment(value: NavigationDestinationLabelBehavior.alwaysHide, label: Text(tr('neverShow'))),
+                  ButtonSegment(
+                    value: NavigationDestinationLabelBehavior.alwaysShow,
+                    label: Text(tr('alwaysShow')),
+                  ),
+                  ButtonSegment(
+                    value: NavigationDestinationLabelBehavior.onlyShowSelected,
+                    label: Text(tr('onlyShowSelected')),
+                  ),
+                  ButtonSegment(
+                    value: NavigationDestinationLabelBehavior.alwaysHide,
+                    label: Text(tr('neverShow')),
+                  ),
                 ],
                 selected: {settings.navigationLabelBehavior},
-                onSelectionChanged: (Set<NavigationDestinationLabelBehavior> newSelection) {
-                  AppHaptics.selectionClick();
-                  settings.navigationLabelBehavior = newSelection.first;
-                },
+                onSelectionChanged:
+                    (Set<NavigationDestinationLabelBehavior> newSelection) {
+                      AppHaptics.selectionClick();
+                      settings.navigationLabelBehavior = newSelection.first;
+                    },
               ),
             ),
           ],
@@ -406,7 +475,7 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildFollowSystemExplanation(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.theme != ThemeSettings.system) {
           return const SizedBox.shrink();
@@ -418,7 +487,10 @@ class ThemeSettingsSection extends StatelessWidget {
               return const SizedBox.shrink();
             }
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Text(
                 tr('followSystemThemeExplanation'),
                 style: Theme.of(context).textTheme.labelSmall,
@@ -437,11 +509,14 @@ class ThemeSettingsSection extends StatelessWidget {
         if ((snapshot.data?.version.sdkInt ?? 0) < 31) {
           return const SizedBox.shrink();
         }
-        return Consumer<SettingsProvider>(
+        return Consumer<ThemeSettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile.adaptive(
               secondary: const Icon(Icons.auto_awesome_outlined),
-              title: Text(tr('useMaterialYou'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('useMaterialYou'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               value: settings.useMaterialYou,
               onChanged: (value) {
                 AppHaptics.selectionClick();
@@ -455,14 +530,17 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildMatchSystemMaterialStyleToggle(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (!settings.useMaterialYou) {
           return const SizedBox.shrink();
         }
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.settings_suggest_outlined),
-          title: Text(tr('matchSystemMaterialStyle'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('matchSystemMaterialStyle'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('matchSystemMaterialStyleDescription')),
           value: settings.matchSystemMaterialStyle,
           onChanged: (value) {
@@ -475,20 +553,26 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildThemeStyleDropdown(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.useMaterialYou && settings.matchSystemMaterialStyle) {
           return const SizedBox.shrink();
         }
         return ListTile(
           leading: const Icon(Icons.style_outlined),
-          title: Text(tr('themeStyle'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('themeStyle'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           trailing: DropdownButton<DynamicSchemeVariant>(
             underline: const SizedBox(),
             value: settings.themeVariant,
             items: DynamicSchemeVariant.values.map((v) {
-              String name = v.name.substring(0, 1).toUpperCase() +
-                  v.name.substring(1).replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
+              String name =
+                  v.name.substring(0, 1).toUpperCase() +
+                  v.name
+                      .substring(1)
+                      .replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
               return DropdownMenuItem(value: v, child: Text(name));
             }).toList(),
             onChanged: (value) {
@@ -504,14 +588,17 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildColorPicker(BuildContext context) {
-    return Consumer<SettingsProvider>(
+    return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.useMaterialYou) {
           return const SizedBox.shrink();
         }
         return ListTile(
           leading: const Icon(Icons.color_lens_outlined),
-          title: Text(tr('selectX', args: [tr('colour').toLowerCase()]), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('selectX', args: [tr('colour').toLowerCase()]),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text("${ColorTools.nameThatColor(settings.themeColor)}"),
           trailing: ColorIndicator(
             width: 32,
@@ -531,7 +618,10 @@ class ThemeSettingsSection extends StatelessWidget {
     );
   }
 
-  Future<bool> _showColorPickerDialog(BuildContext context, SettingsProvider settings) async {
+  Future<bool> _showColorPickerDialog(
+    BuildContext context,
+    ThemeSettingsProvider settings,
+  ) async {
     return ColorPicker(
       color: settings.themeColor,
       onColorChanged: (Color color) => settings.themeColor = color,
@@ -541,8 +631,14 @@ class ThemeSettingsSection extends StatelessWidget {
       spacing: 5,
       runSpacing: 5,
       wheelDiameter: 155,
-      heading: Text(tr('selectX', args: [tr('colour').toLowerCase()]), style: Theme.of(context).textTheme.titleMedium),
-      subheading: Text(tr('selectColourShade'), style: Theme.of(context).textTheme.titleMedium),
+      heading: Text(
+        tr('selectX', args: [tr('colour').toLowerCase()]),
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      subheading: Text(
+        tr('selectColourShade'),
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
       showMaterialName: true,
       showColorName: true,
       showColorCode: true,
@@ -556,7 +652,11 @@ class ThemeSettingsSection extends StatelessWidget {
       customColorSwatchesAndNames: colorsNameMap,
     ).showPickerDialog(
       context,
-      constraints: const BoxConstraints(minHeight: 480, minWidth: 300, maxWidth: 320),
+      constraints: const BoxConstraints(
+        minHeight: 480,
+        minWidth: 300,
+        maxWidth: 320,
+      ),
     );
   }
 
@@ -567,18 +667,25 @@ class ThemeSettingsSection extends StatelessWidget {
         if ((snapshot.data?.version.sdkInt ?? 0) < 34) {
           return const SizedBox.shrink();
         }
-        return Consumer<SettingsProvider>(
+        return Consumer<ThemeSettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile.adaptive(
               secondary: const Icon(Icons.font_download_outlined),
-              title: Text(tr('useSystemFont'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('useSystemFont'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               value: settings.useSystemFont,
               onChanged: (useSystemFont) {
                 AppHaptics.selectionClick();
                 if (useSystemFont) {
                   NativeFeatures.loadSystemFont().then(
-                    (val) { settings.useSystemFont = true; },
-                    onError: (e) { talker.warning('loadSystemFont failed: $e'); },
+                    (val) {
+                      settings.useSystemFont = true;
+                    },
+                    onError: (e) {
+                      talker.warning('loadSystemFont failed: $e');
+                    },
                   );
                 } else {
                   settings.useSystemFont = false;
@@ -591,16 +698,16 @@ class ThemeSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureToggle(
+  Widget _buildFeatureToggle<T extends ChangeNotifier>(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required bool Function(SettingsProvider) value,
-    required void Function(SettingsProvider, bool) onChanged,
-    required bool Function(SettingsProvider) visible,
+    required bool Function(T) value,
+    required void Function(T, bool) onChanged,
+    required bool Function(T) visible,
   }) {
-    return Consumer<SettingsProvider>(
+    return Consumer<T>(
       builder: (context, settings, child) {
         if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(

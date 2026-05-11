@@ -29,8 +29,11 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -71,16 +74,23 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isIgnoringBattery && _hasNotificationPermission) return const SizedBox.shrink();
+    if (_isIgnoringBattery && _hasNotificationPermission)
+      return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Card(
         elevation: 0,
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low)),
+          side: BorderSide(
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(AppOpacity.low),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -89,9 +99,16 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.auto_fix_high, color: Theme.of(context).colorScheme.primary, size: 20),
+                  Icon(
+                    Icons.auto_fix_high,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
-                  Text(tr('quickSetupAssistant'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    tr('quickSetupAssistant'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -120,7 +137,11 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
     );
   }
 
-  Widget _buildActionRow(BuildContext context, {required String label, required VoidCallback onTap}) {
+  Widget _buildActionRow(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: InkWell(
@@ -130,10 +151,22 @@ class _SetupAssistantSectionState extends State<SetupAssistantSection> {
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Row(
             children: [
-              Icon(Icons.add_circle_outline, size: 18, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                Icons.add_circle_outline,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 12),
-              Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.half)),
+              Expanded(
+                child: Text(label, style: const TextStyle(fontSize: 14)),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withOpacity(AppOpacity.half),
+              ),
             ],
           ),
         ),
@@ -166,64 +199,76 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
-    final settings = context.read<SettingsProvider>();
-    _useGridView = settings.plusEnableGridView;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    _useGridView = plusSettings.plusEnableGridView;
   }
 
-  void _cycleTheme(SettingsProvider sp) {
+  void _cycleTheme(ThemeSettingsProvider tsp) {
     final values = ThemeSettings.values;
-    final next = values[(sp.theme.index + 1) % values.length];
-    sp.theme = next;
+    final next = values[(tsp.theme.index + 1) % values.length];
+    tsp.theme = next;
     AppHaptics.mediumImpact();
   }
 
   @override
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
+    final themeSettings = context.watch<ThemeSettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final updateSettings = context.watch<UpdateSettingsProvider>();
     final isSearching = _searchQuery.isNotEmpty;
 
     // --- HUB PAGE BUILDERS ---
-    Widget _hubBuilderPlus(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
-      title: 'Obtainium+ Features',
-      scrollController: controller,
-      child: const PlusFeaturesSection(),
-    );
+    Widget _hubBuilderPlus(BuildContext ctx, ScrollController controller) =>
+        _SettingsSubMenuPage(
+          title: 'Obtainium+ Features',
+          scrollController: controller,
+          child: const PlusFeaturesSection(),
+        );
 
-    Widget _hubBuilderUpdates(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
-      title: 'Updates & Automation',
-      scrollController: controller,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: UpdateSettingsSection(
-          showIntervalLabel: showIntervalLabel,
-          onIntervalLabelChange: (value) => setState(() => showIntervalLabel = value),
-          androidInfoFuture: _androidInfoFuture,
-        ),
-      ),
-    );
+    Widget _hubBuilderUpdates(BuildContext ctx, ScrollController controller) =>
+        _SettingsSubMenuPage(
+          title: 'Updates & Automation',
+          scrollController: controller,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: UpdateSettingsSection(
+              showIntervalLabel: showIntervalLabel,
+              onIntervalLabelChange: (value) =>
+                  setState(() => showIntervalLabel = value),
+              androidInfoFuture: _androidInfoFuture,
+            ),
+          ),
+        );
 
-    Widget _hubBuilderTheming(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
-      title: 'Theming',
-      scrollController: controller,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ThemeSettingsSection(
-          androidInfoFuture: _androidInfoFuture,
-          colorsNameMap: colorsNameMap,
-        ),
-      ),
-    );
+    Widget _hubBuilderTheming(BuildContext ctx, ScrollController controller) =>
+        _SettingsSubMenuPage(
+          title: 'Theming',
+          scrollController: controller,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ThemeSettingsSection(
+              androidInfoFuture: _androidInfoFuture,
+              colorsNameMap: colorsNameMap,
+            ),
+          ),
+        );
 
-    Widget _hubBuilderLayout(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
-      title: 'Layout',
-      scrollController: controller,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: AppsViewSettingsSection(onSetState: setState),
-      ),
-    );
+    Widget _hubBuilderLayout(BuildContext ctx, ScrollController controller) =>
+        _SettingsSubMenuPage(
+          title: 'Layout',
+          scrollController: controller,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: AppsViewSettingsSection(onSetState: setState),
+          ),
+        );
 
-    Widget _hubBuilderInstallation(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
+    Widget _hubBuilderInstallation(
+      BuildContext ctx,
+      ScrollController controller,
+    ) => _SettingsSubMenuPage(
       title: tr('installation'),
       scrollController: controller,
       child: Padding(
@@ -232,48 +277,65 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
 
-    Widget _hubBuilderStats(BuildContext ctx, ScrollController controller) => StatisticsPage(scrollController: controller);
-    
-    Widget _hubBuilderNotifications(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
+    Widget _hubBuilderStats(BuildContext ctx, ScrollController controller) =>
+        StatisticsPage(scrollController: controller);
+
+    Widget _hubBuilderNotifications(
+      BuildContext ctx,
+      ScrollController controller,
+    ) => _SettingsSubMenuPage(
       title: tr('notifications'),
       scrollController: controller,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: const Column(children: [
-          NotificationSettingsSection(),
-        ]),
+        child: const Column(children: [NotificationSettingsSection()]),
       ),
     );
-    
-    Widget _hubBuilderAdvanced(BuildContext ctx, ScrollController controller) => _SettingsSubMenuPage(
-      title: tr('advanced'),
-      scrollController: controller,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          AppBehaviorSection(searchQuery: _searchQuery),
-          const SizedBox(height: 24),
-          AdvancedSettingsSection(searchQuery: _searchQuery),
-          const SizedBox(height: 24),
-          TroubleshootingSection(searchQuery: _searchQuery),
-        ]),
-      ),
-    );
+
+    Widget _hubBuilderAdvanced(BuildContext ctx, ScrollController controller) =>
+        _SettingsSubMenuPage(
+          title: tr('advanced'),
+          scrollController: controller,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                AppBehaviorSection(searchQuery: _searchQuery),
+                const SizedBox(height: 24),
+                AdvancedSettingsSection(searchQuery: _searchQuery),
+                const SizedBox(height: 24),
+                TroubleshootingSection(searchQuery: _searchQuery),
+              ],
+            ),
+          ),
+        );
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: isSearching 
+            title: isSearching
                 ? const SizedBox.shrink()
-                : Text(tr('settings'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-            actions: isSearching ? null : [
-              IconButton(
-                icon: Icon(_useGridView ? Icons.view_list_outlined : Icons.grid_view_outlined),
-                onPressed: () => setState(() => _useGridView = !_useGridView),
-              ),
-            ],
+                : Text(
+                    tr('settings'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+            actions: isSearching
+                ? null
+                : [
+                    IconButton(
+                      icon: Icon(
+                        _useGridView
+                            ? Icons.view_list_outlined
+                            : Icons.grid_view_outlined,
+                      ),
+                      onPressed: () =>
+                          setState(() => _useGridView = !_useGridView),
+                    ),
+                  ],
           ),
 
           SliverToBoxAdapter(
@@ -286,7 +348,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     hintText: tr('searchSettings'),
                     leading: const Icon(Icons.search),
                     elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.surfaceContainerHigh),
+                    backgroundColor: WidgetStateProperty.all(
+                      Theme.of(context).colorScheme.surfaceContainerHigh,
+                    ),
                     shape: WidgetStateProperty.all(const StadiumBorder()),
                     onChanged: (v) => setState(() => _searchQuery = v),
                     trailing: [
@@ -299,7 +363,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               _searchController.clear();
                             });
                           },
-                        )
+                        ),
                     ],
                   ),
                 ),
@@ -313,73 +377,108 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (!isSearching)
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         _buildQuickToggle(
                           context,
                           icon: Icons.sync_outlined,
                           label: tr('updates'),
-                          value: settingsProvider.updateInterval > 0,
+                          value: updateSettings.updateInterval > 0,
                           onChanged: (val) {
                             if (!val) {
-                              if (settingsProvider.updateInterval > 0) _lastNonZeroUpdateInterval = settingsProvider.updateInterval;
-                              settingsProvider.updateInterval = 0;
+                              if (updateSettings.updateInterval > 0)
+                                _lastNonZeroUpdateInterval =
+                                    updateSettings.updateInterval;
+                              updateSettings.updateInterval = 0;
                             } else {
-                              settingsProvider.updateInterval = _lastNonZeroUpdateInterval;
+                              updateSettings.updateInterval =
+                                  _lastNonZeroUpdateInterval;
                             }
                           },
                         ),
                         const SizedBox(width: 8),
                         ActionChip(
                           avatar: Icon(
-                            settingsProvider.theme == ThemeSettings.system ? Icons.brightness_auto : 
-                            settingsProvider.theme == ThemeSettings.light ? Icons.light_mode : Icons.dark_mode,
+                            themeSettings.theme == ThemeSettings.system
+                                ? Icons.brightness_auto
+                                : themeSettings.theme == ThemeSettings.light
+                                ? Icons.light_mode
+                                : Icons.dark_mode,
                             size: 16,
                           ),
                           label: Text(
-                            settingsProvider.theme == ThemeSettings.system ? 'System' : 
-                            settingsProvider.theme == ThemeSettings.light ? 'Light' : 'Dark',
+                            themeSettings.theme == ThemeSettings.system
+                                ? 'System'
+                                : themeSettings.theme == ThemeSettings.light
+                                ? 'Light'
+                                : 'Dark',
                             style: const TextStyle(fontSize: 12),
                           ),
-                          onPressed: () => _cycleTheme(settingsProvider),
-                          shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.half))),
+                          onPressed: () => _cycleTheme(themeSettings),
+                          shape: StadiumBorder(
+                            side: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withOpacity(AppOpacity.half),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         _buildQuickToggle(
                           context,
                           icon: Icons.check_circle_outline,
                           label: tr('installed'),
-                          value: settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
-                          onChanged: (val) => settingsProvider.onlyCheckInstalledOrTrackOnlyApps = val,
+                          value: settingsProvider
+                              .onlyCheckInstalledOrTrackOnlyApps,
+                          onChanged: (val) =>
+                              settingsProvider
+                                      .onlyCheckInstalledOrTrackOnlyApps =
+                                  val,
                         ),
                         const SizedBox(width: 8),
                         _buildQuickToggle(
                           context,
                           icon: Icons.bolt_outlined,
                           label: 'Shizuku / Sui',
-                          value: settingsProvider.useShizuku,
+                          value: behaviorSettings.useShizuku,
                           onChanged: (val) {
                             if (!val) {
-                              settingsProvider.useShizuku = false;
+                              behaviorSettings.useShizuku = false;
                               return;
                             }
                             ShizukuApkInstaller.checkPermission().then(
                               (resCode) {
-                                if (resCode == null || !resCode.startsWith('granted')) {
-                                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-                                    content: Text(resCode == 'binder_not_found' || resCode == null
-                                        ? tr('shizukuBinderNotFound')
-                                        : resCode == 'old_shizuku'
+                                if (resCode == null ||
+                                    !resCode.startsWith('granted')) {
+                                  ScaffoldMessenger.maybeOf(
+                                    context,
+                                  )?.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        resCode == 'binder_not_found' ||
+                                                resCode == null
+                                            ? tr('shizukuBinderNotFound')
+                                            : resCode == 'old_shizuku'
                                             ? tr('shizukuOld')
-                                            : tr('shizukuBinderNotFound')),
-                                    behavior: SnackBarBehavior.floating,
-                                  ));
+                                            : tr('shizukuBinderNotFound'),
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
                                   return;
                                 }
-                                settingsProvider.useShizuku = true;
+                                behaviorSettings.useShizuku = true;
                               },
-                              onError: (e) { talker.warning('Shizuku checkPermission error: $e'); },
+                              onError: (e) {
+                                talker.warning(
+                                  'Shizuku checkPermission error: $e',
+                                );
+                              },
                             );
                           },
                         ),
@@ -392,76 +491,190 @@ class _SettingsPageState extends State<SettingsPage> {
 
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            sliver: _useGridView 
-              ? SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.05,
+            sliver: _useGridView
+                ? SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 1.05,
+                        ),
+                    delegate: SliverChildListDelegate([
+                      _buildHubCard(
+                        context,
+                        icon: Icons.auto_awesome_outlined,
+                        title: tr('obtainiumPlusFeatures'),
+                        subtitle: tr('plusFeaturesDescription'),
+                        builder: _hubBuilderPlus,
+                      ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.sync_outlined,
+                        title: tr('updatesAndAutomation'),
+                        subtitle: tr('updatesDescription'),
+                        builder: _hubBuilderUpdates,
+                      ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.palette_outlined,
+                        title: tr('theming'),
+                        subtitle: tr('themingDescription'),
+                        builder: _hubBuilderTheming,
+                      ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.grid_view_outlined,
+                        title: tr('layout'),
+                        subtitle: tr('layoutDescription'),
+                        builder: _hubBuilderLayout,
+                      ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.notifications_none_outlined,
+                        title: tr('notifications'),
+                        subtitle: tr('notificationsDescription'),
+                        builder: _hubBuilderNotifications,
+                      ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.install_mobile_outlined,
+                        title: tr('installation'),
+                        subtitle: tr('installationDescription'),
+                        builder: _hubBuilderInstallation,
+                      ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.bar_chart_outlined,
+                        title: tr('statistics'),
+                        subtitle: tr('statisticsDescription'),
+                        builder: _hubBuilderStats,
+                      ),
+                      if (plusSettings.plusDeveloperMode)
+                        _buildHubCard(
+                          context,
+                          icon: Icons.code_rounded,
+                          title: tr('devAndLogs'),
+                          subtitle: tr('devAndLogsDescription'),
+                          builder: (ctx, controller) {
+                            _tapCount++;
+                            if (_tapCount >= 7) {
+                              _tapCount = 0;
+                              return DeveloperSettingsPage(
+                                scrollController: controller,
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      _buildHubCard(
+                        context,
+                        icon: Icons.bug_report_outlined,
+                        title: tr('advanced'),
+                        subtitle: tr('advancedDescription'),
+                        builder: _hubBuilderAdvanced,
+                      ),
+                    ]),
+                  )
+                : SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildExpressiveGroup(
+                        context,
+                        title: tr('settingsFeatures'),
+                        children: [
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.auto_awesome_outlined,
+                            title: tr('obtainiumPlusFeatures'),
+                            builder: _hubBuilderPlus,
+                            subtitle: tr('plusFeaturesDescription'),
+                          ),
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.sync_outlined,
+                            title: tr('updatesAndAutomation'),
+                            builder: _hubBuilderUpdates,
+                            subtitle: tr('updatesDescription'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildExpressiveGroup(
+                        context,
+                        title: tr('settingsPersonalization'),
+                        children: [
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.palette_outlined,
+                            title: tr('theming'),
+                            builder: _hubBuilderTheming,
+                            subtitle: tr('themingDescription'),
+                          ),
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.grid_view_outlined,
+                            title: tr('layout'),
+                            builder: _hubBuilderLayout,
+                            subtitle: tr('layoutDescription'),
+                          ),
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.notifications_none_outlined,
+                            title: tr('notifications'),
+                            builder: _hubBuilderNotifications,
+                            subtitle: tr('notificationsDescription'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildExpressiveGroup(
+                        context,
+                        title: tr('settingsMaintenance'),
+                        children: [
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.bar_chart_outlined,
+                            title: tr('statistics'),
+                            builder: _hubBuilderStats,
+                            subtitle: tr('statisticsDescription'),
+                          ),
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.install_mobile_outlined,
+                            title: tr('installation'),
+                            builder: _hubBuilderInstallation,
+                            subtitle: tr('installationDescription'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildExpandableExpressiveGroup(
+                        context,
+                        title: tr('settingsSystemAndAdvanced'),
+                        icon: Icons.settings_suggest_outlined,
+                        children: [
+                          _buildSubMenuTile(
+                            context,
+                            icon: Icons.bug_report_outlined,
+                            title: tr('advanced'),
+                            builder: _hubBuilderAdvanced,
+                            subtitle: tr('advancedDescription'),
+                          ),
+                          if (plusSettings.plusDeveloperMode)
+                            _buildSubMenuTile(
+                              context,
+                              icon: Icons.code_rounded,
+                              title: tr('devAndLogs'),
+                              builder: (ctx, controller) =>
+                                  DeveloperSettingsPage(
+                                    scrollController: controller,
+                                  ),
+                              subtitle: tr('devAndLogsDescription'),
+                            ),
+                        ],
+                      ),
+                    ]),
                   ),
-                  delegate: SliverChildListDelegate([
-                    _buildHubCard(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), subtitle: tr('plusFeaturesDescription'), builder: _hubBuilderPlus),
-                    _buildHubCard(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), subtitle: tr('updatesDescription'), builder: _hubBuilderUpdates),
-                    _buildHubCard(context, icon: Icons.palette_outlined, title: tr('theming'), subtitle: tr('themingDescription'), builder: _hubBuilderTheming),
-                    _buildHubCard(context, icon: Icons.grid_view_outlined, title: tr('layout'), subtitle: tr('layoutDescription'), builder: _hubBuilderLayout),
-                    _buildHubCard(context, icon: Icons.notifications_none_outlined, title: tr('notifications'), subtitle: tr('notificationsDescription'), builder: _hubBuilderNotifications),
-                    _buildHubCard(context, icon: Icons.install_mobile_outlined, title: tr('installation'), subtitle: tr('installationDescription'), builder: _hubBuilderInstallation),
-                    _buildHubCard(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), subtitle: tr('statisticsDescription'), builder: _hubBuilderStats),
-                    if (settingsProvider.plusDeveloperMode)
-                      _buildHubCard(context, icon: Icons.code_rounded, title: tr('devAndLogs'), subtitle: tr('devAndLogsDescription'), builder: (ctx, controller) {
-                    _tapCount++;
-                    if (_tapCount >= 7) {
-                      _tapCount = 0;
-                      return DeveloperSettingsPage(scrollController: controller);
-                    }
-                    return const SizedBox.shrink();
-                  }),
-                    _buildHubCard(context, icon: Icons.bug_report_outlined, title: tr('advanced'), subtitle: tr('advancedDescription'), builder: _hubBuilderAdvanced),
-                  ]),
-                )
-              : SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildExpressiveGroup(
-                      context,
-                      title: tr('settingsFeatures'),
-                      children: [
-                        _buildSubMenuTile(context, icon: Icons.auto_awesome_outlined, title: tr('obtainiumPlusFeatures'), builder: _hubBuilderPlus, subtitle: tr('plusFeaturesDescription')),
-                        _buildSubMenuTile(context, icon: Icons.sync_outlined, title: tr('updatesAndAutomation'), builder: _hubBuilderUpdates, subtitle: tr('updatesDescription')),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildExpressiveGroup(
-                      context,
-                      title: tr('settingsPersonalization'),
-                      children: [
-                        _buildSubMenuTile(context, icon: Icons.palette_outlined, title: tr('theming'), builder: _hubBuilderTheming, subtitle: tr('themingDescription')),
-                        _buildSubMenuTile(context, icon: Icons.grid_view_outlined, title: tr('layout'), builder: _hubBuilderLayout, subtitle: tr('layoutDescription')),
-                        _buildSubMenuTile(context, icon: Icons.notifications_none_outlined, title: tr('notifications'), builder: _hubBuilderNotifications, subtitle: tr('notificationsDescription')),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildExpressiveGroup(
-                      context,
-                      title: tr('settingsMaintenance'),
-                      children: [
-                        _buildSubMenuTile(context, icon: Icons.bar_chart_outlined, title: tr('statistics'), builder: _hubBuilderStats, subtitle: tr('statisticsDescription')),
-                        _buildSubMenuTile(context, icon: Icons.install_mobile_outlined, title: tr('installation'), builder: _hubBuilderInstallation, subtitle: tr('installationDescription')),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildExpandableExpressiveGroup(
-                      context,
-                      title: tr('settingsSystemAndAdvanced'),
-                      icon: Icons.settings_suggest_outlined,
-                      children: [
-                        _buildSubMenuTile(context, icon: Icons.bug_report_outlined, title: tr('advanced'), builder: _hubBuilderAdvanced, subtitle: tr('advancedDescription')),
-                        if (settingsProvider.plusDeveloperMode)
-                          _buildSubMenuTile(context, icon: Icons.code_rounded, title: tr('devAndLogs'), builder: (ctx, controller) => DeveloperSettingsPage(scrollController: controller), subtitle: tr('devAndLogsDescription')),
-                      ],
-                    ),
-                  ]),
-                ),
           ),
 
           SliverToBoxAdapter(
@@ -475,9 +688,34 @@ class _SettingsPageState extends State<SettingsPage> {
                     spacing: 4,
                     runSpacing: 8,
                     children: [
-                      _buildAboutIcon(context, icon: Icons.article_outlined, label: tr('viewChangelog'), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangelogPage()))),
-                      _buildAboutIcon(context, icon: Icons.code_outlined, label: tr('appSource'), onTap: () => launchUrlString(settingsProvider.sourceUrl, mode: LaunchMode.externalApplication)),
-                      _buildAboutIcon(context, icon: Icons.help_outline_rounded, label: tr('wiki'), onTap: () => launchUrlString('https://wiki.obtainium.imranr.dev/', mode: LaunchMode.externalApplication)),
+                      _buildAboutIcon(
+                        context,
+                        icon: Icons.article_outlined,
+                        label: tr('viewChangelog'),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ChangelogPage(),
+                          ),
+                        ),
+                      ),
+                      _buildAboutIcon(
+                        context,
+                        icon: Icons.code_outlined,
+                        label: tr('appSource'),
+                        onTap: () => launchUrlString(
+                          settingsProvider.sourceUrl,
+                          mode: LaunchMode.externalApplication,
+                        ),
+                      ),
+                      _buildAboutIcon(
+                        context,
+                        icon: Icons.help_outline_rounded,
+                        label: tr('wiki'),
+                        onTap: () => launchUrlString(
+                          'https://wiki.obtainium.imranr.dev/',
+                          mode: LaunchMode.externalApplication,
+                        ),
+                      ),
                       _buildAboutIcon(
                         context,
                         icon: Icons.favorite_outline_rounded,
@@ -493,25 +731,102 @@ class _SettingsPageState extends State<SettingsPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Upstream Fork', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                                    Text(
+                                      'Upstream Fork',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                    ),
                                     const SizedBox(height: 4),
-                                    _buildCreditTile(ctx, 'Obtainium', 'ImranR98', 'The original app this project is forked from', 'https://github.com/ImranR98/Obtainium'),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'Obtainium',
+                                      'ImranR98',
+                                      'The original app this project is forked from',
+                                      'https://github.com/ImranR98/Obtainium',
+                                    ),
                                     const Divider(height: 24),
-                                    Text('Git Dependencies', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                                    Text(
+                                      'Git Dependencies',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                    ),
                                     const SizedBox(height: 4),
-                                    _buildCreditTile(ctx, 'android_package_installer', 'ImranR98', 'APK installation via Android PackageInstaller API', 'https://github.com/ImranR98/android_package_installer'),
-                                    _buildCreditTile(ctx, 'android_package_manager', 'ImranR98', 'Android package management bindings', 'https://github.com/ImranR98/android_package_manager'),
-                                    _buildCreditTile(ctx, 'shared_storage', 'AlexBacich', 'Android Scoped Storage / SAF access', 'https://github.com/AlexBacich/shared-storage'),
-                                    _buildCreditTile(ctx, 'android_system_font', 're7gog', 'Read the system font set in Android settings', 'https://github.com/re7gog/android_system_font'),
-                                    _buildCreditTile(ctx, 'shizuku_apk_installer', 'wilver06w', 'Silent APK installation via Shizuku', 'https://github.com/wilver06w/shizuku_apk_installer'),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'android_package_installer',
+                                      'ImranR98',
+                                      'APK installation via Android PackageInstaller API',
+                                      'https://github.com/ImranR98/android_package_installer',
+                                    ),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'android_package_manager',
+                                      'ImranR98',
+                                      'Android package management bindings',
+                                      'https://github.com/ImranR98/android_package_manager',
+                                    ),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'shared_storage',
+                                      'AlexBacich',
+                                      'Android Scoped Storage / SAF access',
+                                      'https://github.com/AlexBacich/shared-storage',
+                                    ),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'android_system_font',
+                                      're7gog',
+                                      'Read the system font set in Android settings',
+                                      'https://github.com/re7gog/android_system_font',
+                                    ),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'shizuku_apk_installer',
+                                      'wilver06w',
+                                      'Silent APK installation via Shizuku',
+                                      'https://github.com/wilver06w/shizuku_apk_installer',
+                                    ),
                                     const Divider(height: 24),
-                                    Text('Inspiration', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                                    Text(
+                                      'Inspiration',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                    ),
                                     const SizedBox(height: 4),
-                                    _buildCreditTile(ctx, 'Discoverium', 'cygnusx-1-org', 'Inspiration for the app discovery & search feature', 'https://github.com/cygnusx-1-org/Discoverium'),
+                                    _buildCreditTile(
+                                      ctx,
+                                      'Discoverium',
+                                      'cygnusx-1-org',
+                                      'Inspiration for the app discovery & search feature',
+                                      'https://github.com/cygnusx-1-org/Discoverium',
+                                    ),
                                   ],
                                 ),
                               ),
-                              actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('close')))],
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: Text(tr('close')),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -523,14 +838,23 @@ class _SettingsPageState extends State<SettingsPage> {
                         onTap: () async {
                           _tapCount++;
                           if (_tapCount == 7) {
-                            settingsProvider.plusDeveloperMode = !settingsProvider.plusDeveloperMode;
+                            plusSettings.plusDeveloperMode =
+                                !plusSettings.plusDeveloperMode;
                             AppHaptics.heavyImpact();
-                            showMessage(settingsProvider.plusDeveloperMode ? 'Developer Mode Enabled' : 'Developer Mode Disabled', context);
+                            showMessage(
+                              plusSettings.plusDeveloperMode
+                                  ? 'Developer Mode Enabled'
+                                  : 'Developer Mode Disabled',
+                              context,
+                            );
                             _tapCount = 0;
                           } else if (_tapCount >= 3) {
-                             showMessage('${7 - _tapCount} more taps to toggle Dev Mode', context);
+                            showMessage(
+                              '${7 - _tapCount} more taps to toggle Dev Mode',
+                              context,
+                            );
                           }
-                          
+
                           final info = await DeviceInfoPlugin().androidInfo;
                           if (!mounted) return;
                           showDialog(
@@ -543,12 +867,21 @@ class _SettingsPageState extends State<SettingsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('Device: ${info.model}'),
-                                  Text('Android: ${info.version.release} (API ${info.version.sdkInt})'),
+                                  Text(
+                                    'Android: ${info.version.release} (API ${info.version.sdkInt})',
+                                  ),
                                   const SizedBox(height: 8),
-                                  const Text('A modernized source-first app updater.'),
+                                  const Text(
+                                    'A modernized source-first app updater.',
+                                  ),
                                 ],
                               ),
-                              actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('close')))],
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: Text(tr('close')),
+                                ),
+                              ],
                             ),
                           );
                         },
@@ -571,10 +904,30 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildQuickToggle(BuildContext context, {required IconData icon, required String label, required bool value, required Function(bool) onChanged}) {
+  Widget _buildQuickToggle(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool value,
+    required Function(bool) onChanged,
+  }) {
     return FilterChip(
-      avatar: Icon(icon, size: 16, color: value ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant),
-      label: Text(label, style: TextStyle(fontSize: 12, color: value ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface)),
+      avatar: Icon(
+        icon,
+        size: 16,
+        color: value
+            ? Theme.of(context).colorScheme.onPrimary
+            : Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: value
+              ? Theme.of(context).colorScheme.onPrimary
+              : Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
       selected: value,
       onSelected: (val) {
         AppHaptics.selectionClick();
@@ -584,26 +937,39 @@ class _SettingsPageState extends State<SettingsPage> {
       checkmarkColor: Theme.of(context).colorScheme.onPrimary,
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      shape: StadiumBorder(side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.half))),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withOpacity(AppOpacity.half),
+        ),
+      ),
     );
   }
 
-  Widget _buildHubCard(BuildContext context, {required IconData icon, required String title, required String subtitle, required Widget Function(BuildContext, ScrollController) builder}) {
+  Widget _buildHubCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget Function(BuildContext, ScrollController) builder,
+  }) {
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium)),
+        side: BorderSide(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
+        ),
       ),
       child: InkWell(
         onTap: () {
           AppHaptics.selectionClick();
-          showDraggableModalBottomSheet(
-            context: context,
-            builder: builder,
-          );
+          showDraggableModalBottomSheet(context: context, builder: builder);
         },
         borderRadius: BorderRadius.circular(24),
         child: Padding(
@@ -612,14 +978,20 @@ class _SettingsPageState extends State<SettingsPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                icon,
+                size: 28,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 10),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Text(
@@ -638,19 +1010,37 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildExpressiveGroup(BuildContext context, {required String title, required List<Widget> children}) {
+  Widget _buildExpressiveGroup(
+    BuildContext context, {
+    required String title,
+    required List<Widget> children,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Text(title.toUpperCase(), style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+          child: Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
         ),
         Card(
           elevation: 0,
           margin: EdgeInsets.zero,
           color: Theme.of(context).colorScheme.surfaceContainerLow,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium))),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
+            ),
+          ),
           child: Column(
             children: children.asMap().entries.map((entry) {
               final idx = entry.key;
@@ -659,7 +1049,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 children: [
                   child,
                   if (idx < children.length - 1)
-                    Divider(height: 1, indent: 56, endIndent: 16, color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium)),
+                    Divider(
+                      height: 1,
+                      indent: 56,
+                      endIndent: 16,
+                      color: Theme.of(context).colorScheme.outlineVariant
+                          .withOpacity(AppOpacity.medium),
+                    ),
                 ],
               );
             }).toList(),
@@ -669,24 +1065,47 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildExpandableExpressiveGroup(BuildContext context, {required String title, required IconData icon, required List<Widget> children}) {
+  Widget _buildExpandableExpressiveGroup(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
     return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.medium))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
+        ),
+      ),
       child: ExpansionTile(
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
         leading: Container(
-          padding: const EdgeInsets.all(8), 
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.hint), 
-            borderRadius: BorderRadius.circular(12)
-          ), 
-          child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(AppOpacity.hint),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
-        title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+        title: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+        ),
         children: [
           const Divider(height: 1, indent: 56, endIndent: 16),
           ...children,
@@ -695,30 +1114,57 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSubMenuTile(BuildContext context, {required IconData icon, required String title, String? subtitle, required Widget Function(BuildContext, ScrollController) builder}) {
+  Widget _buildSubMenuTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Widget Function(BuildContext, ScrollController) builder,
+  }) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8), 
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.hint), 
-          borderRadius: BorderRadius.circular(12)
-        ), 
-        child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary)
+          color: Theme.of(
+            context,
+          ).colorScheme.primary.withOpacity(AppOpacity.hint),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
-      title: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-      subtitle: subtitle != null ? Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)) : null,
+      title: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            )
+          : null,
       trailing: const Icon(Icons.chevron_right, size: 20),
       onTap: () {
         AppHaptics.selectionClick();
-        showDraggableModalBottomSheet(
-          context: context,
-          builder: builder,
-        );
+        showDraggableModalBottomSheet(context: context, builder: builder);
       },
     );
   }
 
-  Widget _buildCreditTile(BuildContext context, String name, String author, String description, String url) {
+  Widget _buildCreditTile(
+    BuildContext context,
+    String name,
+    String author,
+    String description,
+    String url,
+  ) {
     return InkWell(
       onTap: () => launchUrlString(url, mode: LaunchMode.externalApplication),
       borderRadius: BorderRadius.circular(8),
@@ -731,20 +1177,45 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(author, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.secondary)),
-                  Text(description, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Text(
+                    name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    author,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.open_in_new_rounded, size: 14, color: Theme.of(context).colorScheme.secondary),
+            Icon(
+              Icons.open_in_new_rounded,
+              size: 14,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAboutIcon(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap, VoidCallback? onLongPress}) {
+  Widget _buildAboutIcon(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+  }) {
     return SizedBox(
       width: 76,
       child: InkWell(
@@ -757,9 +1228,22 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)), child: Icon(icon, color: Theme.of(context).colorScheme.primary)),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+            ),
             const SizedBox(height: 8),
-            Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -771,16 +1255,27 @@ class _SettingsSubMenuPage extends StatelessWidget {
   final String title;
   final Widget child;
   final ScrollController? scrollController;
-  const _SettingsSubMenuPage({required this.title, required this.child, this.scrollController});
+  const _SettingsSubMenuPage({
+    required this.title,
+    required this.child,
+    this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text(title), centerTitle: true, backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        title: Text(title),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
         controller: scrollController,
-        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewPaddingOf(context).bottom,
+        ),
         child: child,
       ),
     );

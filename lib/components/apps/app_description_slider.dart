@@ -27,7 +27,8 @@ class AppDescriptionSlider extends StatefulWidget {
   State<AppDescriptionSlider> createState() => _AppDescriptionSliderState();
 }
 
-class _AppDescriptionSliderState extends State<AppDescriptionSlider> with SingleTickerProviderStateMixin {
+class _AppDescriptionSliderState extends State<AppDescriptionSlider>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _heightFactor;
   bool _isExpanded = false;
@@ -69,7 +70,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final about = widget.app.app.additionalSettings['about']?.toString();
-    
+
     if (about == null || about.isEmpty || !settings.plusEnablePopupSlider) {
       return const SizedBox.shrink();
     }
@@ -102,24 +103,34 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
               tag: 'app_about_${widget.app.app.id}',
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28),
-                child: ConditionalBlur(sigma: 15, enabled: settings.plusEnableGlassmorphism, child: AnimatedContainer(
+                child: ConditionalBlur(
+                  sigma: 15,
+                  enabled: settings.plusEnableGlassmorphism,
+                  child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     width: double.infinity,
                     height: 80 + (_heightFactor.value * 300),
                     decoration: BoxDecoration(
-                      color: (isDark 
-                          ? colorScheme.surfaceContainerHighest 
-                          : colorScheme.surface)
-                        .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                      color:
+                          (isDark
+                                  ? colorScheme.surfaceContainerHighest
+                                  : colorScheme.surface)
+                              .withOpacity(
+                                settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                              ),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withOpacity(AppOpacity.medium),
+                        color: colorScheme.outlineVariant.withOpacity(
+                          AppOpacity.medium,
+                        ),
                         width: 1,
                       ),
                       boxShadow: AppShadows.smooth(
                         color: Colors.black,
                         opacity: settings.plusEnableGlassmorphism ? 0.2 : 0.1,
-                        blurFactor: settings.plusEnableGlassmorphism ? 1.2 : 1.0,
+                        blurFactor: settings.plusEnableGlassmorphism
+                            ? 1.2
+                            : 1.0,
                       ),
                     ),
                     child: Material(
@@ -136,7 +147,8 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: colorScheme.primaryContainer.withOpacity(AppOpacity.half),
+                                      color: colorScheme.primaryContainer
+                                          .withOpacity(AppOpacity.half),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -148,30 +160,38 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           tr('about'),
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                         if (!_isExpanded)
                                           Text(
                                             about.split('\n').first,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: colorScheme.onSurfaceVariant,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
                                           ),
                                       ],
                                     ),
                                   ),
                                   Icon(
-                                    _isExpanded 
-                                      ? Icons.keyboard_arrow_down_rounded 
-                                      : Icons.keyboard_arrow_up_rounded,
+                                    _isExpanded
+                                        ? Icons.keyboard_arrow_down_rounded
+                                        : Icons.keyboard_arrow_up_rounded,
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                 ],
@@ -185,17 +205,35 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider> with Single
                                       physics: const BouncingScrollPhysics(),
                                       child: MarkdownBody(
                                         data: about,
-                                        onTapLink: (text, href, title) => href != null 
-                                          ? launchUrlString(href, mode: LaunchMode.externalApplication) 
-                                          : null,
+                                        onTapLink: (text, href, title) =>
+                                            href != null
+                                            ? launchUrlString(
+                                                href,
+                                                mode: LaunchMode
+                                                    .externalApplication,
+                                              )
+                                            : null,
                                         extensionSet: md.ExtensionSet(
-                                          md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                                          [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
+                                          md
+                                              .ExtensionSet
+                                              .gitHubFlavored
+                                              .blockSyntaxes,
+                                          [
+                                            md.EmojiSyntax(),
+                                            ...md
+                                                .ExtensionSet
+                                                .gitHubFlavored
+                                                .inlineSyntaxes,
+                                          ],
                                         ),
                                         styleSheet: MarkdownStyleSheet(
-                                          p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            color: colorScheme.onSurface.withOpacity(0.9),
-                                          ),
+                                          p: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: colorScheme.onSurface
+                                                    .withOpacity(0.9),
+                                              ),
                                         ),
                                       ),
                                     ),

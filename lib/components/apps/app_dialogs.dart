@@ -107,10 +107,7 @@ class APKOriginWarningDialog extends StatelessWidget {
       content: Text(
         tr(
           'sourceIsXButPackageFromYPrompt',
-          args: [
-            Uri.parse(sourceUrl).host,
-            Uri.parse(apkUrl).host,
-          ],
+          args: [Uri.parse(sourceUrl).host, Uri.parse(apkUrl).host],
         ),
       ),
       actions: [

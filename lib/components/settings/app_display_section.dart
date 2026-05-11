@@ -10,10 +10,7 @@ import 'package:provider/provider.dart';
 class AppDisplaySection extends StatelessWidget {
   final String? searchQuery;
 
-  const AppDisplaySection({
-    super.key,
-    this.searchQuery,
-  });
+  const AppDisplaySection({super.key, this.searchQuery});
 
   bool _matches(String text) {
     if (searchQuery == null || searchQuery!.isEmpty) return true;
@@ -31,14 +28,23 @@ class AppDisplaySection extends StatelessWidget {
           builder: (context, settings, child) {
             return ListTile(
               leading: const Icon(Icons.view_kanban_outlined),
-              title: Text(tr('viewMode'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('viewMode'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('viewModeDescription')),
               trailing: DropdownButton<ViewMode>(
                 value: settings.globalViewMode,
                 underline: const SizedBox(),
                 items: [
-                  DropdownMenuItem(value: ViewMode.list, child: Text(tr('list'))),
-                  DropdownMenuItem(value: ViewMode.grid, child: Text(tr('grid'))),
+                  DropdownMenuItem(
+                    value: ViewMode.list,
+                    child: Text(tr('list')),
+                  ),
+                  DropdownMenuItem(
+                    value: ViewMode.grid,
+                    child: Text(tr('grid')),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) settings.globalViewMode = value;
@@ -47,17 +53,26 @@ class AppDisplaySection extends StatelessWidget {
             );
           },
         ),
-      
+
       // Grid Column Count
       if (_matches(tr('gridColumns')))
         Consumer<ViewSettingsProvider>(
           builder: (context, settings, child) {
             return ListTile(
               leading: const Icon(Icons.grid_view_outlined),
-              title: Text(tr('gridColumns'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text(settings.gridColumnCount == 0 ? tr('auto') : '${settings.gridColumnCount}'),
+              title: Text(
+                tr('gridColumns'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                settings.gridColumnCount == 0
+                    ? tr('auto')
+                    : '${settings.gridColumnCount}',
+              ),
               trailing: DropdownButton<int>(
-                value: settings.gridColumnCount == 0 ? null : settings.gridColumnCount,
+                value: settings.gridColumnCount == 0
+                    ? null
+                    : settings.gridColumnCount,
                 hint: Text(tr('auto')),
                 underline: const SizedBox(),
                 items: [
@@ -74,19 +89,29 @@ class AppDisplaySection extends StatelessWidget {
             );
           },
         ),
-      
+
       // App List Density
       if (_matches(tr('listDensity')))
         Consumer<ViewSettingsProvider>(
           builder: (context, settings, child) {
             return ListTile(
               leading: const Icon(Icons.view_list_outlined),
-              title: Text(tr('listDensity'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('listDensity'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('listDensityDescription')),
               trailing: DropdownButton<AppListDensity>(
                 value: settings.appListDensity,
                 underline: const SizedBox(),
-                items: AppListDensity.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('density_${e.name}')))).toList(),
+                items: AppListDensity.values
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(tr('density_${e.name}')),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   if (value != null) settings.appListDensity = value;
                 },
@@ -94,7 +119,7 @@ class AppDisplaySection extends StatelessWidget {
             );
           },
         ),
-      
+
       // Show Author
       _buildDisplayToggle(
         context,
@@ -103,7 +128,7 @@ class AppDisplaySection extends StatelessWidget {
         title: tr('showAuthor'),
         subtitle: tr('showAuthorDescription'),
       ),
-      
+
       // Show Version
       _buildDisplayToggle(
         context,
@@ -112,7 +137,7 @@ class AppDisplaySection extends StatelessWidget {
         title: tr('showVersion'),
         subtitle: tr('showVersionDescription'),
       ),
-      
+
       // Show Date
       _buildDisplayToggle(
         context,
@@ -121,7 +146,7 @@ class AppDisplaySection extends StatelessWidget {
         title: tr('showDate'),
         subtitle: tr('showDateDescription'),
       ),
-      
+
       // Show Filter Chips
       _buildDisplayToggle(
         context,
@@ -130,7 +155,7 @@ class AppDisplaySection extends StatelessWidget {
         title: tr('showFilterChips'),
         subtitle: tr('showFilterChipsDescription'),
       ),
-      
+
       // Show App Count
       _buildDisplayToggle(
         context,
@@ -139,7 +164,7 @@ class AppDisplaySection extends StatelessWidget {
         title: tr('showAppCount'),
         subtitle: tr('showAppCountDescription'),
       ),
-      
+
       // Group by Category
       _buildDisplayToggle<ViewSettingsProvider>(
         context,
@@ -195,7 +220,7 @@ class AppDisplaySection extends StatelessWidget {
         },
       );
     }
-    
+
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
         if (!_matches(title)) return const SizedBox.shrink();

@@ -56,18 +56,20 @@ class CategorySections extends StatelessWidget {
 
     if (isGridView) {
       return SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (BuildContext context, int index) {
-            return _buildCategoryGridSection(context, index, viewSettings);
-          },
-          childCount: listedCategories.length,
-        ),
+        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+          return _buildCategoryGridSection(context, index, viewSettings);
+        }, childCount: listedCategories.length),
       );
     } else if (plusEnableCategoryReorder) {
       // Enable drag-to-reorder when Plus Feature is enabled
       return SliverReorderableList(
         itemBuilder: (BuildContext context, int index) {
-          return _buildCategoryCollapsibleTile(context, index, viewSettings, enableReorder: true);
+          return _buildCategoryCollapsibleTile(
+            context,
+            index,
+            viewSettings,
+            enableReorder: true,
+          );
         },
         itemCount: listedCategories.length,
         onReorder: (int oldIndex, int newIndex) {
@@ -85,25 +87,37 @@ class CategorySections extends StatelessWidget {
     } else {
       // Simple list when reorder is disabled
       return SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (BuildContext context, int index) {
-            return _buildCategoryCollapsibleTile(context, index, viewSettings, enableReorder: false);
-          },
-          childCount: listedCategories.length,
-        ),
+        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+          return _buildCategoryCollapsibleTile(
+            context,
+            index,
+            viewSettings,
+            enableReorder: false,
+          );
+        }, childCount: listedCategories.length),
       );
     }
   }
 
-  Widget _buildCategoryGridSection(BuildContext context, int index, ViewSettingsProvider settingsProvider) {
+  Widget _buildCategoryGridSection(
+    BuildContext context,
+    int index,
+    ViewSettingsProvider settingsProvider,
+  ) {
     final String? categoryName = listedCategories[index];
-    final int? categoryColorInt = categoryName != null ? settingsProvider.categories[categoryName] : null;
-    final Color? categoryColor = categoryColorInt != null ? getCachedCategoryColor(categoryColorInt) : null;
+    final int? categoryColorInt = categoryName != null
+        ? settingsProvider.categories[categoryName]
+        : null;
+    final Color? categoryColor = categoryColorInt != null
+        ? getCachedCategoryColor(categoryColorInt)
+        : null;
 
     final appsInCategory = listedApps
-        .where((e) =>
-            e.app.categories.contains(categoryName) ||
-            (e.app.categories.isEmpty && categoryName == null))
+        .where(
+          (e) =>
+              e.app.categories.contains(categoryName) ||
+              (e.app.categories.isEmpty && categoryName == null),
+        )
         .toList();
 
     final columnCount = settingsProvider.gridColumnCount == 0
@@ -130,7 +144,10 @@ class CategorySections extends StatelessWidget {
             children: [
               Text(
                 (categoryName ?? tr('noCategory')).toUpperCase(), // Simplified
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const Spacer(),
               Text(appsInCategory.length.toString()),
@@ -154,7 +171,9 @@ class CategorySections extends StatelessWidget {
               final app = appsInCategory[appIndex];
               return AppGridTile(
                 appInMemory: app,
-                isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
+                isSelected:
+                    selectedAppIds.contains(app.app.id) ||
+                    activeAppId == app.app.id,
                 hasUpdate: app.app.installedVersion != app.app.latestVersion,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
@@ -173,47 +192,82 @@ class CategorySections extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCollapsibleTile(BuildContext context, int index, ViewSettingsProvider settingsProvider, {bool enableReorder = true}) {
+  Widget _buildCategoryCollapsibleTile(
+    BuildContext context,
+    int index,
+    ViewSettingsProvider settingsProvider, {
+    bool enableReorder = true,
+  }) {
     final String? categoryName = listedCategories[index];
-    final categoryColorInt = categoryName != null ? settingsProvider.categories[categoryName] : null;
-    final categoryColor = categoryColorInt != null ? getCachedCategoryColor(categoryColorInt) : null;
-    final transparent = Theme.of(context).colorScheme.surface.withOpacity(0.0).value;
+    final categoryColorInt = categoryName != null
+        ? settingsProvider.categories[categoryName]
+        : null;
+    final categoryColor = categoryColorInt != null
+        ? getCachedCategoryColor(categoryColorInt)
+        : null;
+    final transparent = Theme.of(
+      context,
+    ).colorScheme.surface.withOpacity(0.0).value;
 
     final appsInCategory = listedApps
-        .where((e) =>
-            e.app.categories.contains(categoryName) ||
-            (e.app.categories.isEmpty && categoryName == null))
+        .where(
+          (e) =>
+              e.app.categories.contains(categoryName) ||
+              (e.app.categories.isEmpty && categoryName == null),
+        )
         .toList();
 
     List<Uint8List?> categoryIcons = [];
-    if (settingsProvider.categoryIconPosition != CategoryIconPosition.disabled &&
+    if (settingsProvider.categoryIconPosition !=
+            CategoryIconPosition.disabled &&
         settingsProvider.categoryIconCount > 0) {
       categoryIcons = settingsProvider.categoryIconCount >= 20
           ? appsInCategory.map((e) => e.icon).toList()
-          : appsInCategory.take(settingsProvider.categoryIconCount).map((e) => e.icon).toList();
+          : appsInCategory
+                .take(settingsProvider.categoryIconCount)
+                .map((e) => e.icon)
+                .toList();
     }
 
     Widget categoryTitle = Row(
       children: [
-        if (settingsProvider.categoryIconPosition == CategoryIconPosition.leading && categoryIcons.isNotEmpty) ...[
-          CategoryIconStack(icons: categoryIcons, maxIcons: settingsProvider.categoryIconCount),
+        if (settingsProvider.categoryIconPosition ==
+                CategoryIconPosition.leading &&
+            categoryIcons.isNotEmpty) ...[
+          CategoryIconStack(
+            icons: categoryIcons,
+            maxIcons: settingsProvider.categoryIconCount,
+          ),
           const SizedBox(width: 12),
         ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(categoryName ?? tr('noCategory'), style: const TextStyle(fontWeight: FontWeight.bold)),
-              if (settingsProvider.categoryIconPosition == CategoryIconPosition.below && categoryIcons.isNotEmpty) ...[
+              Text(
+                categoryName ?? tr('noCategory'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (settingsProvider.categoryIconPosition ==
+                      CategoryIconPosition.below &&
+                  categoryIcons.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                CategoryIconStack(icons: categoryIcons, maxIcons: settingsProvider.categoryIconCount),
+                CategoryIconStack(
+                  icons: categoryIcons,
+                  maxIcons: settingsProvider.categoryIconCount,
+                ),
               ],
             ],
           ),
         ),
-        if (settingsProvider.categoryIconPosition == CategoryIconPosition.trailing && categoryIcons.isNotEmpty) ...[
+        if (settingsProvider.categoryIconPosition ==
+                CategoryIconPosition.trailing &&
+            categoryIcons.isNotEmpty) ...[
           const SizedBox(width: 12),
-          CategoryIconStack(icons: categoryIcons, maxIcons: settingsProvider.categoryIconCount),
+          CategoryIconStack(
+            icons: categoryIcons,
+            maxIcons: settingsProvider.categoryIconCount,
+          ),
         ],
       ],
     );
@@ -237,24 +291,33 @@ class CategorySections extends StatelessWidget {
             Text(appsInCategory.length.toString()),
             if (enableReorder) ...[
               const SizedBox(width: 8),
-              ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_handle)),
+              ReorderableDragStartListener(
+                index: index,
+                child: const Icon(Icons.drag_handle),
+              ),
             ],
           ],
         ),
-        children: appsInCategory.map((app) => AppListTile(
-          appInMemory: app,
-          isSelected: selectedAppIds.contains(app.app.id) || activeAppId == app.app.id,
-          hasUpdate: app.app.installedVersion != app.app.latestVersion,
-          onTap: () {
-            if (selectedAppIds.isNotEmpty) {
-              toggleAppSelected(app.app);
-            } else {
-              onAppTap(app.app);
-            }
-          },
-          onLongPress: () => toggleAppSelected(app.app),
-          onShowChanges: getChangeLogFn(context, app.app),
-        )).toList(),
+        children: appsInCategory
+            .map(
+              (app) => AppListTile(
+                appInMemory: app,
+                isSelected:
+                    selectedAppIds.contains(app.app.id) ||
+                    activeAppId == app.app.id,
+                hasUpdate: app.app.installedVersion != app.app.latestVersion,
+                onTap: () {
+                  if (selectedAppIds.isNotEmpty) {
+                    toggleAppSelected(app.app);
+                  } else {
+                    onAppTap(app.app);
+                  }
+                },
+                onLongPress: () => toggleAppSelected(app.app),
+                onShowChanges: getChangeLogFn(context, app.app),
+              ),
+            )
+            .toList(),
       ),
     );
   }

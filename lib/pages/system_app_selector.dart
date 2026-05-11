@@ -28,10 +28,7 @@ enum SystemAppSortMethod {
   userFirst,
 }
 
-enum SystemAppViewMode {
-  list,
-  grid,
-}
+enum SystemAppViewMode { list, grid }
 
 class SystemAppSelector extends StatefulWidget {
   /// When true, tapping an app pops the route with its URL string instead of
@@ -74,7 +71,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       final installed = await AppInstallService.getAllInstalledInfo();
       if (mounted) {
         setState(() {
-          _apps = installed.map((pkg) => _EnhancedPackageInfo.fromPackageInfo(pkg)).toList();
+          _apps = installed
+              .map((pkg) => _EnhancedPackageInfo.fromPackageInfo(pkg))
+              .toList();
           _isLoading = false;
         });
         _sortApps();
@@ -89,21 +88,28 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     const batchSize = 10;
     for (int i = 0; i < packages.length; i += batchSize) {
       if (!mounted) return;
-      final batch = packages.sublist(i, (i + batchSize).clamp(0, packages.length));
-      await Future.wait(batch.map((pkg) async {
-        try {
-          final iconBytes = await pkg.applicationInfo?.getAppIcon();
-          final appName = await pkg.applicationInfo?.getAppLabel();
-          if (!mounted) return;
-          final idx = _apps.indexWhere((a) => a.packageName == pkg.packageName);
-          if (idx != -1) {
-            setState(() {
-              if (iconBytes != null) _apps[idx].icon = iconBytes;
-              if (appName != null) _apps[idx].appName = appName;
-            });
-          }
-        } catch (_) {}
-      }));
+      final batch = packages.sublist(
+        i,
+        (i + batchSize).clamp(0, packages.length),
+      );
+      await Future.wait(
+        batch.map((pkg) async {
+          try {
+            final iconBytes = await pkg.applicationInfo?.getAppIcon();
+            final appName = await pkg.applicationInfo?.getAppLabel();
+            if (!mounted) return;
+            final idx = _apps.indexWhere(
+              (a) => a.packageName == pkg.packageName,
+            );
+            if (idx != -1) {
+              setState(() {
+                if (iconBytes != null) _apps[idx].icon = iconBytes;
+                if (appName != null) _apps[idx].appName = appName;
+              });
+            }
+          } catch (_) {}
+        }),
+      );
     }
   }
 
@@ -114,13 +120,16 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         switch (_sortMethod) {
           case SystemAppSortMethod.nameAZ:
           case SystemAppSortMethod.nameZA:
-            result = (a.appName ?? a.packageName ?? '')
-                .compareTo(b.appName ?? b.packageName ?? '');
+            result = (a.appName ?? a.packageName ?? '').compareTo(
+              b.appName ?? b.packageName ?? '',
+            );
             if (_sortMethod == SystemAppSortMethod.nameZA) result = -result;
           case SystemAppSortMethod.recentlyUpdated:
             result = (b.lastUpdateTime ?? 0).compareTo(a.lastUpdateTime ?? 0);
           case SystemAppSortMethod.recentlyInstalled:
-            result = (b.firstInstallTime ?? 0).compareTo(a.firstInstallTime ?? 0);
+            result = (b.firstInstallTime ?? 0).compareTo(
+              a.firstInstallTime ?? 0,
+            );
           case SystemAppSortMethod.size:
             result = (b.size ?? 0).compareTo(a.size ?? 0);
           case SystemAppSortMethod.systemFirst:
@@ -147,7 +156,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       if (trackedApps.containsKey(pkg.packageName)) return false;
       if (!_showSystemApps && pkg.isSystemApp) return false;
       if (_searchQuery.isNotEmpty) {
-        final text = '${pkg.appName ?? ''} ${pkg.packageName ?? ''}'.toLowerCase();
+        final text = '${pkg.appName ?? ''} ${pkg.packageName ?? ''}'
+            .toLowerCase();
         if (!text.contains(_searchQuery.toLowerCase())) return false;
       }
       if (_selectedLabels.isNotEmpty) {
@@ -190,26 +200,40 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           }
 
           return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(child: DragHandle(width: 40, margin: const EdgeInsets.only(bottom: 12))),
+                  Center(
+                    child: DragHandle(
+                      width: 40,
+                      margin: const EdgeInsets.only(bottom: 12),
+                    ),
+                  ),
                   Text(
                     tr('editLabels'),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   if (allLabels.isNotEmpty) ...[
-                    Text(tr('existingLabels'), style: Theme.of(context).textTheme.labelMedium),
+                    Text(
+                      tr('existingLabels'),
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -220,7 +244,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           label: Text(label),
                           selected: isSelected,
                           onSelected: (val) => setSheetState(() {
-                            if (val) selectedLabels.add(label); else selectedLabels.remove(label);
+                            if (val)
+                              selectedLabels.add(label);
+                            else
+                              selectedLabels.remove(label);
                           }),
                         );
                       }).toList(),
@@ -236,8 +263,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           controller: controller,
                           decoration: InputDecoration(
                             hintText: tr('newLabel'),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
                           onSubmitted: addLabel,
                           textInputAction: TextInputAction.done,
@@ -262,7 +294,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       const SizedBox(width: 8),
                       FilledButton(
                         onPressed: () {
-                          setState(() => _appLabels[packageName] = selectedLabels.toList());
+                          setState(
+                            () => _appLabels[packageName] = selectedLabels
+                                .toList(),
+                          );
                           Navigator.pop(context);
                         },
                         child: Text(tr('save')),
@@ -294,7 +329,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     final allLabels = _getAllLabels();
     final hasLabels = allLabels.isNotEmpty;
     final bottomHeight = _appBarBottomHeight(hasLabels);
-    final allFilteredSelected = filteredApps.isNotEmpty && filteredApps.every((a) => a.isSelected);
+    final allFilteredSelected =
+        filteredApps.isNotEmpty && filteredApps.every((a) => a.isSelected);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -307,8 +343,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             sigma: 15,
             enabled: settings.plusEnableGlassmorphism,
             child: Container(
-              color: Theme.of(context).colorScheme.surface
-                  .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+              color: Theme.of(context).colorScheme.surface.withOpacity(
+                settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+              ),
             ),
           ),
         ),
@@ -316,23 +353,32 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           // Select all / deselect all
           if (!widget.returnUrlOnSelect && filteredApps.isNotEmpty)
             IconButton(
-              icon: Icon(allFilteredSelected
-                  ? Icons.deselect_rounded
-                  : Icons.select_all_rounded),
-              tooltip: allFilteredSelected ? tr('deselectAll') : tr('selectAll'),
+              icon: Icon(
+                allFilteredSelected
+                    ? Icons.deselect_rounded
+                    : Icons.select_all_rounded,
+              ),
+              tooltip: allFilteredSelected
+                  ? tr('deselectAll')
+                  : tr('selectAll'),
               onPressed: () => _toggleSelectAll(filteredApps),
             ),
 
           // View mode toggle
           IconButton(
-            icon: Icon(_viewMode == SystemAppViewMode.list
-                ? Icons.grid_view_outlined
-                : Icons.view_list_outlined),
-            onPressed: () => setState(() => _viewMode =
-                _viewMode == SystemAppViewMode.list
-                    ? SystemAppViewMode.grid
-                    : SystemAppViewMode.list),
-            tooltip: _viewMode == SystemAppViewMode.list ? tr('gridView') : tr('listView'),
+            icon: Icon(
+              _viewMode == SystemAppViewMode.list
+                  ? Icons.grid_view_outlined
+                  : Icons.view_list_outlined,
+            ),
+            onPressed: () => setState(
+              () => _viewMode = _viewMode == SystemAppViewMode.list
+                  ? SystemAppViewMode.grid
+                  : SystemAppViewMode.list,
+            ),
+            tooltip: _viewMode == SystemAppViewMode.list
+                ? tr('gridView')
+                : tr('listView'),
           ),
 
           // Sort menu
@@ -349,21 +395,44 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               _sortApps();
             }),
             itemBuilder: (context) => [
-              PopupMenuItem(value: SystemAppSortMethod.nameAZ, child: Text(tr('nameAZ'))),
-              PopupMenuItem(value: SystemAppSortMethod.nameZA, child: Text(tr('nameZA'))),
-              PopupMenuItem(value: SystemAppSortMethod.recentlyUpdated, child: Text(tr('recentlyUpdated'))),
-              PopupMenuItem(value: SystemAppSortMethod.recentlyInstalled, child: Text(tr('recentlyInstalled'))),
-              PopupMenuItem(value: SystemAppSortMethod.size, child: Text(tr('size'))),
-              PopupMenuItem(value: SystemAppSortMethod.systemFirst, child: Text(tr('systemAppsFirst'))),
-              PopupMenuItem(value: SystemAppSortMethod.userFirst, child: Text(tr('userAppsFirst'))),
+              PopupMenuItem(
+                value: SystemAppSortMethod.nameAZ,
+                child: Text(tr('nameAZ')),
+              ),
+              PopupMenuItem(
+                value: SystemAppSortMethod.nameZA,
+                child: Text(tr('nameZA')),
+              ),
+              PopupMenuItem(
+                value: SystemAppSortMethod.recentlyUpdated,
+                child: Text(tr('recentlyUpdated')),
+              ),
+              PopupMenuItem(
+                value: SystemAppSortMethod.recentlyInstalled,
+                child: Text(tr('recentlyInstalled')),
+              ),
+              PopupMenuItem(
+                value: SystemAppSortMethod.size,
+                child: Text(tr('size')),
+              ),
+              PopupMenuItem(
+                value: SystemAppSortMethod.systemFirst,
+                child: Text(tr('systemAppsFirst')),
+              ),
+              PopupMenuItem(
+                value: SystemAppSortMethod.userFirst,
+                child: Text(tr('userAppsFirst')),
+              ),
             ],
           ),
 
           // System apps toggle
           IconButton(
-            icon: Icon(_showSystemApps
-                ? Icons.system_update_rounded
-                : Icons.person_outline_rounded),
+            icon: Icon(
+              _showSystemApps
+                  ? Icons.system_update_rounded
+                  : Icons.person_outline_rounded,
+            ),
             onPressed: () => setState(() => _showSystemApps = !_showSystemApps),
             tooltip: tr('showSystemApps'),
           ),
@@ -381,7 +450,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   onChanged: (val) => setState(() => _searchQuery = val),
                   elevation: WidgetStateProperty.all(0),
                   backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.surfaceContainerHigh.withOpacity(
+                    Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHigh.withOpacity(
                       settings.plusEnableGlassmorphism ? AppOpacity.half : 1.0,
                     ),
                   ),
@@ -392,9 +463,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             padding: const EdgeInsets.only(right: 12),
                             child: Text(
                               '${filteredApps.length}',
-                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ),
                         ],
@@ -413,7 +487,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             label: Text(tr('all')),
                             selected: _selectedLabels.isEmpty,
                             onSelected: (selected) {
-                              if (selected) setState(() => _selectedLabels.clear());
+                              if (selected)
+                                setState(() => _selectedLabels.clear());
                             },
                           );
                         }
@@ -422,7 +497,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           label: Text(label),
                           selected: _selectedLabels.contains(label),
                           onSelected: (selected) => setState(() {
-                            if (selected) _selectedLabels.add(label); else _selectedLabels.remove(label);
+                            if (selected)
+                              _selectedLabels.add(label);
+                            else
+                              _selectedLabels.remove(label);
                           }),
                         );
                       },
@@ -435,10 +513,19 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: SizedBox(width: 48, height: 48, child: ExpressiveCircularProgressIndicator()))
+          ? const Center(
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: ExpressiveCircularProgressIndicator(),
+              ),
+            )
           : Padding(
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + kToolbarHeight + bottomHeight,
+                top:
+                    MediaQuery.of(context).padding.top +
+                    kToolbarHeight +
+                    bottomHeight,
               ),
               child: filteredApps.isEmpty
                   ? EmptyStateWidget(
@@ -447,24 +534,24 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       subtitle: tr('tryAdjustingFilters'),
                     )
                   : _viewMode == SystemAppViewMode.list
-                      ? ListView.builder(
-                          itemCount: filteredApps.length,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemBuilder: (_, index) =>
-                              _buildAppTile(filteredApps[index], appsProvider),
-                        )
-                      : GridView.builder(
-                          itemCount: filteredApps.length,
-                          padding: const EdgeInsets.all(8),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: _gridColumnCount,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                            childAspectRatio: 0.75,
-                          ),
-                          itemBuilder: (_, index) =>
-                              _buildGridAppTile(filteredApps[index], appsProvider),
-                        ),
+                  ? ListView.builder(
+                      itemCount: filteredApps.length,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemBuilder: (_, index) =>
+                          _buildAppTile(filteredApps[index], appsProvider),
+                    )
+                  : GridView.builder(
+                      itemCount: filteredApps.length,
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: _gridColumnCount,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemBuilder: (_, index) =>
+                          _buildGridAppTile(filteredApps[index], appsProvider),
+                    ),
             ),
       floatingActionButton: widget.returnUrlOnSelect
           ? null
@@ -473,9 +560,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutBack,
               child: FloatingActionButton.extended(
-                onPressed: _selectedCount == 0 ? null : () => _importSelectedApps(appsProvider),
+                onPressed: _selectedCount == 0
+                    ? null
+                    : () => _importSelectedApps(appsProvider),
                 icon: const Icon(Icons.download_outlined),
-                label: Text(tr('importXApps', args: [_selectedCount.toString()])),
+                label: Text(
+                  tr('importXApps', args: [_selectedCount.toString()]),
+                ),
               ),
             ),
     );
@@ -498,16 +589,22 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: 0,
       color: pkg.isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
-          : Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(AppOpacity.half),
+          ? Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
+          : Theme.of(
+              context,
+            ).colorScheme.surfaceContainerLow.withOpacity(AppOpacity.half),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
           if (widget.returnUrlOnSelect) {
             if (pkg.packageName == null) return;
-            Navigator.pop(context,
-                'https://play.google.com/store/apps/details?id=${pkg.packageName}');
+            Navigator.pop(
+              context,
+              'https://play.google.com/store/apps/details?id=${pkg.packageName}',
+            );
           } else {
             setState(() => pkg.isSelected = !pkg.isSelected);
           }
@@ -537,7 +634,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                         if (pkg.versionName != null) pkg.versionName!,
                       ].join('  ·  '),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -547,7 +646,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       Wrap(
                         spacing: 4,
                         runSpacing: 4,
-                        children: appLabels.map((label) => _buildLabelChip(label)).toList(),
+                        children: appLabels
+                            .map((label) => _buildLabelChip(label))
+                            .toList(),
                       ),
                     ],
                   ],
@@ -564,7 +665,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                 const SizedBox(width: 4),
                 Checkbox(
                   value: pkg.isSelected,
-                  onChanged: (value) => setState(() => pkg.isSelected = value ?? false),
+                  onChanged: (value) =>
+                      setState(() => pkg.isSelected = value ?? false),
                 ),
               ],
             ],
@@ -574,22 +676,31 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     );
   }
 
-  Widget _buildGridAppTile(_EnhancedPackageInfo pkg, AppsProvider appsProvider) {
+  Widget _buildGridAppTile(
+    _EnhancedPackageInfo pkg,
+    AppsProvider appsProvider,
+  ) {
     final appLabels = _appLabels[pkg.packageName] ?? [];
 
     return Card(
       elevation: 0,
       color: pkg.isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
-          : Theme.of(context).colorScheme.surfaceContainerLow.withOpacity(AppOpacity.half),
+          ? Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
+          : Theme.of(
+              context,
+            ).colorScheme.surfaceContainerLow.withOpacity(AppOpacity.half),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
           if (widget.returnUrlOnSelect) {
             if (pkg.packageName == null) return;
-            Navigator.pop(context,
-                'https://play.google.com/store/apps/details?id=${pkg.packageName}');
+            Navigator.pop(
+              context,
+              'https://play.google.com/store/apps/details?id=${pkg.packageName}',
+            );
           } else {
             setState(() => pkg.isSelected = !pkg.isSelected);
           }
@@ -602,9 +713,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               const SizedBox(height: 6),
               Text(
                 pkg.appName ?? pkg.packageName ?? '',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -614,7 +725,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                 Text(
                   pkg.versionName!,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.55),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -627,7 +740,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   alignment: WrapAlignment.center,
                   spacing: 2,
                   runSpacing: 2,
-                  children: appLabels.take(2).map((l) => _buildLabelChip(l, small: true)).toList(),
+                  children: appLabels
+                      .take(2)
+                      .map((l) => _buildLabelChip(l, small: true))
+                      .toList(),
                 ),
               ],
               if (!widget.returnUrlOnSelect) ...[
@@ -637,7 +753,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   children: [
                     Checkbox(
                       value: pkg.isSelected,
-                      onChanged: (v) => setState(() => pkg.isSelected = v ?? false),
+                      onChanged: (v) =>
+                          setState(() => pkg.isSelected = v ?? false),
                       visualDensity: VisualDensity.compact,
                     ),
                     IconButton(
@@ -659,9 +776,14 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
 
   Widget _buildLabelChip(String label, {bool small = false}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: small ? 4 : 8, vertical: small ? 1 : 2),
+      padding: EdgeInsets.symmetric(
+        horizontal: small ? 4 : 8,
+        vertical: small ? 1 : 2,
+      ),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
+        color: Theme.of(
+          context,
+        ).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
         borderRadius: BorderRadius.circular(small ? 4 : 8),
       ),
       child: Text(
@@ -679,7 +801,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     if (selectedApps.isEmpty) return;
 
     final urls = selectedApps
-        .map((a) => 'https://play.google.com/store/apps/details?id=${a.packageName}')
+        .map(
+          (a) =>
+              'https://play.google.com/store/apps/details?id=${a.packageName}',
+        )
         .toList();
 
     try {
@@ -688,14 +813,17 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       if (errors.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr('importedX', args: [selectedApps.length.toString()])),
+            content: Text(
+              tr('importedX', args: [selectedApps.length.toString()]),
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
       } else {
         showDialog(
           context: context,
-          builder: (ctx) => ImportErrorDialog(urlsLength: urls.length, errors: errors),
+          builder: (ctx) =>
+              ImportErrorDialog(urlsLength: urls.length, errors: errors),
         );
       }
     } catch (e) {

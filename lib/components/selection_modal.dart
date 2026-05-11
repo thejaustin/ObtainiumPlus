@@ -178,7 +178,12 @@ class _SelectionModalState extends State<SelectionModal> {
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildHeader(context, enableGlass, dialogRadius, colorScheme),
+                    _buildHeader(
+                      context,
+                      enableGlass,
+                      dialogRadius,
+                      colorScheme,
+                    ),
                     const Divider(height: 1, thickness: 0.5),
                     Flexible(
                       child: SingleChildScrollView(
@@ -198,7 +203,12 @@ class _SelectionModalState extends State<SelectionModal> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool enableGlass, double radius, ColorScheme colorScheme) {
+  Widget _buildHeader(
+    BuildContext context,
+    bool enableGlass,
+    double radius,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -220,19 +230,16 @@ class _SelectionModalState extends State<SelectionModal> {
               color: colorScheme.primary.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              Icons.list_alt_rounded,
-              color: colorScheme.primary,
-            ),
+            child: Icon(Icons.list_alt_rounded, color: colorScheme.primary),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               widget.title ?? tr('pick'),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
         ],
@@ -240,7 +247,11 @@ class _SelectionModalState extends State<SelectionModal> {
     );
   }
 
-  Widget _buildContent(BuildContext context, double radius, ColorScheme colorScheme) {
+  Widget _buildContent(
+    BuildContext context,
+    double radius,
+    ColorScheme colorScheme,
+  ) {
     final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
     return Column(
       children: [
@@ -257,7 +268,9 @@ class _SelectionModalState extends State<SelectionModal> {
                   'filter',
                   label: tr('filter'),
                   required: false,
-                  additionalValidators: [(value) => SourceUtils.regExValidator(value)],
+                  additionalValidators: [
+                    (value) => SourceUtils.regExValidator(value),
+                  ],
                 ),
               ],
             ],
@@ -300,7 +313,9 @@ class _SelectionModalState extends State<SelectionModal> {
                 Text(
                   entry.value.isEmpty ? entry.key : entry.value[0],
                   style: TextStyle(
-                    decoration: widget.titlesAreLinks ? TextDecoration.underline : null,
+                    decoration: widget.titlesAreLinks
+                        ? TextDecoration.underline
+                        : null,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.start,
@@ -321,7 +336,9 @@ class _SelectionModalState extends State<SelectionModal> {
           var descriptionText = entry.value.length <= 1
               ? const SizedBox.shrink()
               : Text(
-                  entry.value[1].length > 128 ? '${entry.value[1].substring(0, 128)}...' : entry.value[1],
+                  entry.value[1].length > 128
+                      ? '${entry.value[1].substring(0, 128)}...'
+                      : entry.value[1],
                   style: TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 12,
@@ -329,28 +346,41 @@ class _SelectionModalState extends State<SelectionModal> {
                   ),
                 );
 
-          var selectedEntries = entrySelections.entries.where((e) => e.value).toList();
+          var selectedEntries = entrySelections.entries
+              .where((e) => e.value)
+              .toList();
 
-          return entrySelections[entry] == true && widget.onlyOneSelectionAllowed
+          return entrySelections[entry] == true &&
+                  widget.onlyOneSelectionAllowed
               ? Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(itemRadius),
-                    border: Border.all(color: colorScheme.primary.withOpacity(0.4), width: 1.5),
+                    border: Border.all(
+                      color: colorScheme.primary.withOpacity(0.4),
+                      width: 1.5,
+                    ),
                   ),
                   child: RadioListTile<String>(
                     value: entry.key,
-                    groupValue: selectedEntries.isEmpty ? null : selectedEntries.first.key.key,
+                    groupValue: selectedEntries.isEmpty
+                        ? null
+                        : selectedEntries.first.key.key,
                     onChanged: (value) {
                       AppHaptics.selectionClick();
                       setState(() => selectOnlyOne(entry.key));
                     },
                     title: urlLink,
                     subtitle: entry.value.length <= 1 ? null : descriptionText,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(itemRadius),
+                    ),
                     activeColor: colorScheme.primary,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                   ),
                 )
               : AnimatedContainer(
@@ -377,10 +407,15 @@ class _SelectionModalState extends State<SelectionModal> {
                     title: urlLink,
                     subtitle: entry.value.length <= 1 ? null : descriptionText,
                     controlAffinity: ListTileControlAffinity.leading,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(itemRadius),
+                    ),
                     activeColor: colorScheme.primary,
                     checkColor: colorScheme.onPrimary,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                   ),
                 );
         }),
@@ -388,7 +423,11 @@ class _SelectionModalState extends State<SelectionModal> {
     );
   }
 
-  Widget _buildActions(BuildContext context, double radius, ColorScheme colorScheme) {
+  Widget _buildActions(
+    BuildContext context,
+    double radius,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -418,7 +457,15 @@ class _SelectionModalState extends State<SelectionModal> {
             child: Text(
               widget.onlyOneSelectionAllowed
                   ? tr('pick')
-                  : tr('selectX', args: [entrySelections.values.where((b) => b).length.toString()]),
+                  : tr(
+                      'selectX',
+                      args: [
+                        entrySelections.values
+                            .where((b) => b)
+                            .length
+                            .toString(),
+                      ],
+                    ),
             ),
           ),
         ],

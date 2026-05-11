@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
-
 import 'package:android_package_installer/android_package_installer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +14,8 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart' hide isEnglish, lowerCaseIfEnglish;
+import 'package:obtainium/providers/source_provider.dart'
+    hide isEnglish, lowerCaseIfEnglish;
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/language_utils.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -60,14 +60,18 @@ class InvalidURLError extends ObtainiumError {
   String? appId;
   final String? detectedSource;
   final List<String>? suggestedSources;
-  
-  InvalidURLError(String sourceName, {this.appId, this.detectedSource, this.suggestedSources})
-    : super(_buildMessage(sourceName, detectedSource));
-  
+
+  InvalidURLError(
+    String sourceName, {
+    this.appId,
+    this.detectedSource,
+    this.suggestedSources,
+  }) : super(_buildMessage(sourceName, detectedSource));
+
   static String _buildMessage(String sourceName, String? detectedSource) {
     if (detectedSource != null && detectedSource != sourceName) {
-      return tr('invalidURLForSource', args: [sourceName]) + 
-             '\n\n${tr('didYouMean', args: [detectedSource])}';
+      return tr('invalidURLForSource', args: [sourceName]) +
+          '\n\n${tr('didYouMean', args: [detectedSource])}';
     }
     return tr('invalidURLForSource', args: [sourceName]);
   }
@@ -99,10 +103,10 @@ class NoVersionError extends ObtainiumError {
 class UnsupportedURLError extends ObtainiumError {
   final List<String>? suggestedSources;
   final String? failedUrl;
-  
-  UnsupportedURLError({this.suggestedSources, this.failedUrl}) 
+
+  UnsupportedURLError({this.suggestedSources, this.failedUrl})
     : super(_buildMessage(failedUrl));
-  
+
   static String _buildMessage(String? failedUrl) {
     if (failedUrl != null && failedUrl.isNotEmpty) {
       return '${tr('urlMatchesNoSource')}\n\nURL: $failedUrl';
@@ -129,7 +133,8 @@ class InstallError extends ObtainiumError {
 class IDChangedError extends ObtainiumError {
   String? appId;
   String newId;
-  IDChangedError(this.newId, {this.appId}) : super('${tr('appIdMismatch')} - $newId');
+  IDChangedError(this.newId, {this.appId})
+    : super('${tr('appIdMismatch')} - $newId');
 }
 
 class BadDownloadError extends ObtainiumError {
@@ -149,7 +154,12 @@ class MultiAppMultiError extends ObtainiumError {
 
   MultiAppMultiError() : super(tr('placeholder'), unexpected: false);
 
-  void add(String appId, dynamic error, {String? appName, StackTrace? stackTrace}) {
+  void add(
+    String appId,
+    dynamic error, {
+    String? appName,
+    StackTrace? stackTrace,
+  }) {
     // Normalize common network exceptions to ObtainiumError(unexpected:false) so
     // transient connectivity failures don't get reported to Sentry as crashes.
     if (error is SocketException) {
@@ -162,7 +172,8 @@ class MultiAppMultiError extends ObtainiumError {
       error.appId = appId;
     }
     rawErrors[appId] = error;
-    stackTraces[appId] = stackTrace ?? (error is Error ? error.stackTrace : null);
+    stackTraces[appId] =
+        stackTrace ?? (error is Error ? error.stackTrace : null);
     var string = error.toString();
     var tempIds = idsByErrorString[string] ?? [];
     tempIds.add(appId);
@@ -192,16 +203,21 @@ class MultiAppMultiError extends ObtainiumError {
       .join('\n\n');
 }
 
-Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) async {
+Future<ErrorResolution?> getResolutionForError(
+  dynamic e,
+  BuildContext context,
+) async {
   String s = e.toString().toLowerCase();
-  
-  if (e is CredsNeededError || e is RateLimitError || s.contains('rate limit')) {
-     return ErrorResolution(
-       tr('rateLimitTip'), 
-       fix: FixAction(tr('openSettings'), () {
-         pushRoute(context, const SettingsPage());
-       })
-     );
+
+  if (e is CredsNeededError ||
+      e is RateLimitError ||
+      s.contains('rate limit')) {
+    return ErrorResolution(
+      tr('rateLimitTip'),
+      fix: FixAction(tr('openSettings'), () {
+        pushRoute(context, const SettingsPage());
+      }),
+    );
   }
 
   if (e is InstallError) {
@@ -213,10 +229,10 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
             action: 'android.settings.INTERNAL_STORAGE_SETTINGS',
           );
           intent.launch();
-        })
+        }),
       );
     }
-    
+
     // Conflict (5) or Incompatible (7) - usually signature mismatch
     if ((e.code == 5 || e.code == 7) && e.appId != null) {
       return ErrorResolution(
@@ -227,34 +243,34 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
             data: 'package:${e.appId}',
           );
           intent.launch();
-        })
+        }),
       );
     }
 
     // Check for Install Permission
     if (!(await Permission.requestInstallPackages.isGranted)) {
-       return ErrorResolution(
-          tr('installPermissionMissingTip'),
-          fix: FixAction(tr('allowUnknownApps'), () {
-            // We use standard intent as permission_handler request sometimes flakely redirects
-             const AndroidIntent intent = AndroidIntent(
-                action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
-                data: 'package:app.obtainiumplus', // obtainiumId
-              );
-              intent.launch();
-          })
-       );
+      return ErrorResolution(
+        tr('installPermissionMissingTip'),
+        fix: FixAction(tr('allowUnknownApps'), () {
+          // We use standard intent as permission_handler request sometimes flakely redirects
+          const AndroidIntent intent = AndroidIntent(
+            action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
+            data: 'package:app.obtainiumplus', // obtainiumId
+          );
+          intent.launch();
+        }),
+      );
     }
 
     return ErrorResolution(
       tr('installErrorTip'),
       fix: FixAction(tr('openInstallUnknownApps'), () {
-         const AndroidIntent intent = AndroidIntent(
-            action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
-            data: 'package:app.obtainiumplus', 
-          );
-          intent.launch();
-      })
+        const AndroidIntent intent = AndroidIntent(
+          action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
+          data: 'package:app.obtainiumplus',
+        );
+        intent.launch();
+      }),
     );
   }
 
@@ -292,7 +308,7 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
           data: 'package:${e.appId}',
         );
         intent.launch();
-      })
+      }),
     );
   }
 
@@ -307,11 +323,13 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
         }
         Navigator.maybeOf(context)?.pop();
         showMessage(tr('cacheCleared'), context);
-      })
+      }),
     );
   }
 
-  if ((e is NoReleasesError && e.appId != null) || (e is NoAPKError && e.appId != null) || (e is NoVersionError && e.appId != null)) {
+  if ((e is NoReleasesError && e.appId != null) ||
+      (e is NoAPKError && e.appId != null) ||
+      (e is NoVersionError && e.appId != null)) {
     String? appId = (e as dynamic).appId;
     var appsProvider = Provider.of<AppsProvider>(context, listen: false);
     var app = appsProvider.apps[appId]?.app;
@@ -319,11 +337,8 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
       return ErrorResolution(
         tr('sourceErrorTip'),
         fix: FixAction(tr('openSourceWebsite'), () {
-          launchUrlString(
-            app.url,
-            mode: LaunchMode.externalApplication,
-          );
-        })
+          launchUrlString(app.url, mode: LaunchMode.externalApplication);
+        }),
       );
     }
   }
@@ -335,43 +350,54 @@ Future<ErrorResolution?> getResolutionForError(dynamic e, BuildContext context) 
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AddAppPage(
-              mode: AddAppMode.edit,
-              appId: e.appId,
-            ),
+            builder: (context) =>
+                AddAppPage(mode: AddAppMode.edit, appId: e.appId),
           ),
         );
-      })
+      }),
     );
   }
 
-  if (e is SocketException || s.contains('socketexception') || s.contains('connection refused') || s.contains('timed out')) {
+  if (e is SocketException ||
+      s.contains('socketexception') ||
+      s.contains('connection refused') ||
+      s.contains('timed out')) {
     return ErrorResolution(tr('checkInternet'));
   }
-  if (s.contains('storage') || s.contains('space') || s.contains('permission')) {
+  if (s.contains('storage') ||
+      s.contains('space') ||
+      s.contains('permission')) {
     return ErrorResolution(tr('checkStorage'));
   }
-  if (e is InvalidURLError || e is UnsupportedURLError || s.contains('404') || s.contains('not found')) {
+  if (e is InvalidURLError ||
+      e is UnsupportedURLError ||
+      s.contains('404') ||
+      s.contains('not found')) {
     return ErrorResolution(tr('sourceErrorTip'));
   }
-  
+
   // Generic fallback: Search Online
   return ErrorResolution(
     tr('unknownErrorTip'),
     fix: FixAction(tr('searchOnline'), () {
-       launchUrlString(
-         'https://www.google.com/search?q=Obtainium+${Uri.encodeComponent(e.toString())}',
-         mode: LaunchMode.externalApplication,
-       );
-    })
+      launchUrlString(
+        'https://www.google.com/search?q=Obtainium+${Uri.encodeComponent(e.toString())}',
+        mode: LaunchMode.externalApplication,
+      );
+    }),
   );
 }
 
-Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false, StackTrace? stackTrace}) async {
+Future<void> showMessage(
+  dynamic e,
+  BuildContext context, {
+  bool isError = false,
+  StackTrace? stackTrace,
+}) async {
   if (!context.mounted) return;
   var settings = Provider.of<SettingsProvider>(context, listen: false);
   String logMessage = e.toString();
-  
+
   if (settings.enableDeepLogging && isError) {
     if (stackTrace != null) {
       logMessage += '\nStack Trace:\n$stackTrace';
@@ -391,13 +417,13 @@ Future<void> showMessage(dynamic e, BuildContext context, {bool isError = false,
     listen: false,
   ).add(logMessage, level: isError ? LogLevels.error : LogLevels.info);
   if (e is String || (e is ObtainiumError && !e.unexpected)) {
-   ScaffoldMessenger.maybeOf(
-     context,
-   )?.showSnackBar(SnackBar(content: Text(e.toString())));
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text(e.toString())));
   } else {
     ErrorResolution? resolution = await getResolutionForError(e, context);
     if (!context.mounted) return;
-    
+
     // Use glass dialog for modern UI
     showDialog(
       context: context,
@@ -459,7 +485,10 @@ class _GlassErrorDialog extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 15, enabled: enableGlass, child: Column(
+          child: ConditionalBlur(
+            sigma: 15,
+            enabled: enableGlass,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildHeader(context, enableGlass, colorScheme),
@@ -479,7 +508,11 @@ class _GlassErrorDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool enableGlass, ColorScheme colorScheme) {
+  Widget _buildHeader(
+    BuildContext context,
+    bool enableGlass,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -494,18 +527,15 @@ class _GlassErrorDialog extends StatelessWidget {
               color: colorScheme.error.withOpacity(AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              Icons.error_outline,
-              color: colorScheme.error,
-            ),
+            child: Icon(Icons.error_outline, color: colorScheme.error),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -523,7 +553,9 @@ class _GlassErrorDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
+              color: colorScheme.surfaceContainerHighest.withOpacity(
+                AppOpacity.half,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: GestureDetector(
@@ -535,9 +567,9 @@ class _GlassErrorDialog extends StatelessWidget {
               },
               child: Text(
                 error,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
               ),
             ),
           ),
@@ -546,7 +578,9 @@ class _GlassErrorDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(AppOpacity.medium),
+              color: colorScheme.primaryContainer.withOpacity(
+                AppOpacity.medium,
+              ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: colorScheme.primary.withOpacity(AppOpacity.low),
@@ -591,8 +625,8 @@ class _GlassErrorDialog extends StatelessWidget {
         Text(
           '${appIds.length} ${appIds.length == 1 ? tr('error') : tr('errors')}',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         ...appIds.map((appId) {
@@ -601,21 +635,32 @@ class _GlassErrorDialog extends StatelessWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.half),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.error.withOpacity(0.15),
+              color: colorScheme.surfaceContainerHighest.withOpacity(
+                AppOpacity.half,
               ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.error.withOpacity(0.15)),
             ),
             child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 0,
+                ),
                 childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                leading: Icon(Icons.error_outline, color: colorScheme.error, size: 20),
+                leading: Icon(
+                  Icons.error_outline,
+                  color: colorScheme.error,
+                  size: 20,
+                ),
                 title: Text(
                   appName,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -630,9 +675,9 @@ class _GlassErrorDialog extends StatelessWidget {
                     child: Text(
                       errText,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                        fontFamily: 'monospace',
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -644,11 +689,17 @@ class _GlassErrorDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, bool enableGlass, ColorScheme colorScheme) {
+  Widget _buildActions(
+    BuildContext context,
+    bool enableGlass,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: colorScheme.surfaceContainerHighest.withOpacity(
+          AppOpacity.medium,
+        ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(
@@ -657,9 +708,9 @@ class _GlassErrorDialog extends StatelessWidget {
           TextButton(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: logMessage));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(tr('copiedToClipboard'))),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
             },
             child: Text(tr('copy')),
           ),
@@ -691,7 +742,11 @@ class _GlassErrorDialog extends StatelessWidget {
   }
 }
 
-Future<void> showError(dynamic e, BuildContext context, {StackTrace? stackTrace}) async {
+Future<void> showError(
+  dynamic e,
+  BuildContext context, {
+  StackTrace? stackTrace,
+}) async {
   await showMessage(e, context, isError: true, stackTrace: stackTrace);
 }
 

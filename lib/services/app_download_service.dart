@@ -24,7 +24,8 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
-import 'package:flutter/foundation.dart' as foundation; // Alias to avoid conflict
+import 'package:flutter/foundation.dart'
+    as foundation; // Alias to avoid conflict
 
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/services/app_crud_service.dart';
@@ -35,7 +36,11 @@ class AppDownloadService {
   static final pm = AndroidPackageManager();
 
   // Helper for moving string to end of list
-  static List<String> moveStrToEnd(List<String> list, String str, {String? strB}) {
+  static List<String> moveStrToEnd(
+    List<String> list,
+    String str, {
+    String? strB,
+  }) {
     int indA = list.indexOf(str);
     int indB = strB != null ? list.indexOf(strB) : -1;
     if (indA != -1) {
@@ -90,9 +95,16 @@ class AppDownloadService {
     required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
     required Future<void> Function(List<String>) removeApps,
     required Function(String, {bool ignoreCache}) checkUpdate,
-    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool, {bool evenIfSingleChoice}) confirmAppFileUrl,
+    required Future<MapEntry<String, String>?> Function(
+      App,
+      BuildContext?,
+      bool, {
+      bool evenIfSingleChoice,
+    })
+    confirmAppFileUrl,
     required Future<bool> Function(App) canInstallSilently,
-    required Future<void> Function(BuildContext) waitForUserToReturnToForeground,
+    required Future<void> Function(BuildContext)
+    waitForUserToReturnToForeground,
     BuildContext? context,
     NotificationsProvider? notificationsProvider,
     bool forceParallelDownloads = false,
@@ -101,7 +113,7 @@ class AppDownloadService {
   }) async {
     notificationsProvider =
         notificationsProvider ?? context?.read<NotificationsProvider>();
-    
+
     var preparationResult = await _prepareAppsForInstall(
       appIds: appIds,
       apps: apps,
@@ -111,8 +123,9 @@ class AppDownloadService {
       canInstallSilently: canInstallSilently,
       context: context,
     );
-    
-    List<String> appsToInstall = preparationResult['appsToInstall'] as List<String>;
+
+    List<String> appsToInstall =
+        preparationResult['appsToInstall'] as List<String>;
 
     MultiAppMultiError errors = MultiAppMultiError();
     List<String> installedIds = [];
@@ -127,44 +140,48 @@ class AppDownloadService {
     List<Map<String, dynamic>> downloadResults = [];
     if (!forceParallelDownloads && !settingsProvider.parallelDownloads) {
       for (var id in appsToInstall) {
-        downloadResults.add(await _downloadAppWrapper(
-          id: id,
-          apps: apps,
-          settingsProvider: settingsProvider,
-          logs: logs,
-          APKDir: APKDir,
-          notifyListeners: notifyListeners,
-          canInstallSilently: canInstallSilently,
-          waitForUserToReturnToForeground: waitForUserToReturnToForeground,
-          removeApps: removeApps,
-          saveApps: saveApps,
-          errors: errors,
-          context: context,
-          notificationsProvider: notificationsProvider,
-          useExisting: useExisting,
-          isCancelled: isCancelled,
-        ));
+        downloadResults.add(
+          await _downloadAppWrapper(
+            id: id,
+            apps: apps,
+            settingsProvider: settingsProvider,
+            logs: logs,
+            APKDir: APKDir,
+            notifyListeners: notifyListeners,
+            canInstallSilently: canInstallSilently,
+            waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+            removeApps: removeApps,
+            saveApps: saveApps,
+            errors: errors,
+            context: context,
+            notificationsProvider: notificationsProvider,
+            useExisting: useExisting,
+            isCancelled: isCancelled,
+          ),
+        );
       }
     } else {
       downloadResults = await Future.wait(
-        appsToInstall.map((id) => _downloadAppWrapper(
-          id: id,
-          apps: apps,
-          settingsProvider: settingsProvider,
-          logs: logs,
-          APKDir: APKDir,
-          notifyListeners: notifyListeners,
-          canInstallSilently: canInstallSilently,
-          waitForUserToReturnToForeground: waitForUserToReturnToForeground,
-          removeApps: removeApps,
-          saveApps: saveApps,
-          errors: errors,
-          context: context,
-          notificationsProvider: notificationsProvider,
-          useExisting: useExisting,
-          skipInstalls: true,
-          isCancelled: isCancelled,
-        )),
+        appsToInstall.map(
+          (id) => _downloadAppWrapper(
+            id: id,
+            apps: apps,
+            settingsProvider: settingsProvider,
+            logs: logs,
+            APKDir: APKDir,
+            notifyListeners: notifyListeners,
+            canInstallSilently: canInstallSilently,
+            waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+            removeApps: removeApps,
+            saveApps: saveApps,
+            errors: errors,
+            context: context,
+            notificationsProvider: notificationsProvider,
+            useExisting: useExisting,
+            skipInstalls: true,
+            isCancelled: isCancelled,
+          ),
+        ),
       );
     }
     for (var res in downloadResults) {
@@ -232,7 +249,9 @@ class AppDownloadService {
           settingsProvider,
         )),
       };
-      final apkIndex = app.preferredApkIndex < app.apkUrls.length ? app.preferredApkIndex : 0;
+      final apkIndex = app.preferredApkIndex < app.apkUrls.length
+          ? app.preferredApkIndex
+          : 0;
       String downloadUrl = await source.assetUrlPrefetchModifier(
         await source.generalReqPrefetchModifier(
           app.apkUrls[apkIndex].value,
@@ -241,7 +260,7 @@ class AppDownloadService {
         app.url,
         additionalSettingsPlusSourceConfig,
       );
-      
+
       logs.logEvent('DownloadStarted', {
         'appId': app.id,
         'url': downloadUrl,
@@ -285,7 +304,7 @@ class AppDownloadService {
         isCancelled: isCancelled != null ? () => isCancelled!(app.id) : null,
         useSmartRetries: settingsProvider.plusEnableSmartRetries,
       );
-      
+
       logs.logEvent('DownloadCompleted', {
         'appId': app.id,
         'path': downloadedFile.path,
@@ -320,7 +339,7 @@ class AppDownloadService {
         newInfo = res['newInfo'];
         apkDir = res['apkDir'];
       }
-      
+
       if (newInfo == null) {
         downloadedFile.delete();
         throw ObtainiumError('Could not get ID from APK');
@@ -368,12 +387,19 @@ class AppDownloadService {
     required SettingsProvider settingsProvider,
     required LogsProvider logs,
     required Function() notifyListeners,
-    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool, {bool evenIfSingleChoice}) confirmAppFileUrl,
+    required Future<MapEntry<String, String>?> Function(
+      App,
+      BuildContext?,
+      bool, {
+      bool evenIfSingleChoice,
+    })
+    confirmAppFileUrl,
     required Function(String, {bool ignoreCache}) checkUpdate,
     required BuildContext context,
     bool forceParallelDownloads = false,
   }) async {
-    NotificationsProvider notificationsProvider = context.read<NotificationsProvider>();
+    NotificationsProvider notificationsProvider = context
+        .read<NotificationsProvider>();
     List<MapEntry<MapEntry<String, String>, App>> filesToDownload = [];
     for (var id in appIds) {
       if (apps[id] == null) {
@@ -430,7 +456,8 @@ class AppDownloadService {
 
     Future<void> downloadFn(MapEntry<String, String> fileUrl, App app) async {
       try {
-        String downloadPath = '${await AppInstallService.getStorageRootPath()}/Download';
+        String downloadPath =
+            '${await AppInstallService.getStorageRootPath()}/Download';
         await AppFileService.downloadFile(
           fileUrl.value,
           fileUrl.key,
@@ -484,7 +511,13 @@ class AppDownloadService {
     required Map<String, AppInMemory> apps,
     required Function(List<App>) saveApps,
     required Function(String, {bool ignoreCache}) checkUpdate,
-    required Future<MapEntry<String, String>?> Function(App, BuildContext?, bool, {bool evenIfSingleChoice}) confirmAppFileUrl,
+    required Future<MapEntry<String, String>?> Function(
+      App,
+      BuildContext?,
+      bool, {
+      bool evenIfSingleChoice,
+    })
+    confirmAppFileUrl,
     required Future<bool> Function(App) canInstallSilently,
     BuildContext? context,
   }) async {
@@ -523,8 +556,12 @@ class AppDownloadService {
           // Android 14+ User Pre-approval for non-silent installs (context required)
           if (context != null) {
             var osInfo = await DeviceInfoPlugin().androidInfo;
-            final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-            if (osInfo.version.sdkInt >= 34 && settingsProvider.plusEnableUserPreapproval) {
+            final settingsProvider = Provider.of<SettingsProvider>(
+              context,
+              listen: false,
+            );
+            if (osInfo.version.sdkInt >= 34 &&
+                settingsProvider.plusEnableUserPreapproval) {
               AppInstallService.requestUserPreapproval(apps[id]!.app.id);
             }
           }
@@ -541,9 +578,7 @@ class AppDownloadService {
         return a;
       }).toList(),
     );
-    return {
-      'appsToInstall': appsToInstall,
-    };
+    return {'appsToInstall': appsToInstall};
   }
 
   static Future<Map<String, dynamic>> _processDownloadedArchive(
@@ -589,9 +624,7 @@ class AppDownloadService {
     PackageInfo? newInfo;
     for (var i = 0; i < apks.length; i++) {
       try {
-        newInfo = await pm.getPackageArchiveInfo(
-          archiveFilePath: apks[i].path,
-        );
+        newInfo = await pm.getPackageArchiveInfo(archiveFilePath: apks[i].path);
         if (newInfo != null) {
           break;
         }
@@ -651,12 +684,17 @@ class AppDownloadService {
     try {
       if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       bool sayInstalled = true;
-      var contextIfNewInstall = apps[id]?.installedInfo == null ? context : null;
-      bool needBGWorkaround = (willBeSilent && context == null && !settingsProvider.useShizuku) ||
+      var contextIfNewInstall = apps[id]?.installedInfo == null
+          ? context
+          : null;
+      bool needBGWorkaround =
+          (willBeSilent && context == null && !settingsProvider.useShizuku) ||
           AppConstants.plusAppIds.contains(id) ||
           apps[id]!.app.additionalSettings['persistentVersionTracking'] == true;
-      bool shizukuPretendToBeGooglePlay = settingsProvider.shizukuPretendToBeGooglePlay ||
-          apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] == true;
+      bool shizukuPretendToBeGooglePlay =
+          settingsProvider.shizukuPretendToBeGooglePlay ||
+          apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] ==
+              true;
 
       logs.logEvent('InstallStarted', {
         'appId': id,
@@ -714,7 +752,11 @@ class AppDownloadService {
           );
         } else {
           notificationsProvider?.notify(
-            SilentUpdateNotification([apps[id]!.app], sayInstalled, id: id.hashCode),
+            SilentUpdateNotification(
+              [apps[id]!.app],
+              sayInstalled,
+              id: id.hashCode,
+            ),
           );
         }
       }
@@ -734,7 +776,8 @@ class AppDownloadService {
     required Directory APKDir,
     required Function() notifyListeners,
     required Future<bool> Function(App) canInstallSilently,
-    required Future<void> Function(BuildContext) waitForUserToReturnToForeground,
+    required Future<void> Function(BuildContext)
+    waitForUserToReturnToForeground,
     required Future<void> Function(List<String>) removeApps,
     required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
     required MultiAppMultiError errors,
@@ -751,34 +794,43 @@ class AppDownloadService {
       if (apps[id] == null) {
         throw ObtainiumError(tr('appNotFound'));
       }
-      var downloadedArtifact =
-          await downloadApp(
-            app: apps[id]!.app,
-            apps: apps,
-            settingsProvider: settingsProvider,
-            logs: logs,
-            APKDir: APKDir,
-            notifyListeners: notifyListeners,
-            removeApps: removeApps,
-            saveApps: saveApps,
-            context: context,
-            notificationsProvider: notificationsProvider,
-            useExisting: useExisting,
-            isCancelled: isCancelled,
-            // Keep progress visible during the handoff to _installApp so the
-            // banner doesn't flicker null→-1 between download and install.
-            clearProgressOnComplete: false,
-          );
+      var downloadedArtifact = await downloadApp(
+        app: apps[id]!.app,
+        apps: apps,
+        settingsProvider: settingsProvider,
+        logs: logs,
+        APKDir: APKDir,
+        notifyListeners: notifyListeners,
+        removeApps: removeApps,
+        saveApps: saveApps,
+        context: context,
+        notificationsProvider: notificationsProvider,
+        useExisting: useExisting,
+        isCancelled: isCancelled,
+        // Keep progress visible during the handoff to _installApp so the
+        // banner doesn't flicker null→-1 between download and install.
+        clearProgressOnComplete: false,
+      );
       if (downloadedArtifact['isAPK'] == true) {
-        downloadedFile = DownloadedApk(id, downloadedArtifact['downloadedFile'] as File);
+        downloadedFile = DownloadedApk(
+          id,
+          downloadedArtifact['downloadedFile'] as File,
+        );
       } else {
-        downloadedDir = DownloadedDir(id, downloadedArtifact['downloadedFile'] as File, downloadedArtifact['apkDir'] as Directory, downloadedArtifact['isXAPK'] ? DownloadedDirType.XAPK : DownloadedDirType.ZIP);
+        downloadedDir = DownloadedDir(
+          id,
+          downloadedArtifact['downloadedFile'] as File,
+          downloadedArtifact['apkDir'] as Directory,
+          downloadedArtifact['isXAPK']
+              ? DownloadedDirType.XAPK
+              : DownloadedDirType.ZIP,
+        );
       }
 
       if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       willBeSilent = await canInstallSilently(apps[id]!.app);
       await _checkInstallPermissions(settingsProvider, willBeSilent);
-      
+
       if (!willBeSilent && context != null && !settingsProvider.useShizuku) {
         await waitForUserToReturnToForeground(context);
       }
@@ -800,4 +852,3 @@ class AppDownloadService {
     };
   }
 }
-

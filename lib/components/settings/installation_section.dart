@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -11,10 +13,7 @@ import 'package:obtainium/utils/logger.dart';
 class InstallationSection extends StatelessWidget {
   final String? searchQuery;
 
-  const InstallationSection({
-    super.key,
-    this.searchQuery,
-  });
+  const InstallationSection({super.key, this.searchQuery});
 
   bool _matches(String text) {
     if (searchQuery == null || searchQuery!.isEmpty) return true;
@@ -25,158 +24,171 @@ class InstallationSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
-    List<Widget> children = [
-      // Parallel Downloads
-      _buildToggle(
-        context,
-        icon: Icons.file_download_outlined,
-        title: tr('parallelDownloads'),
-        subtitle: tr('parallelDownloadsDescription'),
-        value: (s) => s.parallelDownloads,
-        onChanged: (s, v) => s.parallelDownloads = v,
-        visible: (s) => _matches(tr('parallelDownloads')),
-      ),
+    return Consumer2<BehaviorSettingsProvider, PlusSettingsProvider>(
+      builder: (context, behaviorSettings, plusSettings, child) {
+        List<Widget> children = [
+          // Parallel Downloads
+          if (_matches(tr('parallelDownloads')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.file_download_outlined),
+              title: Text(
+                tr('parallelDownloads'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('parallelDownloadsDescription')),
+              value: behaviorSettings.parallelDownloads,
+              onChanged: (v) => behaviorSettings.parallelDownloads = v,
+            ),
 
-      // App Verifier
-      _buildToggle(
-        context,
-        icon: Icons.verified_user_outlined,
-        title: tr('beforeNewInstallsShareToAppVerifier'),
-        subtitle: tr('beforeNewInstallsShareToAppVerifierDescription'),
-        value: (s) => s.beforeNewInstallsShareToAppVerifier,
-        onChanged: (s, v) => s.beforeNewInstallsShareToAppVerifier = v,
-        visible: (s) => _matches(tr('beforeNewInstallsShareToAppVerifier')),
-      ),
+          // App Verifier
+          if (_matches(tr('beforeNewInstallsShareToAppVerifier')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.verified_user_outlined),
+              title: Text(
+                tr('beforeNewInstallsShareToAppVerifier'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                tr('beforeNewInstallsShareToAppVerifierDescription'),
+              ),
+              value: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+              onChanged: (v) =>
+                  behaviorSettings.beforeNewInstallsShareToAppVerifier = v,
+            ),
 
-      // Smart Retries & Caching
-      _buildToggle(
-        context,
-        icon: Icons.bolt_outlined,
-        title: tr('plusSmartRetries'),
-        subtitle: tr('plusSmartRetriesDescription'),
-        value: (s) => s.plusEnableSmartRetries,
-        onChanged: (s, v) => s.plusEnableSmartRetries = v,
-        visible: (s) => _matches(tr('plusSmartRetries')),
-      ),
+          // Smart Retries & Caching
+          if (_matches(tr('plusSmartRetries')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.bolt_outlined),
+              title: Text(
+                tr('plusSmartRetries'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusSmartRetriesDescription')),
+              value: plusSettings.plusEnableSmartRetries,
+              onChanged: (v) => plusSettings.plusEnableSmartRetries = v,
+            ),
 
-      // Update Ownership (Android 14+)
-      _buildToggle(
-        context,
-        icon: Icons.security_update_good_rounded,
-        title: tr('plusUpdateOwnership'),
-        subtitle: tr('plusUpdateOwnershipDescription'),
-        value: (s) => s.plusEnableUpdateOwnership,
-        onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
-        visible: (s) => _matches(tr('plusUpdateOwnership')),
-      ),
+          // Update Ownership (Android 14+)
+          if (_matches(tr('plusUpdateOwnership')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.security_update_good_rounded),
+              title: Text(
+                tr('plusUpdateOwnership'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusUpdateOwnershipDescription')),
+              value: plusSettings.plusEnableUpdateOwnership,
+              onChanged: (v) => plusSettings.plusEnableUpdateOwnership = v,
+            ),
 
-      // User Pre-approval (Android 14+)
-      _buildToggle(
-        context,
-        icon: Icons.touch_app_outlined,
-        title: tr('plusUserPreapproval'),
-        subtitle: tr('plusUserPreapprovalDescription'),
-        value: (s) => s.plusEnableUserPreapproval,
-        onChanged: (s, v) => s.plusEnableUserPreapproval = v,
-        visible: (s) => _matches(tr('plusUserPreapproval')),
-      ),
+          // User Pre-approval (Android 14+)
+          if (_matches(tr('plusUserPreapproval')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.touch_app_outlined),
+              title: Text(
+                tr('plusUserPreapproval'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusUserPreapprovalDescription')),
+              value: plusSettings.plusEnableUserPreapproval,
+              onChanged: (v) => plusSettings.plusEnableUserPreapproval = v,
+            ),
 
-      // Remove on External Uninstall
-      _buildToggle(
-        context,
-        icon: Icons.delete_sweep_outlined,
-        title: tr('removeOnExternalUninstall'),
-        subtitle: tr('removeOnExternalUninstallDescription'),
-        value: (s) => s.removeOnExternalUninstall,
-        onChanged: (s, v) => s.removeOnExternalUninstall = v,
-        visible: (s) => _matches(tr('removeOnExternalUninstall')),
-      ),
+          // Remove on External Uninstall
+          if (_matches(tr('removeOnExternalUninstall')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.delete_sweep_outlined),
+              title: Text(
+                tr('removeOnExternalUninstall'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('removeOnExternalUninstallDescription')),
+              value: behaviorSettings.removeOnExternalUninstall,
+              onChanged: (v) => behaviorSettings.removeOnExternalUninstall = v,
+            ),
 
-      // Shizuku / Sui (with full permission check and error feedback)
-      if (_matches(tr('useShizuku')))
-        Consumer<SettingsProvider>(
-          builder: (context, settings, child) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.terminal_outlined),
-            title: Text(tr('useShizuku'), style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text(tr('useShizukuDescription')),
-            value: settings.useShizuku,
-            onChanged: (enable) {
-              if (!enable) {
-                settings.useShizuku = false;
-                return;
-              }
-              ShizukuApkInstaller.checkPermission().then(
-                (resCode) {
-                  if (resCode == null) {
-                    _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
-                    return;
-                  }
-                  settings.useShizuku = resCode.startsWith('authorized') || resCode.startsWith('granted');
-                  switch (resCode) {
-                    case 'binder_not_found':
-                      _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
-                    case 'old_shizuku':
-                      _showError(context, ObtainiumError(tr('shizukuOld')));
-                    case 'old_android_with_adb':
-                      _showError(context, ObtainiumError(tr('shizukuOldAndroidWithADB')));
-                    case 'denied':
-                      _showError(context, ObtainiumError(tr('cancelled')));
-                  }
-                },
-                onError: (e) { talker.warning('Shizuku checkPermission error: $e'); },
-              );
-            },
-          ),
-        ),
+          // Shizuku / Sui
+          if (_matches(tr('useShizuku')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.terminal_outlined),
+              title: Text(
+                tr('useShizuku'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('useShizukuDescription')),
+              value: behaviorSettings.useShizuku,
+              onChanged: (enable) {
+                if (!enable) {
+                  behaviorSettings.useShizuku = false;
+                  return;
+                }
+                ShizukuApkInstaller.checkPermission().then(
+                  (resCode) {
+                    if (resCode == null) {
+                      _showError(
+                        context,
+                        ObtainiumError(tr('shizukuBinderNotFound')),
+                      );
+                      return;
+                    }
+                    behaviorSettings.useShizuku =
+                        resCode.startsWith('authorized') ||
+                        resCode.startsWith('granted');
+                    switch (resCode) {
+                      case 'binder_not_found':
+                        _showError(
+                          context,
+                          ObtainiumError(tr('shizukuBinderNotFound')),
+                        );
+                      case 'old_shizuku':
+                        _showError(context, ObtainiumError(tr('shizukuOld')));
+                      case 'old_android_with_adb':
+                        _showError(
+                          context,
+                          ObtainiumError(tr('shizukuOldAndroidWithADB')),
+                        );
+                      case 'denied':
+                        _showError(context, ObtainiumError(tr('cancelled')));
+                    }
+                  },
+                  onError: (e) {
+                    talker.warning('Shizuku checkPermission error: $e');
+                  },
+                );
+              },
+            ),
 
-      // Shizuku Pretend to be Google Play (only visible when Shizuku is on)
-      if (_matches(tr('shizukuPretendToBeGooglePlay')))
-        Consumer<SettingsProvider>(
-          builder: (context, settings, child) {
-            if (!settings.useShizuku) return const SizedBox.shrink();
-            return SwitchListTile.adaptive(
+          // Shizuku Pretend to be Google Play
+          if (_matches(tr('shizukuPretendToBeGooglePlay')) &&
+              behaviorSettings.useShizuku)
+            SwitchListTile.adaptive(
               secondary: const Icon(Icons.shop_outlined),
-              title: Text(tr('shizukuPretendToBeGooglePlay'), style: Theme.of(context).textTheme.bodyLarge),
+              title: Text(
+                tr('shizukuPretendToBeGooglePlay'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('shizukuPretendToBeGooglePlayDescription')),
-              value: settings.shizukuPretendToBeGooglePlay,
-              onChanged: (v) => settings.shizukuPretendToBeGooglePlay = v,
-            );
-          },
-        ),
-    ];
+              value: behaviorSettings.shizukuPretendToBeGooglePlay,
+              onChanged: (v) =>
+                  behaviorSettings.shizukuPretendToBeGooglePlay = v,
+            ),
+        ];
 
-    return SettingsGroup(
-      title: isSearching ? null : tr('installation'),
-      children: children,
+        return SettingsGroup(
+          title: isSearching ? null : tr('installation'),
+          children: children,
+        );
+      },
     );
   }
 
   void _showError(BuildContext context, ObtainiumError error) {
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(error.message), behavior: SnackBarBehavior.floating),
-    );
-  }
-
-  Widget _buildToggle(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool Function(SettingsProvider) value,
-    required void Function(SettingsProvider, bool) onChanged,
-    required bool Function(SettingsProvider) visible,
-  }) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        if (!visible(settings)) return const SizedBox.shrink();
-        return SwitchListTile.adaptive(
-          secondary: Icon(icon),
-          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(subtitle),
-          value: value(settings),
-          onChanged: (v) => onChanged(settings, v),
-        );
-      },
+      SnackBar(
+        content: Text(error.message),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }

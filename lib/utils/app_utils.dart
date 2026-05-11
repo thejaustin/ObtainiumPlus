@@ -33,7 +33,9 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return SharedAxisTransition(
           animation: reverse ? ReverseAnimation(animation) : animation,
-          secondaryAnimation: reverse ? ReverseAnimation(secondaryAnimation) : secondaryAnimation,
+          secondaryAnimation: reverse
+              ? ReverseAnimation(secondaryAnimation)
+              : secondaryAnimation,
           transitionType: SharedAxisTransitionType.horizontal,
           child: child,
         );
@@ -57,7 +59,8 @@ List<MapEntry<String, String>> assumed2DlistToStringMapList(
 dynamic safeJsonDecode(dynamic jsonValue, dynamic fallback) {
   if (jsonValue == null) return fallback;
   if (jsonValue is! String) {
-    if ((fallback is List && jsonValue is List) || (fallback is Map && jsonValue is Map)) {
+    if ((fallback is List && jsonValue is List) ||
+        (fallback is Map && jsonValue is Map)) {
       return jsonValue;
     }
     return fallback;

@@ -8,12 +8,8 @@ enum ThemeSettings { system, light, dark }
 class ThemeSettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
 
-  ThemeSettingsProvider() {
-    unawaited(_initialize());
-  }
-
-  Future<void> _initialize() async {
-    prefs = await SharedPreferences.getInstance();
+  Future<void> initializeSettings(SharedPreferences p) async {
+    prefs = p;
     notifyListeners();
   }
 

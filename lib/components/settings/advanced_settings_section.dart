@@ -8,10 +8,7 @@ import 'package:provider/provider.dart';
 class AdvancedSettingsSection extends StatelessWidget {
   final String? searchQuery;
 
-  const AdvancedSettingsSection({
-      super.key,
-      this.searchQuery,
-  });
+  const AdvancedSettingsSection({super.key, this.searchQuery});
 
   bool _matches(String text) {
     if (searchQuery == null || searchQuery!.isEmpty) return true;
@@ -61,7 +58,8 @@ class AdvancedSettingsSection extends StatelessWidget {
       ),
     ];
 
-    if (children.every((w) => w is SizedBox && w.child == null)) return const SizedBox.shrink();
+    if (children.every((w) => w is SizedBox && w.child == null))
+      return const SizedBox.shrink();
 
     return SettingsGroup(
       title: isSearching ? null : tr('advanced'),

@@ -20,9 +20,11 @@ class DeviceUtils {
       final info = await getAndroidInfo();
       final manufacturer = info.manufacturer?.toLowerCase() ?? '';
       final brand = info.brand?.toLowerCase() ?? '';
-      return ['xiaomi', 'redmi', 'poco'].any(
-        (x) => manufacturer.contains(x) || brand.contains(x),
-      );
+      return [
+        'xiaomi',
+        'redmi',
+        'poco',
+      ].any((x) => manufacturer.contains(x) || brand.contains(x));
     } catch (e) {
       return false;
     }

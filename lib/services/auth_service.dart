@@ -12,14 +12,16 @@ class AuthService {
   static Future<AuthBundle> fetchAnonymousBundle(String dispenserUrl) async {
     try {
       talker.info('Requesting AuthBundle from: $dispenserUrl');
-      
-      final response = await http.get(
-        Uri.parse(dispenserUrl),
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'ObtainiumPlus/1.0',
-        },
-      ).timeout(const Duration(seconds: 15));
+
+      final response = await http
+          .get(
+            Uri.parse(dispenserUrl),
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'ObtainiumPlus/1.0',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -39,7 +41,8 @@ class AuthService {
             ? '${response.body.substring(0, 200)}…'
             : response.body;
         throw ObtainiumError(
-            'Dispenser returned error ${response.statusCode}: $snippet');
+          'Dispenser returned error ${response.statusCode}: $snippet',
+        );
       }
     } catch (e, stack) {
       talker.handle(e, stack, 'AuthBundle Fetch Failed');
@@ -52,12 +55,16 @@ class AuthService {
   /// Returns null if the user cancelled. Throws [ObtainiumError] on unexpected failure.
   static Future<String?> pickGoogleAccount() async {
     try {
-      final String? email = await _platform.invokeMethod<String>('pickGoogleAccount');
+      final String? email = await _platform.invokeMethod<String>(
+        'pickGoogleAccount',
+      );
       return email;
     } on PlatformException catch (e) {
       if (e.code == 'CANCELLED') return null;
       talker.error('pickGoogleAccount error [${e.code}]: ${e.message}');
-      throw ObtainiumError(e.message ?? 'Failed to open account picker (${e.code})');
+      throw ObtainiumError(
+        e.message ?? 'Failed to open account picker (${e.code})',
+      );
     }
   }
 
@@ -99,10 +106,15 @@ class AuthService {
   /// not found, network error).
   static Future<String> getMicroGToken(String email) async {
     try {
-      final String? token = await _platform.invokeMethod<String>('getMicroGToken', {'email': email});
+      final String? token = await _platform.invokeMethod<String>(
+        'getMicroGToken',
+        {'email': email},
+      );
       if (token == null || token.isEmpty) {
-        throw ObtainiumError('microG returned an empty token for $email. '
-            'Ensure Google Play scope is enabled in microG Settings.');
+        throw ObtainiumError(
+          'microG returned an empty token for $email. '
+          'Ensure Google Play scope is enabled in microG Settings.',
+        );
       }
       talker.info('microG token retrieved for ${email.split('@').first}@…');
       return token;
@@ -111,7 +123,8 @@ class AuthService {
       // Surface the native error message directly — it's already user-friendly.
       var message = e.message ?? 'Failed to retrieve microG token (${e.code})';
       if (e.message?.contains('UnregisteredOnApiConsole') == true) {
-        message = 'microG error: UnregisteredOnApiConsole. Try signing out and back in to the account in microG Settings.';
+        message =
+            'microG error: UnregisteredOnApiConsole. Try signing out and back in to the account in microG Settings.';
       }
       throw ObtainiumError(message);
     } catch (e, stack) {

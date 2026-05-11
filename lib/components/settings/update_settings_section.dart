@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -42,41 +43,59 @@ class UpdateSettingsSection extends StatelessWidget {
         _buildIntervalSlider(context),
       ],
       _buildForegroundServiceSection(context),
-      if (_matches(tr('xiaomiBatteryTroubleshooting'))) _buildXiaomiTroubleshooting(context),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.power_settings_new_outlined,
-        title: tr('checkOnStart'),
-        subtitle: tr('checkOnStartDescription'),
-        value: (dynamic s) => (s as UpdateSettingsProvider).checkOnStart,
-        onChanged: (dynamic s, bool v) => (s as UpdateSettingsProvider).checkOnStart = v,
-        visible: (dynamic s) => _matches(tr('checkOnStart')),
-        providerType: UpdateSettingsProvider,
-      ),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.check_circle_outline,
-        title: tr('onlyCheckInstalledOrTrackOnlyApps'),
-        subtitle: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
-        value: (dynamic s) => (s as SettingsProvider).onlyCheckInstalledOrTrackOnlyApps,
-        onChanged: (dynamic s, bool v) => (s as SettingsProvider).onlyCheckInstalledOrTrackOnlyApps = v,
-        visible: (dynamic s) => _matches(tr('onlyCheckInstalledOrTrackOnlyApps')),
-        providerType: SettingsProvider,
-      ),
-      _buildFeatureToggle(
-        context,
-        icon: Icons.file_download_outlined,
-        title: tr('parallelDownloads'),
-        subtitle: tr('parallelDownloadsDescription'),
-        value: (dynamic s) => (s as SettingsProvider).parallelDownloads,
-        onChanged: (dynamic s, bool v) => (s as SettingsProvider).parallelDownloads = v,
-        visible: (dynamic s) => _matches(tr('parallelDownloads')),
-        providerType: SettingsProvider,
-      ),
+      if (_matches(tr('xiaomiBatteryTroubleshooting')))
+        _buildXiaomiTroubleshooting(context),
+
+      // Update check on start
+      if (_matches(tr('checkOnStart')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.power_settings_new_outlined),
+            title: Text(
+              tr('checkOnStart'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('checkOnStartDescription')),
+            value: settings.checkOnStart,
+            onChanged: (v) => settings.checkOnStart = v,
+          ),
+        ),
+
+      // Only check installed or track only apps
+      if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.check_circle_outline),
+            title: Text(
+              tr('onlyCheckInstalledOrTrackOnlyApps'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('onlyCheckInstalledOrTrackOnlyAppsDescription')),
+            value: settings.onlyCheckInstalledOrTrackOnlyApps,
+            onChanged: (v) => settings.onlyCheckInstalledOrTrackOnlyApps = v,
+          ),
+        ),
+
+      // Parallel downloads
+      if (_matches(tr('parallelDownloads')))
+        Consumer<BehaviorSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.file_download_outlined),
+            title: Text(
+              tr('parallelDownloads'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('parallelDownloadsDescription')),
+            value: settings.parallelDownloads,
+            onChanged: (v) => settings.parallelDownloads = v,
+          ),
+        ),
+
       _buildAdditionalUpdateSettings(context),
     ];
 
-    if (children.every((w) => w is SizedBox && w.child == null)) return const SizedBox.shrink();
+    if (children.every((w) => w is SizedBox && w.child == null))
+      return const SizedBox.shrink();
 
     return SettingsGroup(
       title: isSearching ? null : tr('updates'),
@@ -85,12 +104,16 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildForegroundServiceSection(BuildContext context) {
-    if (!_matches(tr('foregroundServiceExplanation'))) return const SizedBox.shrink();
+    if (!_matches(tr('foregroundServiceExplanation')))
+      return const SizedBox.shrink();
     return Consumer<UpdateSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
           secondary: const Icon(Icons.run_circle_outlined),
-          title: Text(tr('foregroundServiceExplanation'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('foregroundServiceExplanation'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           value: settings.useFGService,
           onChanged: (value) => settings.useFGService = value,
         );
@@ -104,13 +127,24 @@ class UpdateSettingsSection extends StatelessWidget {
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
           var device = snapshot.data!;
-          var isXiaomi = ['xiaomi', 'poco', 'redmi'].contains(device.manufacturer.toLowerCase()) ||
+          var isXiaomi =
+              [
+                'xiaomi',
+                'poco',
+                'redmi',
+              ].contains(device.manufacturer.toLowerCase()) ||
               ['xiaomi', 'poco', 'redmi'].contains(device.brand.toLowerCase());
 
           if (isXiaomi) {
             return ListTile(
-              leading: const Icon(Icons.battery_alert_outlined, color: Colors.orange),
-              title: Text(tr('xiaomiBatteryTroubleshooting'), style: Theme.of(context).textTheme.bodyLarge),
+              leading: const Icon(
+                Icons.battery_alert_outlined,
+                color: Colors.orange,
+              ),
+              title: Text(
+                tr('xiaomiBatteryTroubleshooting'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               subtitle: Text(tr('xiaomiBatteryTroubleshootingDescription')),
               onTap: () => showXiaomiTroubleshootingDialog(context),
             );
@@ -122,7 +156,10 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   void showXiaomiTroubleshootingDialog(BuildContext context) {
-    showDialog(context: context, builder: (ctx) => buildXiaomiTroubleshootingDialog(ctx));
+    showDialog(
+      context: context,
+      builder: (ctx) => buildXiaomiTroubleshootingDialog(ctx),
+    );
   }
 
   Widget buildXiaomiTroubleshootingDialog(BuildContext context) {
@@ -154,7 +191,12 @@ class UpdateSettingsSection extends StatelessWidget {
           ),
         ],
       ),
-      actions: [FilledButton(onPressed: () => Navigator.of(context).pop(), child: Text(tr('ok')))],
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(tr('ok')),
+        ),
+      ],
     );
   }
 
@@ -163,7 +205,10 @@ class UpdateSettingsSection extends StatelessWidget {
       builder: (context, updateSettings, child) {
         return ListTile(
           leading: const Icon(Icons.history_toggle_off_outlined),
-          title: Text(tr('bgUpdateCheckInterval'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('bgUpdateCheckInterval'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(updateSettings.updateIntervalLabel),
         );
       },
@@ -232,22 +277,33 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildAdditionalUpdateSettings(BuildContext context) {
-    return Consumer2<UpdateSettingsProvider, SettingsProvider>(
-      builder: (context, updateSettings, settings, child) {
+    return Consumer3<
+      UpdateSettingsProvider,
+      SettingsProvider,
+      PlusSettingsProvider
+    >(
+      builder: (context, updateSettings, settings, plusSettings, child) {
         return Column(
           children: [
             if (_matches(tr('checkUpdateOnDetailPage')))
               SwitchListTile.adaptive(
                 secondary: const Icon(Icons.description_outlined),
-                title: Text(tr('checkUpdateOnDetailPage'), style: Theme.of(context).textTheme.bodyLarge),
+                title: Text(
+                  tr('checkUpdateOnDetailPage'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
                 value: updateSettings.checkUpdateOnDetailPage,
-                onChanged: (value) => updateSettings.checkUpdateOnDetailPage = value,
+                onChanged: (value) =>
+                    updateSettings.checkUpdateOnDetailPage = value,
               ),
             if (_matches(tr('updateSchedule')) &&
-                settings.plusEnableUpdateSchedule)
+                plusSettings.plusEnableUpdateSchedule)
               ListTile(
                 leading: const Icon(Icons.schedule_outlined),
-                title: Text(tr('updateSchedule'), style: Theme.of(context).textTheme.bodyLarge),
+                title: Text(
+                  tr('updateSchedule'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
                 subtitle: Text(updateSettings.getScheduleDescription()),
                 trailing: Switch(
                   value: updateSettings.useUpdateSchedule,
@@ -260,17 +316,24 @@ class UpdateSettingsSection extends StatelessWidget {
             if (_matches(tr('releaseChannel')))
               ListTile(
                 leading: const Icon(Icons.history_outlined),
-                title: Text(tr('releaseChannel'), style: Theme.of(context).textTheme.bodyLarge),
+                title: Text(
+                  tr('releaseChannel'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
                 subtitle: Text(tr('obtainiumReleaseChannelDescription')),
                 trailing: DropdownButton<String>(
                   value: updateSettings.obtainiumReleaseChannel,
                   onChanged: (String? newValue) {
                     if (newValue == null) return;
-                    if (newValue == 'dev' && updateSettings.obtainiumReleaseChannel != 'dev') {
+                    if (newValue == 'dev' &&
+                        updateSettings.obtainiumReleaseChannel != 'dev') {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                          icon: const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.orange,
+                          ),
                           title: Text(tr('devChannelWarningTitle')),
                           content: Text(tr('devChannelWarningMessage')),
                           actions: [
@@ -293,55 +356,102 @@ class UpdateSettingsSection extends StatelessWidget {
                     }
                   },
                   items: [
-                    DropdownMenuItem(value: 'latest', child: Text(tr('latest'))),
+                    DropdownMenuItem(
+                      value: 'latest',
+                      child: Text(tr('latest')),
+                    ),
                     DropdownMenuItem(value: 'dev', child: Text(tr('dev'))),
                   ],
                 ),
               ),
-            if (_matches(tr('preferredUpdateSource')))
-              ListTile(
-                leading: const Icon(Icons.store_outlined),
-                title: Text(tr('preferredUpdateSource'), style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text(_getSourceDisplayName(settings.preferredUpdateSource)),
-                trailing: DropdownButton<String>(
-                  value: settings.preferredUpdateSource,
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      settings.preferredUpdateSource = newValue;
-                    }
-                  },
-                  items: [
-                    DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
-                    DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
-                    DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
-                    DropdownMenuItem(value: 'github', child: Text(tr('github'))),
-                    DropdownMenuItem(value: 'apkpure', child: Text(tr('apkpure'))),
-                  ],
-                ),
+            Consumer<BehaviorSettingsProvider>(
+              builder: (context, behaviorSettings, _) => Column(
+                children: [
+                  if (_matches(tr('preferredUpdateSource')))
+                    ListTile(
+                      leading: const Icon(Icons.store_outlined),
+                      title: Text(
+                        tr('preferredUpdateSource'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(
+                        _getSourceDisplayName(
+                          behaviorSettings.preferredUpdateSource,
+                        ),
+                      ),
+                      trailing: DropdownButton<String>(
+                        value: behaviorSettings.preferredUpdateSource,
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            behaviorSettings.preferredUpdateSource = newValue;
+                          }
+                        },
+                        items: [
+                          DropdownMenuItem(
+                            value: 'direct',
+                            child: Text(tr('direct')),
+                          ),
+                          DropdownMenuItem(
+                            value: 'play_store',
+                            child: Text(tr('playStore')),
+                          ),
+                          DropdownMenuItem(
+                            value: 'aurora',
+                            child: Text(tr('auroraStore')),
+                          ),
+                          DropdownMenuItem(
+                            value: 'github',
+                            child: Text(tr('github')),
+                          ),
+                          DropdownMenuItem(
+                            value: 'apkpure',
+                            child: Text(tr('apkpure')),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (_matches(tr('allowThirdPartySources')))
+                    SwitchListTile.adaptive(
+                      secondary: const Icon(Icons.cloud_download_outlined),
+                      title: Text(
+                        tr('allowThirdPartySources'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(tr('allowThirdPartySourcesDescription')),
+                      value: behaviorSettings.allowThirdPartySources,
+                      onChanged: (value) =>
+                          behaviorSettings.allowThirdPartySources = value,
+                    ),
+                  if (plusSettings.plusEnableAutoUpdateRules &&
+                      _matches(tr('autoUpdateRules')))
+                    ListTile(
+                      leading: const Icon(Icons.rule_outlined),
+                      title: Text(
+                        tr('autoUpdateRules'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(tr('autoUpdateRulesDescription')),
+                      onTap: () => _showAutoUpdateRulesDialog(
+                        context,
+                        updateSettings,
+                        settings,
+                      ),
+                    ),
+                  if (_matches(tr('usePlayStoreAppLinks')))
+                    SwitchListTile.adaptive(
+                      secondary: const Icon(Icons.android_outlined),
+                      title: Text(
+                        tr('usePlayStoreAppLinks'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(tr('usePlayStoreAppLinksDescription')),
+                      value: behaviorSettings.usePlayStoreAppLinks,
+                      onChanged: (value) =>
+                          behaviorSettings.usePlayStoreAppLinks = value,
+                    ),
+                ],
               ),
-            if (_matches(tr('allowThirdPartySources')))
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.cloud_download_outlined),
-                title: Text(tr('allowThirdPartySources'), style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text(tr('allowThirdPartySourcesDescription')),
-                value: settings.allowThirdPartySources,
-                onChanged: (value) => settings.allowThirdPartySources = value,
-              ),
-            if (settings.plusEnableAutoUpdateRules && _matches(tr('autoUpdateRules')))
-              ListTile(
-                leading: const Icon(Icons.rule_outlined),
-                title: Text(tr('autoUpdateRules'), style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text(tr('autoUpdateRulesDescription')),
-                onTap: () => _showAutoUpdateRulesDialog(context, updateSettings, settings),
-              ),
-            if (_matches(tr('usePlayStoreAppLinks')))
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.android_outlined),
-                title: Text(tr('usePlayStoreAppLinks'), style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text(tr('usePlayStoreAppLinksDescription')),
-                value: settings.usePlayStoreAppLinks,
-                onChanged: (value) => settings.usePlayStoreAppLinks = value,
-              ),
+            ),
           ],
         );
       },
@@ -365,7 +475,10 @@ class UpdateSettingsSection extends StatelessWidget {
     }
   }
 
-  void _showScheduleDialog(BuildContext context, UpdateSettingsProvider settings) {
+  void _showScheduleDialog(
+    BuildContext context,
+    UpdateSettingsProvider settings,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
@@ -391,7 +504,13 @@ class UpdateSettingsSection extends StatelessWidget {
                                   setDialogState(() {});
                                 }
                               },
-                              items: List.generate(24, (i) => DropdownMenuItem(value: i, child: Text('$i:00'))),
+                              items: List.generate(
+                                24,
+                                (i) => DropdownMenuItem(
+                                  value: i,
+                                  child: Text('$i:00'),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -408,7 +527,13 @@ class UpdateSettingsSection extends StatelessWidget {
                                   setDialogState(() {});
                                 }
                               },
-                              items: List.generate(24, (i) => DropdownMenuItem(value: i, child: Text('$i:00'))),
+                              items: List.generate(
+                                24,
+                                (i) => DropdownMenuItem(
+                                  value: i,
+                                  child: Text('$i:00'),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -421,13 +546,26 @@ class UpdateSettingsSection extends StatelessWidget {
                     spacing: 4,
                     children: List.generate(7, (i) {
                       final day = i + 1;
-                      final isSelected = settings.updateScheduleDays.contains(day);
-                      final dayNames = ['', tr('mon'), tr('tue'), tr('wed'), tr('thu'), tr('fri'), tr('sat'), tr('sun')];
+                      final isSelected = settings.updateScheduleDays.contains(
+                        day,
+                      );
+                      final dayNames = [
+                        '',
+                        tr('mon'),
+                        tr('tue'),
+                        tr('wed'),
+                        tr('thu'),
+                        tr('fri'),
+                        tr('sat'),
+                        tr('sun'),
+                      ];
                       return FilterChip(
                         label: Text(dayNames[day]),
                         selected: isSelected,
                         onSelected: (selected) {
-                          final current = List<int>.from(settings.updateScheduleDays);
+                          final current = List<int>.from(
+                            settings.updateScheduleDays,
+                          );
                           if (selected) {
                             current.add(day);
                           } else if (current.length > 1) {
@@ -455,13 +593,17 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   void _showAutoUpdateRulesDialog(
-    BuildContext context, 
+    BuildContext context,
     UpdateSettingsProvider updateSettings,
     SettingsProvider settings,
   ) {
     final appsProvider = context.read<AppsProvider>();
     final categories = settings.categories.keys.toList();
-    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    final allTags = appsProvider
+        .getAppValues()
+        .expand((a) => a.app.tags)
+        .toSet()
+        .toList();
     allTags.sort();
 
     showDialog(
@@ -473,15 +615,19 @@ class UpdateSettingsSection extends StatelessWidget {
           content: StatefulBuilder(
             builder: (context, setDialogState) {
               final rules = updateSettings.autoUpdateRules;
-              
+
               Widget buildRuleItem(String key, String title, bool isCategory) {
                 final ruleKey = isCategory ? 'cat_$key' : 'tag_$key';
-                final rule = rules[ruleKey] ?? {'wifiOnly': false, 'disabled': false};
-                
+                final rule =
+                    rules[ruleKey] ?? {'wifiOnly': false, 'disabled': false};
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     CheckboxListTile(
                       title: Text(tr('wifiOnly')),
                       value: rule['wifiOnly'] == true,
@@ -528,7 +674,10 @@ class UpdateSettingsSection extends StatelessWidget {
                         ...allTags.map((t) => buildRuleItem(t, t, false)),
                       ],
                       if (categories.isEmpty && allTags.isEmpty)
-                        Text(tr('noCategoriesOrTags'), style: const TextStyle(fontStyle: FontStyle.italic)),
+                        Text(
+                          tr('noCategoriesOrTags'),
+                          style: const TextStyle(fontStyle: FontStyle.italic),
+                        ),
                     ],
                   ),
                 ),

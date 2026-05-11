@@ -5,6 +5,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -65,7 +66,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     try {
       final List<String> urls = [];
       final String repoPrefix = _providers[_selectedProvider]!;
-      
+
       if (_installGmsCore) urls.add('https://github.com/$repoPrefix');
       if (_installGsfProxy) urls.add('https://github.com/microg/GsfProxy');
       if (_installFakeStore) urls.add('https://github.com/microg/FakeStore');
@@ -75,13 +76,15 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       }
 
       final errors = await appsProvider.addAppsByURL(urls);
-      
+
       if (errors.isNotEmpty && errors.length == urls.length) {
-        throw Exception('${tr('deploymentError')}: ${errors.map((e) => e[1]).join(", ")}');
+        throw Exception(
+          '${tr('deploymentError')}: ${errors.map((e) => e[1]).join(", ")}',
+        );
       }
 
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       final List<String> addedAppIds = [];
       appsProvider.apps.forEach((id, appInMemory) {
         if (urls.contains(appInMemory.app.url)) {
@@ -90,17 +93,14 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       });
 
       if (addedAppIds.isNotEmpty) {
-        await appsProvider.downloadAndInstallLatestApps(
-          addedAppIds,
-          context,
-        );
+        await appsProvider.downloadAndInstallLatestApps(addedAppIds, context);
       }
-      
+
       // We don't pop immediately, but wait for progress to start or show success
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('deploymentStartedMessage'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('deploymentStartedMessage'))));
       }
     } catch (e) {
       if (mounted) {
@@ -111,7 +111,10 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             icon: Icons.error_outline,
             content: Text(e.toString().replaceFirst('Exception: ', '')),
             actions: [
-              FilledButton(onPressed: () => Navigator.pop(context), child: Text(tr('close'))),
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('close')),
+              ),
             ],
           ),
         );
@@ -124,12 +127,12 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final appsProvider = context.watch<AppsProvider>();
-    final settingsProvider = context.watch<SettingsProvider>();
-    
+    final plusSettings = context.watch<PlusSettingsProvider>();
+
     // Calculate overall progress from selected components
     double overallProgress = 0;
     int trackedCount = 0;
-    
+
     if (_isDownloading) {
       final List<String> urls = [];
       final String repoPrefix = _providers[_selectedProvider]!;
@@ -140,7 +143,12 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       for (var url in urls) {
         final app = appsProvider.apps.values.firstWhere(
           (a) => a.app.url == url,
-          orElse: () => AppInMemory(App('', '', '', '', null, '', [], 0, {}, null, false), null, null, null),
+          orElse: () => AppInMemory(
+            App('', '', '', '', null, '', [], 0, {}, null, false),
+            null,
+            null,
+            null,
+          ),
         );
         if (app.app.id.isNotEmpty) {
           overallProgress += app.downloadProgress ?? 0;
@@ -153,11 +161,9 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tr('microGHub')),
-      ),
+      appBar: AppBar(title: Text(tr('microGHub'))),
       body: ConditionalBlur(
-        enabled: settingsProvider.plusEnableGlassmorphism,
+        enabled: plusSettings.plusEnableGlassmorphism,
         sigma: 15,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -195,7 +201,11 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildProgressSection(ColorScheme cs, double overallProgress, int trackedCount) {
+  Widget _buildProgressSection(
+    ColorScheme cs,
+    double overallProgress,
+    int trackedCount,
+  ) {
     return Card(
       elevation: 0,
       color: cs.primaryContainer.withOpacity(0.3),
@@ -214,7 +224,8 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
               height: 8,
               color: cs.primary,
             ),
-            if (overallProgress >= 1.0 || (trackedCount > 0 && overallProgress == 0))
+            if (overallProgress >= 1.0 ||
+                (trackedCount > 0 && overallProgress == 0))
               Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: FilledButton(
@@ -279,7 +290,11 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           padding: const EdgeInsets.left(8.0),
           child: Text(
             tr('selectProvider'),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -289,7 +304,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             duration: const Duration(milliseconds: 200),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: isSelected 
+              color: isSelected
                   ? cs.primaryContainer.withOpacity(0.5)
                   : cs.surfaceContainerHighest.withOpacity(0.3),
               borderRadius: BorderRadius.circular(20),
@@ -297,8 +312,14 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                 color: isSelected ? cs.primary : cs.outline.withOpacity(0.1),
                 width: isSelected ? 2 : 1,
               ),
-              boxShadow: isSelected 
-                  ? [BoxShadow(color: cs.primary.withOpacity(0.1), blurRadius: 10, spreadRadius: 1)]
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: cs.primary.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ]
                   : null,
             ),
             child: RadioListTile<String>(
@@ -306,12 +327,21 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                 value,
                 style: TextStyle(
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+                  color: isSelected
+                      ? cs.onPrimaryContainer
+                      : cs.onSurfaceVariant,
                 ),
               ),
               subtitle: Text(
-                value.contains('Official') ? 'github.com/microg' : 'github.com/ReVanced',
-                style: TextStyle(fontSize: 11, color: isSelected ? cs.onPrimaryContainer.withOpacity(0.7) : cs.onSurfaceVariant.withOpacity(0.5)),
+                value.contains('Official')
+                    ? 'github.com/microg'
+                    : 'github.com/ReVanced',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isSelected
+                      ? cs.onPrimaryContainer.withOpacity(0.7)
+                      : cs.onSurfaceVariant.withOpacity(0.5),
+                ),
               ),
               value: value,
               groupValue: _selectedProvider,
@@ -338,18 +368,46 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           padding: const EdgeInsets.left(8.0),
           child: Text(
             tr('componentsToInstall'),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        _buildComponentTile(cs, tr('gmsCore'), tr('gmsCoreDescription'), _installGmsCore, (v) => setState(() => _installGmsCore = v!)),
-        _buildComponentTile(cs, tr('gsfProxy'), tr('gsfProxyDescription'), _installGsfProxy, (v) => setState(() => _installGsfProxy = v!)),
-        _buildComponentTile(cs, tr('fakeStore'), tr('fakeStoreDescription'), _installFakeStore, (v) => setState(() => _installFakeStore = v!)),
+        _buildComponentTile(
+          cs,
+          tr('gmsCore'),
+          tr('gmsCoreDescription'),
+          _installGmsCore,
+          (v) => setState(() => _installGmsCore = v!),
+        ),
+        _buildComponentTile(
+          cs,
+          tr('gsfProxy'),
+          tr('gsfProxyDescription'),
+          _installGsfProxy,
+          (v) => setState(() => _installGsfProxy = v!),
+        ),
+        _buildComponentTile(
+          cs,
+          tr('fakeStore'),
+          tr('fakeStoreDescription'),
+          _installFakeStore,
+          (v) => setState(() => _installFakeStore = v!),
+        ),
       ],
     );
   }
 
-  Widget _buildComponentTile(ColorScheme cs, String title, String subtitle, bool value, ValueChanged<bool?> onChanged) {
+  Widget _buildComponentTile(
+    ColorScheme cs,
+    String title,
+    String subtitle,
+    bool value,
+    ValueChanged<bool?> onChanged,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -363,7 +421,9 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         onChanged: onChanged,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        checkboxShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
       ),
     );
   }
@@ -376,7 +436,11 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           padding: const EdgeInsets.left(8.0),
           child: Text(
             tr('deploymentOptions'),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -386,12 +450,25 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: SwitchListTile(
-            title: Text(tr('officialMicroGRoot'), style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(_isRooted ? tr('rootAvailable') : tr('rootNotDetected')),
+            title: Text(
+              tr('officialMicroGRoot'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              _isRooted ? tr('rootAvailable') : tr('rootNotDetected'),
+            ),
             value: _isRooted,
             onChanged: _isRooted ? (val) {} : null,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            secondary: Icon(_isRooted ? Icons.verified_user : Icons.no_encryption_gmailerrorred, color: _isRooted ? cs.primary : cs.error),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            secondary: Icon(
+              _isRooted
+                  ? Icons.verified_user
+                  : Icons.no_encryption_gmailerrorred,
+              color: _isRooted ? cs.primary : cs.error,
+            ),
           ),
         ),
       ],

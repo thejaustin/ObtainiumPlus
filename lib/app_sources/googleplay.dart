@@ -18,7 +18,7 @@ class GooglePlay extends AppSource {
   String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
     Uri? uri = Uri.tryParse(url);
     if (uri == null) throw InvalidURLError(name);
-    
+
     String? appId;
     if (uri.scheme == 'market') {
       appId = uri.queryParameters['id'];

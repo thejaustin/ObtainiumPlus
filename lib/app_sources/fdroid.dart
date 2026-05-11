@@ -28,18 +28,29 @@ class FDroid extends AppSource {
     await sp.initializeSettings();
 
     // Cache F-Droid API and Gitlab metadata requests only if enabled
-    bool isCacheable = sp.plusEnableSmartRetries && 
-        (url.contains('f-droid.org/api/') || url.contains('gitlab.com/fdroid/fdroiddata')) && 
+    bool isCacheable =
+        sp.plusEnableSmartRetries &&
+        (url.contains('f-droid.org/api/') ||
+            url.contains('gitlab.com/fdroid/fdroiddata')) &&
         postBody == null;
-    
+
     if (isCacheable) {
       final cached = _apiCache[url];
       if (cached != null && cached.expiry.isAfter(DateTime.now())) {
-        return Response(cached.body is String ? cached.body : jsonEncode(cached.body), 200, headers: {'x-from-obtainium-cache': 'true'});
+        return Response(
+          cached.body is String ? cached.body : jsonEncode(cached.body),
+          200,
+          headers: {'x-from-obtainium-cache': 'true'},
+        );
       }
     }
 
-    final res = await super.sourceRequest(url, additionalSettings, followRedirects: followRedirects, postBody: postBody);
+    final res = await super.sourceRequest(
+      url,
+      additionalSettings,
+      followRedirects: followRedirects,
+      postBody: postBody,
+    );
 
     if (isCacheable && res.statusCode == 200) {
       try {
@@ -49,7 +60,9 @@ class FDroid extends AppSource {
         }
         _apiCache[url] = (
           body: body,
-          expiry: DateTime.now().add(const Duration(minutes: 10)) // F-Droid data updates infrequently
+          expiry: DateTime.now().add(
+            const Duration(minutes: 10),
+          ), // F-Droid data updates infrequently
         );
       } catch (_) {}
     }
@@ -175,7 +188,8 @@ class FDroid extends AppSource {
           } catch (e) {
             //
           }
-          if (details.changeLog != null && (isGitHub || isGitLab) &&
+          if (details.changeLog != null &&
+              (isGitHub || isGitLab) &&
               (details.changeLog!.indexOf('/blob/') >= 0)) {
             details.changeLog = (await sourceRequest(
               details.changeLog!.replaceFirst('/blob/', '/raw/'),
@@ -256,9 +270,9 @@ class FDroid extends AppSource {
         ];
       }
       final nextPage = page + 1;
-      final hasMore = doc.querySelectorAll('a.label').any(
-        (e) => (e.attributes['href'] ?? '').contains('/$nextPage/'),
-      );
+      final hasMore = doc
+          .querySelectorAll('a.label')
+          .any((e) => (e.attributes['href'] ?? '').contains('/$nextPage/'));
       return (apps: apps, hasMore: hasMore);
     } else {
       throw SourceUtils.getObtainiumHttpError(res);

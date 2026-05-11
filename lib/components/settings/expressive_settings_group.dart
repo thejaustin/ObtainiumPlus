@@ -45,15 +45,17 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                 height: 1,
                 indent: 56,
                 endIndent: 16,
-                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(AppOpacity.low),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withOpacity(AppOpacity.low),
               ),
           ],
         );
       }),
     );
 
-    final radius = settings.plusOverrideIndividualCornerRadius 
-        ? settings.plusSettingsCornerRadius 
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusSettingsCornerRadius
         : settings.plusGlobalCornerRadius;
 
     return Column(
@@ -70,10 +72,10 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                 Text(
                   title!.toUpperCase(),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
                 if (description != null) ...[
                   const SizedBox(height: 2),
@@ -90,14 +92,17 @@ class ExpressiveSettingsGroup extends StatelessWidget {
         Card(
           elevation: 0,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          color: (isDark 
-              ? Theme.of(context).colorScheme.surfaceContainerLow 
-              : Theme.of(context).colorScheme.surface)
-            .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+          color:
+              (isDark
+                      ? Theme.of(context).colorScheme.surfaceContainerLow
+                      : Theme.of(context).colorScheme.surface)
+                  .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.2),
+              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(
+                settings.plusEnableGlassmorphism ? 0.4 : 0.2,
+              ),
               width: 1,
             ),
           ),
@@ -108,25 +113,51 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: isExpandable
                         ? ExpansionTile(
-                            shape: const RoundedRectangleBorder(side: BorderSide.none),
-                            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+                            shape: const RoundedRectangleBorder(
+                              side: BorderSide.none,
+                            ),
+                            collapsedShape: const RoundedRectangleBorder(
+                              side: BorderSide.none,
+                            ),
                             initiallyExpanded: initiallyExpanded,
-                            leading: icon != null ? Icon(icon, color: Theme.of(context).colorScheme.primary) : null,
-                            title: Text(title ?? 'Settings', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            leading: icon != null
+                                ? Icon(
+                                    icon,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  )
+                                : null,
+                            title: Text(
+                              title ?? 'Settings',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             children: [content],
                           )
                         : content,
                   )
                 : isExpandable
-                    ? ExpansionTile(
-                        shape: const RoundedRectangleBorder(side: BorderSide.none),
-                        collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
-                        initiallyExpanded: initiallyExpanded,
-                        leading: icon != null ? Icon(icon, color: Theme.of(context).colorScheme.primary) : null,
-                        title: Text(title ?? 'Settings', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        children: [content],
-                      )
-                    : content,
+                ? ExpansionTile(
+                    shape: const RoundedRectangleBorder(side: BorderSide.none),
+                    collapsedShape: const RoundedRectangleBorder(
+                      side: BorderSide.none,
+                    ),
+                    initiallyExpanded: initiallyExpanded,
+                    leading: icon != null
+                        ? Icon(
+                            icon,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
+                    title: Text(
+                      title ?? 'Settings',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    children: [content],
+                  )
+                : content,
           ),
         ),
       ],

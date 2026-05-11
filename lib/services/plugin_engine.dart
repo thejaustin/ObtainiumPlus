@@ -25,10 +25,12 @@ class PluginEngine {
       // Expected JS function: getDetails(url) -> { version: string, name: string, apkUrls: string[] }
       final result = _runtime.evaluate('getDetails("$url")');
       final data = result.rawResult as Map<String, dynamic>;
-      
+
       return APKDetails(
         data['version'] ?? 'Unknown',
-        (data['apkUrls'] as List).map((u) => MapEntry(u.toString(), u.toString())).toList(),
+        (data['apkUrls'] as List)
+            .map((u) => MapEntry(u.toString(), u.toString()))
+            .toList(),
         AppNames(data['name'] ?? 'Plugin App', data['name'] ?? 'Plugin App'),
       );
     } catch (e, stack) {

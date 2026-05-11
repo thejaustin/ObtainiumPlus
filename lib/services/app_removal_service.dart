@@ -13,7 +13,8 @@ class AppRemovalService {
     BuildContext context,
     List<App> apps,
     Future<void> Function(List<String>) removeApps,
-    Future<void> Function(List<App>, {bool attemptToCorrectInstallStatus}) saveApps,
+    Future<void> Function(List<App>, {bool attemptToCorrectInstallStatus})
+    saveApps,
     Future<bool> Function() undoLastRemoval,
     bool enableUndo,
   ) async {
@@ -77,9 +78,9 @@ class AppRemovalService {
                 onPressed: () async {
                   bool success = await undoLastRemoval();
                   if (success && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(tr('appsRestored'))),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(tr('appsRestored'))));
                   }
                 },
               ),

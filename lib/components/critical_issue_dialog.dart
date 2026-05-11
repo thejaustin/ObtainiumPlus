@@ -56,7 +56,10 @@ class CriticalIssueDialog extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: ConditionalBlur(sigma: 24, enabled: enableGlass, child: Column(
+          child: ConditionalBlur(
+            sigma: 24,
+            enabled: enableGlass,
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
@@ -77,7 +80,12 @@ class CriticalIssueDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, Color accentColor, bool enableGlass, bool isCritical) {
+  Widget _buildHeader(
+    BuildContext context,
+    Color accentColor,
+    bool enableGlass,
+    bool isCritical,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -123,15 +131,15 @@ class CriticalIssueDialog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          issue.description,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(issue.description, style: Theme.of(context).textTheme.bodyMedium),
         const SizedBox(height: 16),
         if (issue.fixedInVersion != null) ...[
           _InfoChip(
             icon: Icons.check_circle_outline,
-            label: tr('fixedInVersion', namedArgs: {'version': issue.fixedInVersion!}),
+            label: tr(
+              'fixedInVersion',
+              namedArgs: {'version': issue.fixedInVersion!},
+            ),
             color: colorScheme.secondary,
           ),
           const SizedBox(height: 8),
@@ -145,11 +153,17 @@ class CriticalIssueDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context, Color accentColor, ColorScheme colorScheme) {
+  Widget _buildActions(
+    BuildContext context,
+    Color accentColor,
+    ColorScheme colorScheme,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: colorScheme.surfaceContainerHighest.withOpacity(
+          AppOpacity.medium,
+        ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Column(
@@ -190,7 +204,10 @@ class CriticalIssueDialog extends StatelessWidget {
                   onPressed: () async {
                     final url = Uri.parse(issue.githubIssueUrl);
                     if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      );
                     }
                   },
                 ),

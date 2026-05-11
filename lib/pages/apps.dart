@@ -36,8 +36,11 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -70,10 +73,7 @@ class AppsPageState extends State<AppsPage> {
   final Map<int, Color> _categoryColorCache = {};
 
   Color _getCachedCategoryColor(int colorInt) {
-    return _categoryColorCache.putIfAbsent(
-      colorInt,
-      () => Color(colorInt),
-    );
+    return _categoryColorCache.putIfAbsent(colorInt, () => Color(colorInt));
   }
 
   bool clearSelected() {
@@ -119,8 +119,8 @@ class AppsPageState extends State<AppsPage> {
   }
 
   void _onScroll() {
-    final sp = context.read<SettingsProvider>();
-    if (!sp.plusEnableIconCaching) return;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    if (!plusSettings.plusEnableIconCaching) return;
 
     final appsProvider = context.read<AppsProvider>();
     final listedApps = appsProvider.getAppValues().toList();
@@ -132,7 +132,8 @@ class AppsPageState extends State<AppsPage> {
     final itemHeight = 72.0;
 
     final firstVisibleIndex = (scrollOffset / itemHeight).floor();
-    final lastVisibleIndex = ((scrollOffset + viewportHeight) / itemHeight).ceil();
+    final lastVisibleIndex = ((scrollOffset + viewportHeight) / itemHeight)
+        .ceil();
 
     final startIndex = (firstVisibleIndex - 10).clamp(0, listedApps.length);
     final endIndex = (lastVisibleIndex + 10).clamp(0, listedApps.length);
@@ -161,9 +162,15 @@ class AppsPageState extends State<AppsPage> {
     return 'all';
   }
 
-  Widget _buildDashboard(BuildContext context, AppsProvider appsProvider, Future<void> Function() onRefresh) {
-    final settings = context.read<SettingsProvider>();
-    if (!settings.plusEnableHomeDashboard || selectedAppIds.isNotEmpty || filter.nameFilter.isNotEmpty) {
+  Widget _buildDashboard(
+    BuildContext context,
+    AppsProvider appsProvider,
+    Future<void> Function() onRefresh,
+  ) {
+    final plusSettings = context.read<PlusSettingsProvider>();
+    if (!plusSettings.plusEnableHomeDashboard ||
+        selectedAppIds.isNotEmpty ||
+        filter.nameFilter.isNotEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
@@ -194,22 +201,22 @@ class AppsPageState extends State<AppsPage> {
         child: SegmentedButton<String>(
           segments: [
             ButtonSegment(
-              value: 'all', 
+              value: 'all',
               label: Text(tr('all')),
               icon: const Icon(Icons.apps_rounded, size: 18),
             ),
             ButtonSegment(
-              value: 'updates', 
+              value: 'updates',
               label: Text(tr('updates')),
               icon: const Icon(Icons.update_rounded, size: 18),
             ),
             ButtonSegment(
-              value: 'installed', 
+              value: 'installed',
               label: Text(tr('installed')),
               icon: const Icon(Icons.install_mobile_rounded, size: 18),
             ),
           ],
-          selected: { _getCurrentFilterMode() },
+          selected: {_getCurrentFilterMode()},
           onSelectionChanged: (Set<String> selection) {
             AppHaptics.selectionClick();
             _applyFilterMode(selection.first);
@@ -226,10 +233,15 @@ class AppsPageState extends State<AppsPage> {
   }
 
   Widget _buildTagFilterBar(BuildContext context, AppsProvider appsProvider) {
-    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    final allTags = appsProvider
+        .getAppValues()
+        .expand((a) => a.app.tags)
+        .toSet()
+        .toList();
     allTags.sort();
 
-    if (allTags.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    if (allTags.isEmpty)
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
 
     return SliverToBoxAdapter(
       child: Container(
@@ -253,17 +265,19 @@ class AppsPageState extends State<AppsPage> {
                   },
                 ),
               ),
-              ...allTags.map((tag) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(tag),
-                  selected: _activeTag == tag,
-                  onSelected: (selected) {
-                    AppHaptics.selectionClick();
-                    setState(() => _activeTag = selected ? tag : null);
-                  },
+              ...allTags.map(
+                (tag) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(tag),
+                    selected: _activeTag == tag,
+                    onSelected: (selected) {
+                      AppHaptics.selectionClick();
+                      setState(() => _activeTag = selected ? tag : null);
+                    },
+                  ),
                 ),
-              )),
+              ),
             ],
           ),
         ),
@@ -276,6 +290,9 @@ class AppsPageState extends State<AppsPage> {
     var appsProvider = context.watch<AppsProvider>();
     var viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final themeSettings = context.watch<ThemeSettingsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
     var listedApps = appsProvider.getFilteredSortedApps(
       filter: filter,
@@ -288,27 +305,37 @@ class AppsPageState extends State<AppsPage> {
     );
 
     // Adaptive Deduplication: Hide apps from main list if shown in Dashboard Recents
-    if (settingsProvider.plusEnableHomeDashboard && 
-        settingsProvider.plusDeduplicateRecents && 
-        selectedAppIds.isEmpty && 
+    if (plusSettings.plusEnableHomeDashboard &&
+        plusSettings.plusDeduplicateRecents &&
+        selectedAppIds.isEmpty &&
         filter.nameFilter.isEmpty) {
       final allApps = appsProvider.getAppValues();
       final updateApps = allApps
-          .where((app) =>
-              app.app.installedVersion != null &&
-              app.app.installedVersion != app.app.latestVersion)
+          .where(
+            (app) =>
+                app.app.installedVersion != null &&
+                app.app.installedVersion != app.app.latestVersion,
+          )
           .toList();
-      
+
       // Mirror the adaptive hide logic from AppDashboard:
       // Recents section is shown if updates exist AND (total apps >= 5 OR updates > 1)
-      if (updateApps.isNotEmpty && (allApps.length >= 5 || updateApps.length > 1)) {
-        final recentUpdateIds = updateApps.take(10).map((e) => e.app.id).toSet();
-        listedApps = listedApps.where((a) => !recentUpdateIds.contains(a.app.id)).toList();
+      if (updateApps.isNotEmpty &&
+          (allApps.length >= 5 || updateApps.length > 1)) {
+        final recentUpdateIds = updateApps
+            .take(10)
+            .map((e) => e.app.id)
+            .toSet();
+        listedApps = listedApps
+            .where((a) => !recentUpdateIds.contains(a.app.id))
+            .toList();
       }
     }
 
     if (_activeTag != null) {
-      listedApps = listedApps.where((a) => a.app.tags.contains(_activeTag)).toList();
+      listedApps = listedApps
+          .where((a) => a.app.tags.contains(_activeTag))
+          .toList();
     }
 
     refresh() {
@@ -324,15 +351,16 @@ class AppsPageState extends State<AppsPage> {
           })
           .whenComplete(() {
             AppHaptics.lightImpact();
-            if (mounted) setState(() {
-              refreshingSince = null;
-            });
+            if (mounted)
+              setState(() {
+                refreshingSince = null;
+              });
           });
     }
 
     if (!appsProvider.loadingApps &&
         appsProvider.apps.isNotEmpty &&
-        context.read<SettingsProvider>().checkJustStarted() &&
+        settingsProvider.checkJustStarted() &&
         updateSettings.checkOnStart) {
       _refreshIndicatorKey.currentState?.show();
     }
@@ -352,8 +380,17 @@ class AppsPageState extends State<AppsPage> {
     }
 
     var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
-    var existingUpdateIds = existingUpdates.where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
-    var newInstallIds = appsProvider.findExistingUpdates(nonInstalledOnly: true).where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
+    var existingUpdateIds = existingUpdates
+        .where(
+          (id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id),
+        )
+        .toList();
+    var newInstallIds = appsProvider
+        .findExistingUpdates(nonInstalledOnly: true)
+        .where(
+          (id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id),
+        )
+        .toList();
 
     List<String> trackOnlyUpdateIds = [];
     existingUpdateIds = existingUpdateIds.where((id) {
@@ -364,7 +401,11 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
-    List<String?> listedCategories = listedApps.map((e) => e.app.categories.isNotEmpty ? e.app.categories : [null]).expand((e) => e).toSet().toList();
+    List<String?> listedCategories = listedApps
+        .map((e) => e.app.categories.isNotEmpty ? e.app.categories : [null])
+        .expand((e) => e)
+        .toSet()
+        .toList();
     var customOrder = viewSettings.categoryOrder;
     listedCategories.sort((a, b) {
       var aIndex = a != null ? customOrder.indexOf(a) : -1;
@@ -372,7 +413,9 @@ class AppsPageState extends State<AppsPage> {
       if (aIndex != -1 && bIndex != -1) return aIndex.compareTo(bIndex);
       if (aIndex != -1) return -1;
       if (bIndex != -1) return 1;
-      return a != null && b != null ? a.toLowerCase().compareTo(b.toLowerCase()) : (a == null ? 1 : -1);
+      return a != null && b != null
+          ? a.toLowerCase().compareTo(b.toLowerCase())
+          : (a == null ? 1 : -1);
     });
 
     getLoadingWidgets() {
@@ -382,101 +425,183 @@ class AppsPageState extends State<AppsPage> {
             hasScrollBody: false,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+              transitionBuilder: (child, anim) =>
+                  FadeTransition(opacity: anim, child: child),
               child: appsProvider.loadingApps
-                ? const Center(
-                    key: ValueKey('loading'),
-                    child: ExpressiveCircularProgressIndicator(
-                      strokeWidth: 3,
+                  ? const Center(
+                      key: ValueKey('loading'),
+                      child: ExpressiveCircularProgressIndicator(
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : EmptyStateWidget(
+                      key: ValueKey(
+                        appsProvider.apps.isEmpty ? 'empty' : 'filtered',
+                      ),
+                      title: appsProvider.apps.isEmpty
+                          ? tr('noAppsYet')
+                          : tr('noMatchingApps'),
+                      subtitle: appsProvider.apps.isEmpty
+                          ? tr('startByAddingFirstApp')
+                          : tr('tryAdjustingFilters'),
+                      icon: appsProvider.apps.isEmpty
+                          ? Icons.apps_outage_rounded
+                          : Icons.search_off_rounded,
+                      actionLabel: appsProvider.apps.isEmpty
+                          ? tr('addApp')
+                          : null,
+                      onActionPressed: appsProvider.apps.isEmpty
+                          ? () {
+                              AppHaptics.lightImpact();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AddAppPage(),
+                                ),
+                              );
+                            }
+                          : null,
+                      secondaryActionLabel: appsProvider.apps.isEmpty
+                          ? tr('discover')
+                          : null,
+                      onSecondaryActionPressed: appsProvider.apps.isEmpty
+                          ? () {
+                              AppHaptics.lightImpact();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AddAppPage(initialTab: 1),
+                                ),
+                              );
+                            }
+                          : null,
                     ),
-                  )
-                : EmptyStateWidget(
-                    key: ValueKey(appsProvider.apps.isEmpty ? 'empty' : 'filtered'),
-                    title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
-                    subtitle: appsProvider.apps.isEmpty
-                        ? tr('startByAddingFirstApp')
-                        : tr('tryAdjustingFilters'),
-                    icon: appsProvider.apps.isEmpty ? Icons.apps_outage_rounded : Icons.search_off_rounded,
-                    actionLabel: appsProvider.apps.isEmpty ? tr('addApp') : null,
-                    onActionPressed: appsProvider.apps.isEmpty
-                        ? () {
-                            AppHaptics.lightImpact();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddAppPage(),
-                              ),
-                            );
-                          }
-                        : null,
-                    secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
-                    onSecondaryActionPressed: appsProvider.apps.isEmpty
-                        ? () {
-                            AppHaptics.lightImpact();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddAppPage(initialTab: 1),
-                              ),
-                            );
-                          }
-                        : null,
-                  ),
             ),
           ),
-        if (refreshingSince != null || appsProvider.loadingApps || appsProvider.gettingUpdates)
+        if (refreshingSince != null ||
+            appsProvider.loadingApps ||
+            appsProvider.gettingUpdates)
           SliverToBoxAdapter(
             child: ExpressiveProgressIndicator(
               value: (appsProvider.loadingApps || appsProvider.gettingUpdates)
                   ? null
-                  : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
+                  : appsProvider
+                            .getAppValues()
+                            .where(
+                              (e) =>
+                                  !(e.app.lastUpdateCheck?.isBefore(
+                                        refreshingSince!,
+                                      ) ??
+                                      true),
+                            )
+                            .length /
+                        (appsProvider.apps.isNotEmpty
+                            ? appsProvider.apps.length
+                            : 1),
             ),
           ),
       ];
     }
 
     getMassObtainFunction() {
-      if (appsProvider.areDownloadsRunning() || (existingUpdateIds.isEmpty && newInstallIds.isEmpty && trackOnlyUpdateIds.isEmpty)) return null;
+      if (appsProvider.areDownloadsRunning() ||
+          (existingUpdateIds.isEmpty &&
+              newInstallIds.isEmpty &&
+              trackOnlyUpdateIds.isEmpty))
+        return null;
       return () {
         AppHaptics.heavyImpact();
         List<GeneratedFormItem> formItems = [];
         if (existingUpdateIds.isNotEmpty) {
-          formItems.add(GeneratedFormSwitch('updates', label: tr('updateX', args: [plural('apps', existingUpdateIds.length).toLowerCase()]), defaultValue: true));
+          formItems.add(
+            GeneratedFormSwitch(
+              'updates',
+              label: tr(
+                'updateX',
+                args: [plural('apps', existingUpdateIds.length).toLowerCase()],
+              ),
+              defaultValue: true,
+            ),
+          );
         }
         if (newInstallIds.isNotEmpty) {
-          formItems.add(GeneratedFormSwitch('installs', label: tr('installX', args: [plural('apps', newInstallIds.length).toLowerCase()]), defaultValue: existingUpdateIds.isEmpty));
+          formItems.add(
+            GeneratedFormSwitch(
+              'installs',
+              label: tr(
+                'installX',
+                args: [plural('apps', newInstallIds.length).toLowerCase()],
+              ),
+              defaultValue: existingUpdateIds.isEmpty,
+            ),
+          );
         }
         if (trackOnlyUpdateIds.isNotEmpty) {
-          formItems.add(GeneratedFormSwitch('trackonlies', label: tr('markXTrackOnlyAsUpdated', args: [plural('apps', trackOnlyUpdateIds.length)]), defaultValue: existingUpdateIds.isEmpty && newInstallIds.isEmpty));
+          formItems.add(
+            GeneratedFormSwitch(
+              'trackonlies',
+              label: tr(
+                'markXTrackOnlyAsUpdated',
+                args: [plural('apps', trackOnlyUpdateIds.length)],
+              ),
+              defaultValue: existingUpdateIds.isEmpty && newInstallIds.isEmpty,
+            ),
+          );
         }
-        showDialog<Map<String, dynamic>?>( 
+        showDialog<Map<String, dynamic>?>(
           context: context,
           builder: (BuildContext ctx) {
             return GeneratedFormModal(
-              title: tr('changeX', args: [plural('apps', existingUpdateIds.length + newInstallIds.length + trackOnlyUpdateIds.length).toLowerCase()]),
+              title: tr(
+                'changeX',
+                args: [
+                  plural(
+                    'apps',
+                    existingUpdateIds.length +
+                        newInstallIds.length +
+                        trackOnlyUpdateIds.length,
+                  ).toLowerCase(),
+                ],
+              ),
               items: formItems.map((e) => [e]).toList(),
               initValid: true,
             );
           },
         ).then((values) async {
           if (values != null) {
-            if (values.isEmpty) values = getDefaultValuesFromFormItems([formItems]);
+            if (values.isEmpty)
+              values = getDefaultValuesFromFormItems([formItems]);
             List<String> toInstall = [];
             if (values['updates'] == true) toInstall.addAll(existingUpdateIds);
             if (values['installs'] == true) toInstall.addAll(newInstallIds);
-            if (values['trackonlies'] == true) toInstall.addAll(trackOnlyUpdateIds);
-            appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then(
-              (value) {
-                if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
-              },
-              onError: (e) { if (mounted) showError(e, context); },
-            );
+            if (values['trackonlies'] == true)
+              toInstall.addAll(trackOnlyUpdateIds);
+            appsProvider
+                .downloadAndInstallLatestApps(
+                  toInstall,
+                  globalNavigatorKey.currentContext,
+                )
+                .then(
+                  (value) {
+                    if (value.isNotEmpty &&
+                        values!['updates'] == true &&
+                        mounted)
+                      showMessage(tr('appsUpdated'), context);
+                  },
+                  onError: (e) {
+                    if (mounted) showError(e, context);
+                  },
+                );
           }
         });
       };
     }
 
-    Widget _buildBulkActionsToolbar(BuildContext context, AppsProvider appsProvider) {
+    Widget _buildBulkActionsToolbar(
+      BuildContext context,
+      AppsProvider appsProvider,
+    ) {
       return SliverToBoxAdapter(
         child: Container(
           padding: const EdgeInsets.all(8),
@@ -495,15 +620,25 @@ class AppsPageState extends State<AppsPage> {
               const Spacer(),
               IconButton(
                 onPressed: () {
-                  final selectedApps = appsProvider.getAppValues().where((e) => appsProvider.selectedAppIds.contains(e.app.id)).map((e) => e.app).toList();
-                  appsProvider.removeAppsWithModal(context, selectedApps).then((_) => appsProvider.clearSelection());
+                  final selectedApps = appsProvider
+                      .getAppValues()
+                      .where(
+                        (e) => appsProvider.selectedAppIds.contains(e.app.id),
+                      )
+                      .map((e) => e.app)
+                      .toList();
+                  appsProvider
+                      .removeAppsWithModal(context, selectedApps)
+                      .then((_) => appsProvider.clearSelection());
                 },
                 icon: const Icon(Icons.delete_outline),
               ),
               IconButton(
                 onPressed: () {
                   final selectedIds = appsProvider.selectedAppIds.toList();
-                  appsProvider.downloadAndInstallLatestApps(selectedIds, context).then((_) => appsProvider.clearSelection());
+                  appsProvider
+                      .downloadAndInstallLatestApps(selectedIds, context)
+                      .then((_) => appsProvider.clearSelection());
                 },
                 icon: const Icon(Icons.download_rounded),
               ),
@@ -514,7 +649,9 @@ class AppsPageState extends State<AppsPage> {
     }
 
     markSelectedAppsUpdated() async {
-      var selectedApps = appsProvider.getAppValues().toList()
+      var selectedApps = appsProvider
+          .getAppValues()
+          .toList()
           .where((e) => appsProvider.selectedAppIds.contains(e.app.id))
           .map((e) => e.app)
           .toList();
@@ -525,15 +662,21 @@ class AppsPageState extends State<AppsPage> {
         builder: (ctx) => GlassDialog(
           title: tr('markSelectedAppsUpdated'),
           icon: Icons.check_circle_outline,
-          content: Text(tr('markXSelectedAppsAsUpdated',
-              args: [selectedApps.length.toString()])),
+          content: Text(
+            tr(
+              'markXSelectedAppsAsUpdated',
+              args: [selectedApps.length.toString()],
+            ),
+          ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(tr('no'))),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(tr('no')),
+            ),
             FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(tr('yes'))),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(tr('yes')),
+            ),
           ],
         ),
       );
@@ -548,9 +691,10 @@ class AppsPageState extends State<AppsPage> {
       }
     }
 
-    var isFilterOff = filter.isIdenticalTo(neutralFilter, context.read<SettingsProvider>());
+    var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final useResponsive = settingsProvider.plusEnableResponsiveAppLayout && screenWidth > 800;
+    final useResponsive =
+        plusSettings.plusEnableResponsiveAppLayout && screenWidth > 800;
 
     if (useResponsive) {
       return Scaffold(
@@ -560,7 +704,16 @@ class AppsPageState extends State<AppsPage> {
             // Master View (App List)
             SizedBox(
               width: 350,
-              child: _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh, settingsProvider, getLoadingWidgets()),
+              child: _buildMainContent(
+                appsProvider,
+                listedApps,
+                listedCategories,
+                isFilterOff,
+                refresh,
+                settingsProvider,
+                plusSettings,
+                getLoadingWidgets(),
+              ),
             ),
             const VerticalDivider(width: 1),
             // Detail View
@@ -576,29 +729,48 @@ class AppsPageState extends State<AppsPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      floatingActionButton: settingsProvider.plusShowLegacyUIComparison
+      floatingActionButton: plusSettings.plusShowLegacyUIComparison
           ? Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: FloatingActionButton.small(
                 heroTag: 'ui_comparison_toggle',
                 onPressed: () {
                   AppHaptics.mediumImpact();
-                  settingsProvider.plusEnableModernAppListTile = !settingsProvider.plusEnableModernAppListTile;
+                  plusSettings.plusEnableModernAppListTile =
+                      !plusSettings.plusEnableModernAppListTile;
                 },
-                child: Icon(settingsProvider.plusEnableModernAppListTile
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined),
+                child: Icon(
+                  plusSettings.plusEnableModernAppListTile
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
               ),
             )
           : null,
       body: Stack(
         children: [
-          _buildMainContent(appsProvider, listedApps, listedCategories, isFilterOff, refresh, settingsProvider, getLoadingWidgets()),
-          if (settingsProvider.plusEnableQuickFilters && selectedAppIds.isEmpty && !settingsProvider.plusTopUILayout)
+          _buildMainContent(
+            appsProvider,
+            listedApps,
+            listedCategories,
+            isFilterOff,
+            refresh,
+            settingsProvider,
+            plusSettings,
+            getLoadingWidgets(),
+          ),
+          if (plusSettings.plusEnableQuickFilters &&
+              selectedAppIds.isEmpty &&
+              !plusSettings.plusTopUILayout)
             Positioned(
               left: 16,
               bottom: 16 + MediaQuery.of(context).viewPadding.bottom,
-              child: _buildQuickActionStrip(context, viewSettings, isFilterOff),
+              child: _buildQuickActionStrip(
+                context,
+                viewSettings,
+                plusSettings,
+                isFilterOff,
+              ),
             ),
         ],
       ),
@@ -606,12 +778,13 @@ class AppsPageState extends State<AppsPage> {
   }
 
   Widget _buildMainContent(
-    AppsProvider appsProvider, 
-    List<AppInMemory> listedApps, 
-    List<String?> listedCategories, 
-    bool isFilterOff, 
+    AppsProvider appsProvider,
+    List<AppInMemory> listedApps,
+    List<String?> listedCategories,
+    bool isFilterOff,
     Future<void> Function() onRefresh,
     SettingsProvider settingsProvider,
+    PlusSettingsProvider plusSettings,
     List<Widget> loadingWidgets,
   ) {
     return Consumer<ViewSettingsProvider>(
@@ -625,7 +798,13 @@ class AppsPageState extends State<AppsPage> {
               controller: scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
-                _buildAppBar(context, viewSettings, listedApps, isFilterOff),
+                _buildAppBar(
+                  context,
+                  viewSettings,
+                  plusSettings,
+                  listedApps,
+                  isFilterOff,
+                ),
                 SliverToBoxAdapter(
                   child: ContextualTip(
                     title: tr('advancedFeatures'),
@@ -634,26 +813,23 @@ class AppsPageState extends State<AppsPage> {
                   ),
                 ),
                 _buildDashboard(context, appsProvider, onRefresh),
-  String? _activeTag;
-
-  Widget _buildTagFilter(AppsProvider appsProvider) {
-    return TagFilterBar(
-      activeTag: _activeTag,
-      onTagSelected: (tag) => setState(() {
-        _activeTag = tag;
-        filter.tagFilter = tag != null ? {tag} : {};
-      }),
-    );
-  }
-
-  // ... (inside _buildMainContent) ...
-                if (settingsProvider.plusEnableTags) _buildTagFilter(appsProvider),
-                if (selectedAppIds.isEmpty && !settingsProvider.plusEnableHomeDashboard) _buildPillSlider(context, appsProvider),
-                if (appsProvider.areDownloadsRunning()) _buildDownloadProgressBanner(context, appsProvider),
+                if (plusSettings.plusEnableTags)
+                  _buildTagFilterBar(context, appsProvider),
+                if (selectedAppIds.isEmpty &&
+                    !plusSettings.plusEnableHomeDashboard)
+                  _buildPillSlider(context, appsProvider),
+                if (appsProvider.areDownloadsRunning())
+                  _buildDownloadProgressBanner(context, appsProvider),
                 ...loadingWidgets,
-                if (filter.statusFilter.contains('updates') && selectedAppIds.isEmpty)
+                if (filter.statusFilter.contains('updates') &&
+                    selectedAppIds.isEmpty)
                   _buildUpdateAllBanner(context),
-                _buildContent(context, viewSettings, listedApps, listedCategories),
+                _buildContent(
+                  context,
+                  viewSettings,
+                  listedApps,
+                  listedCategories,
+                ),
                 // Bottom padding to prevent FAB / quick-filter strip from
                 // obscuring the last list item — includes system nav bar height.
                 SliverToBoxAdapter(
@@ -677,14 +853,18 @@ class AppsPageState extends State<AppsPage> {
           Icon(
             Icons.apps_rounded,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.low),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(AppOpacity.low),
           ),
           const SizedBox(height: 16),
           Text(
-            tr('selectURL'), // Using an existing key, though a better one would be "Select an app to view details"
+            tr(
+              'selectURL',
+            ), // Using an existing key, though a better one would be "Select an app to view details"
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -692,17 +872,18 @@ class AppsPageState extends State<AppsPage> {
   }
 
   Widget _buildAppBar(
-    BuildContext context, 
-    ViewSettingsProvider viewSettings, 
+    BuildContext context,
+    ViewSettingsProvider viewSettings,
+    PlusSettingsProvider plusSettings,
     List<AppInMemory> listedApps,
     bool isFilterOff,
   ) {
     final settings = context.watch<SettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Automatically use compact style if in Bottom Focus mode to reduce empty space
-    final style = settings.plusTopUILayout 
-        ? settings.getAppBarStyleForPage('apps') 
+    final style = plusSettings.plusTopUILayout
+        ? settings.getAppBarStyleForPage('apps')
         : AppBarStyle.compact;
 
     if (style == AppBarStyle.large) {
@@ -712,12 +893,14 @@ class AppsPageState extends State<AppsPage> {
         snap: false,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        flexibleSpace: settings.plusEnableGlassmorphism
+        flexibleSpace: plusSettings.plusEnableGlassmorphism
             ? ClipRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                   child: Container(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.72),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.72),
                   ),
                 ),
               )
@@ -749,8 +932,13 @@ class AppsPageState extends State<AppsPage> {
           if (selectedAppIds.isNotEmpty)
             ..._buildSelectionActions(context, listedApps)
           else
-            ..._buildNormalActions(context, viewSettings, isFilterOff),
-          
+            ..._buildNormalActions(
+              context,
+              viewSettings,
+              plusSettings,
+              isFilterOff,
+            ),
+
           if (viewSettings.displayShowAppCount && selectedAppIds.isEmpty)
             Center(
               child: Padding(
@@ -758,9 +946,9 @@ class AppsPageState extends State<AppsPage> {
                 child: Text(
                   '${listedApps.length}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -776,12 +964,14 @@ class AppsPageState extends State<AppsPage> {
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
-      flexibleSpace: settings.plusEnableGlassmorphism
+      flexibleSpace: plusSettings.plusEnableGlassmorphism
           ? ClipRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                 child: Container(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.72),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.72),
                 ),
               ),
             )
@@ -813,8 +1003,13 @@ class AppsPageState extends State<AppsPage> {
         if (selectedAppIds.isNotEmpty)
           ..._buildSelectionActions(context, listedApps)
         else
-          ..._buildNormalActions(context, viewSettings, isFilterOff),
-        
+          ..._buildNormalActions(
+            context,
+            viewSettings,
+            plusSettings,
+            isFilterOff,
+          ),
+
         if (viewSettings.displayShowAppCount && selectedAppIds.isEmpty)
           Center(
             child: Padding(
@@ -822,9 +1017,9 @@ class AppsPageState extends State<AppsPage> {
               child: Text(
                 '${listedApps.length}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -832,7 +1027,10 @@ class AppsPageState extends State<AppsPage> {
     );
   }
 
-  List<Widget> _buildSelectionActions(BuildContext context, List<AppInMemory> listedApps) {
+  List<Widget> _buildSelectionActions(
+    BuildContext context,
+    List<AppInMemory> listedApps,
+  ) {
     final appsProvider = context.read<AppsProvider>();
     return [
       IconButton(
@@ -930,21 +1128,22 @@ class AppsPageState extends State<AppsPage> {
 
     AppHaptics.selectionClick();
     appsProvider.clearSelection();
-    
+
     // Trigger background update checks for selected apps
     await appsProvider.checkUpdates(specificIds: selectedIds);
   }
 
   List<Widget> _buildNormalActions(
-    BuildContext context, 
+    BuildContext context,
     ViewSettingsProvider viewSettings,
+    PlusSettingsProvider plusSettings,
     bool isFilterOff,
   ) {
-    final settings = context.read<SettingsProvider>();
-    final showTopActions = settings.plusTopUILayout || !settings.plusEnableQuickFilters;
+    final showTopActions =
+        plusSettings.plusTopUILayout || !plusSettings.plusEnableQuickFilters;
 
     return [
-      if (showTopActions && settings.plusShowAppBarSearch) ...[
+      if (showTopActions && plusSettings.plusShowAppBarSearch) ...[
         Tooltip(
           message: isFilterOff ? tr('search') : tr('clear'),
           child: InkWell(
@@ -958,14 +1157,14 @@ class AppsPageState extends State<AppsPage> {
             },
             onLongPress: () {
               AppHaptics.heavyImpact();
-              settings.plusTopUILayout = !settings.plusTopUILayout;
+              plusSettings.plusTopUILayout = !plusSettings.plusTopUILayout;
               showMessage(tr('toggleUIFocus'), context);
             },
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Icon(isFilterOff
-                  ? Icons.search_rounded
-                  : Icons.search_off_rounded),
+              child: Icon(
+                isFilterOff ? Icons.search_rounded : Icons.search_off_rounded,
+              ),
             ),
           ),
         ),
@@ -1017,15 +1216,17 @@ class AppsPageState extends State<AppsPage> {
   Widget _buildQuickActionStrip(
     BuildContext context,
     ViewSettingsProvider viewSettings,
+    PlusSettingsProvider plusSettings,
     bool isFilterOff,
   ) {
-    final settings = context.read<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
 
     final pill = Container(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh.withOpacity(enableGlass ? 0.72 : 0.96),
+        color: colorScheme.surfaceContainerHigh.withOpacity(
+          enableGlass ? 0.72 : 0.96,
+        ),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: enableGlass
@@ -1039,85 +1240,95 @@ class AppsPageState extends State<AppsPage> {
         ),
       ),
       child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Search
-              if (settings.plusShowFloatingSearch)
-                Tooltip(
-                  message: tr('search'),
-                  child: InkWell(
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(32)),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      CommandCenter.show(context);
-                    },
-                    onLongPress: () {
-                      AppHaptics.heavyImpact();
-                      settings.plusTopUILayout = !settings.plusTopUILayout;
-                      showMessage(tr('toggleUIFocus'), context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      child: Icon(
-                        Icons.search_rounded,
-                        size: 22,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Search
+          if (plusSettings.plusShowFloatingSearch)
+            Tooltip(
+              message: tr('search'),
+              child: InkWell(
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(32),
+                ),
+                onTap: () {
+                  AppHaptics.selectionClick();
+                  CommandCenter.show(context);
+                },
+                onLongPress: () {
+                  AppHaptics.heavyImpact();
+                  plusSettings.plusTopUILayout = !plusSettings.plusTopUILayout;
+                  showMessage(tr('toggleUIFocus'), context);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ),
-              // Divider
-              if (settings.plusShowFloatingSearch)
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: colorScheme.onSurface.withOpacity(0.15),
-                ),
-              // Filter/Sort with active badge
-              Tooltip(
-                message: tr('sortOptions'),
-                child: InkWell(
-                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(32)),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    SortFilterPanel.show(
-                      context,
-                      filter: filter,
-                      onFilterChanged: () => setState(() {}),
-                      categories: viewSettings.categories,
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Icon(
-                          Icons.tune_rounded,
-                          size: 22,
-                          color: isFilterOff
-                              ? colorScheme.onSurface
-                              : colorScheme.primary,
-                        ),
-                        if (!isFilterOff)
-                          Positioned(
-                            right: -4,
-                            top: -4,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: colorScheme.error,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                  child: Icon(
+                    Icons.search_rounded,
+                    size: 22,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
-            ],
+            ),
+          // Divider
+          if (plusSettings.plusShowFloatingSearch)
+            Container(
+              width: 1,
+              height: 24,
+              color: colorScheme.onSurface.withOpacity(0.15),
+            ),
+          // Filter/Sort with active badge
+          Tooltip(
+            message: tr('sortOptions'),
+            child: InkWell(
+              borderRadius: const BorderRadius.horizontal(
+                right: Radius.circular(32),
+              ),
+              onTap: () {
+                AppHaptics.selectionClick();
+                SortFilterPanel.show(
+                  context,
+                  filter: filter,
+                  onFilterChanged: () => setState(() {}),
+                  categories: viewSettings.categories,
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.tune_rounded,
+                      size: 22,
+                      color: isFilterOff
+                          ? colorScheme.onSurface
+                          : colorScheme.primary,
+                    ),
+                    if (!isFilterOff)
+                      Positioned(
+                        right: -4,
+                        top: -4,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: colorScheme.error,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
 
@@ -1133,20 +1344,36 @@ class AppsPageState extends State<AppsPage> {
 
   List<Widget> _buildLoadingOverlay(AppsProvider appsProvider) {
     return [
-      if (refreshingSince != null || appsProvider.loadingApps || appsProvider.gettingUpdates)
+      if (refreshingSince != null ||
+          appsProvider.loadingApps ||
+          appsProvider.gettingUpdates)
         SliverToBoxAdapter(
           child: LinearProgressIndicator(
             value: (appsProvider.loadingApps || appsProvider.gettingUpdates)
                 ? null
-                : appsProvider.getAppValues().where((e) => !(e.app.lastUpdateCheck?.isBefore(refreshingSince!) ?? true)).length / (appsProvider.apps.isNotEmpty ? appsProvider.apps.length : 1),
-            semanticsLabel: appsProvider.loadingApps ? tr('loadingApps') : tr('checkingForUpdates'),
+                : appsProvider
+                          .getAppValues()
+                          .where(
+                            (e) =>
+                                !(e.app.lastUpdateCheck?.isBefore(
+                                      refreshingSince!,
+                                    ) ??
+                                    true),
+                          )
+                          .length /
+                      (appsProvider.apps.isNotEmpty
+                          ? appsProvider.apps.length
+                          : 1),
+            semanticsLabel: appsProvider.loadingApps
+                ? tr('loadingApps')
+                : tr('checkingForUpdates'),
           ),
         ),
     ];
   }
 
   Widget _buildContent(
-    BuildContext context, 
+    BuildContext context,
     ViewSettingsProvider viewSettings,
     List<AppInMemory> listedApps,
     List<String?> listedCategories,
@@ -1156,13 +1383,19 @@ class AppsPageState extends State<AppsPage> {
       return SliverFillRemaining(
         hasScrollBody: false,
         child: appsProvider.loadingApps
-            ? const Center(child: ExpressiveCircularProgressIndicator(strokeWidth: 3))
+            ? const Center(
+                child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
+              )
             : EmptyStateWidget(
-                title: appsProvider.apps.isEmpty ? tr('noAppsYet') : tr('noMatchingApps'),
+                title: appsProvider.apps.isEmpty
+                    ? tr('noAppsYet')
+                    : tr('noMatchingApps'),
                 subtitle: appsProvider.apps.isEmpty
                     ? tr('startByAddingFirstApp')
                     : tr('tryAdjustingFilters'),
-                icon: appsProvider.apps.isEmpty ? Icons.apps_outage_rounded : Icons.search_off_rounded,
+                icon: appsProvider.apps.isEmpty
+                    ? Icons.apps_outage_rounded
+                    : Icons.search_off_rounded,
                 actionLabel: appsProvider.apps.isEmpty ? tr('addApp') : null,
                 onActionPressed: appsProvider.apps.isEmpty
                     ? () {
@@ -1170,7 +1403,9 @@ class AppsPageState extends State<AppsPage> {
                         pushRoute(context, const AddAppPage());
                       }
                     : null,
-                secondaryActionLabel: appsProvider.apps.isEmpty ? tr('discover') : null,
+                secondaryActionLabel: appsProvider.apps.isEmpty
+                    ? tr('discover')
+                    : null,
                 onSecondaryActionPressed: appsProvider.apps.isEmpty
                     ? () {
                         AppHaptics.lightImpact();
@@ -1194,26 +1429,25 @@ class AppsPageState extends State<AppsPage> {
       );
     } else if (viewSettings.globalViewMode == ViewMode.grid) {
       return AppGridView(
-          apps: listedApps,
-          selectedAppIds: selectedAppIds,
-          activeAppId: activeAppId,
-          toggleAppSelected: _toggleAppSelected,
-          onAppTap: _handleAppTap);
+        apps: listedApps,
+        activeAppId: activeAppId,
+        onAppTap: _handleAppTap,
+      );
     } else {
       return AppListView(
-          apps: listedApps,
-          selectedAppIds: selectedAppIds,
-          activeAppId: activeAppId,
-          toggleAppSelected: _toggleAppSelected,
-          onAppTap: _handleAppTap,
-          getChangeLogFn: getChangeLogFn);
+        apps: listedApps,
+        activeAppId: activeAppId,
+        onAppTap: _handleAppTap,
+        getChangeLogFn: getChangeLogFn,
+      );
     }
   }
 
   void _handleAppTap(App app) {
-    final settingsProvider = context.read<SettingsProvider>();
+    final plusSettings = context.read<PlusSettingsProvider>();
     final screenWidth = MediaQuery.of(context).size.width;
-    final useResponsive = settingsProvider.plusEnableResponsiveAppLayout && screenWidth > 800;
+    final useResponsive =
+        plusSettings.plusEnableResponsiveAppLayout && screenWidth > 800;
 
     if (useResponsive) {
       setState(() {
@@ -1222,11 +1456,8 @@ class AppsPageState extends State<AppsPage> {
     } else {
       showDraggableModalBottomSheet(
         context: context,
-        builder: (context, controller) => AppPage(
-          appId: app.id,
-          isModal: true,
-          scrollController: controller,
-        ),
+        builder: (context, controller) =>
+            AppPage(appId: app.id, isModal: true, scrollController: controller),
       );
     }
   }
@@ -1244,8 +1475,17 @@ class AppsPageState extends State<AppsPage> {
   VoidCallback? _getMassObtainFunction(BuildContext context) {
     final appsProvider = context.read<AppsProvider>();
     var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
-    var existingUpdateIds = existingUpdates.where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
-    var newInstallIds = appsProvider.findExistingUpdates(nonInstalledOnly: true).where((id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id)).toList();
+    var existingUpdateIds = existingUpdates
+        .where(
+          (id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id),
+        )
+        .toList();
+    var newInstallIds = appsProvider
+        .findExistingUpdates(nonInstalledOnly: true)
+        .where(
+          (id) => selectedAppIds.isEmpty ? true : selectedAppIds.contains(id),
+        )
+        .toList();
 
     List<String> trackOnlyUpdateIds = [];
     existingUpdateIds = existingUpdateIds.where((id) {
@@ -1256,48 +1496,102 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
-    if (appsProvider.areDownloadsRunning() || (existingUpdateIds.isEmpty && newInstallIds.isEmpty && trackOnlyUpdateIds.isEmpty)) return null;
-    
+    if (appsProvider.areDownloadsRunning() ||
+        (existingUpdateIds.isEmpty &&
+            newInstallIds.isEmpty &&
+            trackOnlyUpdateIds.isEmpty))
+      return null;
+
     return () {
       AppHaptics.heavyImpact();
       List<GeneratedFormItem> formItems = [];
       if (existingUpdateIds.isNotEmpty) {
-        formItems.add(GeneratedFormSwitch('updates', label: tr('updateX', args: [plural('apps', existingUpdateIds.length).toLowerCase()]), defaultValue: true));
+        formItems.add(
+          GeneratedFormSwitch(
+            'updates',
+            label: tr(
+              'updateX',
+              args: [plural('apps', existingUpdateIds.length).toLowerCase()],
+            ),
+            defaultValue: true,
+          ),
+        );
       }
       if (newInstallIds.isNotEmpty) {
-        formItems.add(GeneratedFormSwitch('installs', label: tr('installX', args: [plural('apps', newInstallIds.length).toLowerCase()]), defaultValue: existingUpdateIds.isEmpty));
+        formItems.add(
+          GeneratedFormSwitch(
+            'installs',
+            label: tr(
+              'installX',
+              args: [plural('apps', newInstallIds.length).toLowerCase()],
+            ),
+            defaultValue: existingUpdateIds.isEmpty,
+          ),
+        );
       }
       if (trackOnlyUpdateIds.isNotEmpty) {
-        formItems.add(GeneratedFormSwitch('trackonlies', label: tr('markXTrackOnlyAsUpdated', args: [plural('apps', trackOnlyUpdateIds.length)]), defaultValue: existingUpdateIds.isEmpty && newInstallIds.isEmpty));
+        formItems.add(
+          GeneratedFormSwitch(
+            'trackonlies',
+            label: tr(
+              'markXTrackOnlyAsUpdated',
+              args: [plural('apps', trackOnlyUpdateIds.length)],
+            ),
+            defaultValue: existingUpdateIds.isEmpty && newInstallIds.isEmpty,
+          ),
+        );
       }
-      showDialog<Map<String, dynamic>?>( 
+      showDialog<Map<String, dynamic>?>(
         context: context,
         builder: (BuildContext ctx) {
           return GeneratedFormModal(
-            title: tr('changeX', args: [plural('apps', existingUpdateIds.length + newInstallIds.length + trackOnlyUpdateIds.length).toLowerCase()]),
+            title: tr(
+              'changeX',
+              args: [
+                plural(
+                  'apps',
+                  existingUpdateIds.length +
+                      newInstallIds.length +
+                      trackOnlyUpdateIds.length,
+                ).toLowerCase(),
+              ],
+            ),
             items: formItems.map((e) => [e]).toList(),
             initValid: true,
           );
         },
       ).then((values) async {
         if (values != null) {
-          if (values.isEmpty) values = getDefaultValuesFromFormItems([formItems]);
+          if (values.isEmpty)
+            values = getDefaultValuesFromFormItems([formItems]);
           List<String> toInstall = [];
           if (values['updates'] == true) toInstall.addAll(existingUpdateIds);
           if (values['installs'] == true) toInstall.addAll(newInstallIds);
-          if (values['trackonlies'] == true) toInstall.addAll(trackOnlyUpdateIds);
-          appsProvider.downloadAndInstallLatestApps(toInstall, globalNavigatorKey.currentContext).then(
-            (value) {
-              if (value.isNotEmpty && values!['updates'] == true && mounted) showMessage(tr('appsUpdated'), context);
-            },
-            onError: (e) { if (mounted) showError(e, context); },
-          );
+          if (values['trackonlies'] == true)
+            toInstall.addAll(trackOnlyUpdateIds);
+          appsProvider
+              .downloadAndInstallLatestApps(
+                toInstall,
+                globalNavigatorKey.currentContext,
+              )
+              .then(
+                (value) {
+                  if (value.isNotEmpty && values!['updates'] == true && mounted)
+                    showMessage(tr('appsUpdated'), context);
+                },
+                onError: (e) {
+                  if (mounted) showError(e, context);
+                },
+              );
         }
       });
     };
   }
 
-  void _markSelectedAppsUpdated(BuildContext context, List<AppInMemory> listedApps) async {
+  void _markSelectedAppsUpdated(
+    BuildContext context,
+    List<AppInMemory> listedApps,
+  ) async {
     final appsProvider = context.read<AppsProvider>();
     var selectedApps = listedApps
         .where((e) => selectedAppIds.contains(e.app.id))
@@ -1310,11 +1604,21 @@ class AppsPageState extends State<AppsPage> {
       builder: (ctx) => GlassDialog(
         title: tr('markSelectedAppsUpdated'),
         icon: Icons.check_circle_outline,
-        content: Text(tr('markXSelectedAppsAsUpdated',
-            args: [selectedApps.length.toString()])),
+        content: Text(
+          tr(
+            'markXSelectedAppsAsUpdated',
+            args: [selectedApps.length.toString()],
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('no'))),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('yes'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(tr('no')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(tr('yes')),
+          ),
         ],
       ),
     );
@@ -1329,13 +1633,16 @@ class AppsPageState extends State<AppsPage> {
     }
   }
 
-  void _bulkCategorize(BuildContext context, List<AppInMemory> listedApps) async {
+  void _bulkCategorize(
+    BuildContext context,
+    List<AppInMemory> listedApps,
+  ) async {
     final appsProvider = context.read<AppsProvider>();
     final selectedApps = listedApps
         .where((e) => selectedAppIds.contains(e.app.id))
         .map((e) => e.app)
         .toList();
-    
+
     if (selectedApps.isEmpty) return;
 
     Set<String> commonCategories = {};
@@ -1354,7 +1661,10 @@ class AppsPageState extends State<AppsPage> {
           onSelected: (categories) => Navigator.pop(ctx, categories),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('cancel'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(tr('cancel')),
+          ),
         ],
       ),
     );
@@ -1375,10 +1685,14 @@ class AppsPageState extends State<AppsPage> {
         .where((e) => selectedAppIds.contains(e.app.id))
         .map((e) => e.app)
         .toList();
-    
+
     if (selectedApps.isEmpty) return;
 
-    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    final allTags = appsProvider
+        .getAppValues()
+        .expand((a) => a.app.tags)
+        .toSet()
+        .toList();
     allTags.sort();
 
     Set<String> commonTags = {};
@@ -1402,20 +1716,23 @@ class AppsPageState extends State<AppsPage> {
     }
   }
 
-  Widget _buildDownloadProgressBanner(BuildContext context, AppsProvider appsProvider) {
+  Widget _buildDownloadProgressBanner(
+    BuildContext context,
+    AppsProvider appsProvider,
+  ) {
     final active = appsProvider.apps.values
         .where((a) => a.downloadProgress != null)
         .toList();
-    if (active.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    if (active.isEmpty)
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
 
     final downloading = active.where((a) => a.downloadProgress! >= 0).toList();
     final installing = active.where((a) => a.downloadProgress! < 0).toList();
 
     double? aggProgress;
     if (downloading.isNotEmpty) {
-      aggProgress = downloading
-              .map((a) => a.downloadProgress!)
-              .reduce((a, b) => a + b) /
+      aggProgress =
+          downloading.map((a) => a.downloadProgress!).reduce((a, b) => a + b) /
           downloading.length /
           100;
     }
@@ -1448,8 +1765,8 @@ class AppsPageState extends State<AppsPage> {
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1485,8 +1802,11 @@ class AppsPageState extends State<AppsPage> {
     if (fn == null) return const SliverToBoxAdapter(child: SizedBox.shrink());
 
     final appsProvider = context.read<AppsProvider>();
-    final updateCount = appsProvider.findExistingUpdates(installedOnly: true).length;
-    if (updateCount == 0) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    final updateCount = appsProvider
+        .findExistingUpdates(installedOnly: true)
+        .length;
+    if (updateCount == 0)
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
 
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -1503,11 +1823,18 @@ class AppsPageState extends State<AppsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Icon(Icons.system_update_rounded, color: colorScheme.secondary, size: 20),
+                Icon(
+                  Icons.system_update_rounded,
+                  color: colorScheme.secondary,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    tr('updateX', args: [plural('apps', updateCount).toLowerCase()]),
+                    tr(
+                      'updateX',
+                      args: [plural('apps', updateCount).toLowerCase()],
+                    ),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colorScheme.onSecondaryContainer,
@@ -1524,7 +1851,10 @@ class AppsPageState extends State<AppsPage> {
                     backgroundColor: colorScheme.secondary,
                     foregroundColor: colorScheme.onSecondary,
                     visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                   ),
                   child: Text(tr('update')),
                 ),
@@ -1536,4 +1866,3 @@ class AppsPageState extends State<AppsPage> {
     );
   }
 }
-

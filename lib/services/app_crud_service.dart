@@ -67,7 +67,13 @@ class AppCRUDService {
         var icon = await info?.applicationInfo?.getAppIcon();
         app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
         if (attemptToCorrectInstallStatus) {
-          app = AppCRUDService.getCorrectedInstallStatusAppIfPossible(app, info, logs) ?? app;
+          app =
+              AppCRUDService.getCorrectedInstallStatusAppIfPossible(
+                app,
+                info,
+                logs,
+              ) ??
+              app;
         }
         if (!onlyIfExists || apps.containsKey(app.id)) {
           await AppCRUDService.saveAppToDisk(app);
@@ -111,16 +117,20 @@ class AppCRUDService {
         try {
           // Find associated APK files for this app
           List<File> appApkFiles = apkFiles
-              .where((element) => element.path.split('/').last.startsWith('$appId-'))
+              .where(
+                (element) => element.path.split('/').last.startsWith('$appId-'),
+              )
               .cast<File>()
               .toList();
 
           // Store the app data for potential undo via CRUD service
-          AppCRUDService.addRemovedApp(RemovedAppData(
-            apps[appId]!.app, // Store the original app object
-            appApkFiles,      // Store associated APK files
-            DateTime.now(),   // Timestamp for cleanup later
-          ));
+          AppCRUDService.addRemovedApp(
+            RemovedAppData(
+              apps[appId]!.app, // Store the original app object
+              appApkFiles, // Store associated APK files
+              DateTime.now(), // Timestamp for cleanup later
+            ),
+          );
         } catch (e, stack) {
           logs.add('Error preparing app $appId for removal: $e\n$stack');
         }
@@ -134,7 +144,8 @@ class AppCRUDService {
             await AppCRUDService.deleteAppFile(appId);
             apkFiles
                 .where(
-                  (element) => element.path.split('/').last.startsWith('$appId-'),
+                  (element) =>
+                      element.path.split('/').last.startsWith('$appId-'),
                 )
                 .forEach((element) {
                   try {
@@ -279,12 +290,15 @@ class AppCRUDService {
         app.additionalSettings['useVersionCodeAsOSVersion'] == true
         ? installedInfo?.versionCode.toString()
         : installedInfo?.versionName;
-    
+
     // For ObtainiumPlus and other "Plus" apps, we want to be more aggressive about reconciliation
     // to ensure these apps don't show a stale version after an update.
-    bool aggressiveRec = AppConstants.plusAppIds.contains(app.id) || 
+    bool aggressiveRec =
+        AppConstants.plusAppIds.contains(app.id) ||
         app.additionalSettings['aggressiveVersionReconciliation'] == true;
-    if (aggressiveRec && realInstalledVersion != null && realInstalledVersion != app.installedVersion) {
+    if (aggressiveRec &&
+        realInstalledVersion != null &&
+        realInstalledVersion != app.installedVersion) {
       app.installedVersion = realInstalledVersion;
       modded = true;
     }
@@ -338,10 +352,9 @@ class AppCRUDService {
   }
 
   static Future<void> saveAppToDisk(App app) async {
-    String filePath = '${(await AppFileService.getAppsDir()).path}/${app.id}.json';
-    File(
-      '$filePath.tmp',
-    ).writeAsStringSync(jsonEncode(app.toJson()));
+    String filePath =
+        '${(await AppFileService.getAppsDir()).path}/${app.id}.json';
+    File('$filePath.tmp').writeAsStringSync(jsonEncode(app.toJson()));
     File('$filePath.tmp').renameSync(filePath);
   }
 
@@ -365,84 +378,80 @@ class AppCRUDService {
     var installedAppsData = await AppInstallService.getAllInstalledInfo();
     List<String> removedAppIds = [];
     await Future.wait(
-      (await AppFileService.getAppsDir())
-          .listSync()
-          .map((item) async {
-            App? app;
-            if (item.path.toLowerCase().endsWith('.json') &&
-                (singleId == null ||
-                    item.path.split('/').last.toLowerCase() ==
-                        '${singleId.toLowerCase()}.json')) {
+      (await AppFileService.getAppsDir()).listSync().map((item) async {
+        App? app;
+        if (item.path.toLowerCase().endsWith('.json') &&
+            (singleId == null ||
+                item.path.split('/').last.toLowerCase() ==
+                    '${singleId.toLowerCase()}.json')) {
+          try {
+            app = App.fromJson(jsonDecode(File(item.path).readAsStringSync()));
+          } catch (err) {
+            // Catch FormatException and any JSON-related errors
+            if (err is FormatException ||
+                err.toString().contains('FormatException')) {
+              logs.add('Corrupt JSON when loading App (will be ignored): $err');
               try {
-                app = App.fromJson(
-                  jsonDecode(File(item.path).readAsStringSync()),
-                );
-              } catch (err) {
-                // Catch FormatException and any JSON-related errors
-                if (err is FormatException || err.toString().contains('FormatException')) {
-                  logs.add(
-                    'Corrupt JSON when loading App (will be ignored): $err',
-                  );
-                  try {
-                    item.renameSync('${item.path}.corrupt');
-                  } catch (renameErr) {
-                    logs.add('Failed to rename corrupt file: $renameErr');
-                  }
-                } else {
-                  // Log but don't crash on other errors during app loading
-                  logs.add('Error loading app from ${item.path}: $err');
-                }
+                item.renameSync('${item.path}.corrupt');
+              } catch (renameErr) {
+                logs.add('Failed to rename corrupt file: $renameErr');
+              }
+            } else {
+              // Log but don't crash on other errors during app loading
+              logs.add('Error loading app from ${item.path}: $err');
+            }
+          }
+        }
+        if (app != null) {
+          apps.update(
+            app.id,
+            (value) => AppInMemory(
+              app!,
+              value.downloadProgress,
+              value.installedInfo,
+              value.icon,
+            ),
+            ifAbsent: () => AppInMemory(app!, null, null, null),
+          );
+          if (singleId != null) notifyListeners();
+          try {
+            sp.getSource(app.url, overrideSource: app.overrideSource);
+            // Find installed info for this app (null if not installed)
+            PackageInfo? installedInfo;
+            for (var info in installedAppsData) {
+              if (info.packageName == app!.id) {
+                installedInfo = info;
+                break;
               }
             }
-            if (app != null) {
-              apps.update(
-                app.id,
-                (value) => AppInMemory(
-                  app!,
-                  value.downloadProgress,
-                  value.installedInfo,
-                  value.icon,
-                ),
-                ifAbsent: () => AppInMemory(app!, null, null, null),
-              );
-              if (singleId != null) notifyListeners();
-              try {
-                sp.getSource(app.url, overrideSource: app.overrideSource);
-                // Find installed info for this app (null if not installed)
-                PackageInfo? installedInfo;
-                for (var info in installedAppsData) {
-                  if (info.packageName == app!.id) {
-                    installedInfo = info;
-                    break;
-                  }
-                }
-                var moddedApp = AppCRUDService.getCorrectedInstallStatusAppIfPossible(
+            var moddedApp =
+                AppCRUDService.getCorrectedInstallStatusAppIfPossible(
                   app,
                   installedInfo,
                   logs,
                 );
-                if (moddedApp != null) {
-                  app = moddedApp;
-                  if (moddedApp.installedVersion == null) {
-                    removedAppIds.add(moddedApp.id);
-                  }
-                }
-                apps.update(
-                  app.id,
-                  (value) => AppInMemory(
-                    app!,
-                    value.downloadProgress,
-                    installedInfo,
-                    value.icon,
-                  ),
-                  ifAbsent: () => AppInMemory(app!, null, installedInfo, null),
-                );
-                if (singleId != null) notifyListeners();
-              } catch (e) {
-                errors.add([app!.id, app.finalName, e.toString()]);
+            if (moddedApp != null) {
+              app = moddedApp;
+              if (moddedApp.installedVersion == null) {
+                removedAppIds.add(moddedApp.id);
               }
             }
-          }),
+            apps.update(
+              app.id,
+              (value) => AppInMemory(
+                app!,
+                value.downloadProgress,
+                installedInfo,
+                value.icon,
+              ),
+              ifAbsent: () => AppInMemory(app!, null, installedInfo, null),
+            );
+            if (singleId != null) notifyListeners();
+          } catch (e) {
+            errors.add([app!.id, app.finalName, e.toString()]);
+          }
+        }
+      }),
     );
     if (errors.isNotEmpty) {
       removeApps(errors.map((e) => e[0]).toList());

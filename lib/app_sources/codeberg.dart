@@ -11,11 +11,14 @@ class Codeberg extends GitSource {
     name = 'Forgejo (Codeberg)';
     hosts = ['codeberg.org'];
 
-    additionalSourceAppSpecificSettingFormItems =
-        GitHub(hostChanged: true).additionalSourceAppSpecificSettingFormItems;
+    additionalSourceAppSpecificSettingFormItems = GitHub(
+      hostChanged: true,
+    ).additionalSourceAppSpecificSettingFormItems;
 
     canSearch = true;
-    searchQuerySettingFormItems = GitHub(hostChanged: true).searchQuerySettingFormItems;
+    searchQuerySettingFormItems = GitHub(
+      hostChanged: true,
+    ).searchQuerySettingFormItems;
   }
 
   @override
@@ -23,7 +26,9 @@ class Codeberg extends GitSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    return await GitHub(hostChanged: true).getLatestAPKDetailsCommon2(standardUrl, additionalSettings, (
+    return await GitHub(
+      hostChanged: true,
+    ).getLatestAPKDetailsCommon2(standardUrl, additionalSettings, (
       bool useTagUrl,
     ) async {
       return 'https://${hosts[0]}/api/v1/repos${standardUrl.substring('https://${hosts[0]}'.length)}/${useTagUrl ? 'tags' : 'releases'}?per_page=100';

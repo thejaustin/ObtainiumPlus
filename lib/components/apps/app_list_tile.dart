@@ -66,8 +66,9 @@ class AppListTile extends StatelessWidget {
         icon: const Icon(Icons.download_rounded),
         onPressed: () {
           AppHaptics.selectionClick();
-          appsProvider.downloadAndInstallLatestApps(
-              [appInMemory.app.id], context);
+          appsProvider.downloadAndInstallLatestApps([
+            appInMemory.app.id,
+          ], context);
         },
         tooltip: tr('installUpdate'),
         style: IconButton.styleFrom(
@@ -79,15 +80,18 @@ class AppListTile extends StatelessWidget {
 
     String getVersionText() {
       if (appInMemory.app.installedVersion == null) return tr('notInstalled');
-      if (hasUpdate) return '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}';
+      if (hasUpdate)
+        return '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}';
       return appInMemory.app.installedVersion!;
     }
 
     Widget getAppIcon() {
-      final itemRadius = (settingsProvider.plusOverrideIndividualCornerRadius
+      final itemRadius =
+          (settingsProvider.plusOverrideIndividualCornerRadius
               ? settingsProvider.plusHomeCornerRadius
-              : settingsProvider.plusGlobalCornerRadius) * 0.5;
-      
+              : settingsProvider.plusGlobalCornerRadius) *
+          0.5;
+
       return Hero(
         tag: 'icon_${appInMemory.app.id}',
         child: Container(
@@ -95,27 +99,44 @@ class AppListTile extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(itemRadius),
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
           ),
           child: appInMemory.icon != null
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(itemRadius),
                   child: Image.memory(appInMemory.icon!, fit: BoxFit.cover),
                 )
-              : Icon(Icons.apps_rounded,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+              : Icon(
+                  Icons.apps_rounded,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                ),
         ),
       );
     }
 
-    final Color? displayCategoryColor = categoryColor ?? 
-        (appInMemory.app.categories.isNotEmpty && settingsProvider.viewSettings.categoryIconPosition != CategoryIconPosition.disabled
-            ? settingsProvider.viewSettings.categories[appInMemory.app.categories.first] != null
-                ? Color(settingsProvider.viewSettings.categories[appInMemory.app.categories.first]!)
-                : null
+    final Color? displayCategoryColor =
+        categoryColor ??
+        (appInMemory.app.categories.isNotEmpty &&
+                settingsProvider.viewSettings.categoryIconPosition !=
+                    CategoryIconPosition.disabled
+            ? settingsProvider.viewSettings.categories[appInMemory
+                          .app
+                          .categories
+                          .first] !=
+                      null
+                  ? Color(
+                      settingsProvider.viewSettings.categories[appInMemory
+                          .app
+                          .categories
+                          .first]!,
+                    )
+                  : null
             : null);
 
-    final isCompact = settingsProvider.viewSettings.appListDensity == AppListDensity.compact;
+    final isCompact =
+        settingsProvider.viewSettings.appListDensity == AppListDensity.compact;
     final radius = settingsProvider.plusOverrideIndividualCornerRadius
         ? settingsProvider.plusHomeCornerRadius
         : settingsProvider.plusGlobalCornerRadius;
@@ -131,16 +152,21 @@ class AppListTile extends StatelessWidget {
           ),
         if (hasUpdate) getUpdateButton(),
         if (!hasUpdate && !isCheckingUpdate)
-           Icon(Icons.chevron_right_rounded,
-             size: 20,
-             color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+          ),
       ],
     );
 
     // --- MODERN UI ---
     return RepaintBoundary(
       child: Semantics(
-        label: '${appInMemory.name}${settingsProvider.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
+        label:
+            '${appInMemory.name}${settingsProvider.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
         button: true,
         onTap: onTap,
         onLongPress: onLongPress,
@@ -159,32 +185,61 @@ class AppListTile extends StatelessWidget {
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(radius),
                 child: AnimatedContainer(
-                  duration: Duration(milliseconds: settingsProvider.plusEnableEnhancedAnimations ? 250 : 0),
+                  duration: Duration(
+                    milliseconds: settingsProvider.plusEnableEnhancedAnimations
+                        ? 250
+                        : 0,
+                  ),
                   curve: AppConstants.expressiveStandard,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(radius),
                     color: isSelected
-                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7)
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withOpacity(0.7)
                         : hasUpdate
-                            ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(isCompact ? 0.1 : 0.2)
-                            : appInMemory.app.pinned
-                                ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.moderate)
-                                : Theme.of(context).colorScheme.surface.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0),
+                        ? Theme.of(context).colorScheme.secondaryContainer
+                              .withOpacity(isCompact ? 0.1 : 0.2)
+                        : appInMemory.app.pinned
+                        ? Theme.of(context).colorScheme.surfaceContainerHighest
+                              .withOpacity(AppOpacity.moderate)
+                        : Theme.of(context).colorScheme.surface.withOpacity(
+                            settingsProvider.plusEnableGlassmorphism
+                                ? 0.45
+                                : 1.0,
+                          ),
                     border: Border.all(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
                           : hasUpdate
-                              ? Theme.of(context).colorScheme.secondary.withOpacity(AppOpacity.hint)
-                              : appInMemory.app.pinned
-                                  ? Theme.of(context).colorScheme.outlineVariant
-                                  : Theme.of(context).colorScheme.outline.withOpacity(settingsProvider.plusEnableGlassmorphism ? 0.1 : 0),
-                      width: isSelected || appInMemory.app.pinned || (hasUpdate && !isCompact) ? 1.5 : 0.8,
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.secondary.withOpacity(AppOpacity.hint)
+                          : appInMemory.app.pinned
+                          ? Theme.of(context).colorScheme.outlineVariant
+                          : Theme.of(context).colorScheme.outline.withOpacity(
+                              settingsProvider.plusEnableGlassmorphism
+                                  ? 0.1
+                                  : 0,
+                            ),
+                      width:
+                          isSelected ||
+                              appInMemory.app.pinned ||
+                              (hasUpdate && !isCompact)
+                          ? 1.5
+                          : 0.8,
                     ),
                     boxShadow: isSelected
-                        ? AppShadows.glow(color: Theme.of(context).colorScheme.primary, intensity: 0.6)
+                        ? AppShadows.glow(
+                            color: Theme.of(context).colorScheme.primary,
+                            intensity: 0.6,
+                          )
                         : hasUpdate && !isCompact
-                            ? AppShadows.smooth(color: Theme.of(context).colorScheme.secondary, opacity: 0.1)
-                            : null,
+                        ? AppShadows.smooth(
+                            color: Theme.of(context).colorScheme.secondary,
+                            opacity: 0.1,
+                          )
+                        : null,
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(radius),
@@ -207,7 +262,7 @@ class AppListTile extends StatelessWidget {
                               ),
                             ),
                           ),
-  
+
                         if (displayCategoryColor != null)
                           Positioned(
                             left: 0,
@@ -223,16 +278,20 @@ class AppListTile extends StatelessWidget {
                               ),
                             ),
                           ),
-                        
+
                         ListTile(
-                          visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
+                          visualDensity: isCompact
+                              ? VisualDensity.compact
+                              : VisualDensity.standard,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: isCompact ? 12 : 18,
                             vertical: isCompact ? 0 : 6,
                           ),
                           dense: isCompact,
                           leading: Padding(
-                            padding: EdgeInsets.only(left: displayCategoryColor != null ? 6 : 0),
+                            padding: EdgeInsets.only(
+                              left: displayCategoryColor != null ? 6 : 0,
+                            ),
                             child: Transform.scale(
                               scale: isCompact ? 0.9 : 1.0,
                               child: getAppIcon(),
@@ -241,9 +300,11 @@ class AppListTile extends StatelessWidget {
                           title: Text(
                             appInMemory.name,
                             maxLines: 1,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
                                   overflow: TextOverflow.ellipsis,
-                                  fontWeight: appInMemory.app.pinned || hasUpdate
+                                  fontWeight:
+                                      appInMemory.app.pinned || hasUpdate
                                       ? FontWeight.bold
                                       : FontWeight.w600,
                                   letterSpacing: -0.2,
@@ -251,26 +312,44 @@ class AppListTile extends StatelessWidget {
                           ),
                           subtitle: Row(
                             children: [
-                              if (settingsProvider.plusShowTagsInList && appInMemory.app.tags.isNotEmpty)
+                              if (settingsProvider.plusShowTagsInList &&
+                                  appInMemory.app.tags.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
-                                    children: appInMemory.app.tags.take(2).map((tag) => Container(
-                                      margin: const EdgeInsets.only(right: 4),
-                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.4),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        tag,
-                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                          fontSize: 9.5,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    )).toList(),
+                                    children: appInMemory.app.tags
+                                        .take(2)
+                                        .map(
+                                          (tag) => Container(
+                                            margin: const EdgeInsets.only(
+                                              right: 4,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 7,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .secondaryContainer
+                                                  .withOpacity(0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              tag,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall
+                                                  ?.copyWith(
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
                                   ),
                                 ),
                               if (settingsProvider.displayShowAuthor)
@@ -278,20 +357,35 @@ class AppListTile extends StatelessWidget {
                                   child: Text(
                                     appInMemory.author,
                                     maxLines: 1,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
                                           overflow: TextOverflow.ellipsis,
-                                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant
+                                              .withOpacity(0.8),
                                           fontWeight: FontWeight.w500,
                                         ),
                                   ),
                                 ),
-                              if (settingsProvider.displayShowVersion && !isCompact)
+                              if (settingsProvider.displayShowVersion &&
+                                  !isCompact)
                                 Text(
                                   ' • ${getVersionText()}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: hasUpdate ? Theme.of(context).colorScheme.secondary : null,
-                                        fontWeight: hasUpdate ? FontWeight.bold : null,
-                                        fontStyle: SourceUtils.isVersionPseudo(appInMemory.app)
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: hasUpdate
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.secondary
+                                            : null,
+                                        fontWeight: hasUpdate
+                                            ? FontWeight.bold
+                                            : null,
+                                        fontStyle:
+                                            SourceUtils.isVersionPseudo(
+                                              appInMemory.app,
+                                            )
                                             ? FontStyle.italic
                                             : null,
                                       ),
@@ -305,18 +399,26 @@ class AppListTile extends StatelessWidget {
                                     key: const ValueKey('download'),
                                     width: 65,
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           appInMemory.downloadProgress! >= 0
                                               ? '${appInMemory.downloadProgress!.toInt()}%'
                                               : tr('installing'),
-                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                         const SizedBox(height: 6),
                                         ExpressiveProgressIndicator(
-                                          value: appInMemory.downloadProgress! >= 0
-                                              ? appInMemory.downloadProgress! / 100
+                                          value:
+                                              appInMemory.downloadProgress! >= 0
+                                              ? appInMemory.downloadProgress! /
+                                                    100
                                               : null,
                                           height: 5,
                                         ),

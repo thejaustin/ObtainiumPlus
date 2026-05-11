@@ -28,7 +28,9 @@ class StartupRepairService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      talker.info('Repair: Factory reset performed (SharedPreferences cleared)');
+      talker.info(
+        'Repair: Factory reset performed (SharedPreferences cleared)',
+      );
     } catch (e) {
       talker.error('Repair: Factory reset failed: $e');
     }

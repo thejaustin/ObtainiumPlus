@@ -16,15 +16,39 @@ class ThemeBuilder {
       useMaterial3: true,
       colorScheme: colorScheme,
       fontFamily: useSystemFont ? 'SystemFont' : 'Roboto',
-      inputDecorationTheme: _buildInputDecorationTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
+      inputDecorationTheme: _buildInputDecorationTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        cornerRadius,
+      ),
       dropdownMenuTheme: _buildDropdownMenuTheme(colorScheme),
-      textTheme: _buildTextTheme(useSystemFont, colorScheme, plusEnableMaterialExpressive),
-      cardTheme: _buildCardTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
-      listTileTheme: _buildListTileTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
+      textTheme: _buildTextTheme(
+        useSystemFont,
+        colorScheme,
+        plusEnableMaterialExpressive,
+      ),
+      cardTheme: _buildCardTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        cornerRadius,
+      ),
+      listTileTheme: _buildListTileTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        cornerRadius,
+      ),
       switchTheme: _buildSwitchTheme(colorScheme),
       sliderTheme: _buildSliderTheme(colorScheme),
-      dialogTheme: _buildDialogTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
-      bottomSheetTheme: _buildBottomSheetTheme(colorScheme, plusEnableMaterialExpressive, cornerRadius),
+      dialogTheme: _buildDialogTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        cornerRadius,
+      ),
+      bottomSheetTheme: _buildBottomSheetTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        cornerRadius,
+      ),
       navigationBarTheme: _buildNavigationBarTheme(colorScheme),
       appBarTheme: _buildAppBarTheme(colorScheme),
       searchBarTheme: _buildSearchBarTheme(colorScheme),
@@ -43,8 +67,8 @@ class ThemeBuilder {
       ),
       pageTransitionsTheme: PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: plusEnableMaterialExpressive 
-              ? const ZoomPageTransitionsBuilder() 
+          TargetPlatform.android: plusEnableMaterialExpressive
+              ? const ZoomPageTransitionsBuilder()
               : const PredictiveBackPageTransitionsBuilder(),
           TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
         },
@@ -53,8 +77,13 @@ class ThemeBuilder {
   }
 
   /// Builds InputDecorationTheme with enhanced contrast and Material 3 styling
-  static InputDecorationTheme _buildInputDecorationTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
-    final borderRadius = cornerRadius ?? (expressive ? AppConstants.defaultBorderRadius : 12.0);
+  static InputDecorationTheme _buildInputDecorationTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+    double? cornerRadius,
+  ) {
+    final borderRadius =
+        cornerRadius ?? (expressive ? AppConstants.defaultBorderRadius : 12.0);
     return InputDecorationTheme(
       filled: true,
       fillColor: colorScheme.surfaceContainerHigh,
@@ -95,7 +124,11 @@ class ThemeBuilder {
   }
 
   /// Builds custom text theme with improved readability and spacing
-  static TextTheme _buildTextTheme(bool useSystemFont, ColorScheme colorScheme, bool expressive) {
+  static TextTheme _buildTextTheme(
+    bool useSystemFont,
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
     final baseTextTheme = colorScheme.brightness == Brightness.dark
         ? Typography.material2021().white
         : Typography.material2021().black;
@@ -103,17 +136,27 @@ class ThemeBuilder {
 
     if (!expressive) {
       return baseTextTheme.copyWith(
-        headlineLarge: baseTextTheme.headlineLarge?.copyWith(fontFamily: fontFamily),
-        headlineMedium: baseTextTheme.headlineMedium?.copyWith(fontFamily: fontFamily),
-        headlineSmall: baseTextTheme.headlineSmall?.copyWith(fontFamily: fontFamily),
+        headlineLarge: baseTextTheme.headlineLarge?.copyWith(
+          fontFamily: fontFamily,
+        ),
+        headlineMedium: baseTextTheme.headlineMedium?.copyWith(
+          fontFamily: fontFamily,
+        ),
+        headlineSmall: baseTextTheme.headlineSmall?.copyWith(
+          fontFamily: fontFamily,
+        ),
         titleLarge: baseTextTheme.titleLarge?.copyWith(fontFamily: fontFamily),
-        titleMedium: baseTextTheme.titleMedium?.copyWith(fontFamily: fontFamily),
+        titleMedium: baseTextTheme.titleMedium?.copyWith(
+          fontFamily: fontFamily,
+        ),
         titleSmall: baseTextTheme.titleSmall?.copyWith(fontFamily: fontFamily),
         bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontFamily: fontFamily),
         bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontFamily: fontFamily),
         bodySmall: baseTextTheme.bodySmall?.copyWith(fontFamily: fontFamily),
         labelLarge: baseTextTheme.labelLarge?.copyWith(fontFamily: fontFamily),
-        labelMedium: baseTextTheme.labelMedium?.copyWith(fontFamily: fontFamily),
+        labelMedium: baseTextTheme.labelMedium?.copyWith(
+          fontFamily: fontFamily,
+        ),
         labelSmall: baseTextTheme.labelSmall?.copyWith(fontFamily: fontFamily),
       );
     }
@@ -180,7 +223,9 @@ class ThemeBuilder {
   }
 
   /// Builds DropdownMenuThemeData with consistent text styling
-  static DropdownMenuThemeData _buildDropdownMenuTheme(ColorScheme colorScheme) {
+  static DropdownMenuThemeData _buildDropdownMenuTheme(
+    ColorScheme colorScheme,
+  ) {
     return DropdownMenuThemeData(
       textStyle: TextStyle(
         color: colorScheme.onSurface,
@@ -191,25 +236,39 @@ class ThemeBuilder {
   }
 
   /// CardThemeData with M3 tonal elevation and configurable radius
-  static CardThemeData _buildCardTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
+  static CardThemeData _buildCardTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+    double? cornerRadius,
+  ) {
     return CardThemeData(
       color: colorScheme.surfaceContainerLow,
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cornerRadius ?? (expressive ? 24 : 12)),
+        borderRadius: BorderRadius.circular(
+          cornerRadius ?? (expressive ? 24 : 12),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
     );
   }
 
   /// ListTileThemeData with proper M3 styling and configurable radius
-  static ListTileThemeData _buildListTileTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
+  static ListTileThemeData _buildListTileTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+    double? cornerRadius,
+  ) {
     return ListTileThemeData(
       iconColor: colorScheme.onSurfaceVariant,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       visualDensity: VisualDensity.standard,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cornerRadius != null ? (cornerRadius * 0.66).clamp(8.0, 16.0) : (expressive ? 16 : 12)),
+        borderRadius: BorderRadius.circular(
+          cornerRadius != null
+              ? (cornerRadius * 0.66).clamp(8.0, 16.0)
+              : (expressive ? 16 : 12),
+        ),
       ),
     );
   }
@@ -246,19 +305,23 @@ class ThemeBuilder {
       thumbColor: colorScheme.primary,
       overlayColor: colorScheme.primary.withOpacity(AppOpacity.hint),
       valueIndicatorColor: colorScheme.primaryContainer,
-      valueIndicatorTextStyle: TextStyle(
-        color: colorScheme.onPrimaryContainer,
-      ),
+      valueIndicatorTextStyle: TextStyle(color: colorScheme.onPrimaryContainer),
     );
   }
 
   /// DialogThemeData with M3 surface container high and configurable radius
-  static DialogThemeData _buildDialogTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
+  static DialogThemeData _buildDialogTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+    double? cornerRadius,
+  ) {
     return DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
       elevation: 6,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cornerRadius ?? (expressive ? 32 : 28)),
+        borderRadius: BorderRadius.circular(
+          cornerRadius ?? (expressive ? 32 : 28),
+        ),
       ),
       titleTextStyle: TextStyle(
         color: colorScheme.onSurface,
@@ -273,7 +336,11 @@ class ThemeBuilder {
   }
 
   /// BottomSheetThemeData with M3 surface container low and configurable radius
-  static BottomSheetThemeData _buildBottomSheetTheme(ColorScheme colorScheme, bool expressive, double? cornerRadius) {
+  static BottomSheetThemeData _buildBottomSheetTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+    double? cornerRadius,
+  ) {
     final radius = cornerRadius ?? (expressive ? 32 : 28);
     return BottomSheetThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
@@ -282,14 +349,18 @@ class ThemeBuilder {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       ),
-      dragHandleColor: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.moderate),
+      dragHandleColor: colorScheme.onSurfaceVariant.withOpacity(
+        AppOpacity.moderate,
+      ),
       dragHandleSize: Size(expressive ? 40 : 32, 4),
       showDragHandle: true,
     );
   }
 
   /// Builds NavigationBarThemeData with proper M3 icon/label theming
-  static NavigationBarThemeData _buildNavigationBarTheme(ColorScheme colorScheme) {
+  static NavigationBarThemeData _buildNavigationBarTheme(
+    ColorScheme colorScheme,
+  ) {
     return NavigationBarThemeData(
       backgroundColor: colorScheme.surfaceContainer,
       elevation: 3,
@@ -340,26 +411,33 @@ class ThemeBuilder {
   static SearchBarThemeData _buildSearchBarTheme(ColorScheme colorScheme) {
     return SearchBarThemeData(
       elevation: WidgetStateProperty.all(0),
-      backgroundColor: WidgetStateProperty.all(colorScheme.surfaceContainerHigh),
+      backgroundColor: WidgetStateProperty.all(
+        colorScheme.surfaceContainerHigh,
+      ),
       shape: WidgetStateProperty.all(const StadiumBorder()),
-      hintStyle: WidgetStateProperty.all(TextStyle(
-        color: colorScheme.onSurfaceVariant,
-      )),
-      textStyle: WidgetStateProperty.all(TextStyle(
-        color: colorScheme.onSurface,
-      )),
+      hintStyle: WidgetStateProperty.all(
+        TextStyle(color: colorScheme.onSurfaceVariant),
+      ),
+      textStyle: WidgetStateProperty.all(
+        TextStyle(color: colorScheme.onSurface),
+      ),
     );
   }
 
   /// Builds ChipThemeData for consistent chip styling
-  static ChipThemeData _buildChipTheme(ColorScheme colorScheme, bool expressive) {
+  static ChipThemeData _buildChipTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.secondaryContainer,
       disabledColor: colorScheme.onSurface.withOpacity(AppOpacity.hint),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
       secondaryLabelStyle: TextStyle(color: colorScheme.onSecondaryContainer),
-      shape: expressive ? const StadiumBorder() : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: expressive
+          ? const StadiumBorder()
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       side: BorderSide(color: colorScheme.outline.withOpacity(AppOpacity.half)),
     );
   }
@@ -379,9 +457,7 @@ class ThemeBuilder {
       backgroundColor: colorScheme.inverseSurface,
       contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
       actionTextColor: colorScheme.inversePrimary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
       elevation: 6,
     );

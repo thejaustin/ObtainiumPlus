@@ -27,14 +27,19 @@ import 'package:obtainium/utils/app_constants.dart';
 
 /// Directly runs the GitHub mass-source import flow from any context,
 /// without needing to navigate to ImportExportPage first.
-Future<void> _runMassImport(BuildContext context, MassAppUrlSource source) async {
+Future<void> _runMassImport(
+  BuildContext context,
+  MassAppUrlSource source,
+) async {
   final appsProvider = context.read<AppsProvider>();
 
   final values = await showDialog<Map<String, dynamic>?>(
     context: context,
     builder: (ctx) => GeneratedFormModal(
       title: tr('importX', args: [source.name]),
-      items: source.requiredArgs.map((e) => [GeneratedFormTextField(e, label: e)]).toList(),
+      items: source.requiredArgs
+          .map((e) => [GeneratedFormTextField(e, label: e)])
+          .toList(),
     ),
   );
   if (values == null) return;
@@ -71,18 +76,26 @@ Future<void> _runMassImport(BuildContext context, MassAppUrlSource source) async
       if (!context.mounted) return;
       if (errors.isEmpty) {
         showMessage(
-          tr('importedX', args: [plural('apps', selectedUrls.length).toLowerCase()]),
+          tr(
+            'importedX',
+            args: [plural('apps', selectedUrls.length).toLowerCase()],
+          ),
           context,
         );
       } else {
         showDialog(
           context: context,
-          builder: (ctx) => ImportErrorDialog(urlsLength: selectedUrls.length, errors: errors),
+          builder: (ctx) => ImportErrorDialog(
+            urlsLength: selectedUrls.length,
+            errors: errors,
+          ),
         );
       }
     }
   } catch (e) {
-    try { nav.pop(); } catch (_) {} // dismiss loading if still showing
+    try {
+      nav.pop();
+    } catch (_) {} // dismiss loading if still showing
     if (context.mounted) showError(e, context);
   }
 }
@@ -131,10 +144,11 @@ class _OmnibarState extends State<Omnibar> {
 
   void _checkInputType(String input) {
     setState(() {
-      _isUrl = input.trim().startsWith('http://') || 
-               input.trim().startsWith('https://') ||
-               input.trim().startsWith('market://');
-      
+      _isUrl =
+          input.trim().startsWith('http://') ||
+          input.trim().startsWith('https://') ||
+          input.trim().startsWith('market://');
+
       if (_isUrl) {
         try {
           _sourceProvider.getSource(input);
@@ -142,8 +156,8 @@ class _OmnibarState extends State<Omnibar> {
           _urlError = null;
         } catch (e) {
           _isValidUrl = false;
-          _urlError = e is UnsupportedURLError 
-              ? tr('unsupportedUrl') 
+          _urlError = e is UnsupportedURLError
+              ? tr('unsupportedUrl')
               : e.toString();
         }
       } else {
@@ -155,7 +169,7 @@ class _OmnibarState extends State<Omnibar> {
 
   void _handleInput(String value) {
     _checkInputType(value);
-    
+
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (value.trim().isEmpty) {
@@ -181,7 +195,7 @@ class _OmnibarState extends State<Omnibar> {
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.66).clamp(12.0, 32.0);
-    
+
     return Semantics(
       label: _isUrl ? tr('appURLList') : tr('search'),
       textField: true,
@@ -192,17 +206,23 @@ class _OmnibarState extends State<Omnibar> {
           duration: const Duration(milliseconds: 200),
           curve: Easing.standard,
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withOpacity(settings.plusEnableGlassmorphism ? 0.45 : 0.7),
+            color: colorScheme.surfaceContainerHighest.withOpacity(
+              settings.plusEnableGlassmorphism ? 0.45 : 0.7,
+            ),
             borderRadius: BorderRadius.circular(itemRadius),
             border: Border.all(
               color: _isValidUrl
                   ? colorScheme.primary.withOpacity(AppOpacity.half)
                   : _urlError != null
-                      ? colorScheme.error.withOpacity(AppOpacity.half)
-                      : colorScheme.outline.withOpacity(settings.plusEnableGlassmorphism ? 0.15 : AppOpacity.medium),
+                  ? colorScheme.error.withOpacity(AppOpacity.half)
+                  : colorScheme.outline.withOpacity(
+                      settings.plusEnableGlassmorphism
+                          ? 0.15
+                          : AppOpacity.medium,
+                    ),
               width: 1.5,
             ),
-            boxShadow: settings.plusEnableGlassmorphism 
+            boxShadow: settings.plusEnableGlassmorphism
                 ? [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -248,27 +268,32 @@ class _OmnibarState extends State<Omnibar> {
                               ? (_isValidUrl ? Icons.link : Icons.link_off)
                               : Icons.search,
                           key: ValueKey(
-                              'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}'),
+                            'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}',
+                          ),
                           color: _isValidUrl
                               ? colorScheme.primary
                               : _urlError != null
-                                  ? colorScheme.error
-                                  : colorScheme.onSurfaceVariant,
+                              ? colorScheme.error
+                              : colorScheme.onSurfaceVariant,
                           size: 22,
                         ),
                       ),
                     ),
-                    
+
                     // Input field
                     Expanded(
                       child: TextField(
                         controller: _controller,
                         decoration: InputDecoration(
-                          hintText: _isUrl 
-                              ? (_isValidUrl ? tr('validUrlEnterToAdd') : tr('invalidUrl'))
+                          hintText: _isUrl
+                              ? (_isValidUrl
+                                    ? tr('validUrlEnterToAdd')
+                                    : tr('invalidUrl'))
                               : tr('searchOrEnterUrl'),
                           hintStyle: TextStyle(
-                            color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                            color: colorScheme.onSurfaceVariant.withOpacity(
+                              0.7,
+                            ),
                           ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
@@ -284,13 +309,13 @@ class _OmnibarState extends State<Omnibar> {
                             widget.onSearchQuery?.call(value);
                           }
                         },
-                        keyboardType: _isUrl 
-                            ? TextInputType.url 
+                        keyboardType: _isUrl
+                            ? TextInputType.url
                             : TextInputType.text,
                         textInputAction: TextInputAction.search,
                       ),
                     ),
-                    
+
                     // Clear button
                     if (_controller.text.isNotEmpty)
                       Semantics(
@@ -305,36 +330,50 @@ class _OmnibarState extends State<Omnibar> {
                           padding: const EdgeInsets.only(right: 8),
                         ),
                       ),
-                    
+
                     // Add button (for URLs)
                     if (_isUrl)
                       Container(
-                        margin: const EdgeInsets.only(right: 6, top: 6, bottom: 6),
+                        margin: const EdgeInsets.only(
+                          right: 6,
+                          top: 6,
+                          bottom: 6,
+                        ),
                         child: Semantics(
                           label: tr('add'),
                           button: true,
                           child: FilledButton.tonal(
-                            onPressed: _isValidUrl 
-                                ? () => widget.onUrlInput?.call(_controller.text)
+                            onPressed: _isValidUrl
+                                ? () =>
+                                      widget.onUrlInput?.call(_controller.text)
                                 : () {
                                     // Show unsupported source dialog
-                                    final supportedSources = _sourceProvider.sources
+                                    final supportedSources = _sourceProvider
+                                        .sources
                                         .where((s) => s.hosts.isNotEmpty)
                                         .map((s) => s.name)
                                         .toList();
-                                    
+
                                     showUnsupportedSourceDialog(
                                       context: context,
-                                      suggestedSources: supportedSources.take(8).toList(),
+                                      suggestedSources: supportedSources
+                                          .take(8)
+                                          .toList(),
                                       failedUrl: _controller.text,
                                     );
                                   },
                             style: FilledButton.styleFrom(
-                              backgroundColor: _isValidUrl 
+                              backgroundColor: _isValidUrl
                                   ? colorScheme.primary
                                   : null,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius * 0.8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  itemRadius * 0.8,
+                                ),
+                              ),
                             ),
                             child: Text(_isValidUrl ? tr('add') : tr('error')),
                           ),
@@ -372,7 +411,9 @@ class AppActionsFAB extends StatelessWidget {
         final sheet = Container(
           decoration: BoxDecoration(
             color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(sheetRadius),
+            ),
             border: Border(
               top: BorderSide(
                 color: enableGlass
@@ -380,153 +421,165 @@ class AppActionsFAB extends StatelessWidget {
                     : colorScheme.outline.withOpacity(AppOpacity.hint),
               ),
               left: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(
+                  enableGlass ? 0.12 : 0,
+                ),
               ),
               right: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(
+                  enableGlass ? 0.12 : 0,
+                ),
               ),
             ),
           ),
           child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Handle
-                      const DragHandle(
-                        width: 40,
-                      ),
-                      const SizedBox(height: 20),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle
+                  const DragHandle(width: 40),
+                  const SizedBox(height: 20),
 
-                      // Title
-                      Text(
-                        tr('addApp'),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Search shortcut — always reachable from thumb zone
-                      if (settings.plusFabShowSearch)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.search_rounded,
-                          title: tr('search'),
-                          subtitle: tr('searchOrEnterUrl'),
-                          iconColor: colorScheme.tertiary,
-                          containerColor: colorScheme.tertiaryContainer.withOpacity(AppOpacity.half),
-                          onTap: () {
-                            Navigator.pop(context);
-                            CommandCenter.show(context);
-                          },
-                        ),
-
-                      if (settings.plusFabShowSearch &&
-                          (settings.plusFabShowAddByUrl ||
-                              settings.plusFabShowGithubStarred ||
-                              settings.plusFabShowGithubPersonalRepos ||
-                              settings.plusFabShowImportInstalled))
-                        const Divider(height: 20),
-
-                      // Add by URL
-                      if (settings.plusFabShowAddByUrl)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.link_outlined,
-                          title: tr('addAppByUrl'),
-                          subtitle: tr('addAppByUrlDescription'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            pushRoute(context, const AddAppPage());
-                          },
-                        ),
-
-                      if (settings.plusFabShowGithubStarred)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.star_border_rounded,
-                          title: tr('importGithubStarredRepos'),
-                          subtitle: tr('importGithubStarredReposDescription'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _runMassImport(
-                              context,
-                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubStars, orElse: () => GitHubStars()),
-                            );
-                          },
-                        ),
-
-                      if (settings.plusFabShowGithubPersonalRepos)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.person_outline_rounded,
-                          title: tr('githubPersonalRepos'),
-                          subtitle: tr('githubPersonalReposDescription'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            _runMassImport(
-                              context,
-                              SourceProvider().massUrlSources.firstWhere((s) => s is GitHubPersonalRepos, orElse: () => GitHubPersonalRepos()),
-                            );
-                          },
-                        ),
-
-                      if (settings.plusFabShowImportInstalled)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.install_mobile_outlined,
-                          title: tr('importInstalledApps'),
-                          subtitle: tr('importInstalledAppsDescription'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            pushRoute(context, const SystemAppSelector());
-                          },
-                        ),
-
-                      if (settings.plusDeveloperMode)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.qr_code_scanner_outlined,
-                          title: tr('scanQRCode'),
-                          subtitle: tr('scanQRCodeDescription'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(tr('comingSoon'))),
-                            );
-                          },
-                        ),
-
-                      // Fallback when every item is disabled
-                      if (!settings.plusFabShowSearch &&
-                          !settings.plusFabShowAddByUrl &&
-                          !settings.plusFabShowGithubStarred &&
-                          !settings.plusFabShowGithubPersonalRepos &&
-                          !settings.plusFabShowImportInstalled &&
-                          !settings.plusDeveloperMode)
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.link_outlined,
-                          title: tr('addAppByUrl'),
-                          subtitle: tr('addAppByUrlDescription'),
-                          onTap: () {
-                            Navigator.pop(context);
-                            pushRoute(context, const AddAppPage());
-                          },
-                        ),
-
-                      const SizedBox(height: 8),
-                    ],
+                  // Title
+                  Text(
+                    tr('addApp'),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+
+                  // Search shortcut — always reachable from thumb zone
+                  if (settings.plusFabShowSearch)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.search_rounded,
+                      title: tr('search'),
+                      subtitle: tr('searchOrEnterUrl'),
+                      iconColor: colorScheme.tertiary,
+                      containerColor: colorScheme.tertiaryContainer.withOpacity(
+                        AppOpacity.half,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        CommandCenter.show(context);
+                      },
+                    ),
+
+                  if (settings.plusFabShowSearch &&
+                      (settings.plusFabShowAddByUrl ||
+                          settings.plusFabShowGithubStarred ||
+                          settings.plusFabShowGithubPersonalRepos ||
+                          settings.plusFabShowImportInstalled))
+                    const Divider(height: 20),
+
+                  // Add by URL
+                  if (settings.plusFabShowAddByUrl)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.link_outlined,
+                      title: tr('addAppByUrl'),
+                      subtitle: tr('addAppByUrlDescription'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        pushRoute(context, const AddAppPage());
+                      },
+                    ),
+
+                  if (settings.plusFabShowGithubStarred)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.star_border_rounded,
+                      title: tr('importGithubStarredRepos'),
+                      subtitle: tr('importGithubStarredReposDescription'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _runMassImport(
+                          context,
+                          SourceProvider().massUrlSources.firstWhere(
+                            (s) => s is GitHubStars,
+                            orElse: () => GitHubStars(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (settings.plusFabShowGithubPersonalRepos)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.person_outline_rounded,
+                      title: tr('githubPersonalRepos'),
+                      subtitle: tr('githubPersonalReposDescription'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _runMassImport(
+                          context,
+                          SourceProvider().massUrlSources.firstWhere(
+                            (s) => s is GitHubPersonalRepos,
+                            orElse: () => GitHubPersonalRepos(),
+                          ),
+                        );
+                      },
+                    ),
+
+                  if (settings.plusFabShowImportInstalled)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.install_mobile_outlined,
+                      title: tr('importInstalledApps'),
+                      subtitle: tr('importInstalledAppsDescription'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        pushRoute(context, const SystemAppSelector());
+                      },
+                    ),
+
+                  if (settings.plusDeveloperMode)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.qr_code_scanner_outlined,
+                      title: tr('scanQRCode'),
+                      subtitle: tr('scanQRCodeDescription'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(tr('comingSoon'))),
+                        );
+                      },
+                    ),
+
+                  // Fallback when every item is disabled
+                  if (!settings.plusFabShowSearch &&
+                      !settings.plusFabShowAddByUrl &&
+                      !settings.plusFabShowGithubStarred &&
+                      !settings.plusFabShowGithubPersonalRepos &&
+                      !settings.plusFabShowImportInstalled &&
+                      !settings.plusDeveloperMode)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.link_outlined,
+                      title: tr('addAppByUrl'),
+                      subtitle: tr('addAppByUrlDescription'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        pushRoute(context, const AddAppPage());
+                      },
+                    ),
+
+                  const SizedBox(height: 8),
+                ],
               ),
+            ),
+          ),
         );
 
         if (!enableGlass) return sheet;
         return ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(sheetRadius),
+          ),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: sheet,
@@ -556,7 +609,9 @@ class AppActionsFAB extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: containerColor ?? colorScheme.primaryContainer.withOpacity(AppOpacity.half),
+          color:
+              containerColor ??
+              colorScheme.primaryContainer.withOpacity(AppOpacity.half),
           borderRadius: BorderRadius.circular(itemRadius),
         ),
         child: Icon(icon, color: iconColor ?? colorScheme.primary),
@@ -564,14 +619,17 @@ class AppActionsFAB extends StatelessWidget {
       title: Text(title, style: Theme.of(context).textTheme.titleMedium),
       subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
       onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(itemRadius),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final showSearch = !settings.plusTopUILayout && settings.plusShowFloatingSearch;
+    final showSearch =
+        !settings.plusTopUILayout && settings.plusShowFloatingSearch;
 
     if (showSearch) {
       return Row(

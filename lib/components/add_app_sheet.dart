@@ -31,38 +31,44 @@ Future<T?> showAddAppSheet<T>({
     ),
     builder: (ctx) {
       final sheet = Container(
-            height: MediaQuery.of(context).size.height * 0.85,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(
-                top: BorderSide(
-                  color: enableGlass
-                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.18)
-                      : Theme.of(context).colorScheme.outline.withOpacity(AppOpacity.low),
-                ),
-                left: BorderSide(
-                  color: enableGlass
-                      ? Theme.of(context).colorScheme.onSurface.withOpacity(AppOpacity.hint)
-                      : Colors.transparent,
-                ),
-                right: BorderSide(
-                  color: enableGlass
-                      ? Theme.of(context).colorScheme.onSurface.withOpacity(AppOpacity.hint)
-                      : Colors.transparent,
-                ),
-              ),
-              boxShadow: AppShadows.smooth(
-                color: Colors.black,
-                opacity: enableGlass ? 0.28 : 0.15,
-                blurFactor: enableGlass ? 1.5 : 1.0,
-              ),
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          color: Theme.of(
+            context,
+          ).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(
+            top: BorderSide(
+              color: enableGlass
+                  ? Theme.of(context).colorScheme.onSurface.withOpacity(0.18)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.outline.withOpacity(AppOpacity.low),
             ),
-            child: _AddAppSheetContent(
-              initialUrl: initialUrl,
-              editAppId: editAppId,
+            left: BorderSide(
+              color: enableGlass
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                  : Colors.transparent,
+            ),
+            right: BorderSide(
+              color: enableGlass
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                  : Colors.transparent,
             ),
           ),
+          boxShadow: AppShadows.smooth(
+            color: Colors.black,
+            opacity: enableGlass ? 0.28 : 0.15,
+            blurFactor: enableGlass ? 1.5 : 1.0,
+          ),
+        ),
+        child: _AddAppSheetContent(
+          initialUrl: initialUrl,
+          editAppId: editAppId,
         ),
       );
       final clipped = ClipRRect(
@@ -85,10 +91,7 @@ class _AddAppSheetContent extends StatefulWidget {
   final String? initialUrl;
   final String? editAppId;
 
-  const _AddAppSheetContent({
-    this.initialUrl,
-    this.editAppId,
-  });
+  const _AddAppSheetContent({this.initialUrl, this.editAppId});
 
   @override
   State<_AddAppSheetContent> createState() => _AddAppSheetContentState();
@@ -107,15 +110,14 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -151,9 +153,7 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
             _buildHeader(context),
             const Divider(height: 1),
             // Content
-            Expanded(
-              child: _buildContent(context),
-            ),
+            Expanded(child: _buildContent(context)),
           ],
         ),
       ),
@@ -171,16 +171,18 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
               children: [
                 Text(
                   widget.editAppId != null ? tr('editApp') : tr('addApp'),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   widget.editAppId != null
                       ? tr('editAppDescription')
                       : tr('addAppDescription'),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -205,13 +207,12 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
           Icon(
             Icons.add_circle_outline,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(AppOpacity.half),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withOpacity(AppOpacity.half),
           ),
           const SizedBox(height: 24),
-          Text(
-            tr('addApp'),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text(tr('addApp'), style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             tr('enterAppUrlOrSearch'),
@@ -257,9 +258,10 @@ class _QuickAddButtonState extends State<QuickAddButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

@@ -22,6 +22,11 @@ import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -64,7 +69,7 @@ class _AppPageState extends State<AppPage> {
     required List<MapEntry<String, VoidCallback>> actions,
   }) {
     final settings = context.read<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
@@ -78,13 +83,19 @@ class _AppPageState extends State<AppPage> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.18 : 0),
+                color: colorScheme.onSurface.withOpacity(
+                  enableGlass ? 0.18 : 0,
+                ),
               ),
               left: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(
+                  enableGlass ? 0.12 : 0,
+                ),
               ),
               right: BorderSide(
-                color: colorScheme.onSurface.withOpacity(enableGlass ? 0.12 : 0),
+                color: colorScheme.onSurface.withOpacity(
+                  enableGlass ? 0.12 : 0,
+                ),
               ),
             ),
           ),
@@ -94,17 +105,27 @@ class _AppPageState extends State<AppPage> {
               children: [
                 const DragHandle(margin: EdgeInsets.only(top: 8, bottom: 4)),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(title, style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    title,
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const Divider(height: 1),
-                ...actions.map((action) => ListTile(
-                  title: Text(action.key),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    action.value();
-                  },
-                )),
+                ...actions.map(
+                  (action) => ListTile(
+                    title: Text(action.key),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      action.value();
+                    },
+                  ),
+                ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -124,7 +145,11 @@ class _AppPageState extends State<AppPage> {
 
   void _showTagEditor(AppInMemory appInMemory) async {
     final appsProvider = context.read<AppsProvider>();
-    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+    final allTags = appsProvider
+        .getAppValues()
+        .expand((a) => a.app.tags)
+        .toSet()
+        .toList();
     allTags.sort();
 
     final newTags = await showTagEditor(
@@ -149,9 +174,15 @@ class _AppPageState extends State<AppPage> {
   @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
-    final showAppWebpage = context.select<SettingsProvider, bool>((sp) => sp.showAppWebpage);
-    final checkUpdateOnDetailPage = context.select<SettingsProvider, bool>((sp) => sp.checkUpdateOnDetailPage);
-    final highlightTouchTargets = context.select<SettingsProvider, bool>((sp) => sp.highlightTouchTargets);
+    final showAppWebpage = context.select<SettingsProvider, bool>(
+      (sp) => sp.showAppWebpage,
+    );
+    final checkUpdateOnDetailPage = context.select<SettingsProvider, bool>(
+      (sp) => sp.checkUpdateOnDetailPage,
+    );
+    final highlightTouchTargets = context.select<SettingsProvider, bool>(
+      (sp) => sp.highlightTouchTargets,
+    );
     var showAppWebpageFinal =
         (showAppWebpage && !widget.showOppositeOfPreferredView) ||
         (!showAppWebpage && widget.showOppositeOfPreferredView);
@@ -315,19 +346,25 @@ class _AppPageState extends State<AppPage> {
 
     return Scaffold(
       appBar: showAppWebpageFinal ? (widget.isModal ? null : AppBar()) : null,
-      backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
-      floatingActionButton: appsProvider.settingsProvider.plusShowLegacyUIComparison
+      backgroundColor: widget.isModal
+          ? Colors.transparent
+          : Theme.of(context).colorScheme.surface,
+      floatingActionButton:
+          appsProvider.settingsProvider.plusShowLegacyUIComparison
           ? Padding(
               padding: const EdgeInsets.only(bottom: 80.0), // Above bottom bar
               child: FloatingActionButton.small(
                 heroTag: 'app_page_ui_comparison_toggle',
                 onPressed: () {
                   AppHaptics.mediumImpact();
-                  appsProvider.settingsProvider.plusEnableModernAppPage = !appsProvider.settingsProvider.plusEnableModernAppPage;
+                  appsProvider.settingsProvider.plusEnableModernAppPage =
+                      !appsProvider.settingsProvider.plusEnableModernAppPage;
                 },
-                child: Icon(appsProvider.settingsProvider.plusEnableModernAppPage 
-                    ? Icons.visibility_outlined 
-                    : Icons.visibility_off_outlined),
+                child: Icon(
+                  appsProvider.settingsProvider.plusEnableModernAppPage
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
               ),
             )
           : null,
@@ -341,139 +378,194 @@ class _AppPageState extends State<AppPage> {
             },
             child: showAppWebpageFinal
                 ? (app != null
-                    ? _AppWebView(
-                        url: app.app.url,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                      )
-                    : const SizedBox.shrink())
+                      ? _AppWebView(
+                          url: app.app.url,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                        )
+                      : const SizedBox.shrink())
                 : (appsProvider.settingsProvider.plusEnableModernAppPage
-                    ? CustomScrollView(
-                        controller: widget.scrollController,
-                        slivers: [
-                          _buildSliverAppBar(context, app),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Column(
-                                children: [
-                                  _buildMainInfo(context, app, appsProvider),
-                                  const SizedBox(height: 24),
-                                  
-                                  // 1. Stats Group
-                                  ExpressiveSettingsGroup(
-                                    title: tr('statistics'),
-                                    children: [
-                                      _buildStatRow(
-                                        context,
-                                        icon: Icons.install_mobile_rounded,
-                                        label: tr('installed'),
-                                        value: app?.app.installedVersion ?? tr('notInstalled'),
-                                        isBold: true,
-                                      ),
-                                      _buildStatRow(
-                                        context,
-                                        icon: Icons.new_releases_rounded,
-                                        label: tr('latest'),
-                                        value: app?.app.latestVersion ?? tr('unknown'),
-                                        valueColor: (app?.app.installedVersion == app?.app.latestVersion) ? null : Theme.of(context).colorScheme.primary,
-                                      ),
-                                      _buildStatRow(
-                                        context,
-                                        icon: Icons.update_rounded,
-                                        label: tr('lastCheck'),
-                                        value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
-                                      ),
-                                    ],
-                                  ),
+                      ? CustomScrollView(
+                          controller: widget.scrollController,
+                          slivers: [
+                            _buildSliverAppBar(context, app),
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
+                                child: Column(
+                                  children: [
+                                    _buildMainInfo(context, app, appsProvider),
+                                    const SizedBox(height: 24),
 
-                                  // 3. Category Group
-                                  ExpressiveSettingsGroup(
-                                    title: tr('categories'),
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: CategoryEditorSelector(
-                                          alignment: WrapAlignment.start,
-                                          preselected: app?.app.categories != null ? app!.app.categories.toSet() : {},
-                                          onSelected: (categories) {
-                                            if (app != null) {
-                                              app.app.categories = categories;
-                                              appsProvider.saveApps([app.app]);
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  // 3.5 Tags Group
-                                  if (app != null)
+                                    // 1. Stats Group
                                     ExpressiveSettingsGroup(
-                                      title: tr('tags'),
+                                      title: tr('statistics'),
                                       children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: _buildTagsSection(context, app, appsProvider),
+                                        _buildStatRow(
+                                          context,
+                                          icon: Icons.install_mobile_rounded,
+                                          label: tr('installed'),
+                                          value:
+                                              app?.app.installedVersion ??
+                                              tr('notInstalled'),
+                                          isBold: true,
+                                        ),
+                                        _buildStatRow(
+                                          context,
+                                          icon: Icons.new_releases_rounded,
+                                          label: tr('latest'),
+                                          value:
+                                              app?.app.latestVersion ??
+                                              tr('unknown'),
+                                          valueColor:
+                                              (app?.app.installedVersion ==
+                                                  app?.app.latestVersion)
+                                              ? null
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                        ),
+                                        _buildStatRow(
+                                          context,
+                                          icon: Icons.update_rounded,
+                                          label: tr('lastCheck'),
+                                          value:
+                                              app?.app.lastUpdateCheck
+                                                  ?.toLocal()
+                                                  .toString()
+                                                  .split('.')
+                                                  .first ??
+                                              tr('never'),
                                         ),
                                       ],
                                     ),
 
-                                  // 4. Advanced Group
-                                  ExpressiveSettingsGroup(
-                                    title: tr('advanced'),
-                                    children: [
-                                      ExpansionTile(
-                                        title: Text(tr('advancedSettings')),
-                                        leading: const Icon(Icons.tune_rounded),
+                                    // 3. Category Group
+                                    ExpressiveSettingsGroup(
+                                      title: tr('categories'),
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: CategoryEditorSelector(
+                                            alignment: WrapAlignment.start,
+                                            preselected:
+                                                app?.app.categories != null
+                                                ? app!.app.categories.toSet()
+                                                : {},
+                                            onSelected: (categories) {
+                                              if (app != null) {
+                                                app.app.categories = categories;
+                                                appsProvider.saveApps([
+                                                  app.app,
+                                                ]);
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    // 3.5 Tags Group
+                                    if (app != null)
+                                      ExpressiveSettingsGroup(
+                                        title: tr('tags'),
                                         children: [
-                                          ListTile(
-                                            title: Text(tr('additionalOptions')),
-                                            leading: const Icon(Icons.settings_input_composite_rounded),
-                                            onTap: () async {
-                                              var values = await showAdditionalOptionsDialog();
-                                              handleAdditionalOptionChanges(values);
-                                            },
-                                          ),
-                                          SwitchListTile(
-                                            title: Text(tr('trackOnly')),
-                                            value: trackOnly,
-                                            onChanged: (val) {
-                                              if (app != null) {
-                                                app.app.additionalSettings['trackOnly'] = val;
-                                                appsProvider.saveApps([app.app]);
-                                                setState(() {});
-                                              }
-                                            },
-                                          ),
-                                          SwitchListTile(
-                                            title: Text(tr('versionDetection')),
-                                            value: isVersionDetectionStandard,
-                                            onChanged: (val) {
-                                              if (app != null) {
-                                                app.app.additionalSettings['versionDetection'] = val;
-                                                appsProvider.saveApps([app.app]);
-                                                setState(() {});
-                                              }
-                                            },
+                                          Padding(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: _buildTagsSection(
+                                              context,
+                                              app,
+                                              appsProvider,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 150),
-                                ],
+
+                                    // 4. Advanced Group
+                                    ExpressiveSettingsGroup(
+                                      title: tr('advanced'),
+                                      children: [
+                                        ExpansionTile(
+                                          title: Text(tr('advancedSettings')),
+                                          leading: const Icon(
+                                            Icons.tune_rounded,
+                                          ),
+                                          children: [
+                                            ListTile(
+                                              title: Text(
+                                                tr('additionalOptions'),
+                                              ),
+                                              leading: const Icon(
+                                                Icons
+                                                    .settings_input_composite_rounded,
+                                              ),
+                                              onTap: () async {
+                                                var values =
+                                                    await showAdditionalOptionsDialog();
+                                                handleAdditionalOptionChanges(
+                                                  values,
+                                                );
+                                              },
+                                            ),
+                                            SwitchListTile(
+                                              title: Text(tr('trackOnly')),
+                                              value: trackOnly,
+                                              onChanged: (val) {
+                                                if (app != null) {
+                                                  app.app.additionalSettings['trackOnly'] =
+                                                      val;
+                                                  appsProvider.saveApps([
+                                                    app.app,
+                                                  ]);
+                                                  setState(() {});
+                                                }
+                                              },
+                                            ),
+                                            SwitchListTile(
+                                              title: Text(
+                                                tr('versionDetection'),
+                                              ),
+                                              value: isVersionDetectionStandard,
+                                              onChanged: (val) {
+                                                if (app != null) {
+                                                  app.app.additionalSettings['versionDetection'] =
+                                                      val;
+                                                  appsProvider.saveApps([
+                                                    app.app,
+                                                  ]);
+                                                  setState(() {});
+                                                }
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 150),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      )
-                    : ListView(
-                        children: [
-                          _buildLegacyFullInfoColumn(context, app, appsProvider, highlightTouchTargets, updating),
-                        ],
-                      )),
+                          ],
+                        )
+                      : ListView(
+                          children: [
+                            _buildLegacyFullInfoColumn(
+                              context,
+                              app,
+                              appsProvider,
+                              highlightTouchTargets,
+                              updating,
+                            ),
+                          ],
+                        )),
           ),
-          if (app != null && !showAppWebpageFinal && appsProvider.settingsProvider.plusEnableModernAppPage)
+          if (app != null &&
+              !showAppWebpageFinal &&
+              appsProvider.settingsProvider.plusEnableModernAppPage)
             AppDescriptionSlider(app: app),
         ],
       ),
@@ -498,7 +590,7 @@ class _AppPageState extends State<AppPage> {
                     ? tr('installed')
                     : tr('appsUpdated');
                 AppHaptics.heavyImpact();
-                
+
                 // Handle different source types
                 if (settings.preferredUpdateSource == 'play_store' ||
                     settings.preferredUpdateSource == 'aurora') {
@@ -565,8 +657,17 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  Widget _buildMainInfo(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
-    var source = app != null ? SourceProvider().getSource(app.app.url, overrideSource: app.app.overrideSource) : null;
+  Widget _buildMainInfo(
+    BuildContext context,
+    AppInMemory? app,
+    AppsProvider appsProvider,
+  ) {
+    var source = app != null
+        ? SourceProvider().getSource(
+            app.app.url,
+            overrideSource: app.app.overrideSource,
+          )
+        : null;
     return Column(
       children: [
         const SizedBox(height: 20),
@@ -579,16 +680,29 @@ class _AppPageState extends State<AppPage> {
                 title: tr('appearance'),
                 actions: [
                   if (app?.installedInfo != null)
-                    MapEntry(tr('openAppInfo'), () => AppInstallService.openAppSettings(app!.app.id)),
-                  MapEntry(tr('appearance'), () => pushRoute(context, const SettingsPage(initialTab: 0))),
+                    MapEntry(
+                      tr('openAppInfo'),
+                      () => AppInstallService.openAppSettings(app!.app.id),
+                    ),
+                  MapEntry(
+                    tr('appearance'),
+                    () => pushRoute(context, const SettingsPage(initialTab: 0)),
+                  ),
                 ],
               );
             },
             child: Hero(
               tag: 'app_icon_${widget.appId}',
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(appsProvider.settingsProvider.plusGlobalCornerRadius),
-                child: Image.memory(app!.icon!, height: 120, width: 120, gaplessPlayback: true),
+                borderRadius: BorderRadius.circular(
+                  appsProvider.settingsProvider.plusGlobalCornerRadius,
+                ),
+                child: Image.memory(
+                  app!.icon!,
+                  height: 120,
+                  width: 120,
+                  gaplessPlayback: true,
+                ),
               ),
             ),
           ),
@@ -596,7 +710,9 @@ class _AppPageState extends State<AppPage> {
         Text(
           app?.name ?? tr('app'),
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         GestureDetector(
@@ -607,14 +723,18 @@ class _AppPageState extends State<AppPage> {
               actions: [
                 MapEntry(tr('copy'), () {
                   Clipboard.setData(ClipboardData(text: app?.author ?? ''));
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
                 }),
               ],
             );
           },
           child: Text(
             tr('byX', args: [app?.author ?? tr('unknown')]),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -665,7 +785,9 @@ class _AppPageState extends State<AppPage> {
               actions: [
                 MapEntry(tr('copy'), () {
                   Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
                 }),
               ],
             );
@@ -694,79 +816,100 @@ class _AppPageState extends State<AppPage> {
               actions: [
                 MapEntry(tr('copy'), () {
                   Clipboard.setData(ClipboardData(text: app?.app.id ?? ''));
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                  );
                 }),
               ],
             );
           },
           child: Text(
             app?.app.id ?? '',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatsSection(BuildContext context, AppInMemory? app, bool updating, bool highlightTouchTargets, AppsProvider appsProvider) {
+  Widget _buildStatsSection(
+    BuildContext context,
+    AppInMemory? app,
+    bool updating,
+    bool highlightTouchTargets,
+    AppsProvider appsProvider,
+  ) {
     bool installed = app?.app.installedVersion != null;
     bool upToDate = app?.app.installedVersion == app?.app.latestVersion;
     var changeLogFn = app != null ? getChangeLogFn(context, app.app) : null;
     final settings = appsProvider.settingsProvider;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final radius = settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusGlobalCornerRadius;
     final statsContainer = Container(
       decoration: BoxDecoration(
-        color: (isDark
-                ? Theme.of(context).colorScheme.surfaceContainerLow
-                : Theme.of(context).colorScheme.surface)
-            .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
+        color:
+            (isDark
+                    ? Theme.of(context).colorScheme.surfaceContainerLow
+                    : Theme.of(context).colorScheme.surface)
+                .withOpacity(plusSettings.plusEnableGlassmorphism ? 0.6 : 1.0),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1),
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(
+            plusSettings.plusEnableGlassmorphism ? 0.4 : 0.1,
+          ),
         ),
       ),
       padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
           _buildStatRow(
-                context,
-                icon: Icons.install_mobile_rounded,
-                label: tr('installed'),
-                value: app?.app.installedVersion ?? tr('notInstalled'),
-                isBold: true,
-              ),
-              const Divider(height: 24),
-              _buildStatRow(
-                context,
-                icon: Icons.new_releases_rounded,
-                label: tr('latest'),
-                value: app?.app.latestVersion ?? tr('unknown'),
-                valueColor: upToDate ? null : Theme.of(context).colorScheme.primary,
-              ),
-              const Divider(height: 24),
-              _buildStatRow(
-                context,
-                icon: Icons.update_rounded,
-                label: tr('lastCheck'),
-                value: app?.app.lastUpdateCheck?.toLocal().toString().split('.').first ?? tr('never'),
-              ),
-              if (changeLogFn != null) ...[
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: changeLogFn,
-                  icon: const Icon(Icons.history_rounded, size: 18),
-                  label: Text(tr('viewChangelog')),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+            context,
+            icon: Icons.install_mobile_rounded,
+            label: tr('installed'),
+            value: app?.app.installedVersion ?? tr('notInstalled'),
+            isBold: true,
+          ),
+          const Divider(height: 24),
+          _buildStatRow(
+            context,
+            icon: Icons.new_releases_rounded,
+            label: tr('latest'),
+            value: app?.app.latestVersion ?? tr('unknown'),
+            valueColor: upToDate ? null : Theme.of(context).colorScheme.primary,
+          ),
+          const Divider(height: 24),
+          _buildStatRow(
+            context,
+            icon: Icons.update_rounded,
+            label: tr('lastCheck'),
+            value:
+                app?.app.lastUpdateCheck
+                    ?.toLocal()
+                    .toString()
+                    .split('.')
+                    .first ??
+                tr('never'),
+          ),
+          if (changeLogFn != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: changeLogFn,
+              icon: const Icon(Icons.history_rounded, size: 18),
+              label: Text(tr('viewChangelog')),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
-    if (!settings.plusEnableGlassmorphism) {
+    if (!plusSettings.plusEnableGlassmorphism) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: statsContainer,
@@ -781,10 +924,21 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  Widget _buildStatRow(BuildContext context, {required IconData icon, required String label, required String value, Color? valueColor, bool isBold = false}) {
+  Widget _buildStatRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+    bool isBold = false,
+  }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(width: 12),
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
         const Spacer(),
@@ -803,17 +957,26 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  Widget _buildCategorySection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+  Widget _buildCategorySection(
+    BuildContext context,
+    AppInMemory? app,
+    AppsProvider appsProvider,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(tr('categories'), style: Theme.of(context).textTheme.titleSmall),
+          child: Text(
+            tr('categories'),
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
         ),
         CategoryEditorSelector(
           alignment: WrapAlignment.start,
-          preselected: app?.app.categories != null ? app!.app.categories.toSet() : {},
+          preselected: app?.app.categories != null
+              ? app!.app.categories.toSet()
+              : {},
           onSelected: (categories) {
             if (app != null) {
               app.app.categories = categories;
@@ -825,10 +988,18 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  Widget _buildTagsSection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+  Widget _buildTagsSection(
+    BuildContext context,
+    AppInMemory? app,
+    AppsProvider appsProvider,
+  ) {
     if (app == null) return const SizedBox.shrink();
-    
-    final allTags = appsProvider.getAppValues().expand((a) => a.app.tags).toSet().toList();
+
+    final allTags = appsProvider
+        .getAppValues()
+        .expand((a) => a.app.tags)
+        .toSet()
+        .toList();
     allTags.sort();
 
     return Column(
@@ -836,7 +1007,10 @@ class _AppPageState extends State<AppPage> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(tr('tags'), style: Theme.of(context).textTheme.titleSmall),
+          child: Text(
+            tr('tags'),
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
         ),
         if (app.app.tags.isEmpty)
           OutlinedButton.icon(
@@ -854,7 +1028,9 @@ class _AppPageState extends State<AppPage> {
             icon: const Icon(Icons.add_rounded, size: 18),
             label: Text(tr('addTags')),
             style: OutlinedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           )
         else
@@ -862,20 +1038,22 @@ class _AppPageState extends State<AppPage> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              ...app.app.tags.map((tag) => ActionChip(
-                label: Text(tag),
-                onPressed: () async {
-                  final newTags = await showTagEditor(
-                    context: context,
-                    currentTags: app.app.tags,
-                    allTags: allTags,
-                  );
-                  if (newTags != null) {
-                    app.app.tags = newTags;
-                    appsProvider.saveApps([app.app]);
-                  }
-                },
-              )),
+              ...app.app.tags.map(
+                (tag) => ActionChip(
+                  label: Text(tag),
+                  onPressed: () async {
+                    final newTags = await showTagEditor(
+                      context: context,
+                      currentTags: app.app.tags,
+                      allTags: allTags,
+                    );
+                    if (newTags != null) {
+                      app.app.tags = newTags;
+                      appsProvider.saveApps([app.app]);
+                    }
+                  },
+                ),
+              ),
               ActionChip(
                 avatar: const Icon(Icons.add_rounded, size: 16),
                 label: Text(tr('add')),
@@ -897,9 +1075,16 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  Widget _buildAboutSection(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+  Widget _buildAboutSection(
+    BuildContext context,
+    AppInMemory? app,
+    AppsProvider appsProvider,
+  ) {
     final about = app?.app.additionalSettings['about'];
-    if (about == null || about.toString().isEmpty || appsProvider.settingsProvider.plusEnablePopupSlider) return const SizedBox.shrink();
+    if (about == null ||
+        about.toString().isEmpty ||
+        appsProvider.settingsProvider.plusEnablePopupSlider)
+      return const SizedBox.shrink();
     final settings = appsProvider.settingsProvider;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -908,77 +1093,106 @@ class _AppPageState extends State<AppPage> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(tr('about'), style: Theme.of(context).textTheme.titleSmall),
+          child: Text(
+            tr('about'),
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
         ),
-        Builder(builder: (ctx) {
-          final aboutRadius = settings.plusGlobalCornerRadius;
-          final aboutContainer = Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: (isDark
-                      ? Theme.of(ctx).colorScheme.surfaceContainerLow
-                      : Theme.of(ctx).colorScheme.surface)
-                  .withOpacity(settings.plusEnableGlassmorphism ? 0.6 : 1.0),
-              borderRadius: BorderRadius.circular(aboutRadius),
-              border: Border.all(
-                color: Theme.of(ctx).colorScheme.outlineVariant.withOpacity(settings.plusEnableGlassmorphism ? 0.4 : 0.1),
-              ),
-            ),
-            child: MarkdownBody(
-              data: about.toString(),
-              onTapLink: (text, href, title) => href != null ? launchUrlString(href, mode: LaunchMode.externalApplication) : null,
-              extensionSet: md.ExtensionSet(
-                md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                [md.EmojiSyntax(), ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes],
-              ),
-              styleSheet: MarkdownStyleSheet(
-                p: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.9),
+        Builder(
+          builder: (ctx) {
+            final aboutRadius = plusSettings.plusGlobalCornerRadius;
+            final aboutContainer = Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color:
+                    (isDark
+                            ? Theme.of(ctx).colorScheme.surfaceContainerLow
+                            : Theme.of(ctx).colorScheme.surface)
+                        .withOpacity(
+                          plusSettings.plusEnableGlassmorphism ? 0.6 : 1.0,
+                        ),
+                borderRadius: BorderRadius.circular(aboutRadius),
+                border: Border.all(
+                  color: Theme.of(ctx).colorScheme.outlineVariant.withOpacity(
+                    plusSettings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                  ),
                 ),
               ),
-            ),
-          );
-          if (!settings.plusEnableGlassmorphism) {
+              child: MarkdownBody(
+                data: about.toString(),
+                onTapLink: (text, href, title) => href != null
+                    ? launchUrlString(
+                        href,
+                        mode: LaunchMode.externalApplication,
+                      )
+                    : null,
+                extensionSet: md.ExtensionSet(
+                  md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                  [
+                    md.EmojiSyntax(),
+                    ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+                  ],
+                ),
+                styleSheet: MarkdownStyleSheet(
+                  p: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.9),
+                  ),
+                ),
+              ),
+            );
+            if (!plusSettings.plusEnableGlassmorphism) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(aboutRadius),
+                child: aboutContainer,
+              );
+            }
             return ClipRRect(
               borderRadius: BorderRadius.circular(aboutRadius),
-              child: aboutContainer,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: aboutContainer,
+              ),
             );
-          }
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(aboutRadius),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: aboutContainer,
-            ),
-          );
-        }),
+          },
+        ),
       ],
     );
   }
 
-  void _showAppDetailsDialog(BuildContext context, AppInMemory? app, AppsProvider appsProvider) {
+  void _showAppDetailsDialog(
+    BuildContext context,
+    AppInMemory? app,
+    AppsProvider appsProvider,
+  ) {
     showDialog(
       context: context,
       builder: (_) => GlassDialog(
         title: app?.name ?? '',
         content: Column(
           children: [
-            if (app?.icon != null) Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
+            if (app?.icon != null)
+              Image.memory(app!.icon!, height: 80, gaplessPlayback: true),
             const SizedBox(height: 16),
-            Text(app?.app.id ?? '', style: Theme.of(context).textTheme.labelSmall),
+            Text(
+              app?.app.id ?? '',
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ok'))),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('ok')),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildLegacyFullInfoColumn(
-    BuildContext context, 
-    AppInMemory? app, 
+    BuildContext context,
+    AppInMemory? app,
     AppsProvider appsProvider,
     bool highlightTouchTargets,
     bool updating,
@@ -1007,19 +1221,19 @@ class _AppPageState extends State<AppPage> {
                               if (app?.installedInfo != null)
                                 MapEntry(
                                   tr('openAppInfo'),
-                                  () => AppInstallService.openAppSettings(app!.app.id),
+                                  () => AppInstallService.openAppSettings(
+                                    app!.app.id,
+                                  ),
                                 ),
-                              MapEntry(
-                                tr('appearance'),
-                                () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const SettingsPage(initialTab: 0),
-                                    ),
-                                  );
-                                },
-                              ),
+                              MapEntry(tr('appearance'), () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SettingsPage(initialTab: 0),
+                                  ),
+                                );
+                              }),
                             ],
                           );
                         },
@@ -1089,10 +1303,7 @@ class _AppPageState extends State<AppPage> {
                 urlToOpen = 'https://github.com/$owner/$repo/releases';
               }
             }
-            launchUrlString(
-              urlToOpen,
-              mode: LaunchMode.externalApplication,
-            );
+            launchUrlString(urlToOpen, mode: LaunchMode.externalApplication);
           },
           onLongPress: () {
             AppHaptics.heavyImpact();
@@ -1143,15 +1354,21 @@ class _AppPageState extends State<AppPage> {
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ),
-        _buildLegacyInfoColumn(context, app, appsProvider, highlightTouchTargets, updating),
+        _buildLegacyInfoColumn(
+          context,
+          app,
+          appsProvider,
+          highlightTouchTargets,
+          updating,
+        ),
         const SizedBox(height: 150),
       ],
     );
   }
 
   Widget _buildLegacyInfoColumn(
-    BuildContext context, 
-    AppInMemory? app, 
+    BuildContext context,
+    AppInMemory? app,
     AppsProvider appsProvider,
     bool highlightTouchTargets,
     bool updating,
@@ -1225,17 +1442,18 @@ class _AppPageState extends State<AppPage> {
                       child: Text(
                         app?.app.releaseDate == null
                             ? tr('changes')
-                            : DateFormat('MMM d, yyyy • h:mm a').format(app!.app.releaseDate!.toLocal()),
+                            : DateFormat(
+                                'MMM d, yyyy • h:mm a',
+                              ).format(app!.app.releaseDate!.toLocal()),
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelSmall!
-                            .copyWith(
-                              decoration: changeLogFn != null
-                                  ? TextDecoration.underline
-                                  : null,
-                              fontStyle: changeLogFn != null
-                                  ? FontStyle.italic
-                                  : null,
-                            ),
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          decoration: changeLogFn != null
+                              ? TextDecoration.underline
+                              : null,
+                          fontStyle: changeLogFn != null
+                              ? FontStyle.italic
+                              : null,
+                        ),
                       ),
                     )
                   : const SizedBox.shrink(),
@@ -1273,8 +1491,7 @@ class _AppPageState extends State<AppPage> {
                                   ? Theme.of(context).primaryColor
                                   : Theme.of(context).primaryColorLight)
                               .withOpacity(
-                                Theme.of(context).brightness ==
-                                        Brightness.light
+                                Theme.of(context).brightness == Brightness.light
                                     ? 20 / 255
                                     : 40 / 255,
                               )
@@ -1469,23 +1686,32 @@ class _AppBottomBarState extends State<_AppBottomBar> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final updateSettings = context.watch<UpdateSettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final themeSettings = context.watch<ThemeSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final barRadius = radius.clamp(24.0, 48.0);
 
     return Consumer<AppsProvider>(
       builder: (context, appsProvider, _) {
-        final currentApp = widget.app != null ? appsProvider.apps[widget.app!.app.id] : null;
+        final currentApp = widget.app != null
+            ? appsProvider.apps[widget.app!.app.id]
+            : null;
         final busy = currentApp?.downloadProgress != null || widget.updating;
 
         final barContent = Container(
           decoration: BoxDecoration(
             color: colorScheme.surface.withOpacity(enableGlass ? 0.75 : 1.0),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(barRadius)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(barRadius),
+            ),
             border: Border(
               top: BorderSide(
                 color: enableGlass
@@ -1513,7 +1739,7 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                     ),
                   ),
                 ),
-              
+
               Padding(
                 padding: EdgeInsets.fromLTRB(
                   16,
@@ -1530,17 +1756,26 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
                           children: [
-                            Icon(Icons.store_outlined, size: 20, color: colorScheme.primary),
+                            Icon(
+                              Icons.store_outlined,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
                             const SizedBox(width: 10),
                             Text(
                               tr('preferredUpdateSource'),
-                              style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const Spacer(),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                                color: colorScheme.surfaceContainerHighest
+                                    .withOpacity(0.4),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: colorScheme.outline.withOpacity(0.1),
@@ -1561,9 +1796,18 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                                         }
                                       },
                                 items: [
-                                  DropdownMenuItem(value: 'direct', child: Text(tr('direct'))),
-                                  DropdownMenuItem(value: 'play_store', child: Text(tr('playStore'))),
-                                  DropdownMenuItem(value: 'aurora', child: Text(tr('auroraStore'))),
+                                  DropdownMenuItem(
+                                    value: 'direct',
+                                    child: Text(tr('direct')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'play_store',
+                                    child: Text(tr('playStore')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'aurora',
+                                    child: Text(tr('auroraStore')),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1576,31 +1820,69 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Row(
                           children: [
-                            Icon(Icons.label_outline, size: 20, color: colorScheme.secondary),
+                            Icon(
+                              Icons.label_outline,
+                              size: 20,
+                              color: colorScheme.secondary,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: Row(
                                   children: widget.app!.app.tags.isEmpty
-                                      ? [Text(tr('noTags'), style: theme.textTheme.labelMedium?.copyWith(fontStyle: FontStyle.italic, opacity: 0.6))]
-                                      : widget.app!.app.tags.map((tag) => Padding(
-                                            padding: const EdgeInsets.only(right: 6),
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: colorScheme.secondaryContainer.withOpacity(0.3),
-                                                borderRadius: BorderRadius.circular(20),
+                                      ? [
+                                          Text(
+                                            tr('noTags'),
+                                            style: theme.textTheme.labelMedium
+                                                ?.copyWith(
+                                                  fontStyle: FontStyle.italic,
+                                                  opacity: 0.6,
+                                                ),
+                                          ),
+                                        ]
+                                      : widget.app!.app.tags
+                                            .map(
+                                              (tag) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                  right: 6,
+                                                ),
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 4,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: colorScheme
+                                                        .secondaryContainer
+                                                        .withOpacity(0.3),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    tag,
+                                                    style: const TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                              child: Text(tag, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                                            ),
-                                          )).toList(),
+                                            )
+                                            .toList(),
                                 ),
                               ),
                             ),
                             IconButton(
                               onPressed: busy ? null : widget.onEditTags,
-                              icon: const Icon(Icons.add_circle_outline_rounded, size: 22),
+                              icon: const Icon(
+                                Icons.add_circle_outline_rounded,
+                                size: 22,
+                              ),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               visualDensity: VisualDensity.compact,
@@ -1609,7 +1891,7 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                           ],
                         ),
                       ),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -1619,12 +1901,15 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (widget.source != null &&
-                                    widget.source!
+                                    widget
+                                        .source!
                                         .combinedAppSpecificSettingFormItems
                                         .isNotEmpty)
                                   _buildCircularAction(
                                     icon: Icons.edit_rounded,
-                                    onPressed: busy ? null : widget.onAdditionalOptions,
+                                    onPressed: busy
+                                        ? null
+                                        : widget.onAdditionalOptions,
                                     tooltip: tr('additionalOptions'),
                                     colorScheme: colorScheme,
                                   ),
@@ -1632,12 +1917,13 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                                     currentApp?.installedInfo != null)
                                   _buildCircularAction(
                                     icon: Icons.settings_rounded,
-                                    onPressed: () =>
-                                        appsProvider.openAppSettings(widget.app!.app.id),
+                                    onPressed: () => appsProvider
+                                        .openAppSettings(widget.app!.app.id),
                                     tooltip: tr('settings'),
                                     colorScheme: colorScheme,
                                   ),
-                                if (widget.app != null && widget.showAppWebpageFinal)
+                                if (widget.app != null &&
+                                    widget.showAppWebpageFinal)
                                   _buildCircularAction(
                                     icon: Icons.more_horiz_rounded,
                                     onPressed: widget.onMore,
@@ -1649,17 +1935,22 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                                     !widget.trackOnly)
                                   _buildCircularAction(
                                     icon: Icons.done_rounded,
-                                    onPressed: busy ? null : widget.onMarkUpdated,
+                                    onPressed: busy
+                                        ? null
+                                        : widget.onMarkUpdated,
                                     tooltip: tr('markUpdated'),
                                     colorScheme: colorScheme,
                                   ),
-                                if ((!widget.isVersionDetectionStandard || widget.trackOnly) &&
+                                if ((!widget.isVersionDetectionStandard ||
+                                        widget.trackOnly) &&
                                     widget.app?.app.installedVersion != null &&
                                     widget.app?.app.installedVersion ==
                                         widget.app?.app.latestVersion)
                                   _buildCircularAction(
                                     icon: Icons.restore_rounded,
-                                    onPressed: busy ? null : widget.onResetInstallStatus,
+                                    onPressed: busy
+                                        ? null
+                                        : widget.onResetInstallStatus,
                                     tooltip: tr('resetInstallStatus'),
                                     colorScheme: colorScheme,
                                   ),
@@ -1672,9 +1963,12 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                         Expanded(
                           flex: 3,
                           child: GestureDetector(
-                            onTapDown: (_) => setState(() => _isButtonPressed = true),
-                            onTapUp: (_) => setState(() => _isButtonPressed = false),
-                            onTapCancel: () => setState(() => _isButtonPressed = false),
+                            onTapDown: (_) =>
+                                setState(() => _isButtonPressed = true),
+                            onTapUp: (_) =>
+                                setState(() => _isButtonPressed = false),
+                            onTapCancel: () =>
+                                setState(() => _isButtonPressed = false),
                             child: AnimatedScale(
                               scale: _isButtonPressed ? 0.94 : 1.0,
                               duration: const Duration(milliseconds: 100),
@@ -1685,7 +1979,9 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                                     : null,
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size(0, 52),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                   elevation: 0,
                                 ),
                                 child: AnimatedSwitcher(
@@ -1696,41 +1992,64 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                                           width: 24,
                                           height: 24,
                                           child: ExpressiveCircularProgressIndicator(
-                                            value: currentApp?.downloadProgress != null &&
-                                                    currentApp!.downloadProgress! >= 0
-                                                ? currentApp.downloadProgress! / 100
+                                            value:
+                                                currentApp?.downloadProgress !=
+                                                        null &&
+                                                    currentApp!
+                                                            .downloadProgress! >=
+                                                        0
+                                                ? currentApp.downloadProgress! /
+                                                      100
                                                 : null,
                                             strokeWidth: 3,
                                           ),
                                         )
                                       : Row(
                                           key: const ValueKey('btn_content'),
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(
-                                              widget.preferredSource == 'play_store' || widget.preferredSource == 'aurora'
+                                              widget.preferredSource ==
+                                                          'play_store' ||
+                                                      widget.preferredSource ==
+                                                          'aurora'
                                                   ? Icons.open_in_new_rounded
-                                                  : widget.app?.app.installedVersion == null
-                                                      ? Icons.download_rounded
-                                                      : Icons.system_update_rounded,
+                                                  : widget
+                                                            .app
+                                                            ?.app
+                                                            .installedVersion ==
+                                                        null
+                                                  ? Icons.download_rounded
+                                                  : Icons.system_update_rounded,
                                               size: 22,
                                             ),
                                             const SizedBox(width: 10),
                                             Flexible(
                                               child: Text(
-                                                widget.preferredSource == 'play_store'
+                                                widget.preferredSource ==
+                                                        'play_store'
                                                     ? tr('playStore')
-                                                    : widget.preferredSource == 'aurora'
+                                                    : widget.preferredSource ==
+                                                          'aurora'
                                                     ? 'Aurora Store'
-                                                    : widget.app?.app.installedVersion == null
-                                                        ? !widget.trackOnly
-                                                              ? tr('install')
-                                                              : tr('markInstalled')
-                                                        : !widget.trackOnly
-                                                        ? tr('update')
-                                                        : tr('markUpdated'),
-                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: -0.2),
+                                                    : widget
+                                                              .app
+                                                              ?.app
+                                                              .installedVersion ==
+                                                          null
+                                                    ? !widget.trackOnly
+                                                          ? tr('install')
+                                                          : tr('markInstalled')
+                                                    : !widget.trackOnly
+                                                    ? tr('update')
+                                                    : tr('markUpdated'),
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: -0.2,
+                                                ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -1749,7 +2068,8 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                           tooltip: tr('remove'),
                           colorScheme: colorScheme,
                           color: colorScheme.error,
-                          containerColor: colorScheme.errorContainer.withOpacity(0.3),
+                          containerColor: colorScheme.errorContainer
+                              .withOpacity(0.3),
                         ),
                       ],
                     ),
@@ -1763,7 +2083,9 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                           child: child,
                         ),
                       ),
-                      child: currentApp?.downloadProgress != null && currentApp!.downloadProgress! >= 0
+                      child:
+                          currentApp?.downloadProgress != null &&
+                              currentApp!.downloadProgress! >= 0
                           ? Padding(
                               key: const ValueKey('progress_bar'),
                               padding: const EdgeInsets.only(top: 12),
@@ -1777,41 +2099,53 @@ class _AppBottomBarState extends State<_AppBottomBar> {
                                   ),
                                   const SizedBox(width: 12),
                                   TextButton(
-                                    onPressed: () => appsProvider.cancelDownload(widget.app!.app.id),
+                                    onPressed: () => appsProvider
+                                        .cancelDownload(widget.app!.app.id),
                                     style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                    child: Text(tr('cancel'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                    child: Text(
+                                      tr('cancel'),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                             )
                           : currentApp?.downloadProgress != null
-                              ? Padding(
-                                  key: const ValueKey('installing_bar'),
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: Row(
-                                    children: [
-                                      const Expanded(
-                                        child: ExpressiveProgressIndicator(
-                                          value: null,
-                                          height: 6,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        tr('installing'),
-                                        style: TextStyle(
-                                          color: colorScheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
+                          ? Padding(
+                              key: const ValueKey('installing_bar'),
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Row(
+                                children: [
+                                  const Expanded(
+                                    child: ExpressiveProgressIndicator(
+                                      value: null,
+                                      height: 6,
+                                    ),
                                   ),
-                                )
-                              : const SizedBox.shrink(key: ValueKey('no_progress')),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    tr('installing'),
+                                    style: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(key: ValueKey('no_progress')),
                     ),
                   ],
                 ),
@@ -1847,7 +2181,9 @@ class _AppBottomBarState extends State<_AppBottomBar> {
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: containerColor ?? colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color:
+                  containerColor ??
+                  colorScheme.surfaceContainerHighest.withOpacity(0.5),
               shape: BoxShape.circle,
             ),
             child: Icon(

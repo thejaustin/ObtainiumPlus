@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_package_manager/android_package_manager.dart' hide LaunchMode;
+import 'package:android_package_manager/android_package_manager.dart'
+    hide LaunchMode;
 import 'package:obtainium/app_sources/apkpure.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -35,21 +36,23 @@ class PlayStoreMirrorService {
     required Map<String, AppInMemory> trackedApps,
     Function(int current, int total)? onProgress,
   }) async {
-    final List<PackageInfo> installed = await AppInstallService.getAllInstalledInfo();
+    final List<PackageInfo> installed =
+        await AppInstallService.getAllInstalledInfo();
     final List<ExternalAppUpdate> updates = [];
-    
+
     // Filter out system apps and tracked apps
     final List<PackageInfo> untracked = installed.where((pkg) {
       if (pkg.packageName == null) return false;
-      
+
       // Ignore apps already tracked in Obtainium
       if (trackedApps.containsKey(pkg.packageName)) return false;
-      
+
       // Ignore common system/google packages that we shouldn't manage
-      if (pkg.packageName!.startsWith('com.android.') || 
+      if (pkg.packageName!.startsWith('com.android.') ||
           pkg.packageName!.startsWith('com.google.android.gms') ||
-          pkg.packageName == 'android') return false;
-          
+          pkg.packageName == 'android')
+        return false;
+
       return true;
     }).toList();
 
@@ -57,30 +60,37 @@ class PlayStoreMirrorService {
     for (final pkg in untracked) {
       count++;
       onProgress?.call(count, untracked.length);
-      
+
       try {
         // We use a timeout to prevent slow scans from hanging
-        final APKDetails details = await _backend.getLatestAPKDetails(
-          'https://apkpure.com/any/${pkg.packageName}',
-          {'autoApkFilterByArch': true},
-        ).timeout(const Duration(seconds: 5));
+        final APKDetails details = await _backend
+            .getLatestAPKDetails('https://apkpure.com/any/${pkg.packageName}', {
+              'autoApkFilterByArch': true,
+            })
+            .timeout(const Duration(seconds: 5));
 
-        final String currentVersion = pkg.versionName ?? pkg.versionCode.toString();
+        final String currentVersion =
+            pkg.versionName ?? pkg.versionCode.toString();
         final String latestVersion = details.version;
 
         // Simple version comparison
         if (latestVersion != currentVersion) {
-          final res = reconcileVersionDifferences(currentVersion, latestVersion);
+          final res = reconcileVersionDifferences(
+            currentVersion,
+            latestVersion,
+          );
           // If reconcile returns key=true, it means latest is actually newer
           if (res != null && res.key == true) {
-            updates.add(ExternalAppUpdate(
-              appId: pkg.packageName!,
-              name: details.names.name,
-              currentVersion: currentVersion,
-              latestVersion: latestVersion,
-              author: details.names.author,
-              releaseDate: details.releaseDate,
-            ));
+            updates.add(
+              ExternalAppUpdate(
+                appId: pkg.packageName!,
+                name: details.names.name,
+                currentVersion: currentVersion,
+                latestVersion: latestVersion,
+                author: details.names.author,
+                releaseDate: details.releaseDate,
+              ),
+            );
           }
         }
       } catch (e) {
@@ -109,10 +119,15 @@ class PlayStoreMirrorService {
     }
   }
 
-  static Future<void> openInPlayStore(String appId, {bool useAppLinks = true}) async {
+  static Future<void> openInPlayStore(
+    String appId, {
+    bool useAppLinks = true,
+  }) async {
     if (useAppLinks) {
       // Try using app links (https URL) first
-      final playStoreUri = Uri.parse('https://play.google.com/store/apps/details?id=$appId');
+      final playStoreUri = Uri.parse(
+        'https://play.google.com/store/apps/details?id=$appId',
+      );
       if (await canLaunchUrl(playStoreUri)) {
         try {
           await launchUrl(
@@ -125,7 +140,7 @@ class PlayStoreMirrorService {
         }
       }
     }
-    
+
     // Fallback to Android Intent with market:// scheme
     final intent = AndroidIntent(
       action: 'android.intent.action.VIEW',

@@ -33,7 +33,10 @@ class Log {
 
   Log.fromMap(Map<String, Object?> map) {
     id = map[idColumn] as int;
-    final levelIndex = (map[levelColumn] as int).clamp(0, LogLevels.values.length - 1);
+    final levelIndex = (map[levelColumn] as int).clamp(
+      0,
+      LogLevels.values.length - 1,
+    );
     level = LogLevels.values.elementAt(levelIndex);
     message = map[messageColumn] as String;
     timestamp = DateTime.fromMillisecondsSinceEpoch(
@@ -74,7 +77,7 @@ create table if not exists $logTable (
   Future<Log> add(String message, {LogLevels level = LogLevels.info}) async {
     Log l = Log(message, level);
     l.id = await (await getDB()).insert(logTable, l.toMap());
-    
+
     // Add Sentry breadcrumb
     SentryLevel sentryLevel;
     switch (level) {
@@ -91,11 +94,9 @@ create table if not exists $logTable (
         sentryLevel = SentryLevel.error;
         break;
     }
-    Sentry.addBreadcrumb(Breadcrumb(
-      message: message,
-      level: sentryLevel,
-      timestamp: l.timestamp,
-    ));
+    Sentry.addBreadcrumb(
+      Breadcrumb(message: message, level: sentryLevel, timestamp: l.timestamp),
+    );
 
     if (kDebugMode) {
       print(l);
@@ -103,8 +104,13 @@ create table if not exists $logTable (
     return l;
   }
 
-  Future<Log> logEvent(String event, Map<String, dynamic> params, {LogLevels level = LogLevels.info}) async {
-    String message = 'EVENT: $event | ${params.entries.map((e) => '${e.key}=${e.value}').join(', ')}';
+  Future<Log> logEvent(
+    String event,
+    Map<String, dynamic> params, {
+    LogLevels level = LogLevels.info,
+  }) async {
+    String message =
+        'EVENT: $event | ${params.entries.map((e) => '${e.key}=${e.value}').join(', ')}';
     return add(message, level: level);
   }
 
@@ -125,14 +131,16 @@ create table if not exists $logTable (
       whereArgs: where.value,
     );
     if (res > 0) {
-      unawaited(add(
-        plural(
-          'clearedNLogsBeforeXAfterY',
-          res,
-          namedArgs: {'before': before.toString(), 'after': after.toString()},
-          name: 'n',
+      unawaited(
+        add(
+          plural(
+            'clearedNLogsBeforeXAfterY',
+            res,
+            namedArgs: {'before': before.toString(), 'after': after.toString()},
+            name: 'n',
+          ),
         ),
-      ));
+      );
     }
     return res;
   }

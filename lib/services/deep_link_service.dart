@@ -57,7 +57,9 @@ class DeepLinkService {
               return GlassDialog(
                 title: tr('error'),
                 icon: Icons.warning_amber_outlined,
-                content: const Text('Invalid or potentially malicious JSON data.'),
+                content: const Text(
+                  'Invalid or potentially malicious JSON data.',
+                ),
                 actions: [
                   FilledButton(
                     onPressed: () => Navigator.of(ctx).pop(),
@@ -98,9 +100,7 @@ class DeepLinkService {
             ) !=
             null) {
           var result = await appsProvider.import(
-            action == 'app'
-                ? '{ "apps": [$dataStr] }'
-                : '{ "apps": $dataStr }',
+            action == 'app' ? '{ "apps": [$dataStr] }' : '{ "apps": $dataStr }',
           );
           if (context.mounted) {
             showMessage(

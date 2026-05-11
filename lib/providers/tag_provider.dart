@@ -3,7 +3,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 
 class TagProvider with ChangeNotifier {
   final AppsProvider appsProvider;
-  
+
   TagProvider(this.appsProvider);
 
   // Get all unique tags currently in use

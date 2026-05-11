@@ -77,10 +77,9 @@ class _StatisticsPageState extends State<StatisticsPage>
       final file = File('${tempDir.path}/$fileName');
       await file.writeAsString(jsonStr);
 
-      await Share.shareXFiles(
-        [XFile(file.path, name: fileName, mimeType: 'application/json')],
-        subject: fileName,
-      );
+      await Share.shareXFiles([
+        XFile(file.path, name: fileName, mimeType: 'application/json'),
+      ], subject: fileName);
     } catch (e) {
       if (mounted) {
         showError(e, context);
@@ -94,8 +93,7 @@ class _StatisticsPageState extends State<StatisticsPage>
     final allApps = appsProvider.getAppValues().toList();
 
     final totalApps = allApps.length;
-    final installedApps =
-        allApps.where((a) => a.installedInfo != null).length;
+    final installedApps = allApps.where((a) => a.installedInfo != null).length;
     final notInstalledApps = totalApps - installedApps;
     final updatesAvailable = allApps
         .where(
@@ -191,8 +189,7 @@ class _StatisticsPageState extends State<StatisticsPage>
 
           final successfulInstalls30Days = installEvents.length;
 
-          final sevenDaysAgo =
-              DateTime.now().subtract(const Duration(days: 7));
+          final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
           final successfulInstalls7Days = installEvents
               .where((l) => l.timestamp.isAfter(sevenDaysAgo))
               .length;
@@ -231,8 +228,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                           label: tr('notInstalled'),
                           value: notInstalledApps.toString(),
                           icon: Icons.cloud_off_rounded,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ]),
                     ),
@@ -275,9 +271,7 @@ class _StatisticsPageState extends State<StatisticsPage>
 
                 ExpressiveSettingsGroup(
                   title: tr('recentInstalls'),
-                  children: [
-                    _buildRecentHistoryList(context, installEvents),
-                  ],
+                  children: [_buildRecentHistoryList(context, installEvents)],
                 ),
               ],
             ),
@@ -287,7 +281,10 @@ class _StatisticsPageState extends State<StatisticsPage>
     );
   }
 
-  Widget _buildDistributionSection(BuildContext context, List<AppInMemory> apps) {
+  Widget _buildDistributionSection(
+    BuildContext context,
+    List<AppInMemory> apps,
+  ) {
     if (apps.isEmpty) return const SizedBox.shrink();
 
     final Map<String, int> categoryCounts = {};
@@ -306,11 +303,16 @@ class _StatisticsPageState extends State<StatisticsPage>
     for (var app in apps) {
       String source = 'Other';
       final url = app.app.url.toLowerCase();
-      if (url.contains('github.com')) source = 'GitHub';
-      else if (url.contains('gitlab.com')) source = 'GitLab';
-      else if (url.contains('f-droid.org')) source = 'F-Droid';
-      else if (url.contains('play.google.com')) source = 'Play Store';
-      else if (url.contains('apkpure.com')) source = 'APKPure';
+      if (url.contains('github.com'))
+        source = 'GitHub';
+      else if (url.contains('gitlab.com'))
+        source = 'GitLab';
+      else if (url.contains('f-droid.org'))
+        source = 'F-Droid';
+      else if (url.contains('play.google.com'))
+        source = 'Play Store';
+      else if (url.contains('apkpure.com'))
+        source = 'APKPure';
       sourceCounts[source] = (sourceCounts[source] ?? 0) + 1;
     }
 
@@ -348,8 +350,9 @@ class _StatisticsPageState extends State<StatisticsPage>
 
     final topEntries = sortedEntries.take(4).toList();
     if (sortedEntries.length > 4) {
-      final othersCount =
-          sortedEntries.skip(4).fold(0, (sum, e) => sum + e.value);
+      final othersCount = sortedEntries
+          .skip(4)
+          .fold(0, (sum, e) => sum + e.value);
       topEntries.add(MapEntry(tr('others'), othersCount));
     }
 
@@ -366,10 +369,9 @@ class _StatisticsPageState extends State<StatisticsPage>
       children: [
         Text(
           title,
-          style: Theme.of(context)
-              .textTheme
-              .labelLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         // Animated distribution bar
@@ -458,15 +460,16 @@ class _StatisticsPageState extends State<StatisticsPage>
               parent: _entranceController,
               curve: Interval(start, end, curve: Curves.easeOut),
             );
-            final slide = Tween<Offset>(
-              begin: const Offset(0, 0.2),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: _entranceController,
-                curve: Interval(start, end, curve: Curves.easeOutCubic),
-              ),
-            );
+            final slide =
+                Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entranceController,
+                    curve: Interval(start, end, curve: Curves.easeOutCubic),
+                  ),
+                );
 
             return FadeTransition(
               opacity: opacity,
@@ -479,9 +482,10 @@ class _StatisticsPageState extends State<StatisticsPage>
                     enabled: settings.plusEnableGlassmorphism,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerLow.withOpacity(
-                          settings.plusEnableGlassmorphism ? 0.5 : 1.0,
-                        ),
+                        color: theme.colorScheme.surfaceContainerLow
+                            .withOpacity(
+                              settings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                            ),
                         borderRadius: BorderRadius.circular(itemRadius),
                         border: Border.all(
                           color: theme.colorScheme.outline.withOpacity(
@@ -502,14 +506,19 @@ class _StatisticsPageState extends State<StatisticsPage>
                                 color: item.color.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(item.icon, color: item.color, size: 18),
+                              child: Icon(
+                                item.icon,
+                                color: item.color,
+                                size: 18,
+                              ),
                             ),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   item.value,
-                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: theme.colorScheme.onSurface,
                                         height: 1.1,
@@ -558,8 +567,9 @@ class _StatisticsPageState extends State<StatisticsPage>
     }
 
     final counts = List<int>.generate(30, (i) => dailyCounts[29 - i] ?? 0);
-    final maxCount =
-        counts.isEmpty ? 0 : counts.reduce((a, b) => a > b ? a : b);
+    final maxCount = counts.isEmpty
+        ? 0
+        : counts.reduce((a, b) => a > b ? a : b);
     final primaryColor = theme.colorScheme.primary;
     final bgColor = theme.colorScheme.surfaceContainerHighest.withOpacity(0.3);
 
@@ -577,7 +587,9 @@ class _StatisticsPageState extends State<StatisticsPage>
           decoration: BoxDecoration(
             color: bgColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: theme.colorScheme.outline.withOpacity(0.05)),
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(0.05),
+            ),
           ),
           child: CustomPaint(
             size: Size.infinite,
@@ -628,8 +640,7 @@ class _StatisticsPageState extends State<StatisticsPage>
 
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor:
-                Theme.of(context).colorScheme.primaryContainer,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             child: Icon(
               Icons.download_done_rounded,
               color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -704,14 +715,7 @@ class _ActivityPainter extends CustomPainter {
       } else {
         final prevX = (i - 1) * stepX;
         final prevY = size.height - (counts[i - 1] * scaleY);
-        path.cubicTo(
-          prevX + stepX / 2,
-          prevY,
-          x - stepX / 2,
-          y,
-          x,
-          y,
-        );
+        path.cubicTo(prevX + stepX / 2, prevY, x - stepX / 2, y, x, y);
       }
     }
 

@@ -10,6 +10,8 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:obtainium/custom_errors.dart';
+import 'package:crypto/crypto.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 
 Uint8List _encodeJson(Map<String, dynamic> data) {
   var encoder = const JsonEncoder.withIndent("    ");
@@ -18,6 +20,62 @@ Uint8List _encodeJson(Map<String, dynamic> data) {
 
 class AppExportService {
   AppExportService._();
+
+  static Future<String> decryptBackup(String data, String password) async {
+    return await compute(_decryptData, {'data': data, 'password': password});
+  }
+
+  static String _decryptData(Map<String, String> args) {
+    try {
+      final decodedData = jsonDecode(args['data']!);
+      if (decodedData is Map && decodedData['encrypted'] == true) {
+        final salt = decodedData['salt'];
+        final ivBase64 = decodedData['iv'];
+        final encryptedData = decodedData['data'];
+
+        final keyHash = sha256
+            .convert(utf8.encode(args['password']! + salt))
+            .bytes;
+        final key = encrypt.Key(Uint8List.fromList(keyHash));
+        final iv = encrypt.IV.fromBase64(ivBase64);
+
+        final encrypter = encrypt.Encrypter(
+          encrypt.AES(key, mode: encrypt.AESMode.cbc, padding: 'PKCS7'),
+        );
+        return encrypter.decrypt64(encryptedData, iv: iv);
+      }
+      return args['data']!;
+    } catch (e) {
+      throw ObtainiumError(tr('invalidBackupPassword'));
+    }
+  }
+
+  static Future<Uint8List> _encryptData(Map<String, dynamic> args) async {
+    final Map<String, dynamic> finalExport = args['exportData'];
+    final String password = args['password'];
+
+    var encoder = const JsonEncoder.withIndent("    ");
+    final jsonStr = encoder.convert(finalExport);
+
+    final salt = DateTime.now().millisecondsSinceEpoch.toString();
+    final keyHash = sha256.convert(utf8.encode(password + salt)).bytes;
+    final key = encrypt.Key(Uint8List.fromList(keyHash));
+    final iv = encrypt.IV.fromSecureRandom(16);
+
+    final encrypter = encrypt.Encrypter(
+      encrypt.AES(key, mode: encrypt.AESMode.cbc, padding: 'PKCS7'),
+    );
+    final encrypted = encrypter.encrypt(jsonStr, iv: iv);
+
+    final wrappedData = {
+      'encrypted': true,
+      'salt': salt,
+      'iv': iv.base64,
+      'data': encrypted.base64,
+    };
+
+    return Uint8List.fromList(utf8.encode(jsonEncode(wrappedData)));
+  }
 
   static Map<String, dynamic> generateExportJSON({
     required Map<String, AppInMemory> apps,
@@ -55,11 +113,32 @@ class AppExportService {
     return finalExport;
   }
 
+  static Future<Uint8List> getExportBytes({
+    required Map<String, AppInMemory> apps,
+    required SettingsProvider settingsProvider,
+    String? password,
+  }) async {
+    Map<String, dynamic> finalExport = generateExportJSON(
+      apps: apps,
+      settingsProvider: settingsProvider,
+    );
+
+    if (password != null && password.isNotEmpty) {
+      return await compute(_encryptData, {
+        'exportData': finalExport,
+        'password': password,
+      });
+    } else {
+      return await compute(_encodeJson, finalExport);
+    }
+  }
+
   static Future<String?> export({
     required Map<String, AppInMemory> apps,
     required SettingsProvider settingsProvider,
     bool pickOnly = false,
     bool isAuto = false,
+    String? password,
   }) async {
     var exportDir = await settingsProvider.getExportDir();
     if (isAuto) {
@@ -88,13 +167,11 @@ class AppExportService {
     }
     String? returnPath;
     if (!pickOnly) {
-      Map<String, dynamic> finalExport = generateExportJSON(
+      Uint8List bytes = await getExportBytes(
         apps: apps,
         settingsProvider: settingsProvider,
+        password: password,
       );
-      
-      // Run JSON encoding in a background isolate to prevent UI freeze
-      Uint8List bytes = await compute(_encodeJson, finalExport);
 
       var result = await saf.createFile(
         exportDir,
@@ -131,7 +208,10 @@ class AppExportService {
       await Future.delayed(const Duration(microseconds: 1));
     }
     for (App a in importedApps) {
-      var installedInfo = await AppInstallService.getInstalledInfo(a.id, printErr: false);
+      var installedInfo = await AppInstallService.getInstalledInfo(
+        a.id,
+        printErr: false,
+      );
       a.installedVersion =
           a.additionalSettings['useVersionCodeAsOSVersion'] == true
           ? installedInfo?.versionCode.toString()

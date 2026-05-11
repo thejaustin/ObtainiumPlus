@@ -223,7 +223,8 @@ class NotificationsProvider {
   }
 
   bool _isQuietHours() {
-    if (settings == null || !settings!.plusEnableNotificationQuietHours) return false;
+    if (settings == null || !settings!.plusEnableNotificationQuietHours)
+      return false;
     final now = DateTime.now();
     final hour = now.hour;
     final start = settings!.plusNotificationQuietHoursStart;
@@ -279,30 +280,34 @@ class NotificationsProvider {
     }
     await notifications.cancel(id);
   }
-Future<void> notifyRaw(
-  int id,
-  String title,
-  String message,
-  String channelCode,
-  String channelName,
-  String channelDescription,
-  Importance importance, {
-  bool cancelExisting = false,
-  int? progPercent,
-  bool onlyAlertOnce = false,
-  String? payload,
-}) async {
-  if (_isQuietHours() && importance != Importance.max) {
-    return; // Skip non-critical notifications during quiet hours
-  }
 
-  if (settings != null && settings!.plusEnableNotificationDigest && channelCode == 'UPDATES_AVAILABLE') {
-    // For Digest, we use a single fixed ID and group multiple updates
-    id = 999;
-    onlyAlertOnce = true;
-  }
+  Future<void> notifyRaw(
+    int id,
+    String title,
+    String message,
+    String channelCode,
+    String channelName,
+    String channelDescription,
+    Importance importance, {
+    bool cancelExisting = false,
+    int? progPercent,
+    bool onlyAlertOnce = false,
+    String? payload,
+  }) async {
+    if (_isQuietHours() && importance != Importance.max) {
+      return; // Skip non-critical notifications during quiet hours
+    }
 
-  if (cancelExisting) {      await cancel(id);
+    if (settings != null &&
+        settings!.plusEnableNotificationDigest &&
+        channelCode == 'UPDATES_AVAILABLE') {
+      // For Digest, we use a single fixed ID and group multiple updates
+      id = 999;
+      onlyAlertOnce = true;
+    }
+
+    if (cancelExisting) {
+      await cancel(id);
     }
     if (!isInitialized) {
       await initialize();

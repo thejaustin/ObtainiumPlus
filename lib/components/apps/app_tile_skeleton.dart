@@ -22,7 +22,9 @@ class AppTileSkeleton extends StatelessWidget {
         highlightColor: highlightColor,
         child: Card(
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(

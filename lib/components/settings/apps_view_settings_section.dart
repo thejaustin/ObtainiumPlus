@@ -5,6 +5,7 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Apps, Categories, and View settings section widget
@@ -29,7 +30,8 @@ class AppsViewSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> categoryWidgets = [
-      if (!isSearching || _matches('category')) CategoryEditorSelector(showLabelWhenNotEmpty: false),
+      if (!isSearching || _matches('category'))
+        CategoryEditorSelector(showLabelWhenNotEmpty: false),
       _buildFeatureToggle<ViewSettingsProvider>(
         context,
         icon: Icons.category_outlined,
@@ -45,13 +47,15 @@ class AppsViewSettingsSection extends StatelessWidget {
         title: tr('collapseCategoriesByDefault'),
         subtitle: tr('collapseCategoriesByDefaultDescription'),
         value: (s) => s.categoriesCollapsedByDefault,
-        onChanged: (s, v) => onSetState(() => s.categoriesCollapsedByDefault = v),
+        onChanged: (s, v) =>
+            onSetState(() => s.categoriesCollapsedByDefault = v),
         visible: (s) => _matches(tr('collapseCategoriesByDefault')),
       ),
     ];
 
     List<Widget> iconWidgets = [
-      if (_matches(tr('iconPosition'))) _buildCategoryIconPositionDropdown(context),
+      if (_matches(tr('iconPosition')))
+        _buildCategoryIconPositionDropdown(context),
       if (_matches(tr('iconCount'))) _buildCategoryIconCountSlider(context),
     ];
 
@@ -59,7 +63,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.pages_outlined,
         title: tr('plusModernAppPage'),
@@ -68,7 +72,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusEnableModernAppPage = v),
         visible: (s) => _matches(tr('plusModernAppPage')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.dashboard_customize_outlined,
         title: tr('plusHomeDashboard'),
@@ -77,7 +81,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusEnableHomeDashboard = v),
         visible: (s) => _matches(tr('plusHomeDashboard')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.auto_awesome_mosaic_outlined,
         title: tr('plusDeduplicateRecents'),
@@ -86,25 +90,27 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusDeduplicateRecents = v),
         visible: (s) => _matches(tr('plusDeduplicateRecents')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.gesture_rounded,
         title: tr('plusExpressiveProgress'),
         subtitle: tr('plusExpressiveProgressDescription'),
         value: (s) => s.plusEnableExpressiveProgress,
-        onChanged: (s, v) => onSetState(() => s.plusEnableExpressiveProgress = v),
+        onChanged: (s, v) =>
+            onSetState(() => s.plusEnableExpressiveProgress = v),
         visible: (s) => _matches(tr('plusExpressiveProgress')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.tablet_android_rounded,
         title: tr('plusResponsiveLayout'),
         subtitle: tr('plusResponsiveLayoutDescription'),
         value: (s) => s.plusEnableResponsiveAppLayout,
-        onChanged: (s, v) => onSetState(() => s.plusEnableResponsiveAppLayout = v),
+        onChanged: (s, v) =>
+            onSetState(() => s.plusEnableResponsiveAppLayout = v),
         visible: (s) => _matches(tr('plusResponsiveLayout')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.drag_indicator_rounded,
         title: tr('plusCategoryReorder'),
@@ -144,13 +150,14 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.displayShowDate = v),
         visible: (s) => _matches(tr('showDate')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.view_list_rounded,
         title: tr('plusModernAppListTile'),
         subtitle: tr('plusModernAppListTileDescription'),
         value: (s) => s.plusEnableModernAppListTile,
-        onChanged: (s, v) => onSetState(() => s.plusEnableModernAppListTile = v),
+        onChanged: (s, v) =>
+            onSetState(() => s.plusEnableModernAppListTile = v),
         visible: (s) => _matches(tr('plusModernAppListTile')),
       ),
     ];
@@ -177,7 +184,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> searchWidgets = [
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.vertical_align_top_rounded,
         title: tr('showAppBarSearch'),
@@ -186,7 +193,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
         visible: (s) => _matches(tr('showAppBarSearch')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.dashboard_outlined,
         title: tr('showDashboardSearch'),
@@ -195,7 +202,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
         visible: (s) => _matches(tr('showDashboardSearch')),
       ),
-      _buildFeatureToggle<SettingsProvider>(
+      _buildFeatureToggle<PlusSettingsProvider>(
         context,
         icon: Icons.ads_click_rounded,
         title: tr('showFloatingSearch'),
@@ -245,7 +252,8 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildGridSettings(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        if (settings.globalViewMode != ViewMode.grid) return const SizedBox.shrink();
+        if (settings.globalViewMode != ViewMode.grid)
+          return const SizedBox.shrink();
 
         bool showDisplay = _matches(tr('gridCategoryDisplay'));
         bool showCols = _matches(tr('gridColumns'));
@@ -255,25 +263,40 @@ class AppsViewSettingsSection extends StatelessWidget {
             if (showDisplay)
               ListTile(
                 leading: const Icon(Icons.grid_view_outlined),
-                title: Text(tr('gridCategoryDisplay'), style: Theme.of(context).textTheme.bodyLarge),
+                title: Text(
+                  tr('gridCategoryDisplay'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
                 subtitle: Text(tr('gridCategoryDisplayDescription')),
                 trailing: DropdownButton<GridCategoryMode>(
                   underline: const SizedBox(),
                   value: settings.gridCategoryMode,
                   items: [
-                    DropdownMenuItem(value: GridCategoryMode.sections, child: Text(tr('categorySections'))),
-                    DropdownMenuItem(value: GridCategoryMode.disabled, child: Text(tr('flatGridOnly'))),
+                    DropdownMenuItem(
+                      value: GridCategoryMode.sections,
+                      child: Text(tr('categorySections')),
+                    ),
+                    DropdownMenuItem(
+                      value: GridCategoryMode.disabled,
+                      child: Text(tr('flatGridOnly')),
+                    ),
                   ],
                   onChanged: (value) {
-                    if (value != null) onSetState(() => settings.gridCategoryMode = value);
+                    if (value != null)
+                      onSetState(() => settings.gridCategoryMode = value);
                   },
                 ),
               ),
             if (showCols) ...[
               ListTile(
                 leading: const Icon(Icons.view_column_outlined),
-                title: Text(tr('gridColumns'), style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text("${tr('gridColumnsDescription')} (${settings.gridColumnCount == 0 ? tr('auto') : settings.gridColumnCount.toString()})"),
+                title: Text(
+                  tr('gridColumns'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                subtitle: Text(
+                  "${tr('gridColumnsDescription')} (${settings.gridColumnCount == 0 ? tr('auto') : settings.gridColumnCount.toString()})",
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -282,10 +305,12 @@ class AppsViewSettingsSection extends StatelessWidget {
                   min: 0,
                   max: 6,
                   divisions: 6,
-                  onChanged: (value) => onSetState(() => settings.gridColumnCount = value.toInt()),
+                  onChanged: (value) => onSetState(
+                    () => settings.gridColumnCount = value.toInt(),
+                  ),
                 ),
               ),
-            ]
+            ],
           ],
         );
       },
@@ -297,16 +322,31 @@ class AppsViewSettingsSection extends StatelessWidget {
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.branding_watermark_outlined),
-          title: Text(tr('iconPosition'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('iconPosition'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('iconPositionDescription')),
           trailing: DropdownButton<CategoryIconPosition>(
             underline: const SizedBox(),
             value: settings.categoryIconPosition,
             items: [
-              DropdownMenuItem(value: CategoryIconPosition.disabled, child: Text(tr('disabled'))),
-              DropdownMenuItem(value: CategoryIconPosition.leading, child: Text(tr('leading'))),
-              DropdownMenuItem(value: CategoryIconPosition.trailing, child: Text(tr('trailing'))),
-              DropdownMenuItem(value: CategoryIconPosition.below, child: Text(tr('belowName'))),
+              DropdownMenuItem(
+                value: CategoryIconPosition.disabled,
+                child: Text(tr('disabled')),
+              ),
+              DropdownMenuItem(
+                value: CategoryIconPosition.leading,
+                child: Text(tr('leading')),
+              ),
+              DropdownMenuItem(
+                value: CategoryIconPosition.trailing,
+                child: Text(tr('trailing')),
+              ),
+              DropdownMenuItem(
+                value: CategoryIconPosition.below,
+                child: Text(tr('belowName')),
+              ),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -326,8 +366,13 @@ class AppsViewSettingsSection extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.numbers_outlined),
-              title: Text(tr('iconCount'), style: Theme.of(context).textTheme.bodyLarge),
-              subtitle: Text("${tr('iconCountDescription')} (${settings.categoryIconCount})"),
+              title: Text(
+                tr('iconCount'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                "${tr('iconCountDescription')} (${settings.categoryIconCount})",
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -336,9 +381,13 @@ class AppsViewSettingsSection extends StatelessWidget {
                 min: 0,
                 max: 20,
                 divisions: 20,
-                onChanged: settings.categoryIconPosition == CategoryIconPosition.disabled
+                onChanged:
+                    settings.categoryIconPosition ==
+                        CategoryIconPosition.disabled
                     ? null
-                    : (value) => onSetState(() => settings.categoryIconCount = value.toInt()),
+                    : (value) => onSetState(
+                        () => settings.categoryIconCount = value.toInt(),
+                      ),
               ),
             ),
           ],
@@ -352,14 +401,23 @@ class AppsViewSettingsSection extends StatelessWidget {
       builder: (context, settings, child) {
         return ListTile(
           leading: const Icon(Icons.view_quilt_outlined),
-          title: Text(tr('defaultViewMode'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('defaultViewMode'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('viewModeDescription')),
           trailing: DropdownButton<ViewMode>(
             underline: const SizedBox(),
             value: settings.globalViewMode,
             items: [
-              DropdownMenuItem(value: ViewMode.list, child: Text(tr('listView'))),
-              DropdownMenuItem(value: ViewMode.grid, child: Text(tr('gridView'))),
+              DropdownMenuItem(
+                value: ViewMode.list,
+                child: Text(tr('listView')),
+              ),
+              DropdownMenuItem(
+                value: ViewMode.grid,
+                child: Text(tr('gridView')),
+              ),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -376,15 +434,24 @@ class AppsViewSettingsSection extends StatelessWidget {
     final settingsProvider = context.read<SettingsProvider>();
     return ListTile(
       leading: const Icon(Icons.vertical_align_top_rounded),
-      title: Text(tr('appBarStyle'), style: Theme.of(context).textTheme.bodyLarge),
+      title: Text(
+        tr('appBarStyle'),
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
       subtitle: Text(tr('appBarStyleDescription')),
       trailing: DropdownButton<AppBarStyle>(
         underline: const SizedBox(),
         value: settingsProvider.getAppBarStyleForPage('apps'),
-        items: AppBarStyle.values.map((e) => DropdownMenuItem(
-          value: e, 
-          child: Text(e.name.substring(0, 1).toUpperCase() + e.name.substring(1))
-        )).toList(),
+        items: AppBarStyle.values
+            .map(
+              (e) => DropdownMenuItem(
+                value: e,
+                child: Text(
+                  e.name.substring(0, 1).toUpperCase() + e.name.substring(1),
+                ),
+              ),
+            )
+            .toList(),
         onChanged: (value) {
           if (value != null) {
             onSetState(() {
@@ -400,15 +467,26 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildDensityDropdown(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        if (settings.globalViewMode != ViewMode.list) return const SizedBox.shrink();
+        if (settings.globalViewMode != ViewMode.list)
+          return const SizedBox.shrink();
         return ListTile(
           leading: const Icon(Icons.density_medium_outlined),
-          title: Text(tr('listDensity'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('listDensity'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('listDensityDescription')),
           trailing: DropdownButton<AppListDensity>(
             underline: const SizedBox(),
             value: settings.appListDensity,
-            items: AppListDensity.values.map((e) => DropdownMenuItem(value: e, child: Text(tr('density_${e.name}')))).toList(),
+            items: AppListDensity.values
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(tr('density_${e.name}')),
+                  ),
+                )
+                .toList(),
             onChanged: (value) {
               if (value != null) {
                 onSetState(() => settings.appListDensity = value);

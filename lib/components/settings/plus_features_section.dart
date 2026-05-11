@@ -7,16 +7,13 @@ import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class PlusFeaturesSection extends StatelessWidget {
   final String? searchQuery;
 
-  const PlusFeaturesSection({
-    super.key,
-    this.searchQuery,
-  });
+  const PlusFeaturesSection({super.key, this.searchQuery});
 
   bool _matches(String text) {
     if (searchQuery == null || searchQuery!.isEmpty) return true;
@@ -27,7 +24,7 @@ class PlusFeaturesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
-    return Consumer<SettingsProvider>(
+    return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
         return Column(
           children: [
@@ -37,10 +34,14 @@ class PlusFeaturesSection extends StatelessWidget {
                 if (_matches(tr('enableAllPlusFeatures')))
                   SwitchListTile.adaptive(
                     secondary: const Icon(Icons.auto_awesome),
-                    title: Text(tr('enableAllPlusFeatures'), style: Theme.of(context).textTheme.bodyLarge),
+                    title: Text(
+                      tr('enableAllPlusFeatures'),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
                     subtitle: Text(tr('enableAllPlusFeaturesDescription')),
                     value: settings.enableAllPlusFeatures,
-                    onChanged: (value) => settings.enableAllPlusFeatures = value,
+                    onChanged: (value) =>
+                        settings.enableAllPlusFeatures = value,
                   ),
               ],
             ),
@@ -63,7 +64,10 @@ class PlusFeaturesSection extends StatelessWidget {
                   if (_matches(tr('importInstalledApps')))
                     ListTile(
                       leading: const Icon(Icons.install_mobile_rounded),
-                      title: Text(tr('importInstalledApps'), style: Theme.of(context).textTheme.bodyLarge),
+                      title: Text(
+                        tr('importInstalledApps'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
                       subtitle: Text(tr('importInstalledAppsDescription')),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
@@ -79,7 +83,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusSystemUpdateScanner'),
                       subtitle: tr('plusSystemUpdateScannerDescription'),
                       value: settings.plusEnableSystemUpdateScanner,
-                      onChanged: (val) => settings.plusEnableSystemUpdateScanner = val,
+                      onChanged: (val) =>
+                          settings.plusEnableSystemUpdateScanner = val,
                       experimental: true,
                     ),
                   if (_matches(tr('plusEnableMicroGHub')))
@@ -100,7 +105,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusEnableStandaloneInstaller'),
                       subtitle: tr('plusEnableStandaloneInstallerDescription'),
                       value: settings.plusEnableStandaloneInstaller,
-                      onChanged: (val) => settings.plusEnableStandaloneInstaller = val,
+                      onChanged: (val) =>
+                          settings.plusEnableStandaloneInstaller = val,
                     ),
                   if (_matches(tr('plusUpdateSchedule')))
                     _buildFeatureToggle(
@@ -110,7 +116,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusUpdateSchedule'),
                       subtitle: tr('plusUpdateScheduleDescription'),
                       value: settings.plusEnableUpdateSchedule,
-                      onChanged: (val) => settings.plusEnableUpdateSchedule = val,
+                      onChanged: (val) =>
+                          settings.plusEnableUpdateSchedule = val,
                     ),
                   if (_matches(tr('plusEnableAutoUpdateRules')))
                     _buildFeatureToggle(
@@ -120,7 +127,51 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusEnableAutoUpdateRules'),
                       subtitle: tr('plusEnableAutoUpdateRulesDescription'),
                       value: settings.plusEnableAutoUpdateRules,
-                      onChanged: (val) => settings.plusEnableAutoUpdateRules = val,
+                      onChanged: (val) =>
+                          settings.plusEnableAutoUpdateRules = val,
+                    ),
+                  if (_matches(tr('backupEncryption')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.enhanced_encryption_outlined,
+                      title: tr('backupEncryption'),
+                      subtitle: tr('backupEncryptionDescription'),
+                      value: settings.backupEncryptionEnabled,
+                      onChanged: (val) =>
+                          settings.backupEncryptionEnabled = val,
+                    ),
+                  if (_matches(tr('plusSmartRetries')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.bolt_outlined,
+                      title: tr('plusSmartRetries'),
+                      subtitle: tr('plusSmartRetriesDescription'),
+                      value: settings.plusEnableSmartRetries,
+                      onChanged: (val) => settings.plusEnableSmartRetries = val,
+                    ),
+                  if (_matches(tr('plusUpdateOwnership')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.security_update_good_rounded,
+                      title: tr('plusUpdateOwnership'),
+                      subtitle: tr('plusUpdateOwnershipDescription'),
+                      value: settings.plusEnableUpdateOwnership,
+                      onChanged: (val) =>
+                          settings.plusEnableUpdateOwnership = val,
+                    ),
+                  if (_matches(tr('plusUserPreapproval')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.touch_app_outlined,
+                      title: tr('plusUserPreapproval'),
+                      subtitle: tr('plusUserPreapprovalDescription'),
+                      value: settings.plusEnableUserPreapproval,
+                      onChanged: (val) =>
+                          settings.plusEnableUserPreapproval = val,
                     ),
                 ],
               ),
@@ -135,9 +186,12 @@ class PlusFeaturesSection extends StatelessWidget {
                       settings,
                       icon: Icons.notifications_active_outlined,
                       title: tr('plusEnableNotificationEnhancements'),
-                      subtitle: tr('plusEnableNotificationEnhancementsDescription'),
+                      subtitle: tr(
+                        'plusEnableNotificationEnhancementsDescription',
+                      ),
                       value: settings.plusEnableNotificationEnhancements,
-                      onChanged: (val) => settings.plusEnableNotificationEnhancements = val,
+                      onChanged: (val) =>
+                          settings.plusEnableNotificationEnhancements = val,
                     ),
                 ],
               ),
@@ -154,7 +208,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusEnhancedAnimations'),
                       subtitle: tr('plusEnhancedAnimationsDescription'),
                       value: settings.plusEnableEnhancedAnimations,
-                      onChanged: (val) => settings.plusEnableEnhancedAnimations = val,
+                      onChanged: (val) =>
+                          settings.plusEnableEnhancedAnimations = val,
                     ),
                   if (_matches(tr('plusHomeDashboard')))
                     _buildFeatureToggle(
@@ -164,7 +219,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusHomeDashboard'),
                       subtitle: tr('plusHomeDashboardDescription'),
                       value: settings.plusEnableHomeDashboard,
-                      onChanged: (val) => settings.plusEnableHomeDashboard = val,
+                      onChanged: (val) =>
+                          settings.plusEnableHomeDashboard = val,
                     ),
                 ],
               ),
@@ -201,7 +257,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('fabShowGithubStarred'),
                       subtitle: tr('fabShowGithubStarredDescription'),
                       value: settings.plusFabShowGithubStarred,
-                      onChanged: (val) => settings.plusFabShowGithubStarred = val,
+                      onChanged: (val) =>
+                          settings.plusFabShowGithubStarred = val,
                     ),
                   if (_matches(tr('fabShowGithubPersonalRepos')))
                     _buildFeatureToggle(
@@ -211,7 +268,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('fabShowGithubPersonalRepos'),
                       subtitle: tr('fabShowGithubPersonalReposDescription'),
                       value: settings.plusFabShowGithubPersonalRepos,
-                      onChanged: (val) => settings.plusFabShowGithubPersonalRepos = val,
+                      onChanged: (val) =>
+                          settings.plusFabShowGithubPersonalRepos = val,
                     ),
                   if (_matches(tr('fabShowImportInstalled')))
                     _buildFeatureToggle(
@@ -221,14 +279,17 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('fabShowImportInstalled'),
                       subtitle: tr('fabShowImportInstalledDescription'),
                       value: settings.plusFabShowImportInstalled,
-                      onChanged: (val) => settings.plusFabShowImportInstalled = val,
+                      onChanged: (val) =>
+                          settings.plusFabShowImportInstalled = val,
                     ),
                 ],
               ),
 
               // --- ADVANCED CUSTOMIZATION (Expandable) ---
               ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('plusSectionOrganizationSorting'),
+                title: isSearching
+                    ? null
+                    : tr('plusSectionOrganizationSorting'),
                 children: [
                   if (_matches(tr('plusIconCaching')))
                     _buildFeatureToggle(
@@ -278,7 +339,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusAdvancedSorting'),
                       subtitle: tr('plusAdvancedSortingDescription'),
                       value: settings.plusEnableAdvancedSorting,
-                      onChanged: (val) => settings.plusEnableAdvancedSorting = val,
+                      onChanged: (val) =>
+                          settings.plusEnableAdvancedSorting = val,
                     ),
                 ],
               ),
@@ -291,7 +353,7 @@ class PlusFeaturesSection extends StatelessWidget {
 
   Widget _buildFeatureToggle(
     BuildContext context,
-    SettingsProvider settings, {
+    PlusSettingsProvider settings, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -303,7 +365,9 @@ class PlusFeaturesSection extends StatelessWidget {
       secondary: Icon(icon),
       title: Row(
         children: [
-          Expanded(child: Text(title, style: Theme.of(context).textTheme.bodyLarge)),
+          Expanded(
+            child: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          ),
           if (experimental)
             Container(
               margin: const EdgeInsets.only(left: 8),

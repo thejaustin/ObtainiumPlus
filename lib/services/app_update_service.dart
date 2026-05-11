@@ -36,9 +36,14 @@ class AppUpdateService {
   static bool _areVersionsDifferent(App app, String? installed, String latest) {
     if (installed == null) return true;
     if (installed == latest) return false;
-    final aggressive = app.additionalSettings['aggressiveVersionReconciliation'] == true ||
+    final aggressive =
+        app.additionalSettings['aggressiveVersionReconciliation'] == true ||
         AppConstants.plusAppIds.contains(app.id);
-    final reconciliation = reconcileVersionDifferences(installed, latest, aggressive: aggressive);
+    final reconciliation = reconcileVersionDifferences(
+      installed,
+      latest,
+      aggressive: aggressive,
+    );
     if (reconciliation != null && reconciliation.key == true) {
       return false; // Reconciled as equal
     }
@@ -59,7 +64,11 @@ class AppUpdateService {
     if (!ignoreCache && _updateCache.containsKey(appId)) {
       var (cachedApp, timestamp) = _updateCache[appId]!;
       if (DateTime.now().difference(timestamp) < _cacheTtl) {
-        return _areVersionsDifferent(currentApp, currentApp.installedVersion, cachedApp.latestVersion)
+        return _areVersionsDifferent(
+              currentApp,
+              currentApp.installedVersion,
+              cachedApp.latestVersion,
+            )
             ? cachedApp
             : null;
       }
@@ -87,7 +96,13 @@ class AppUpdateService {
     // Update cache
     _updateCache[appId] = (newApp, DateTime.now());
 
-    return _areVersionsDifferent(newApp, newApp.installedVersion, newApp.latestVersion) ? newApp : null;
+    return _areVersionsDifferent(
+          newApp,
+          newApp.installedVersion,
+          newApp.latestVersion,
+        )
+        ? newApp
+        : null;
   }
 
   static List<String> getAppsSortedByUpdateCheckTime(
@@ -140,8 +155,9 @@ class AppUpdateService {
     }
 
     final rules = settingsProvider.autoUpdateRules;
-    final bool isWifi = netResult.contains(ConnectivityResult.wifi) || 
-                        netResult.contains(ConnectivityResult.ethernet);
+    final bool isWifi =
+        netResult.contains(ConnectivityResult.wifi) ||
+        netResult.contains(ConnectivityResult.ethernet);
 
     for (var key in ruleKeys) {
       final rule = rules[key];
@@ -185,7 +201,8 @@ class AppUpdateService {
         }
 
         // --- Per-app/tag/category rule filtering ---
-        final List<ConnectivityResult> netResult = await (Connectivity().checkConnectivity());
+        final List<ConnectivityResult> netResult = await (Connectivity()
+            .checkConnectivity());
         appIds.removeWhere((id) {
           final app = apps[id]?.app;
           if (app == null) return false;
@@ -250,7 +267,8 @@ class AppUpdateService {
     if (apps[obtainiumId] == null) return null;
     App obt = apps[obtainiumId]!.app;
     // Apply release channel setting
-    obt.additionalSettings['includePrereleases'] = settingsProvider.obtainiumReleaseChannel == 'dev';
+    obt.additionalSettings['includePrereleases'] =
+        settingsProvider.obtainiumReleaseChannel == 'dev';
     obt.additionalSettings['apkFilterRegEx'] = 'fdroid';
     obt.additionalSettings['invertAPKFilter'] = true;
     return checkUpdateFn(obtainiumId);
