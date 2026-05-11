@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
@@ -5,6 +6,11 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+=======
+import 'package:easy_localization/easy_localization.dart';
+import 'package:http/http.dart';
+import 'package:obtainium/custom_errors.dart';
+>>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class HuaweiAppGallery extends AppSource {
@@ -45,7 +51,11 @@ class HuaweiAppGallery extends AppSource {
         res.statusCode == 304) {
       return res;
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 

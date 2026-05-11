@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
+=======
+>>>>>>> upstream/main
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -6,6 +9,7 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+<<<<<<< HEAD
 import 'package:obtainium/providers/apps_provider.dart'
     hide obtainiumId, obtainiumTempId;
 import 'package:obtainium/providers/settings_provider.dart';
@@ -14,6 +18,11 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+=======
+import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
+>>>>>>> upstream/main
 
 class APKMirror extends AppSource {
   APKMirror() {
@@ -36,7 +45,11 @@ class APKMirror extends AppSource {
           required: false,
           additionalValidators: [
             (value) {
+<<<<<<< HEAD
               return SourceUtils.regExValidator(value);
+=======
+              return regExValidator(value);
+>>>>>>> upstream/main
             },
           ],
         ),
@@ -52,7 +65,11 @@ class APKMirror extends AppSource {
   }) async {
     return {
       "User-Agent":
+<<<<<<< HEAD
           "Obtainium/${(await AppInstallService.getInstalledInfo(obtainiumId))?.versionName ?? '1.0.0'}",
+=======
+          "Obtainium/${(await getInstalledInfo(obtainiumId))?.versionName ?? '1.0.0'}",
+>>>>>>> upstream/main
     };
   }
 
@@ -133,7 +150,11 @@ class APKMirror extends AppSource {
         releaseDate: releaseDate,
       );
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 

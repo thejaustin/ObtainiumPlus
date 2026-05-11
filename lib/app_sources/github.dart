@@ -9,6 +9,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
@@ -104,18 +105,37 @@ class GitHub extends GitSource {
     hosts = ['github.com'];
     appIdInferIsOptional = true;
     showReleaseDateAsVersionToggle = true;
+=======
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+
+class GitHub extends AppSource {
+  GitHub({hostChanged = false}) {
+    hosts = ['github.com'];
+    appIdInferIsOptional = true;
+    showReleaseDateAsVersionToggle = true;
+    this.hostChanged = hostChanged;
+>>>>>>> upstream/main
     allowIncludeZips = true;
 
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
         'github-creds',
+<<<<<<< HEAD
         label: tr('githubToken'),
         tooltip: tr('githubTokenTooltip'),
+=======
+        label: tr('githubPATLabel'),
+>>>>>>> upstream/main
         password: true,
         required: false,
         belowWidgets: [
           const SizedBox(height: 4),
+<<<<<<< HEAD
           GestureDetector(
+=======
+          InkWell(
+>>>>>>> upstream/main
             onTap: () {
               launchUrlString(
                 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
@@ -135,8 +155,12 @@ class GitHub extends GitSource {
       ),
       GeneratedFormTextField(
         'GHReqPrefix',
+<<<<<<< HEAD
         label: tr('githubProxy'),
         tooltip: tr('githubProxyTooltip'),
+=======
+        label: tr('GHReqPrefix'),
+>>>>>>> upstream/main
         hint: 'gh-proxy.org',
         required: false,
         additionalValidators: [
@@ -156,7 +180,11 @@ class GitHub extends GitSource {
         ],
         belowWidgets: [
           const SizedBox(height: 4),
+<<<<<<< HEAD
           GestureDetector(
+=======
+          InkWell(
+>>>>>>> upstream/main
             onTap: () {
               launchUrlString(
                 'https://github.com/sky22333/hubproxy',
@@ -174,6 +202,14 @@ class GitHub extends GitSource {
           const SizedBox(height: 4),
         ],
       ),
+<<<<<<< HEAD
+=======
+      GeneratedFormSwitch(
+        'checkRepoRename',
+        label: tr('repoRenamedCheck'),
+        defaultValue: false,
+      ),
+>>>>>>> upstream/main
     ];
 
     additionalSourceAppSpecificSettingFormItems = [
@@ -181,7 +217,10 @@ class GitHub extends GitSource {
         GeneratedFormSwitch(
           'includePrereleases',
           label: tr('includePrereleases'),
+<<<<<<< HEAD
           tooltip: tr('includePrereleasesTooltip'),
+=======
+>>>>>>> upstream/main
           defaultValue: false,
         ),
       ],
@@ -189,19 +228,30 @@ class GitHub extends GitSource {
         GeneratedFormSwitch(
           'fallbackToOlderReleases',
           label: tr('fallbackToOlderReleases'),
+<<<<<<< HEAD
           tooltip: tr('fallbackToOlderReleasesTooltip'),
+=======
+>>>>>>> upstream/main
           defaultValue: true,
         ),
       ],
       [
         GeneratedFormTextField(
           'filterReleaseTitlesByRegEx',
+<<<<<<< HEAD
           label: tr('filterReleaseTitlesByRegExLabel'),
           tooltip: tr('filterReleaseTitlesByRegExTooltip'),
           required: false,
           additionalValidators: [
             (value) {
               return SourceUtils.regExValidator(value);
+=======
+          label: tr('filterReleaseTitlesByRegEx'),
+          required: false,
+          additionalValidators: [
+            (value) {
+              return regExValidator(value);
+>>>>>>> upstream/main
             },
           ],
         ),
@@ -209,16 +259,25 @@ class GitHub extends GitSource {
       [
         GeneratedFormTextField(
           'filterReleaseNotesByRegEx',
+<<<<<<< HEAD
           label: tr('filterReleaseNotesByRegExLabel'),
           tooltip: tr('filterReleaseNotesByRegExTooltip'),
           required: false,
           additionalValidators: [
             (value) {
               return SourceUtils.regExValidator(value);
+=======
+          label: tr('filterReleaseNotesByRegEx'),
+          required: false,
+          additionalValidators: [
+            (value) {
+              return regExValidator(value);
+>>>>>>> upstream/main
             },
           ],
         ),
       ],
+<<<<<<< HEAD
       [
         GeneratedFormSwitch(
           'verifyLatestTag',
@@ -226,6 +285,9 @@ class GitHub extends GitSource {
           tooltip: tr('verifyLatestTagTooltip'),
         ),
       ],
+=======
+      [GeneratedFormSwitch('verifyLatestTag', label: tr('verifyLatestTag'))],
+>>>>>>> upstream/main
       [
         GeneratedFormDropdown(
           'sortMethodChoice',
@@ -240,23 +302,34 @@ class GitHub extends GitSource {
             MapEntry('name', tr('name')),
           ],
           label: tr('sortMethod'),
+<<<<<<< HEAD
           tooltip: tr('sortMethodTooltip'),
+=======
+>>>>>>> upstream/main
           defaultValue: 'date',
         ),
       ],
       [
         GeneratedFormSwitch(
           'useLatestAssetDateAsReleaseDate',
+<<<<<<< HEAD
           label: tr('useLatestAssetDateAsReleaseDateLabel'),
           tooltip: tr('useLatestAssetDateAsReleaseDateTooltip'),
+=======
+          label: tr('useLatestAssetDateAsReleaseDate'),
+>>>>>>> upstream/main
           defaultValue: false,
         ),
       ],
       [
         GeneratedFormSwitch(
           'releaseTitleAsVersion',
+<<<<<<< HEAD
           label: tr('releaseTitleAsVersionLabel'),
           tooltip: tr('releaseTitleAsVersionTooltip'),
+=======
+          label: tr('releaseTitleAsVersion'),
+>>>>>>> upstream/main
           defaultValue: false,
         ),
       ],
@@ -279,11 +352,14 @@ class GitHub extends GitSource {
           },
         ],
       ),
+<<<<<<< HEAD
       GeneratedFormSwitch(
         'includeForks',
         label: tr('includeForks'),
         defaultValue: true,
       ),
+=======
+>>>>>>> upstream/main
     ];
   }
 
@@ -356,6 +432,22 @@ class GitHub extends GitSource {
   }
 
   @override
+<<<<<<< HEAD
+=======
+  String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
+    RegExp standardUrlRegEx = RegExp(
+      '^https?://(www\\.)?${getSourceRegex(hosts)}/[^/]+/[^/]+',
+      caseSensitive: false,
+    );
+    RegExpMatch? match = standardUrlRegEx.firstMatch(url);
+    if (match == null) {
+      throw InvalidURLError(name);
+    }
+    return match.group(0)!;
+  }
+
+  @override
+>>>>>>> upstream/main
   Future<Map<String, String>?> getRequestHeaders(
     Map<String, dynamic> additionalSettings,
     String url, {
@@ -420,15 +512,21 @@ class GitHub extends GitSource {
     return reqUrl;
   }
 
+<<<<<<< HEAD
   Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async {
     // Always use the official GitHub API endpoint, regardless of user input host
     // This fixes issues when users enter www.github.com instead of github.com
     return 'https://api.github.com';
   }
+=======
+  Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async =>
+      'https://api.${hosts[0]}';
+>>>>>>> upstream/main
 
   Future<String> convertStandardUrlToAPIUrl(
     String standardUrl,
     Map<String, dynamic> additionalSettings,
+<<<<<<< HEAD
   ) async {
     // Parse the standard URL to extract the user/repo path
     Uri uri = Uri.parse(standardUrl);
@@ -445,6 +543,67 @@ class GitHub extends GitSource {
     return '${await getAPIHost(additionalSettings)}/repos$userRepoPath';
   }
 
+=======
+  ) async =>
+      '${await getAPIHost(additionalSettings)}/repos${standardUrl.substring('https://${hosts[0]}'.length)}';
+
+  /// Checks if the repository has been renamed or transferred.
+  ///
+  /// This method explicitly disables automatic redirect following to detect when
+  /// GitHub returns a redirect (indicating the repository has moved). A redirect
+  /// from the GitHub API for a repository endpoint definitively indicates that
+  /// the repository has been renamed or transferred to a different owner.
+  ///
+  /// Throws [RepositoryRenamedError] if a redirect is detected.
+  Future<void> checkForRepositoryRename(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings,
+    Map<String, String> sourceConfigSettingValues,
+  ) async {
+    if (sourceConfigSettingValues['checkRepoRename'] == "false") {
+      return;
+    }
+    var uri = Uri.tryParse(standardUrl);
+    var host = uri?.host.toLowerCase() ?? '';
+    // Guard against non-GitHub URLs
+    if (host != hosts[0] && host != 'www.${hosts[0]}') {
+      return;
+    }
+    var apiUrl = await convertStandardUrlToAPIUrl(
+      standardUrl,
+      additionalSettings,
+    );
+    Response res = await sourceRequest(
+      apiUrl,
+      additionalSettings,
+      followRedirects: false,
+    );
+    if (res.statusCode >= 300 && res.statusCode < 400) {
+      String? location = res.headers[HttpHeaders.locationHeader.toLowerCase()];
+      if (location != null) {
+        Response res2 = await sourceRequest(
+          location,
+          additionalSettings,
+          followRedirects: false,
+        );
+        String? newUrl;
+        try {
+          newUrl = jsonDecode(res2.body)['html_url'];
+        } catch (e) {
+          // Unexpected - ignore (keep old URL)
+        }
+        if (newUrl != null) {
+          throw RepositoryRenamedError(standardUrl, newUrl);
+        }
+      }
+    }
+  }
+
+  @override
+  String? changeLogPageFromStandardUrl(String standardUrl) =>
+      '$standardUrl/releases';
+
+>>>>>>> upstream/main
   Future<APKDetails> getLatestAPKDetailsCommon(
     String requestUrl,
     String standardUrl,
@@ -457,6 +616,14 @@ class GitHub extends GitSource {
       additionalSettings,
       settingsProvider,
     );
+<<<<<<< HEAD
+=======
+    await checkForRepositoryRename(
+      standardUrl,
+      additionalSettings,
+      sourceConfigSettingValues,
+    );
+>>>>>>> upstream/main
     bool includePrereleases = additionalSettings['includePrereleases'] == true;
     bool fallbackToOlderReleases =
         additionalSettings['fallbackToOlderReleases'] == true;
@@ -489,7 +656,11 @@ class GitHub extends GitSource {
         if (onHttpErrorCode != null) {
           onHttpErrorCode(res);
         }
+<<<<<<< HEAD
         throw SourceUtils.getObtainiumHttpError(res);
+=======
+        throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
       }
       latestRelease = jsonDecode(res.body);
     }
@@ -525,6 +696,7 @@ class GitHub extends GitSource {
           }).toList() ??
           [];
 
+<<<<<<< HEAD
       DateTime? getPublishDateFromRelease(dynamic rel) {
         DateTime? date = null;
         if (rel?['published_at'] != null) {
@@ -544,12 +716,21 @@ class GitHub extends GitSource {
         return date;
       }
 
+=======
+      DateTime? getPublishDateFromRelease(dynamic rel) =>
+          rel?['published_at'] != null
+          ? DateTime.parse(rel['published_at'])
+          : rel?['commit']?['created'] != null
+          ? DateTime.parse(rel['commit']['created'])
+          : null;
+>>>>>>> upstream/main
       DateTime? getNewestAssetDateFromRelease(dynamic rel) {
         var allAssets = rel['assets'] as List<dynamic>?;
         var filteredAssets = rel['filteredAssets'] as List<dynamic>?;
         var t = (filteredAssets ?? allAssets)
             ?.map((e) {
               return e?['updated_at'] != null
+<<<<<<< HEAD
                   ? tryParseDateTime(e['updated_at'])
                   : null;
             })
@@ -558,6 +739,16 @@ class GitHub extends GitSource {
         if (t != null && t.isNotEmpty) {
           t.sort((a, b) => b.compareTo(a));
           return t.first;
+=======
+                  ? DateTime.parse(e['updated_at'])
+                  : null;
+            })
+            .where((e) => e != null)
+            .toList();
+        t?.sort((a, b) => b!.compareTo(a!));
+        if (t?.isNotEmpty == true) {
+          return t!.first;
+>>>>>>> upstream/main
         }
         return null;
       }
@@ -605,6 +796,7 @@ class GitHub extends GitSource {
                 var reg = RegExp(stdFormats.last);
                 var matchA = reg.firstMatch(nameA);
                 var matchB = reg.firstMatch(nameB);
+<<<<<<< HEAD
                 if (matchA != null && matchB != null) {
                   return compareAlphaNumeric(
                     (nameA as String).substring(matchA.start, matchA.end),
@@ -613,6 +805,12 @@ class GitHub extends GitSource {
                 } else {
                   return compareAlphaNumeric(nameA as String, nameB as String);
                 }
+=======
+                return compareAlphaNumeric(
+                  (nameA as String).substring(matchA!.start, matchA.end),
+                  (nameB as String).substring(matchB!.start, matchB.end),
+                );
+>>>>>>> upstream/main
               } else {
                 // 'name'
                 return compareAlphaNumeric(
@@ -679,7 +877,11 @@ class GitHub extends GitSource {
           return ext == 'apk' || ext == 'xapk' || (includeZips && ext == 'zip');
         }).toList();
 
+<<<<<<< HEAD
         var filteredApkUrls = SourceUtils.filterApks(
+=======
+        var filteredApkUrls = filterApks(
+>>>>>>> upstream/main
           apkAssetsWithUrls
               .map((e) => e['final_url'] as MapEntry<String, String>)
               .toList(),
@@ -742,10 +944,13 @@ class GitHub extends GitSource {
         targetRelease,
         useLatestAssetDateAsReleaseDate,
       );
+<<<<<<< HEAD
       LogsProvider().add(
         'GitHub final releaseDate for $standardUrl: $releaseDate',
         level: LogLevels.debug,
       );
+=======
+>>>>>>> upstream/main
       if (version == null) {
         throw NoVersionError();
       }
@@ -763,7 +968,11 @@ class GitHub extends GitSource {
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 
@@ -848,7 +1057,11 @@ class GitHub extends GitSource {
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 
@@ -868,6 +1081,7 @@ class GitHub extends GitSource {
     var sp = SettingsProvider();
     await sp.initializeSettings();
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
+<<<<<<< HEAD
     bool includeForks =
         querySettings['includeForks'] == true ||
         querySettings['includeForks'] == 'true';
@@ -875,6 +1089,11 @@ class GitHub extends GitSource {
     var results = await searchCommon(
       query,
       '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}$forkParam&per_page=100',
+=======
+    var results = await searchCommon(
+      query,
+      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}&per_page=100',
+>>>>>>> upstream/main
       'items',
       onHttpErrorCode: (Response res) {
         rateLimitErrorCheck(res);
@@ -894,6 +1113,7 @@ class GitHub extends GitSource {
 
   void rateLimitErrorCheck(Response res) {
     if (res.headers['x-ratelimit-remaining'] == '0') {
+<<<<<<< HEAD
       int resetTime = 1800000000;
       try {
         resetTime = int.parse(res.headers['x-ratelimit-reset'] ?? '1800000000');
@@ -901,6 +1121,12 @@ class GitHub extends GitSource {
         // ignore
       }
       throw RateLimitError((resetTime / 60000000).round());
+=======
+      throw RateLimitError(
+        (int.parse(res.headers['x-ratelimit-reset'] ?? '1800000000') / 60000000)
+            .round(),
+      );
+>>>>>>> upstream/main
     }
   }
 }

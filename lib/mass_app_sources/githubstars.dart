@@ -4,10 +4,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
+<<<<<<< HEAD
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/source_utils.dart';
+=======
+import 'package:obtainium/providers/source_provider.dart';
+>>>>>>> upstream/main
 
 class GitHubStars implements MassAppUrlSource {
   @override
@@ -42,7 +46,11 @@ class GitHubStars implements MassAppUrlSource {
     } else {
       var gh = GitHub();
       gh.rateLimitErrorCheck(res);
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 

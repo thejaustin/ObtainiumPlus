@@ -1,8 +1,12 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/haptic_utils.dart';
+=======
+>>>>>>> upstream/main
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+<<<<<<< HEAD
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,6 +35,21 @@ import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
+=======
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:obtainium/app_sources/fdroidrepo.dart';
+import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+>>>>>>> upstream/main
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});
@@ -41,6 +60,7 @@ class ImportExportPage extends StatefulWidget {
 
 class _ImportExportPageState extends State<ImportExportPage> {
   bool importInProgress = false;
+<<<<<<< HEAD
   // PERFORMANCE: Cache SourceProvider to avoid recreating 24 source objects on every build
   late final SourceProvider _sourceProvider = SourceProvider();
 
@@ -51,6 +71,14 @@ class _ImportExportPageState extends State<ImportExportPage> {
     var settingsProvider = context.watch<SettingsProvider>();
     var plusSettings = context.watch<PlusSettingsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
+=======
+
+  @override
+  Widget build(BuildContext context) {
+    SourceProvider sourceProvider = SourceProvider();
+    var appsProvider = context.watch<AppsProvider>();
+    var settingsProvider = context.watch<SettingsProvider>();
+>>>>>>> upstream/main
 
     var outlineButtonStyle = ButtonStyle(
       shape: WidgetStateProperty.all(
@@ -63,6 +91,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       ),
     );
 
+<<<<<<< HEAD
     Future<String?> _promptForPassword() async {
       final TextEditingController passwordController = TextEditingController();
       return showDialog<String>(
@@ -91,6 +120,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
       );
     }
 
+=======
+>>>>>>> upstream/main
     urlListImport({String? initValue, bool overrideInitValid = false}) {
       showDialog<Map<String, dynamic>?>(
         context: context,
@@ -133,6 +164,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           });
           appsProvider
               .addAppsByURL(urls)
+<<<<<<< HEAD
               .then(
                 (errors) {
                   if (errors.isEmpty) {
@@ -164,12 +196,43 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   setState(() {
                     importInProgress = false;
                   });
+=======
+              .then((errors) {
+                if (errors.isEmpty) {
+                  showMessage(
+                    tr(
+                      'importedX',
+                      args: [plural('apps', urls.length).toLowerCase()],
+                    ),
+                    context,
+                  );
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext ctx) {
+                      return ImportErrorDialog(
+                        urlsLength: urls.length,
+                        errors: errors,
+                      );
+                    },
+                  );
+                }
+              })
+              .catchError((e) {
+                showError(e, context);
+              })
+              .whenComplete(() {
+                setState(() {
+                  importInProgress = false;
+                });
+>>>>>>> upstream/main
               });
         }
       });
     }
 
     runObtainiumExport({bool pickOnly = false}) async {
+<<<<<<< HEAD
       AppHaptics.selectionClick();
       try {
         String? password;
@@ -364,6 +427,90 @@ class _ImportExportPageState extends State<ImportExportPage> {
           });
         }
       }
+=======
+      HapticFeedback.selectionClick();
+      appsProvider
+          .export(
+            pickOnly:
+                pickOnly || (await settingsProvider.getExportDir()) == null,
+            sp: settingsProvider,
+          )
+          .then((String? result) {
+            if (result != null) {
+              showMessage(tr('exportedTo', args: [result]), context);
+            }
+          })
+          .catchError((e) {
+            showError(e, context);
+          });
+    }
+
+    runObtainiumImport() {
+      HapticFeedback.selectionClick();
+      FilePicker.pickFiles()
+          .then((result) {
+            setState(() {
+              importInProgress = true;
+            });
+            if (result != null) {
+              String data = File(result.files.single.path!).readAsStringSync();
+              try {
+                jsonDecode(data);
+              } catch (e) {
+                throw ObtainiumError(tr('invalidInput'));
+              }
+              appsProvider.import(data).then((value) {
+                var cats = settingsProvider.categories;
+                appsProvider.apps.forEach((key, value) {
+                  for (var c in value.app.categories) {
+                    if (!cats.containsKey(c)) {
+                      cats[c] = generateRandomLightColor().value;
+                    }
+                  }
+                });
+                appsProvider.addMissingCategories(settingsProvider);
+                showMessage(
+                  '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
+                  context,
+                );
+              });
+            } else {
+              // User canceled the picker
+            }
+          })
+          .catchError((e) {
+            showError(e, context);
+          })
+          .whenComplete(() {
+            setState(() {
+              importInProgress = false;
+            });
+          });
+    }
+
+    runUrlImport() {
+      FilePicker.pickFiles().then((result) {
+        if (result != null) {
+          urlListImport(
+            overrideInitValid: true,
+            initValue: RegExp('https?://[^"]+')
+                .allMatches(File(result.files.single.path!).readAsStringSync())
+                .map((e) => e.input.substring(e.start, e.end))
+                .toSet()
+                .toList()
+                .where((url) {
+                  try {
+                    sourceProvider.getSource(url);
+                    return true;
+                  } catch (e) {
+                    return false;
+                  }
+                })
+                .join('\n'),
+          );
+        }
+      });
+>>>>>>> upstream/main
     }
 
     runSourceSearch(AppSource source) {
@@ -459,6 +606,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
+<<<<<<< HEAD
             if (mounted) showError(e, context);
           })
           .whenComplete(() {
@@ -466,6 +614,14 @@ class _ImportExportPageState extends State<ImportExportPage> {
               setState(() {
                 importInProgress = false;
               });
+=======
+            showError(e, context);
+          })
+          .whenComplete(() {
+            setState(() {
+              importInProgress = false;
+            });
+>>>>>>> upstream/main
           });
     }
 
@@ -482,7 +638,11 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 );
               },
             );
+<<<<<<< HEAD
             if (values != null && mounted) {
+=======
+            if (values != null) {
+>>>>>>> upstream/main
               setState(() {
                 importInProgress = true;
               });
@@ -527,10 +687,16 @@ class _ImportExportPageState extends State<ImportExportPage> {
             showError(e, context);
           })
           .whenComplete(() {
+<<<<<<< HEAD
             if (mounted)
               setState(() {
                 importInProgress = false;
               });
+=======
+            setState(() {
+              importInProgress = false;
+            });
+>>>>>>> upstream/main
           });
     }
 
@@ -550,6 +716,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+<<<<<<< HEAD
                   _sectionHeader(context, tr('exportAndImport')),
                   FutureBuilder(
                     future: behaviorSettings.getExportDir(),
@@ -720,18 +887,136 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   ),
                   const SizedBox(height: 8),
                   _sectionHeader(context, tr('importApps')),
+=======
+                  if (!settingsProvider.isTV)
+                    FutureBuilder(
+                      future: settingsProvider.getExportDir(),
+                      builder: (context, snapshot) {
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    style: outlineButtonStyle,
+                                    onPressed: importInProgress
+                                        ? null
+                                        : () {
+                                            runObtainiumExport(pickOnly: true);
+                                          },
+                                    child: Text(
+                                      tr('pickExportDir'),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: TextButton(
+                                    style: outlineButtonStyle,
+                                    onPressed:
+                                        importInProgress ||
+                                            snapshot.data == null
+                                        ? null
+                                        : runObtainiumExport,
+                                    child: Text(
+                                      tr('obtainiumExport'),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    style: outlineButtonStyle,
+                                    onPressed: importInProgress
+                                        ? null
+                                        : runObtainiumImport,
+                                    child: Text(
+                                      tr('obtainiumImport'),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (snapshot.data != null)
+                              Column(
+                                children: [
+                                  const SizedBox(height: 16),
+                                  GeneratedForm(
+                                    items: [
+                                      [
+                                        GeneratedFormSwitch(
+                                          'autoExportOnChanges',
+                                          label: tr('autoExportOnChanges'),
+                                          defaultValue: settingsProvider
+                                              .autoExportOnChanges,
+                                        ),
+                                      ],
+                                      [
+                                        GeneratedFormDropdown(
+                                          'exportSettings',
+                                          [
+                                            MapEntry('0', tr('none')),
+                                            MapEntry('1', tr('excludeSecrets')),
+                                            MapEntry('2', tr('all')),
+                                          ],
+                                          label: tr('includeSettings'),
+                                          defaultValue: settingsProvider
+                                              .exportSettings
+                                              .toString(),
+                                        ),
+                                      ],
+                                    ],
+                                    onValueChanges: (value, valid, isBuilding) {
+                                      if (valid && !isBuilding) {
+                                        if (value['autoExportOnChanges'] !=
+                                            null) {
+                                          settingsProvider.autoExportOnChanges =
+                                              value['autoExportOnChanges'] ==
+                                              true;
+                                        }
+                                        if (value['exportSettings'] != null) {
+                                          settingsProvider.exportSettings =
+                                              int.parse(
+                                                value['exportSettings'],
+                                              );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+>>>>>>> upstream/main
                   if (importInProgress)
                     const Column(
                       children: [
                         SizedBox(height: 14),
+<<<<<<< HEAD
                         const ExpressiveProgressIndicator(),
+=======
+                        LinearProgressIndicator(),
+>>>>>>> upstream/main
                         SizedBox(height: 14),
                       ],
                     )
                   else
                     Column(
                       children: [
+<<<<<<< HEAD
                         const SizedBox(height: 32),
+=======
+                        SizedBox(height: 32),
+>>>>>>> upstream/main
                         Row(
                           children: [
                             Expanded(
@@ -788,12 +1073,38 @@ class _ImportExportPageState extends State<ImportExportPage> {
                           child: Text(tr('importFromURLList')),
                         ),
                         const SizedBox(height: 8),
+<<<<<<< HEAD
                         TextButton(
                           onPressed: importInProgress ? null : runUrlImport,
                           child: Text(tr('importFromURLsInFile')),
                         ),
                       ],
                     ),
+=======
+                        if (!settingsProvider.isTV)
+                          TextButton(
+                            onPressed: importInProgress ? null : runUrlImport,
+                            child: Text(tr('importFromURLsInFile')),
+                          ),
+                      ],
+                    ),
+                  ...sourceProvider.massUrlSources.map(
+                    (source) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: importInProgress
+                              ? null
+                              : () {
+                                  runMassSourceImport(source);
+                                },
+                          child: Text(tr('importX', args: [source.name])),
+                        ),
+                      ],
+                    ),
+                  ),
+>>>>>>> upstream/main
                   const Spacer(),
                   const Divider(height: 32),
                   Text(
@@ -813,6 +1124,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       ),
     );
   }
+<<<<<<< HEAD
 
   Widget _sectionHeader(BuildContext context, String title) {
     return Padding(
@@ -825,6 +1137,412 @@ class _ImportExportPageState extends State<ImportExportPage> {
           letterSpacing: 1.2,
         ),
       ),
+=======
+}
+
+class ImportErrorDialog extends StatefulWidget {
+  const ImportErrorDialog({
+    super.key,
+    required this.urlsLength,
+    required this.errors,
+  });
+
+  final int urlsLength;
+  final List<List<String>> errors;
+
+  @override
+  State<ImportErrorDialog> createState() => _ImportErrorDialogState();
+}
+
+class _ImportErrorDialogState extends State<ImportErrorDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      scrollable: true,
+      title: Text(tr('importErrors')),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            tr(
+              'importedXOfYApps',
+              args: [
+                (widget.urlsLength - widget.errors.length).toString(),
+                widget.urlsLength.toString(),
+              ],
+            ),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            tr('followingURLsHadErrors'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          ...widget.errors.map((e) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
+                Text(e[0]),
+                Text(e[1], style: const TextStyle(fontStyle: FontStyle.italic)),
+              ],
+            );
+          }),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(null);
+          },
+          child: Text(tr('ok')),
+        ),
+      ],
+    );
+  }
+}
+
+// ignore: must_be_immutable
+class SelectionModal extends StatefulWidget {
+  SelectionModal({
+    super.key,
+    required this.entries,
+    this.selectedByDefault = true,
+    this.onlyOneSelectionAllowed = false,
+    this.titlesAreLinks = true,
+    this.title,
+    this.deselectThese = const [],
+  });
+
+  String? title;
+  Map<String, List<String>> entries;
+  bool selectedByDefault;
+  List<String> deselectThese;
+  bool onlyOneSelectionAllowed;
+  bool titlesAreLinks;
+
+  @override
+  State<SelectionModal> createState() => _SelectionModalState();
+}
+
+class _SelectionModalState extends State<SelectionModal> {
+  Map<MapEntry<String, List<String>>, bool> entrySelections = {};
+  String filterRegex = '';
+  @override
+  void initState() {
+    super.initState();
+    for (var entry in widget.entries.entries) {
+      entrySelections.putIfAbsent(
+        entry,
+        () =>
+            widget.selectedByDefault &&
+            !widget.onlyOneSelectionAllowed &&
+            !widget.deselectThese.contains(entry.key),
+      );
+    }
+    if (widget.selectedByDefault && widget.onlyOneSelectionAllowed) {
+      selectOnlyOne(widget.entries.entries.first.key);
+    }
+  }
+
+  void selectOnlyOne(String url) {
+    for (var e in entrySelections.keys) {
+      entrySelections[e] = e.key == url;
+    }
+  }
+
+  void selectAll({bool deselect = false}) {
+    for (var e in entrySelections.keys) {
+      entrySelections[e] = !deselect;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isTV = context.read<SettingsProvider>().isTV;
+    Map<MapEntry<String, List<String>>, bool> filteredEntrySelections = {};
+    entrySelections.forEach((key, value) {
+      var searchableText = key.value.isEmpty ? key.key : key.value[0];
+      if (filterRegex.isEmpty || RegExp(filterRegex).hasMatch(searchableText)) {
+        filteredEntrySelections.putIfAbsent(key, () => value);
+      }
+    });
+    if (filterRegex.isNotEmpty && filteredEntrySelections.isEmpty) {
+      entrySelections.forEach((key, value) {
+        var searchableText = key.value.isEmpty ? key.key : key.value[0];
+        if (filterRegex.isEmpty ||
+            RegExp(
+              filterRegex,
+              caseSensitive: false,
+            ).hasMatch(searchableText)) {
+          filteredEntrySelections.putIfAbsent(key, () => value);
+        }
+      });
+    }
+    getSelectAllButton() {
+      if (widget.onlyOneSelectionAllowed) {
+        return SizedBox.shrink();
+      }
+      var noneSelected = entrySelections.values.where((v) => v == true).isEmpty;
+      return noneSelected
+          ? TextButton(
+              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              onPressed: () {
+                setState(() {
+                  selectAll();
+                });
+              },
+              child: Text(tr('selectAll')),
+            )
+          : TextButton(
+              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              onPressed: () {
+                setState(() {
+                  selectAll(deselect: true);
+                });
+              },
+              child: Text(tr('deselectX', args: [''])),
+            );
+    }
+
+    return AlertDialog(
+      scrollable: true,
+      title: Text(widget.title ?? tr('pick')),
+      content: Column(
+        children: [
+          GeneratedForm(
+            items: [
+              [
+                GeneratedFormTextField(
+                  'filter',
+                  label: tr('filter'),
+                  required: false,
+                  additionalValidators: [
+                    (value) {
+                      return regExValidator(value);
+                    },
+                  ],
+                ),
+              ],
+            ],
+            onValueChanges: (value, valid, isBuilding) {
+              if (valid && !isBuilding) {
+                if (value['filter'] != null) {
+                  setState(() {
+                    filterRegex = value['filter'];
+                  });
+                }
+              }
+            },
+          ),
+          ...filteredEntrySelections.keys.map((entry) {
+            selectThis(bool? value) {
+              setState(() {
+                value ??= false;
+                if (value! && widget.onlyOneSelectionAllowed) {
+                  selectOnlyOne(entry.key);
+                } else {
+                  entrySelections[entry] = value!;
+                }
+              });
+            }
+
+            var urlLink = InkWell(
+              onTap: !widget.titlesAreLinks
+                  ? null
+                  : () {
+                      launchUrlString(
+                        entry.key,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.value.isEmpty ? entry.key : entry.value[0],
+                    style: TextStyle(
+                      decoration: widget.titlesAreLinks
+                          ? TextDecoration.underline
+                          : null,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  if (widget.titlesAreLinks)
+                    Text(
+                      Uri.parse(entry.key).host,
+                      style: const TextStyle(
+                        decoration: TextDecoration.underline,
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            );
+
+            var descriptionText = entry.value.length <= 1
+                ? const SizedBox.shrink()
+                : Text(
+                    entry.value[1].length > 128
+                        ? '${entry.value[1].substring(0, 128)}...'
+                        : entry.value[1],
+                    style: const TextStyle(
+                      fontStyle: FontStyle.italic,
+                      fontSize: 12,
+                    ),
+                  );
+
+            var selectedEntries = entrySelections.entries
+                .where((e) => e.value)
+                .toList();
+
+            var singleSelectTile = ListTile(
+              title: InkWell(
+                onTap: widget.titlesAreLinks
+                    ? null
+                    : () {
+                        selectThis(!(entrySelections[entry] ?? false));
+                      },
+                child: urlLink,
+              ),
+              subtitle: entry.value.length <= 1
+                  ? null
+                  : InkWell(
+                      onTap: () {
+                        setState(() {
+                          selectOnlyOne(entry.key);
+                        });
+                      },
+                      child: descriptionText,
+                    ),
+              leading: Radio<String>(
+                value: entry.key,
+                groupValue: selectedEntries.isEmpty
+                    ? null
+                    : selectedEntries.first.key.key,
+                onChanged: (value) {
+                  if (isTV) {
+                    Navigator.of(context).pop([entry.key]);
+                  } else {
+                    setState(() {
+                      selectOnlyOne(entry.key);
+                    });
+                  }
+                },
+              ),
+            );
+
+            var multiSelectTile = Row(
+              children: [
+                Checkbox(
+                  value: entrySelections[entry],
+                  onChanged: (value) {
+                    selectThis(value);
+                  },
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: widget.titlesAreLinks
+                            ? null
+                            : () {
+                                selectThis(!(entrySelections[entry] ?? false));
+                              },
+                        child: urlLink,
+                      ),
+                      entry.value.length <= 1
+                          ? const SizedBox.shrink()
+                          : InkWell(
+                              onTap: () {
+                                selectThis(!(entrySelections[entry] ?? false));
+                              },
+                              child: descriptionText,
+                            ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ],
+            );
+
+            return widget.onlyOneSelectionAllowed
+                ? singleSelectTile
+                : multiSelectTile;
+          }),
+          if (isTV && !widget.onlyOneSelectionAllowed) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(tr('cancel')),
+                ),
+                TextButton(
+                  onPressed: entrySelections.values.where((b) => b).isEmpty
+                      ? null
+                      : () => Navigator.of(context).pop(
+                          entrySelections.entries
+                              .where((entry) => entry.value)
+                              .map((e) => e.key.key)
+                              .toList(),
+                        ),
+                  child: Text(
+                    tr(
+                      'selectX',
+                      args: [
+                        entrySelections.values
+                            .where((b) => b)
+                            .length
+                            .toString(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        getSelectAllButton(),
+        TextButton(
+          autofocus: isTV,
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(tr('cancel')),
+        ),
+        TextButton(
+          onPressed: entrySelections.values.where((b) => b).isEmpty
+              ? null
+              : () {
+                  Navigator.of(context).pop(
+                    entrySelections.entries
+                        .where((entry) => entry.value)
+                        .map((e) => e.key.key)
+                        .toList(),
+                  );
+                },
+          child: Text(
+            widget.onlyOneSelectionAllowed
+                ? tr('pick')
+                : tr(
+                    'selectX',
+                    args: [
+                      entrySelections.values.where((b) => b).length.toString(),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+>>>>>>> upstream/main
     );
   }
 }

@@ -1,13 +1,19 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
+=======
+>>>>>>> upstream/main
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_constants.dart';
+=======
+>>>>>>> upstream/main
 import 'package:provider/provider.dart';
 
 class GeneratedFormModal extends StatefulWidget {
@@ -20,7 +26,10 @@ class GeneratedFormModal extends StatefulWidget {
     this.additionalWidgets = const [],
     this.singleNullReturnButton,
     this.primaryActionColour,
+<<<<<<< HEAD
     this.icon,
+=======
+>>>>>>> upstream/main
   });
 
   final String title;
@@ -30,7 +39,10 @@ class GeneratedFormModal extends StatefulWidget {
   final List<Widget> additionalWidgets;
   final String? singleNullReturnButton;
   final Color? primaryActionColour;
+<<<<<<< HEAD
   final IconData? icon;
+=======
+>>>>>>> upstream/main
 
   @override
   State<GeneratedFormModal> createState() => _GeneratedFormModalState();
@@ -48,6 +60,7 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final settings = context.watch<SettingsProvider>();
     final enableGlass = settings.plusEnableGlassmorphism;
 
@@ -221,6 +234,64 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
             ),
         ],
       ),
+=======
+    return AlertDialog(
+      scrollable: true,
+      title: Text(widget.title),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.message.isNotEmpty) Text(widget.message),
+          if (widget.message.isNotEmpty) const SizedBox(height: 16),
+          GeneratedForm(
+            items: widget.items,
+            onValueChanges: (values, valid, isBuilding) {
+              if (isBuilding) {
+                this.values = values;
+                this.valid = valid;
+              } else {
+                setState(() {
+                  this.values = values;
+                  this.valid = valid;
+                });
+              }
+            },
+          ),
+          if (widget.additionalWidgets.isNotEmpty) ...widget.additionalWidgets,
+        ],
+      ),
+      actions: [
+        TextButton(
+          autofocus: context.read<SettingsProvider>().isTV,
+          onPressed: () {
+            Navigator.of(context).pop(null);
+          },
+          child: Text(
+            widget.singleNullReturnButton == null
+                ? tr('cancel')
+                : widget.singleNullReturnButton!,
+          ),
+        ),
+        widget.singleNullReturnButton == null
+            ? TextButton(
+                style: widget.primaryActionColour == null
+                    ? null
+                    : TextButton.styleFrom(
+                        foregroundColor: widget.primaryActionColour,
+                      ),
+                onPressed: !valid
+                    ? null
+                    : () {
+                        if (valid) {
+                          HapticFeedback.selectionClick();
+                          Navigator.of(context).pop(values);
+                        }
+                      },
+                child: Text(tr('continue')),
+              )
+            : const SizedBox.shrink(),
+      ],
+>>>>>>> upstream/main
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -134,11 +135,38 @@ class CustomSliverAppBarCompact extends StatelessWidget {
           color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.15,
+=======
+
+class CustomAppBar extends StatefulWidget {
+  const CustomAppBar({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<CustomAppBar> createState() => _CustomAppBarState();
+}
+
+class _CustomAppBarState extends State<CustomAppBar> {
+  @override
+  Widget build(BuildContext context) {
+    return SliverAppBar(
+      pinned: true,
+      automaticallyImplyLeading: false,
+      expandedHeight: 100,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        title: Text(
+          widget.title,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium!.color,
+          ),
+>>>>>>> upstream/main
         ),
       ),
     );
   }
 }
+<<<<<<< HEAD
 
 /// A smart sliver app bar that automatically chooses between compact and large
 /// based on the user's settings for a specific page.
@@ -193,3 +221,5 @@ class AdaptiveSliverAppBar extends StatelessWidget {
     }
   }
 }
+=======
+>>>>>>> upstream/main

@@ -1,12 +1,18 @@
+<<<<<<< HEAD
 import 'package:obtainium/utils/app_utils.dart';
+=======
+>>>>>>> upstream/main
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
+<<<<<<< HEAD
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+=======
+>>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class FDroidRepo extends AppSource {
@@ -97,7 +103,11 @@ class FDroidRepo extends AppSource {
       });
       return results;
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 
@@ -126,7 +136,11 @@ class FDroidRepo extends AppSource {
   App endOfGetAppChanges(App app) {
     var uri = Uri.parse(app.url);
     String? appId;
+<<<<<<< HEAD
     if (!SourceUtils.isTempId(app)) {
+=======
+    if (!isTempId(app)) {
+>>>>>>> upstream/main
       appId = app.id;
     } else if (uri.queryParameters['appId'] != null) {
       appId = uri.queryParameters['appId'];
@@ -181,8 +195,12 @@ class FDroidRepo extends AppSource {
     }
     standardUrl = removeQueryParamsFromUrl(standardUrl);
     bool pickHighestVersionCode = additionalSettings['pickHighestVersionCode'];
+<<<<<<< HEAD
     bool trySelectingSuggestedVersionCode =
         additionalSettings['trySelectingSuggestedVersionCode'];
+=======
+    bool trySelectingSuggestedVersionCode = additionalSettings['trySelectingSuggestedVersionCode'];
+>>>>>>> upstream/main
     if (appIdOrName == null) {
       throw NoReleasesError();
     }
@@ -228,6 +246,7 @@ class FDroidRepo extends AppSource {
       if (latestVersion == null) {
         throw NoVersionError();
       }
+<<<<<<< HEAD
       String? marketvercodeStr = foundApps[0]
           .querySelector('marketvercode')
           ?.innerHtml;
@@ -244,12 +263,23 @@ class FDroidRepo extends AppSource {
                   e.querySelector('apkname') != null,
             )
             .toList();
+=======
+      String? marketvercodeStr = foundApps[0].querySelector('marketvercode')?.innerHtml;
+      int? marketvercode = int.tryParse(marketvercodeStr ?? '');
+      List selectedReleases = [];
+      if (trySelectingSuggestedVersionCode && marketvercode != null) {
+        selectedReleases = releases.where((e) =>
+          int.tryParse(e.querySelector('versioncode')?.innerHtml ?? '') == marketvercode &&
+          e.querySelector('apkname') != null
+        ).toList();
+>>>>>>> upstream/main
       }
       String? appAuthorName = foundApps[0].querySelector('author')?.innerHtml;
       if (appAuthorName != null) {
         authorName = appAuthorName;
       }
       if (selectedReleases.isEmpty) {
+<<<<<<< HEAD
         selectedReleases = releases
             .where(
               (e) =>
@@ -277,6 +307,21 @@ class FDroidRepo extends AppSource {
       String? selectedVersion = selectedReleases[0]
           .querySelector('version')
           ?.innerHtml;
+=======
+        selectedReleases = releases.where((e) =>
+          e.querySelector('version')?.innerHtml == latestVersion &&
+          e.querySelector('apkname') != null
+        ).toList();
+        if (selectedReleases.length > 1 && pickHighestVersionCode) {
+          selectedReleases.sort((e1, e2) {
+            return int.parse(e2.querySelector('versioncode')!.innerHtml)
+              .compareTo(int.parse(e1.querySelector('versioncode')!.innerHtml));
+        });
+          selectedReleases = [selectedReleases[0]];
+        }
+      }
+      String? selectedVersion = selectedReleases[0].querySelector('version')?.innerHtml;
+>>>>>>> upstream/main
       if (selectedVersion == null) {
         throw NoVersionError();
       }
@@ -296,7 +341,11 @@ class FDroidRepo extends AppSource {
         changeLog: changeLog,
       );
     } else {
+<<<<<<< HEAD
       throw SourceUtils.getObtainiumHttpError(res);
+=======
+      throw getObtainiumHttpError(res);
+>>>>>>> upstream/main
     }
   }
 }
