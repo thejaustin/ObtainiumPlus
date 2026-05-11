@@ -81,6 +81,25 @@ class AppsProvider with ChangeNotifier {
   bool isForeground = true;
   late Stream<FGBGType>? foregroundStream;
   late StreamSubscription<FGBGType>? foregroundSubscription;
+
+  // Bulk Selection State
+  final Set<String> _selectedAppIds = {};
+  Set<String> get selectedAppIds => _selectedAppIds;
+  bool get isSelectionMode => _selectedAppIds.isNotEmpty;
+
+  void toggleAppSelection(String appId) {
+    if (_selectedAppIds.contains(appId)) {
+      _selectedAppIds.remove(appId);
+    } else {
+      _selectedAppIds.add(appId);
+    }
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedAppIds.clear();
+    notifyListeners();
+  }
   
   Directory? _APKDir;
   Directory? _iconsCacheDir;
@@ -141,7 +160,7 @@ class AppsProvider with ChangeNotifier {
     }
 
     // Always call initialize to set up directories and load apps
-    initialize();
+    unawaited(initialize());
   }
 
   void _onSettingsChanged() {

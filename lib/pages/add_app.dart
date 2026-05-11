@@ -937,43 +937,40 @@ class AddAppPageState extends State<AddAppPage> {
       elevation: 0,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tr('additionalOptions'),
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            GeneratedForm(
-              key: Key(
-                'modern-${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+      child: ExpansionTile(
+        title: Text(
+          tr('additionalOptions'),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
               ),
-              items: [
-                ...pickedSource!.combinedAppSpecificSettingFormItems,
-                ...(pickedSourceOverride != null
-                    ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
-                    : []),
-              ],
-              onValueChanges: (values, valid, isBuilding) {
-                if (!isBuilding) {
-                  setState(() {
-                    additionalSettings = values;
-                    additionalSettingsValid = valid;
-                  });
-                }
-              },
-            ),
-            if (pickedSource != null && pickedSource!.appIdInferIsOptional) ...[
-              const Divider(),
-              _buildInferAppIdToggle(),
-            ],
-          ],
         ),
+        leading: const Icon(Icons.tune_rounded),
+        childrenPadding: const EdgeInsets.all(16),
+        children: [
+          GeneratedForm(
+            key: Key(
+              'modern-${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+            ),
+            items: [
+              ...pickedSource!.combinedAppSpecificSettingFormItems,
+              ...(pickedSourceOverride != null
+                  ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
+                  : []),
+            ],
+            onValueChanges: (values, valid, isBuilding) {
+              if (!isBuilding) {
+                setState(() {
+                  additionalSettings = values;
+                  additionalSettingsValid = valid;
+                });
+              }
+            },
+          ),
+          if (pickedSource != null && pickedSource!.appIdInferIsOptional) ...[
+            const Divider(),
+            _buildInferAppIdToggle(),
+          ],
+        ],
       ),
     );
   }
