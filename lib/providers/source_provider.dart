@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-// Provides functions used to interact with App sources
-import 'dart:convert';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:obtainium/app_sources/apkcombo.dart';
-import 'package:obtainium/app_sources/apkmirror.dart';
-import 'package:obtainium/app_sources/apkpure.dart';
-import 'package:obtainium/app_sources/aptoide.dart';
-=======
 // Defines App sources and provides functions used to interact with them
 // AppSource is an abstract class with a concrete implementation for each source
 
@@ -24,7 +14,6 @@ import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
 import 'package:obtainium/app_sources/aptoide.dart';
 import 'package:obtainium/app_sources/apk4free.dart';
->>>>>>> upstream/main
 import 'package:obtainium/app_sources/codeberg.dart';
 import 'package:obtainium/app_sources/coolapk.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
@@ -33,13 +22,7 @@ import 'package:obtainium/app_sources/fdroid.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/app_sources/gitlab.dart';
-<<<<<<< HEAD
-import 'package:obtainium/app_sources/googleplay.dart';
-import 'package:obtainium/app_sources/googleplay_native.dart';
-=======
->>>>>>> upstream/main
 import 'package:obtainium/app_sources/huaweiappgallery.dart';
-import 'package:obtainium/app_sources/itchio.dart';
 import 'package:obtainium/app_sources/izzyondroid.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/app_sources/jenkins.dart';
@@ -55,24 +38,6 @@ import 'package:obtainium/app_sources/uptodown.dart';
 import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
-<<<<<<< HEAD
-import 'package:obtainium/main.dart';
-import 'package:obtainium/mass_app_sources/githubstars.dart';
-import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
-import 'package:obtainium/models/app.dart';
-import 'package:obtainium/models/app_in_memory.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/utils/app_utils.dart';
-import 'package:obtainium/utils/language_utils.dart';
-import 'package:obtainium/utils/version_utils.dart';
-import 'package:obtainium/utils/source_utils.dart';
-
-export 'package:obtainium/models/app.dart';
-
-// App JSON schema has changed multiple times over the many versions of Obtainium
-=======
 import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -112,7 +77,6 @@ List<MapEntry<String, String>> assumed2DlistToStringMapList(
 
 // App JSON schema has changed multiple times over the many versions of Obtainium
 // This function takes an App JSON and modifies it if needed to conform to the latest (current) version
->>>>>>> upstream/main
 Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   var source = SourceProvider().getSource(
     json['url'],
@@ -126,65 +90,6 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   ]);
   Map<String, dynamic> originalAdditionalSettings = {};
   if (json['additionalSettings'] != null) {
-<<<<<<< HEAD
-    var decoded = safeJsonDecode(
-      json['additionalSettings'],
-      <String, dynamic>{},
-    );
-    if (decoded is Map) {
-      originalAdditionalSettings = Map<String, dynamic>.from(decoded);
-      additionalSettings.addEntries(originalAdditionalSettings.entries);
-    }
-  }
-
-  _migrateV1Settings(json, additionalSettings, formItems);
-  _migrateVersionDetection(additionalSettings);
-  _migratePseudoVersioning(originalAdditionalSettings, additionalSettings);
-
-  // Ensure additionalSettings are correctly typed
-  for (var item in formItems) {
-    if (additionalSettings[item.key] != null) {
-      additionalSettings[item.key] = item.ensureType(
-        additionalSettings[item.key],
-      );
-    }
-  }
-
-  json['preferredApkIndex'] = _getValidPreferredApkIndex(json);
-  json['apkUrls'] = _getStandardizedApkUrls(json);
-
-  if (additionalSettings['autoApkFilterByArch'] == null) {
-    additionalSettings['autoApkFilterByArch'] = false;
-  }
-  if (additionalSettings['dontSortReleasesList'] == true) {
-    additionalSettings['sortMethodChoice'] = 'none';
-  }
-
-  if (source.runtimeType == HTML().runtimeType) {
-    _migrateHtmlSourceSettings(
-      additionalSettings,
-      originalAdditionalSettings,
-      json,
-    );
-  }
-
-  json['additionalSettings'] = jsonEncode(additionalSettings);
-
-  _migrateFDroidSource(json);
-
-  return json;
-}
-
-void _migrateV1Settings(
-  Map<String, dynamic> json,
-  Map<String, dynamic> additionalSettings,
-  List<GeneratedFormItem> formItems,
-) {
-  if (json['additionalData'] != null) {
-    var decoded = safeJsonDecode(json['additionalData'], <dynamic>[]);
-    if (decoded is! List) return;
-    List<String> temp = List<String>.from(decoded);
-=======
     originalAdditionalSettings = Map<String, dynamic>.from(
       jsonDecode(json['additionalSettings']),
     );
@@ -193,7 +98,6 @@ void _migrateV1Settings(
   // If needed, migrate old-style additionalData to newer-style additionalSettings (V1)
   if (json['additionalData'] != null) {
     List<String> temp = List<String>.from(jsonDecode(json['additionalData']));
->>>>>>> upstream/main
     temp.asMap().forEach((i, value) {
       if (i < formItems.length) {
         if (formItems[i] is GeneratedFormSwitch) {
@@ -208,13 +112,7 @@ void _migrateV1Settings(
     additionalSettings['noVersionDetection'] =
         json['noVersionDetection'] == 'true' || json['trackOnly'] == true;
   }
-<<<<<<< HEAD
-}
-
-void _migrateVersionDetection(Map<String, dynamic> additionalSettings) {
-=======
   // Convert bool style version detection options to dropdown style
->>>>>>> upstream/main
   if (additionalSettings['noVersionDetection'] == true) {
     additionalSettings['versionDetection'] = 'noVersionDetection';
     if (additionalSettings['releaseDateAsVersion'] == true) {
@@ -228,10 +126,7 @@ void _migrateVersionDetection(Map<String, dynamic> additionalSettings) {
       additionalSettings.remove('releaseDateAsVersion');
     }
   }
-<<<<<<< HEAD
-=======
   // Convert dropdown style version detection options back into bool style
->>>>>>> upstream/main
   if (additionalSettings['versionDetection'] == 'standardVersionDetection') {
     additionalSettings['versionDetection'] = true;
   } else if (additionalSettings['versionDetection'] == 'noVersionDetection') {
@@ -240,33 +135,6 @@ void _migrateVersionDetection(Map<String, dynamic> additionalSettings) {
     additionalSettings['versionDetection'] = false;
     additionalSettings['releaseDateAsVersion'] = true;
   }
-<<<<<<< HEAD
-}
-
-void _migratePseudoVersioning(
-  Map<String, dynamic> originalSettings,
-  Map<String, dynamic> additionalSettings,
-) {
-  if (originalSettings['supportFixedAPKURL'] == true) {
-    additionalSettings['defaultPseudoVersioningMethod'] = 'partialAPKHash';
-  } else if (originalSettings['supportFixedAPKURL'] == false) {
-    additionalSettings['defaultPseudoVersioningMethod'] = 'APKLinkHash';
-  }
-}
-
-int _getValidPreferredApkIndex(Map<String, dynamic> json) {
-  int preferredApkIndex = json['preferredApkIndex'] == null
-      ? 0
-      : json['preferredApkIndex'] as int;
-  return preferredApkIndex < 0 ? 0 : preferredApkIndex;
-}
-
-String _getStandardizedApkUrls(Map<String, dynamic> json) {
-  List<MapEntry<String, String>> apkUrls = [];
-  if (json['apkUrls'] != null) {
-    var apkUrlJson = safeJsonDecode(json['apkUrls'], <dynamic>[]);
-    if (apkUrlJson is! List) return '[]';
-=======
   // Convert bool style pseudo version method to dropdown style
   if (originalAdditionalSettings['supportFixedAPKURL'] == true) {
     additionalSettings['defaultPseudoVersioningMethod'] = 'partialAPKHash';
@@ -292,125 +160,10 @@ String _getStandardizedApkUrls(Map<String, dynamic> json) {
   List<MapEntry<String, String>> apkUrls = [];
   if (json['apkUrls'] != null) {
     var apkUrlJson = jsonDecode(json['apkUrls']);
->>>>>>> upstream/main
     try {
       apkUrls = getApkUrlsFromUrls(List<String>.from(apkUrlJson));
     } catch (e) {
       apkUrls = assumed2DlistToStringMapList(List<dynamic>.from(apkUrlJson));
-<<<<<<< HEAD
-    }
-    return jsonEncode(stringMapListTo2DList(apkUrls));
-  }
-  return '[]';
-}
-
-void _migrateHtmlSourceSettings(
-  Map<String, dynamic> additionalSettings,
-  Map<String, dynamic> originalAdditionalSettings,
-  Map<String, dynamic> json,
-) {
-  if (originalAdditionalSettings['sortByFileNamesNotLinks'] != null) {
-    additionalSettings['sortByLastLinkSegment'] =
-        originalAdditionalSettings['sortByFileNamesNotLinks'];
-  }
-  if (originalAdditionalSettings['intermediateLinkRegex'] != null &&
-      additionalSettings['intermediateLinkRegex']?.isNotEmpty != true) {
-    additionalSettings['intermediateLink'] = [
-      {
-        'customLinkFilterRegex':
-            originalAdditionalSettings['intermediateLinkRegex'],
-        'filterByLinkText':
-            originalAdditionalSettings['intermediateLinkByText'],
-      },
-    ];
-  }
-  if ((additionalSettings['intermediateLink']?.length ?? 0) > 0) {
-    additionalSettings['intermediateLink'] =
-        additionalSettings['intermediateLink'].where((e) {
-          return e['customLinkFilterRegex']?.isNotEmpty == true;
-        }).toList();
-  }
-
-  _migrateLegacyHtmlApps(additionalSettings, json);
-}
-
-void _migrateLegacyHtmlApps(
-  Map<String, dynamic> additionalSettings,
-  Map<String, dynamic> json,
-) {
-  var legacySteamSourceApps = ['steam', 'steam-chat-app'];
-  if (legacySteamSourceApps.contains(additionalSettings['app'] ?? '')) {
-    json['url'] = '${json['url']}/mobile';
-    var replacementAdditionalSettings = getDefaultValuesFromFormItems(
-      HTML().combinedAppSpecificSettingFormItems,
-    );
-    for (var s in replacementAdditionalSettings.keys) {
-      if (additionalSettings.containsKey(s)) {
-        replacementAdditionalSettings[s] = additionalSettings[s];
-      }
-    }
-    replacementAdditionalSettings['customLinkFilterRegex'] =
-        '/${additionalSettings['app']}-(([0-9]+\.?){1,})\.apk';
-    replacementAdditionalSettings['versionExtractionRegEx'] =
-        replacementAdditionalSettings['customLinkFilterRegex'];
-    replacementAdditionalSettings['matchGroupToUse'] = '\$1';
-    additionalSettings.clear();
-    additionalSettings.addAll(replacementAdditionalSettings);
-  }
-  // Signal, WhatsApp, VLC migrations
-  const legacyApps = {
-    'org.thoughtcrime.securesms': {
-      'url': 'https://updates.signal.org/android/latest.json',
-      'settings': {'versionExtractionRegEx': '\\d+.\\d+.\\d+'},
-    },
-    'com.whatsapp': {
-      'url': 'https://whatsapp.com/android',
-      'settings': {'refreshBeforeDownload': true},
-    },
-    'org.videolan.vlc': {
-      'url': 'https://www.videolan.org/vlc/download-android.html',
-      'settings': {
-        'refreshBeforeDownload': true,
-        'intermediateLink': [
-          {
-            'customLinkFilterRegex': 'APK',
-            'filterByLinkText': true,
-            'skipSort': false,
-            'reverseSort': false,
-            'sortByLastLinkSegment': false,
-          },
-          {
-            'customLinkFilterRegex': 'arm64-v8a\\.apk\$',
-            'filterByLinkText': false,
-            'skipSort': false,
-            'reverseSort': false,
-            'sortByLastLinkSegment': false,
-          },
-        ],
-        'versionExtractionRegEx': '/vlc-android/([^/]+)/',
-        'matchGroupToUse': "1",
-      },
-    },
-  };
-
-  if (legacyApps.containsKey(json['id']) &&
-      json['overrideSource'] == null &&
-      (json['lastUpdateCheck'] != null)) {
-    var appConfig = legacyApps[json['id']]!;
-    json['url'] = appConfig['url'];
-    var replacementAdditionalSettings = getDefaultValuesFromFormItems(
-      HTML().combinedAppSpecificSettingFormItems,
-    );
-    replacementAdditionalSettings.addAll(
-      appConfig['settings'] as Map<String, dynamic>,
-    );
-    additionalSettings.clear();
-    additionalSettings.addAll(replacementAdditionalSettings);
-  }
-}
-
-void _migrateFDroidSource(Map<String, dynamic> json) {
-=======
       apkUrls = List<dynamic>.from(
         apkUrlJson,
       ).map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
@@ -542,31 +295,18 @@ void _migrateFDroidSource(Map<String, dynamic> json) {
   // F-Droid no longer needs cloudflare exception since override can be used - migrate apps appropriately
   // This allows us to reverse the changes made for issue #418 (support cloudflare.f-droid)
   // While not causing problems for existing apps from that source that were added in a previous version
->>>>>>> upstream/main
   var overrideSourceWasUndefined = !json.keys.contains('overrideSource');
   if ((json['url'] as String).startsWith('https://cloudflare.f-droid.org')) {
     json['overrideSource'] = FDroid().runtimeType.toString();
   } else if (overrideSourceWasUndefined) {
-<<<<<<< HEAD
-    RegExpMatch? match = RegExp(
-      r'^https?://.+/fdroid/([^/]+(/|\?)|[^/]+)',
-=======
     // Similar to above, but for third-party F-Droid repos
     RegExpMatch? match = RegExp(
       '^https?://.+/fdroid/([^/]+(/|\\?)|[^/]+\$)',
->>>>>>> upstream/main
     ).firstMatch(json['url'] as String);
     if (match != null) {
       json['overrideSource'] = FDroidRepo().runtimeType.toString();
     }
   }
-<<<<<<< HEAD
-}
-
-class SourceProvider {
-  // PERFORMANCE: Cache sources to avoid re-instantiating ~24 classes on every access
-  static final List<AppSource> _cachedSources = [
-=======
   return json;
 }
 
@@ -1357,7 +1097,6 @@ bool isVersionPseudo(App app) =>
 class SourceProvider {
   // Add more source classes here so they are available via the service
   List<AppSource> get sources => [
->>>>>>> upstream/main
     GitHub(),
     GitLab(),
     Codeberg(),
@@ -1366,27 +1105,10 @@ class SourceProvider {
     IzzyOnDroid(),
     SourceHut(),
     APKPure(),
-<<<<<<< HEAD
-    APKCombo(),
-    GooglePlay(),
-    GooglePlayNative(),
-=======
->>>>>>> upstream/main
     Aptoide(),
     Uptodown(),
-    ItchIO(),
     HuaweiAppGallery(),
     Tencent(),
-<<<<<<< HEAD
-    CoolApk(),
-    LiteAPKs(),
-    RockMods(),
-    VivoAppStore(),
-    Jenkins(),
-    APKMirror(),
-    RuStore(),
-    Farsroid(),
-=======
     VivoAppStore(),
     RuStore(),
     Apk4Free(),
@@ -1396,31 +1118,17 @@ class SourceProvider {
     LiteAPKs(),
     Jenkins(),
     APKMirror(),
->>>>>>> upstream/main
     TelegramApp(),
     NeutronCode(),
     DirectAPKLink(),
     HTML(), // This should ALWAYS be the last option as they are tried in order
   ];
 
-<<<<<<< HEAD
-  List<AppSource> get sources => _cachedSources;
-
-  // Add more mass url source classes here so they are available via the service
-  List<MassAppUrlSource> massUrlSources = [
-    GitHubStars(),
-    GitHubPersonalRepos(),
-  ];
-
-  AppSource getSource(String url, {String? overrideSource}) {
-    url = GitHub().preStandardizeUrl(url); // Any AppSource can provide this
-=======
   // Add more mass url source classes here so they are available via the service
   List<MassAppUrlSource> massUrlSources = [GitHubStars()];
 
   AppSource getSource(String url, {String? overrideSource}) {
     url = preStandardizeUrl(url);
->>>>>>> upstream/main
     if (overrideSource != null) {
       var srcs = sources.where(
         (e) => e.runtimeType.toString() == overrideSource,
@@ -1442,11 +1150,7 @@ class SourceProvider {
     for (var s in sources.where((element) => element.hosts.isNotEmpty)) {
       try {
         if (RegExp(
-<<<<<<< HEAD
-          '^${s.allowSubDomains ? r'([^\.]+\.)*' : r'(www\.)?'}(${getSourceRegex(s.hosts)})',
-=======
           '^${s.allowSubDomains ? '([^\\.]+\\.)*' : '(www\\.)?'}(${getSourceRegex(s.hosts)})\$',
->>>>>>> upstream/main
         ).hasMatch(Uri.parse(url).host)) {
           source = s;
           break;
@@ -1469,20 +1173,7 @@ class SourceProvider {
       }
     }
     if (source == null) {
-<<<<<<< HEAD
-      // Get list of supported sources for suggestions
-      final supportedSources = sources
-          .where((s) => s.hosts.isNotEmpty)
-          .map((s) => s.name)
-          .toList();
-
-      throw UnsupportedURLError(
-        suggestedSources: supportedSources.take(8).toList(),
-        failedUrl: url,
-      );
-=======
       throw UnsupportedURLError();
->>>>>>> upstream/main
     }
     return source;
   }
@@ -1503,40 +1194,6 @@ class SourceProvider {
     Map<String, dynamic> additionalSettings,
   ) => (standardUrl + additionalSettings.toString()).hashCode.toString();
 
-<<<<<<< HEAD
-  Future<AppSource?> findSourceForPackage(String appId) async {
-    // 1. Try Google Play (via mirror) as it's the most common
-    // We check if it exists on the mirror first
-    try {
-      final GooglePlay gp = GooglePlay();
-      final url = gp.standardizeUrl(
-        'https://play.google.com/store/apps/details?id=$appId',
-      );
-      // Verify it exists by trying to get details
-      await gp.getLatestAPKDetails(url, {'autoApkFilterByArch': true});
-      return gp;
-    } catch (e) {
-      // Not on Play Store or mirror failed
-    }
-
-    // 2. Try F-Droid (Common for FOSS)
-    try {
-      final FDroid fd = FDroid();
-      // F-Droid usually has a predictable API for package names
-      await fd.getLatestAPKDetails(
-        'https://f-droid.org/en/packages/$appId',
-        {},
-      );
-      return fd;
-    } catch (e) {
-      // Not on F-Droid
-    }
-
-    return null;
-  }
-
-=======
->>>>>>> upstream/main
   Future<App> getApp(
     AppSource source,
     String url,
@@ -1559,11 +1216,7 @@ class SourceProvider {
     if (source.runtimeType !=
             HTML().runtimeType && // Some sources do it separately
         source.runtimeType != SourceForge().runtimeType) {
-<<<<<<< HEAD
-      String? extractedVersion = SourceUtils.extractVersion(
-=======
       String? extractedVersion = extractVersion(
->>>>>>> upstream/main
         additionalSettings['versionExtractionRegEx'] as String?,
         additionalSettings['matchGroupToUse'] as String?,
         apk.version,
@@ -1577,11 +1230,7 @@ class SourceProvider {
         apk.releaseDate != null) {
       apk.version = apk.releaseDate!.microsecondsSinceEpoch.toString();
     }
-<<<<<<< HEAD
-    apk.apkUrls = SourceUtils.filterApks(
-=======
     apk.apkUrls = filterApks(
->>>>>>> upstream/main
       apk.apkUrls,
       additionalSettings['apkFilterRegEx'],
       additionalSettings['invertAPKFilter'],

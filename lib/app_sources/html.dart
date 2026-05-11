@@ -6,23 +6,11 @@ import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-<<<<<<< HEAD
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/services/app_file_service.dart';
-import 'package:obtainium/utils/app_utils.dart';
-
-String ensureAbsoluteUrl(String ambiguousUrl, Uri referenceAbsoluteUrl) {
-  try {
-=======
 import 'package:obtainium/providers/source_provider.dart';
 
 String ensureAbsoluteUrl(String ambiguousUrl, Uri referenceAbsoluteUrl) {
   try {
     ambiguousUrl = ambiguousUrl.trim();
->>>>>>> upstream/main
     if (Uri.parse(ambiguousUrl).isAbsolute) {
       return ambiguousUrl; // #2315
     }
@@ -131,11 +119,7 @@ Future<List<MapEntry<String, String>>> grabLinksCommonFromRes(
   Map<String, dynamic> additionalSettings,
 ) async {
   if (res.statusCode != 200) {
-<<<<<<< HEAD
-    throw SourceUtils.getObtainiumHttpError(res);
-=======
     throw getObtainiumHttpError(res);
->>>>>>> upstream/main
   }
   return grabLinksCommon(res.body, res.request!.url, additionalSettings);
 }
@@ -204,11 +188,7 @@ Future<List<MapEntry<String, String>>> grabLinksCommon(
         // Some links may not have valid encoding
       }
       return Uri.parse(
-<<<<<<< HEAD
-        filterLinkByText ? element.value : link,
-=======
         (filterLinkByText ? element.value : link).trim(),
->>>>>>> upstream/main
       ).path.toLowerCase().endsWith('.apk');
     }).toList();
   }
@@ -253,11 +233,7 @@ class HTML extends AppSource {
         required: false,
         additionalValidators: [
           (value) {
-<<<<<<< HEAD
-            return SourceUtils.regExValidator(value);
-=======
             return regExValidator(value);
->>>>>>> upstream/main
           },
         ],
       ),
@@ -293,11 +269,7 @@ class HTML extends AppSource {
         label: tr('intermediateLinkRegex'),
         hint: '([0-9]+.)*[0-9]+/\$',
         required: true,
-<<<<<<< HEAD
-        additionalValidators: [(value) => SourceUtils.regExValidator(value)],
-=======
         additionalValidators: [(value) => regExValidator(value)],
->>>>>>> upstream/main
       ),
     ],
     [
@@ -437,11 +409,7 @@ class HTML extends AppSource {
           .split('\n')
           .join('\\n');
       links = await grabLinksCommonFromRes(res, additionalSettings);
-<<<<<<< HEAD
-      links = SourceUtils.filterApks(
-=======
       links = filterApks(
->>>>>>> upstream/main
         links,
         additionalSettings['apkFilterRegEx'],
         additionalSettings['invertAPKFilter'],
@@ -460,11 +428,7 @@ class HTML extends AppSource {
       // Some links may not have valid encoding
     }
     String? version;
-<<<<<<< HEAD
-    version = SourceUtils.extractVersion(
-=======
     version = extractVersion(
->>>>>>> upstream/main
       additionalSettings['versionExtractionRegEx'] as String?,
       additionalSettings['matchGroupToUse'] as String?,
       additionalSettings['versionExtractWholePage'] == true
@@ -478,11 +442,7 @@ class HTML extends AppSource {
     );
     if (version == null &&
         additionalSettings['defaultPseudoVersioningMethod'] == 'ETag') {
-<<<<<<< HEAD
-      version = await AppFileService.checkETagHeader(
-=======
       version = await checkETagHeader(
->>>>>>> upstream/main
         rel,
         headers: apkReqHeaders,
         allowInsecure: additionalSettings['allowInsecure'] == true,
@@ -494,11 +454,7 @@ class HTML extends AppSource {
     version ??=
         additionalSettings['defaultPseudoVersioningMethod'] == 'APKLinkHash'
         ? rel.hashCode.toString()
-<<<<<<< HEAD
-        : (await AppFileService.checkPartialDownloadHashDynamic(
-=======
         : (await checkPartialDownloadHashDynamic(
->>>>>>> upstream/main
             rel,
             headers: apkReqHeaders,
             allowInsecure: additionalSettings['allowInsecure'] == true,

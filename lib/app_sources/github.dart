@@ -9,103 +9,6 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-<<<<<<< HEAD
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/version_utils.dart';
-import 'package:obtainium/utils/app_utils.dart';
-import 'package:url_launcher/url_launcher_string.dart';
-
-import 'package:obtainium/app_sources/git_source.dart';
-
-class GitHub extends GitSource {
-  static final Map<String, ({String etag, dynamic body, DateTime expiry})>
-  _apiCache = {};
-
-  @override
-  Future<Response> sourceRequest(
-    String url,
-    Map<String, dynamic> additionalSettings, {
-    bool followRedirects = true,
-    Object? postBody,
-  }) async {
-    var sp = SettingsProvider();
-    await sp.initializeSettings();
-
-    // Only cache GET requests to the API if smart retries/caching is enabled
-    if (postBody != null ||
-        !url.contains('api.github.com') ||
-        !sp.plusEnableSmartRetries) {
-      return super.sourceRequest(
-        url,
-        additionalSettings,
-        followRedirects: followRedirects,
-        postBody: postBody,
-      );
-    }
-
-    final cached = _apiCache[url];
-    if (cached != null && cached.expiry.isAfter(DateTime.now())) {
-      // Use cached response if still fresh (GitHub suggests 60s for frequent checks)
-      return Response(
-        jsonEncode(cached.body),
-        200,
-        headers: {'x-from-obtainium-cache': 'true'},
-      );
-    }
-
-    var sourceConfigSettingValues = await getSourceConfigValues(
-      additionalSettings,
-      sp,
-    );
-    Map<String, String> headers =
-        await getRequestHeaders(additionalSettings, url) ?? {};
-
-    if (cached != null) {
-      headers['If-None-Match'] = cached.etag;
-    }
-
-    final res = await SourceUtils.httpRequest(
-      url,
-      method: 'GET',
-      headers: headers,
-      sourceConfigSettingValues: sourceConfigSettingValues,
-      followRedirects: followRedirects,
-      allowInsecure: additionalSettings['allowInsecure'] == true,
-    );
-
-    if (res.statusCode == 304 && cached != null) {
-      // Not modified, refresh expiry and return cached body
-      _apiCache[url] = (
-        etag: cached.etag,
-        body: cached.body,
-        expiry: DateTime.now().add(const Duration(minutes: 5)),
-      );
-      return Response(jsonEncode(cached.body), 200, headers: res.headers);
-    }
-
-    if (res.statusCode == 200 && res.headers.containsKey('etag')) {
-      // Success, cache the new response
-      try {
-        final body = jsonDecode(res.body);
-        _apiCache[url] = (
-          etag: res.headers['etag']!,
-          body: body,
-          expiry: DateTime.now().add(const Duration(minutes: 5)),
-        );
-      } catch (_) {}
-    }
-
-    return res;
-  }
-
-  GitHub({bool hostChanged = false}) : super(hostChanged: hostChanged) {
-    hosts = ['github.com'];
-    appIdInferIsOptional = true;
-    showReleaseDateAsVersionToggle = true;
-=======
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -115,27 +18,17 @@ class GitHub extends AppSource {
     appIdInferIsOptional = true;
     showReleaseDateAsVersionToggle = true;
     this.hostChanged = hostChanged;
->>>>>>> upstream/main
     allowIncludeZips = true;
 
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
         'github-creds',
-<<<<<<< HEAD
-        label: tr('githubToken'),
-        tooltip: tr('githubTokenTooltip'),
-=======
         label: tr('githubPATLabel'),
->>>>>>> upstream/main
         password: true,
         required: false,
         belowWidgets: [
           const SizedBox(height: 4),
-<<<<<<< HEAD
-          GestureDetector(
-=======
           InkWell(
->>>>>>> upstream/main
             onTap: () {
               launchUrlString(
                 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
@@ -155,12 +48,7 @@ class GitHub extends AppSource {
       ),
       GeneratedFormTextField(
         'GHReqPrefix',
-<<<<<<< HEAD
-        label: tr('githubProxy'),
-        tooltip: tr('githubProxyTooltip'),
-=======
         label: tr('GHReqPrefix'),
->>>>>>> upstream/main
         hint: 'gh-proxy.org',
         required: false,
         additionalValidators: [
@@ -180,11 +68,7 @@ class GitHub extends AppSource {
         ],
         belowWidgets: [
           const SizedBox(height: 4),
-<<<<<<< HEAD
-          GestureDetector(
-=======
           InkWell(
->>>>>>> upstream/main
             onTap: () {
               launchUrlString(
                 'https://github.com/sky22333/hubproxy',
@@ -202,14 +86,11 @@ class GitHub extends AppSource {
           const SizedBox(height: 4),
         ],
       ),
-<<<<<<< HEAD
-=======
       GeneratedFormSwitch(
         'checkRepoRename',
         label: tr('repoRenamedCheck'),
         defaultValue: false,
       ),
->>>>>>> upstream/main
     ];
 
     additionalSourceAppSpecificSettingFormItems = [
@@ -217,10 +98,6 @@ class GitHub extends AppSource {
         GeneratedFormSwitch(
           'includePrereleases',
           label: tr('includePrereleases'),
-<<<<<<< HEAD
-          tooltip: tr('includePrereleasesTooltip'),
-=======
->>>>>>> upstream/main
           defaultValue: false,
         ),
       ],
@@ -228,30 +105,17 @@ class GitHub extends AppSource {
         GeneratedFormSwitch(
           'fallbackToOlderReleases',
           label: tr('fallbackToOlderReleases'),
-<<<<<<< HEAD
-          tooltip: tr('fallbackToOlderReleasesTooltip'),
-=======
->>>>>>> upstream/main
           defaultValue: true,
         ),
       ],
       [
         GeneratedFormTextField(
           'filterReleaseTitlesByRegEx',
-<<<<<<< HEAD
-          label: tr('filterReleaseTitlesByRegExLabel'),
-          tooltip: tr('filterReleaseTitlesByRegExTooltip'),
-          required: false,
-          additionalValidators: [
-            (value) {
-              return SourceUtils.regExValidator(value);
-=======
           label: tr('filterReleaseTitlesByRegEx'),
           required: false,
           additionalValidators: [
             (value) {
               return regExValidator(value);
->>>>>>> upstream/main
             },
           ],
         ),
@@ -259,35 +123,16 @@ class GitHub extends AppSource {
       [
         GeneratedFormTextField(
           'filterReleaseNotesByRegEx',
-<<<<<<< HEAD
-          label: tr('filterReleaseNotesByRegExLabel'),
-          tooltip: tr('filterReleaseNotesByRegExTooltip'),
-          required: false,
-          additionalValidators: [
-            (value) {
-              return SourceUtils.regExValidator(value);
-=======
           label: tr('filterReleaseNotesByRegEx'),
           required: false,
           additionalValidators: [
             (value) {
               return regExValidator(value);
->>>>>>> upstream/main
             },
           ],
         ),
       ],
-<<<<<<< HEAD
-      [
-        GeneratedFormSwitch(
-          'verifyLatestTag',
-          label: tr('verifyLatestTag'),
-          tooltip: tr('verifyLatestTagTooltip'),
-        ),
-      ],
-=======
       [GeneratedFormSwitch('verifyLatestTag', label: tr('verifyLatestTag'))],
->>>>>>> upstream/main
       [
         GeneratedFormDropdown(
           'sortMethodChoice',
@@ -302,34 +147,20 @@ class GitHub extends AppSource {
             MapEntry('name', tr('name')),
           ],
           label: tr('sortMethod'),
-<<<<<<< HEAD
-          tooltip: tr('sortMethodTooltip'),
-=======
->>>>>>> upstream/main
           defaultValue: 'date',
         ),
       ],
       [
         GeneratedFormSwitch(
           'useLatestAssetDateAsReleaseDate',
-<<<<<<< HEAD
-          label: tr('useLatestAssetDateAsReleaseDateLabel'),
-          tooltip: tr('useLatestAssetDateAsReleaseDateTooltip'),
-=======
           label: tr('useLatestAssetDateAsReleaseDate'),
->>>>>>> upstream/main
           defaultValue: false,
         ),
       ],
       [
         GeneratedFormSwitch(
           'releaseTitleAsVersion',
-<<<<<<< HEAD
-          label: tr('releaseTitleAsVersionLabel'),
-          tooltip: tr('releaseTitleAsVersionTooltip'),
-=======
           label: tr('releaseTitleAsVersion'),
->>>>>>> upstream/main
           defaultValue: false,
         ),
       ],
@@ -352,14 +183,6 @@ class GitHub extends AppSource {
           },
         ],
       ),
-<<<<<<< HEAD
-      GeneratedFormSwitch(
-        'includeForks',
-        label: tr('includeForks'),
-        defaultValue: true,
-      ),
-=======
->>>>>>> upstream/main
     ];
   }
 
@@ -432,8 +255,6 @@ class GitHub extends AppSource {
   }
 
   @override
-<<<<<<< HEAD
-=======
   String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
     RegExp standardUrlRegEx = RegExp(
       '^https?://(www\\.)?${getSourceRegex(hosts)}/[^/]+/[^/]+',
@@ -447,7 +268,6 @@ class GitHub extends AppSource {
   }
 
   @override
->>>>>>> upstream/main
   Future<Map<String, String>?> getRequestHeaders(
     Map<String, dynamic> additionalSettings,
     String url, {
@@ -512,38 +332,12 @@ class GitHub extends AppSource {
     return reqUrl;
   }
 
-<<<<<<< HEAD
-  Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async {
-    // Always use the official GitHub API endpoint, regardless of user input host
-    // This fixes issues when users enter www.github.com instead of github.com
-    return 'https://api.github.com';
-  }
-=======
   Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async =>
       'https://api.${hosts[0]}';
->>>>>>> upstream/main
 
   Future<String> convertStandardUrlToAPIUrl(
     String standardUrl,
     Map<String, dynamic> additionalSettings,
-<<<<<<< HEAD
-  ) async {
-    // Parse the standard URL to extract the user/repo path
-    Uri uri = Uri.parse(standardUrl);
-
-    // Extract the path part after the host (e.g., from /user/repo/path to /user/repo)
-    List<String> pathSegments = uri.pathSegments;
-    if (pathSegments.length < 2) {
-      throw InvalidURLError(name);
-    }
-
-    // Take only the first two segments (user and repo) to form the API path
-    String userRepoPath = '/${pathSegments[0]}/${pathSegments[1]}';
-
-    return '${await getAPIHost(additionalSettings)}/repos$userRepoPath';
-  }
-
-=======
   ) async =>
       '${await getAPIHost(additionalSettings)}/repos${standardUrl.substring('https://${hosts[0]}'.length)}';
 
@@ -603,7 +397,6 @@ class GitHub extends AppSource {
   String? changeLogPageFromStandardUrl(String standardUrl) =>
       '$standardUrl/releases';
 
->>>>>>> upstream/main
   Future<APKDetails> getLatestAPKDetailsCommon(
     String requestUrl,
     String standardUrl,
@@ -616,14 +409,11 @@ class GitHub extends AppSource {
       additionalSettings,
       settingsProvider,
     );
-<<<<<<< HEAD
-=======
     await checkForRepositoryRename(
       standardUrl,
       additionalSettings,
       sourceConfigSettingValues,
     );
->>>>>>> upstream/main
     bool includePrereleases = additionalSettings['includePrereleases'] == true;
     bool fallbackToOlderReleases =
         additionalSettings['fallbackToOlderReleases'] == true;
@@ -656,11 +446,7 @@ class GitHub extends AppSource {
         if (onHttpErrorCode != null) {
           onHttpErrorCode(res);
         }
-<<<<<<< HEAD
-        throw SourceUtils.getObtainiumHttpError(res);
-=======
         throw getObtainiumHttpError(res);
->>>>>>> upstream/main
       }
       latestRelease = jsonDecode(res.body);
     }
@@ -696,50 +482,18 @@ class GitHub extends AppSource {
           }).toList() ??
           [];
 
-<<<<<<< HEAD
-      DateTime? getPublishDateFromRelease(dynamic rel) {
-        DateTime? date = null;
-        if (rel?['published_at'] != null) {
-          date = tryParseDateTime(rel['published_at']);
-          LogsProvider().add(
-            'GitHub API published_at: ${rel['published_at']} → Parsed: $date',
-            level: LogLevels.debug,
-          );
-        }
-        if (date == null && rel?['commit']?['created'] != null) {
-          date = tryParseDateTime(rel['commit']['created']);
-          LogsProvider().add(
-            'GitHub API commit created: ${rel['commit']['created']} → Parsed: $date',
-            level: LogLevels.debug,
-          );
-        }
-        return date;
-      }
-
-=======
       DateTime? getPublishDateFromRelease(dynamic rel) =>
           rel?['published_at'] != null
           ? DateTime.parse(rel['published_at'])
           : rel?['commit']?['created'] != null
           ? DateTime.parse(rel['commit']['created'])
           : null;
->>>>>>> upstream/main
       DateTime? getNewestAssetDateFromRelease(dynamic rel) {
         var allAssets = rel['assets'] as List<dynamic>?;
         var filteredAssets = rel['filteredAssets'] as List<dynamic>?;
         var t = (filteredAssets ?? allAssets)
             ?.map((e) {
               return e?['updated_at'] != null
-<<<<<<< HEAD
-                  ? tryParseDateTime(e['updated_at'])
-                  : null;
-            })
-            .whereType<DateTime>()
-            .toList();
-        if (t != null && t.isNotEmpty) {
-          t.sort((a, b) => b.compareTo(a));
-          return t.first;
-=======
                   ? DateTime.parse(e['updated_at'])
                   : null;
             })
@@ -748,7 +502,6 @@ class GitHub extends AppSource {
         t?.sort((a, b) => b!.compareTo(a!));
         if (t?.isNotEmpty == true) {
           return t!.first;
->>>>>>> upstream/main
         }
         return null;
       }
@@ -796,21 +549,10 @@ class GitHub extends AppSource {
                 var reg = RegExp(stdFormats.last);
                 var matchA = reg.firstMatch(nameA);
                 var matchB = reg.firstMatch(nameB);
-<<<<<<< HEAD
-                if (matchA != null && matchB != null) {
-                  return compareAlphaNumeric(
-                    (nameA as String).substring(matchA.start, matchA.end),
-                    (nameB as String).substring(matchB.start, matchB.end),
-                  );
-                } else {
-                  return compareAlphaNumeric(nameA as String, nameB as String);
-                }
-=======
                 return compareAlphaNumeric(
                   (nameA as String).substring(matchA!.start, matchA.end),
                   (nameB as String).substring(matchB!.start, matchB.end),
                 );
->>>>>>> upstream/main
               } else {
                 // 'name'
                 return compareAlphaNumeric(
@@ -877,11 +619,7 @@ class GitHub extends AppSource {
           return ext == 'apk' || ext == 'xapk' || (includeZips && ext == 'zip');
         }).toList();
 
-<<<<<<< HEAD
-        var filteredApkUrls = SourceUtils.filterApks(
-=======
         var filteredApkUrls = filterApks(
->>>>>>> upstream/main
           apkAssetsWithUrls
               .map((e) => e['final_url'] as MapEntry<String, String>)
               .toList(),
@@ -944,13 +682,6 @@ class GitHub extends AppSource {
         targetRelease,
         useLatestAssetDateAsReleaseDate,
       );
-<<<<<<< HEAD
-      LogsProvider().add(
-        'GitHub final releaseDate for $standardUrl: $releaseDate',
-        level: LogLevels.debug,
-      );
-=======
->>>>>>> upstream/main
       if (version == null) {
         throw NoVersionError();
       }
@@ -968,11 +699,7 @@ class GitHub extends AppSource {
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(res);
-=======
       throw getObtainiumHttpError(res);
->>>>>>> upstream/main
     }
   }
 
@@ -1057,11 +784,7 @@ class GitHub extends AppSource {
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(res);
-=======
       throw getObtainiumHttpError(res);
->>>>>>> upstream/main
     }
   }
 
@@ -1081,19 +804,9 @@ class GitHub extends AppSource {
     var sp = SettingsProvider();
     await sp.initializeSettings();
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
-<<<<<<< HEAD
-    bool includeForks =
-        querySettings['includeForks'] == true ||
-        querySettings['includeForks'] == 'true';
-    String forkParam = includeForks ? '+fork:true' : '';
-    var results = await searchCommon(
-      query,
-      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}$forkParam&per_page=100',
-=======
     var results = await searchCommon(
       query,
       '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}&per_page=100',
->>>>>>> upstream/main
       'items',
       onHttpErrorCode: (Response res) {
         rateLimitErrorCheck(res);
@@ -1113,20 +826,10 @@ class GitHub extends AppSource {
 
   void rateLimitErrorCheck(Response res) {
     if (res.headers['x-ratelimit-remaining'] == '0') {
-<<<<<<< HEAD
-      int resetTime = 1800000000;
-      try {
-        resetTime = int.parse(res.headers['x-ratelimit-reset'] ?? '1800000000');
-      } catch (e) {
-        // ignore
-      }
-      throw RateLimitError((resetTime / 60000000).round());
-=======
       throw RateLimitError(
         (int.parse(res.headers['x-ratelimit-reset'] ?? '1800000000') / 60000000)
             .round(),
       );
->>>>>>> upstream/main
     }
   }
 }

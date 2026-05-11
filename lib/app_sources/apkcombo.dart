@@ -1,16 +1,6 @@
-<<<<<<< HEAD
-import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-=======
-import 'package:easy_localization/easy_localization.dart';
-import 'package:html/parser.dart';
-import 'package:obtainium/custom_errors.dart';
->>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class APKCombo extends AppSource {
@@ -60,11 +50,7 @@ class APKCombo extends AppSource {
   ) async {
     var res = await sourceRequest('$standardUrl/download/apk', {});
     if (res.statusCode != 200) {
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(res);
-=======
       throw getObtainiumHttpError(res);
->>>>>>> upstream/main
     }
     var html = parse(res.body);
     return html
@@ -120,11 +106,7 @@ class APKCombo extends AppSource {
     String appId = (await tryInferringAppId(standardUrl))!;
     var preres = await sourceRequest(standardUrl, additionalSettings);
     if (preres.statusCode != 200) {
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(preres);
-=======
       throw getObtainiumHttpError(preres);
->>>>>>> upstream/main
     }
     var res = parse(preres.body);
     String? version = res.querySelector('div.version')?.text.trim();

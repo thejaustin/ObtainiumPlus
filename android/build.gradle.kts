@@ -1,30 +1,7 @@
-<<<<<<< HEAD
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath("io.sentry:sentry-android-gradle-plugin:4.14.1")
-    }
-}
-
-=======
->>>>>>> upstream/main
 allprojects {
     repositories {
         google()
         mavenCentral()
-<<<<<<< HEAD
-        maven {
-            // [required] background_fetch
-            url = uri("${project(":background_fetch").projectDir}/libs")
-        }
-    }
-}
-
-val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
-=======
     }
 }
 
@@ -32,7 +9,6 @@ val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
         .get()
->>>>>>> upstream/main
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {

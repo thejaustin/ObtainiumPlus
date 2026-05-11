@@ -1,41 +1,7 @@
-<<<<<<< HEAD
-import 'package:obtainium/utils/haptic_utils.dart';
-=======
->>>>>>> upstream/main
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
-<<<<<<< HEAD
-import 'package:flutter/foundation.dart' as foundation;
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:obtainium/app_sources/fdroidrepo.dart';
-import 'package:obtainium/components/common/expressive_progress_indicator.dart';
-import 'package:obtainium/components/custom_app_bar.dart';
-import 'package:obtainium/utils/app_utils.dart';
-import 'package:obtainium/components/generated_form.dart';
-import 'package:obtainium/components/generated_form_modal.dart';
-import 'package:obtainium/components/import_error_dialog.dart';
-import 'package:obtainium/components/selection_modal.dart';
-import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart'
-    hide isEnglish, lowerCaseIfEnglish;
-import 'package:obtainium/utils/language_utils.dart';
-import 'package:obtainium/services/app_export_service.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:obtainium/mass_app_sources/githubstars.dart';
-import 'package:obtainium/mass_app_sources/githubpersonalrepos.dart';
-=======
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
@@ -49,7 +15,6 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher_string.dart';
->>>>>>> upstream/main
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});
@@ -60,25 +25,12 @@ class ImportExportPage extends StatefulWidget {
 
 class _ImportExportPageState extends State<ImportExportPage> {
   bool importInProgress = false;
-<<<<<<< HEAD
-  // PERFORMANCE: Cache SourceProvider to avoid recreating 24 source objects on every build
-  late final SourceProvider _sourceProvider = SourceProvider();
-
-  @override
-  Widget build(BuildContext context) {
-    final sourceProvider = _sourceProvider;
-    var appsProvider = context.watch<AppsProvider>();
-    var settingsProvider = context.watch<SettingsProvider>();
-    var plusSettings = context.watch<PlusSettingsProvider>();
-    var behaviorSettings = context.watch<BehaviorSettingsProvider>();
-=======
 
   @override
   Widget build(BuildContext context) {
     SourceProvider sourceProvider = SourceProvider();
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
->>>>>>> upstream/main
 
     var outlineButtonStyle = ButtonStyle(
       shape: WidgetStateProperty.all(
@@ -91,37 +43,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
       ),
     );
 
-<<<<<<< HEAD
-    Future<String?> _promptForPassword() async {
-      final TextEditingController passwordController = TextEditingController();
-      return showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(tr('enterBackupPassword')),
-          content: TextField(
-            controller: passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              hintText: tr('password'),
-              prefixIcon: const Icon(Icons.lock_outline),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('cancel')),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, passwordController.text),
-              child: Text(tr('ok')),
-            ),
-          ],
-        ),
-      );
-    }
-
-=======
->>>>>>> upstream/main
     urlListImport({String? initValue, bool overrideInitValid = false}) {
       showDialog<Map<String, dynamic>?>(
         context: context,
@@ -164,39 +85,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
           });
           appsProvider
               .addAppsByURL(urls)
-<<<<<<< HEAD
-              .then(
-                (errors) {
-                  if (errors.isEmpty) {
-                    showMessage(
-                      tr(
-                        'importedX',
-                        args: [plural('apps', urls.length).toLowerCase()],
-                      ),
-                      context,
-                    );
-                  } else {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext ctx) {
-                        return ImportErrorDialog(
-                          urlsLength: urls.length,
-                          errors: errors,
-                        );
-                      },
-                    );
-                  }
-                },
-                onError: (e) {
-                  showError(e, context);
-                },
-              )
-              .whenComplete(() {
-                if (mounted)
-                  setState(() {
-                    importInProgress = false;
-                  });
-=======
               .then((errors) {
                 if (errors.isEmpty) {
                   showMessage(
@@ -225,209 +113,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 setState(() {
                   importInProgress = false;
                 });
->>>>>>> upstream/main
               });
         }
       });
     }
 
     runObtainiumExport({bool pickOnly = false}) async {
-<<<<<<< HEAD
-      AppHaptics.selectionClick();
-      try {
-        String? password;
-        if (plusSettings.backupEncryptionEnabled && !pickOnly) {
-          password = await _promptForPassword();
-          if (password == null || password.isEmpty) return;
-        }
-
-        final result = await appsProvider.export(
-          pickOnly: pickOnly || (await behaviorSettings.getExportDir()) == null,
-          sp: settingsProvider,
-          password: password,
-        );
-        if (result != null) {
-          showMessage(tr('exportedTo', args: [result]), context);
-        }
-      } catch (e) {
-        if (e is! PlatformException || e.toString().contains('No activity')) {
-          showError(e, context);
-        }
-      }
-    }
-
-    shareBackup() async {
-      AppHaptics.selectionClick();
-      setState(() => importInProgress = true);
-      try {
-        String? password;
-        if (plusSettings.backupEncryptionEnabled) {
-          password = await _promptForPassword();
-          if (password == null || password.isEmpty) {
-            setState(() => importInProgress = false);
-            return;
-          }
-        }
-
-        final bytes = await AppExportService.getExportBytes(
-          apps: appsProvider.apps,
-          settingsProvider: settingsProvider,
-          password: password,
-        );
-
-        final tempDir = await getTemporaryDirectory();
-        final fileName =
-            'Obtainium_Backup_${DateTime.now().millisecondsSinceEpoch}.json';
-        final file = File('${tempDir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-
-        await Share.shareXFiles([
-          XFile(file.path, name: fileName, mimeType: 'application/json'),
-        ], subject: fileName);
-      } catch (e) {
-        if (mounted) showError(e, context);
-      } finally {
-        if (mounted) setState(() => importInProgress = false);
-      }
-    }
-
-    runObtainiumImport() async {
-      AppHaptics.selectionClick();
-      try {
-        final result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['json'],
-          allowMultiple: false,
-        );
-
-        if (result == null ||
-            result.files.isEmpty ||
-            result.files.first.path == null) {
-          // User cancelled
-          return;
-        }
-        if (!mounted) return;
-
-        setState(() {
-          importInProgress = true;
-        });
-
-        // Read file asynchronously
-        final file = File(result.files.first.path!);
-        String data = await file.readAsString();
-
-        // Check if encrypted
-        try {
-          final decodedData = jsonDecode(data);
-          if (decodedData is Map && decodedData['encrypted'] == true) {
-            String? password = await _promptForPassword();
-            if (password == null || password.isEmpty) {
-              setState(() => importInProgress = false);
-              return;
-            }
-            data = await AppExportService.decryptBackup(data, password);
-          }
-        } catch (e) {
-          if (e is ObtainiumError) rethrow;
-          // Not JSON or other error, fallback to standard import which handles invalid input
-        }
-
-        // Decode JSON in a background isolate if it's large
-        try {
-          await foundation.compute(jsonDecode, data);
-        } catch (e) {
-          throw ObtainiumError(tr('invalidInput'));
-        }
-
-        final value = await appsProvider.import(data);
-        var cats = settingsProvider.categories;
-        for (var entry in value.key) {
-          for (var c in entry.categories) {
-            if (!cats.containsKey(c)) {
-              cats[c] = generateRandomLightColor().value;
-            }
-          }
-        }
-        appsProvider.addMissingCategories(settingsProvider);
-        if (mounted) {
-          showMessage(
-            '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
-            context,
-          );
-        }
-      } catch (e) {
-        if (e is! PlatformException || e.toString().contains('No activity')) {
-          if (mounted) showError(e, context);
-        }
-        // Silently ignore PlatformException for "No activity" - user cancelled
-      } finally {
-        if (mounted) {
-          setState(() {
-            importInProgress = false;
-          });
-        }
-      }
-    }
-
-    runUrlImport() async {
-      try {
-        final result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['json', 'txt', 'html'],
-          allowMultiple: false,
-        );
-
-        if (result == null ||
-            result.files.isEmpty ||
-            result.files.first.path == null) {
-          // User cancelled
-          return;
-        }
-        if (!mounted) return;
-
-        setState(() {
-          importInProgress = true;
-        });
-
-        final file = File(result.files.first.path!);
-        final content = await file.readAsString();
-
-        // Process URLs in background to avoid freezing UI if file is huge
-        final urls = await foundation.compute((String text) {
-          return RegExp('https?://[^"]+')
-              .allMatches(text)
-              .map((e) => e.input.substring(e.start, e.end))
-              .toSet()
-              .toList();
-        }, content);
-
-        // Filter valid sources - this might also be heavy
-        final validUrls = urls
-            .where((url) {
-              try {
-                sourceProvider.getSource(url);
-                return true;
-              } catch (e) {
-                return false;
-              }
-            })
-            .join('\n');
-
-        if (mounted) {
-          urlListImport(overrideInitValid: true, initValue: validUrls);
-        }
-      } catch (e) {
-        if (e is! PlatformException || e.toString().contains('No activity')) {
-          if (mounted) showError(e, context);
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            importInProgress = false;
-          });
-        }
-      }
-=======
       HapticFeedback.selectionClick();
       appsProvider
           .export(
@@ -510,7 +201,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
           );
         }
       });
->>>>>>> upstream/main
     }
 
     runSourceSearch(AppSource source) {
@@ -606,22 +296,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
-<<<<<<< HEAD
-            if (mounted) showError(e, context);
-          })
-          .whenComplete(() {
-            if (mounted)
-              setState(() {
-                importInProgress = false;
-              });
-=======
             showError(e, context);
           })
           .whenComplete(() {
             setState(() {
               importInProgress = false;
             });
->>>>>>> upstream/main
           });
     }
 
@@ -638,11 +318,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 );
               },
             );
-<<<<<<< HEAD
-            if (values != null && mounted) {
-=======
             if (values != null) {
->>>>>>> upstream/main
               setState(() {
                 importInProgress = true;
               });
@@ -687,16 +363,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
             showError(e, context);
           })
           .whenComplete(() {
-<<<<<<< HEAD
-            if (mounted)
-              setState(() {
-                importInProgress = false;
-              });
-=======
             setState(() {
               importInProgress = false;
             });
->>>>>>> upstream/main
           });
     }
 
@@ -716,178 +385,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-<<<<<<< HEAD
-                  _sectionHeader(context, tr('exportAndImport')),
-                  FutureBuilder(
-                    future: behaviorSettings.getExportDir(),
-                    builder: (context, snapshot) {
-                      return Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  style: outlineButtonStyle,
-                                  onPressed: importInProgress
-                                      ? null
-                                      : () {
-                                          runObtainiumExport(pickOnly: true);
-                                        },
-                                  child: Text(
-                                    tr('pickExportDir'),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextButton(
-                                  style: outlineButtonStyle,
-                                  onPressed:
-                                      importInProgress || snapshot.data == null
-                                      ? null
-                                      : runObtainiumExport,
-                                  child: Text(
-                                    tr('obtainiumExport'),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  style: outlineButtonStyle,
-                                  onPressed: importInProgress
-                                      ? null
-                                      : runObtainiumImport,
-                                  child: Text(
-                                    tr('obtainiumImport'),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextButton(
-                                  style: outlineButtonStyle,
-                                  onPressed: importInProgress
-                                      ? null
-                                      : shareBackup,
-                                  child: Text(
-                                    tr('shareBackup'),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (snapshot.data != null)
-                            Column(
-                              children: [
-                                const SizedBox(height: 16),
-                                GeneratedForm(
-                                  items: [
-                                    [
-                                      GeneratedFormSwitch(
-                                        'autoExportOnChanges',
-                                        label: tr('autoExportOnChanges'),
-                                        defaultValue: behaviorSettings
-                                            .autoExportOnChanges,
-                                      ),
-                                    ],
-                                    [
-                                      GeneratedFormDropdown(
-                                        'exportSettings',
-                                        [
-                                          MapEntry('0', tr('none')),
-                                          MapEntry('1', tr('excludeSecrets')),
-                                          MapEntry('2', tr('all')),
-                                        ],
-                                        label: tr('includeSettings'),
-                                        defaultValue: behaviorSettings
-                                            .exportSettings
-                                            .toString(),
-                                      ),
-                                    ],
-                                  ],
-                                  onValueChanges: (value, valid, isBuilding) {
-                                    if (valid && !isBuilding) {
-                                      if (value['autoExportOnChanges'] !=
-                                          null) {
-                                        behaviorSettings.autoExportOnChanges =
-                                            value['autoExportOnChanges'] ==
-                                            true;
-                                      }
-                                      if (value['exportSettings'] != null) {
-                                        behaviorSettings.exportSettings =
-                                            int.parse(value['exportSettings']);
-                                      }
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  _sectionHeader(context, tr('githubIntegration')),
-                  Text(
-                    tr('githubStarredRepos'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: importInProgress
-                        ? null
-                        : () {
-                            runMassSourceImport(
-                              sourceProvider.massUrlSources.firstWhere(
-                                (s) =>
-                                    s.runtimeType == GitHubStars().runtimeType,
-                                orElse: () => GitHubStars(),
-                              ),
-                            );
-                          },
-                    child: Text(tr('importGithubStarredRepos')),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    tr('githubPersonalRepos'),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: importInProgress
-                        ? null
-                        : () {
-                            runMassSourceImport(
-                              sourceProvider.massUrlSources.firstWhere(
-                                (s) =>
-                                    s.runtimeType ==
-                                    GitHubPersonalRepos().runtimeType,
-                                orElse: () => GitHubPersonalRepos(),
-                              ),
-                            );
-                          },
-                    child: Text(
-                      tr('importX', args: [tr('githubPersonalRepos')]),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _sectionHeader(context, tr('importApps')),
-=======
                   if (!settingsProvider.isTV)
                     FutureBuilder(
                       future: settingsProvider.getExportDir(),
@@ -996,27 +493,18 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         );
                       },
                     ),
->>>>>>> upstream/main
                   if (importInProgress)
                     const Column(
                       children: [
                         SizedBox(height: 14),
-<<<<<<< HEAD
-                        const ExpressiveProgressIndicator(),
-=======
                         LinearProgressIndicator(),
->>>>>>> upstream/main
                         SizedBox(height: 14),
                       ],
                     )
                   else
                     Column(
                       children: [
-<<<<<<< HEAD
-                        const SizedBox(height: 32),
-=======
                         SizedBox(height: 32),
->>>>>>> upstream/main
                         Row(
                           children: [
                             Expanded(
@@ -1073,14 +561,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
                           child: Text(tr('importFromURLList')),
                         ),
                         const SizedBox(height: 8),
-<<<<<<< HEAD
-                        TextButton(
-                          onPressed: importInProgress ? null : runUrlImport,
-                          child: Text(tr('importFromURLsInFile')),
-                        ),
-                      ],
-                    ),
-=======
                         if (!settingsProvider.isTV)
                           TextButton(
                             onPressed: importInProgress ? null : runUrlImport,
@@ -1104,7 +584,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       ],
                     ),
                   ),
->>>>>>> upstream/main
                   const Spacer(),
                   const Divider(height: 32),
                   Text(
@@ -1124,20 +603,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
       ),
     );
   }
-<<<<<<< HEAD
-
-  Widget _sectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
-        ),
-      ),
-=======
 }
 
 class ImportErrorDialog extends StatefulWidget {
@@ -1542,7 +1007,6 @@ class _SelectionModalState extends State<SelectionModal> {
           ),
         ),
       ],
->>>>>>> upstream/main
     );
   }
 }

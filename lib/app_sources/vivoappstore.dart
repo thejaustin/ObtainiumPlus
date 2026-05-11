@@ -2,12 +2,6 @@ import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
-<<<<<<< HEAD
-import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
-=======
->>>>>>> upstream/main
 import 'package:obtainium/providers/source_provider.dart';
 
 class VivoAppStore extends AppSource {
@@ -69,11 +63,7 @@ class VivoAppStore extends AppSource {
     var searchUrl = '$apiBaseUrl${Uri.encodeQueryComponent(query)}';
     var response = await sourceRequest(searchUrl, {});
     if (response.statusCode != 200) {
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(response);
-=======
       throw getObtainiumHttpError(response);
->>>>>>> upstream/main
     }
     var json = jsonDecode(response.body);
     if (json['code'] != 0 || !json['data']['appSearchResponse']['result']) {
@@ -102,11 +92,7 @@ class VivoAppStore extends AppSource {
     var detailUrl = '$apiBaseUrl$vivoAppId$params';
     var response = await sourceRequest(detailUrl, additionalSettings);
     if (response.statusCode != 200) {
-<<<<<<< HEAD
-      throw SourceUtils.getObtainiumHttpError(response);
-=======
       throw getObtainiumHttpError(response);
->>>>>>> upstream/main
     }
     var json = jsonDecode(response.body);
     if (json['id'] == null) {

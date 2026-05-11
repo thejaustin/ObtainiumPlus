@@ -1,15 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
-<<<<<<< HEAD
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/utils/app_utils.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/source_utils.dart';
-=======
-import 'package:obtainium/providers/source_provider.dart';
->>>>>>> upstream/main
 
 class RockMods extends AppSource {
   RockMods() {
@@ -38,11 +30,7 @@ class RockMods extends AppSource {
     try {
       var res = await sourceRequest(standardUrl, additionalSettings);
       if (res.statusCode != 200) {
-<<<<<<< HEAD
-        throw SourceUtils.getObtainiumHttpError(res);
-=======
         throw getObtainiumHttpError(res);
->>>>>>> upstream/main
       }
       var html = parse(res.body);
 
@@ -94,11 +82,7 @@ class RockMods extends AppSource {
               additionalSettings,
             );
             if (resIntermediate.statusCode != 200) {
-<<<<<<< HEAD
-              throw SourceUtils.getObtainiumHttpError(resIntermediate);
-=======
               throw getObtainiumHttpError(resIntermediate);
->>>>>>> upstream/main
             }
             return parse(resIntermediate.body);
           }).toList();
@@ -121,11 +105,7 @@ class RockMods extends AppSource {
       var slugFutures = slugs.map((slugUrl) async {
         var resSlug = await sourceRequest(slugUrl, additionalSettings);
         if (resSlug.statusCode != 200) {
-<<<<<<< HEAD
-          throw SourceUtils.getObtainiumHttpError(resSlug);
-=======
           throw getObtainiumHttpError(resSlug);
->>>>>>> upstream/main
         }
         return MapEntry(slugUrl, parse(resSlug.body));
       }).toList();

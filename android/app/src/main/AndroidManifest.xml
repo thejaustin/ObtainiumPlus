@@ -1,14 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="app.obtainiumplus">
+    package="dev.imranr.obtainium">
     <application
         android:label="@string/label"
-        android:name=".ObtainiumApplication"
+        android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:banner="@drawable/tv_banner"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         android:localeConfig="@xml/locales_config"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:memtagMode="async">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -31,6 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+            <intent-filter>
                 <action
                     android:name="com.android_package_installer.content.SESSION_API_PACKAGE_INSTALLED"
                     android:exported="false" />
@@ -42,40 +47,6 @@
                 <data android:scheme="obtainium" />
             </intent-filter>
         </activity>
-        <!--
-            Activity aliases for original Obtainium's component names.
-            Icon packs map icons to ComponentInfo{package/activity}. Since Obtainium+
-            uses a different package (app.obtainiumplus) than the original
-            (dev.imranr.obtainium), most icon packs won't match us automatically.
-
-            Launchers that resolve icon pack icons by activity class name only
-            (rather than the full package/activity pair) will pick up the Obtainium
-            icon pack entry via these aliases.
-
-            Two aliases cover the two common appfilter.xml formats:
-              - Fully-qualified:  ComponentInfo{dev.imranr.obtainium/dev.imranr.obtainium.MainActivity}
-              - Short-form:       ComponentInfo{dev.imranr.obtainium/.MainActivity}
-        -->
-        <activity-alias
-            android:name="dev.imranr.obtainium.MainActivity"
-            android:targetActivity=".MainActivity"
-            android:exported="false"
-            android:enabled="true" />
-        <activity-alias
-            android:name="dev.imranr.obtainium.ObtainiumActivity"
-            android:targetActivity=".MainActivity"
-            android:exported="false"
-            android:enabled="true" />
-
-        <!--
-            Themed Icons (Android 13+ / Google spec).
-            Launchers implementing the Themed Icons standard (Pixel Launcher, Lawnchair, etc.)
-            read this to resolve our monochrome icon without a third-party icon pack entry.
-        -->
-        <meta-data
-            android:name="android.app.icon_map"
-            android:resource="@xml/grayscale_icon_map" />
-
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -90,11 +61,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
         <provider
-            android:name=".CacheContentProvider"
-            android:authorities="${applicationId}.provider.cache"
-            android:exported="false"
-            android:grantUriPermissions="true" />
-        <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
             android:multiprocess="false"
@@ -106,21 +72,19 @@
             android:foregroundServiceType="specialUse"
             android:exported="false" />
         <meta-data
-            android:name="app.obtainiumplus.service.NOTIFICATION_ICON"
+            android:name="dev.imranr.obtainium.service.NOTIFICATION_ICON"
             android:resource="@drawable/ic_notification" />
     </application>
-    <!-- Required to enumerate Google accounts registered with microG -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+    <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="false"/>
+    <uses-feature android:name="android.software.leanback" android:required="false"/>
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.ENFORCE_UPDATE_OWNERSHIP"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
@@ -136,14 +100,6 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <data android:mimeType="application/vnd.android.package-archive"/>
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.INSTALL_PACKAGE"/>
-            <data android:mimeType="application/vnd.android.package-archive"/>
         </intent>
     </queries>
 </manifest>

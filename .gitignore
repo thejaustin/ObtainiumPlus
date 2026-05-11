@@ -54,20 +54,3 @@ app.*.map.json
 TODO.txt
 data
 node_modules/
-# Signing files (should never be committed)
-obtainium-release-key.jks
-keystore-base64.txt
-release-keystore.jks
-key.properties
-
-# Sentry Config File
-sentry.properties
-
-# Local generated directories
-wiki_temp
-flutter_sdk.tar.xz
-flutter/
-.gemini/
-CLAUDE.md
-GEMINI.md
-QWEN.md
