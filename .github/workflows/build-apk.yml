@@ -279,6 +279,3 @@ jobs:
     secrets: inherit
     permissions:
       issues: write
-      - name: Update Compile SDK
-        run: |
-          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/' android/app/build.gradle.kts
