@@ -125,12 +125,11 @@ class MainActivity : FlutterActivity() {
                         if (packageName != null) {
                             try {
                                 val installer = packageManager.packageInstaller
-                                val constraints = android.content.pm.PackageInstaller.InstallConstraints.Builder()
-                                    .setAppNotForegroundRequired(true)
-                                    .setAppNotInteractingRequired(true)
-                                    .setDeviceIdleRequired(false)
-                                    .setNotInCallRequired(true)
-                                    .build()
+                                val constraintsBuilder = android.content.pm.PackageInstaller.InstallConstraints.Builder()
+                                constraintsBuilder.setAppNotForegroundRequired()
+                                constraintsBuilder.setAppNotInteractingRequired()
+                                constraintsBuilder.setNotInCallRequired()
+                                val constraints = constraintsBuilder.build()
                                 
                                 val packages = listOf(packageName)
                                 installer.checkInstallConstraints(
