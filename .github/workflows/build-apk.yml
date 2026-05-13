@@ -228,20 +228,18 @@ jobs:
             CHANGELOG="No significant changes."
           fi
 
-          cat << EOF > release_body.md
-**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
-
-- **Build #:** ${{ github.run_number }}
-- **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}
-- **Date:** ${{ github.event.head_commit.timestamp }}
-- **Branch:** ${{ github.ref_name }}
-
-### Changelog
-$CHANGELOG
-
----
-Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch.
-EOF
+          echo "**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**" > release_body.md
+          echo "" >> release_body.md
+          echo "- **Build #:** ${{ github.run_number }}" >> release_body.md
+          echo "- **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}" >> release_body.md
+          echo "- **Date:** ${{ github.event.head_commit.timestamp }}" >> release_body.md
+          echo "- **Branch:** ${{ github.ref_name }}" >> release_body.md
+          echo "" >> release_body.md
+          echo "### Changelog" >> release_body.md
+          echo "$CHANGELOG" >> release_body.md
+          echo "" >> release_body.md
+          echo "---" >> release_body.md
+          echo "Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch." >> release_body.md
 
       - name: Commit version bump
         id: commit_bump
