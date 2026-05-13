@@ -228,6 +228,10 @@ jobs:
             CHANGELOG="No significant changes."
           fi
 
+          if [ ${#CHANGELOG} -gt 100000 ]; then
+            CHANGELOG="${CHANGELOG:0:100000}... *(changelog truncated due to size limits)*"
+          fi
+
           echo "**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**" > release_body.md
           echo "" >> release_body.md
           echo "- **Build #:** ${{ github.run_number }}" >> release_body.md
