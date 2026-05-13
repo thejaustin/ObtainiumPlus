@@ -228,10 +228,20 @@ jobs:
             CHANGELOG="No significant changes."
           fi
 
-          DELIMITER=$(openssl rand -hex 8)
-          echo "changelog<<$DELIMITER" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "$DELIMITER" >> $GITHUB_OUTPUT
+          cat << EOF > release_body.md
+**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
+
+- **Build #:** ${{ github.run_number }}
+- **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}
+- **Date:** ${{ github.event.head_commit.timestamp }}
+- **Branch:** ${{ github.ref_name }}
+
+### Changelog
+$CHANGELOG
+
+---
+Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch.
+EOF
 
       - name: Commit version bump
         id: commit_bump
@@ -259,19 +269,7 @@ jobs:
           allowUpdates: true
           skipIfReleaseExists: false
           replacesArtifacts: true
-          body: |
-            **Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
-            
-            - **Build #:** ${{ github.run_number }}
-            - **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}
-            - **Date:** ${{ github.event.head_commit.timestamp }}
-            - **Branch:** ${{ github.ref_name }}
-            
-            ### Changelog
-            ${{ steps.build_changelog.outputs.changelog }}
-            
-            ---
-            Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch.
+          bodyFile: release_body.md
 
   sync-sentry-issues:
     needs: build
