@@ -64,6 +64,25 @@ jobs:
           custom_tag: "${{ steps.extract_version.outputs.tag }}"
           tag_prefix: ""
       
+      - name: Generate Changelog
+        id: build_changelog
+        run: |
+          if [ -f "CHANGELOG_USER.md" ] && [ -s "CHANGELOG_USER.md" ]; then
+            USER_CHANGELOG=$(cat CHANGELOG_USER.md)
+            CHANGELOG="### What's New\n$USER_CHANGELOG"
+          else
+            CHANGELOG="No significant changes provided."
+          fi
+          
+          cat <<EOF > release_body.md
+**Obtainium+ Release**
+
+- **Version:** ${{ steps.extract_version.outputs.version }}
+- **Date:** $(date)
+
+$CHANGELOG
+EOF
+
       - name: Create Draft Release
         uses: ncipollo/release-action@v1
         with:
@@ -72,3 +91,4 @@ jobs:
           prerelease: "${{ steps.extract_version.outputs.beta }}"
           draft: "true"
           generateReleaseNotes: true
+          bodyFile: release_body.md

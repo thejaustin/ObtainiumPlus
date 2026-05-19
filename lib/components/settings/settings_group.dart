@@ -7,8 +7,16 @@ import 'package:obtainium/utils/app_constants.dart';
 class SettingsGroup extends StatelessWidget {
   final String? title;
   final List<Widget> children;
+  final String? helpText;
+  final VoidCallback? onReset;
 
-  const SettingsGroup({super.key, this.title, required this.children});
+  const SettingsGroup({
+    super.key,
+    this.title,
+    required this.children,
+    this.helpText,
+    this.onReset,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +38,34 @@ class SettingsGroup extends StatelessWidget {
       children: [
         if (title != null)
           Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0),
-            child: Text(
-              title!,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
+            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0, right: 12.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title!,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (helpText != null)
+                  IconButton(
+                    icon: const Icon(Icons.help_outline_rounded, size: 18),
+                    onPressed: () => _showHelp(context),
+                    visualDensity: VisualDensity.compact,
+                    tooltip: tr('help'),
+                  ),
+                if (onReset != null)
+                  IconButton(
+                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                    onPressed: onReset,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: tr('resetToDefault'),
+                  ),
+              ],
             ),
           ),
         Builder(
@@ -95,6 +124,23 @@ class SettingsGroup extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+
+  void _showHelp(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => GlassDialog(
+        title: tr('help'),
+        icon: Icons.help_outline_rounded,
+        content: Text(helpText!),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(tr('ok')),
+          ),
+        ],
+      ),
     );
   }
 }

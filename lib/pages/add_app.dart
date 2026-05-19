@@ -1,3 +1,8 @@
+import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +22,14 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AddAppPage extends StatefulWidget {
-  const AddAppPage({super.key});
+  const AddAppPage({
+    super.key,
+    this.isModal = false,
+    this.scrollController,
+  });
+
+  final bool isModal;
+  final ScrollController? scrollController;
 
   @override
   State<AddAppPage> createState() => AddAppPageState();
@@ -222,9 +234,14 @@ class AddAppPageState extends State<AddAppPage> {
           await appsProvider.saveApps([app], onlyIfExists: false);
         }
         if (app != null) {
-          Navigator.push(
-            globalNavigatorKey.currentContext ?? context,
-            MaterialPageRoute(builder: (context) => AppPage(appId: app!.id)),
+          AppHaptics.selectionClick();
+          showDraggableModalBottomSheet(
+            context: globalNavigatorKey.currentContext ?? context,
+            builder: (context, controller) => AppPage(
+              appId: app!.id,
+              isModal: true,
+              scrollController: controller,
+            ),
           );
         }
       } catch (e) {
@@ -290,7 +307,7 @@ class AddAppPageState extends State<AddAppPage> {
                             !additionalSettingsValid)
                     ? null
                     : () {
-                        HapticFeedback.selectionClick();
+                        AppHaptics.selectionClick();
                         addApp();
                       },
                 child: Text(tr('add')),
@@ -551,100 +568,117 @@ class AddAppPageState extends State<AddAppPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 16),
-        Text(
-          tr('additionalOptsFor', args: [pickedSource?.name ?? tr('source')]),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GeneratedForm(
-          key: Key(
-            '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
-          ),
-          items: [
-            ...pickedSource!.combinedAppSpecificSettingFormItems,
-            ...(pickedSourceOverride != null
-                ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
-                : []),
-          ],
-          onValueChanges: (values, valid, isBuilding) {
-            if (!isBuilding) {
-              setState(() {
-                additionalSettings = values;
-                additionalSettingsValid = valid;
-              });
-            }
+        CategoryEditorSelector(
+          alignment: WrapAlignment.start,
+          onSelected: (categories) {
+            pickedCategories = categories;
           },
         ),
-        Column(
-          children: [
-            const SizedBox(height: 16),
-            CategoryEditorSelector(
-              alignment: WrapAlignment.start,
-              onSelected: (categories) {
-                pickedCategories = categories;
-              },
+        const SizedBox(height: 24),
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            leading: const Icon(Icons.tune_rounded),
+            title: Text(
+              tr('advancedOptions'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ],
-        ),
-        if (pickedSource != null && pickedSource!.appIdInferIsOptional)
-          GeneratedForm(
-            key: const Key('inferAppIdIfOptional'),
-            items: [
-              [
-                GeneratedFormSwitch(
-                  'inferAppIdIfOptional',
-                  label: tr('tryInferAppIdFromCode'),
-                  defaultValue: inferAppIdIfOptional,
-                ),
-              ],
-            ],
-            onValueChanges: (values, valid, isBuilding) {
-              if (!isBuilding) {
-                setState(() {
-                  inferAppIdIfOptional = values['inferAppIdIfOptional'];
-                });
-              }
-            },
-          ),
-        if (pickedSource != null && pickedSource!.enforceTrackOnly)
-          GeneratedForm(
-            key: Key(
-              '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}-appId',
+            subtitle: Text(
+              tr('additionalOptsFor', args: [pickedSource?.name ?? tr('source')]),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
-            items: [
-              [
-                GeneratedFormTextField(
-                  'appId',
-                  label: '${tr('appId')} - ${tr('custom')}',
-                  required: false,
-                  additionalValidators: [
-                    (value) {
-                      if (value == null || value.isEmpty) {
-                        return null;
-                      }
-                      final isValid = RegExp(
-                        r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$',
-                      ).hasMatch(value);
-                      if (!isValid) {
-                        return tr('invalidInput');
-                      }
-                      return null;
-                    },
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  children: [
+                    GeneratedForm(
+                      key: Key(
+                        '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+                      ),
+                      items: [
+                        ...pickedSource!.combinedAppSpecificSettingFormItems,
+                        ...(pickedSourceOverride != null
+                            ? pickedSource!.sourceConfigSettingFormItems.map(
+                                (e) => [e],
+                              )
+                            : []),
+                      ],
+                      onValueChanges: (values, valid, isBuilding) {
+                        if (!isBuilding) {
+                          setState(() {
+                            additionalSettings = values;
+                            additionalSettingsValid = valid;
+                          });
+                        }
+                      },
+                    ),
+                    if (pickedSource != null && pickedSource!.appIdInferIsOptional)
+                      GeneratedForm(
+                        key: const Key('inferAppIdIfOptional'),
+                        items: [
+                          [
+                            GeneratedFormSwitch(
+                              'inferAppIdIfOptional',
+                              label: tr('tryInferAppIdFromCode'),
+                              defaultValue: inferAppIdIfOptional,
+                            ),
+                          ],
+                        ],
+                        onValueChanges: (values, valid, isBuilding) {
+                          if (!isBuilding) {
+                            setState(() {
+                              inferAppIdIfOptional =
+                                  values['inferAppIdIfOptional'];
+                            });
+                          }
+                        },
+                      ),
+                    if (pickedSource != null && pickedSource!.enforceTrackOnly)
+                      GeneratedForm(
+                        key: Key(
+                          '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}-appId',
+                        ),
+                        items: [
+                          [
+                            GeneratedFormTextField(
+                              'appId',
+                              label: '${tr('appId')} - ${tr('custom')}',
+                              required: false,
+                              additionalValidators: [
+                                (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return null;
+                                  }
+                                  final isValid = RegExp(
+                                    r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$',
+                                  ).hasMatch(value);
+                                  if (!isValid) {
+                                    return tr('invalidInput');
+                                  }
+                                  return null;
+                                },
+                              ],
+                            ),
+                          ],
+                        ],
+                        onValueChanges: (values, valid, isBuilding) {
+                          if (!isBuilding) {
+                            setState(() {
+                              additionalSettings['appId'] = values['appId'];
+                            });
+                          }
+                        },
+                      ),
                   ],
                 ),
-              ],
+              ),
             ],
-            onValueChanges: (values, valid, isBuilding) {
-              if (!isBuilding) {
-                setState(() {
-                  additionalSettings['appId'] = values['appId'];
-                });
-              }
-            },
           ),
+        ),
       ],
     );
 
@@ -729,13 +763,17 @@ class AddAppPageState extends State<AddAppPage> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+    final scaffold = Scaffold(
+      backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
       bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
       body: CustomScrollView(
+        controller: widget.scrollController,
+        physics: widget.isModal
+            ? const BouncingScrollPhysics()
+            : const AlwaysScrollableScrollPhysics(),
         shrinkWrap: true,
         slivers: <Widget>[
-          CustomAppBar(title: tr('addApp')),
+          if (!widget.isModal) CustomAppBar(title: tr('addApp')),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -767,5 +805,30 @@ class AddAppPageState extends State<AddAppPage> {
         ],
       ),
     );
+
+    if (widget.isModal) {
+      final plusSettings = context.watch<PlusSettingsProvider>();
+      final radius = plusSettings.plusOverrideIndividualCornerRadius
+          ? plusSettings.plusHomeCornerRadius
+          : plusSettings.plusGlobalCornerRadius;
+
+      return ConditionalBlur(
+        enabled: plusSettings.plusEnableGlassmorphism,
+        sigma: 20,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withOpacity(
+              plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
+            ),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(radius.clamp(20.0, 48.0)),
+            ),
+          ),
+          child: scaffold,
+        ),
+      );
+    }
+
+    return scaffold;
   }
 }

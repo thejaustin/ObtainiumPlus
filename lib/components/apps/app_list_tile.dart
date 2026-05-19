@@ -151,14 +151,92 @@ class AppListTile extends StatelessWidget {
             tooltip: tr('viewChanges'),
           ),
         if (hasUpdate) getUpdateButton(),
-        if (!hasUpdate && !isCheckingUpdate)
-          Icon(
-            Icons.chevron_right_rounded,
+        PopupMenuButton<String>(
+          icon: Icon(
+            Icons.more_vert_rounded,
             size: 20,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
           ),
+          onSelected: (value) {
+            AppHaptics.selectionClick();
+            switch (value) {
+              case 'togglePin':
+                appInMemory.app.pinned = !appInMemory.app.pinned;
+                appsProvider.saveApps([appInMemory.app]);
+                break;
+              case 'settings':
+                appsProvider.openAppSettings(appInMemory.app.id);
+                break;
+              case 'copyUrl':
+                Clipboard.setData(ClipboardData(text: appInMemory.app.url));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(tr('copiedToClipboard'))),
+                );
+                break;
+              case 'share':
+                Share.share(appInMemory.app.url);
+                break;
+              case 'remove':
+                appsProvider.removeAppsWithModal(context, [appInMemory.app]);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'togglePin',
+              child: ListTile(
+                leading: Icon(
+                  appInMemory.app.pinned
+                      ? Icons.push_pin_rounded
+                      : Icons.push_pin_outlined,
+                ),
+                title: Text(
+                  appInMemory.app.pinned ? tr('unpin') : tr('pin'),
+                ),
+                dense: true,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'settings',
+              child: ListTile(
+                leading: const Icon(Icons.settings_outlined),
+                title: Text(tr('settings')),
+                dense: true,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'copyUrl',
+              child: ListTile(
+                leading: const Icon(Icons.copy_rounded),
+                title: Text(tr('copyAppURL')),
+                dense: true,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'share',
+              child: ListTile(
+                leading: const Icon(Icons.share_rounded),
+                title: Text(tr('share')),
+                dense: true,
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'remove',
+              child: ListTile(
+                leading: Icon(
+                  Icons.delete_outline_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  tr('remove'),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                dense: true,
+              ),
+            ),
+          ],
+        ),
       ],
     );
 

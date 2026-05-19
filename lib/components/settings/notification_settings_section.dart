@@ -1,69 +1,81 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class NotificationSettingsSection extends StatelessWidget {
-  const NotificationSettingsSection({super.key});
+  final String? searchQuery;
+  const NotificationSettingsSection({super.key, this.searchQuery});
+
+  bool _matches(String text) {
+    if (searchQuery == null || searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SettingsGroup(
-      title: tr('notifications'),
-      children: [
-        Consumer<PlusSettingsProvider>(
-          builder: (context, settings, child) {
-            if (!settings.plusEnableNotificationEnhancements) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  tr('noAdvancedNotifications'),
-                  style: const TextStyle(fontStyle: FontStyle.italic),
+    final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+
+    return Consumer<PlusSettingsProvider>(
+      builder: (context, settings, child) {
+        final List<Widget> children = [
+          if (!settings.plusEnableNotificationEnhancements)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                tr('noAdvancedNotifications'),
+                style: const TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ),
+          if (settings.plusEnableNotificationEnhancements) ...[
+            if (_matches(tr('enableNotificationDigest')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.mark_email_unread_outlined),
+                title: Text(
+                  tr('enableNotificationDigest'),
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
-              );
-            }
-            return Column(
-              children: [
-                SwitchListTile.adaptive(
-                  secondary: const Icon(Icons.mark_email_unread_outlined),
-                  title: Text(
-                    tr('enableNotificationDigest'),
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  subtitle: Text(tr('notificationDigestDescription')),
-                  value: settings.plusEnableNotificationDigest,
-                  onChanged: (val) =>
-                      settings.plusEnableNotificationDigest = val,
+                subtitle: Text(tr('notificationDigestDescription')),
+                value: settings.plusEnableNotificationDigest,
+                onChanged: (val) => settings.plusEnableNotificationDigest = val,
+              ),
+            if (_matches(tr('enableQuietHours')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.do_not_disturb_on_outlined),
+                title: Text(
+                  tr('enableQuietHours'),
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                SwitchListTile.adaptive(
-                  secondary: const Icon(Icons.do_not_disturb_on_outlined),
-                  title: Text(
-                    tr('enableQuietHours'),
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  subtitle: Text(tr('quietHoursDescription')),
-                  value: settings.plusEnableNotificationQuietHours,
-                  onChanged: (val) =>
-                      settings.plusEnableNotificationQuietHours = val,
+                subtitle: Text(tr('quietHoursDescription')),
+                value: settings.plusEnableNotificationQuietHours,
+                onChanged: (val) =>
+                    settings.plusEnableNotificationQuietHours = val,
+              ),
+            if (settings.plusEnableNotificationQuietHours &&
+                _matches(tr('quietHoursSchedule')))
+              ListTile(
+                leading: const Icon(Icons.schedule_outlined),
+                title: Text(
+                  tr('quietHoursSchedule'),
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                if (settings.plusEnableNotificationQuietHours)
-                  ListTile(
-                    leading: const Icon(Icons.schedule_outlined),
-                    title: Text(
-                      tr('quietHoursSchedule'),
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    subtitle: Text(
-                      '${settings.plusNotificationQuietHoursStart}:00 - ${settings.plusNotificationQuietHoursEnd}:00',
-                    ),
-                    onTap: () => _showQuietHoursDialog(context, settings),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
+                subtitle: Text(
+                  '${settings.plusNotificationQuietHoursStart}:00 - ${settings.plusNotificationQuietHoursEnd}:00',
+                ),
+                onTap: () => _showQuietHoursDialog(context, settings),
+              ),
+          ],
+        ];
+
+        if (children.isEmpty) return const SizedBox.shrink();
+
+        return SettingsGroup(
+          title: isSearching ? null : tr('notifications'),
+          children: children,
+        );
+      },
     );
   }
 
@@ -74,8 +86,9 @@ class NotificationSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(tr('quietHoursSchedule')),
+        return GlassDialog(
+          title: tr('quietHoursSchedule'),
+          icon: Icons.schedule_outlined,
           content: StatefulBuilder(
             builder: (context, setDialogState) {
               return Column(

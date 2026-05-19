@@ -8,10 +8,15 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 
@@ -20,10 +25,14 @@ class AppPage extends StatefulWidget {
     super.key,
     required this.appId,
     this.showOppositeOfPreferredView = false,
+    this.isModal = false,
+    this.scrollController,
   });
 
   final String appId;
   final bool showOppositeOfPreferredView;
+  final bool isModal;
+  final ScrollController? scrollController;
 
   @override
   State<AppPage> createState() => _AppPageState();
@@ -165,7 +174,7 @@ Widget buildRepoRenameWarning({
                       style: ButtonStyle(
                         backgroundColor: WidgetStateProperty.fromMap({
                           WidgetState.disabled: colorScheme.onSurface
-                              .withValues(alpha: 0.10),
+                              .withOpacity(0.10),
                           WidgetState.any: Colors.transparent,
                         }),
                         side: WidgetStatePropertyAll(
@@ -178,19 +187,19 @@ Widget buildRepoRenameWarning({
                         elevation: WidgetStatePropertyAll(0),
                         overlayColor: WidgetStateProperty.fromMap({
                           WidgetState.disabled: colorScheme.onSurfaceVariant
-                              .withAlpha(0),
+                              .withOpacity(0),
                           WidgetState.pressed: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.10),
+                              .withOpacity(0.10),
                           WidgetState.focused: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.10),
+                              .withOpacity(0.10),
                           WidgetState.hovered: colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.08),
+                              .withOpacity(0.08),
                           WidgetState.any: colorScheme.onSurfaceVariant
-                              .withAlpha(0),
+                              .withOpacity(0),
                         }),
                         foregroundColor: WidgetStateProperty.fromMap({
                           WidgetState.disabled: colorScheme.onSurface
-                              .withValues(alpha: 0.38),
+                              .withOpacity(0.38),
                           WidgetState.any: colorScheme.onSurfaceVariant,
                         }),
                         textStyle: WidgetStatePropertyAll(textTheme.labelLarge),
@@ -265,6 +274,7 @@ Widget buildRepoRenameWarning({
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
+    var plusSettings = context.watch<PlusSettingsProvider>();
     var showAppWebpageFinal =
         (settingsProvider.showAppWebpage &&
             !widget.showOppositeOfPreferredView) ||
@@ -444,11 +454,11 @@ Widget buildRepoRenameWarning({
                           ? (Theme.of(context).brightness == Brightness.light
                                     ? Theme.of(context).primaryColor
                                     : Theme.of(context).primaryColorLight)
-                                .withAlpha(
+                                .withOpacity(
                                   Theme.of(context).brightness ==
                                           Brightness.light
-                                      ? 20
-                                      : 40,
+                                      ? 20 / 255
+                                      : 40 / 255,
                                 )
                           : null,
                     ),
@@ -642,10 +652,10 @@ Widget buildRepoRenameWarning({
                       ? (Theme.of(context).brightness == Brightness.light
                                 ? Theme.of(context).primaryColor
                                 : Theme.of(context).primaryColorLight)
-                            .withAlpha(
+                            .withOpacity(
                               Theme.of(context).brightness == Brightness.light
-                                  ? 20
-                                  : 40,
+                                  ? 20 / 255
+                                  : 40 / 255,
                             )
                       : null,
                 ),
@@ -687,8 +697,9 @@ Widget buildRepoRenameWarning({
       return showDialog(
         context: context,
         builder: (BuildContext ctx) {
-          return AlertDialog(
-            title: Text(tr('alreadyUpToDateQuestion')),
+          return GlassDialog(
+            title: tr('alreadyUpToDateQuestion'),
+            content: Container(), // Empty content as the question is in the title
             actions: [
               TextButton(
                 onPressed: () {
@@ -698,7 +709,7 @@ Widget buildRepoRenameWarning({
               ),
               TextButton(
                 onPressed: () {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   var updatedApp = app?.app;
                   if (updatedApp != null) {
                     updatedApp.installedVersion = updatedApp.latestVersion;
@@ -790,7 +801,7 @@ Widget buildRepoRenameWarning({
                 var successMessage = app?.app.installedVersion == null
                     ? tr('installed')
                     : tr('appsUpdated');
-                HapticFeedback.heavyImpact();
+                AppHaptics.heavyImpact();
                 var res = await appsProvider.downloadAndInstallLatestApps(
                   app?.app.id != null ? [app!.app.id] : [],
                   globalNavigatorKey.currentContext,
@@ -834,95 +845,144 @@ Widget buildRepoRenameWarning({
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                if (source != null &&
-                    source.combinedAppSpecificSettingFormItems.isNotEmpty)
-                  IconButton(
-                    onPressed: app?.downloadProgress != null || updating
-                        ? null
-                        : () async {
-                            var values = await showAdditionalOptionsDialog();
-                            handleAdditionalOptionChanges(values);
-                          },
-                    tooltip: tr('additionalOptions'),
-                    icon: const Icon(Icons.edit),
-                  ),
-                if (app != null && app.installedInfo != null)
-                  IconButton(
-                    onPressed: () {
-                      appsProvider.openAppSettings(app.app.id);
-                    },
-                    icon: const Icon(Icons.settings),
-                    tooltip: tr('settings'),
-                  ),
-                if (app != null && showAppWebpageFinal)
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext ctx) {
-                          return AlertDialog(
-                            scrollable: true,
-                            content: getFullInfoColumn(small: true),
-                            title: Text(app.name),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text(tr('continue')),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    icon: const Icon(Icons.more_horiz),
-                    tooltip: tr('more'),
-                  ),
-                if (app?.app.installedVersion != null &&
-                    app?.app.installedVersion != app?.app.latestVersion &&
-                    !isVersionDetectionStandard &&
-                    !trackOnly)
-                  IconButton(
-                    onPressed: app?.downloadProgress != null || updating
-                        ? null
-                        : showMarkUpdatedDialog,
-                    tooltip: tr('markUpdated'),
-                    icon: const Icon(Icons.done),
-                  ),
-                if ((!isVersionDetectionStandard || trackOnly) &&
-                    app?.app.installedVersion != null &&
-                    app?.app.installedVersion == app?.app.latestVersion)
-                  IconButton(
-                    onPressed: app?.app == null || updating
-                        ? null
-                        : () {
-                            app!.app.installedVersion = null;
-                            appsProvider.saveApps([app.app]);
-                          },
-                    icon: const Icon(Icons.restore_rounded),
-                    tooltip: tr('resetInstallStatus'),
-                  ),
                 const SizedBox(width: 16.0),
                 Expanded(child: getInstallOrUpdateButton()),
-                const SizedBox(width: 16.0),
-                IconButton(
-                  onPressed: app?.downloadProgress != null || updating
-                      ? null
-                      : () {
-                          appsProvider
-                              .removeAppsWithModal(
-                                context,
-                                app != null ? [app.app] : [],
-                              )
-                              .then((value) {
-                                if (value == true) {
-                                  Navigator.of(context).pop();
-                                }
-                              });
-                        },
-                  tooltip: tr('remove'),
-                  icon: const Icon(Icons.delete_outline),
+                const SizedBox(width: 8.0),
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onSelected: (value) async {
+                    AppHaptics.selectionClick();
+                    switch (value) {
+                      case 'additionalOptions':
+                        var values = await showAdditionalOptionsDialog();
+                        handleAdditionalOptionChanges(values);
+                        break;
+                      case 'settings':
+                        if (app != null) {
+                          appsProvider.openAppSettings(app.app.id);
+                        }
+                        break;
+                      case 'moreInfo':
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext ctx) {
+                            return GlassDialog(
+                              title: app?.name ?? tr('app'),
+                              content: getFullInfoColumn(small: true),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text(tr('continue')),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        break;
+                      case 'markUpdated':
+                        showMarkUpdatedDialog();
+                        break;
+                      case 'resetStatus':
+                        if (app != null) {
+                          app.app.installedVersion = null;
+                          appsProvider.saveApps([app.app]);
+                        }
+                        break;
+                      case 'remove':
+                        appsProvider
+                            .removeAppsWithModal(
+                              context,
+                              app != null ? [app.app] : [],
+                            )
+                            .then((value) {
+                              if (value == true) {
+                                Navigator.of(context).pop();
+                              }
+                            });
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final isUpdating = app?.downloadProgress != null || updating;
+                    return [
+                      if (source != null &&
+                          source.combinedAppSpecificSettingFormItems.isNotEmpty)
+                        PopupMenuItem(
+                          value: 'additionalOptions',
+                          enabled: !isUpdating,
+                          child: ListTile(
+                            leading: const Icon(Icons.edit_outlined),
+                            title: Text(tr('additionalOptions')),
+                            dense: true,
+                          ),
+                        ),
+                      if (app != null && app.installedInfo != null)
+                        PopupMenuItem(
+                          value: 'settings',
+                          child: ListTile(
+                            leading: const Icon(Icons.settings_outlined),
+                            title: Text(tr('settings')),
+                            dense: true,
+                          ),
+                        ),
+                      if (app != null && showAppWebpageFinal)
+                        PopupMenuItem(
+                          value: 'moreInfo',
+                          child: ListTile(
+                            leading: const Icon(Icons.info_outline),
+                            title: Text(tr('more')),
+                            dense: true,
+                          ),
+                        ),
+                      if (app?.app.installedVersion != null &&
+                          app?.app.installedVersion !=
+                              app?.app.latestVersion &&
+                          !isVersionDetectionStandard &&
+                          !trackOnly)
+                        PopupMenuItem(
+                          value: 'markUpdated',
+                          enabled: !isUpdating,
+                          child: ListTile(
+                            leading: const Icon(Icons.done_all_rounded),
+                            title: Text(tr('markUpdated')),
+                            dense: true,
+                          ),
+                        ),
+                      if ((!isVersionDetectionStandard || trackOnly) &&
+                          app?.app.installedVersion != null &&
+                          app?.app.installedVersion == app?.app.latestVersion)
+                        PopupMenuItem(
+                          value: 'resetStatus',
+                          enabled: !isUpdating,
+                          child: ListTile(
+                            leading: const Icon(Icons.restore_rounded),
+                            title: Text(tr('resetInstallStatus')),
+                            dense: true,
+                          ),
+                        ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 'remove',
+                        enabled: !isUpdating,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.delete_outline_rounded,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          title: Text(
+                            tr('remove'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                          dense: true,
+                        ),
+                      ),
+                    ];
+                  },
                 ),
               ],
             ),
@@ -949,13 +1009,21 @@ Widget buildRepoRenameWarning({
       ),
     );
 
-    return Scaffold(
-      appBar: showAppWebpageFinal ? AppBar() : appScreenAppBar(),
-      backgroundColor: Theme.of(context).colorScheme.surface,
+    final scaffold = Scaffold(
+      appBar: widget.isModal
+          ? null
+          : (showAppWebpageFinal ? AppBar() : appScreenAppBar()),
+      backgroundColor: widget.isModal
+          ? Colors.transparent
+          : Theme.of(context).colorScheme.surface,
       body: RefreshIndicator(
         child: showAppWebpageFinal
             ? getAppWebView()
             : CustomScrollView(
+                controller: widget.scrollController,
+                physics: widget.isModal
+                    ? const BouncingScrollPhysics()
+                    : const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
                     child: Column(children: [getFullInfoColumn()]),
@@ -970,5 +1038,28 @@ Widget buildRepoRenameWarning({
       ),
       bottomSheet: getBottomSheetMenu(),
     );
+
+    if (widget.isModal) {
+      final radius = plusSettings.plusOverrideIndividualCornerRadius
+          ? plusSettings.plusHomeCornerRadius
+          : plusSettings.plusGlobalCornerRadius;
+
+      return ConditionalBlur(
+        enabled: plusSettings.plusEnableGlassmorphism,
+        sigma: 20,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withOpacity(
+              plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
+            ),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(radius.clamp(20.0, 48.0)),
+            ),
+          ),
+          child: scaffold,
+        ),
+      );
+    }
+    return scaffold;
   }
 }

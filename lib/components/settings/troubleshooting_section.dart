@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/settings/logs_dialog.dart';
+import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:provider/provider.dart';
 
 /// Section for system settings shortcuts and troubleshooting
@@ -65,6 +68,22 @@ class TroubleshootingSection extends StatelessWidget {
           title: tr('usageAccessSettings'),
           onTap: () => AppInstallService.openUsageAccessSettings(),
         ),
+      if (_matches(tr('appLogs')))
+        ListTile(
+          leading: Icon(
+            Icons.bug_report_outlined,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(tr('appLogs'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('appLogsDescription')),
+          onTap: () {
+            AppHaptics.selectionClick();
+            showDialog(
+              context: context,
+              builder: (context) => const LogsDialog(),
+            );
+          },
+        ),
       if (!context.watch<SettingsProvider>().plusDeveloperMode)
         ListTile(
           leading: Icon(
@@ -77,6 +96,21 @@ class TroubleshootingSection extends StatelessWidget {
           ),
           subtitle: Text(tr('devOptionsHint')),
         ),
+      const Divider(),
+      _buildCleanupTile(
+        context,
+        icon: Icons.cleaning_services_rounded,
+        title: tr('clearAPKCache'),
+        subtitle: tr('clearAPKCacheDescription'),
+        onTap: () => _clearAPKCache(context),
+      ),
+      _buildCleanupTile(
+        context,
+        icon: Icons.image_not_supported_rounded,
+        title: tr('clearIconCache'),
+        subtitle: tr('clearIconCacheDescription'),
+        onTap: () => _clearIconCache(context),
+      ),
     ];
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -85,6 +119,45 @@ class TroubleshootingSection extends StatelessWidget {
       title: isSearching ? null : tr('troubleshootingAndSystem'),
       children: items,
     );
+  }
+
+  Widget _buildCleanupTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+      subtitle: Text(subtitle),
+      onTap: () {
+        AppHaptics.selectionClick();
+        onTap();
+      },
+    );
+  }
+
+  void _clearAPKCache(BuildContext context) async {
+    final count = await StartupRepairService.clearAPKCache();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('clearedXAPKs', args: [count.toString()]))),
+      );
+    }
+  }
+
+  void _clearIconCache(BuildContext context) async {
+    await StartupRepairService.clearIconCache();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('iconCacheCleared'))),
+      );
+    }
   }
 
   Widget _buildSystemShortcutTile(

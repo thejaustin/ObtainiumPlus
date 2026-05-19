@@ -181,6 +181,123 @@ class _AppGridTileState extends State<AppGridTile>
                         ),
                       ),
 
+                    // Quick Actions Menu
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert_rounded,
+                            size: 18,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(0.6),
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 150),
+                          onSelected: (value) {
+                            AppHaptics.selectionClick();
+                            final appsProvider = context.read<AppsProvider>();
+                            switch (value) {
+                              case 'togglePin':
+                                widget.appInMemory.app.pinned =
+                                    !widget.appInMemory.app.pinned;
+                                appsProvider.saveApps([widget.appInMemory.app]);
+                                break;
+                              case 'settings':
+                                appsProvider.openAppSettings(
+                                  widget.appInMemory.app.id,
+                                );
+                                break;
+                              case 'copyUrl':
+                                Clipboard.setData(
+                                  ClipboardData(text: widget.appInMemory.app.url),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(tr('copiedToClipboard')),
+                                  ),
+                                );
+                                break;
+                              case 'remove':
+                                appsProvider.removeAppsWithModal(
+                                  context,
+                                  [widget.appInMemory.app],
+                                );
+                                break;
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'togglePin',
+                              child: ListTile(
+                                leading: Icon(
+                                  widget.appInMemory.app.pinned
+                                      ? Icons.push_pin_rounded
+                                      : Icons.push_pin_outlined,
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  widget.appInMemory.app.pinned
+                                      ? tr('unpin')
+                                      : tr('pin'),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'settings',
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.settings_outlined,
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  tr('settings'),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'copyUrl',
+                              child: ListTile(
+                                leading: const Icon(Icons.copy_rounded, size: 20),
+                                title: Text(
+                                  tr('copyAppURL'),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'remove',
+                              child: ListTile(
+                                leading: Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Theme.of(context).colorScheme.error,
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  tr('remove'),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     Semantics(
                       label: _buildSemanticLabel(),
                       button: true,

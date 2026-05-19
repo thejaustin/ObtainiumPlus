@@ -295,41 +295,71 @@ class _CommandCenterState extends State<CommandCenter> {
         : settings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
 
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(itemRadius * 0.75),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        ),
-        child: app.icon != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                child: Image.memory(app.icon!, fit: BoxFit.cover),
-              )
-            : const Icon(Icons.apps),
-      ),
-      title: Text(app.name),
-      subtitle: Text(
-        app.app.latestVersion,
-        style: const TextStyle(fontSize: 12),
-      ),
-      trailing: const Icon(Icons.chevron_right, size: 16),
-      shape: RoundedRectangleBorder(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(itemRadius),
-      ),
-      onTap: () {
-        Navigator.pop(context);
-        showDraggableModalBottomSheet(
-          context: context,
-          builder: (context, controller) => AppPage(
-            appId: app.app.id,
-            isModal: true,
-            scrollController: controller,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(itemRadius),
+          onTap: () {
+            Navigator.pop(context);
+            showDraggableModalBottomSheet(
+              context: context,
+              builder: (context, controller) => AppPage(
+                appId: app.app.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  ),
+                  child: app.icon != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                          child: Image.memory(app.icon!, fit: BoxFit.cover),
+                        )
+                      : const Icon(Icons.apps_rounded),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        app.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        app.app.latestVersion,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -385,62 +415,73 @@ class _CommandCenterState extends State<CommandCenter> {
               : settings.plusGlobalCornerRadius;
           final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
 
-          return ListTile(
-            leading: CircleAvatar(
-              radius: 20,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Material(
+              color: theme.colorScheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(itemRadius),
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(itemRadius),
                 ),
-              ),
-            ),
-            title: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge,
-            ),
-            subtitle: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                leading: Container(
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                    color: theme.colorScheme.primaryContainer,
                   ),
-                  child: Text(
-                    source,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSecondaryContainer,
-                      fontSize: 10,
+                  child: Center(
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    url,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
+                title: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
+                subtitle: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        source,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSecondaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+                onTap: () => _openAddApp(url),
+              ),
             ),
-            trailing: Icon(
-              Icons.add_circle_outline,
-              color: theme.colorScheme.primary,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(itemRadius),
-            ),
-            onTap: () => _openAddApp(url),
           );
         }),
       ],

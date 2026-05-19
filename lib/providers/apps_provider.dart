@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
 
@@ -30,6 +31,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_fgbg/flutter_fgbg.dart';
@@ -2263,14 +2265,13 @@ class _AppFilePickerState extends State<AppFilePicker> {
     if (widget.pickAnyAsset) {
       urlsToSelectFrom = [...urlsToSelectFrom, ...widget.app.otherAssetUrls];
     }
-    return AlertDialog(
-      scrollable: true,
-      title: Text(
-        widget.pickAnyAsset
-            ? tr('selectX', args: [lowerCaseIfEnglish(tr('releaseAsset'))])
-            : tr('pickAnAPK'),
-      ),
+    return GlassDialog(
+      title: widget.pickAnyAsset
+          ? tr('selectX', args: [lowerCaseIfEnglish(tr('releaseAsset'))])
+          : tr('pickAnAPK'),
+      icon: widget.pickAnyAsset ? Icons.file_present_rounded : Icons.android_rounded,
       content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           urlsToSelectFrom.length > 1
               ? Text(
@@ -2312,7 +2313,7 @@ class _AppFilePickerState extends State<AppFilePicker> {
         ),
         TextButton(
           onPressed: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             Navigator.of(context).pop(fileUrl);
           },
           child: Text(tr('continue')),
@@ -2339,9 +2340,9 @@ class APKOriginWarningDialog extends StatefulWidget {
 class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      scrollable: true,
-      title: Text(tr('warning')),
+    return GlassDialog(
+      title: tr('warning'),
+      icon: Icons.warning_amber_rounded,
       content: Text(
         tr(
           'sourceIsXButPackageFromYPrompt',
@@ -2360,7 +2361,7 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
         ),
         TextButton(
           onPressed: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.selectionClick();
             Navigator.of(context).pop(true);
           },
           child: Text(tr('continue')),

@@ -1,6 +1,7 @@
 // Exposes functions that can be used to send notifications to the user
 // Contains a set of pre-defined ObtainiumNotification objects that should be used throughout the app
 
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -235,8 +236,11 @@ class NotificationsProvider {
       var content = (payload ?? '\n\n').split('\n').sublist(1).join('\n');
       globalNavigatorKey.currentState?.push(
         PageRouteBuilder(
-          pageBuilder: (context, _, __) => AlertDialog(
-            title: Text(title),
+          opaque: false,
+          barrierDismissible: true,
+          pageBuilder: (context, _, __) => GlassDialog(
+            title: title,
+            icon: Icons.notifications_active_outlined,
             content: Text(content),
             actions: [
               TextButton(

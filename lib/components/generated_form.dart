@@ -606,7 +606,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                 label: Text(e2.key),
                                 backgroundColor: Color(
                                   e2.value.key,
-                                ).withAlpha(50),
+                                ).withOpacity(50/255),
                                 selectedColor: Color(e2.value.key),
                                 visualDensity: VisualDensity.compact,
                                 selected: e2.value.value,

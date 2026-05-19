@@ -224,6 +224,7 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> shapeWidgets = [
+      _buildCornerRadiusPreview(context, plusSettings),
       if (_matches(tr('plusGlobalCornerRadius'))) ...[
         ListTile(
           leading: const Icon(Icons.rounded_corner_rounded),
@@ -304,11 +305,20 @@ class ThemeSettingsSection extends StatelessWidget {
         if (themeWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appearance'),
+            helpText: tr('appearanceHelp'),
             children: themeWidgets,
           ),
         if (shapeWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusShapesAndCorners'),
+            helpText: tr('shapesHelp'),
+            onReset: () {
+              AppHaptics.heavyImpact();
+              plusSettings.plusGlobalCornerRadius = 20.0;
+              plusSettings.plusHomeCornerRadius = 20.0;
+              plusSettings.plusSettingsCornerRadius = 16.0;
+              plusSettings.plusOverrideIndividualCornerRadius = false;
+            },
             children: shapeWidgets,
           ),
         if (typographyWidgets.any((w) => w is! SizedBox))
@@ -322,6 +332,74 @@ class ThemeSettingsSection extends StatelessWidget {
             children: animationWidgets,
           ),
       ],
+    );
+  }
+
+  Widget _buildCornerRadiusPreview(
+    BuildContext context,
+    PlusSettingsProvider settings,
+  ) {
+    if (searchQuery != null && searchQuery!.isNotEmpty)
+      return const SizedBox.shrink();
+
+    final radius = settings.plusGlobalCornerRadius;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(radius),
+                  border: Border.all(
+                    color: colorScheme.primary.withOpacity(0.2),
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Icon(Icons.apps_rounded, color: colorScheme.primary),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Container(
+                width: 140,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(radius),
+                  border: Border.all(
+                    color: colorScheme.outline.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                child: ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.info_outline, size: 18),
+                  title: const Text(
+                    'Preview',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            tr('cornerRadiusPreview'),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

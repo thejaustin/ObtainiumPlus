@@ -419,4 +419,8 @@ class PlusSettingsProvider with ChangeNotifier {
     _prefs?.setStringList('plusPinnedAppsOrder', val);
     notifyListeners();
   }
+
+  ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
+      ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+      : const AlwaysScrollableScrollPhysics();
 }
