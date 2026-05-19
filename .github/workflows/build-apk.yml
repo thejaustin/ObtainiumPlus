@@ -13,10 +13,49 @@ on:
         default: false
 
 jobs:
-  build:
+  quality:
+    name: Lint and Test
     runs-on: ubuntu-latest
-    # Skip if commit was from auto-bump to prevent infinite loop
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'Auto-bump version') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Validate locale JSON files
+        run: |
+          echo "Checking all translation JSON files for syntax errors..."
+          failed=0
+          for f in assets/translations/*.json; do
+            if ! python3 -c "import json,sys; json.load(open('$f'))" 2>/dev/null; then
+              echo "❌ Invalid JSON: $f"
+              failed=1
+            else
+              echo "✅ $f"
+            fi
+          done
+          if [ $failed -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Flutter Analyze
+        run: flutter analyze
+
+      - name: Flutter Test
+        run: flutter test
+
+  build:
+    name: Build and Release
+    needs: quality
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: Auto-bump version') }}
     permissions:
       contents: write
 
@@ -35,21 +74,15 @@ jobs:
             IS_DEV=true
           fi
           echo "is_dev=$IS_DEV" >> $GITHUB_OUTPUT
-          echo "Build type: $( [ "$IS_DEV" = true ] && echo 'Dev' || echo 'Release' )"
 
       - name: Auto-bump version
         id: bump_version
         if: steps.detect_build.outputs.is_dev != 'true'
         run: |
-          # Extract current version and build number using a more robust regex
-          # Matches "version: 1.2.9-p24+107" -> version=1.2.9-p24, build=107
           FULL_VERSION=$(grep "^version: " pubspec.yaml | cut -d' ' -f2)
           CURRENT_VERSION=$(echo "$FULL_VERSION" | cut -d'+' -f1)
           CURRENT_BUILD=$(echo "$FULL_VERSION" | cut -d'+' -f2)
 
-          echo "Current version: $CURRENT_VERSION (build $CURRENT_BUILD)"
-
-          # Handle cases where patch number might be missing
           if [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
             BASE_VERSION="${BASH_REMATCH[1]}"
             PATCH_NUM="${BASH_REMATCH[2]}"
@@ -58,23 +91,16 @@ jobs:
             PATCH_NUM="0"
           fi
 
-          # Increment patch and build numbers
           NEW_PATCH=$((PATCH_NUM + 1))
           NEW_BUILD=$((CURRENT_BUILD + 1))
           NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
 
-          echo "New version: $NEW_VERSION (build $NEW_BUILD)"
-
-          # Update pubspec.yaml with clean replacement
           sed -i "s/^version: .*/version: ${NEW_VERSION}+${NEW_BUILD}/" pubspec.yaml
 
-          # Verify change
           if git diff --quiet pubspec.yaml; then
             echo "version_changed=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Version already up to date"
           else
             echo "version_changed=true" >> $GITHUB_OUTPUT
-            echo "✅ Version bumped to $NEW_VERSION+$NEW_BUILD"
           fi
 
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -94,52 +120,28 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Install Android SDK Platform 36
-        run: |
-          SDKMANAGER=$(find /usr/local/lib/android/sdk -name sdkmanager | head -n 1)
-          echo "Using sdkmanager at: $SDKMANAGER"
-          echo "y" | $SDKMANAGER "platforms;android-36"
+        run: sdkmanager "platforms;android-36"
 
       - name: Get dependencies
         run: flutter pub get
-
-      - name: Validate locale JSON files
-        run: |
-          echo "Checking all translation JSON files for syntax errors..."
-          failed=0
-          for f in assets/translations/*.json; do
-            if ! python3 -c "import json,sys; json.load(open('$f'))" 2>/dev/null; then
-              echo "❌ Invalid JSON: $f"
-              python3 -c "import json,sys; json.load(open('$f'))" 2>&1 || true
-              failed=1
-            else
-              echo "✅ $f"
-            fi
-          done
-          if [ $failed -ne 0 ]; then
-            echo "ERROR: One or more locale JSON files are invalid. Fix before building."
-            exit 1
-          fi
 
       - name: Validate Secrets
         id: check_secrets
         run: |
           has_secrets=true
           if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] || [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || [ -z "${{ secrets.KEY_PASSWORD }}" ] || [ -z "${{ secrets.KEY_ALIAS }}" ]; then
-            echo "⚠️ WARNING: Signing secrets are missing. Building unsigned APK."
             has_secrets=false
-          else
-            echo "✅ Signing secrets found"
           fi
           echo "has_secrets=$has_secrets" >> $GITHUB_OUTPUT
 
       - name: Setup Keystore
         if: steps.check_secrets.outputs.has_secrets == 'true'
         run: |
-          echo "Creating keystore from secret..."
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-keystore.jks
-          
-          echo "Creating key.properties file..."
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=release-keystore.jks\n' \
             '${{ secrets.KEYSTORE_PASSWORD }}' \
             '${{ secrets.KEY_PASSWORD }}' \
@@ -148,105 +150,65 @@ jobs:
 
       - name: Build APK
         run: |
-          echo "Building universal APK (Obtainium Plus)..."
           flutter build apk --flavor normal --no-pub --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
-
-          echo "Renaming APK to remove flavor suffix..."
           find build/app/outputs/flutter-apk/ -name "app-*normal*.apk" -exec bash -c 'mv "$1" "${1//-normal/}"' -- {} \;
-
           if [ "${{ steps.detect_build.outputs.is_dev }}" = "true" ]; then
-            echo "Labeling APK as Dev build..."
             mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/Obtainium-Plus-Dev.apk
           fi
-
-          echo "Cleaning up SHA1 files..."
           rm -f ./build/app/outputs/flutter-apk/*.sha1
 
-      - name: Check Sentry Token
-        id: check_sentry
-        run: |
-          if [ -n "${{ secrets.SENTRY_AUTH_TOKEN }}" ]; then
-            echo "has_token=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_token=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Cache Sentry CLI
+        id: cache-sentry
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/sentry-cli
+          key: ${{ runner.os }}-sentry-cli
+
+      - name: Install Sentry CLI
+        if: steps.cache-sentry.outputs.cache-hit != 'true' && secrets.SENTRY_AUTH_TOKEN != ''
+        run: curl -sL https://sentry.io/get-cli/ | bash
 
       - name: Upload Sentry Debug Symbols
-        if: steps.check_sentry.outputs.has_token == 'true'
+        if: secrets.SENTRY_AUTH_TOKEN != ''
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
-          curl -sL https://sentry.io/get-cli/ | bash
           MAPPING_FILE="build/app/outputs/flutter-apk/app-release-mapping.txt"
           if [ -f "$MAPPING_FILE" ]; then
             sentry-cli upload-proguard "$MAPPING_FILE"
-          else
-            echo "⚠️ Sentry mapping file not found at $MAPPING_FILE - skipping upload."
           fi
 
       - name: Generate Changelog
         id: build_changelog
         run: |
-          # Get previous tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            COMMIT_RANGE="HEAD~1..HEAD"
+          COMMIT_RANGE=$([ -z "$PREVIOUS_TAG" ] && echo "HEAD~1..HEAD" || echo "$PREVIOUS_TAG..HEAD")
+          
+          # Use user-friendly changelog if available
+          if [ -f "CHANGELOG_USER.md" ] && [ -s "CHANGELOG_USER.md" ]; then
+            USER_CHANGELOG=$(cat CHANGELOG_USER.md)
+            CHANGELOG="### What's New\n$USER_CHANGELOG\n\n### Developer Details\n"
+            CHANGELOG+=$(git log $COMMIT_RANGE --pretty=format:'* **%s** (%h)' --no-merges)
           else
-            echo "Generating changelog since $PREVIOUS_TAG"
-            COMMIT_RANGE="$PREVIOUS_TAG..HEAD"
+            CHANGELOG=$(git log $COMMIT_RANGE --pretty=format:'* **%s** (%h)%n%b' --no-merges)
+            [ -z "$CHANGELOG" ] && CHANGELOG="No significant changes."
           fi
+          
+          [ ${#CHANGELOG} -gt 10000 ] && CHANGELOG="${CHANGELOG:0:10000}... (truncated)"
 
-          CHANGELOG=""
-          while IFS= read -r commit_hash; do
-            if [ -n "$commit_hash" ]; then
-              SUBJECT=$(git log -1 --pretty=format:'%s' "$commit_hash")
-              BODY=$(git log -1 --pretty=format:'%b' "$commit_hash" | sed '/^$/d')
-              SHORT_HASH=$(git log -1 --pretty=format:'%h' "$commit_hash")
+          cat <<EOF > release_body.md
+**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
 
-              if [ -n "$CHANGELOG" ]; then
-                CHANGELOG="${CHANGELOG}
+- **Build #:** ${{ github.run_number }}
+- **Commit:** ${{ github.sha }}
+- **Date:** $(date)
 
-          ---
-
-          "
-              fi
-
-              CHANGELOG="${CHANGELOG}**${SUBJECT}** (\`${SHORT_HASH}\`)"
-
-              if [ -n "$BODY" ]; then
-                CHANGELOG="${CHANGELOG}
-
-          ${BODY}"
-              fi
-            fi
-          done < <(git log $COMMIT_RANGE --pretty=format:'%H' --no-merges)
-
-          if [ -z "$CHANGELOG" ]; then
-            CHANGELOG="No significant changes."
-          fi
-
-          if [ ${#CHANGELOG} -gt 100000 ]; then
-            CHANGELOG="${CHANGELOG:0:100000}... *(changelog truncated due to size limits)*"
-          fi
-
-          echo "**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**" > release_body.md
-          echo "" >> release_body.md
-          echo "- **Build #:** ${{ github.run_number }}" >> release_body.md
-          echo "- **Commit:** ${{ steps.commit_bump.outputs.sha || github.sha }}" >> release_body.md
-          echo "- **Date:** ${{ github.event.head_commit.timestamp }}" >> release_body.md
-          echo "- **Branch:** ${{ github.ref_name }}" >> release_body.md
-          echo "" >> release_body.md
-          echo "### Changelog" >> release_body.md
-          echo "$CHANGELOG" >> release_body.md
-          echo "" >> release_body.md
-          echo "---" >> release_body.md
-          echo "Built automatically on push to ${{ (steps.detect_build.outputs.is_dev == 'true' && 'feature') || 'main' }} branch." >> release_body.md
+$CHANGELOG
+EOF
 
       - name: Commit version bump
-        id: commit_bump
         if: steps.bump_version.outputs.version_changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
@@ -254,22 +216,24 @@ jobs:
           git add pubspec.yaml
           git commit -m "chore: Auto-bump version to ${{ steps.bump_version.outputs.version }}"
           git push origin HEAD:main
-          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: obtainium-plus-apk
+          path: build/app/outputs/flutter-apk/*.apk
 
       - name: Create Release
-        id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || steps.bump_version.outputs.version && format('v{0}', steps.bump_version.outputs.version) || format('build-{0}', github.run_number) }}
           name: "${{ (steps.detect_build.outputs.is_dev == 'true' && format('Obtainium+ Dev Build #{0}', github.run_number)) || format('Obtainium+ {0}', steps.bump_version.outputs.version) }}"
-          commit: ${{ steps.commit_bump.outputs.sha || github.sha }}
           draft: false
           prerelease: ${{ steps.detect_build.outputs.is_dev == 'true' }}
           generateReleaseNotes: false
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
-          skipIfReleaseExists: false
           replacesArtifacts: true
           bodyFile: release_body.md
 

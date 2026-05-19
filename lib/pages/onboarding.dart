@@ -307,9 +307,9 @@ class _OnboardingPageState extends State<OnboardingPage>
       pages: [
         // ── 1. Welcome ──────────────────────────────────────────────────────
         PageViewModel(
-          title: 'Obtainium+',
+          title: 'Welcome to Obtainium+',
           body:
-              'Install and update Android apps directly from their source — GitHub, GitLab, F-Droid, and more — without an app store.',
+              'Install and update Android apps directly from their source — GitHub, GitLab, F-Droid, and more — without an app store.\n\n✨ New in v1.4.3: Smoother setup, increased stability, a reorganized Settings menu, unified Add App page, and new Offline Update Queuing!',
           image: Icon(
             Icons.download_for_offline,
             size: 80,

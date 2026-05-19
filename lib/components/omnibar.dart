@@ -635,11 +635,9 @@ class AppActionsFAB extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onLongPress: () {
-              AppHaptics.heavyImpact();
-              settings.plusTopUILayout = !settings.plusTopUILayout;
-            },
+          ConditionalBlur(
+            enabled: settings.plusEnableGlassmorphism,
+            sigma: 12,
             child: FloatingActionButton.small(
               heroTag: 'fab_search',
               onPressed: () {
@@ -653,12 +651,16 @@ class AppActionsFAB extends StatelessWidget {
           Semantics(
             label: tr('addApp'),
             button: true,
-            child: FloatingActionButton.extended(
-              heroTag: 'fab_add',
-              onPressed: () => _showAddAppMenu(context),
-              icon: const Icon(Icons.add),
-              label: Text(tr('addApp')),
-              elevation: 4,
+            child: ConditionalBlur(
+              enabled: settings.plusEnableGlassmorphism,
+              sigma: 12,
+              child: FloatingActionButton.extended(
+                heroTag: 'fab_add',
+                onPressed: () => _showAddAppMenu(context),
+                icon: const Icon(Icons.add),
+                label: Text(tr('addApp')),
+                elevation: 4,
+              ),
             ),
           ),
         ],

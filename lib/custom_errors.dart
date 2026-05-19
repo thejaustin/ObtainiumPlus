@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ObtainiumError {
@@ -130,13 +131,11 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
-        return AlertDialog(
-          scrollable: true,
-          title: Text(
-            e is MultiAppMultiError
-                ? tr(isError ? 'someErrors' : 'updates')
-                : tr(isError ? 'unexpectedError' : 'unknown'),
-          ),
+        return GlassDialog(
+          title: e is MultiAppMultiError
+              ? tr(isError ? 'someErrors' : 'updates')
+              : tr(isError ? 'unexpectedError' : 'unknown'),
+          icon: isError ? Icons.error_outline_rounded : Icons.info_outline_rounded,
           content: GestureDetector(
             onLongPress: () {
               Clipboard.setData(ClipboardData(text: e.toString()));

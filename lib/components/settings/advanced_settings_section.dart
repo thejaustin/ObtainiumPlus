@@ -2,6 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/startup_repair_service.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 
 /// Advanced / warnings settings section
@@ -56,6 +59,19 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.enableContextualTips = v,
         visible: (s) => _matches(tr('enableContextualTips')),
       ),
+      const Divider(),
+      if (_matches(tr('factoryReset')))
+        ListTile(
+          leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
+          title: Text(
+            tr('factoryReset'),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.red),
+          ),
+          subtitle: Text(tr('factoryResetDescription')),
+          onTap: () => _showResetConfirmation(context),
+        ),
     ];
 
     if (children.every((w) => w is SizedBox && w.child == null))
@@ -64,6 +80,37 @@ class AdvancedSettingsSection extends StatelessWidget {
     return SettingsGroup(
       title: isSearching ? null : tr('advanced'),
       children: children,
+    );
+  }
+
+  void _showResetConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => GlassDialog(
+        title: tr('factoryReset'),
+        icon: Icons.warning_amber_rounded,
+        content: Text(tr('factoryResetConfirmation')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () async {
+              AppHaptics.heavyImpact();
+              await StartupRepairService.factoryReset();
+              if (context.mounted) {
+                // Should ideally restart app, but clearing and showing msg for now
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(tr('factoryResetComplete'))),
+                );
+                Navigator.pop(ctx);
+              }
+            },
+            child: Text(tr('reset'), style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 

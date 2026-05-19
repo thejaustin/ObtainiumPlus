@@ -167,11 +167,12 @@ class _StatisticsPageState extends State<StatisticsPage>
               actionLabel: tr('addApp'),
               onActionPressed: () {
                 AppHaptics.lightImpact();
-                showModalBottomSheet(
+                showDraggableModalBottomSheet(
                   context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  builder: (context) => const AddAppPage(),
+                  builder: (context, controller) => AddAppPage(
+                    isModal: true,
+                    scrollController: controller,
+                  ),
                 );
               },
             );

@@ -388,13 +388,13 @@ class _SelectionModalState extends State<SelectionModal> {
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: entrySelections[entry] == true
-                        ? colorScheme.primaryContainer.withOpacity(0.4)
-                        : colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                        ? colorScheme.primaryContainer.withOpacity(0.55)
+                        : colorScheme.surfaceContainerHighest.withOpacity(0.42),
                     borderRadius: BorderRadius.circular(itemRadius),
                     border: Border.all(
                       color: entrySelections[entry] == true
-                          ? colorScheme.primary.withOpacity(0.5)
-                          : colorScheme.outline.withOpacity(0.08),
+                          ? colorScheme.primary.withOpacity(0.65)
+                          : colorScheme.outline.withOpacity(0.15),
                       width: 1.5,
                     ),
                   ),
@@ -431,7 +431,7 @@ class _SelectionModalState extends State<SelectionModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(radius)),
       ),
       child: Row(

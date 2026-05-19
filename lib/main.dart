@@ -8,8 +8,19 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/providers/tag_provider.dart';
+import 'package:obtainium/providers/installer_provider.dart';
+import 'package:obtainium/providers/source_config_provider.dart';
+import 'package:obtainium/providers/plugin_provider.dart';
+import 'package:obtainium/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_system_colors/dynamic_system_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:background_fetch/background_fetch.dart';
@@ -149,14 +160,45 @@ void main() async {
   }
   final np = NotificationsProvider();
   await np.initialize();
+
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final sp = SettingsProvider();
+  await sp.initializeSettings(); // This also gets prefs, but let's keep it for compatibility
+
+  final plusSettings = PlusSettingsProvider();
+  await plusSettings.initializeSettings(prefs);
+
+  final themeSettings = ThemeSettingsProvider();
+  await themeSettings.initializeSettings(prefs);
+
+  final behaviorSettings = BehaviorSettingsProvider();
+  await behaviorSettings.initializeSettings(prefs);
+
+  final viewSettings = ViewSettingsProvider();
+  await viewSettings.initializeSettings(prefs);
+
+  final updateSettings = UpdateSettingsProvider();
+  await updateSettings.initializeSettings(prefs);
+
   FlutterForegroundTask.initCommunicationPort();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AppsProvider()),
-        ChangeNotifierProvider(create: (context) => SettingsProvider()),
+        ChangeNotifierProvider(create: (context) => sp),
+        ChangeNotifierProvider(create: (context) => plusSettings),
+        ChangeNotifierProvider(create: (context) => themeSettings),
+        ChangeNotifierProvider(create: (context) => behaviorSettings),
+        ChangeNotifierProvider(create: (context) => viewSettings),
+        ChangeNotifierProvider(create: (context) => updateSettings),
+        ChangeNotifierProvider(create: (context) => TagProvider()),
+        ChangeNotifierProvider(create: (context) => InstallerProvider()),
+        ChangeNotifierProvider(create: (context) => SourceConfigProvider()),
+        ChangeNotifierProvider(create: (context) => PluginProvider()),
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
         Provider(create: (context) => np),
         Provider(create: (context) => LogsProvider()),
+        Provider(create: (context) => SourceProvider()),
       ],
       child: EasyLocalization(
         supportedLocales: supportedLocales.map((e) => e.key).toList(),

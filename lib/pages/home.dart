@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 
 import 'package:animations/animations.dart';
@@ -70,63 +71,34 @@ class _HomePageState extends State<HomePage> {
         await showDialog(
           context: context,
           builder: (BuildContext ctx) {
-            return AlertDialog(
-              title: Text(tr('welcome')),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 20,
-                children: [
-                  Text(tr('documentationLinksNote')),
-                  InkWell(
-                    onTap: () {
-                      launchUrlString(
-                        'https://github.com/ImranR98/Obtainium/blob/main/README.md',
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
-                    child: Text(
-                      'https://github.com/ImranR98/Obtainium/blob/main/README.md',
-                      style: const TextStyle(
-                        decoration: TextDecoration.underline,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  autofocus: sp.isTV,
-                  onPressed: () {
-                    sp.welcomeShown = true;
-                    Navigator.of(context).pop(null);
-                  },
-                  child: Text(tr('ok')),
-                ),
-              ],
+            return GeneratedFormModal(
+              title: tr('welcome'),
+              items: const [],
+              message: "Welcome to Obtainium+!\n\nThis app allows you to install and update apps directly from their sources, bypassing traditional app stores.\n\nTo get started, tap the '+' button to add your first app.",
+              singleNullReturnButton: tr('ok'),
             );
           },
         );
+        sp.welcomeShown = true;
       }
       if (!sp.googleVerificationWarningShown && DateTime.now().year == 2026) {
         await showDialog(
           context: context,
           builder: (BuildContext ctx) {
-            return AlertDialog(
-              title: Text(tr('note')),
-              scrollable: true,
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 20,
-                children: [
-                  Text(tr('googleVerificationWarningP1')),
-                  InkWell(
-                    onTap: () {
-                      launchUrlString(
-                        'https://keepandroidopen.org/',
-                        mode: LaunchMode.externalApplication,
-                      );
-                    },
+            return GeneratedFormModal(
+              title: tr('note'),
+              items: const [],
+              message: "${tr('googleVerificationWarningP1')}\n\n${tr('googleVerificationWarningP3')}",
+              additionalWidgets: [
+                InkWell(
+                  onTap: () {
+                    launchUrlString(
+                      'https://keepandroidopen.org/',
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
                       tr('googleVerificationWarningP2'),
                       style: const TextStyle(
@@ -135,22 +107,13 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  Text(tr('googleVerificationWarningP3')),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  autofocus: sp.isTV,
-                  onPressed: () {
-                    sp.googleVerificationWarningShown = true;
-                    Navigator.of(context).pop(null);
-                  },
-                  child: Text(tr('ok')),
                 ),
               ],
+              singleNullReturnButton: tr('ok'),
             );
           },
         );
+        sp.googleVerificationWarningShown = true;
       }
     });
   }
@@ -352,7 +315,34 @@ class _HomePageState extends State<HomePage> {
       child: pages.elementAt(currentIndex).widget,
     );
 
-    return WillPopScope(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (isLinkActivity &&
+            selectedIndexHistory.length == 1 &&
+            selectedIndexHistory.last == 1) {
+          Navigator.of(context).pop();
+          return;
+        }
+        setIsReversing(
+          selectedIndexHistory.length >= 2
+              ? selectedIndexHistory.reversed.toList()[1]
+              : 0,
+        );
+        if (selectedIndexHistory.isNotEmpty) {
+          setState(() {
+            selectedIndexHistory.removeLast();
+          });
+          return;
+        }
+        final clearSelected = (pages[0].widget.key as GlobalKey<AppsPageState>)
+            .currentState!
+            .clearSelected();
+        if (!clearSelected) {
+          SystemNavigator.pop();
+        }
+      },
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: settingsProvider.isTV
@@ -406,7 +396,7 @@ class _HomePageState extends State<HomePage> {
                         )
                         .toList(),
                     onDestinationSelected: (int index) async {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.selectionClick();
                       switchToPage(index);
                     },
                     selectedIndex: currentIndex,
@@ -414,26 +404,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
       ),
-      onWillPop: () async {
-        if (isLinkActivity &&
-            selectedIndexHistory.length == 1 &&
-            selectedIndexHistory.last == 1) {
-          return true;
-        }
-        setIsReversing(
-          selectedIndexHistory.length >= 2
-              ? selectedIndexHistory.reversed.toList()[1]
-              : 0,
-        );
-        if (selectedIndexHistory.isNotEmpty) {
-          setState(() {
-            selectedIndexHistory.removeLast();
-          });
-          return false;
-        }
-        return !(pages[0].widget.key as GlobalKey<AppsPageState>).currentState!
-            .clearSelected();
-      },
     );
   }
 

@@ -30,6 +30,13 @@ class PlusFeaturesSection extends StatelessWidget {
           children: [
             // Master toggle in its own expressive card
             ExpressiveSettingsGroup(
+              title: isSearching ? null : tr('plusFeatures'),
+              helpText: tr('plusFeaturesHelp'),
+              onReset: () {
+                AppHaptics.heavyImpact();
+                settings.enableAllPlusFeatures = true;
+                // Add more specific resets if needed
+              },
               children: [
                 if (_matches(tr('enableAllPlusFeatures')))
                   SwitchListTile.adaptive(

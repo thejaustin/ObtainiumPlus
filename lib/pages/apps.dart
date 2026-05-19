@@ -1,3 +1,6 @@
+import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/utils/modal_utils.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -172,7 +175,7 @@ class AppsPageState extends State<AppsPage> {
     var listedApps = appsProvider.getAppValues().toList();
 
     refresh() {
-      HapticFeedback.lightImpact();
+      AppHaptics.lightImpact();
       setState(() {
         refreshingSince = DateTime.now();
       });
@@ -510,13 +513,14 @@ class AppsPageState extends State<AppsPage> {
           pm.openApp(listedApps[appIndex].app.id);
         },
         onLongPress: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AppPage(
-                appId: listedApps[appIndex].app.id,
-                showOppositeOfPreferredView: true,
-              ),
+          AppHaptics.selectionClick();
+          showDraggableModalBottomSheet(
+            context: context,
+            builder: (context, controller) => AppPage(
+              appId: listedApps[appIndex].app.id,
+              showOppositeOfPreferredView: true,
+              isModal: true,
+              scrollController: controller,
             ),
           );
         },
@@ -597,10 +601,10 @@ class AppsPageState extends State<AppsPage> {
                     ? (Theme.of(context).brightness == Brightness.light
                               ? Theme.of(context).primaryColor
                               : Theme.of(context).primaryColorLight)
-                          .withAlpha(
+                          .withOpacity(
                             Theme.of(context).brightness == Brightness.light
-                                ? 20
-                                : 40,
+                                ? 20 / 255
+                                : 40 / 255,
                           )
                     : null,
               ),
@@ -652,7 +656,7 @@ class AppsPageState extends State<AppsPage> {
 
       var transparent = Theme.of(
         context,
-      ).colorScheme.surface.withAlpha(0).value;
+      ).colorScheme.surface.withOpacity(0).value;
       List<double> stops = [
         ...listedApps[index].app.categories.asMap().entries.map(
           (e) =>
@@ -674,7 +678,7 @@ class AppsPageState extends State<AppsPage> {
               ...listedApps[index].app.categories.map(
                 (e) => Color(
                   settingsProvider.categories[e] ?? transparent,
-                ).withAlpha(255),
+                ).withOpacity(1),
               ),
               Color(transparent),
             ],
@@ -742,11 +746,13 @@ class AppsPageState extends State<AppsPage> {
             if (selectedAppIds.isNotEmpty) {
               toggleAppSelected(listedApps[index].app);
             } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      AppPage(appId: listedApps[index].app.id),
+              AppHaptics.selectionClick();
+              showDraggableModalBottomSheet(
+                context: context,
+                builder: (context, controller) => AppPage(
+                  appId: listedApps[index].app.id,
+                  isModal: true,
+                  scrollController: controller,
                 ),
               );
             }
@@ -818,7 +824,7 @@ class AppsPageState extends State<AppsPage> {
                   trackOnlyUpdateIdsAllOrSelected.isEmpty)
           ? null
           : () {
-              HapticFeedback.heavyImpact();
+              AppHaptics.heavyImpact();
               List<GeneratedFormItem> formItems = [];
               if (existingUpdateIdsAllOrSelected.isNotEmpty) {
                 formItems.add(
@@ -993,12 +999,10 @@ class AppsPageState extends State<AppsPage> {
       return showDialog(
         context: context,
         builder: (BuildContext ctx) {
-          return AlertDialog(
-            title: Text(
-              tr(
-                'markXSelectedAppsAsUpdated',
-                args: [selectedAppIds.length.toString()],
-              ),
+          return GlassDialog(
+            title: tr(
+              'markXSelectedAppsAsUpdated',
+              args: [selectedAppIds.length.toString()],
             ),
             content: Text(
               tr('onlyWorksWithNonVersionDetectApps'),
@@ -1016,7 +1020,7 @@ class AppsPageState extends State<AppsPage> {
               ),
               TextButton(
                 onPressed: () {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.selectionClick();
                   appsProvider.saveApps(
                     selectedApps.map((a) {
                       if (a.installedVersion != null &&
@@ -1056,23 +1060,22 @@ class AppsPageState extends State<AppsPage> {
       return showDialog(
         context: context,
         builder: (BuildContext ctx) {
-          return AlertDialog(
-            scrollable: true,
-            content: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  TextButton(
-                    onPressed: pinSelectedApps,
-                    child: Text(
-                      selectedApps.where((element) => element.pinned).isEmpty
-                          ? tr('pinToTop')
-                          : tr('unpinFromTop'),
-                      textAlign: TextAlign.center,
-                    ),
+          return GlassDialog(
+            title: tr('moreOptions'),
+            icon: Icons.more_vert_rounded,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: pinSelectedApps,
+                  child: Text(
+                    selectedApps.where((element) => element.pinned).isEmpty
+                        ? tr('pinToTop')
+                        : tr('unpinFromTop'),
+                    textAlign: TextAlign.center,
                   ),
-                  const Divider(),
+                ),
+                const Divider(),
                   TextButton(
                     onPressed: () {
                       String urls = '';
@@ -1355,6 +1358,8 @@ class AppsPageState extends State<AppsPage> {
             );
     }
 
+    final plusSettings = context.watch<PlusSettingsProvider>();
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: RefreshIndicator(
@@ -1364,7 +1369,7 @@ class AppsPageState extends State<AppsPage> {
           interactive: true,
           controller: scrollController,
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: plusSettings.scrollPhysics,
             controller: scrollController,
             slivers: <Widget>[
               CustomAppBar(title: tr('appsString')),
@@ -1390,10 +1395,13 @@ class AppsPageState extends State<AppsPage> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => AppPage(appId: app.app.id),
+    AppHaptics.selectionClick();
+    showDraggableModalBottomSheet(
+      context: context,
+      builder: (context, controller) => AppPage(
+        appId: app.app.id,
+        isModal: true,
+        scrollController: controller,
       ),
     );
   }

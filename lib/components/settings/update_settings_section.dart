@@ -329,12 +329,9 @@ class UpdateSettingsSection extends StatelessWidget {
                         updateSettings.obtainiumReleaseChannel != 'dev') {
                       showDialog(
                         context: context,
-                        builder: (ctx) => AlertDialog(
-                          icon: const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.orange,
-                          ),
-                          title: Text(tr('devChannelWarningTitle')),
+                        builder: (ctx) => GlassDialog(
+                          icon: Icons.warning_amber_rounded,
+                          title: tr('devChannelWarningTitle'),
                           content: Text(tr('devChannelWarningMessage')),
                           actions: [
                             TextButton(

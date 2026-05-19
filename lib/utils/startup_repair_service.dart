@@ -23,6 +23,29 @@ class StartupRepairService {
     }
   }
 
+  /// Clears the APK cache to free up storage space
+  static Future<int> clearAPKCache() async {
+    try {
+      final dirs = await AppFileService.initAppDirectories();
+      final apkDir = dirs['APKDir'];
+      if (apkDir != null && apkDir.existsSync()) {
+        final files = apkDir.listSync();
+        int count = 0;
+        for (final file in files) {
+          if (file is File) {
+            file.deleteSync(recursive: true);
+            count++;
+          }
+        }
+        talker.info('Repair: APK cache cleared ($count files)');
+        return count;
+      }
+    } catch (e) {
+      talker.error('Repair: Failed to clear APK cache: $e');
+    }
+    return 0;
+  }
+
   /// Performs a factory reset by clearing all SharedPreferences
   static Future<void> factoryReset() async {
     try {
