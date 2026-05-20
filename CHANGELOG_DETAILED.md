@@ -1,3 +1,21 @@
+### (pending) - refactor: decompose SettingsProvider "God Class"
+- **Date**: 2026-05-19
+- **Author**: Gemini CLI
+- **Details**: Major architectural refactoring to eliminate the monolithic `SettingsProvider`. Extracted settings into five specialized, domain-specific providers to improve performance, maintainability, and rebuild efficiency.
+
+#### Specialized Providers
+- **`ThemeSettingsProvider`**: Centralized all UI theming, Material You, and visual customization.
+- **`UpdateSettingsProvider`**: Extracted background update logic, scheduling, and interval management.
+- **`BehaviorSettingsProvider`**: Consolidated storage management, haptics, and app-link behaviors.
+- **`ViewSettingsProvider`**: Manages app organization, categories, grid/list modes, and dashboard layouts.
+- **`PlusSettingsProvider`**: Controls all "Plus" exclusive features, glassmorphism, and advanced UI toggles.
+
+#### Component Migrations
+- Refactored `AppsPage`, `AppPage`, and `ImportExportPage` to consume specialized providers.
+- Migrated `AppListTile`, `AppGridTile`, `CategorySections`, and `UpdateSettingsSection` for better performance.
+- Updated `AppsProvider` and `AppCRUDService` to use the new provider architecture.
+- Cleaned up `SettingsProvider` to retain only core application state.
+
 ### (pending) - fix: prevent Google login dialog from appearing on first launch
 - **Date**: 2026-05-03
 - **Author**: Gemini CLI

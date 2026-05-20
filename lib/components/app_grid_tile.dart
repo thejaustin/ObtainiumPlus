@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
@@ -96,9 +96,9 @@ class _AppGridTileState extends State<AppGridTile>
           context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
         }
 
-        final settingsProvider = context.watch<SettingsProvider>();
-        final curve = settingsProvider.plusEnableEnhancedAnimations
-            ? (settingsProvider.plusEnableMaterialExpressive
+        final plusSettings = context.watch<PlusSettingsProvider>();
+        final curve = plusSettings.plusEnableEnhancedAnimations
+            ? (plusSettings.plusEnableMaterialExpressive
                   ? AppConstants.expressiveStandard
                   : AppConstants.standardStandard)
             : Curves.easeInOut;
@@ -108,15 +108,15 @@ class _AppGridTileState extends State<AppGridTile>
           duration: const Duration(milliseconds: 100),
           curve: curve,
           child: ConditionalBlur(
-            enabled: settingsProvider.plusEnableGlassmorphism,
+            enabled: plusSettings.plusEnableGlassmorphism,
             sigma: 10,
             child: AnimatedContainer(
               duration: Duration(
-                milliseconds: settingsProvider.plusEnableEnhancedAnimations
+                milliseconds: plusSettings.plusEnableEnhancedAnimations
                     ? AppConstants.shortAnimationMs
                     : 200,
               ),
-              curve: settingsProvider.plusEnableEnhancedAnimations
+              curve: plusSettings.plusEnableEnhancedAnimations
                   ? Curves.easeOutCubic
                   : Curves.easeInOut,
               decoration: BoxDecoration(
@@ -130,7 +130,7 @@ class _AppGridTileState extends State<AppGridTile>
                         context,
                       ).colorScheme.errorContainer.withOpacity(0.12)
                     : Theme.of(context).colorScheme.surface.withOpacity(
-                        settingsProvider.plusEnableGlassmorphism ? 0.45 : 1.0,
+                        plusSettings.plusEnableGlassmorphism ? 0.45 : 1.0,
                       ),
                 border: Border.all(
                   color: widget.isSelected
@@ -142,7 +142,7 @@ class _AppGridTileState extends State<AppGridTile>
                       : widget.appInMemory.app.pinned
                       ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
                       : Theme.of(context).colorScheme.outline.withOpacity(
-                          settingsProvider.plusEnableGlassmorphism ? 0.1 : 0,
+                          plusSettings.plusEnableGlassmorphism ? 0.1 : 0,
                         ),
                   width:
                       widget.isSelected ||
@@ -163,7 +163,7 @@ class _AppGridTileState extends State<AppGridTile>
                 child: Stack(
                   children: [
                     // Glass sheen
-                    if (settingsProvider.plusEnableGlassmorphism)
+                    if (plusSettings.plusEnableGlassmorphism)
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -328,13 +328,13 @@ class _AppGridTileState extends State<AppGridTile>
                                     iconSize,
                                     iconBorderRadius,
                                     badgeSize,
-                                    settingsProvider,
+                                    plusSettings,
                                   )
                                 : _buildVerticalContent(
                                     iconSize,
                                     iconBorderRadius,
                                     badgeSize,
-                                    settingsProvider,
+                                    plusSettings,
                                   ),
                           ),
                         ),
@@ -354,14 +354,14 @@ class _AppGridTileState extends State<AppGridTile>
     double iconSize,
     double iconBorderRadius,
     double badgeSize,
-    SettingsProvider settingsProvider,
+    PlusSettingsProvider plusSettings,
   ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _buildIconStack(iconSize, iconBorderRadius, badgeSize),
         const SizedBox(height: 10),
-        _buildAppInfo(settingsProvider, TextAlign.center),
+        _buildAppInfo(plusSettings, TextAlign.center),
       ],
     );
   }
@@ -370,13 +370,13 @@ class _AppGridTileState extends State<AppGridTile>
     double iconSize,
     double iconBorderRadius,
     double badgeSize,
-    SettingsProvider settingsProvider,
+    PlusSettingsProvider plusSettings,
   ) {
     return Row(
       children: [
         _buildIconStack(iconSize, iconBorderRadius, badgeSize),
         const SizedBox(width: 20),
-        Expanded(child: _buildAppInfo(settingsProvider, TextAlign.start)),
+        Expanded(child: _buildAppInfo(plusSettings, TextAlign.start)),
         const Icon(Icons.chevron_right_rounded, opacity: 0.5),
       ],
     );
@@ -452,7 +452,7 @@ class _AppGridTileState extends State<AppGridTile>
     );
   }
 
-  Widget _buildAppInfo(SettingsProvider settingsProvider, TextAlign textAlign) {
+  Widget _buildAppInfo(PlusSettingsProvider plusSettings, TextAlign textAlign) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: textAlign == TextAlign.start
@@ -472,7 +472,7 @@ class _AppGridTileState extends State<AppGridTile>
             letterSpacing: -0.2,
           ),
         ),
-        if (settingsProvider.plusShowTagsInList &&
+        if (plusSettings.plusShowTagsInList &&
             widget.appInMemory.app.tags.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 6),

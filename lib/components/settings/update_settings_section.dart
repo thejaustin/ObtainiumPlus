@@ -279,10 +279,10 @@ class UpdateSettingsSection extends StatelessWidget {
   Widget _buildAdditionalUpdateSettings(BuildContext context) {
     return Consumer3<
       UpdateSettingsProvider,
-      SettingsProvider,
+      ViewSettingsProvider,
       PlusSettingsProvider
     >(
-      builder: (context, updateSettings, settings, plusSettings, child) {
+      builder: (context, updateSettings, viewSettings, plusSettings, child) {
         return Column(
           children: [
             if (_matches(tr('checkUpdateOnDetailPage')))
@@ -431,7 +431,7 @@ class UpdateSettingsSection extends StatelessWidget {
                       onTap: () => _showAutoUpdateRulesDialog(
                         context,
                         updateSettings,
-                        settings,
+                        viewSettings,
                       ),
                     ),
                   if (_matches(tr('usePlayStoreAppLinks')))
@@ -592,10 +592,10 @@ class UpdateSettingsSection extends StatelessWidget {
   void _showAutoUpdateRulesDialog(
     BuildContext context,
     UpdateSettingsProvider updateSettings,
-    SettingsProvider settings,
+    ViewSettingsProvider viewSettings,
   ) {
     final appsProvider = context.read<AppsProvider>();
-    final categories = settings.categories.keys.toList();
+    final categories = viewSettings.categories.keys.toList();
     final allTags = appsProvider
         .getAppValues()
         .expand((a) => a.app.tags)

@@ -191,7 +191,11 @@ void main() async {
         ChangeNotifierProvider(create: (context) => behaviorSettings),
         ChangeNotifierProvider(create: (context) => viewSettings),
         ChangeNotifierProvider(create: (context) => updateSettings),
-        ChangeNotifierProvider(create: (context) => TagProvider()),
+        ChangeNotifierProxyProvider<AppsProvider, TagProvider>(
+          create: (context) => TagProvider(context.read<AppsProvider>()),
+          update: (context, appsProvider, tagProvider) =>
+              TagProvider(appsProvider),
+        ),
         ChangeNotifierProvider(create: (context) => InstallerProvider()),
         ChangeNotifierProvider(create: (context) => SourceConfigProvider()),
         ChangeNotifierProvider(create: (context) => PluginProvider()),
@@ -332,15 +336,18 @@ class _ObtainiumState extends State<Obtainium> {
 
   @override
   Widget build(BuildContext context) {
-    SettingsProvider settingsProvider = context.watch<SettingsProvider>();
-    AppsProvider appsProvider = context.read<AppsProvider>();
-    LogsProvider logs = context.read<LogsProvider>();
-    NotificationsProvider notifs = context.read<NotificationsProvider>();
-    if (settingsProvider.updateInterval == 0) {
+    final settingsProvider = context.watch<SettingsProvider>();
+    final updateSettings = context.watch<UpdateSettingsProvider>();
+    final themeSettings = context.watch<ThemeSettingsProvider>();
+    final appsProvider = context.read<AppsProvider>();
+    final logs = context.read<LogsProvider>();
+    final notifs = context.read<NotificationsProvider>();
+
+    if (updateSettings.updateInterval == 0) {
       stopForegroundService();
       BackgroundFetch.stop();
     } else {
-      if (settingsProvider.useFGService) {
+      if (updateSettings.useFGService) {
         BackgroundFetch.stop();
         startForegroundService(false);
       } else {
@@ -348,6 +355,7 @@ class _ObtainiumState extends State<Obtainium> {
         BackgroundFetch.start();
       }
     }
+
     if (settingsProvider.prefs == null) {
       settingsProvider.initializeSettings();
     } else {
@@ -404,27 +412,27 @@ class _ObtainiumState extends State<Obtainium> {
           ColorScheme darkColorScheme;
           if (lightDynamic != null &&
               darkDynamic != null &&
-              settingsProvider.useMaterialYou) {
+              themeSettings.useMaterialYou) {
             lightColorScheme = lightDynamic.harmonized();
             darkColorScheme = darkDynamic.harmonized();
           } else {
             lightColorScheme = ColorScheme.fromSeed(
-              seedColor: settingsProvider.themeColor,
+              seedColor: themeSettings.themeColor,
             );
             darkColorScheme = ColorScheme.fromSeed(
-              seedColor: settingsProvider.themeColor,
+              seedColor: themeSettings.themeColor,
               brightness: Brightness.dark,
             );
           }
 
           // set the background and surface colors to pure black in the amoled theme
-          if (settingsProvider.useBlackTheme) {
+          if (themeSettings.useBlackTheme) {
             darkColorScheme = darkColorScheme
                 .copyWith(surface: Colors.black)
                 .harmonized();
           }
 
-          if (settingsProvider.useSystemFont) NativeFeatures.loadSystemFont();
+          if (themeSettings.useSystemFont) NativeFeatures.loadSystemFont();
 
           return MaterialApp(
             title: 'Obtainium',
@@ -435,19 +443,19 @@ class _ObtainiumState extends State<Obtainium> {
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               useMaterial3: true,
-              colorScheme: settingsProvider.theme == ThemeSettings.dark
+              colorScheme: themeSettings.theme == ThemeSettings.dark
                   ? darkColorScheme
                   : lightColorScheme,
-              fontFamily: settingsProvider.useSystemFont
+              fontFamily: themeSettings.useSystemFont
                   ? 'SystemFont'
                   : 'Montserrat',
             ),
             darkTheme: ThemeData(
               useMaterial3: true,
-              colorScheme: settingsProvider.theme == ThemeSettings.light
+              colorScheme: themeSettings.theme == ThemeSettings.light
                   ? lightColorScheme
                   : darkColorScheme,
-              fontFamily: settingsProvider.useSystemFont
+              fontFamily: themeSettings.useSystemFont
                   ? 'SystemFont'
                   : 'Montserrat',
             ),

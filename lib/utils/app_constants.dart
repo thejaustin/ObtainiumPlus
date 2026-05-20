@@ -115,6 +115,9 @@ class AppConstants {
     shareMoveId,
     pearityId,
   };
+
+  /// Supported app package file extensions
+  static const List<String> supportedPackageExtensions = ['.apk', '.xapk'];
 }
 
 /// Centralised opacity values used across the app.

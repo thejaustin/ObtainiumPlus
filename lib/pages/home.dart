@@ -276,8 +276,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    AppsProvider appsProvider = context.watch<AppsProvider>();
-    SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    final appsProvider = context.watch<AppsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     if (!prevIsLoading &&
         prevAppCount >= 0 &&
@@ -295,9 +296,9 @@ class _HomePageState extends State<HomePage> {
 
     final pageBody = PageTransitionSwitcher(
       duration: Duration(
-        milliseconds: settingsProvider.disablePageTransitions ? 0 : 300,
+        milliseconds: behaviorSettings.disablePageTransitions ? 0 : 300,
       ),
-      reverse: settingsProvider.reversePageTransitions
+      reverse: behaviorSettings.reversePageTransitions
           ? !isReversing
           : isReversing,
       transitionBuilder: (

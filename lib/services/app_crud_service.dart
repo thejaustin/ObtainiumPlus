@@ -35,11 +35,11 @@ class AppCRUDService {
   static Timer? _cleanupTimer;
 
   static void addMissingCategories({
-    required SettingsProvider settingsProvider,
+    required ViewSettingsProvider viewSettings,
     required Map<String, AppInMemory> apps,
     required dynamic appsProvider,
   }) {
-    var cats = settingsProvider.categories;
+    var cats = viewSettings.categories;
     apps.forEach((key, value) {
       for (var c in value.app.categories) {
         if (!cats.containsKey(c)) {
@@ -47,7 +47,7 @@ class AppCRUDService {
         }
       }
     });
-    settingsProvider.setCategories(cats, appsProvider: appsProvider);
+    viewSettings.setCategories(cats, appsProvider: appsProvider);
   }
 
   static Future<void> saveApps({

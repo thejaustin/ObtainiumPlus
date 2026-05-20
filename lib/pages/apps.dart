@@ -1,3 +1,8 @@
+import 'package:obtainium/components/apps/tag_filter_bar.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -139,6 +144,7 @@ class AppsPageState extends State<AppsPage> {
     includeNonInstalled: false,
   );
   Set<String> selectedAppIds = {};
+  String? activeTag;
   DateTime? refreshingSince;
 
   bool clearSelected() {
@@ -170,9 +176,13 @@ class AppsPageState extends State<AppsPage> {
 
   @override
   Widget build(BuildContext context) {
-    var appsProvider = context.watch<AppsProvider>();
-    var settingsProvider = context.watch<SettingsProvider>();
-    var listedApps = appsProvider.getAppValues().toList();
+    final appsProvider = context.watch<AppsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final updateSettings = context.watch<UpdateSettingsProvider>();
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final listedAppsAll = appsProvider.getAppValues().toList();
+    var listedApps = List<AppInMemory>.from(listedAppsAll);
 
     refresh() {
       AppHaptics.lightImpact();
@@ -195,7 +205,7 @@ class AppsPageState extends State<AppsPage> {
     if (!appsProvider.loadingApps &&
         appsProvider.apps.isNotEmpty &&
         settingsProvider.checkJustStarted() &&
-        settingsProvider.checkOnStart) {
+        updateSettings.checkOnStart) {
       _refreshIndicatorKey.currentState?.show();
     }
 
@@ -247,6 +257,9 @@ class AppsPageState extends State<AppsPage> {
           return false;
         }
       }
+      if (activeTag != null && !app.app.tags.contains(activeTag)) {
+        return false;
+      }
       if (filter.categoryFilter.isNotEmpty &&
           filter.categoryFilter
               .intersection(app.app.categories.toSet())
@@ -267,23 +280,24 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
+    final viewSettings = context.watch<ViewSettingsProvider>();
     listedApps.sort((a, b) {
       int result = 0;
-      if (settingsProvider.sortColumn == SortColumnSettings.authorName) {
+      if (viewSettings.sortColumn == SortColumnSettings.authorName) {
         result = ((a.author + a.name).toLowerCase()).compareTo(
           (b.author + b.name).toLowerCase(),
         );
-      } else if (settingsProvider.sortColumn == SortColumnSettings.nameAuthor) {
+      } else if (viewSettings.sortColumn == SortColumnSettings.nameAuthor) {
         result = ((a.name + a.author).toLowerCase()).compareTo(
           (b.name + b.author).toLowerCase(),
         );
-      } else if (settingsProvider.sortColumn ==
+      } else if (viewSettings.sortColumn ==
           SortColumnSettings.releaseDate) {
         // Handle null dates: apps with unknown release dates are grouped at the end
         final aDate = a.app.releaseDate;
         final bDate = b.app.releaseDate;
         final isDescending =
-            settingsProvider.sortOrder == SortOrderSettings.descending;
+            viewSettings.sortOrder == SortOrderSettings.descending;
         if (aDate == null && bDate == null) {
           // Both null: sort by name for consistency
           result = ((a.name + a.author).toLowerCase()).compareTo(
@@ -302,7 +316,7 @@ class AppsPageState extends State<AppsPage> {
       return result;
     });
 
-    if (settingsProvider.sortOrder == SortOrderSettings.descending) {
+    if (viewSettings.sortOrder == SortOrderSettings.descending) {
       listedApps = listedApps.reversed.toList();
     }
 
@@ -340,7 +354,7 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
-    if (settingsProvider.pinUpdates) {
+    if (viewSettings.pinUpdates) {
       var temp = [];
       listedApps = listedApps.where((sa) {
         if (existingUpdates.contains(sa.app.id)) {
@@ -352,7 +366,7 @@ class AppsPageState extends State<AppsPage> {
       listedApps = [...temp, ...listedApps];
     }
 
-    if (settingsProvider.buryNonInstalled) {
+    if (viewSettings.buryNonInstalled) {
       var temp = [];
       listedApps = listedApps.where((sa) {
         if (sa.app.installedVersion == null) {
@@ -596,7 +610,7 @@ class AppsPageState extends State<AppsPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 color:
-                    settingsProvider.highlightTouchTargets &&
+                    behaviorSettings.highlightTouchTargets &&
                         showChangesFn != null
                     ? (Theme.of(context).brightness == Brightness.light
                               ? Theme.of(context).primaryColor
@@ -608,7 +622,7 @@ class AppsPageState extends State<AppsPage> {
                           )
                     : null,
               ),
-              padding: settingsProvider.highlightTouchTargets
+              padding: behaviorSettings.highlightTouchTargets
                   ? const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 0)
                   : const EdgeInsetsDirectional.fromSTEB(24, 0, 0, 0),
               child: Column(
@@ -677,7 +691,7 @@ class AppsPageState extends State<AppsPage> {
             colors: [
               ...listedApps[index].app.categories.map(
                 (e) => Color(
-                  settingsProvider.categories[e] ?? transparent,
+                  viewSettings.categories[e] ?? transparent,
                 ).withOpacity(1),
               ),
               Color(transparent),
@@ -1337,7 +1351,7 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getDisplayedList() {
-      return settingsProvider.groupByCategory &&
+      return viewSettings.groupByCategory &&
               !(listedCategories.isEmpty ||
                   (listedCategories.length == 1 && listedCategories[0] == null))
           ? SliverList(
@@ -1373,6 +1387,16 @@ class AppsPageState extends State<AppsPage> {
             controller: scrollController,
             slivers: <Widget>[
               CustomAppBar(title: tr('appsString')),
+              if (plusSettings.plusEnableTags)
+                TagFilterBar(
+                  activeTag: activeTag,
+                  onTagSelected: (tag) {
+                    AppHaptics.selectionClick();
+                    setState(() {
+                      activeTag = tag;
+                    });
+                  },
+                ),
               ...getLoadingWidgets(),
               getDisplayedList(),
             ],
