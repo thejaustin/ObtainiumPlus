@@ -137,6 +137,11 @@ jobs:
             has_secrets=false
           fi
           echo "has_secrets=$has_secrets" >> $GITHUB_OUTPUT
+          has_sentry=true
+          if [ -z "${{ secrets.SENTRY_AUTH_TOKEN }}" ]; then
+            has_sentry=false
+          fi
+          echo "has_sentry_token=$has_sentry" >> $GITHUB_OUTPUT
 
       - name: Setup Keystore
         if: steps.check_secrets.outputs.has_secrets == 'true'
@@ -165,11 +170,11 @@ jobs:
           key: ${{ runner.os }}-sentry-cli
 
       - name: Install Sentry CLI
-        if: steps.cache-sentry.outputs.cache-hit != 'true' && secrets.SENTRY_AUTH_TOKEN != ''
+        if: steps.cache-sentry.outputs.cache-hit != 'true' && steps.check_secrets.outputs.has_sentry_token == 'true'
         run: curl -sL https://sentry.io/get-cli/ | bash
 
       - name: Upload Sentry Debug Symbols
-        if: secrets.SENTRY_AUTH_TOKEN != ''
+        if: steps.check_secrets.outputs.has_sentry_token == 'true'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
