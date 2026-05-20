@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/tag_editor.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -275,10 +276,13 @@ Widget buildRepoRenameWarning({
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
     var plusSettings = context.watch<PlusSettingsProvider>();
+    var viewSettings = context.watch<ViewSettingsProvider>();
+    var updateSettings = context.watch<UpdateSettingsProvider>();
+    var behaviorSettings = context.watch<BehaviorSettingsProvider>();
     var showAppWebpageFinal =
-        (settingsProvider.showAppWebpage &&
+        (viewSettings.showAppWebpage &&
             !widget.showOppositeOfPreferredView) ||
-        (!settingsProvider.showAppWebpage &&
+        (!viewSettings.showAppWebpage &&
             widget.showOppositeOfPreferredView);
     getUpdate(String id, {bool resetVersion = false}) async {
       try {
@@ -321,7 +325,7 @@ Widget buildRepoRenameWarning({
     if (!areDownloadsRunning &&
         prevApp == null &&
         app != null &&
-        settingsProvider.checkUpdateOnDetailPage) {
+        updateSettings.checkUpdateOnDetailPage) {
       prevApp = app;
       getUpdate(app.app.id);
     }
@@ -450,7 +454,7 @@ Widget buildRepoRenameWarning({
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      color: settingsProvider.highlightTouchTargets
+                      color: behaviorSettings.highlightTouchTargets
                           ? (Theme.of(context).brightness == Brightness.light
                                     ? Theme.of(context).primaryColor
                                     : Theme.of(context).primaryColorLight)
@@ -462,7 +466,7 @@ Widget buildRepoRenameWarning({
                                 )
                           : null,
                     ),
-                    padding: settingsProvider.highlightTouchTargets
+                    padding: behaviorSettings.highlightTouchTargets
                         ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
                         : const EdgeInsetsDirectional.fromSTEB(0, 2, 0, 2),
                     margin: const EdgeInsetsDirectional.fromSTEB(0, 2, 0, 0),
@@ -534,6 +538,36 @@ Widget buildRepoRenameWarning({
               }
             },
           ),
+          if (plusSettings.plusEnableTags) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                ...app?.app.tags.map((tag) => Chip(label: Text(tag))).toList() ??
+                    [],
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 18),
+                  label: Text(tr('editTags')),
+                  onPressed: () async {
+                    final allTags = getAllTagsFromApps(
+                      appsProvider.apps.entries.toList(),
+                    );
+                    final result = await showTagEditor(
+                      context: context,
+                      currentTags: app?.app.tags ?? [],
+                      allTags: allTags,
+                    );
+                    if (result != null && app != null) {
+                      app.app.tags = result;
+                      appsProvider.saveApps([app.app]);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ],
           if (app?.app.additionalSettings['about'] is String &&
               app?.app.additionalSettings['about'].isNotEmpty)
             Column(
@@ -626,7 +660,7 @@ Widget buildRepoRenameWarning({
               ? Theme.of(context).textTheme.headlineSmall
               : Theme.of(context).textTheme.headlineMedium,
         ),
-        SizedBox(height: settingsProvider.highlightTouchTargets ? 2 : 8),
+        SizedBox(height: behaviorSettings.highlightTouchTargets ? 2 : 8),
         InkWell(
           onTap: () {
             if (app?.app.url != null) {
@@ -648,7 +682,7 @@ Widget buildRepoRenameWarning({
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: settingsProvider.highlightTouchTargets
+                  color: behaviorSettings.highlightTouchTargets
                       ? (Theme.of(context).brightness == Brightness.light
                                 ? Theme.of(context).primaryColor
                                 : Theme.of(context).primaryColorLight)
@@ -659,7 +693,7 @@ Widget buildRepoRenameWarning({
                             )
                       : null,
                 ),
-                padding: settingsProvider.highlightTouchTargets
+                padding: behaviorSettings.highlightTouchTargets
                     ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
                     : const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
                 margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
@@ -681,7 +715,7 @@ Widget buildRepoRenameWarning({
           style: Theme.of(context).textTheme.labelSmall,
         ),
         getInfoColumn(),
-        const SizedBox(height: 85),
+        SizedBox(height: 85 + MediaQuery.paddingOf(context).bottom),
       ],
     );
 
@@ -1018,7 +1052,14 @@ Widget buildRepoRenameWarning({
           : Theme.of(context).colorScheme.surface,
       body: RefreshIndicator(
         child: showAppWebpageFinal
-            ? getAppWebView()
+            ? PopScope(
+                canPop: false,
+                onPopInvoked: (didPop) {
+                  if (didPop) return;
+                  Navigator.of(context).pop();
+                },
+                child: getAppWebView(),
+              )
             : CustomScrollView(
                 controller: widget.scrollController,
                 physics: widget.isModal

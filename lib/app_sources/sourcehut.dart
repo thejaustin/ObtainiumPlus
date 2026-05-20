@@ -39,6 +39,19 @@ class SourceHut extends AppSource {
   String? changeLogPageFromStandardUrl(String standardUrl) => standardUrl;
 
   @override
+  Future<Map<String, String>?> getRequestHeaders(
+    Map<String, dynamic> additionalSettings,
+    String url, {
+    bool forAPKDownload = false,
+  }) async {
+    // Mimic a mobile browser to ensure SourceHut returns .apk links instead of .nar.lz
+    return {
+      'User-Agent':
+          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    };
+  }
+
+  @override
   Future<APKDetails> getLatestAPKDetails(
     String standardUrl,
     Map<String, dynamic> additionalSettings,

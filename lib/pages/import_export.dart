@@ -35,6 +35,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     SourceProvider sourceProvider = SourceProvider();
     var appsProvider = context.watch<AppsProvider>();
     var settingsProvider = context.watch<SettingsProvider>();
+    var behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     var outlineButtonStyle = ButtonStyle(
       shape: WidgetStateProperty.all(
@@ -127,8 +128,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
       appsProvider
           .export(
             pickOnly:
-                pickOnly || (await settingsProvider.getExportDir()) == null,
-            sp: settingsProvider,
+                pickOnly || (await behaviorSettings.getExportDir()) == null,
+            bsp: behaviorSettings,
           )
           .then((String? result) {
             if (result != null) {
@@ -155,15 +156,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 throw ObtainiumError(tr('invalidInput'));
               }
               appsProvider.import(data).then((value) {
-                var cats = settingsProvider.categories;
-                appsProvider.apps.forEach((key, value) {
-                  for (var c in value.app.categories) {
-                    if (!cats.containsKey(c)) {
-                      cats[c] = generateRandomLightColor().value;
-                    }
-                  }
-                });
-                appsProvider.addMissingCategories(settingsProvider);
+                appsProvider.addMissingCategories(context.read());
                 showMessage(
                   '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
                   context,
@@ -389,9 +382,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (!settingsProvider.isTV)
-                    FutureBuilder(
-                      future: settingsProvider.getExportDir(),
+                  FutureBuilder(
+                    future: behaviorSettings.getExportDir(),
                       builder: (context, snapshot) {
                         return Column(
                           children: [
@@ -455,7 +447,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                         GeneratedFormSwitch(
                                           'autoExportOnChanges',
                                           label: tr('autoExportOnChanges'),
-                                          defaultValue: settingsProvider
+                                          defaultValue: behaviorSettings
                                               .autoExportOnChanges,
                                         ),
                                       ],
@@ -468,7 +460,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                             MapEntry('2', tr('all')),
                                           ],
                                           label: tr('includeSettings'),
-                                          defaultValue: settingsProvider
+                                          defaultValue: behaviorSettings
                                               .exportSettings
                                               .toString(),
                                         ),
@@ -478,12 +470,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                       if (valid && !isBuilding) {
                                         if (value['autoExportOnChanges'] !=
                                             null) {
-                                          settingsProvider.autoExportOnChanges =
+                                          behaviorSettings.autoExportOnChanges =
                                               value['autoExportOnChanges'] ==
                                               true;
                                         }
                                         if (value['exportSettings'] != null) {
-                                          settingsProvider.exportSettings =
+                                          behaviorSettings.exportSettings =
                                               int.parse(
                                                 value['exportSettings'],
                                               );
@@ -565,11 +557,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                           child: Text(tr('importFromURLList')),
                         ),
                         const SizedBox(height: 8),
-                        if (!settingsProvider.isTV)
-                          TextButton(
-                            onPressed: importInProgress ? null : runUrlImport,
-                            child: Text(tr('importFromURLsInFile')),
-                          ),
+                        TextButton(
+                          onPressed: importInProgress ? null : runUrlImport,
+                          child: Text(tr('importFromURLsInFile')),
+                        ),
                       ],
                     ),
                   ...sourceProvider.massUrlSources.map(

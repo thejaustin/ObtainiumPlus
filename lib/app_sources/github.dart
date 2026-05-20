@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:obtainium/utils/source_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -612,11 +613,11 @@ class GitHub extends AppSource {
             .map((e) => e['final_url'] as MapEntry<String, String>)
             .toList();
         var apkAssetsWithUrls = allAssetsWithUrls.where((element) {
-          var ext = (element['final_url'] as MapEntry<String, String>).key
-              .toLowerCase()
-              .split('.')
-              .last;
-          return ext == 'apk' || ext == 'xapk' || (includeZips && ext == 'zip');
+          final urlEntry = element['final_url'] as MapEntry<String, String>;
+          final fileName = urlEntry.key;
+          final isPackage = SourceUtils.isSupportedPackageFile(fileName);
+          final isZip = includeZips && fileName.toLowerCase().endsWith('.zip');
+          return isPackage || isZip;
         }).toList();
 
         var filteredApkUrls = filterApks(

@@ -542,6 +542,11 @@ class AppsProvider with ChangeNotifier {
   late Directory APKDir;
   late Directory iconsCacheDir;
   late SettingsProvider settingsProvider = SettingsProvider();
+  late ThemeSettingsProvider themeSettings = ThemeSettingsProvider();
+  late UpdateSettingsProvider updateSettings = UpdateSettingsProvider();
+  late BehaviorSettingsProvider behaviorSettings = BehaviorSettingsProvider();
+  late ViewSettingsProvider viewSettings = ViewSettingsProvider();
+  late PlusSettingsProvider plusSettings = PlusSettingsProvider();
 
   Iterable<AppInMemory> getAppValues() => apps.values.map((a) => a.deepCopy());
 
@@ -555,7 +560,14 @@ class AppsProvider with ChangeNotifier {
       }
     });
     () async {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       await settingsProvider.initializeSettings();
+      await themeSettings.initializeSettings(prefs);
+      await updateSettings.initializeSettings(prefs);
+      await behaviorSettings.initializeSettings(prefs);
+      await viewSettings.initializeSettings(prefs);
+      await plusSettings.initializeSettings(prefs);
+
       var cacheDirs = await getExternalCacheDirectories();
       if (cacheDirs?.isNotEmpty ?? false) {
         APKDir = cacheDirs!.first;
@@ -811,7 +823,7 @@ class AppsProvider with ChangeNotifier {
       .isNotEmpty;
 
   Future<bool> canInstallSilently(App app) async {
-    if (!settingsProvider.enableBackgroundUpdates) {
+    if (!updateSettings.enableBackgroundUpdates) {
       return false;
     }
     if (app.additionalSettings['exemptFromBackgroundUpdates'] == true) {
@@ -851,7 +863,7 @@ class AppsProvider with ChangeNotifier {
       return false;
     }
 
-    if (settingsProvider.useShizuku) {
+    if (behaviorSettings.useShizuku) {
       return true;
     }
 
@@ -963,7 +975,7 @@ class AppsProvider with ChangeNotifier {
     List<DownloadedApk> additionalAPKs = const [],
   }) async {
     if (firstTimeWithContext != null &&
-        settingsProvider.beforeNewInstallsShareToAppVerifier &&
+        behaviorSettings.beforeNewInstallsShareToAppVerifier &&
         (await getInstalledInfo('dev.soupslurpr.appverifier')) != null) {
       XFile f = XFile.fromData(
         file.file.readAsBytesSync(),
@@ -1012,7 +1024,7 @@ class AppsProvider with ChangeNotifier {
       ], attemptToCorrectInstallStatus: false);
     }
     int? code;
-    if (!settingsProvider.useShizuku) {
+    if (!behaviorSettings.useShizuku) {
       var allAPKs = [file.file.path];
       allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
       code = await AndroidPackageInstaller.installApk(
@@ -1226,9 +1238,9 @@ class AppsProvider with ChangeNotifier {
             ? context
             : null;
         bool needBGWorkaround =
-            willBeSilent && context == null && !settingsProvider.useShizuku;
+            willBeSilent && context == null && !behaviorSettings.useShizuku;
         bool shizukuPretendToBeGooglePlay =
-            settingsProvider.shizukuPretendToBeGooglePlay ||
+            behaviorSettings.shizukuPretendToBeGooglePlay ||
             apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] ==
                 true;
         if (downloadedFile != null) {
@@ -1266,7 +1278,7 @@ class AppsProvider with ChangeNotifier {
           }
         }
         if (willBeSilent && context == null) {
-          if (!settingsProvider.useShizuku) {
+          if (!behaviorSettings.useShizuku) {
             notificationsProvider?.notify(
               SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
             );
@@ -1314,8 +1326,8 @@ class AppsProvider with ChangeNotifier {
         }
         id = downloadedFile?.appId ?? downloadedDir!.appId;
         willBeSilent = await canInstallSilently(apps[id]!.app);
-        if (!settingsProvider.useShizuku) {
-          if (!(await settingsProvider.getInstallPermission(enforce: false))) {
+        if (!behaviorSettings.useShizuku) {
+          if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
             throw ObtainiumError(tr('cancelled'));
           }
         } else {
@@ -1330,7 +1342,7 @@ class AppsProvider with ChangeNotifier {
               throw ObtainiumError(tr('cancelled'));
           }
         }
-        if (!willBeSilent && context != null && !settingsProvider.useShizuku) {
+        if (!willBeSilent && context != null && !behaviorSettings.useShizuku) {
           // ignore: use_build_context_synchronously
           await waitForUserToReturnToForeground(context);
         }
@@ -1346,7 +1358,7 @@ class AppsProvider with ChangeNotifier {
     }
 
     List<Map<Object?, Object?>> downloadResults = [];
-    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
+    if (forceParallelDownloads || !behaviorSettings.parallelDownloads) {
       for (var id in appsToInstall) {
         downloadResults.add(await downloadFn(id));
       }
@@ -1475,7 +1487,7 @@ class AppsProvider with ChangeNotifier {
       }
     }
 
-    if (forceParallelDownloads || !settingsProvider.parallelDownloads) {
+    if (forceParallelDownloads || !behaviorSettings.parallelDownloads) {
       for (var urlWithApp in filesToDownload) {
         await downloadFn(urlWithApp.key, urlWithApp.value);
       }
@@ -1762,7 +1774,7 @@ class AppsProvider with ChangeNotifier {
     // Delete externally uninstalled Apps if needed
     if (removedAppIds.isNotEmpty) {
       if (removedAppIds.isNotEmpty) {
-        if (settingsProvider.removeOnExternalUninstall) {
+        if (behaviorSettings.removeOnExternalUninstall) {
           await removeApps(removedAppIds);
         }
       }
@@ -1932,8 +1944,8 @@ class AppsProvider with ChangeNotifier {
     await intent.launch();
   }
 
-  void addMissingCategories(SettingsProvider settingsProvider) {
-    var cats = settingsProvider.categories;
+  void addMissingCategories(ViewSettingsProvider viewSettings) {
+    var cats = viewSettings.categories;
     apps.forEach((key, value) {
       for (var c in value.app.categories) {
         if (!cats.containsKey(c)) {
@@ -1941,7 +1953,7 @@ class AppsProvider with ChangeNotifier {
         }
       }
     });
-    settingsProvider.setCategories(cats, appsProvider: this);
+    viewSettings.setCategories(cats, appsProvider: this);
   }
 
   Future<App?> checkUpdate(String appId) async {
@@ -2004,9 +2016,9 @@ class AppsProvider with ChangeNotifier {
     DateTime? ignoreAppsCheckedAfter,
     bool throwErrorsForRetry = false,
     List<String>? specificIds,
-    SettingsProvider? sp,
+    UpdateSettingsProvider? usp,
   }) async {
-    SettingsProvider settingsProvider = sp ?? this.settingsProvider;
+    UpdateSettingsProvider updateSettings = usp ?? this.updateSettings;
     List<App> updates = [];
     MultiAppMultiError errors = MultiAppMultiError();
     if (!gettingUpdates) {
@@ -2015,7 +2027,7 @@ class AppsProvider with ChangeNotifier {
         List<String> appIds = getAppsSortedByUpdateCheckTime(
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
           onlyCheckInstalledOrTrackOnlyApps:
-              settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
+              updateSettings.onlyCheckInstalledOrTrackOnlyApps,
         );
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
@@ -2091,7 +2103,7 @@ class AppsProvider with ChangeNotifier {
         })
         .map((e) => e.app.toJson())
         .toList();
-    int shouldExportSettings = settingsProvider.exportSettings;
+    int shouldExportSettings = behaviorSettings.exportSettings;
     if (overrideExportSettings != null) {
       shouldExportSettings = overrideExportSettings;
     }
@@ -2113,12 +2125,12 @@ class AppsProvider with ChangeNotifier {
   Future<String?> export({
     bool pickOnly = false,
     isAuto = false,
-    SettingsProvider? sp,
+    BehaviorSettingsProvider? bsp,
   }) async {
-    SettingsProvider settingsProvider = sp ?? this.settingsProvider;
-    var exportDir = await settingsProvider.getExportDir();
+    BehaviorSettingsProvider behaviorSettings = bsp ?? this.behaviorSettings;
+    var exportDir = await behaviorSettings.getExportDir();
     if (isAuto) {
-      if (settingsProvider.autoExportOnChanges != true) {
+      if (behaviorSettings.autoExportOnChanges != true) {
         return null;
       }
       if (exportDir == null) {
@@ -2135,8 +2147,8 @@ class AppsProvider with ChangeNotifier {
       }
     }
     if (exportDir == null || pickOnly) {
-      await settingsProvider.pickExportDir();
-      exportDir = await settingsProvider.getExportDir();
+      await behaviorSettings.pickExportDir();
+      exportDir = await behaviorSettings.getExportDir();
     }
     if (exportDir == null) {
       return null;
@@ -2414,7 +2426,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
   bool firstEverUpdateTask =
       DateTime.fromMillisecondsSinceEpoch(
         0,
-      ).compareTo(appsProvider.settingsProvider.lastCompletedBGCheckTime) ==
+      ).compareTo(appsProvider.updateSettings.lastCompletedBGCheckTime) ==
       0;
 
   List<MapEntry<String, int>> toCheck = <MapEntry<String, int>>[
@@ -2431,10 +2443,10 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
               ignoreAppsCheckedAfter: params['toCheck'] == null
                   ? firstEverUpdateTask
                         ? null
-                        : appsProvider.settingsProvider.lastCompletedBGCheckTime
+                        : appsProvider.updateSettings.lastCompletedBGCheckTime
                   : null,
               onlyCheckInstalledOrTrackOnlyApps: appsProvider
-                  .settingsProvider
+                  .updateSettings
                   .onlyCheckInstalledOrTrackOnlyApps,
             )
             .map((e) => MapEntry(e, 0))),
@@ -2452,12 +2464,12 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
   ];
 
   var networkRestricted =
-      appsProvider.settingsProvider.bgUpdatesOnWiFiOnly &&
+      appsProvider.updateSettings.bgUpdatesOnWiFiOnly &&
       !netResult.contains(ConnectivityResult.wifi) &&
       !netResult.contains(ConnectivityResult.ethernet);
 
   var chargingRestricted =
-      appsProvider.settingsProvider.bgUpdatesWhileChargingOnly &&
+      appsProvider.updateSettings.bgUpdatesWhileChargingOnly &&
       (await Battery().batteryState) != BatteryState.charging;
 
   if (networkRestricted) {
@@ -2478,16 +2490,16 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
     // Then we run the function again in install mode (toCheck is empty)
 
     var enoughTimePassed =
-        appsProvider.settingsProvider.updateInterval != 0 &&
-        appsProvider.settingsProvider.lastCompletedBGCheckTime
+        appsProvider.updateSettings.updateInterval != 0 &&
+        appsProvider.updateSettings.lastCompletedBGCheckTime
             .add(
-              Duration(minutes: appsProvider.settingsProvider.updateInterval),
+              Duration(minutes: appsProvider.updateSettings.updateInterval),
             )
             .isBefore(DateTime.now());
     if (!enoughTimePassed) {
       // ignore: avoid_print
       print(
-        'BG update task: Too early for another check (last check was ${appsProvider.settingsProvider.lastCompletedBGCheckTime.toIso8601String()}, interval is ${appsProvider.settingsProvider.updateInterval}).',
+        'BG update task: Too early for another check (last check was ${appsProvider.updateSettings.lastCompletedBGCheckTime.toIso8601String()}, interval is ${appsProvider.updateSettings.updateInterval}).',
       );
       return;
     }
@@ -2514,7 +2526,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
       notificationsProvider.notify(notif, cancelExisting: true);
       updates = await appsProvider.checkUpdates(
         specificIds: toCheck.map((e) => e.key).toList(),
-        sp: appsProvider.settingsProvider,
+        usp: appsProvider.updateSettings,
       );
     } catch (e) {
       if (e is Map) {
@@ -2660,5 +2672,5 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
       logs.add('BG install task: Done installing updates.');
     }
   }
-  appsProvider.settingsProvider.lastCompletedBGCheckTime = DateTime.now();
+  appsProvider.updateSettings.lastCompletedBGCheckTime = DateTime.now();
 }

@@ -43,7 +43,8 @@ class AppListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appsProvider = context.read<AppsProvider>();
-    final settingsProvider = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
     final isSelected = context.select<AppsProvider, bool>(
       (p) => p.selectedAppIds.contains(appInMemory.app.id),
     );
@@ -87,9 +88,9 @@ class AppListTile extends StatelessWidget {
 
     Widget getAppIcon() {
       final itemRadius =
-          (settingsProvider.plusOverrideIndividualCornerRadius
-              ? settingsProvider.plusHomeCornerRadius
-              : settingsProvider.plusGlobalCornerRadius) *
+          (plusSettings.plusOverrideIndividualCornerRadius
+              ? plusSettings.plusHomeCornerRadius
+              : plusSettings.plusGlobalCornerRadius) *
           0.5;
 
       return Hero(
@@ -119,15 +120,15 @@ class AppListTile extends StatelessWidget {
     final Color? displayCategoryColor =
         categoryColor ??
         (appInMemory.app.categories.isNotEmpty &&
-                settingsProvider.viewSettings.categoryIconPosition !=
+                viewSettings.categoryIconPosition !=
                     CategoryIconPosition.disabled
-            ? settingsProvider.viewSettings.categories[appInMemory
+            ? viewSettings.categories[appInMemory
                           .app
                           .categories
                           .first] !=
                       null
                   ? Color(
-                      settingsProvider.viewSettings.categories[appInMemory
+                      viewSettings.categories[appInMemory
                           .app
                           .categories
                           .first]!,
@@ -136,10 +137,10 @@ class AppListTile extends StatelessWidget {
             : null);
 
     final isCompact =
-        settingsProvider.viewSettings.appListDensity == AppListDensity.compact;
-    final radius = settingsProvider.plusOverrideIndividualCornerRadius
-        ? settingsProvider.plusHomeCornerRadius
-        : settingsProvider.plusGlobalCornerRadius;
+        viewSettings.appListDensity == AppListDensity.compact;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
 
     final trailingRow = Row(
       mainAxisSize: MainAxisSize.min,
@@ -244,7 +245,7 @@ class AppListTile extends StatelessWidget {
     return RepaintBoundary(
       child: Semantics(
         label:
-            '${appInMemory.name}${settingsProvider.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
+            '${appInMemory.name}${viewSettings.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
         button: true,
         onTap: onTap,
         onLongPress: onLongPress,
@@ -254,7 +255,7 @@ class AppListTile extends StatelessWidget {
             vertical: isCompact ? 2 : 6,
           ),
           child: ConditionalBlur(
-            enabled: settingsProvider.plusEnableGlassmorphism,
+            enabled: plusSettings.plusEnableGlassmorphism,
             sigma: 12,
             child: Material(
               color: Colors.transparent,
@@ -264,7 +265,7 @@ class AppListTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(radius),
                 child: AnimatedContainer(
                   duration: Duration(
-                    milliseconds: settingsProvider.plusEnableEnhancedAnimations
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
                         ? 250
                         : 0,
                   ),
@@ -282,7 +283,7 @@ class AppListTile extends StatelessWidget {
                         ? Theme.of(context).colorScheme.surfaceContainerHighest
                               .withOpacity(AppOpacity.moderate)
                         : Theme.of(context).colorScheme.surface.withOpacity(
-                            settingsProvider.plusEnableGlassmorphism
+                            plusSettings.plusEnableGlassmorphism
                                 ? 0.45
                                 : 1.0,
                           ),
@@ -296,7 +297,7 @@ class AppListTile extends StatelessWidget {
                           : appInMemory.app.pinned
                           ? Theme.of(context).colorScheme.outlineVariant
                           : Theme.of(context).colorScheme.outline.withOpacity(
-                              settingsProvider.plusEnableGlassmorphism
+                              plusSettings.plusEnableGlassmorphism
                                   ? 0.1
                                   : 0,
                             ),
@@ -323,7 +324,7 @@ class AppListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius),
                     child: Stack(
                       children: [
-                        if (settingsProvider.plusEnableGlassmorphism)
+                        if (plusSettings.plusEnableGlassmorphism)
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
@@ -390,7 +391,7 @@ class AppListTile extends StatelessWidget {
                           ),
                           subtitle: Row(
                             children: [
-                              if (settingsProvider.plusShowTagsInList &&
+                              if (plusSettings.plusShowTagsInList &&
                                   appInMemory.app.tags.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8),
@@ -430,7 +431,7 @@ class AppListTile extends StatelessWidget {
                                         .toList(),
                                   ),
                                 ),
-                              if (settingsProvider.displayShowAuthor)
+                              if (viewSettings.displayShowAuthor)
                                 Expanded(
                                   child: Text(
                                     appInMemory.author,
@@ -446,7 +447,7 @@ class AppListTile extends StatelessWidget {
                                         ),
                                   ),
                                 ),
-                              if (settingsProvider.displayShowVersion &&
+                              if (viewSettings.displayShowVersion &&
                                   !isCompact)
                                 Text(
                                   ' • ${getVersionText()}',

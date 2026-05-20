@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/source_utils.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -196,12 +197,8 @@ class GitLab extends AppSource {
           .where(
             (s) =>
                 s.key.isNotEmpty &&
-                (s.key.toLowerCase().endsWith('.apk') ||
-                    s.key.toLowerCase().endsWith('.xapk') ||
-                    s.value.toLowerCase().endsWith('.apk') ||
-                    s.value.toLowerCase().endsWith(
-                      '.xapk',
-                    )), // TODO: Supported file types should be centralized somewhere and shared between sources
+                (SourceUtils.isSupportedPackageFile(s.key) ||
+                    SourceUtils.isSupportedPackageFile(s.value)),
           )
           .toList();
       var uploadedAPKsFromDescription = ((e['description'] ?? '') as String)
@@ -215,10 +212,7 @@ class GitLab extends AppSource {
           .where(
             (s) =>
                 s.startsWith('/uploads/') &&
-                (s.endsWith('apk') ||
-                    s.endsWith(
-                      'xapk',
-                    )), // TODO: Supported file types should be centralized somewhere and shared between sources
+                SourceUtils.isSupportedPackageFile(s),
           )
           .map((s) => 'https://${hosts[0]}/-/project/$projectId$s')
           .map((l) => MapEntry(Uri.parse(l).pathSegments.last, l))

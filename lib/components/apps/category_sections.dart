@@ -49,9 +49,7 @@ class CategorySections extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
-    final plusEnableCategoryReorder = context.select<SettingsProvider, bool>(
-      (sp) => sp.plusEnableCategoryReorder,
-    );
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final isGridView = viewSettings.globalViewMode == ViewMode.grid;
 
     if (isGridView) {
@@ -60,7 +58,7 @@ class CategorySections extends StatelessWidget {
           return _buildCategoryGridSection(context, index, viewSettings);
         }, childCount: listedCategories.length),
       );
-    } else if (plusEnableCategoryReorder) {
+    } else if (plusSettings.plusEnableCategoryReorder) {
       // Enable drag-to-reorder when Plus Feature is enabled
       return SliverReorderableList(
         itemBuilder: (BuildContext context, int index) {

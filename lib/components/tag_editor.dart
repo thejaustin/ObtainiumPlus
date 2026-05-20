@@ -4,7 +4,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
@@ -14,8 +14,8 @@ Future<List<String>?> showTagEditor({
   required List<String> currentTags,
   required List<String> allTags,
 }) async {
-  final settings = context.read<SettingsProvider>();
-  final enableGlass = settings.plusEnableGlassmorphism;
+  final plusSettings = context.read<PlusSettingsProvider>();
+  final enableGlass = plusSettings.plusEnableGlassmorphism;
 
   final selectedTags = Set<String>.from(currentTags);
   final TextEditingController _controller = TextEditingController();
@@ -261,10 +261,10 @@ Widget _buildActions(BuildContext context, List<String> selectedTags) {
 }
 
 /// Get all unique tags from a list of apps
-List<String> getAllTagsFromApps(List<MapEntry<String, dynamic>> apps) {
+List<String> getAllTagsFromApps(List<MapEntry<String, AppInMemory>> apps) {
   final tags = <String>{};
   for (final app in apps) {
-    final appTags = app.value.tags;
+    final appTags = app.value.app.tags;
     if (appTags != null) {
       tags.addAll(appTags);
     }

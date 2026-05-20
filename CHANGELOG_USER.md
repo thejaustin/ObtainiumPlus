@@ -1,5 +1,10 @@
 # What's New in Obtainium+
 
+## Version 1.4.3-p4 (Pending)
+*   **Performance Overhaul**: We've completely redesigned the internal settings engine. This makes ObtainiumPlus faster and more responsive, especially when scrolling through large app lists.
+*   **Better Organization**: Settings are now more logically grouped, making it easier to find and customize features like "Glassmorphism" and background updates.
+*   **Localized Plus Features**: All new advanced features now have full English translations, ensuring a polished experience.
+
 ## Version 1.4.3
 *   **Smoother Onboarding**: We fixed an issue where the Google login prompt would appear unexpectedly during setup.
 *   **Increased Stability**: Resolved several crash issues that occurred during file downloads from unstable sources and when verifying installed apps.
