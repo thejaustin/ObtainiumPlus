@@ -74,14 +74,10 @@ jobs:
             CHANGELOG="No significant changes provided."
           fi
           
-          cat <<EOF > release_body.md
-**Obtainium+ Release**
-
-- **Version:** ${{ steps.extract_version.outputs.version }}
-- **Date:** $(date)
-
-$CHANGELOG
-EOF
+          printf "**Obtainium+ Release**\n\n- **Version:** %s\n- **Date:** %s\n\n%s\n" \
+            "${{ steps.extract_version.outputs.version }}" \
+            "$(date)" \
+            "$CHANGELOG" > release_body.md
 
       - name: Create Draft Release
         uses: ncipollo/release-action@v1

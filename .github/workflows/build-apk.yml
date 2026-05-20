@@ -55,7 +55,7 @@ jobs:
     name: Build and Release
     needs: quality
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: Auto-bump version') }}
+    if: "${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: Auto-bump version') }}"
     permissions:
       contents: write
 
@@ -198,15 +198,12 @@ jobs:
           
           [ ${#CHANGELOG} -gt 10000 ] && CHANGELOG="${CHANGELOG:0:10000}... (truncated)"
 
-          cat <<EOF > release_body.md
-**Obtainium+ ${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}**
-
-- **Build #:** ${{ github.run_number }}
-- **Commit:** ${{ github.sha }}
-- **Date:** $(date)
-
-$CHANGELOG
-EOF
+          printf "**Obtainium+ %s**\n\n- **Build #:** %s\n- **Commit:** %s\n- **Date:** %s\n\n%s\n" \
+            "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}" \
+            "${{ github.run_number }}" \
+            "${{ github.sha }}" \
+            "$(date)" \
+            "$CHANGELOG" > release_body.md
 
       - name: Commit version bump
         if: steps.bump_version.outputs.version_changed == 'true'
