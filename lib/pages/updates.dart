@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/models/apps_filter.dart';
-import 'package:obtainium/pages/apps.dart';
+import 'package:obtainium/pages/apps.dart' hide AppsFilter;
 import 'package:obtainium/pages/system_updates.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';

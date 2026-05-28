@@ -105,6 +105,15 @@ create table if not exists $logTable (
     }
     return res;
   }
+
+  /// Alias for [add] for compatibility with callers using logEvent.
+  Future<Log> logEvent(String message, [Map<String, dynamic>? params, LogLevels level = LogLevels.info]) {
+    String fullMessage = message;
+    if (params != null && params.isNotEmpty) {
+      fullMessage = '$message: $params';
+    }
+    return add(fullMessage, level: level);
+  }
 }
 
 MapEntry<String?, List<int>?> getWhereDates({

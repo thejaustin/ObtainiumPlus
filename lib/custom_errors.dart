@@ -10,9 +10,10 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 
 class ObtainiumError {
-  late String message;
+  final String message;
   bool unexpected;
-  ObtainiumError(this.message, {this.unexpected = false});
+  String? appId;
+  ObtainiumError(this.message, {this.unexpected = false, this.appId});
   @override
   String toString() {
     return message;
@@ -20,7 +21,7 @@ class ObtainiumError {
 }
 
 class RateLimitError extends ObtainiumError {
-  late int remainingMinutes;
+  final int remainingMinutes;
   RateLimitError(this.remainingMinutes)
     : super(plural('tooManyRequestsTryAgainInMinutes', remainingMinutes));
 }
@@ -55,14 +56,16 @@ class UnsupportedURLError extends ObtainiumError {
 }
 
 class DowngradeError extends ObtainiumError {
-  DowngradeError(int currentVersionCode, int newVersionCode)
+  final String? appId;
+  DowngradeError(int currentVersionCode, int newVersionCode, {this.appId})
     : super(
         '${tr('cantInstallOlderVersion')} (versionCode $currentVersionCode ➔ $newVersionCode)',
       );
 }
 
 class InstallError extends ObtainiumError {
-  InstallError(int code)
+  final String? appId;
+  InstallError(int code, {this.appId})
     : super(PackageInstallerStatus.byCode(code).name.substring(7));
 }
 
@@ -76,6 +79,17 @@ class RepositoryRenamedError extends ObtainiumError {
   RepositoryRenamedError(this.oldUrl, this.newUrl) : super(tr('repoRenamed'));
 }
 
+class DownloadCancelledError extends ObtainiumError {
+  DownloadCancelledError() : super(tr('cancelled'));
+}
+
+class BadDownloadError extends ObtainiumError {
+  final String? appId;
+  BadDownloadError({this.appId}) : super('Downloaded file is invalid or corrupted');
+}
+
+
+
 class NotImplementedError extends ObtainiumError {
   NotImplementedError() : super(tr('functionNotImplemented'));
 }
@@ -87,7 +101,7 @@ class MultiAppMultiError extends ObtainiumError {
 
   MultiAppMultiError() : super(tr('placeholder'), unexpected: true);
 
-  void add(String appId, dynamic error, {String? appName}) {
+  void add(String appId, dynamic error, {String? appName, StackTrace? stackTrace}) {
     if (error is SocketException) {
       error = error.message;
     }

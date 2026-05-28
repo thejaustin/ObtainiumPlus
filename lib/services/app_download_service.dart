@@ -27,6 +27,10 @@ import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:flutter/foundation.dart'
     as foundation; // Alias to avoid conflict
 
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/services/app_crud_service.dart';
 
@@ -89,6 +93,9 @@ class AppDownloadService {
     required List<String> appIds,
     required Map<String, AppInMemory> apps,
     required SettingsProvider settingsProvider,
+    required BehaviorSettingsProvider behaviorSettings,
+    required PlusSettingsProvider plusSettings,
+    required UpdateSettingsProvider updateSettings,
     required LogsProvider logs,
     required Directory APKDir,
     required Function() notifyListeners,
@@ -138,13 +145,16 @@ class AppDownloadService {
     appsToInstall = moveStrToEnd(appsToInstall, 'app.obtainiumplus.fdroid');
 
     List<Map<String, dynamic>> downloadResults = [];
-    if (!forceParallelDownloads && !settingsProvider.parallelDownloads) {
+    if (!forceParallelDownloads && !behaviorSettings.parallelDownloads) {
       for (var id in appsToInstall) {
         downloadResults.add(
           await _downloadAppWrapper(
             id: id,
             apps: apps,
             settingsProvider: settingsProvider,
+            behaviorSettings: behaviorSettings,
+            plusSettings: plusSettings,
+            updateSettings: updateSettings,
             logs: logs,
             APKDir: APKDir,
             notifyListeners: notifyListeners,
@@ -167,6 +177,9 @@ class AppDownloadService {
             id: id,
             apps: apps,
             settingsProvider: settingsProvider,
+            behaviorSettings: behaviorSettings,
+            plusSettings: plusSettings,
+            updateSettings: updateSettings,
             logs: logs,
             APKDir: APKDir,
             notifyListeners: notifyListeners,
@@ -194,6 +207,9 @@ class AppDownloadService {
             downloadedDir: res['downloadedDir'] as DownloadedDir?,
             apps: apps,
             settingsProvider: settingsProvider,
+            behaviorSettings: behaviorSettings,
+            plusSettings: plusSettings,
+            updateSettings: updateSettings,
             logs: logs,
             notifyListeners: notifyListeners,
             saveApps: (appList) => saveApps(appList),
@@ -639,14 +655,15 @@ class AppDownloadService {
 
   static Future<void> _checkInstallPermissions(
     SettingsProvider settingsProvider,
+    BehaviorSettingsProvider behaviorSettings,
     bool willBeSilent,
   ) async {
-    if (!settingsProvider.useShizuku) {
-      if (!(await settingsProvider.getInstallPermission(enforce: false))) {
+    if (!behaviorSettings.useShizuku) {
+      if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
         throw ObtainiumError(tr('cancelled'));
       }
     } else {
-      var shizukuPermission = await ShizukuApkInstaller.checkPermission();
+      var shizukuPermission = await ShizukuApkInstaller().checkPermission();
       switch (shizukuPermission) {
         case 'authorized':
           break;
@@ -665,7 +682,6 @@ class AppDownloadService {
       }
     }
   }
-
   static Future<bool> _installApp({
     required String id,
     required bool willBeSilent,
@@ -673,6 +689,9 @@ class AppDownloadService {
     required DownloadedDir? downloadedDir,
     required Map<String, AppInMemory> apps,
     required SettingsProvider settingsProvider,
+    required BehaviorSettingsProvider behaviorSettings,
+    required PlusSettingsProvider plusSettings,
+    required UpdateSettingsProvider updateSettings,
     required LogsProvider logs,
     required Function() notifyListeners,
     Future<void> Function(List<App>)? saveApps,
@@ -688,17 +707,17 @@ class AppDownloadService {
           ? context
           : null;
       bool needBGWorkaround =
-          (willBeSilent && context == null && !settingsProvider.useShizuku) ||
+          (willBeSilent && context == null && !behaviorSettings.useShizuku) ||
           AppConstants.plusAppIds.contains(id) ||
           apps[id]!.app.additionalSettings['persistentVersionTracking'] == true;
       bool shizukuPretendToBeGooglePlay =
-          settingsProvider.shizukuPretendToBeGooglePlay ||
+          behaviorSettings.shizukuPretendToBeGooglePlay ||
           apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] ==
               true;
 
       logs.logEvent('InstallStarted', {
         'appId': id,
-        'shizuku': settingsProvider.useShizuku,
+        'shizuku': behaviorSettings.useShizuku,
         'bgWorkaround': needBGWorkaround,
       });
 
@@ -706,7 +725,9 @@ class AppDownloadService {
         sayInstalled = await AppInstallService.installApk(
           downloadedFile,
           contextIfNewInstall,
-          settingsProvider,
+          behaviorSettings,
+          plusSettings,
+          updateSettings,
           logs,
           apps,
           needsBGWorkaround: needBGWorkaround,
@@ -717,7 +738,9 @@ class AppDownloadService {
         sayInstalled = await AppInstallService.installApkDir(
           downloadedDir,
           contextIfNewInstall,
-          settingsProvider,
+          behaviorSettings,
+          plusSettings,
+          updateSettings,
           logs,
           apps,
           needsBGWorkaround: needBGWorkaround,
@@ -746,7 +769,7 @@ class AppDownloadService {
         }
       }
       if (willBeSilent && context == null && apps[id] != null) {
-        if (!settingsProvider.useShizuku) {
+        if (!behaviorSettings.useShizuku) {
           notificationsProvider?.notify(
             SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
           );
@@ -772,6 +795,9 @@ class AppDownloadService {
     required String id,
     required Map<String, AppInMemory> apps,
     required SettingsProvider settingsProvider,
+    required BehaviorSettingsProvider behaviorSettings,
+    required PlusSettingsProvider plusSettings,
+    required UpdateSettingsProvider updateSettings,
     required LogsProvider logs,
     required Directory APKDir,
     required Function() notifyListeners,
@@ -829,9 +855,9 @@ class AppDownloadService {
 
       if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       willBeSilent = await canInstallSilently(apps[id]!.app);
-      await _checkInstallPermissions(settingsProvider, willBeSilent);
+      await _checkInstallPermissions(settingsProvider, behaviorSettings, willBeSilent);
 
-      if (!willBeSilent && context != null && !settingsProvider.useShizuku) {
+      if (!willBeSilent && context != null && !behaviorSettings.useShizuku) {
         await waitForUserToReturnToForeground(context);
       }
     } catch (e) {

@@ -22,6 +22,7 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
 class CommandCenter extends StatefulWidget {
@@ -159,13 +160,14 @@ class _CommandCenterState extends State<CommandCenter> {
     final theme = Theme.of(context);
     final isUrl = URLValidator.isValidSourceURL(_query);
     final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final isDark = theme.brightness == Brightness.dark;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: ConditionalBlur(
         sigma: 24,
-        enabled: settings.plusEnableGlassmorphism,
+        enabled: plusSettings.plusEnableGlassmorphism,
         child: Container(
           height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
@@ -173,23 +175,23 @@ class _CommandCenterState extends State<CommandCenter> {
                 (isDark
                         ? theme.colorScheme.surfaceContainerHighest
                         : theme.colorScheme.surface)
-                    .withOpacity(settings.plusEnableGlassmorphism ? 0.72 : 1.0),
+                    .withOpacity(plusSettings.plusEnableGlassmorphism ? 0.72 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
-                color: settings.plusEnableGlassmorphism
+                color: plusSettings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withOpacity(0.18)
                     : theme.colorScheme.outlineVariant.withOpacity(
                         AppOpacity.subtle,
                       ),
               ),
               left: BorderSide(
-                color: settings.plusEnableGlassmorphism
+                color: plusSettings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
                     : Colors.transparent,
               ),
               right: BorderSide(
-                color: settings.plusEnableGlassmorphism
+                color: plusSettings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
                     : Colors.transparent,
               ),
@@ -289,10 +291,10 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildLocalResult(AppInMemory app) {
-    final settings = context.read<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
 
     return Padding(
@@ -374,7 +376,7 @@ class _CommandCenterState extends State<CommandCenter> {
         final homeState = globalNavigatorKey.currentContext
             ?.findAncestorStateOfType<HomePageState>();
         final addAppKey =
-            homeState?.addAppPage.key as GlobalKey<AddAppPageState>?;
+            homeState?.pages[1].widget.key as GlobalKey<AddAppPageState>?;
         if (addAppKey?.currentState != null) {
           addAppKey!.currentState!.linkFn(url);
         }
@@ -384,6 +386,7 @@ class _CommandCenterState extends State<CommandCenter> {
 
   Widget _buildSearchResultsList() {
     final theme = Theme.of(context);
+    final plusSettings = context.watch<PlusSettingsProvider>();
     if (_isSearching && _discoverResults.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(32.0),
@@ -410,9 +413,9 @@ class _CommandCenterState extends State<CommandCenter> {
           final result = entry.value;
           final name = result.value.isNotEmpty ? result.value[0] : 'Unknown';
           final source = result.key;
-          final radius = settings.plusOverrideIndividualCornerRadius
-              ? settings.plusHomeCornerRadius
-              : settings.plusGlobalCornerRadius;
+          final radius = plusSettings.plusOverrideIndividualCornerRadius
+              ? plusSettings.plusHomeCornerRadius
+              : plusSettings.plusGlobalCornerRadius;
           final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
 
           return Padding(
@@ -569,7 +572,7 @@ class _CommandCenterState extends State<CommandCenter> {
                 Navigator.pop(context);
                 context
                     .read<AppsProvider>()
-                    .checkUpdates(ignoreCache: true)
+                    .checkUpdates(ignoreAppsCheckedAfter: DateTime.now())
                     .catchError((e) {
                       if (mounted) {
                         showError(e is Map ? e['errors'] : e, context);
@@ -597,10 +600,10 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildActionChip(IconData icon, String label, VoidCallback onPressed) {
-    final settings = context.read<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final chipRadius = (radius * 0.5).clamp(8.0, 16.0);
 
     return ActionChip(

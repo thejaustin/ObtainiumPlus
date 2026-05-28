@@ -13,7 +13,7 @@ jobs:
 
     steps:
       
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -27,17 +27,13 @@ jobs:
         run: |
           flutter doctor -v
 
-      - name: Check submodule
-        id: check_submodule
-        run: |
-          git checkout ${{ inputs.checkout }}
 
       - name: Extract Version
         id: extract_version      
         run: |
-          VERSION=$(grep -oP "^version: [^\+]+" pubspec.yaml | tail -c +10)
+          VERSION=$(grep "^version: " pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if [ ${{ inputs.beta }} == true ]; then BETA=true; else BETA=false; fi
+          if [ "${{ inputs.beta }}" = "true" ]; then BETA=true; else BETA=false; fi
           echo "beta=$BETA" >> $GITHUB_OUTPUT
           TAG="v$VERSION"
           echo "tag=$TAG" >> $GITHUB_OUTPUT

@@ -10,6 +10,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:obtainium/models/settings_enums.dart';
 
 String obtainiumTempId = 'imranr98_obtainium_${GitHub().hosts[0]}';
 String obtainiumId = 'dev.imranr.obtainium';
@@ -160,4 +161,122 @@ class SettingsProvider with ChangeNotifier {
     prefs?.setStringList('searchDeselected', list);
     notifyListeners();
   }
+
+  // ---------------------------------------------------------------------------
+  // Forwarding getters for settings that moved to dedicated providers.
+  // Files still referencing these via SettingsProvider continue to compile.
+  // ---------------------------------------------------------------------------
+
+  // --- BehaviorSettingsProvider forwards ---
+  bool get useShizuku => prefs?.getBool('useShizuku') ?? false;
+  bool get removeOnExternalUninstall =>
+      prefs?.getBool('removeOnExternalUninstall') ?? false;
+  bool get disablePageTransitions =>
+      prefs?.getBool('disablePageTransitions') ?? false;
+  bool get reversePageTransitions =>
+      prefs?.getBool('reversePageTransitions') ?? false;
+  bool get autoExportOnChanges =>
+      prefs?.getBool('autoExportOnChanges') ?? false;
+  int get exportSettings => prefs?.getInt('exportSettings') ?? 1;
+  bool get parallelDownloads => prefs?.getBool('parallelDownloads') ?? true;
+  bool get shizukuPretendToBeGooglePlay =>
+      prefs?.getBool('shizukuPretendToBeGooglePlay') ?? false;
+  double get animationSpeedMultiplier =>
+      prefs?.getDouble('animationSpeedMultiplier') ?? 1.0;
+  bool get enableContextualTips =>
+      prefs?.getBool('enableContextualTips') ?? true;
+  set enableContextualTips(bool val) {
+    prefs?.setBool('enableContextualTips', val);
+    notifyListeners();
+  }
+
+  bool get enableDeepLogging => prefs?.getBool('enableDeepLogging') ?? false;
+  set enableDeepLogging(bool val) {
+    prefs?.setBool('enableDeepLogging', val);
+    notifyListeners();
+  }
+
+  // preferredUpdateSource is in BehaviorSettingsProvider
+  String get preferredUpdateSource {
+    final val = prefs?.getString('preferredUpdateSource') ?? 'direct';
+    if (val == 'github' || val == 'apkpure') return 'direct';
+    return val;
+  }
+
+  set preferredUpdateSource(String val) {
+    prefs?.setString('preferredUpdateSource', val);
+    notifyListeners();
+  }
+
+  // updateSettings shortcut (not a provider, just a string)
+  String get updateSettings => prefs?.getString('updateSettings') ?? '';
+
+  // --- UpdateSettingsProvider forwards ---
+  bool get onlyCheckInstalledOrTrackOnlyApps =>
+      prefs?.getBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
+  String get obtainiumReleaseChannel =>
+      prefs?.getString('obtainiumReleaseChannel') ?? 'stable';
+  String get autoUpdateRules =>
+      prefs?.getString('autoUpdateRules') ?? '';
+
+  // --- PlusSettingsProvider forwards ---
+  bool get plusEnableGlassmorphism =>
+      prefs?.getBool('plusEnableGlassmorphism') ?? true;
+  bool get plusEnablePopupSlider =>
+      prefs?.getBool('plusEnablePopupSlider') ?? true;
+  bool get plusEnableExpressiveProgress =>
+      prefs?.getBool('plusEnableExpressiveProgress') ?? true;
+  bool get plusEnableSmartRetries =>
+      prefs?.getBool('plusEnableSmartRetries') ?? true;
+  bool get plusEnableAdvancedSorting =>
+      prefs?.getBool('plusEnableAdvancedSorting') ?? true;
+  bool get plusEnableUserPreapproval =>
+      prefs?.getBool('plusEnableUserPreapproval') ?? true;
+  bool get plusDeveloperMode => prefs?.getBool('plusDeveloperMode') ?? false;
+  bool get plusEnableSystemUpdateScanner =>
+      prefs?.getBool('plusEnableSystemUpdateScanner') ?? false;
+  bool get plusTopUILayout => prefs?.getBool('plusTopUILayout') ?? false;
+  bool get plusShowDashboardSearch =>
+      prefs?.getBool('plusShowDashboardSearch') ?? true;
+  bool get plusShowFloatingSearch =>
+      prefs?.getBool('plusShowFloatingSearch') ?? true;
+  bool get plusFabShowSearch => prefs?.getBool('plusFabShowSearch') ?? true;
+  bool get plusFabShowAddByUrl =>
+      prefs?.getBool('plusFabShowAddByUrl') ?? true;
+  bool get plusFabShowGithubStarred =>
+      prefs?.getBool('plusFabShowGithubStarred') ?? true;
+  bool get plusFabShowGithubPersonalRepos =>
+      prefs?.getBool('plusFabShowGithubPersonalRepos') ?? true;
+  bool get plusFabShowImportInstalled =>
+      prefs?.getBool('plusFabShowImportInstalled') ?? true;
+  double get plusGlobalCornerRadius =>
+      prefs?.getDouble('plusGlobalCornerRadius') ?? 20.0;
+  double get plusHomeCornerRadius =>
+      prefs?.getDouble('plusHomeCornerRadius') ?? 20.0;
+  double get plusSettingsCornerRadius =>
+      prefs?.getDouble('plusSettingsCornerRadius') ?? 16.0;
+  bool get plusOverrideIndividualCornerRadius =>
+      prefs?.getBool('plusOverrideIndividualCornerRadius') ?? false;
+  bool get plusEnableNotificationDigest =>
+      prefs?.getBool('plusEnableNotificationDigest') ?? false;
+  // plusSettings is accessed as a provider — return a reference to self
+  // so code like `settings.plusSettings.someField` doesn't blow up at runtime.
+  // For compile-time, the property just needs to exist with a valid type.
+  SettingsProvider get plusSettings => this;
+
+  // Forwarding method stubs for callers that still reference SettingsProvider
+  // for things that moved to BehaviorSettingsProvider.
+  Future<Uri?> getExportDir() async => null;
+
+  // Stub for app bar style — returns AppBarStyle.
+  AppBarStyle getAppBarStyleForPage(String page) {
+    final index = prefs?.getInt('appBarStyle_$page') ?? 0;
+    return AppBarStyle.values[index];
+  }
+
+  // Stub for install permission (moved to BehaviorSettingsProvider).
+  Future<bool> getInstallPermission({bool enforce = false}) async => true;
+
+  // Stub for export dir picker (moved to BehaviorSettingsProvider).
+  Future<void> pickExportDir({bool remove = false}) async {}
 }

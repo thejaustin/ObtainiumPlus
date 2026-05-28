@@ -96,6 +96,14 @@ dependencies:
   flutter_lints: ^6.0.0
   flutter_foreground_task: ^9.2.2
   flutter_markdown_plus: ^1.0.7
+  go_router: ^17.2.3
+  shimmer: ^3.0.0
+  flutter_markdown: ^0.7.7+1
+  introduction_screen: ^4.0.0
+  sentry_flutter: ^8.14.2
+  flutter_secure_storage: ^10.2.0
+  encrypt: ^5.0.3
+  flutter_js: ^0.8.7
 
 flutter_launcher_icons:
   android: "ic_launcher"
@@ -152,3 +160,7 @@ flutter:
       - family: Montserrat
         fonts:
           - asset: assets/fonts/Montserrat-Regular.ttf
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

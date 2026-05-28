@@ -8,9 +8,11 @@ import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 
 /// Update settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds

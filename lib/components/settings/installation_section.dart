@@ -123,7 +123,7 @@ class InstallationSection extends StatelessWidget {
                   behaviorSettings.useShizuku = false;
                   return;
                 }
-                ShizukuApkInstaller.checkPermission().then(
+                ShizukuApkInstaller().checkPermission().then(
                   (resCode) {
                     if (resCode == null) {
                       _showError(

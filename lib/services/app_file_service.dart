@@ -11,8 +11,8 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/providers/source_provider.dart' hide createHttpClient;
+import 'package:obtainium/utils/source_utils.dart' hide sourceRequestStreamResponse;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -67,8 +67,8 @@ class AppFileService {
   }
 
   static Future<Map<String, Directory>> initAppDirectories() async {
-    Directory APKDir;
-    Directory iconsCacheDir;
+    late Directory APKDir;
+    late Directory iconsCacheDir;
 
     var cacheDirs = await getExternalCacheDirectories();
     if (cacheDirs?.isNotEmpty ?? false) {

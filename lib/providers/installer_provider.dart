@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 
 const _channel = MethodChannel('dev.imranr.obtainium/installer');
 
@@ -19,8 +20,8 @@ class InstallerAppInfo {
   });
 }
 
-Future<List<InstallerAppInfo>> getApkInstallerApps() async {
-  if (!plusSettings.plusEnableStandaloneInstaller) return [];
+Future<List<InstallerAppInfo>> getApkInstallerApps([PlusSettingsProvider? plusSettings]) async {
+  if (plusSettings != null && !plusSettings.plusEnableStandaloneInstaller) return [];
   if (!Platform.isAndroid) return [];
   final rawList =
       await _channel.invokeMethod<List<dynamic>>('queryApkInstallerActivities');

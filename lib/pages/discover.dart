@@ -508,7 +508,7 @@ class DiscoverPageState extends State<DiscoverPage> {
       body: CustomScrollView(
         slivers: [
           if (widget.showAppBar)
-            AdaptiveSliverAppBar(title: tr('discover'), pageId: 'discover'),
+            CustomAppBar(title: tr('discover')),
           if (widget.showSearchBar)
             SliverToBoxAdapter(
               child: Padding(

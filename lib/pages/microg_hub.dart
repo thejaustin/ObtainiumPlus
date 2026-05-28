@@ -9,6 +9,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -287,7 +288,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.left(8.0),
+          padding: const EdgeInsets.only(left: 8.0),
           child: Text(
             tr('selectProvider'),
             style: const TextStyle(
@@ -365,7 +366,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.left(8.0),
+          padding: const EdgeInsets.only(left: 8.0),
           child: Text(
             tr('componentsToInstall'),
             style: const TextStyle(
@@ -433,7 +434,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.left(8.0),
+          padding: const EdgeInsets.only(left: 8.0),
           child: Text(
             tr('deploymentOptions'),
             style: const TextStyle(

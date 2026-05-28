@@ -196,7 +196,6 @@ void main() async {
           update: (context, appsProvider, tagProvider) =>
               TagProvider(appsProvider),
         ),
-        ChangeNotifierProvider(create: (context) => InstallerProvider()),
         ChangeNotifierProvider(create: (context) => SourceConfigProvider()),
         ChangeNotifierProvider(create: (context) => PluginProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),

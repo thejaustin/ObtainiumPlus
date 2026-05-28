@@ -377,7 +377,10 @@ class _AppGridTileState extends State<AppGridTile>
         _buildIconStack(iconSize, iconBorderRadius, badgeSize),
         const SizedBox(width: 20),
         Expanded(child: _buildAppInfo(plusSettings, TextAlign.start)),
-        const Icon(Icons.chevron_right_rounded, opacity: 0.5),
+        Icon(
+          Icons.chevron_right_rounded,
+          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+        ),
       ],
     );
   }

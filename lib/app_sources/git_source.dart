@@ -1,7 +1,7 @@
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_utils.dart' hide getSourceRegex;
 
 abstract class GitSource extends AppSource {
   GitSource({bool hostChanged = false}) {

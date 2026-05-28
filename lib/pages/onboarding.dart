@@ -13,6 +13,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/main.dart';
 
 import 'package:obtainium/providers/auth_provider.dart';

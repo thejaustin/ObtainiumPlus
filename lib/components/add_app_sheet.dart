@@ -278,7 +278,7 @@ class _QuickAddButtonState extends State<QuickAddButton>
       child: GestureDetector(
         onTapDown: (_) => _controller.forward(),
         onTapUp: (_) => _controller.reverse(),
-        onTapCancel: (_) => _controller.reverse(),
+        onTapCancel: () => _controller.reverse(),
         onTap: widget.loading ? null : widget.onPressed,
         child: ScaleTransition(
           scale: _scaleAnimation,
