@@ -288,4 +288,62 @@ class FDroid extends AppSource {
       throw getObtainiumHttpError(res);
     }
   }
+
+  Future<FDroidBrowseResult> browseCategory(String slug, {int page = 1}) async {
+    String catName = slug;
+    switch (slug) {
+      case 'connectivity': catName = 'Connectivity'; break;
+      case 'development': catName = 'Development'; break;
+      case 'games': catName = 'Games'; break;
+      case 'graphics': catName = 'Graphics'; break;
+      case 'internet': catName = 'Internet'; break;
+      case 'money': catName = 'Money'; break;
+      case 'multimedia': catName = 'Multimedia'; break;
+      case 'navigation': catName = 'Navigation'; break;
+      case 'phone-sms': catName = 'Phone+%26+SMS'; break;
+      case 'reading': catName = 'Reading'; break;
+      case 'security': catName = 'Security'; break;
+      case 'system': catName = 'System'; break;
+      case 'theming': catName = 'Theming'; break;
+      case 'time': catName = 'Time'; break;
+      case 'writing': catName = 'Writing'; break;
+    }
+
+    final String url = 'https://f-droid.org/en/categories/$catName/';
+    Response res = await sourceRequest(url, {});
+
+    if (res.statusCode == 200) {
+      Map<String, List<String>> urlsWithDescriptions = {};
+      parse(res.body).querySelectorAll('.package-header').forEach((e) {
+        String? appUrl = e.attributes['href'];
+        if (appUrl != null) {
+          if (appUrl.startsWith('/')) {
+            appUrl = 'https://f-droid.org$appUrl';
+          }
+          try {
+            appUrl = standardizeUrl(appUrl);
+          } catch (err) {
+            //
+          }
+        }
+        if (appUrl != null) {
+          urlsWithDescriptions[appUrl] = [
+            e.querySelector('.package-name')?.text.trim() ?? '',
+            e.querySelector('.package-summary')?.text.trim() ??
+                tr('noDescription'),
+          ];
+        }
+      });
+      return FDroidBrowseResult(urlsWithDescriptions, false);
+    } else {
+      throw getObtainiumHttpError(res);
+    }
+  }
 }
+
+class FDroidBrowseResult {
+  final Map<String, List<String>> apps;
+  final bool hasMore;
+  FDroidBrowseResult(this.apps, this.hasMore);
+}
+

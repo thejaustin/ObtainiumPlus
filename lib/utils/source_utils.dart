@@ -16,15 +16,6 @@ import 'package:equations/equations.dart';
 import 'package:crypto/crypto.dart';
 
 import 'package:obtainium/utils/app_constants.dart';
-...
-class SourceUtils {
-  static bool isSupportedPackageFile(String fileNameOrUrl) {
-    final lower = fileNameOrUrl.toLowerCase();
-    return AppConstants.supportedPackageExtensions
-        .any((ext) => lower.endsWith(ext));
-  }
-}
-
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
 
@@ -110,6 +101,12 @@ sourceRequestStreamResponse(
 }
 
 class SourceUtils {
+  static bool isSupportedPackageFile(String fileNameOrUrl) {
+    final lower = fileNameOrUrl.toLowerCase();
+    return AppConstants.supportedPackageExtensions
+        .any((ext) => lower.endsWith(ext));
+  }
+
   static Future<Response> httpRequest(
     String url, {
     String method = 'GET',

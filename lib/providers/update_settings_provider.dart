@@ -278,4 +278,36 @@ class UpdateSettingsProvider with ChangeNotifier {
     prefs?.setString('autoUpdateRules', jsonEncode(val));
     notifyListeners();
   }
+
+  // --- Offline queue (app IDs to retry when back online) ---
+  List<String> get offlineQueue {
+    final stored = prefs?.getString('offlineQueue');
+    if (stored == null) return [];
+    try {
+      return List<String>.from(jsonDecode(stored) as List);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  set offlineQueue(List<String> val) {
+    prefs?.setString('offlineQueue', jsonEncode(val));
+    notifyListeners();
+  }
+
+  // --- Persistent retry queue (app IDs with backoff info) ---
+  Map<String, dynamic> get retryQueue {
+    final stored = prefs?.getString('retryQueue');
+    if (stored == null) return {};
+    try {
+      return Map<String, dynamic>.from(jsonDecode(stored) as Map);
+    } catch (_) {
+      return {};
+    }
+  }
+
+  set retryQueue(Map<String, dynamic> val) {
+    prefs?.setString('retryQueue', jsonEncode(val));
+    notifyListeners();
+  }
 }

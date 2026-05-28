@@ -11,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/providers/update_settings_provider.dart'';
+import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:share_plus/share_plus.dart';
@@ -22,6 +22,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -315,7 +317,7 @@ class AppInstallService {
     if (!behaviorSettings.useShizuku) {
       code = await AndroidPackageInstaller.installApk(apkFilePath: file.path);
     } else {
-      code = await ShizukuApkInstaller.installAPK(
+      code = await ShizukuApkInstaller().installAPK(
         file.uri.toString(),
         shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
       );
@@ -423,7 +425,7 @@ class AppInstallService {
         apkFilePath: allAPKs.join(','),
       );
     } else {
-      code = await ShizukuApkInstaller.installAPK(
+      code = await ShizukuApkInstaller().installAPK(
         file.file.uri.toString(),
         shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
       );
@@ -506,6 +508,8 @@ class AppInstallService {
         var wasInstalled = await installApk(
           DownloadedApk(dir.appId, APKFiles[0]),
           firstTimeWithContext,
+          behaviorSettings,
+          plusSettings,
           updateSettings,
           logs,
           apps,
@@ -549,3 +553,4 @@ class AppInstallService {
     return '/${(await AppFileService.getAppStorageDir()).uri.pathSegments.sublist(0, 3).join('/')}';
   }
 }
+

@@ -17,7 +17,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final int? initialTab;
+  const SettingsPage({super.key, this.initialTab});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -87,7 +88,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 PlusFeaturesSection(searchQuery: _searchQuery),
 
                 // 2. Appearance & Theme
-                ThemeSettingsSection(searchQuery: _searchQuery),
+                ThemeSettingsSection(
+                  searchQuery: _searchQuery,
+                  androidInfoFuture: _androidInfoFuture,
+                  colorsNameMap: const <ColorSwatch<Object>, String>{},
+                ),
 
                 // 3. App List, Categories & Display
                 AppsViewSettingsSection(

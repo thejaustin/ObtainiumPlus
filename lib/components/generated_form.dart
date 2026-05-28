@@ -16,6 +16,7 @@ abstract class GeneratedFormItem {
   late List<Widget> belowWidgets;
   late dynamic defaultValue;
   List<dynamic> additionalValidators;
+  String? tooltip;
   dynamic ensureType(dynamic val);
   GeneratedFormItem clone();
 
@@ -25,6 +26,7 @@ abstract class GeneratedFormItem {
     this.belowWidgets = const [],
     this.defaultValue,
     this.additionalValidators = const [],
+    this.tooltip,
   });
 }
 
@@ -115,8 +117,9 @@ class GeneratedFormSwitch extends GeneratedFormItem {
     super.label,
     super.belowWidgets,
     bool super.defaultValue = false,
-    bool disabled = false,
+    this.disabled = false,
     List<String? Function(bool value)> super.additionalValidators = const [],
+    super.tooltip,
   });
 
   @override
@@ -131,8 +134,9 @@ class GeneratedFormSwitch extends GeneratedFormItem {
       label: label,
       belowWidgets: belowWidgets,
       defaultValue: defaultValue,
-      disabled: false,
+      disabled: disabled,
       additionalValidators: List.from(additionalValidators),
+      tooltip: tooltip,
     );
   }
 }
@@ -507,14 +511,33 @@ class _GeneratedFormState extends State<GeneratedForm> {
       for (var e = 0; e < formInputs[r].length; e++) {
         String fieldKey = widget.items[r][e].key;
         if (widget.items[r][e] is GeneratedFormSwitch) {
+          final sw = widget.items[r][e] as GeneratedFormSwitch;
+          Widget labelWidget = Text(sw.label);
+          if (sw.tooltip != null) {
+            labelWidget = Tooltip(
+              message: sw.tooltip!,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(child: Text(sw.label)),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  ),
+                ],
+              ),
+            );
+          }
           formInputs[r][e] = Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: Text(widget.items[r][e].label)),
+              Flexible(child: labelWidget),
               const SizedBox(width: 8),
               Switch(
                 value: values[fieldKey],
-                onChanged: (widget.items[r][e] as GeneratedFormSwitch).disabled
+                onChanged: sw.disabled
                     ? null
                     : (value) {
                         setState(() {

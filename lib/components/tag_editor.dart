@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/models/app_in_memory.dart';
 import 'package:provider/provider.dart';
 
 /// Tag editor dialog for adding/removing tags from apps

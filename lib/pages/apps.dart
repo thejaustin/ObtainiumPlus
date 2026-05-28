@@ -1,4 +1,5 @@
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
+import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -6,6 +7,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -26,9 +28,14 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/selection_modal.dart';
+import 'package:obtainium/models/app_in_memory.dart';
 
 class AppsPage extends StatefulWidget {
-  const AppsPage({super.key});
+  final AppsFilter? initialFilter;
+  final int? initialTab;
+  const AppsPage({super.key, this.initialFilter, this.initialTab});
 
   @override
   State<AppsPage> createState() => AppsPageState();
@@ -137,7 +144,7 @@ Null Function()? getChangeLogFn(BuildContext context, App app) {
 }
 
 class AppsPageState extends State<AppsPage> {
-  AppsFilter filter = AppsFilter();
+  late AppsFilter filter = widget.initialFilter ?? AppsFilter();
   final AppsFilter neutralFilter = AppsFilter();
   var updatesOnlyFilter = AppsFilter(
     includeUptodate: false,
@@ -280,7 +287,6 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
-    final viewSettings = context.watch<ViewSettingsProvider>();
     listedApps.sort((a, b) {
       int result = 0;
       if (viewSettings.sortColumn == SortColumnSettings.authorName) {
@@ -1192,10 +1198,9 @@ class AppsPageState extends State<AppsPage> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                ],
+                  ],
               ),
-            ),
-          );
+            );
         },
       );
     }
@@ -1429,53 +1434,4 @@ class AppsPageState extends State<AppsPage> {
       ),
     );
   }
-}
-
-class AppsFilter {
-  late String nameFilter;
-  late String authorFilter;
-  late String idFilter;
-  late bool includeUptodate;
-  late bool includeNonInstalled;
-  late Set<String> categoryFilter;
-  late String sourceFilter;
-
-  AppsFilter({
-    this.nameFilter = '',
-    this.authorFilter = '',
-    this.idFilter = '',
-    this.includeUptodate = true,
-    this.includeNonInstalled = true,
-    this.categoryFilter = const {},
-    this.sourceFilter = '',
-  });
-
-  Map<String, dynamic> toFormValuesMap() {
-    return {
-      'appName': nameFilter,
-      'author': authorFilter,
-      'appId': idFilter,
-      'upToDateApps': includeUptodate,
-      'nonInstalledApps': includeNonInstalled,
-      'sourceFilter': sourceFilter,
-    };
-  }
-
-  void setFormValuesFromMap(Map<String, dynamic> values) {
-    nameFilter = values['appName']!;
-    authorFilter = values['author']!;
-    idFilter = values['appId']!;
-    includeUptodate = values['upToDateApps'];
-    includeNonInstalled = values['nonInstalledApps'];
-    sourceFilter = values['sourceFilter'];
-  }
-
-  bool isIdenticalTo(AppsFilter other, SettingsProvider settingsProvider) =>
-      authorFilter.trim() == other.authorFilter.trim() &&
-      nameFilter.trim() == other.nameFilter.trim() &&
-      idFilter.trim() == other.idFilter.trim() &&
-      includeUptodate == other.includeUptodate &&
-      includeNonInstalled == other.includeNonInstalled &&
-      settingsProvider.setEqual(categoryFilter, other.categoryFilter) &&
-      sourceFilter.trim() == other.sourceFilter.trim();
 }

@@ -7,19 +7,23 @@ import 'package:obtainium/utils/app_constants.dart';
 class ExpressiveSettingsGroup extends StatelessWidget {
   final String? title;
   final String? description;
+  final String? helpText;
   final List<Widget> children;
   final bool isExpandable;
   final bool initiallyExpanded;
   final IconData? icon;
+  final VoidCallback? onReset;
 
   const ExpressiveSettingsGroup({
     super.key,
     this.title,
     this.description,
+    this.helpText,
     required this.children,
     this.isExpandable = false,
     this.initiallyExpanded = true,
     this.icon,
+    this.onReset,
   });
 
   @override
@@ -65,27 +69,40 @@ class ExpressiveSettingsGroup extends StatelessWidget {
         // suppress the outer label to prevent it rendering twice.
         if (title != null && !isExpandable)
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title!.toUpperCase(),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title!.toUpperCase(),
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      if (description != null || helpText != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          description ?? helpText!,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (description != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    description!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                if (onReset != null)
+                  IconButton(
+                    icon: const Icon(Icons.restore_rounded, size: 20),
+                    onPressed: onReset,
+                    tooltip: 'Reset to default',
                   ),
-                ],
               ],
             ),
           ),

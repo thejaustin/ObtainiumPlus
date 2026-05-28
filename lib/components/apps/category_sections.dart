@@ -9,6 +9,7 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -300,9 +301,6 @@ class CategorySections extends StatelessWidget {
             .map(
               (app) => AppListTile(
                 appInMemory: app,
-                isSelected:
-                    selectedAppIds.contains(app.app.id) ||
-                    activeAppId == app.app.id,
                 hasUpdate: app.app.installedVersion != app.app.latestVersion,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {

@@ -27,6 +27,8 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/models/app_in_memory.dart';
+export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -42,58 +44,19 @@ import 'package:flutter_archive/flutter_archive.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/models/downloaded_artifact.dart';
+export 'package:obtainium/models/downloaded_artifact.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final pm = AndroidPackageManager();
 final packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates});
 
-class AppInMemory {
-  late App app;
-  double? downloadProgress;
-  PackageInfo? installedInfo;
-  Uint8List? icon;
 
-  AppInMemory(this.app, this.downloadProgress, this.installedInfo, this.icon);
-  AppInMemory deepCopy() =>
-      AppInMemory(app.deepCopy(), downloadProgress, installedInfo, icon);
-
-  String get name => app.overrideName ?? app.finalName;
-  String get author => app.overrideAuthor ?? app.finalAuthor;
-
-  bool get hasMultipleSigners {
-    return installedInfo?.signingInfo?.hasMultipleSigners ?? false;
-  }
-
-  List<String> get certificateHashes {
-    // https://developer.android.com/reference/android/content/pm/SigningInfo#getApkContentsSigners()
-    final signatures = this.hasMultipleSigners
-        ? installedInfo?.signingInfo?.apkContentSigners
-        : installedInfo?.signingInfo?.signingCertificateHistory;
-
-    return signatures?.map((signature) {
-      final digest = sha256.convert(signature);
-      return digest.bytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-        .join(':');
-      }).toList() ??
-      [];
-  }
-}
-
-class DownloadedApk {
-  String appId;
-  File file;
-  DownloadedApk(this.appId, this.file);
-}
-
-enum DownloadedDirType { XAPK, ZIP }
-
-class DownloadedDir {
-  String appId;
-  File file;
-  Directory extracted;
-  DownloadedDirType type;
-  DownloadedDir(this.appId, this.file, this.extracted, this.type);
-}
 
 List<String> generateStandardVersionRegExStrings() {
   var basics = [
@@ -535,6 +498,30 @@ class AppsProvider with ChangeNotifier {
   bool gettingUpdates = false;
   LogsProvider logs = LogsProvider();
 
+  bool isSelectionMode = false;
+  Set<String> selectedAppIds = {};
+  Set<String> checkingUpdateIds = {};
+  Set<String> get selectedApps => selectedAppIds;
+
+  void toggleAppSelection(String appId) {
+    if (selectedAppIds.contains(appId)) {
+      selectedAppIds.remove(appId);
+      if (selectedAppIds.isEmpty) {
+        isSelectionMode = false;
+      }
+    } else {
+      selectedAppIds.add(appId);
+      isSelectionMode = true;
+    }
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    selectedAppIds.clear();
+    isSelectionMode = false;
+    notifyListeners();
+  }
+
   // Variables to keep track of the app foreground status (installs can't run in the background)
   bool isForeground = true;
   late Stream<FGBGType>? foregroundStream;
@@ -547,8 +534,11 @@ class AppsProvider with ChangeNotifier {
   late BehaviorSettingsProvider behaviorSettings = BehaviorSettingsProvider();
   late ViewSettingsProvider viewSettings = ViewSettingsProvider();
   late PlusSettingsProvider plusSettings = PlusSettingsProvider();
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get initializationDone => _initCompleter.future;
 
-  Iterable<AppInMemory> getAppValues() => apps.values.map((a) => a.deepCopy());
+  Iterable<AppInMemory> getAppValues({bool deepCopy = true}) =>
+      deepCopy ? apps.values.map((a) => a.deepCopy()) : apps.values;
 
   AppsProvider({isBg = false}) {
     // Subscribe to changes in the app foreground status
@@ -598,6 +588,7 @@ class AppsProvider with ChangeNotifier {
               }
             });
       }
+      _initCompleter.complete();
     }();
   }
 
@@ -1956,7 +1947,7 @@ class AppsProvider with ChangeNotifier {
     viewSettings.setCategories(cats, appsProvider: this);
   }
 
-  Future<App?> checkUpdate(String appId) async {
+  Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
     App? currentApp = apps[appId]!.app;
     // Pause update checks until the user resolves a pending repo rename.
     if (currentApp.hasPendingRepoRename) {

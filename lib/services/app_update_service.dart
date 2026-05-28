@@ -11,6 +11,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
@@ -141,7 +142,7 @@ class AppUpdateService {
 
   static bool shouldSkipAppUpdate({
     required App app,
-    required SettingsProvider settingsProvider,
+    required UpdateSettingsProvider updateSettings,
     required List<ConnectivityResult> netResult,
     bool isBackground = false,
   }) {
@@ -154,7 +155,7 @@ class AppUpdateService {
       ruleKeys.add('tag_$tag');
     }
 
-    final rules = settingsProvider.autoUpdateRules;
+    final rules = updateSettings.autoUpdateRules;
     final bool isWifi =
         netResult.contains(ConnectivityResult.wifi) ||
         netResult.contains(ConnectivityResult.ethernet);
@@ -175,7 +176,7 @@ class AppUpdateService {
 
   static Future<List<App>> checkUpdates({
     required Map<String, AppInMemory> apps,
-    required SettingsProvider settingsProvider,
+    required UpdateSettingsProvider updateSettings,
     required Function(String) checkUpdateFn,
     DateTime? ignoreAppsCheckedAfter,
     bool throwErrorsForRetry = false,
@@ -194,7 +195,7 @@ class AppUpdateService {
           apps,
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
           onlyCheckInstalledOrTrackOnlyApps:
-              settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
+              updateSettings.onlyCheckInstalledOrTrackOnlyApps,
         );
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
@@ -208,7 +209,7 @@ class AppUpdateService {
           if (app == null) return false;
           return shouldSkipAppUpdate(
             app: app,
-            settingsProvider: settingsProvider,
+            updateSettings: updateSettings,
             netResult: netResult,
             isBackground: isBackground,
           );

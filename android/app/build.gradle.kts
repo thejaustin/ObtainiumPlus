@@ -128,6 +128,7 @@ android.applicationVariants.configureEach {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
 
 flutter {

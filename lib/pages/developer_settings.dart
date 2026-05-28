@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
-import 'package:talker_flutter/talker_flutter.dart';
+import 'package:obtainium/components/talker_screen.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -12,8 +12,11 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
+import 'package:android_package_manager/android_package_manager.dart' hide LaunchMode;
 import 'package:obtainium/pages/microg_hub.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/glass_dialog.dart';
@@ -655,7 +658,7 @@ class DeveloperSettingsPage extends StatelessWidget {
 
   void _handleStandaloneInstall(BuildContext context) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['apk'],
       );
@@ -663,9 +666,9 @@ class DeveloperSettingsPage extends StatelessWidget {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         if (context.mounted) {
-          final settings = context.read<SettingsProvider>();
           final plusSettings = context.read<PlusSettingsProvider>();
           final behaviorSettings = context.read<BehaviorSettingsProvider>();
+          final updateSettings = context.read<UpdateSettingsProvider>();
           final logs = context.read<LogsProvider>();
 
           // Get APK info before installing
@@ -707,9 +710,9 @@ class DeveloperSettingsPage extends StatelessWidget {
               final success = await AppInstallService.installApkStandalone(
                 file,
                 context,
-                settings,
-                plusSettings,
                 behaviorSettings,
+                plusSettings,
+                updateSettings,
                 logs,
               );
 

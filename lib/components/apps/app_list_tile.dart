@@ -19,6 +19,9 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'dart:ui';
 

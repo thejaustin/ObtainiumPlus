@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/selection_modal.dart';
+import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
@@ -22,10 +24,12 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AddAppPage extends StatefulWidget {
+  final int? initialTab;
   const AddAppPage({
     super.key,
     this.isModal = false,
     this.scrollController,
+    this.initialTab,
   });
 
   final bool isModal;

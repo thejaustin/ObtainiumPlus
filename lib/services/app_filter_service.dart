@@ -20,6 +20,7 @@ class AppFilterService {
     required bool groupByCategory,
     required bool buryNonInstalled,
     required List<String> existingUpdates,
+    required List<String> pinnedOrder,
   }) {
     var listedApps = apps.where((app) {
       if (filter.statusFilter.isNotEmpty) {
@@ -203,7 +204,6 @@ class AppFilterService {
     }
 
     var tempPinned = listedApps.where((a) => a.app.pinned).toList();
-    var pinnedOrder = settings.plusSettings.plusPinnedAppsOrder;
     if (pinnedOrder.isNotEmpty) {
       tempPinned.sort((a, b) {
         int indexA = pinnedOrder.indexOf(a.app.id);
