@@ -232,7 +232,9 @@ class _CommandCenterState extends State<CommandCenter> {
                           )
                         : null,
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHigh,
+                    fillColor: theme.colorScheme.surfaceContainerHigh.withOpacity(
+                      plusSettings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,

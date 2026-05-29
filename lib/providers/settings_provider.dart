@@ -35,6 +35,10 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void notifyPlusSettingsChanged() {
+    notifyListeners();
+  }
+
   bool checkAndFlipFirstRun() {
     bool result = prefs?.getBool('firstRun') ?? true;
     if (result) {

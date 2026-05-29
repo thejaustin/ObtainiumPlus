@@ -14,7 +14,7 @@ Future<T?> showAddAppSheet<T>({
   String? initialUrl,
   String? editAppId,
 }) {
-  final settings = context.read<SettingsProvider>();
+  final settings = context.watch<SettingsProvider>();
   final enableGlass = settings.plusEnableGlassmorphism;
 
   return showModalBottomSheet<T>(

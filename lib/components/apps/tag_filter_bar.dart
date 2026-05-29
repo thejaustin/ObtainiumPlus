@@ -18,7 +18,7 @@ class TagFilterBar extends StatelessWidget {
     final tagProvider = context.watch<TagProvider>();
     final tags = tagProvider.allTags.toList()..sort();
 
-    if (tags.isEmpty) return const SizedBox.shrink();
+    if (tags.isEmpty) return const SliverToBoxAdapter();
 
     return SliverToBoxAdapter(
       child: SizedBox(

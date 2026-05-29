@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -211,31 +212,69 @@ class _OnboardingPageState extends State<OnboardingPage>
     Color? iconColor,
     VoidCallback? onTap,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Card(
-        elevation: 0,
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+    final settings = context.watch<SettingsProvider>();
+    final enableGlass = settings.plusEnableGlassmorphism;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    Widget cardContent = ListTile(
+      leading: Icon(
+        icon,
+        color: iconColor ?? colorScheme.primary,
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      dense: true,
+      trailing: onTap != null
+          ? const Icon(Icons.chevron_right, size: 18)
+          : null,
+    );
+
+    Widget container = Container(
+      decoration: BoxDecoration(
+        color: (isDark
+                ? colorScheme.surfaceContainerHigh
+                : colorScheme.surface)
+            .withOpacity(enableGlass ? 0.45 : 1.0),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(enableGlass ? 0.3 : 0.1),
+          width: 1,
+        ),
+        boxShadow: enableGlass
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: ListTile(
-            leading: Icon(
-              icon,
-              color: iconColor ?? Theme.of(context).colorScheme.primary,
-            ),
-            title: Text(
-              title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-            dense: true,
-            trailing: onTap != null
-                ? const Icon(Icons.chevron_right, size: 18)
-                : null,
-          ),
+          borderRadius: BorderRadius.circular(16),
+          child: cardContent,
         ),
       ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: enableGlass
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: container,
+              ),
+            )
+          : container,
     );
   }
 

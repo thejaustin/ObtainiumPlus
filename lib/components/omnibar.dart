@@ -599,7 +599,7 @@ class AppActionsFAB extends StatelessWidget {
     Color? containerColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.read<SettingsProvider>();
+    final settings = context.watch<SettingsProvider>();
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;

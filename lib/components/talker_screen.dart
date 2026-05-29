@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TalkerScreen extends StatefulWidget {
   final Talker talker;
@@ -45,30 +46,30 @@ class _TalkerScreenState extends State<TalkerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Diagnostics Log Viewer'),
+        title: Text(tr('diagnosticsLogViewer')),
         actions: [
           IconButton(
             icon: const Icon(Icons.copy_rounded),
-            tooltip: 'Copy all to clipboard',
+            tooltip: tr('copyAllToClipboard'),
             onPressed: () {
               final text = widget.talker.history
                   .map((e) => '[${e.timestamp.toIso8601String()}] [${e.title}] ${e.message}')
                   .join('\n');
               Clipboard.setData(ClipboardData(text: text));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('All logs copied to clipboard')),
+                SnackBar(content: Text(tr('allLogsCopiedToClipboard'))),
               );
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete_sweep_rounded),
-            tooltip: 'Clear history',
+            tooltip: tr('clearHistory'),
             onPressed: () {
               setState(() {
                 widget.talker.clear();
               });
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Log history cleared')),
+                SnackBar(content: Text(tr('logHistoryCleared'))),
               );
             },
           ),
@@ -93,8 +94,8 @@ class _TalkerScreenState extends State<TalkerScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Search logs...',
+                        decoration: InputDecoration(
+                          hintText: tr('searchLogs'),
                           border: InputBorder.none,
                         ),
                         onChanged: (val) {
@@ -107,12 +108,12 @@ class _TalkerScreenState extends State<TalkerScreen> {
                     DropdownButton<String>(
                       value: _filterType,
                       underline: const SizedBox(),
-                      items: const [
-                        DropdownMenuItem(value: 'ALL', child: Text('All')),
-                        DropdownMenuItem(value: 'INFO', child: Text('Info')),
-                        DropdownMenuItem(value: 'WARNING', child: Text('Warning')),
-                        DropdownMenuItem(value: 'EXCEPTION', child: Text('Errors')),
-                        DropdownMenuItem(value: 'DEBUG', child: Text('Debug')),
+                      items: [
+                        DropdownMenuItem(value: 'ALL', child: Text(tr('all'))),
+                        DropdownMenuItem(value: 'INFO', child: Text(tr('info'))),
+                        DropdownMenuItem(value: 'WARNING', child: Text(tr('warning'))),
+                        DropdownMenuItem(value: 'EXCEPTION', child: Text(tr('errors'))),
+                        DropdownMenuItem(value: 'DEBUG', child: Text(tr('debug'))),
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -137,7 +138,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                         Icon(Icons.receipt_long_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
                         const SizedBox(height: 16),
                         Text(
-                          'No logs matches the filter',
+                          tr('noLogsMatchesTheFilter'),
                           style: TextStyle(color: colorScheme.onSurfaceVariant),
                         ),
                       ],
