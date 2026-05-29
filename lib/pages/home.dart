@@ -45,21 +45,21 @@ class HomePageState extends State<HomePage> {
 
   List<NavigationPageItem> pages = [
     NavigationPageItem(
-      tr('appsString'),
+      'appsString',
       Icons.apps,
       AppsPage(key: GlobalKey<AppsPageState>()),
     ),
     NavigationPageItem(
-      tr('addApp'),
+      'addApp',
       Icons.add,
       AddAppPage(key: GlobalKey<AddAppPageState>()),
     ),
     NavigationPageItem(
-      tr('importExport'),
+      'importExport',
       Icons.import_export,
       const ImportExportPage(),
     ),
-    NavigationPageItem(tr('settings'), Icons.settings, const SettingsPage()),
+    NavigationPageItem('settings', Icons.settings, const SettingsPage()),
   ];
 
   @override
@@ -356,7 +356,7 @@ class HomePageState extends State<HomePage> {
                           .map(
                             (e) => NavigationRailDestination(
                               icon: Icon(e.icon),
-                              label: Text(e.title),
+                              label: Text(tr(e.title)),
                             ),
                           )
                           .toList(),
@@ -393,7 +393,7 @@ class HomePageState extends State<HomePage> {
                         .map(
                           (e) => NavigationDestination(
                             icon: Icon(e.icon),
-                            label: e.title,
+                            label: tr(e.title),
                           ),
                         )
                         .toList(),

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/talker_screen.dart';
@@ -34,28 +35,28 @@ class DeveloperSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Developer & Diagnostics')),
+      appBar: AppBar(title: Text(tr('developerAndDiagnostics'))),
       body: ListView(
         controller: scrollController,
         children: [
-          _buildSection(context, 'Play Store & Plugins (Experimental)', [
+          _buildSection(context, tr('playStoreAndPluginsExperimental'), [
             ListTile(
               leading: const Icon(Icons.security_outlined),
-              title: const Text('Authentication Mode'),
+              title: Text(tr('authenticationMode')),
               subtitle: Text(
                 context.watch<AuthProvider>().authMode == AuthMode.anonymous
-                    ? 'Anonymous (Dispenser)'
+                    ? tr('anonymousDispenser')
                     : (context.watch<AuthProvider>().authMode == AuthMode.hybrid
-                          ? 'Hybrid (Safety First)'
-                          : 'Personal (microG)'),
+                          ? tr('hybridSafetyFirst')
+                          : tr('personalMicroG')),
               ),
               onTap: () => _showAuthModePicker(context),
             ),
             ListTile(
               leading: const Icon(Icons.token_outlined),
-              title: const Text('Manage Token Dispensers'),
-              subtitle: const Text(
-                'Anonymous login tokens (AAS) for Google Play Store access',
+              title: Text(tr('manageTokenDispensers')),
+              subtitle: Text(
+                tr('anonymousLoginTokensAAS'),
               ),
               trailing: const Icon(Icons.chevron_right),
               enabled:
@@ -65,14 +66,14 @@ class DeveloperSettingsPage extends StatelessWidget {
             if (context.watch<AuthProvider>().authMode != AuthMode.anonymous)
               ListTile(
                 leading: const Icon(Icons.account_circle_outlined),
-                title: const Text('microG Account'),
+                title: Text(tr('microGAccount')),
                 subtitle: Text(
-                  context.watch<AuthProvider>().microGEmail ?? 'None selected',
+                  context.watch<AuthProvider>().microGEmail ?? tr('noneSelected'),
                 ),
                 trailing: context.watch<AuthProvider>().microGEmail != null
                     ? IconButton(
                         icon: const Icon(Icons.link_off),
-                        tooltip: 'Remove linked account',
+                        tooltip: tr('removeLinkedAccount'),
                         onPressed: () async {
                           await context.read<AuthProvider>().setMicroGEmail(
                             null,
@@ -84,27 +85,27 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
             ListTile(
               leading: const Icon(Icons.extension_outlined),
-              title: const Text('Plugin Manager'),
-              subtitle: const Text(
-                'JS "Recipes" that add new sources without a full app update',
+              title: Text(tr('pluginManager')),
+              subtitle: Text(
+                tr('jsRecipesPluginManager'),
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => pushRoute(context, const PluginManagerPage()),
             ),
             ListTile(
               leading: const Icon(Icons.phonelink_setup_outlined),
-              title: const Text('Device Spoofing (microG)'),
-              subtitle: const Text(
-                'Spoof GSF ID / device profile for regional app compatibility',
+              title: Text(tr('deviceSpoofingMicroG')),
+              subtitle: Text(
+                tr('spoofGsfIdDeviceProfile'),
               ),
               onTap: () => _showSpoofingManager(context),
             ),
             if (plusSettings.plusEnableMicroGHub)
               ListTile(
                 leading: const Icon(Icons.hub_outlined),
-                title: const Text('microG Deployment Hub'),
-                subtitle: const Text(
-                  'Directly download and install microG / GmsCore components',
+                title: Text(tr('microGDeploymentHub')),
+                subtitle: Text(
+                  tr('directlyDownloadInstallMicroG'),
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => pushRoute(context, const MicroGHubPage()),
@@ -112,22 +113,22 @@ class DeveloperSettingsPage extends StatelessWidget {
             if (plusSettings.plusEnableStandaloneInstaller)
               ListTile(
                 leading: const Icon(Icons.install_mobile_outlined),
-                title: const Text('Standalone APK Installer'),
-                subtitle: const Text(
-                  'Install any APK from storage using Shizuku / System',
+                title: Text(tr('standaloneApkInstaller')),
+                subtitle: Text(
+                  tr('installAnyApkStorage'),
                 ),
                 trailing: const Icon(Icons.file_open_outlined),
                 onTap: () => _handleStandaloneInstall(context),
               ),
           ]),
-          _buildSection(context, 'Play Store Safety & Filters', [
+          _buildSection(context, tr('playStoreSafetyAndFilters'), [
             _buildSafetyScoreCard(context),
             const SizedBox(height: 12),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.verified_user_outlined),
-              title: const Text('Verified Apps Only'),
-              subtitle: const Text(
-                'Only show apps verified by Play Protect in search results.',
+              title: Text(tr('verifiedAppsOnly')),
+              subtitle: Text(
+                tr('onlyShowAppsVerifiedByPlayProtect'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -138,9 +139,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.block_outlined),
-              title: const Text('No Ads Filter'),
-              subtitle: const Text(
-                'Exclude apps that contain advertisements from search.',
+              title: Text(tr('noAdsFilter')),
+              subtitle: Text(
+                tr('excludeAppsContainAds'),
               ),
               value: context.watch<PlusSettingsProvider>().playStoreNoAdsFilter,
               onChanged: (val) =>
@@ -151,9 +152,9 @@ class DeveloperSettingsPage extends StatelessWidget {
               secondary: const Icon(
                 Icons.system_security_update_warning_outlined,
               ),
-              title: const Text('Exclude System Apps'),
-              subtitle: const Text(
-                'Prevents updating critical system components via the native bridge.',
+              title: Text(tr('excludeSystemApps')),
+              subtitle: Text(
+                tr('preventsUpdatingCriticalSystemComponents'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -166,9 +167,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.vpn_lock_outlined),
-              title: const Text('Require VPN (Strict IP Privacy)'),
-              subtitle: const Text(
-                'Block all native Play Store traffic unless connected to a VPN/Proxy.',
+              title: Text(tr('requireVpnStrictIpPrivacy')),
+              subtitle: Text(
+                tr('blockAllNativePlayStoreTraffic'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -179,9 +180,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.auto_delete_outlined),
-              title: const Text('Auto-Discard Tokens'),
-              subtitle: const Text(
-                'Immediately clear authentication tokens after each successful request.',
+              title: Text(tr('autoDiscardTokens')),
+              subtitle: Text(
+                tr('immediatelyClearAuthTokens'),
               ),
               value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
               onChanged: (val) =>
@@ -190,9 +191,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.download_for_offline_outlined),
-              title: const Text('Minimum Downloads Filter'),
+              title: Text(tr('minimumDownloadsFilter')),
               subtitle: Text(
-                'Exclude apps with fewer than ${context.watch<PlusSettingsProvider>().playStoreMinDownloads} downloads',
+                tr('excludeAppsFewerThanDownloads', args: [context.watch<PlusSettingsProvider>().playStoreMinDownloads.toString()]),
               ),
             ),
             Slider(
@@ -212,21 +213,21 @@ class DeveloperSettingsPage extends StatelessWidget {
                       val.toInt(),
             ),
           ]),
-          _buildSection(context, 'Diagnostics', [
+          _buildSection(context, tr('diagnostics'), [
             ListTile(
               leading: const Icon(Icons.receipt_long_outlined),
-              title: const Text('View Talker Logs'),
-              subtitle: const Text(
-                'Real-time network requests, UI events, and errors',
+              title: Text(tr('viewTalkerLogs')),
+              subtitle: Text(
+                tr('realtimeNetworkRequests'),
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => pushRoute(context, TalkerScreen(talker: talker)),
             ),
             ListTile(
               leading: const Icon(Icons.analytics_outlined),
-              title: const Text('Crash Statistics'),
-              subtitle: const Text(
-                'Local crash frequency and error type breakdown',
+              title: Text(tr('crashStatistics')),
+              subtitle: Text(
+                tr('localCrashFrequency'),
               ),
               onTap: () async {
                 final stats = await CrashAnalytics.getStats();
@@ -234,17 +235,19 @@ class DeveloperSettingsPage extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (context) => GlassDialog(
-                      title: 'Local Crash Stats',
+                      title: tr('localCrashStats'),
                       icon: Icons.analytics_outlined,
                       content: Text(
-                        'Total Crashes: ${stats.totalCrashes}\n'
-                        'Last Crash: ${stats.lastCrashTime ?? "Never"}\n'
-                        'Types: ${stats.crashTypes.join(", ")}',
+                        tr('localCrashStatsContent', args: [
+                          stats.totalCrashes.toString(),
+                          stats.lastCrashTime ?? tr('never'),
+                          stats.crashTypes.join(", "),
+                        ]),
                       ),
                       actions: [
                         FilledButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Close'),
+                          child: Text(tr('close')),
                         ),
                       ],
                     ),
@@ -254,12 +257,12 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.bug_report_outlined),
-              title: const Text('Standard App Logs'),
-              subtitle: const Text('Legacy obtainium logs'),
+              title: Text(tr('standardAppLogs')),
+              subtitle: Text(tr('legacyObtainiumLogs')),
               onTap: () => context.read<LogsProvider>().get().then((logs) {
                 if (logs.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No logs found')),
+                    SnackBar(content: Text(tr('noLogsFound'))),
                   );
                 } else {
                   Navigator.of(context).push(
@@ -272,9 +275,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.upload_file_outlined),
-              title: const Text('Upload Logs to New Issue'),
-              subtitle: const Text(
-                'Opens a pre-filled GitHub issue with current diagnostic logs',
+              title: Text(tr('uploadLogsNewIssue')),
+              subtitle: Text(
+                tr('opensPrefilledGithubIssue'),
               ),
               onTap: () async {
                 final history = talker.history.reversed
@@ -303,12 +306,12 @@ class DeveloperSettingsPage extends StatelessWidget {
               },
             ),
           ]),
-          _buildSection(context, 'Expressive Design & Shapes', [
+          _buildSection(context, tr('expressiveDesignShapes'), [
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.gesture_rounded),
-              title: const Text('Squiggly Progress Bars'),
-              subtitle: const Text(
-                'Use Play Store-style sinusoidal animations for loading and downloads.',
+              title: Text(tr('squigglyProgressBars')),
+              subtitle: Text(
+                tr('usePlayStoreStyleSinusoidal'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -322,9 +325,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.rounded_corner_rounded),
-              title: const Text('Global Corner Radius'),
+              title: Text(tr('globalCornerRadius')),
               subtitle: Text(
-                'Default roundedness for cards and containers (${context.watch<PlusSettingsProvider>().plusGlobalCornerRadius.toInt()}px)',
+                tr('defaultRoundednessCards', args: [context.watch<PlusSettingsProvider>().plusGlobalCornerRadius.toInt().toString()]),
               ),
             ),
             Slider(
@@ -340,9 +343,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.tune_rounded),
-              title: const Text('Override Individual Radii'),
-              subtitle: const Text(
-                'Fine-tune roundedness for specific areas of the app.',
+              title: Text(tr('overrideIndividualRadii')),
+              subtitle: Text(
+                tr('fineTuneRoundedness'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -358,9 +361,9 @@ class DeveloperSettingsPage extends StatelessWidget {
                 .plusOverrideIndividualCornerRadius) ...[
               ListTile(
                 leading: const Icon(Icons.home_max_rounded),
-                title: const Text('Home Screen Radius'),
+                title: Text(tr('homeScreenRadius')),
                 subtitle: Text(
-                  'Roundedness for dashboard and app list elements (${context.watch<PlusSettingsProvider>().plusHomeCornerRadius.toInt()}px)',
+                  tr('roundednessDashboardElements', args: [context.watch<PlusSettingsProvider>().plusHomeCornerRadius.toInt().toString()]),
                 ),
               ),
               Slider(
@@ -376,9 +379,9 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.settings_suggest_rounded),
-                title: const Text('Settings Radius'),
+                title: Text(tr('settingsRadius')),
                 subtitle: Text(
-                  'Roundedness for settings groups and cards (${context.watch<PlusSettingsProvider>().plusSettingsCornerRadius.toInt()}px)',
+                  tr('roundednessSettingsGroups', args: [context.watch<PlusSettingsProvider>().plusSettingsCornerRadius.toInt().toString()]),
                 ),
               ),
               Slider(
@@ -396,12 +399,12 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
             ],
           ]),
-          _buildSection(context, 'Experimental Features', [
+          _buildSection(context, tr('experimentalFeatures'), [
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.compare_arrows_outlined),
-              title: const Text('Legacy UI Comparison'),
-              subtitle: const Text(
-                'Injects FABs on the app list, app detail, and add-app pages to preview the old UI side-by-side.',
+              title: Text(tr('legacyUiComparison')),
+              subtitle: Text(
+                tr('injectsFabsAppList'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -414,9 +417,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.science_outlined),
-              title: const Text('Advanced Theming'),
-              subtitle: const Text(
-                'Unlocks the experimental Advanced Theming section in Settings → Appearance. May have visual regressions.',
+              title: Text(tr('advancedTheming')),
+              subtitle: Text(
+                tr('unlocksExperimentalAdvancedTheming'),
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -428,43 +431,43 @@ class DeveloperSettingsPage extends StatelessWidget {
                       val,
             ),
           ]),
-          _buildSection(context, 'Testing', [
+          _buildSection(context, tr('testing'), [
             ListTile(
               leading: const Icon(Icons.flash_on_outlined),
               iconColor: Colors.red,
-              title: const Text('Trigger Test Crash'),
-              subtitle: const Text(
-                'Forces a crash to verify Sentry and Talker are capturing errors',
+              title: Text(tr('triggerTestCrash')),
+              subtitle: Text(
+                tr('forcesCrashVerify'),
               ),
               onTap: () {
-                talker.warning('User triggered a test crash');
-                throw Exception('Obtainium+ Test Crash');
+                talker.warning(tr('userTriggeredTestCrash'));
+                throw Exception(tr('obtainiumTestCrash'));
               },
             ),
             ListTile(
               leading: const Icon(Icons.network_check_outlined),
-              title: const Text('Test Network Logging'),
-              subtitle: const Text(
-                'Sends a dummy request to verify network interception logging',
+              title: Text(tr('testNetworkLogging')),
+              subtitle: Text(
+                tr('sendsDummyRequest'),
               ),
               onTap: () async {
-                talker.info('Triggering test network request...');
+                talker.info(tr('triggeringTestNetworkRequest'));
                 try {
                   // ignore: unused_local_variable
                   final response = await SentryHttpClient().get(
                     Uri.parse('https://api.github.com/zen'),
                   );
-                  talker.info('Test network request successful');
+                  talker.info(tr('testNetworkRequestSuccessful'));
                 } catch (e, st) {
-                  talker.handle(e, st, 'Test network request failed');
+                  talker.handle(e, st, tr('testNetworkRequestFailed'));
                 }
               },
             ),
           ]),
-          _buildSection(context, 'External Links', [
+          _buildSection(context, tr('externalLinks'), [
             ListTile(
               leading: const Icon(Icons.cloud_outlined),
-              title: const Text('View Sentry Project'),
+              title: Text(tr('viewSentryProject')),
               onTap: () => launchUrlString(
                 'https://sentry.io/organizations/af-developments/projects/obtainiumplus/',
                 mode: LaunchMode.externalApplication,
@@ -472,7 +475,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.list_alt_outlined),
-              title: const Text('GitHub Issue Tracker'),
+              title: Text(tr('githubIssueTracker')),
               onTap: () => launchUrlString(
                 CrashTracker.issueTrackerUrl,
                 mode: LaunchMode.externalApplication,
@@ -541,9 +544,9 @@ class DeveloperSettingsPage extends StatelessWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.group_outlined),
-                  title: const Text('Anonymous (Dispenser)'),
-                  subtitle: const Text(
-                    'Use throwaway accounts only. Safest for your personal account.',
+                  title: Text(tr('anonymousDispenser')),
+                  subtitle: Text(
+                    tr('useThrowawayAccounts'),
                   ),
                   trailing: authProvider.authMode == AuthMode.anonymous
                       ? const Icon(Icons.check, color: Colors.green)
@@ -555,9 +558,9 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.person_outline),
-                  title: const Text('Personal (microG)'),
-                  subtitle: const Text(
-                    'Use your real account for all actions. Highest risk.',
+                  title: Text(tr('personalMicroG')),
+                  subtitle: Text(
+                    tr('useRealAccount'),
                   ),
                   trailing: authProvider.authMode == AuthMode.microG
                       ? const Icon(Icons.check, color: Colors.green)
@@ -569,9 +572,9 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.security_outlined),
-                  title: const Text('Hybrid (Safety First)'),
-                  subtitle: const Text(
-                    'Anonymous for search/browsing, Personal only for paid apps.',
+                  title: Text(tr('hybridSafetyFirst')),
+                  subtitle: Text(
+                    tr('anonymousForSearch'),
                   ),
                   trailing: authProvider.authMode == AuthMode.hybrid
                       ? const Icon(Icons.check, color: Colors.green)
@@ -614,12 +617,12 @@ class DeveloperSettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(
           children: [
-            ExpressiveCircularProgressIndicator(),
-            SizedBox(width: 16),
-            Flexible(child: Text('Linking account…')),
+            const ExpressiveCircularProgressIndicator(),
+            const SizedBox(width: 16),
+            Flexible(child: Text(tr('linkingAccount'))),
           ],
         ),
       ),
@@ -632,14 +635,14 @@ class DeveloperSettingsPage extends StatelessWidget {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Linked $email successfully')));
+        ).showSnackBar(SnackBar(content: Text(tr('linkedEmailSuccessfully', args: [email]))));
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceFirst('ObtainiumError: ', '')),
+            content: Text(tr('errorWithMessage', args: [e.toString().replaceFirst('ObtainiumError: ', '')])),
           ),
         );
       }
@@ -681,26 +684,26 @@ class DeveloperSettingsPage extends StatelessWidget {
             final confirm = await showDialog<bool>(
               context: context,
               builder: (context) => GlassDialog(
-                title: 'Install Standalone APK',
+                title: tr('installStandaloneApk'),
                 icon: Icons.install_mobile_outlined,
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Package: ${info.packageName}'),
-                    Text('Version: ${info.versionName} (${info.versionCode})'),
+                    Text(tr('packageNameLabel', args: [info.packageName])),
+                    Text(tr('versionLabel', args: [info.versionName, info.versionCode.toString()])),
                     const SizedBox(height: 12),
-                    const Text('Do you want to proceed with the installation?'),
+                    Text(tr('proceedWithInstallation')),
                   ],
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: Text(tr('cancel')),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Install'),
+                    child: Text(tr('install')),
                   ),
                 ],
               ),
@@ -718,8 +721,8 @@ class DeveloperSettingsPage extends StatelessWidget {
 
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Installation completed successfully'),
+                  SnackBar(
+                    content: Text(tr('installationCompletedSuccessfully')),
                   ),
                 );
               }
@@ -731,7 +734,7 @@ class DeveloperSettingsPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))));
       }
     }
   }
@@ -762,7 +765,10 @@ class DeveloperSettingsPage extends StatelessWidget {
     final color = score > 80
         ? Colors.green
         : (score > 50 ? Colors.orange : Colors.red);
-    final label = score > 80 ? 'Excellent' : (score > 50 ? 'Moderate' : 'Low');
+
+    final String labelKey = score > 80
+        ? 'safetyExcellent'
+        : (score > 50 ? 'safetyModerate' : 'safetyLow');
 
     return Card(
       elevation: 0,
@@ -778,9 +784,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Account Safety Score',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  tr('accountSafetyScore'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   '$score%',
@@ -800,7 +806,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Current Protection: $label',
+              tr('currentProtection', args: [tr(labelKey)]),
               style: TextStyle(
                 color: color,
                 fontSize: 12,
@@ -827,11 +833,11 @@ void showDeviceProfilePicker(BuildContext context) {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Select Device Profile',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              tr('selectDeviceProfile'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           ...AuthProvider.deviceProfiles.map(
@@ -839,7 +845,7 @@ void showDeviceProfilePicker(BuildContext context) {
               leading: const Icon(Icons.phone_android_rounded),
               title: Text(p.name),
               subtitle: Text(
-                '${p.manufacturer} ${p.model} (Android ${p.sdkVersion - 21 + 5})',
+                tr('deviceProfileAndroidVersion', args: [p.manufacturer, p.model, (p.sdkVersion - 21 + 5).toString()]),
               ),
               trailing: authProvider.selectedProfile.name == p.name
                   ? const Icon(Icons.check, color: Colors.green)
@@ -870,6 +876,7 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
   @override
   void initState() {
     super.initState();
+    _gsfId = tr('checkingEllipsis');
     _getGsfId();
   }
 
@@ -880,7 +887,7 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
       setState(() => _gsfId = result);
     } on PlatformException catch (e) {
       if (!mounted) return;
-      setState(() => _gsfId = 'Failed to get GSF ID: ${e.message}');
+      setState(() => _gsfId = tr('failedToGetGsfId', args: [e.message ?? '']));
     }
   }
 
@@ -912,12 +919,12 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
           const Icon(Icons.phonelink_setup_outlined, size: 48),
           const SizedBox(height: 16),
           Text(
-            'Device Identifier Spoofing',
+            tr('deviceIdentifierSpoofing'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
           ListTile(
-            title: const Text('Current GSF ID'),
+            title: Text(tr('currentGsfId')),
             subtitle: Text(_gsfId),
             trailing: IconButton(
               icon: const Icon(Icons.refresh),
@@ -926,19 +933,19 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
           ),
           ListTile(
             leading: const Icon(Icons.shuffle_rounded),
-            title: const Text('Anonymous Device ID'),
+            title: Text(tr('anonymousDeviceId')),
             subtitle: Text(
               context.watch<AuthProvider>().spoofedAndroidId ??
-                  'None generated',
+                  tr('noneGenerated'),
             ),
             trailing: TextButton(
               onPressed: () => context.read<AuthProvider>().rotateDeviceId(),
-              child: const Text('ROTATE'),
+              child: Text(tr('rotate')),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.devices_other_rounded),
-            title: const Text('Device Profile'),
+            title: Text(tr('deviceProfile')),
             subtitle: Text(context.watch<AuthProvider>().selectedProfile.name),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
@@ -949,10 +956,10 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
             },
           ),
           const Divider(),
-          const Text(
-            'microG Spoofing is active when a custom GSF ID or Device Profile is selected. This allows the app to bypass regional and device restrictions on the Play Store.',
+          Text(
+            tr('microGSpoofingActiveExplanation'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 24),
         ],
@@ -1017,12 +1024,12 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Token Dispensers',
+            tr('tokenDispensers'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Dispensers provide anonymous login tokens for Google Play access.',
+          Text(
+            tr('dispensersProvideAnonymousTokens'),
             textAlign: TextAlign.center,
           ),
           if (authProvider.hasActiveToken)
@@ -1034,7 +1041,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
                   color: Colors.green,
                   size: 16,
                 ),
-                label: Text('Active Token Ready'),
+                label: Text(tr('activeTokenReady')),
                 onDeleted: () => authProvider.clearBundle(),
                 deleteIcon: const Icon(Icons.close, size: 16),
               ),
@@ -1075,7 +1082,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
           TextField(
             controller: _controller,
             decoration: InputDecoration(
-              labelText: 'Add Dispenser URL',
+              labelText: tr('addDispenserUrl'),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
@@ -1115,14 +1122,14 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
       await authProvider.refreshBundle(url);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully retrieved token!')),
+          SnackBar(content: Text(tr('successfullyRetrievedToken'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        ).showSnackBar(SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

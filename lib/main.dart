@@ -167,6 +167,9 @@ void main() async {
 
   final plusSettings = PlusSettingsProvider();
   await plusSettings.initializeSettings(prefs);
+  plusSettings.addListener(() {
+    sp.notifyPlusSettingsChanged();
+  });
 
   final themeSettings = ThemeSettingsProvider();
   await themeSettings.initializeSettings(prefs);

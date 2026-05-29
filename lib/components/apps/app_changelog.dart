@@ -5,6 +5,8 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
 
@@ -50,7 +52,9 @@ void showChangeLogDialog(
                   child: Markdown(
                     styleSheet: MarkdownStyleSheet(
                       blockquoteDecoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
+                        color: context.watch<SettingsProvider>().plusEnableGlassmorphism
+                            ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4)
+                            : Theme.of(context).cardColor,
                       ),
                     ),
                     data: changeLog,

@@ -431,7 +431,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   }
 
   Widget _buildAppBarStyleDropdown(BuildContext context) {
-    final settingsProvider = context.read<SettingsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
     return ListTile(
       leading: const Icon(Icons.vertical_align_top_rounded),
       title: Text(

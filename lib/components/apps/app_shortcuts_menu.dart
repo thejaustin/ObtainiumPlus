@@ -26,7 +26,7 @@ void showAppShortcutsMenu(
   final appsProvider = context.read<AppsProvider>();
   final appInMemory = appsProvider.apps[appId];
   if (appInMemory == null) return;
-  final settings = context.read<SettingsProvider>();
+  final settings = context.watch<SettingsProvider>();
   final enableGlass = settings.plusEnableGlassmorphism;
   final colorScheme = Theme.of(context).colorScheme;
 
