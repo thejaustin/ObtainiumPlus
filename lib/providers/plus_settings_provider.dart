@@ -420,6 +420,32 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableBanWarnings => _prefs?.getBool('plusEnableBanWarnings') ?? true;
+  set plusEnableBanWarnings(bool val) {
+    _prefs?.setBool('plusEnableBanWarnings', val);
+    notifyListeners();
+  }
+
+  String? get plusDefaultStorePackage => _prefs?.getString('plusDefaultStorePackage');
+  set plusDefaultStorePackage(String? val) {
+    if (val == null) {
+      _prefs?.remove('plusDefaultStorePackage');
+    } else {
+      _prefs?.setString('plusDefaultStorePackage', val);
+    }
+    notifyListeners();
+  }
+
+  String? get plusDefaultStoreName => _prefs?.getString('plusDefaultStoreName');
+  set plusDefaultStoreName(String? val) {
+    if (val == null) {
+      _prefs?.remove('plusDefaultStoreName');
+    } else {
+      _prefs?.setString('plusDefaultStoreName', val);
+    }
+    notifyListeners();
+  }
+
   ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
       ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
       : const AlwaysScrollableScrollPhysics();
