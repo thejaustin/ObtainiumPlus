@@ -45,6 +45,8 @@ class _OnboardingPageState extends State<OnboardingPage>
   bool _batteryGranted = false;
   bool _usageGranted = false;
 
+  final _dispenserController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +57,7 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   @override
   void dispose() {
+    _dispenserController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -554,6 +557,68 @@ class _OnboardingPageState extends State<OnboardingPage>
                         }
                       }
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Text(
+                    tr('tokenDispensers'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    tr('dispensersProvideAnonymousTokens'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  if (auth.dispensers.isNotEmpty)
+                    Card(
+                      elevation: 0,
+                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Column(
+                          children: auth.dispensers
+                              .map(
+                                (d) => ListTile(
+                                  dense: true,
+                                  title: Text(d, style: const TextStyle(fontSize: 13)),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 18),
+                                    onPressed: () => auth.removeDispenser(d),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _dispenserController,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: tr('addDispenserUrl'),
+                      hintText: 'https://your-dispenser.com/api/auth',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          if (_dispenserController.text.isNotEmpty) {
+                            auth.addDispenser(_dispenserController.text);
+                            _dispenserController.clear();
+                          }
+                        },
+                      ),
+                    ),
                   ),
                 ],
               );
