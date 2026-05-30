@@ -25,7 +25,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_package_manager/android_package_manager.dart';
+import 'package:android_package_manager/android_package_manager.dart' hide LaunchMode;
 
 class AppPage extends StatefulWidget {
   const AppPage({
