@@ -77,7 +77,7 @@ class AuthProvider with ChangeNotifier {
 
   AuthBundle? _anonymousBundle;
   AuthBundle? _personalBundle;
-  List<String> _dispensers = ['https://auroraoss.com/api/auth'];
+  List<String> _dispensers = [];
   AuthMode _authMode = AuthMode.hybrid;
   String? _microGEmail;
   String? _spoofedAndroidId;
@@ -125,7 +125,14 @@ class AuthProvider with ChangeNotifier {
 
     _dispensers =
         _prefs?.getStringList('play_store_dispensers') ??
-        ['https://auroraoss.com/api/auth'];
+        [];
+
+    // Migrate existing users off the default auroraoss.com dispenser to honor the maintainer's request
+    if (_dispensers.contains('https://auroraoss.com/api/auth')) {
+      _dispensers.remove('https://auroraoss.com/api/auth');
+      await _prefs?.setStringList('play_store_dispensers', _dispensers);
+    }
+
     _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
     _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
 
