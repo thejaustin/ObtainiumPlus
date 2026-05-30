@@ -1,25 +1,61 @@
 # What's New in Obtainium+
 
-## Version 1.4.3-p9 (Current Release)
-*   **App Identity Shift**: Shifted the app name back to `Obtainium+` and updated the codename/package ID to `dev.thejaustin.obtainium.plus`.
-*   **Customizable Ban Warning Limit**: Added a settings slider to allow users to customize the query threshold (from 1 to 50 apps) before receiving dispenser ban warnings during bulk updates.
-*   **Default App Store Routing**: Auto-detects installed client stores (F-Droid, Droidify, Aurora Store) on the details sheet and allows setting a default store to route the main "Install/Update" button clicks.
-*   **M3E Expressive Theme Polish**: Applied responsive Material 3 Expressive (M3E) scaling, border-radius constraints, and curves to all new UI elements. Solved rendering issues (text-wrapping and overlays) on cards, lists, and sheets to provide a premium user experience.
+This changelog highlights the major new features, stability improvements, and visual refinements across the latest ten releases.
 
-## Version 1.4.3-p4 (Pending)
-*   **Performance Overhaul**: We've completely redesigned the internal settings engine. This makes ObtainiumPlus faster and more responsive, especially when scrolling through large app lists.
-*   **Better Organization**: Settings are now more logically grouped, making it easier to find and customize features like "Glassmorphism" and background updates.
-*   **Localized Plus Features**: All new advanced features now have full English translations, ensuring a polished experience.
+---
 
-## Version 1.4.3
-*   **Smoother Onboarding**: We fixed an issue where the Google login prompt would appear unexpectedly during setup.
-*   **Increased Stability**: Resolved several crash issues that occurred during file downloads from unstable sources and when verifying installed apps.
-*   **Settings Reorganization**: We've cleaned up the Settings menu! You'll find a new "Installation" hub, and we've removed duplicate toggles so it's easier to customize your experience.
-*   **UI Polish**: The "Add App" page is now a unified, scrollable view instead of separate tabs, making it much easier to use.
-*   **Offline Mode**: Obtainium+ now supports queuing updates when you are offline; it will automatically check when your connection is restored.
-*   **Statistics Dashboard**: Check out the new Statistics page in the Troubleshooting section to see your update history and track app installations.
+## 🚀 Version 1.4.3-p9 — App Renaming, Store Defaults & Warning Slider (May 2026)
+*   **App Identity Shift**: Shifted the app name back to **Obtainium+** and updated the official package ID/codename to `dev.thejaustin.obtainium.plus` for full identity consistency.
+*   **Customizable Warning Slider**: Added a dynamic settings slider allowing users to adjust the exact check threshold (from 1 to 50 apps) for automated Play Store dispenser check warnings.
+*   **Default Store Routing**: Automatically scans for F-Droid, Droidify, and Aurora Store installations on your device. Easily set a default store to route the main "Install/Update" button clicks.
+*   **Aesthetic Polish & Safe Layouts**: Implemented dynamic Material 3 Expressive (M3E) scaling and border-radius rules. Applied strict ellipsis text truncation constraints to guarantee zero overlapping text or layout overflows on details sheets and lists.
 
-## Earlier Updates
-*   **Improved Grid View**: We've significantly reduced the memory footprint when scrolling through large libraries of apps in Grid View.
-*   **Better Haptics**: Tactile feedback is now consistent across the entire app.
-*   **Modern Visuals**: The App Details and Add App screens now fully support "Glassmorphism" for a beautiful, modern look.
+## 🐛 Version 1.4.3-p8 — Onboarding Fixes & Diagnostic Retries (May 2026)
+*   **Google Login Fix**: Replaced native GSF dialog calls with an efficient, silent microG availability check to prevent unexpected account popup sheets on first app launch.
+*   **Network & Source Retries**: Added robust HTTP, Socket, and Handshake timeout retries for unstable download hosts like APKPure.
+*   **Sentry Exception Safeguards**: Wrapped underlying platform calls in solid try-catch layers to prevent null-pointer crashes during package verification.
+*   **Live Logger (Talker) Integration**: Introduced a real-time diagnostic error tracker inside local testing sessions to cleanly log background network activities.
+
+## 🏗️ Version 1.4.3-p4 — Core Architecture Modularization (May 2026)
+*   **Settings Engine Deconstruction**: Decomposed the monolithic "God Class" SettingsProvider into five specialized, high-performance providers:
+    *   `ThemeSettingsProvider` (Colors, Material You, visual effects)
+    *   `UpdateSettingsProvider` (Schedules, intervals, checks)
+    *   `BehaviorSettingsProvider` (Haptics, swipe actions, deep logs)
+    *   `ViewSettingsProvider` (Lists, grids, categories, layout styles)
+    *   `PlusSettingsProvider` (Plus visual filters, glassmorphic opacities)
+*   **Enhanced Memory Efficiency**: Significantly minimized state rebuilds when scrolling deep app lists or reordering categories.
+
+## 📊 Version 1.4.3 — Streamlined Add App & Statistics (January 2026)
+*   **Unified Add App Page**: Replaced the separate tab views (URL, Discover, Import/Export) with a single, elegant scrollable viewport for faster inputs.
+*   **Troubleshooting Dashboard**: Added a diagnostic dashboard showing live installation counts, system metrics, and comprehensive local update statistics.
+*   **Offline Operation Queue**: Manual updates requested while offline are safely queued and auto-triggered once a network connection is verified.
+
+## 🔍 Version 1.2.9-p50 — Advanced Discovery Filters (January 2026)
+*   **Forks in Search Results**: Added a dedicated settings toggle to optionally include source forks during GitHub Discover keyword queries.
+*   **F-Droid Repository Sync**: Stabilized background parsing for custom third-party F-Droid index signatures.
+
+## 📱 Version 1.2.9-p49 — Performance Optimization & Layouts (January 2026)
+*   **Reduced Memory Footprint**: Optimized image rendering for cached remote icons in both Dashboard lists and detailed tiles.
+*   **Dynamic Fluid Spacing**: Polished general layouts and padding rules to scale beautifully on varying screen sizes (including foldable devices and tablets).
+
+## 🎨 Version 1.2.9-p48 — Modern Material 3 (M3) Enhancements (January 2026)
+*   **Compatibility Updates**: Updated core color schemes and styles for full compatibility with newer Flutter 3.38 theme engines.
+*   **Granular Header Controls**: Introduced premium custom app bar styles and header toggle selectors to personalize the top dashboard.
+
+## 💎 Version 1.2.9-p47 — Plus Feature-Gate System (January 2026)
+*   **Custom Feature Switches**: Launched the initial toggle panel under Settings to configure or deactivate individual Plus additions.
+*   **Scheduled Update Windows**: Set specific hours during which background automatic update checks are permitted to run (saving battery and data usage).
+*   **ObtainiumPlus Package Migration**: Relocated basic platform hooks to support the initial `app.obtainiumplus` package configurations.
+
+## 🛡️ Version 1.2.9-p46 — Stability Enhancements & Safe Sheets (January 2026)
+*   **Details Page Text Fixes**: Resolved layout bugs where extremely long app descriptions or change lists would overlay text buttons.
+*   **Discover Empty State**: Rebuilt empty dashboard screens with helpful direct shortcuts to open the repository Discovery page.
+*   **WebViewController Leak Fixes**: Fixed background memory leaks associated with Web Scraper fallback sessions.
+
+## 🛠️ Version 1.2.9-p44 — Submenus & Contrast Adjustments (January 2026)
+*   **Modern Settings Submenus**: Transitioned the settings sheet from a long single page to modular nested sheets with SharedAxisTransitions.
+*   **Dark Mode Visual Contrast**: Adjusted background tinting and text brightness to maximize readability under high-contrast dark modes.
+
+---
+
+— Antigravity (Gemini Agent)
