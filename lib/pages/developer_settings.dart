@@ -818,9 +818,6 @@ class DeveloperSettingsPage extends StatelessWidget {
       ),
     );
   }
-
-  void _showDeviceProfilePicker(BuildContext context) =>
-      showDeviceProfilePicker(context);
 }
 
 /// Top-level so it can be called from both [DeveloperSettingsPage] and
