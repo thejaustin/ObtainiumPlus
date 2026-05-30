@@ -49,6 +49,110 @@ class _AppPageState extends State<AppPage> {
   AppInMemory? prevApp;
   bool updating = false;
 
+  Future<List<Map<String, String>>> _getInstalledStores() async {
+    final stores = [
+      {'name': 'Aurora Store', 'package': 'com.aurora.store', 'scheme': 'market://details?id='},
+      {'name': 'F-Droid', 'package': 'org.fdroid.fdroid', 'scheme': 'market://details?id='},
+      {'name': 'Droidify', 'package': 'com.looker.droidify', 'scheme': 'market://details?id='},
+    ];
+    final List<Map<String, String>> installed = [];
+    for (final store in stores) {
+      try {
+        await pm.getPackageInfo(
+          packageName: store['package']!,
+          flags: PackageInfoFlags({}),
+        );
+        installed.add(store);
+      } catch (_) {}
+    }
+    return installed;
+  }
+
+  Future<void> _openInStore(String storePackage, String storeScheme, String appId) async {
+    final intent = AndroidIntent(
+      action: 'android.intent.action.VIEW',
+      data: '$storeScheme$appId',
+      package: storePackage,
+    );
+    try {
+      await intent.launch();
+    } catch (e) {
+      // Fallback
+      final fallback = AndroidIntent(
+        action: 'android.intent.action.VIEW',
+        data: 'market://details?id=$appId',
+      );
+      await fallback.launch();
+    }
+  }
+
+  void _showStoreChooser(BuildContext context, String appId) async {
+    final installed = await _getInstalledStores();
+    if (installed.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No supported stores found (Aurora Store, F-Droid, or Droidify)')),
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      final plusSettings = context.read<PlusSettingsProvider>();
+      showDialog(
+        context: context,
+        builder: (ctx) => GlassDialog(
+          title: 'Open in Store',
+          icon: Icons.storefront_outlined,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...installed.map(
+                (store) => ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: Text(store['name']!),
+                  subtitle: Text(store['package']!),
+                  trailing: plusSettings.plusDefaultStorePackage == store['package']
+                      ? const Chip(label: Text('Default'))
+                      : TextButton(
+                          onPressed: () {
+                            plusSettings.plusDefaultStorePackage = store['package'];
+                            plusSettings.plusDefaultStoreName = store['name'];
+                            Navigator.pop(ctx);
+                            _showStoreChooser(context, appId);
+                          },
+                          child: const Text('Set Default'),
+                        ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openInStore(store['package']!, store['scheme']!, appId);
+                  },
+                ),
+              ),
+              if (plusSettings.plusDefaultStorePackage != null)
+                ListTile(
+                  leading: const Icon(Icons.clear),
+                  title: const Text('Clear Default Store'),
+                  onTap: () {
+                    plusSettings.plusDefaultStorePackage = null;
+                    plusSettings.plusDefaultStoreName = null;
+                    Navigator.pop(ctx);
+                    _showStoreChooser(context, appId);
+                  },
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
 Widget buildRepoRenameWarning({
     required AppInMemory? app,
     required AppsProvider appsProvider,
@@ -828,45 +932,58 @@ Widget buildRepoRenameWarning({
       }
     }
 
-    getInstallOrUpdateButton() => TextButton(
-      onPressed:
-          !updating &&
-              (app?.app.installedVersion == null ||
-                  app?.app.installedVersion != app?.app.latestVersion) &&
-              !areDownloadsRunning
-          ? () async {
-              try {
-                var successMessage = app?.app.installedVersion == null
-                    ? tr('installed')
-                    : tr('appsUpdated');
-                AppHaptics.heavyImpact();
-                var res = await appsProvider.downloadAndInstallLatestApps(
-                  app?.app.id != null ? [app!.app.id] : [],
-                  globalNavigatorKey.currentContext,
-                );
-                if (res.isNotEmpty && !trackOnly) {
+    getInstallOrUpdateButton() {
+      final plusSettings = context.watch<PlusSettingsProvider>();
+      final defaultStorePackage = plusSettings.plusDefaultStorePackage;
+      final defaultStoreName = plusSettings.plusDefaultStoreName;
+
+      return TextButton(
+        onPressed: !updating &&
+                (app?.app.installedVersion == null ||
+                    app?.app.installedVersion != app?.app.latestVersion) &&
+                !areDownloadsRunning
+            ? () async {
+                if (defaultStorePackage != null && app?.app.id != null) {
+                  AppHaptics.heavyImpact();
+                  final scheme = defaultStorePackage == 'org.fdroid.fdroid'
+                      ? 'fdroid.app://details?id='
+                      : 'market://details?id=';
+                  await _openInStore(defaultStorePackage, scheme, app!.app.id);
+                  return;
+                }
+                try {
+                  var successMessage = app?.app.installedVersion == null
+                      ? tr('installed')
+                      : tr('appsUpdated');
+                  AppHaptics.heavyImpact();
+                  var res = await appsProvider.downloadAndInstallLatestApps(
+                    app?.app.id != null ? [app!.app.id] : [],
+                    globalNavigatorKey.currentContext,
+                  );
+                  if (res.isNotEmpty && !trackOnly) {
+                    // ignore: use_build_context_synchronously
+                    showMessage(successMessage, context);
+                  }
+                  if (res.isNotEmpty && mounted) {
+                    Navigator.of(context).pop();
+                  }
+                } catch (e) {
                   // ignore: use_build_context_synchronously
-                  showMessage(successMessage, context);
+                  showError(e, context);
                 }
-                if (res.isNotEmpty && mounted) {
-                  Navigator.of(context).pop();
-                }
-              } catch (e) {
-                // ignore: use_build_context_synchronously
-                showError(e, context);
               }
-            }
-          : null,
-      child: Text(
-        app?.app.installedVersion == null
-            ? !trackOnly
-                  ? tr('install')
-                  : tr('markInstalled')
-            : !trackOnly
-            ? tr('update')
-            : tr('markUpdated'),
-      ),
-    );
+            : null,
+        child: Text(
+          defaultStoreName != null
+              ? (app?.app.installedVersion == null
+                  ? 'Install in $defaultStoreName'
+                  : 'Update in $defaultStoreName')
+              : (app?.app.installedVersion == null
+                  ? (!trackOnly ? tr('install') : tr('markInstalled'))
+                  : (!trackOnly ? tr('update') : tr('markUpdated'))),
+        ),
+      );
+    }
 
     getBottomSheetMenu() => Padding(
       padding: EdgeInsets.fromLTRB(
@@ -885,6 +1002,17 @@ Widget buildRepoRenameWarning({
               children: [
                 const SizedBox(width: 16.0),
                 Expanded(child: getInstallOrUpdateButton()),
+                const SizedBox(width: 8.0),
+                IconButton(
+                  icon: const Icon(Icons.storefront_outlined),
+                  onPressed: app?.app.id != null
+                      ? () => _showStoreChooser(context, app!.app.id)
+                      : null,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                    shape: const CircleBorder(),
+                  ),
+                ),
                 const SizedBox(width: 8.0),
                 PopupMenuButton<String>(
                   icon: Icon(

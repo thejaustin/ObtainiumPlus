@@ -325,3 +325,17 @@ class NotificationsProvider {
     payload: notif.payload,
   );
 }
+
+class DispenserBanWarningNotification extends ObtainiumNotification {
+  DispenserBanWarningNotification(int requestCount)
+      : super(
+          999,
+          tr('dispenserBanWarningTitle'),
+          tr('dispenserBanWarningMessage', args: [requestCount.toString()]),
+          'DISPENSER_BAN_WARNINGS',
+          tr('dispenserBanWarningChannel'),
+          tr('dispenserBanWarningDescription'),
+          Importance.high,
+          payload: '${tr('dispenserBanWarningTitle')}\n${tr('dispenserBanWarningMessage', args: [requestCount.toString()])}',
+        );
+}

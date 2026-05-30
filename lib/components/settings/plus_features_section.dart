@@ -349,6 +349,16 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableAdvancedSorting = val,
                     ),
+                  if (_matches(tr('plusEnableBanWarnings')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.warning_amber_rounded,
+                      title: tr('plusEnableBanWarnings'),
+                      subtitle: tr('plusEnableBanWarningsDescription'),
+                      value: settings.plusEnableBanWarnings,
+                      onChanged: (val) => settings.plusEnableBanWarnings = val,
+                    ),
                 ],
               ),
             ],
