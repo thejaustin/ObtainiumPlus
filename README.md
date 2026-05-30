@@ -1,4 +1,4 @@
-# ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium+ (ObtainiumPlus)
+# ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium+
 
 Get Android app updates straight from the source, styled with modern aesthetics and advanced developer options.
 
