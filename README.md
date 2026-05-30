@@ -84,7 +84,7 @@ Or, contribute some configurations to the website by creating a PR at [this repo
     height="80">](https://github.com/thejaustin/ObtainiumPlus/releases)
      
 Verification info:
-- Package ID: `dev.thejaustin.obtainium.plus`
+- Package ID: `dev.thejaustin.obtainiumplus`
 - SHA-256 hash of signing certificate: `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
 - [PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index) (to verify APK hashes)
 

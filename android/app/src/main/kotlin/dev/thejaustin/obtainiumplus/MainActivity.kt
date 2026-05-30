@@ -1,4 +1,4 @@
-package dev.thejaustin.obtainium.plus
+package dev.thejaustin.obtainiumplus
 
 import android.accounts.AccountManager
 import android.accounts.AccountManagerCallback
