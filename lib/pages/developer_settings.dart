@@ -240,8 +240,8 @@ class DeveloperSettingsPage extends StatelessWidget {
                       content: Text(
                         tr('localCrashStatsContent', args: [
                           stats.totalCrashes.toString(),
-                          stats.lastCrashTime ?? tr('never'),
-                          stats.crashTypes.join(", "),
+                          stats.lastCrashTime != null ? stats.lastCrashTime.toString() : tr('never'),
+                          stats.crashTypes.isEmpty ? tr('none') : stats.crashTypes.join(", "),
                         ]),
                       ),
                       actions: [
@@ -690,8 +690,8 @@ class DeveloperSettingsPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(tr('packageNameLabel', args: [info.packageName])),
-                    Text(tr('versionLabel', args: [info.versionName, info.versionCode.toString()])),
+                    Text(tr('packageNameLabel', args: [info.packageName ?? ''])),
+                    Text(tr('versionLabel', args: [info.versionName ?? '', info.versionCode?.toString() ?? ''])),
                     const SizedBox(height: 12),
                     Text(tr('proceedWithInstallation')),
                   ],
