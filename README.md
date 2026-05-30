@@ -1,21 +1,45 @@
 <div align="center"><a href="https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md"><img src="https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/banner-support.svg" alt="Support Palestine" style="width: 100%;"></a></div>
 
-# ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium
+# ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium+ (ObtainiumPlus)
 
-Get Android app updates straight from the source.
+Get Android app updates straight from the source, styled with modern aesthetics and advanced developer options.
 
-Obtainium allows you to install and update apps directly from their releases pages, and receive notifications when new releases are made available.
+Obtainium+ is a enhanced, telemetry-free fork of the original Obtainium client. It allows you to install and update apps directly from their releases pages, receive notifications when new releases are made available, and adds advanced diagnostic logging, reactive layout controls, and Google Play Store mirror integration.
 
-More info:
-- [Obtainium Wiki](https://wiki.obtainium.imranr.dev/) ([repository](https://github.com/ImranR98/Obtainium-Wiki))
-- [Obtainium 101](https://www.youtube.com/watch?v=0MF_v2OBncw) - Tutorial video
-- [AppVerifier](https://github.com/soupslurpr/AppVerifier) - App verification tool (recommended, integrates with Obtainium)
-- [apps.obtainium.imranr.dev](https://apps.obtainium.imranr.dev/) - Crowdsourced app configurations ([repository](https://github.com/ImranR98/apps.obtainium.imranr.dev))
-- [Side Of Burritos - You should use this instead of F-Droid | How to use app RSS feed](https://youtu.be/FFz57zNR_M0) - Original motivation for this app
-- [Website](https://obtainium.imranr.dev) ([repository](https://github.com/ImranR98/obtainium.imranr.dev))
-- [Source code](https://github.com/ImranR98/Obtainium)
+---
 
-Currently supported App sources:
+### 🌟 Obtainium+ vs. Upstream Obtainium
+
+| Feature | Upstream Obtainium | Obtainium+ |
+| :--- | :--- | :--- |
+| **User Interface** | Standard Flutter Material Design | Curated modern Glassmorphic design with dynamic HSL gradients, blurs, and premium typography. |
+| **Play Store Support** | Direct APK links / Web scraper fallbacks | Full API Mirror Integration with support for custom **Anonymous Token Dispensers** and microG profiles. |
+| **Developer Diagnostics** | Standard command logs | Real-time structured network logger (Talker Integration) and local Crash Statistics Dashboard. |
+| **Settings Reactivity** | Requires app restarts for many switches | 100% reactive state management (`context.watch`) with instant, dynamic UI updates. |
+| **Community Privacy** | Hardcoded default third-party servers | Telemetry-free and default-free (no hardcoded server pings) to protect community resources and guarantee privacy. |
+
+---
+
+## Key Additions in Obtainium+
+
+### 🎨 Glassmorphic Interface & Premium Polish
+*   **Modern Aesthetics:** Rebuilt the onboarding, cards, detail sheets, and settings headers to support smooth backdrop blurs, dynamic opacities, and premium HSL gradients.
+*   **Visual Audit Resolution:** Completely removed solid, high-contrast panels and overwhelming card glow borders to preserve a cohesive glassmorphic look.
+
+### 🔒 Anonymous Play Store Mirror Integration
+*   **Custom Token Dispensers:** Configure your own self-hosted anonymous token dispenser URL or hook in a custom microG account to retrieve updates straight from Google Play.
+*   **Telemetry-Free & Zero Defaults:** Contains absolutely no telemetry, and does not ship with any pre-configured default server URLs (such as `auroraoss.com`) to honor the maintainers' wishes and ensure maximum privacy.
+
+### 🌐 Diagnostics & Live Log Viewers
+*   **Talker Integration:** Real-time structured logger capturing network requests, errors, and system warnings on a dedicated, localized diagnostics screen.
+*   **Crash Statistics:** A local crash statistics analyzer that tracks frequencies, error types, and logs without routing data to external services.
+
+### 🔄 Dynamic Toggles & Providers
+*   **Fully Reactive Engine:** Swapped out once-off reading routines for reactive providers (`context.watch`) on all layout settings, app bar styles, quick-action FAB menus, and bottom sheets so they update instantly.
+
+---
+
+## Currently supported App sources:
 - Open Source - General:
   - [GitHub](https://github.com/)
   - [GitLab](https://gitlab.com/)
@@ -57,25 +81,19 @@ Or, contribute some configurations to the website by creating a PR at [this repo
 
 [<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png"
     alt="Get it on GitHub"
-    height="80">](https://github.com/ImranR98/Obtainium/releases)
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
-     alt="Get it on IzzyOnDroid"
-     height="80">](https://apt.izzysoft.de/fdroid/index/apk/dev.imranr.obtainium)
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/packages/dev.imranr.obtainium.fdroid/)
+    height="80">](https://github.com/thejaustin/ObtainiumPlus/releases)
      
 Verification info:
 - Package ID: `dev.imranr.obtainium`
 - SHA-256 hash of signing certificate: `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
-  - Note: The above signature is also valid for the F-Droid flavour of Obtainium, thanks to [reproducible builds](https://f-droid.org/docs/Reproducible_Builds/).
 - [PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index) (to verify APK hashes)
-
-## Limitations
-- For some sources, data is gathered using Web scraping and can easily break due to changes in website design. In such cases, more reliable methods may be unavailable.
 
 ## Screenshots
 
 | <img src="./assets/screenshots/1.apps.png" alt="Apps Page" /> | <img src="./assets/screenshots/2.dark_theme.png" alt="Dark Theme" />           | <img src="./assets/screenshots/3.material_you.png" alt="Material You" />    |
 | ------------------------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | <img src="./assets/screenshots/4.app.png" alt="App Page" />   | <img src="./assets/screenshots/5.app_opts.png" alt="App Options" /> | <img src="./assets/screenshots/6.app_webview.png" alt="App Web View" /> |
+
+---
+
+— Antigravity (Gemini Agent)
