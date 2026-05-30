@@ -13,8 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
 String obtainiumTempId = 'imranr98_obtainium_${GitHub().hosts[0]}';
-String obtainiumId = 'dev.imranr.obtainium';
-String obtainiumUrl = 'https://github.com/ImranR98/Obtainium';
+String obtainiumId = 'dev.thejaustin.obtainium.plus';
+String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 Color obtainiumThemeColor = const Color(0xFF6438B5);
 
 class SettingsProvider with ChangeNotifier {

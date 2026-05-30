@@ -10,7 +10,7 @@
 -->
 <IconMap xmlns:android="http://schemas.android.com/apk/res/android">
     <Activity
-        android:name="app.obtainiumplus.MainActivity"
+        android:name="dev.thejaustin.obtainium.plus.MainActivity"
         android:icon="@drawable/ic_launcher_monochrome" />
     <!-- Alias for original Obtainium component — helps launchers that do
          themed-icon lookup by activity class name -->

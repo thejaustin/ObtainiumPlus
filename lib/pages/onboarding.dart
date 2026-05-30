@@ -463,6 +463,7 @@ class _OnboardingPageState extends State<OnboardingPage>
           decoration: pageDecoration,
           bodyWidget: Consumer<AuthProvider>(
             builder: (context, auth, _) {
+              final plusSettings = context.watch<PlusSettingsProvider>();
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -578,7 +579,9 @@ class _OnboardingPageState extends State<OnboardingPage>
                       elevation: 0,
                       color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(
+                          plusSettings.plusEnableMaterialExpressive ? 24 : 16,
+                        ),
                         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3)),
                       ),
                       child: Padding(
@@ -588,7 +591,12 @@ class _OnboardingPageState extends State<OnboardingPage>
                               .map(
                                 (d) => ListTile(
                                   dense: true,
-                                  title: Text(d, style: const TextStyle(fontSize: 13)),
+                                  title: Text(
+                                    d,
+                                    style: const TextStyle(fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                   trailing: IconButton(
                                     icon: const Icon(Icons.delete_outline, size: 18),
                                     onPressed: () => auth.removeDispenser(d),
@@ -607,7 +615,9 @@ class _OnboardingPageState extends State<OnboardingPage>
                       labelText: tr('addDispenserUrl'),
                       hintText: 'https://your-dispenser.com/api/auth',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(
+                          plusSettings.plusEnableMaterialExpressive ? 28 : 12,
+                        ),
                       ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.add),

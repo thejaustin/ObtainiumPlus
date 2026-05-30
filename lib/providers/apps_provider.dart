@@ -2024,11 +2024,12 @@ class AppsProvider with ChangeNotifier {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
         }
 
-        // Trigger dispenser ban warning if enabled and a large query (>5 apps) is run
+        // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
         try {
           final SharedPreferences prefs = await SharedPreferences.getInstance();
           final bool enableBanWarnings = prefs.getBool('plusEnableBanWarnings') ?? true;
-          if (enableBanWarnings && appIds.length > 5) {
+          final int threshold = prefs.getInt('plusBanWarningThreshold') ?? 5;
+          if (enableBanWarnings && appIds.length > threshold) {
             NotificationsProvider().notify(DispenserBanWarningNotification(appIds.length));
           }
         } catch (_) {}

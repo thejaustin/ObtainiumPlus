@@ -112,8 +112,8 @@ class _AppPageState extends State<AppPage> {
               ...installed.map(
                 (store) => ListTile(
                   leading: const Icon(Icons.open_in_new),
-                  title: Text(store['name']!),
-                  subtitle: Text(store['package']!),
+                  title: Text(store['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(store['package']!, maxLines: 1, overflow: TextOverflow.ellipsis),
                   trailing: plusSettings.plusDefaultStorePackage == store['package']
                       ? const Chip(label: Text('Default'))
                       : TextButton(
@@ -983,6 +983,8 @@ Widget buildRepoRenameWarning({
               : (app?.app.installedVersion == null
                   ? (!trackOnly ? tr('install') : tr('markInstalled'))
                   : (!trackOnly ? tr('update') : tr('markUpdated'))),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       );
     }

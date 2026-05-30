@@ -426,6 +426,12 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  int get plusBanWarningThreshold => _prefs?.getInt('plusBanWarningThreshold') ?? 5;
+  set plusBanWarningThreshold(int val) {
+    _prefs?.setInt('plusBanWarningThreshold', val);
+    notifyListeners();
+  }
+
   String? get plusDefaultStorePackage => _prefs?.getString('plusDefaultStorePackage');
   set plusDefaultStorePackage(String? val) {
     if (val == null) {

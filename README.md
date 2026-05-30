@@ -84,9 +84,14 @@ Or, contribute some configurations to the website by creating a PR at [this repo
     height="80">](https://github.com/thejaustin/ObtainiumPlus/releases)
      
 Verification info:
-- Package ID: `dev.imranr.obtainium`
+- Package ID: `dev.thejaustin.obtainium.plus`
 - SHA-256 hash of signing certificate: `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
 - [PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index) (to verify APK hashes)
+
+### 🚀 Major Additions in the Latest Release:
+*   **Default App Store Routing & Detection:** Auto-detects installed stores (F-Droid, Droidify, Aurora Store) on the details sheet. Users can choose to open an app in their preferred store or configure a default store to automatically route the main Install/Update buttons.
+*   **Customizable Dispenser Ban Warning Threshold:** Added a settings slider to adjust the bulk update threshold (from 1 to 50 apps). Alerts trigger when automated checks exceed this value to guard your IP from Google Play ban triggers.
+*   **Material 3 Expressive (M3E) Dynamic Alignment:** Ensured all newly added compartments, bubble buttons, dialogs, and text fields scale beautifully using M3E tokens and responsive dimensions. Fixed layout wrappers to prevent text or button overlaps.
 
 ## Screenshots
 

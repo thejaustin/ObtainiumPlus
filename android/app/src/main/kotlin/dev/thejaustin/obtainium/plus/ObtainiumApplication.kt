@@ -1,4 +1,4 @@
-package dev.imranr.obtainium
+package dev.thejaustin.obtainium.plus
 
 import io.flutter.app.FlutterApplication
 import app.obtainiumplus.initLeakCanary
