@@ -5,7 +5,7 @@ This changelog highlights the major new features, stability improvements, and vi
 ---
 
 ## 🚀 Version 1.4.3-p9 — App Renaming, Store Defaults & Warning Slider (May 2026)
-*   **App Identity Shift**: Shifted the app name back to **Obtainium+** and updated the official package ID/codename to `dev.thejaustin.obtainium.plus` for full identity consistency.
+*   **App Identity Shift**: Shifted the app name back to **Obtainium+** and updated the official package ID/codename to `dev.thejaustin.obtainiumplus` for full identity consistency.
 *   **Customizable Warning Slider**: Added a dynamic settings slider allowing users to adjust the exact check threshold (from 1 to 50 apps) for automated Play Store dispenser check warnings.
 *   **Default Store Routing**: Automatically scans for F-Droid, Droidify, and Aurora Store installations on your device. Easily set a default store to route the main "Install/Update" button clicks.
 *   **Aesthetic Polish & Safe Layouts**: Implemented dynamic Material 3 Expressive (M3E) scaling and border-radius rules. Applied strict ellipsis text truncation constraints to guarantee zero overlapping text or layout overflows on details sheets and lists.

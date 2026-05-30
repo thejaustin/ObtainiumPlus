@@ -29,7 +29,7 @@ if (keystorePropertiesExists) {
 }
 
 android {
-    namespace = "dev.thejaustin.obtainium.plus"
+    namespace = "dev.thejaustin.obtainiumplus"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "dev.thejaustin.obtainium.plus"
+        applicationId = "dev.thejaustin.obtainiumplus"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26
