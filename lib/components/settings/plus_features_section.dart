@@ -349,7 +349,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableAdvancedSorting = val,
                     ),
-                  if (_matches(tr('plusEnableBanWarnings')))
+                  if (_matches(tr('plusEnableBanWarnings'))) ...[
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -359,6 +359,50 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableBanWarnings,
                       onChanged: (val) => settings.plusEnableBanWarnings = val,
                     ),
+                    if (settings.plusEnableBanWarnings)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 72.0, right: 24.0, bottom: 12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('plusBanWarningThresholdDescription', args: [settings.plusBanWarningThreshold.toString()]),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Slider(
+                                    value: settings.plusBanWarningThreshold.toDouble(),
+                                    min: 1,
+                                    max: 50,
+                                    divisions: 49,
+                                    label: settings.plusBanWarningThreshold.toString(),
+                                    onChanged: (val) {
+                                      settings.plusBanWarningThreshold = val.round();
+                                    },
+                                  ),
+                                ),
+                                Container(
+                                  width: 40,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    settings.plusBanWarningThreshold.toString(),
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ],

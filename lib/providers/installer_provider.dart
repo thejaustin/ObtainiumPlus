@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 
-const _channel = MethodChannel('dev.imranr.obtainium/installer');
+const _channel = MethodChannel('dev.thejaustin.obtainium.plus/installer');
 
 class InstallerAppInfo {
   final String packageName;

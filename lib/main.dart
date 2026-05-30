@@ -286,7 +286,7 @@ class _ObtainiumState extends State<Obtainium> {
         notificationTitle: tr('foregroundService'),
         notificationText: tr('fgServiceNotice'),
         notificationIcon: NotificationIcon(
-          metaDataName: 'dev.imranr.obtainium.service.NOTIFICATION_ICON',
+          metaDataName: 'dev.thejaustin.obtainium.plus.service.NOTIFICATION_ICON',
         ),
         callback: startCallback,
       );

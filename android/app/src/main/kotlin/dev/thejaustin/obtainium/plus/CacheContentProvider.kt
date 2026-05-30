@@ -1,5 +1,5 @@
 // @author Bikram Agarwal
-package dev.imranr.obtainium
+package dev.thejaustin.obtainium.plus
 
 import android.content.ContentProvider
 import android.content.ContentValues
