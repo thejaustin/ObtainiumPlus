@@ -159,7 +159,6 @@ class _CommandCenterState extends State<CommandCenter> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isUrl = URLValidator.isValidSourceURL(_query);
-    final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isDark = theme.brightness == Brightness.dark;
 
