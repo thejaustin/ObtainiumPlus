@@ -4,7 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/glass_dialog.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -21,16 +21,18 @@ class UpdateSettingsSection extends StatelessWidget {
   final Function(bool) onIntervalLabelChange;
   final Future<AndroidDeviceInfo>? androidInfoFuture;
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
   const UpdateSettingsSection({
     super.key,
     required this.showIntervalLabel,
     required this.onIntervalLabelChange,
     required this.androidInfoFuture,
-    this.searchQuery,
+    this.searchQuery, this.showAdvancedSettings,
   });
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -79,7 +81,7 @@ class UpdateSettingsSection extends StatelessWidget {
         ),
 
       // Parallel downloads
-      if (_matches(tr('parallelDownloads')))
+      if (_matches(tr('parallelDownloads'), isAdvanced: true))
         Consumer<BehaviorSettingsProvider>(
           builder: (context, settings, _) => SwitchListTile.adaptive(
             secondary: const Icon(Icons.file_download_outlined),
@@ -99,8 +101,11 @@ class UpdateSettingsSection extends StatelessWidget {
     if (children.every((w) => w is SizedBox && w.child == null))
       return const SizedBox.shrink();
 
-    return SettingsGroup(
+    return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('updates'),
+      icon: Icons.update_rounded,
+      isExpandable: !isSearching,
+      initiallyExpanded: false,
       children: children,
     );
   }
@@ -315,53 +320,70 @@ class UpdateSettingsSection extends StatelessWidget {
                 ),
                 onTap: () => _showScheduleDialog(context, updateSettings),
               ),
-            if (_matches(tr('releaseChannel')))
-              ListTile(
-                leading: const Icon(Icons.history_outlined),
-                title: Text(
-                  tr('releaseChannel'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                subtitle: Text(tr('obtainiumReleaseChannelDescription')),
-                trailing: DropdownButton<String>(
-                  value: updateSettings.obtainiumReleaseChannel,
-                  onChanged: (String? newValue) {
-                    if (newValue == null) return;
-                    if (newValue == 'dev' &&
-                        updateSettings.obtainiumReleaseChannel != 'dev') {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => GlassDialog(
-                          icon: Icons.warning_amber_rounded,
-                          title: tr('devChannelWarningTitle'),
-                          content: Text(tr('devChannelWarningMessage')),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: Text(tr('cancel')),
-                            ),
-                            FilledButton(
-                              onPressed: () {
-                                updateSettings.obtainiumReleaseChannel = 'dev';
-                                Navigator.pop(ctx);
-                              },
-                              child: Text(tr('enable')),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      updateSettings.obtainiumReleaseChannel = newValue;
-                    }
-                  },
-                  items: [
-                    DropdownMenuItem(
-                      value: 'latest',
-                      child: Text(tr('latest')),
+            if (_matches(tr('releaseChannel'), isAdvanced: true))
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.history_outlined),
+                    title: Text(
+                      tr('releaseChannel'),
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
-                    DropdownMenuItem(value: 'dev', child: Text(tr('dev'))),
-                  ],
-                ),
+                    subtitle: Text(tr('obtainiumReleaseChannelDescription')),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: 'latest',
+                            label: Text(tr('latest')),
+                            icon: const Icon(Icons.new_releases_outlined),
+                          ),
+                          ButtonSegment(
+                            value: 'dev',
+                            label: Text(tr('dev')),
+                            icon: const Icon(Icons.bug_report_outlined),
+                          ),
+                        ],
+                        selected: {updateSettings.obtainiumReleaseChannel},
+                        onSelectionChanged: (value) {
+                          final newValue = value.first;
+                          if (newValue == 'dev' &&
+                              updateSettings.obtainiumReleaseChannel != 'dev') {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => GlassDialog(
+                                icon: Icons.warning_amber_rounded,
+                                title: tr('devChannelWarningTitle'),
+                                content: Text(tr('devChannelWarningMessage')),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: Text(tr('cancel')),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () {
+                                      updateSettings.obtainiumReleaseChannel =
+                                          'dev';
+                                      Navigator.pop(ctx);
+                                    },
+                                    child: Text(tr('enable')),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            updateSettings.obtainiumReleaseChannel = newValue;
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             Consumer<BehaviorSettingsProvider>(
               builder: (context, behaviorSettings, _) => Column(
@@ -409,7 +431,7 @@ class UpdateSettingsSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                  if (_matches(tr('allowThirdPartySources')))
+                  if (_matches(tr('allowThirdPartySources'), isAdvanced: true))
                     SwitchListTile.adaptive(
                       secondary: const Icon(Icons.cloud_download_outlined),
                       title: Text(

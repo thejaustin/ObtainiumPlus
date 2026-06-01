@@ -1,15 +1,17 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class NotificationSettingsSection extends StatelessWidget {
   final String? searchQuery;
-  const NotificationSettingsSection({super.key, this.searchQuery});
+  final bool? showAdvancedSettings;
+  const NotificationSettingsSection({super.key, this.searchQuery, this.showAdvancedSettings});
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -71,8 +73,11 @@ class NotificationSettingsSection extends StatelessWidget {
 
         if (children.isEmpty) return const SizedBox.shrink();
 
-        return SettingsGroup(
+        return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('notifications'),
+          icon: Icons.notifications_active_rounded,
+          isExpandable: !isSearching,
+          initiallyExpanded: false,
           children: children,
         );
       },

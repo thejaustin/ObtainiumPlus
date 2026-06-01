@@ -4,6 +4,22 @@ This changelog highlights the major new features, stability improvements, and vi
 
 ---
 
+## ✨ Version 1.4.3-p12 — UI Density, Advanced Filters & Bug Fixes (June 2026)
+*   **Settings Density Revolution**:
+    *   **Expandable Sections**: Reorganized all settings into collapsed, categorizeable cards for a cleaner one-page overview.
+    *   **Segmented Buttons**: Converted space-consuming dropdowns (View Mode, App Bar Style, Release Channels, etc.) into horizontal segmented buttons.
+    *   **Generic Control Grids**: Replaced long lists of toggles (FAB items, App Tile options) with compact 2-column grids, reducing vertical height by over 60%.
+    *   **Global Compact Mode**: Added a master toggle to reduce padding and icon sizes throughout the settings menu for a high-density "Pro" feel.
+*   **Intelligent Filtering & Discovery**:
+    *   **Advanced Settings Filter**: Introduced a master toggle to hide complex technical options from casual users while keeping them accessible for power users.
+    *   **Master-Detail Layout**: Automatically enables a dual-pane sidebar layout on large screens (Tablets, Foldables) for optimized space usage.
+*   **Bug Fixes & Stability**:
+    *   **False Update Fix**: Resolved a persistent issue where Obtainium+ incorrectly reported available updates due to strict version comparison and mismatched package IDs.
+    *   **Translation Coverage**: Added over 90 missing localized strings, replacing internal codenames with user-friendly labels.
+    *   **Code Quality**: Standardized version reconciliation logic across all UI components and background services.
+
+---
+
 ## 🚀 Version 1.4.3-p9 — App Renaming, Store Defaults & Warning Slider (May 2026)
 *   **App Identity Shift**: Shifted the app name back to **Obtainium+** and updated the official package ID/codename to `dev.thejaustin.obtainiumplus` for full identity consistency.
 *   **Customizable Warning Slider**: Added a dynamic settings slider allowing users to adjust the exact check threshold (from 1 to 50 apps) for automated Play Store dispenser check warnings.

@@ -70,19 +70,21 @@ class SettingsGroup extends StatelessWidget {
               ],
             ),
           ),
-        Builder(
-          builder: (context) {
+            final radius = settings.plusOverrideIndividualCornerRadius
+                ? settings.plusSettingsCornerRadius
+                : settings.plusGlobalCornerRadius;
+
             final container = Container(
               margin: const EdgeInsets.symmetric(vertical: 4.0),
               decoration: BoxDecoration(
                 color:
                     (isDark
-                            ? Theme.of(context).colorScheme.surfaceContainerHigh
+                            ? Theme.of(context).colorScheme.surfaceContainerLow
                             : Theme.of(context).colorScheme.surface)
                         .withOpacity(
                           settings.plusEnableGlassmorphism ? 0.7 : 1.0,
                         ),
-                borderRadius: BorderRadius.circular(28.0),
+                borderRadius: BorderRadius.circular(radius),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outlineVariant
                       .withOpacity(
@@ -112,12 +114,12 @@ class SettingsGroup extends StatelessWidget {
             );
             if (!settings.plusEnableGlassmorphism) {
               return ClipRRect(
-                borderRadius: BorderRadius.circular(28.0),
+                borderRadius: BorderRadius.circular(radius),
                 child: container,
               );
             }
             return ClipRRect(
-              borderRadius: BorderRadius.circular(28.0),
+              borderRadius: BorderRadius.circular(radius),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: container,

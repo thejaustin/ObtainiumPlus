@@ -15,6 +15,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/services/app_update_service.dart';
 
 class CategorySections extends StatelessWidget {
   final List<AppInMemory> listedApps;
@@ -173,7 +174,11 @@ class CategorySections extends StatelessWidget {
                 isSelected:
                     selectedAppIds.contains(app.app.id) ||
                     activeAppId == app.app.id,
-                hasUpdate: app.app.installedVersion != app.app.latestVersion,
+                hasUpdate: AppUpdateService.areVersionsDifferent(
+                  app.app,
+                  app.app.installedVersion,
+                  app.app.latestVersion,
+                ),
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
@@ -301,7 +306,11 @@ class CategorySections extends StatelessWidget {
             .map(
               (app) => AppListTile(
                 appInMemory: app,
-                hasUpdate: app.app.installedVersion != app.app.latestVersion,
+                hasUpdate: AppUpdateService.areVersionsDifferent(
+                  app.app,
+                  app.app.installedVersion,
+                  app.app.latestVersion,
+                ),
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);

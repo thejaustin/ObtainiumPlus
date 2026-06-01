@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -12,10 +12,12 @@ import 'package:obtainium/utils/logger.dart';
 /// App installation and update settings
 class InstallationSection extends StatelessWidget {
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
-  const InstallationSection({super.key, this.searchQuery});
+  const InstallationSection({super.key, this.searchQuery, this.showAdvancedSettings});
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -28,7 +30,7 @@ class InstallationSection extends StatelessWidget {
       builder: (context, behaviorSettings, plusSettings, child) {
         List<Widget> children = [
           // Parallel Downloads
-          if (_matches(tr('parallelDownloads')))
+          if (_matches(tr('parallelDownloads'), isAdvanced: true))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.file_download_outlined),
               title: Text(
@@ -175,8 +177,11 @@ class InstallationSection extends StatelessWidget {
             ),
         ];
 
-        return SettingsGroup(
+        return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('installation'),
+          icon: Icons.install_mobile_rounded,
+          isExpandable: !isSearching,
+          initiallyExpanded: false,
           children: children,
         );
       },

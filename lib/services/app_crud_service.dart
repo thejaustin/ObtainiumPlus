@@ -16,6 +16,7 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/version_utils.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -327,7 +328,11 @@ class AppCRUDService {
       }
     }
     if (app.installedVersion != null &&
-        app.installedVersion != app.latestVersion &&
+        AppUpdateService.areVersionsDifferent(
+          app,
+          app.installedVersion,
+          app.latestVersion,
+        ) &&
         versionDetectionIsStandard) {
       var correctedInstalledVersion = reconcileVersionDifferences(
         app.installedVersion!,

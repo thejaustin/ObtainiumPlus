@@ -16,6 +16,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
@@ -942,7 +943,11 @@ Widget buildRepoRenameWarning({
       return TextButton(
         onPressed: !updating &&
                 (app?.app.installedVersion == null ||
-                    app?.app.installedVersion != app?.app.latestVersion) &&
+                    AppUpdateService.areVersionsDifferent(
+                      app!.app,
+                      app!.app.installedVersion,
+                      app!.app.latestVersion,
+                    )) &&
                 !areDownloadsRunning
             ? () async {
                 if (defaultStorePackage != null && app?.app.id != null) {

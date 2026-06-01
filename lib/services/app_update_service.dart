@@ -34,7 +34,7 @@ class AppUpdateService {
     _updateCache.remove(appId);
   }
 
-  static bool _areVersionsDifferent(App app, String? installed, String latest) {
+  static bool areVersionsDifferent(App app, String? installed, String latest) {
     if (installed == null) return true;
     if (installed == latest) return false;
     final aggressive =

@@ -19,17 +19,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
     return SliverAppBar(
       pinned: true,
       automaticallyImplyLeading: false,
-      expandedHeight: 100 + (widget.bottom?.preferredSize.height ?? 0),
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: widget.bottom != null ? 0 : 16,
-        ),
-        title: Text(
-          widget.title,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium!.color,
-          ),
+      title: Text(
+        widget.title,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
         ),
       ),
       bottom: widget.bottom,

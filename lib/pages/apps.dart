@@ -1,4 +1,5 @@
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
+import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -183,6 +184,10 @@ class AppsPageState extends State<AppsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    if (plusSettings.plusEnableHomeDashboard) {
+      return AppDashboard(key: widget.key);
+    }
     final appsProvider = context.watch<AppsProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();

@@ -754,11 +754,11 @@ class AppDownloadService {
         // still need updates, cancel it if all are now up-to-date.
         final remaining = apps.values
             .where((a) {
-              final inst = a.app.installedVersion;
-              final latest = a.app.latestVersion;
-              if (inst == null || inst == latest) return false;
-              final rec = reconcileVersionDifferences(inst, latest);
-              return rec == null || rec.key == false;
+              return AppUpdateService.areVersionsDifferent(
+                a.app,
+                a.app.installedVersion,
+                a.app.latestVersion,
+              );
             })
             .map((a) => a.app)
             .toList();

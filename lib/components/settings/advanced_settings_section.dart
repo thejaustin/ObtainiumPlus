@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -10,10 +10,12 @@ import 'package:provider/provider.dart';
 /// Advanced / warnings settings section
 class AdvancedSettingsSection extends StatelessWidget {
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
-  const AdvancedSettingsSection({super.key, this.searchQuery});
+  const AdvancedSettingsSection({super.key, this.searchQuery, this.showAdvancedSettings});
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -77,8 +79,11 @@ class AdvancedSettingsSection extends StatelessWidget {
     if (children.every((w) => w is SizedBox && w.child == null))
       return const SizedBox.shrink();
 
-    return SettingsGroup(
+    return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('advanced'),
+      icon: Icons.settings_applications_rounded,
+      isExpandable: !isSearching,
+      initiallyExpanded: false,
       children: children,
     );
   }

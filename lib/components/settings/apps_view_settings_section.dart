@@ -2,7 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -13,14 +14,16 @@ import 'package:provider/provider.dart';
 class AppsViewSettingsSection extends StatelessWidget {
   final Function(void Function()) onSetState;
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
   const AppsViewSettingsSection({
     super.key,
     required this.onSetState,
-    this.searchQuery,
+    this.searchQuery, this.showAdvancedSettings,
   });
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -108,7 +111,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         value: (s) => s.plusEnableResponsiveAppLayout,
         onChanged: (s, v) =>
             onSetState(() => s.plusEnableResponsiveAppLayout = v),
-        visible: (s) => _matches(tr('plusResponsiveLayout')),
+        visible: (s) => _matches(tr('plusResponsiveLayout')), isAdvanced: true,
       ),
       _buildFeatureToggle<PlusSettingsProvider>(
         context,
@@ -117,7 +120,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         subtitle: tr('plusCategoryReorderDescription'),
         value: (s) => s.plusEnableCategoryReorder,
         onChanged: (s, v) => onSetState(() => s.plusEnableCategoryReorder = v),
-        visible: (s) => _matches(tr('plusCategoryReorder')),
+        visible: (s) => _matches(tr('plusCategoryReorder')), isAdvanced: true,
       ),
       _buildGridSettings(context),
     ];
@@ -213,36 +216,91 @@ class AppsViewSettingsSection extends StatelessWidget {
       ),
     ];
 
-    return Column(
+    return ExpressiveSettingsGroup(
+      title: isSearching ? null : tr('appsString'),
+      icon: Icons.grid_view_rounded,
+      isExpandable: !isSearching,
+      initiallyExpanded: false,
       children: [
         if (categoryWidgets.any((w) => w is! SizedBox))
-          SettingsGroup(
+          ExpressiveSettingsGroup(
             title: isSearching ? null : tr('categorySettings'),
+            isExpandable: true,
+            initiallyExpanded: false,
             children: categoryWidgets,
           ),
         if (iconWidgets.any((w) => w is! SizedBox))
-          SettingsGroup(
+          ExpressiveSettingsGroup(
             title: isSearching ? null : tr('categoryIconPreview'),
+            isExpandable: true,
+            initiallyExpanded: false,
             children: iconWidgets,
           ),
-        if (searchWidgets.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('searchSettings'),
-            children: searchWidgets,
-          ),
-        if (viewWidgets.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('viewOptions'),
-            children: viewWidgets,
-          ),
         if (displayWidgets.any((w) => w is! SizedBox))
-          SettingsGroup(
-            title: isSearching ? null : tr('appTileDisplay'),
-            children: displayWidgets,
+          GenericBooleanControlGrid<ViewSettingsProvider>(
+            title: tr('appTileDisplay'),
+            settings: [
+              if (_matches(tr('showAuthor')))
+                (
+                  icon: Icons.person_outline,
+                  label: tr('showAuthor'),
+                  description: tr('showAuthorDescription'),
+                  getValue: (s) => s.displayShowAuthor,
+                  setValue: (s, v) => onSetState(() => s.displayShowAuthor = v),
+                ),
+              if (_matches(tr('showVersion')))
+                (
+                  icon: Icons.code,
+                  label: tr('showVersion'),
+                  description: tr('showVersionDescription'),
+                  getValue: (s) => s.displayShowVersion,
+                  setValue: (s, v) => onSetState(() => s.displayShowVersion = v),
+                ),
+              if (_matches(tr('showDate')))
+                (
+                  icon: Icons.calendar_today_outlined,
+                  label: tr('showDate'),
+                  description: tr('showDateDescription'),
+                  getValue: (s) => s.displayShowDate,
+                  setValue: (s, v) => onSetState(() => s.displayShowDate = v),
+                ),
+            ],
+          ),
+        if (searchWidgets.any((w) => w is! SizedBox))
+          GenericBooleanControlGrid<PlusSettingsProvider>(
+            title: tr('searchSettings'),
+            settings: [
+              if (_matches(tr('showAppBarSearch')))
+                (
+                  icon: Icons.vertical_align_top_rounded,
+                  label: tr('showAppBarSearch'),
+                  description: tr('showAppBarSearchDescription'),
+                  getValue: (s) => s.plusShowAppBarSearch,
+                  setValue: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
+                ),
+              if (_matches(tr('showDashboardSearch')))
+                (
+                  icon: Icons.dashboard_outlined,
+                  label: tr('showDashboardSearch'),
+                  description: tr('showDashboardSearchDescription'),
+                  getValue: (s) => s.plusShowDashboardSearch,
+                  setValue: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
+                ),
+              if (_matches(tr('showFloatingSearch')))
+                (
+                  icon: Icons.ads_click_rounded,
+                  label: tr('showFloatingSearch'),
+                  description: tr('showFloatingSearchDescription'),
+                  getValue: (s) => s.plusShowFloatingSearch,
+                  setValue: (s, v) => onSetState(() => s.plusShowFloatingSearch = v),
+                ),
+            ],
           ),
         if (headerWidgets.any((w) => w is! SizedBox))
-          SettingsGroup(
+          ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appListHeader'),
+            isExpandable: true,
+            initiallyExpanded: false,
             children: headerWidgets,
           ),
       ],
@@ -399,32 +457,42 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildViewModeDropdown(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.view_quilt_outlined),
-          title: Text(
-            tr('defaultViewMode'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('viewModeDescription')),
-          trailing: DropdownButton<ViewMode>(
-            underline: const SizedBox(),
-            value: settings.globalViewMode,
-            items: [
-              DropdownMenuItem(
-                value: ViewMode.list,
-                child: Text(tr('listView')),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.view_quilt_outlined),
+              title: Text(
+                tr('defaultViewMode'),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-              DropdownMenuItem(
-                value: ViewMode.grid,
-                child: Text(tr('gridView')),
+              subtitle: Text(tr('viewModeDescription')),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<ViewMode>(
+                  segments: [
+                    ButtonSegment(
+                      value: ViewMode.list,
+                      label: Text(tr('listView')),
+                      icon: const Icon(Icons.view_list_rounded),
+                    ),
+                    ButtonSegment(
+                      value: ViewMode.grid,
+                      label: Text(tr('gridView')),
+                      icon: const Icon(Icons.grid_view_rounded),
+                    ),
+                  ],
+                  selected: {settings.globalViewMode},
+                  onSelectionChanged: (value) {
+                    onSetState(() => settings.globalViewMode = value.first);
+                  },
+                ),
               ),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                onSetState(() => settings.globalViewMode = value);
-              }
-            },
-          ),
+            ),
+          ],
         );
       },
     );
@@ -432,35 +500,48 @@ class AppsViewSettingsSection extends StatelessWidget {
 
   Widget _buildAppBarStyleDropdown(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
-    return ListTile(
-      leading: const Icon(Icons.vertical_align_top_rounded),
-      title: Text(
-        tr('appBarStyle'),
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-      subtitle: Text(tr('appBarStyleDescription')),
-      trailing: DropdownButton<AppBarStyle>(
-        underline: const SizedBox(),
-        value: settingsProvider.getAppBarStyleForPage('apps'),
-        items: AppBarStyle.values
-            .map(
-              (e) => DropdownMenuItem(
-                value: e,
-                child: Text(
-                  e.name.substring(0, 1).toUpperCase() + e.name.substring(1),
-                ),
-              ),
-            )
-            .toList(),
-        onChanged: (value) {
-          if (value != null) {
-            onSetState(() {
-              settingsProvider.prefs?.setInt('appBarStyle_apps', value.index);
-              settingsProvider.notifyListeners();
-            });
-          }
-        },
-      ),
+    final currentStyle = settingsProvider.getAppBarStyleForPage('apps');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.vertical_align_top_rounded),
+          title: Text(
+            tr('appBarStyle'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: Text(tr('appBarStyleDescription')),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<AppBarStyle>(
+              segments: AppBarStyle.values
+                  .map(
+                    (e) => ButtonSegment(
+                      value: e,
+                      label: Text(
+                        e.name.substring(0, 1).toUpperCase() +
+                            e.name.substring(1),
+                      ),
+                    ),
+                  )
+                  .toList(),
+              selected: {currentStyle},
+              onSelectionChanged: (value) {
+                onSetState(() {
+                  settingsProvider.prefs?.setInt(
+                    'appBarStyle_apps',
+                    value.first.index,
+                  );
+                  settingsProvider.notifyListeners();
+                });
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -469,30 +550,38 @@ class AppsViewSettingsSection extends StatelessWidget {
       builder: (context, settings, child) {
         if (settings.globalViewMode != ViewMode.list)
           return const SizedBox.shrink();
-        return ListTile(
-          leading: const Icon(Icons.density_medium_outlined),
-          title: Text(
-            tr('listDensity'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('listDensityDescription')),
-          trailing: DropdownButton<AppListDensity>(
-            underline: const SizedBox(),
-            value: settings.appListDensity,
-            items: AppListDensity.values
-                .map(
-                  (e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(tr('density_${e.name}')),
-                  ),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                onSetState(() => settings.appListDensity = value);
-              }
-            },
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.density_medium_outlined),
+              title: Text(
+                tr('listDensity'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('listDensityDescription')),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<AppListDensity>(
+                  segments: AppListDensity.values
+                      .map(
+                        (e) => ButtonSegment(
+                          value: e,
+                          label: Text(tr('density_${e.name}')),
+                        ),
+                      )
+                      .toList(),
+                  selected: {settings.appListDensity},
+                  onSelectionChanged: (value) {
+                    onSetState(() => settings.appListDensity = value.first);
+                  },
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -505,11 +594,11 @@ class AppsViewSettingsSection extends StatelessWidget {
     required String subtitle,
     required dynamic Function(T) value,
     required void Function(T, bool) onChanged,
-    required bool Function(T) visible,
+    required bool Function(T) visible, bool isAdvanced = false,
   }) {
     return Consumer<T>(
       builder: (context, settings, child) {
-        if (!visible(settings)) return const SizedBox.shrink();
+        if (!visible(settings) || (isAdvanced && !(showAdvancedSettings ?? false))) return const SizedBox.shrink();
         return SwitchListTile.adaptive(
           secondary: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),

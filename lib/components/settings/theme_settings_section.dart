@@ -22,15 +22,17 @@ class ThemeSettingsSection extends StatelessWidget {
   final Future<AndroidDeviceInfo>? androidInfoFuture;
   final Map<ColorSwatch<Object>, String> colorsNameMap;
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
   const ThemeSettingsSection({
     super.key,
     required this.androidInfoFuture,
     required this.colorsNameMap,
-    this.searchQuery,
+    this.searchQuery, this.showAdvancedSettings,
   });
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -59,7 +61,7 @@ class ThemeSettingsSection extends StatelessWidget {
         subtitle: tr('plusPopupSliderDescription'),
         value: (s) => s.plusEnablePopupSlider,
         onChanged: (s, v) => s.plusEnablePopupSlider = v,
-        visible: (s) => _matches(tr('plusPopupSlider')),
+        visible: (s) => _matches(tr('plusPopupSlider')), isAdvanced: true,
       ),
       _buildFeatureToggle<PlusSettingsProvider>(
         context,
@@ -95,7 +97,7 @@ class ThemeSettingsSection extends StatelessWidget {
         subtitle: tr('plusTopUILayoutDescription'),
         value: (s) => s.plusTopUILayout,
         onChanged: (s, v) => s.plusTopUILayout = v,
-        visible: (s) => _matches(tr('plusTopUILayout')),
+        visible: (s) => _matches(tr('plusTopUILayout')), isAdvanced: true,
       ),
     ];
 
@@ -200,7 +202,7 @@ class ThemeSettingsSection extends StatelessWidget {
         subtitle: tr('disablePageTransitionsDescription'),
         value: (s) => s.disablePageTransitions,
         onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) => _matches(tr('disablePageTransitions')),
+        visible: (s) => _matches(tr('disablePageTransitions')), isAdvanced: true,
       ),
       _buildFeatureToggle<BehaviorSettingsProvider>(
         context,
@@ -305,13 +307,19 @@ class ThemeSettingsSection extends StatelessWidget {
         if (themeWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appearance'),
+            icon: Icons.palette_rounded,
             helpText: tr('appearanceHelp'),
+            isExpandable: !isSearching,
+            initiallyExpanded: false,
             children: themeWidgets,
           ),
         if (shapeWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusShapesAndCorners'),
+            icon: Icons.rounded_corner_rounded,
             helpText: tr('shapesHelp'),
+            isExpandable: !isSearching,
+            initiallyExpanded: false,
             onReset: () {
               AppHaptics.heavyImpact();
               plusSettings.plusGlobalCornerRadius = 20.0;
@@ -324,11 +332,17 @@ class ThemeSettingsSection extends StatelessWidget {
         if (typographyWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('typography'),
+            icon: Icons.font_download_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: false,
             children: typographyWidgets,
           ),
         if (animationWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('animations'),
+            icon: Icons.animation_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: false,
             children: animationWidgets,
           ),
       ],
@@ -636,30 +650,42 @@ class ThemeSettingsSection extends StatelessWidget {
         if (settings.useMaterialYou && settings.matchSystemMaterialStyle) {
           return const SizedBox.shrink();
         }
-        return ListTile(
-          leading: const Icon(Icons.style_outlined),
-          title: Text(
-            tr('themeStyle'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          trailing: DropdownButton<DynamicSchemeVariant>(
-            underline: const SizedBox(),
-            value: settings.themeVariant,
-            items: DynamicSchemeVariant.values.map((v) {
-              String name =
-                  v.name.substring(0, 1).toUpperCase() +
-                  v.name
-                      .substring(1)
-                      .replaceAllMapped(RegExp(r'(?=[A-Z])'), (Match m) => ' ');
-              return DropdownMenuItem(value: v, child: Text(name));
-            }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                AppHaptics.selectionClick();
-                settings.themeVariant = value;
-              }
-            },
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.style_outlined),
+              title: Text(
+                tr('themeStyle'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<DynamicSchemeVariant>(
+                    segments: DynamicSchemeVariant.values.map((v) {
+                      String name =
+                          v.name.substring(0, 1).toUpperCase() +
+                          v.name.substring(1).replaceAllMapped(
+                            RegExp(r'(?=[A-Z])'),
+                            (Match m) => ' ',
+                          );
+                      return ButtonSegment(value: v, label: Text(name));
+                    }).toList(),
+                    selected: {settings.themeVariant},
+                    onSelectionChanged: (value) {
+                      AppHaptics.selectionClick();
+                      settings.themeVariant = value.first;
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -783,11 +809,11 @@ class ThemeSettingsSection extends StatelessWidget {
     required String subtitle,
     required bool Function(T) value,
     required void Function(T, bool) onChanged,
-    required bool Function(T) visible,
+    required bool Function(T) visible, bool isAdvanced = false,
   }) {
     return Consumer<T>(
       builder: (context, settings, child) {
-        if (!visible(settings)) return const SizedBox.shrink();
+        if (!visible(settings) || (isAdvanced && !(showAdvancedSettings ?? false))) return const SizedBox.shrink();
         return SwitchListTile.adaptive(
           secondary: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
