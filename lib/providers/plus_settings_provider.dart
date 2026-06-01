@@ -52,6 +52,20 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusUseCompactSettings =>
+      _prefs?.getBool('plusUseCompactSettings') ?? false;
+  set plusUseCompactSettings(bool val) {
+    _prefs?.setBool('plusUseCompactSettings', val);
+    notifyListeners();
+  }
+
+  bool get plusShowAdvancedSettings =>
+      _prefs?.getBool('plusShowAdvancedSettings') ?? false;
+  set plusShowAdvancedSettings(bool val) {
+    _prefs?.setBool('plusShowAdvancedSettings', val);
+    notifyListeners();
+  }
+
   bool get plusEnableExperimentalCustomization =>
       _prefs?.getBool('plusEnableExperimentalCustomization') ?? false;
   set plusEnableExperimentalCustomization(bool val) {
@@ -420,7 +434,7 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableBanWarnings => _prefs?.getBool('plusEnableBanWarnings') ?? true;
+  bool get plusEnableBanWarnings => _prefs?.getBool('plusEnableBanWarnings') ?? false;
   set plusEnableBanWarnings(bool val) {
     _prefs?.setBool('plusEnableBanWarnings', val);
     notifyListeners();

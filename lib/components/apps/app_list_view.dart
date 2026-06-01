@@ -13,6 +13,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -48,11 +49,11 @@ class AppListView extends StatelessWidget {
     Widget _buildAppItem(AppInMemory app, bool isPinned, int index) {
       final inst = app.app.installedVersion;
       final latest = app.app.latestVersion;
-      final hasUpdate =
-          inst != null &&
-          inst != latest &&
-          (reconcileVersionDifferences(inst, latest)?.key != true);
-
+      final hasUpdate = AppUpdateService.areVersionsDifferent(
+        app.app,
+        inst,
+        latest,
+      );
       Widget getActionIcon(AppSwipeAction action) {
         switch (action) {
           case AppSwipeAction.update:

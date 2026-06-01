@@ -551,9 +551,10 @@ class DeveloperSettingsPage extends StatelessWidget {
                   trailing: authProvider.authMode == AuthMode.anonymous
                       ? const Icon(Icons.check, color: Colors.green)
                       : null,
-                  onTap: () {
+                  onTap: () async {
                     authProvider.setAuthMode(AuthMode.anonymous);
                     Navigator.pop(context);
+                    await checkAndPromptBanWarnings(context);
                   },
                 ),
                 ListTile(
@@ -579,9 +580,10 @@ class DeveloperSettingsPage extends StatelessWidget {
                   trailing: authProvider.authMode == AuthMode.hybrid
                       ? const Icon(Icons.check, color: Colors.green)
                       : null,
-                  onTap: () {
+                  onTap: () async {
                     authProvider.setAuthMode(AuthMode.hybrid);
                     Navigator.pop(context);
+                    await checkAndPromptBanWarnings(context);
                   },
                 ),
               ],
@@ -1082,10 +1084,11 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
               labelText: tr('addDispenserUrl'),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: () {
+                onPressed: () async {
                   if (_controller.text.isNotEmpty) {
                     authProvider.addDispenser(_controller.text);
                     _controller.clear();
+                    await checkAndPromptBanWarnings(context);
                   }
                 },
               ),
@@ -1133,3 +1136,33 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
     }
   }
 }
+
+Future<void> checkAndPromptBanWarnings(BuildContext context) async {
+  final plusSettings = context.read<PlusSettingsProvider>();
+  if (!plusSettings.plusEnableBanWarnings) {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => GlassDialog(
+        title: tr('plusEnableBanWarnings'),
+        icon: Icons.warning_amber_rounded,
+        content: Text(
+          '${tr('plusEnableBanWarningsDescription')}\n\nWould you like to enable Dispenser Ban Warnings now for extra protection?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(tr('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(tr('enable')),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      plusSettings.plusEnableBanWarnings = true;
+    }
+  }
+}
+

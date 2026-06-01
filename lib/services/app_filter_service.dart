@@ -4,6 +4,7 @@ import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_install_service.dart'; // For installedInfo
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/models/app.dart'; // For App model
 import 'package:obtainium/utils/version_utils.dart'; // For reconcileVersionDifferences
 
@@ -26,7 +27,11 @@ class AppFilterService {
       if (filter.statusFilter.isNotEmpty) {
         bool hasUpdate =
             app.app.installedVersion != null &&
-            app.app.installedVersion != app.app.latestVersion;
+            AppUpdateService.areVersionsDifferent(
+              app.app,
+              app.app.installedVersion,
+              app.app.latestVersion,
+            );
         bool notInstalled = app.app.installedVersion == null;
 
         bool matches = false;

@@ -28,6 +28,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/app_in_memory.dart';
+import 'package:obtainium/services/app_update_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -1589,7 +1590,11 @@ class AppsProvider with ChangeNotifier {
     }
     // THIRD, RECONCILE THE APP'S REPORTED INSTALLED AND LATEST VERSIONS
     if (app.installedVersion != null &&
-        app.installedVersion != app.latestVersion &&
+        AppUpdateService.areVersionsDifferent(
+          app,
+          app.installedVersion,
+          app.latestVersion,
+        ) &&
         versionDetectionIsStandard) {
       // App's reported installed and latest versions don't match (and it uses standard version detection)
       // If they share a standard format, make sure the App's reported installed version uses that format
@@ -2027,7 +2032,7 @@ class AppsProvider with ChangeNotifier {
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
         try {
           final SharedPreferences prefs = await SharedPreferences.getInstance();
-          final bool enableBanWarnings = prefs.getBool('plusEnableBanWarnings') ?? true;
+          final bool enableBanWarnings = prefs.getBool('plusEnableBanWarnings') ?? false;
           final int threshold = prefs.getInt('plusBanWarningThreshold') ?? 5;
           if (enableBanWarnings && appIds.length > threshold) {
             NotificationsProvider().notify(DispenserBanWarningNotification(appIds.length));
@@ -2077,7 +2082,11 @@ class AppsProvider with ChangeNotifier {
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
       App? app = apps[appIds[i]]!.app;
-      if (app.installedVersion != app.latestVersion &&
+      if (AppUpdateService.areVersionsDifferent(
+            app,
+            app.installedVersion,
+            app.latestVersion,
+          ) &&
           (!installedOnly || !nonInstalledOnly)) {
         if ((app.installedVersion == null &&
                 (nonInstalledOnly || !installedOnly) ||

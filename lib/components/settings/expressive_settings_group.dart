@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -29,7 +30,9 @@ class ExpressiveSettingsGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final plusSettings = Provider.of<PlusSettingsProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompact = plusSettings.plusUseCompactSettings;
 
     final visibleChildren = children.where((child) {
       if (child is SizedBox && child.child == null) return false;
@@ -43,11 +46,19 @@ class ExpressiveSettingsGroup extends StatelessWidget {
       children: List.generate(visibleChildren.length, (index) {
         return Column(
           children: [
-            visibleChildren[index],
+            if (isCompact && visibleChildren[index] is ListTile)
+              Theme(
+                data: Theme.of(context).copyWith(
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: visibleChildren[index],
+              )
+            else
+              visibleChildren[index],
             if (index < visibleChildren.length - 1)
               Divider(
                 height: 1,
-                indent: 56,
+                indent: isCompact ? 16 : 56,
                 endIndent: 16,
                 color: Theme.of(
                   context,
@@ -108,7 +119,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
           ),
         Card(
           elevation: 0,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          margin: const EdgeInsets.symmetric(vertical: 4),
           color:
               (isDark
                       ? Theme.of(context).colorScheme.surfaceContainerLow
@@ -143,6 +154,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.primary,
+                                    size: isCompact ? 20 : 24,
                                   )
                                 : null,
                             title: Text(

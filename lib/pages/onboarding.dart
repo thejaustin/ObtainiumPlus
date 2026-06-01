@@ -621,10 +621,11 @@ class _OnboardingPageState extends State<OnboardingPage>
                       ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.add),
-                        onPressed: () {
+                        onPressed: () async {
                           if (_dispenserController.text.isNotEmpty) {
                             auth.addDispenser(_dispenserController.text);
                             _dispenserController.clear();
+                            await _checkAndPromptBanWarnings();
                           }
                         },
                       ),
@@ -988,5 +989,34 @@ class _OnboardingPageState extends State<OnboardingPage>
         activeColor: colorScheme.primary,
       ),
     );
+  }
+
+  Future<void> _checkAndPromptBanWarnings() async {
+    final plusSettings = context.read<PlusSettingsProvider>();
+    if (!plusSettings.plusEnableBanWarnings) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => GlassDialog(
+          title: tr('plusEnableBanWarnings'),
+          icon: Icons.warning_amber_rounded,
+          content: Text(
+            '${tr('plusEnableBanWarningsDescription')}\n\nWould you like to enable Dispenser Ban Warnings now for extra protection?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(tr('cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(tr('enable')),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true) {
+        plusSettings.plusEnableBanWarnings = true;
+      }
+    }
   }
 }

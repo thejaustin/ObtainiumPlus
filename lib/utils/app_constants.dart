@@ -81,7 +81,7 @@ class AppConstants {
 
   // Package IDs for thejaustin's "Plus" apps
   /// ObtainiumPlus Package ID
-  static const String obtainiumPlusId = 'app.obtainiumplus';
+  static const String obtainiumPlusId = 'dev.thejaustin.obtainiumplus';
 
   /// ShizukuPlus Package ID
   static const String shizukuPlusId = 'af.shizuku.plus.api';

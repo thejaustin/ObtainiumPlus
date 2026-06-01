@@ -8,6 +8,7 @@ import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
@@ -109,7 +110,11 @@ class _AppDashboardState extends State<AppDashboard>
         .where(
           (app) =>
               app.app.installedVersion != null &&
-              app.app.installedVersion != app.app.latestVersion,
+              AppUpdateService.areVersionsDifferent(
+                app.app,
+                app.app.installedVersion,
+                app.app.latestVersion,
+              ),
         )
         .toList();
     final updatesAvailable = updateApps.length;

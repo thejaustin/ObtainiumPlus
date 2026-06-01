@@ -5,17 +5,21 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/settings_group.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 
 class PlusFeaturesSection extends StatelessWidget {
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
-  const PlusFeaturesSection({super.key, this.searchQuery});
+  const PlusFeaturesSection({super.key, this.searchQuery, this.showAdvancedSettings});
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -31,6 +35,9 @@ class PlusFeaturesSection extends StatelessWidget {
             // Master toggle in its own expressive card
             ExpressiveSettingsGroup(
               title: isSearching ? null : tr('plusFeatures'),
+              icon: Icons.auto_awesome_rounded,
+              isExpandable: !isSearching,
+              initiallyExpanded: true,
               helpText: tr('plusFeaturesHelp'),
               onReset: () {
                 AppHaptics.heavyImpact();
@@ -57,6 +64,9 @@ class PlusFeaturesSection extends StatelessWidget {
               // --- APP MANAGEMENT ---
               ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('appManagement'),
+                icon: Icons.manage_accounts_rounded,
+                isExpandable: true,
+                initiallyExpanded: false,
                 children: [
                   if (_matches(tr('plusDiscover')))
                     _buildFeatureToggle(
@@ -82,7 +92,7 @@ class PlusFeaturesSection extends StatelessWidget {
                         pushRoute(context, SystemAppSelector());
                       },
                     ),
-                  if (_matches(tr('plusSystemUpdateScanner')))
+                  if (_matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -94,7 +104,7 @@ class PlusFeaturesSection extends StatelessWidget {
                           settings.plusEnableSystemUpdateScanner = val,
                       experimental: true,
                     ),
-                  if (_matches(tr('plusEnableMicroGHub')))
+                  if (_matches(tr('plusEnableMicroGHub'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -137,7 +147,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableAutoUpdateRules = val,
                     ),
-                  if (_matches(tr('backupEncryption')))
+                  if (_matches(tr('backupEncryption'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -148,7 +158,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.backupEncryptionEnabled = val,
                     ),
-                  if (_matches(tr('plusSmartRetries')))
+                  if (_matches(tr('plusSmartRetries'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -158,7 +168,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableSmartRetries,
                       onChanged: (val) => settings.plusEnableSmartRetries = val,
                     ),
-                  if (_matches(tr('plusUpdateOwnership')))
+                  if (_matches(tr('plusUpdateOwnership'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -169,7 +179,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableUpdateOwnership = val,
                     ),
-                  if (_matches(tr('plusUserPreapproval')))
+                  if (_matches(tr('plusUserPreapproval'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -186,6 +196,9 @@ class PlusFeaturesSection extends StatelessWidget {
               // --- NOTIFICATIONS ---
               ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('notifications'),
+                icon: Icons.notifications_active_rounded,
+                isExpandable: true,
+                initiallyExpanded: false,
                 children: [
                   if (_matches(tr('plusEnableNotificationEnhancements')))
                     _buildFeatureToggle(
@@ -206,6 +219,9 @@ class PlusFeaturesSection extends StatelessWidget {
               // --- UI & VISUALS ---
               ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('plusSectionInterfaceVisuals'),
+                icon: Icons.face_retouching_natural_rounded,
+                isExpandable: true,
+                initiallyExpanded: false,
                 children: [
                   if (_matches(tr('plusEnhancedAnimations')))
                     _buildFeatureToggle(
@@ -233,61 +249,48 @@ class PlusFeaturesSection extends StatelessWidget {
               ),
 
               // --- QUICK-ADD FAB MENU ---
-              ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('fabMenuItems'),
-                children: [
+              GenericBooleanControlGrid<PlusSettingsProvider>(
+                title: tr('fabMenuItems'),
+                settings: [
                   if (_matches(tr('fabShowSearch')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
+                    (
                       icon: Icons.search_rounded,
-                      title: tr('fabShowSearch'),
-                      subtitle: tr('fabShowSearchDescription'),
-                      value: settings.plusFabShowSearch,
-                      onChanged: (val) => settings.plusFabShowSearch = val,
+                      label: tr('fabShowSearch'),
+                      description: tr('fabShowSearchDescription'),
+                      getValue: (s) => s.plusFabShowSearch,
+                      setValue: (s, v) => s.plusFabShowSearch = v,
                     ),
                   if (_matches(tr('fabShowAddByUrl')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
+                    (
                       icon: Icons.link_outlined,
-                      title: tr('fabShowAddByUrl'),
-                      subtitle: tr('fabShowAddByUrlDescription'),
-                      value: settings.plusFabShowAddByUrl,
-                      onChanged: (val) => settings.plusFabShowAddByUrl = val,
+                      label: tr('fabShowAddByUrl'),
+                      description: tr('fabShowAddByUrlDescription'),
+                      getValue: (s) => s.plusFabShowAddByUrl,
+                      setValue: (s, v) => s.plusFabShowAddByUrl = v,
                     ),
                   if (_matches(tr('fabShowGithubStarred')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
+                    (
                       icon: Icons.star_border_rounded,
-                      title: tr('fabShowGithubStarred'),
-                      subtitle: tr('fabShowGithubStarredDescription'),
-                      value: settings.plusFabShowGithubStarred,
-                      onChanged: (val) =>
-                          settings.plusFabShowGithubStarred = val,
+                      label: tr('fabShowGithubStarred'),
+                      description: tr('fabShowGithubStarredDescription'),
+                      getValue: (s) => s.plusFabShowGithubStarred,
+                      setValue: (s, v) => s.plusFabShowGithubStarred = v,
                     ),
                   if (_matches(tr('fabShowGithubPersonalRepos')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
+                    (
                       icon: Icons.person_outline_rounded,
-                      title: tr('fabShowGithubPersonalRepos'),
-                      subtitle: tr('fabShowGithubPersonalReposDescription'),
-                      value: settings.plusFabShowGithubPersonalRepos,
-                      onChanged: (val) =>
-                          settings.plusFabShowGithubPersonalRepos = val,
+                      label: tr('fabShowGithubPersonalRepos'),
+                      description: tr('fabShowGithubPersonalReposDescription'),
+                      getValue: (s) => s.plusFabShowGithubPersonalRepos,
+                      setValue: (s, v) => s.plusFabShowGithubPersonalRepos = v,
                     ),
                   if (_matches(tr('fabShowImportInstalled')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
+                    (
                       icon: Icons.install_mobile_outlined,
-                      title: tr('fabShowImportInstalled'),
-                      subtitle: tr('fabShowImportInstalledDescription'),
-                      value: settings.plusFabShowImportInstalled,
-                      onChanged: (val) =>
-                          settings.plusFabShowImportInstalled = val,
+                      label: tr('fabShowImportInstalled'),
+                      description: tr('fabShowImportInstalledDescription'),
+                      getValue: (s) => s.plusFabShowImportInstalled,
+                      setValue: (s, v) => s.plusFabShowImportInstalled = v,
                     ),
                 ],
               ),
@@ -297,6 +300,9 @@ class PlusFeaturesSection extends StatelessWidget {
                 title: isSearching
                     ? null
                     : tr('plusSectionOrganizationSorting'),
+                icon: Icons.sort_rounded,
+                isExpandable: true,
+                initiallyExpanded: false,
                 children: [
                   if (_matches(tr('plusIconCaching')))
                     _buildFeatureToggle(
@@ -338,7 +344,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableTags,
                       onChanged: (val) => settings.plusEnableTags = val,
                     ),
-                  if (_matches(tr('plusAdvancedSorting')))
+                  if (_matches(tr('plusAdvancedSorting'), isAdvanced: true))
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -349,7 +355,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableAdvancedSorting = val,
                     ),
-                  if (_matches(tr('plusEnableBanWarnings'))) ...[
+                  if (_matches(tr('plusEnableBanWarnings'), isAdvanced: true)) ...[
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -357,7 +363,33 @@ class PlusFeaturesSection extends StatelessWidget {
                       title: tr('plusEnableBanWarnings'),
                       subtitle: tr('plusEnableBanWarningsDescription'),
                       value: settings.plusEnableBanWarnings,
-                      onChanged: (val) => settings.plusEnableBanWarnings = val,
+                      onChanged: (val) async {
+                        if (val) {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => GlassDialog(
+                              title: tr('plusEnableBanWarnings'),
+                              icon: Icons.warning_amber_rounded,
+                              content: Text(tr('plusEnableBanWarningsDescription')),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text(tr('cancel')),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text(tr('enable')),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            settings.plusEnableBanWarnings = true;
+                          }
+                        } else {
+                          settings.plusEnableBanWarnings = false;
+                        }
+                      },
                     ),
                     if (settings.plusEnableBanWarnings)
                       Padding(
@@ -420,7 +452,7 @@ class PlusFeaturesSection extends StatelessWidget {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-    bool experimental = false,
+    bool experimental = false, bool isAdvanced = false,
   }) {
     return SwitchListTile.adaptive(
       secondary: Icon(icon),

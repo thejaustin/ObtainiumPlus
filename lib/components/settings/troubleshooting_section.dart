@@ -2,7 +2,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/settings/logs_dialog.dart';
 import 'package:obtainium/providers/logs_provider.dart';
@@ -13,9 +13,11 @@ import 'package:provider/provider.dart';
 /// Section for system settings shortcuts and troubleshooting
 class TroubleshootingSection extends StatelessWidget {
   final String? searchQuery;
-  const TroubleshootingSection({super.key, this.searchQuery});
+  final bool? showAdvancedSettings;
+  const TroubleshootingSection({super.key, this.searchQuery, this.showAdvancedSettings});
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -115,10 +117,14 @@ class TroubleshootingSection extends StatelessWidget {
 
     if (items.isEmpty) return const SizedBox.shrink();
 
-    return SettingsGroup(
+    return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('troubleshootingAndSystem'),
-      children: items,
+      icon: Icons.bug_report_rounded,
+      isExpandable: !isSearching,
+      initiallyExpanded: false,
+      children: children,
     );
+
   }
 
   Widget _buildCleanupTile(

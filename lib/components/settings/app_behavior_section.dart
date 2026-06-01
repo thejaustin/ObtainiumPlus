@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/components/settings/settings_group.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:provider/provider.dart';
@@ -8,10 +8,12 @@ import 'package:provider/provider.dart';
 /// App behavior and interaction settings section
 class AppBehaviorSection extends StatelessWidget {
   final String? searchQuery;
+  final bool? showAdvancedSettings;
 
-  const AppBehaviorSection({super.key, this.searchQuery});
+  const AppBehaviorSection({super.key, this.searchQuery, this.showAdvancedSettings});
 
-  bool _matches(String text) {
+  bool _matches(String text, {bool isAdvanced = false}) {
+    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(searchQuery!.toLowerCase());
   }
@@ -29,7 +31,7 @@ class AppBehaviorSection extends StatelessWidget {
         subtitle: tr('disablePageTransitionsDescription'),
         value: (s) => s.disablePageTransitions,
         onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) => _matches(tr('disablePageTransitions')),
+        visible: (s) => _matches(tr('disablePageTransitions')), isAdvanced: true,
       ),
       // Haptic Feedback
       _buildFeatureToggle(
@@ -99,9 +101,13 @@ class AppBehaviorSection extends StatelessWidget {
     return Column(
       children: [
         if (children.any((w) => w is! SizedBox))
-          SettingsGroup(
+          ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appBehavior'),
-            children: children,
+            icon: Icons.settings_suggest_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: false,
+            children: [
+
           ),
         Consumer<BehaviorSettingsProvider>(
           builder: (context, settings, _) {
@@ -121,7 +127,7 @@ class AppBehaviorSection extends StatelessWidget {
               opacity: settings.enableSwipeGestures ? 1.0 : 0.4,
               child: IgnorePointer(
                 ignoring: !settings.enableSwipeGestures,
-                child: SettingsGroup(
+                child: ExpressiveSettingsGroup(
                   title: isSearching ? null : tr('swipeActions'),
                   children: swipeChildren,
                 ),
@@ -139,42 +145,55 @@ class AppBehaviorSection extends StatelessWidget {
   }) {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
-        return ListTile(
-          leading: Icon(
-            isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined,
-          ),
-          title: Text(
-            isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(
-            isRight
-                ? tr('swipeRightActionDescription')
-                : tr('swipeLeftActionDescription'),
-          ),
-          trailing: DropdownButton<AppSwipeAction>(
-            underline: const SizedBox(),
-            value: isRight
-                ? settings.swipeRightAction
-                : settings.swipeLeftAction,
-            items: AppSwipeAction.values
-                .map(
-                  (e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(tr('action_${e.name}')),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: Icon(
+                isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined,
+              ),
+              title: Text(
+                isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                isRight
+                    ? tr('swipeRightActionDescription')
+                    : tr('swipeLeftActionDescription'),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<AppSwipeAction>(
+                    segments: AppSwipeAction.values
+                        .map(
+                          (e) => ButtonSegment(
+                            value: e,
+                            label: Text(tr('action_${e.name}')),
+                          ),
+                        )
+                        .toList(),
+                    selected: {
+                      isRight
+                          ? settings.swipeRightAction
+                          : settings.swipeLeftAction
+                    },
+                    onSelectionChanged: (value) {
+                      if (isRight) {
+                        settings.swipeRightAction = value.first;
+                      } else {
+                        settings.swipeLeftAction = value.first;
+                      }
+                    },
                   ),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                if (isRight) {
-                  settings.swipeRightAction = value;
-                } else {
-                  settings.swipeLeftAction = value;
-                }
-              }
-            },
-          ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
