@@ -517,6 +517,18 @@ class AppsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void selectAll() {
+    selectedAppIds = apps.keys.toSet();
+    isSelectionMode = true;
+    notifyListeners();
+  }
+
+  void deselectAll() {
+    selectedAppIds.clear();
+    isSelectionMode = false;
+    notifyListeners();
+  }
+
   void clearSelection() {
     selectedAppIds.clear();
     isSelectionMode = false;
