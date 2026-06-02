@@ -729,6 +729,132 @@ Widget buildRepoRenameWarning({
       );
     }
 
+    Widget _buildSystemActions() {
+      if (app?.installedInfo == null) return const SizedBox.shrink();
+      final colorScheme = Theme.of(context).colorScheme;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              tr('systemActions'),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionCard(
+                    icon: Icons.settings_applications_outlined,
+                    label: tr('appInfo'),
+                    onTap: () => pm.openAppSettings(app!.app.id),
+                    color: colorScheme.secondary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionCard(
+                    icon: Icons.block_flipped,
+                    label: tr('forceStop'),
+                    onTap: () async {
+                      try {
+                        await pm.forceStopApp(app!.app.id);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(tr('forceStopSuccess'))),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) showError(e, context);
+                      }
+                    },
+                    color: colorScheme.error,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionCard(
+                    icon: Icons.security_rounded,
+                    label: tr('safetyScan'),
+                    onTap: () async {
+                      if (app?.app.url != null) {
+                        final vtUrl = 'https://www.virustotal.com/gui/search/${Uri.encodeComponent(app!.app.url)}';
+                        launchUrlString(vtUrl, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    color: Colors.blueAccent,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionCard(
+                    icon: Icons.delete_sweep_outlined,
+                    label: tr('clearCache'),
+                    onTap: () async {
+                      // Note: Clearing cache typically requires Shizuku/Root
+                      try {
+                        await pm.deleteApplicationCacheFiles(
+                          packageName: app!.app.id,
+                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(tr('clearCacheSuccess'))),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) showError(e, context);
+                      }
+                    },
+                    color: colorScheme.tertiary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildActionCard({
+      required IconData icon,
+      required String label,
+      required VoidCallback onTap,
+      required Color color,
+    }) {
+      return Material(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     getFullInfoColumn({bool small = false}) => Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -826,6 +952,8 @@ Widget buildRepoRenameWarning({
           style: Theme.of(context).textTheme.labelSmall,
         ),
         getInfoColumn(),
+        const SizedBox(height: 16),
+        _buildSystemActions(),
         SizedBox(height: 85 + MediaQuery.paddingOf(context).bottom),
       ],
     );
