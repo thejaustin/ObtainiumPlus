@@ -685,41 +685,70 @@ Widget buildRepoRenameWarning({
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 32),
-                GestureDetector(
-                  onLongPress: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: app?.app.additionalSettings['about'] ?? '',
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.description_outlined, size: 18, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        tr('about'),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(tr('copiedToClipboard'))),
-                    );
-                  },
-                  child: Markdown(
-                    physics: NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    styleSheet: MarkdownStyleSheet(
-                      blockquoteDecoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                      ),
-                      textAlign: WrapAlignment.center,
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
                     ),
-                    data: app?.app.additionalSettings['about'],
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrlString(
-                          href,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
+                  ),
+                  child: GestureDetector(
+                    onLongPress: () {
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: app?.app.additionalSettings['about'] ?? '',
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(tr('copiedToClipboard'))),
+                      );
                     },
-                    extensionSet: md.ExtensionSet(
-                      md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                      [
-                        md.EmojiSyntax(),
-                        ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                      ],
+                    child: Markdown(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      styleSheet: MarkdownStyleSheet(
+                        p: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+                        blockquoteDecoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      data: app?.app.additionalSettings['about'],
+                      onTapLink: (text, href, title) {
+                        if (href != null) {
+                          launchUrlString(
+                            href,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      extensionSet: md.ExtensionSet(
+                        md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                        [
+                          md.EmojiSyntax(),
+                          ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -774,6 +803,19 @@ Widget buildRepoRenameWarning({
                       }
                     },
                     color: colorScheme.error,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionCard(
+                    icon: Icons.public_rounded,
+                    label: tr('website'),
+                    onTap: () async {
+                      if (app?.app.url != null) {
+                        launchUrlString(app!.app.url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 8),

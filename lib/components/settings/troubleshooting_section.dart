@@ -8,6 +8,10 @@ import 'package:obtainium/components/settings/logs_dialog.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
+import 'package:obtainium/pages/statistics.dart';
+import 'package:obtainium/pages/changelog.dart';
+import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
 /// Section for system settings shortcuts and troubleshooting
@@ -32,14 +36,14 @@ class TroubleshootingSection extends StatelessWidget {
           context,
           icon: Icons.info_outlined,
           title: tr('openAppInfo'),
-          onTap: () => AppInstallService.openAppSettings(obtainiumId),
+          onTap: () => AppInstallService.openAppSettings(AppConstants.obtainiumPlusId),
         ),
       if (_matches(tr('notificationSettings')))
         _buildSystemShortcutTile(
           context,
           icon: Icons.notifications_active_outlined,
           title: tr('notificationSettings'),
-          onTap: () => AppInstallService.openNotificationSettings(obtainiumId),
+          onTap: () => AppInstallService.openNotificationSettings(AppConstants.obtainiumPlusId),
         ),
       if (_matches(tr('batteryOptimizationSettings')))
         _buildSystemShortcutTile(
@@ -54,14 +58,14 @@ class TroubleshootingSection extends StatelessWidget {
           icon: Icons.install_mobile_outlined,
           title: tr('installUnknownApps'),
           onTap: () =>
-              AppInstallService.openInstallUnknownAppsSettings(obtainiumId),
+              AppInstallService.openInstallUnknownAppsSettings(AppConstants.obtainiumPlusId),
         ),
       if (_matches(tr('overlaySettings')))
         _buildSystemShortcutTile(
           context,
           icon: Icons.layers_outlined,
           title: tr('overlaySettings'),
-          onTap: () => AppInstallService.openOverlaySettings(obtainiumId),
+          onTap: () => AppInstallService.openOverlaySettings(AppConstants.obtainiumPlusId),
         ),
       if (_matches(tr('usageAccessSettings')))
         _buildSystemShortcutTile(
@@ -84,6 +88,32 @@ class TroubleshootingSection extends StatelessWidget {
               context: context,
               builder: (context) => const LogsDialog(),
             );
+          },
+        ),
+      if (_matches(tr('statistics')))
+        ListTile(
+          leading: Icon(
+            Icons.bar_chart_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(tr('statistics'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('statisticsDescription')),
+          onTap: () {
+            AppHaptics.selectionClick();
+            pushRoute(context, const StatisticsPage());
+          },
+        ),
+      if (_matches(tr('viewChangelog')))
+        ListTile(
+          leading: Icon(
+            Icons.history_edu_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(tr('viewChangelog'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(tr('viewChangelogDescription')),
+          onTap: () {
+            AppHaptics.selectionClick();
+            pushRoute(context, const ChangelogPage());
           },
         ),
       if (!context.watch<SettingsProvider>().plusDeveloperMode)
@@ -147,7 +177,7 @@ class TroubleshootingSection extends StatelessWidget {
       icon: Icons.bug_report_rounded,
       isExpandable: !isSearching,
       initiallyExpanded: false,
-      children: children,
+      children: items,
     );
 
   }

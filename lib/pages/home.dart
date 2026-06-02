@@ -10,10 +10,12 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
+import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
@@ -43,28 +45,41 @@ class HomePageState extends State<HomePage> {
   StreamSubscription<Uri>? _linkSubscription;
   bool isLinkActivity = false;
 
-  List<NavigationPageItem> pages = [
-    NavigationPageItem(
-      'appsString',
-      Icons.apps,
-      AppsPage(key: GlobalKey<AppsPageState>()),
-    ),
-    NavigationPageItem(
-      'addApp',
-      Icons.add,
-      AddAppPage(key: GlobalKey<AddAppPageState>()),
-    ),
-    NavigationPageItem(
-      'importExport',
-      Icons.import_export,
-      const ImportExportPage(),
-    ),
-    NavigationPageItem('settings', Icons.settings, const SettingsPage()),
-  ];
+  late List<NavigationPageItem> pages;
 
   @override
   void initState() {
     super.initState();
+    final plusSettings = context.read<PlusSettingsProvider>();
+    pages = [
+      NavigationPageItem(
+        'appsString',
+        Icons.apps_rounded,
+        AppsPage(key: GlobalKey<AppsPageState>()),
+      ),
+      NavigationPageItem(
+        'addApp',
+        Icons.add_rounded,
+        AddAppPage(key: GlobalKey<AddAppPageState>()),
+      ),
+      if (plusSettings.plusEnableDiscover)
+        NavigationPageItem(
+          'discover',
+          Icons.explore_rounded,
+          const DiscoverPage(),
+        ),
+      NavigationPageItem(
+        'importExport',
+        Icons.import_export_rounded,
+        const ImportExportPage(),
+      ),
+      NavigationPageItem(
+        'settings',
+        Icons.settings_rounded,
+        const SettingsPage(),
+      ),
+    ];
+
     initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();

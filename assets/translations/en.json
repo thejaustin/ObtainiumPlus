@@ -138,6 +138,7 @@
     "appSource": "App source",
     "noLogs": "No logs",
     "viewChangelog": "View Changelog",
+    "viewChangelogDescription": "See what's new in the latest version of Obtainium+",
     "appLogs": "App logs",
     "close": "Close",
     "share": "Share",
@@ -635,6 +636,7 @@
     "advancedFeatures": "Advanced Features",
     "advancedFeaturesSubtitle": "Experimental and 'Plus' exclusive enhancements",
     "statistics": "Statistics",
+    "statisticsDescription": "Track installation metrics, categories, and source distribution",
     "overview": "Overview",
     "totalApps": "Total Apps",
     "tracked": "Tracked",
@@ -1050,8 +1052,11 @@
     "forceStoppedXApps": "Successfully force stopped {} apps",
     "searchSuggestions": "Search Suggestions",
     "plusShowStatusHub": "Show Status Hub",
-    "plusShowStatusHubDescription": "Display summary cards for apps, updates, and storage at the top of the dashboard"
+    "plusShowStatusHubDescription": "Display summary cards for apps, updates, and storage at the top of the dashboard",
+    "plusShowQuickActions": "Show Quick Actions",
+    "plusShowQuickActionsDescription": "Display a grid of frequently used management tools on the dashboard"
 }
+
 
 
 
