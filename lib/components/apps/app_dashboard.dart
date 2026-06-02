@@ -9,6 +9,7 @@ import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
@@ -140,84 +141,106 @@ class _AppDashboardState extends State<AppDashboard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Omnibar - Unified Search/Add
-          if (settings.plusShowDashboardSearch) ...[
-            Omnibar(
-              onSearchQuery: widget.onSearchQuery,
-              onUrlInput: widget.onUrlInput,
-            ),
-            const SizedBox(height: 20),
-          ],
+          // Batch Operations Hub (visible during selection)
+          if (appsProvider.isSelectionMode)
+            _animated(
+              _card0Anim,
+              _buildBatchActionsHub(context, appsProvider, radius),
+            )
+          else ...[
+            // Omnibar - Unified Search/Add
+            if (settings.plusShowDashboardSearch) ...[
+              Omnibar(
+                onSearchQuery: widget.onSearchQuery,
+                onUrlInput: widget.onUrlInput,
+              ),
+              const SizedBox(height: 20),
+            ],
 
-          // Summary cards — staggered M3 entrance
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _animated(
-                  _card0Anim,
-                  _buildSummaryCard(
-                    context,
-                    icon: Icons.apps_rounded,
-                    label: tr('appsString'),
-                    value: totalApps.toString(),
-                    color: colorScheme.primary,
+            // Summary cards — staggered M3 entrance
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _animated(
+                    _card0Anim,
+                    _buildSummaryCard(
+                      context,
+                      icon: Icons.apps_rounded,
+                      label: tr('appsString'),
+                      value: totalApps.toString(),
+                      color: colorScheme.primary,
+                      onLongPress: () {
+                        AppHaptics.heavyImpact();
+                        appsProvider.selectAll();
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                _animated(
-                  _card1Anim,
-                  _buildSummaryCard(
-                    context,
-                    icon: Icons.update_rounded,
-                    label: tr('updates'),
-                    value: updatesAvailable.toString(),
-                    color: updatesAvailable > 0
-                        ? colorScheme.error
-                        : colorScheme.secondary,
-                    onTap: updatesAvailable > 0 ? widget.onCheckUpdates : null,
+                  const SizedBox(width: 12),
+                  _animated(
+                    _card1Anim,
+                    _buildSummaryCard(
+                      context,
+                      icon: Icons.update_rounded,
+                      label: tr('updates'),
+                      value: updatesAvailable.toString(),
+                      color: updatesAvailable > 0
+                          ? colorScheme.error
+                          : colorScheme.secondary,
+                      onTap: updatesAvailable > 0 ? widget.onCheckUpdates : null,
+                      onLongPress: updatesAvailable > 0
+                          ? () {
+                              AppHaptics.heavyImpact();
+                              appsProvider.downloadAndInstallLatestApps(
+                                updateApps.map((e) => e.app.id).toList(),
+                                context,
+                              );
+                            }
+                          : null,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                _animated(
-                  _card2Anim,
-                  _buildSummaryCard(
-                    context,
-                    icon: Icons.history_rounded,
-                    label: tr('lastCheck'),
-                    value: lastCheck != null
-                        ? DateFormat.Md().add_jm().format(lastCheck.toLocal())
-                        : tr('never'),
-                    color: colorScheme.tertiary,
+                  const SizedBox(width: 12),
+                  _animated(
+                    _card2Anim,
+                    _buildSummaryCard(
+                      context,
+                      icon: Icons.history_rounded,
+                      label: tr('lastCheck'),
+                      value: lastCheck != null
+                          ? DateFormat.Md().add_jm().format(lastCheck.toLocal())
+                          : tr('never'),
+                      color: colorScheme.tertiary,
+                      onTap: widget.onCheckUpdates,
+                    ),
                   ),
-                ),
 
-                // Adaptive 'Get Started' Card for new/sparse users
-                if (totalApps < 3) ...[
+                  // Storage Hub Card
                   const SizedBox(width: 12),
                   _animated(
                     _updatesAnim,
                     _buildSummaryCard(
                       context,
-                      icon: Icons.auto_awesome_rounded,
-                      label: tr('discover'),
-                      value: tr('new'),
+                      icon: Icons.storage_rounded,
+                      label: tr('storage'),
+                      value: tr('clean'),
                       color: colorScheme.secondary,
-                      onTap: () {
+                      onTap: () async {
                         AppHaptics.selectionClick();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AddAppPage(initialTab: 1),
-                          ),
-                        );
+                        final count = await AppFileService.clearAllDownloadedApks();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(tr('clearedXApks', args: [count.toString()])),
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+          ],
 
           const SizedBox(height: 24),
 
@@ -486,6 +509,93 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
+  Widget _buildBatchActionsHub(
+    BuildContext context,
+    AppsProvider appsProvider,
+    double radius,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final count = appsProvider.selectedAppIds.length;
+    final itemRadius = (radius * 0.7).clamp(12.0, 24.0);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(itemRadius),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(Icons.library_add_check_rounded, color: colorScheme.primary),
+              const SizedBox(width: 12),
+              Text(
+                tr('plural_apps', args: [count.toString()]),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => appsProvider.clearSelection(),
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: Text(tr('cancel')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    AppHaptics.heavyImpact();
+                    appsProvider.downloadAndInstallLatestApps(
+                      appsProvider.selectedAppIds.toList(),
+                      context,
+                    );
+                    appsProvider.clearSelection();
+                  },
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: Text(tr('update')),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: () {
+                    // Navigate to export page with selected IDs
+                    // (Assuming ImportExportPage supports this or handled elsewhere)
+                    AppHaptics.selectionClick();
+                  },
+                  icon: const Icon(Icons.ios_share_rounded, size: 18),
+                  label: Text(tr('share')),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                onPressed: () {
+                  AppHaptics.heavyImpact();
+                  appsProvider.removeApps(appsProvider.selectedAppIds.toList());
+                  appsProvider.clearSelection();
+                },
+                icon: const Icon(Icons.delete_outline_rounded),
+                style: IconButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                  backgroundColor: colorScheme.errorContainer.withOpacity(0.3),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSummaryCard(
     BuildContext context, {
     required IconData icon,
@@ -493,6 +603,7 @@ class _AppDashboardState extends State<AppDashboard>
     required String value,
     required Color color,
     VoidCallback? onTap,
+    VoidCallback? onLongPress,
   }) {
     final settings = context.watch<SettingsProvider>();
     final radius = settings.plusOverrideIndividualCornerRadius
@@ -502,6 +613,7 @@ class _AppDashboardState extends State<AppDashboard>
 
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       borderRadius: BorderRadius.circular(itemRadius),
       child: Container(
         width: 110,
