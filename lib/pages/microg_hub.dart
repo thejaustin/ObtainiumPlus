@@ -24,7 +24,7 @@ class MicroGHubPage extends StatefulWidget {
 }
 
 class _MicroGHubPageState extends State<MicroGHubPage> {
-  static const _platform = MethodChannel('app.obtainiumplus/native');
+  static const _platform = MethodChannel('dev.thejaustin.obtainiumplus/native');
   String _selectedProvider = 'Official (microG Project)';
   bool _installGmsCore = true;
   bool _installGsfProxy = true;

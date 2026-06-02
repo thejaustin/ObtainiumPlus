@@ -125,7 +125,7 @@ class AppInstallService {
   static Future<bool> isUsageAccessGranted() async {
     try {
       final bool? granted = await const MethodChannel(
-        'app.obtainiumplus/native',
+        'dev.thejaustin.obtainiumplus/native',
       ).invokeMethod<bool>('isUsageAccessGranted');
       return granted ?? false;
     } catch (e) {
@@ -141,7 +141,7 @@ class AppInstallService {
     }
   }
 
-  static const _nativeChannel = MethodChannel('app.obtainiumplus/native');
+  static const _nativeChannel = MethodChannel('dev.thejaustin.obtainiumplus/native');
 
   static Future<bool> setUpdateOwnership(String packageName) async {
     try {
@@ -196,7 +196,7 @@ class AppInstallService {
       try {
         await fallback.launch();
       } catch (e2) {
-        unawaited(openAppSettings('app.obtainiumplus'));
+        unawaited(openAppSettings('dev.thejaustin.obtainiumplus'));
       }
     }
   }
@@ -212,7 +212,7 @@ class AppInstallService {
     try {
       await intent.launch();
     } catch (e) {
-      openAppSettings('app.obtainiumplus');
+      openAppSettings('dev.thejaustin.obtainiumplus');
     }
   }
 
@@ -274,11 +274,11 @@ class AppInstallService {
       }
     }
 
-    if (app.id == 'app.obtainiumplus') {
+    if (app.id == 'dev.thejaustin.obtainiumplus') {
       // obtainiumId
       return false;
     }
-    if (installerPackageName != 'app.obtainiumplus') {
+    if (installerPackageName != 'dev.thejaustin.obtainiumplus') {
       return false;
     }
     if (osInfo.version.sdkInt < 31) {

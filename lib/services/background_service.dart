@@ -81,7 +81,7 @@ class BackgroundService {
           notificationTitle: tr('foregroundService'),
           notificationText: tr('fgServiceNotice'),
           notificationIcon: NotificationIcon(
-            metaDataName: 'app.obtainiumplus.service.NOTIFICATION_ICON',
+            metaDataName: 'dev.thejaustin.obtainiumplus.service.NOTIFICATION_ICON',
           ),
           callback: startCallback,
         );

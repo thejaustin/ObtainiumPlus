@@ -869,7 +869,7 @@ class _SpoofingManagerSheet extends StatefulWidget {
 }
 
 class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
-  static const _platform = MethodChannel('app.obtainiumplus/native');
+  static const _platform = MethodChannel('dev.thejaustin.obtainiumplus/native');
   String _gsfId = 'Checking...';
 
   @override
