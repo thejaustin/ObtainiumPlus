@@ -52,6 +52,20 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String get plusLastSeenVersion =>
+      _prefs?.getString('plusLastSeenVersion') ?? '';
+  set plusLastSeenVersion(String val) {
+    _prefs?.setString('plusLastSeenVersion', val);
+    notifyListeners();
+  }
+
+  bool get plusShowQuickActions =>
+      _prefs?.getBool('plusShowQuickActions') ?? true;
+  set plusShowQuickActions(bool val) {
+    _prefs?.setBool('plusShowQuickActions', val);
+    notifyListeners();
+  }
+
   bool get plusShowStatusHub =>
       _prefs?.getBool('plusShowStatusHub') ?? true;
   set plusShowStatusHub(bool val) {
