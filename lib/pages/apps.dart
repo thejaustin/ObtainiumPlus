@@ -1,5 +1,6 @@
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
+import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -185,10 +186,53 @@ class AppsPageState extends State<AppsPage> {
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
-    if (plusSettings.plusEnableHomeDashboard) {
-      return AppDashboard(key: widget.key);
-    }
     final appsProvider = context.watch<AppsProvider>();
+
+    if (appsProvider.apps.isEmpty && !appsProvider.loadingApps) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: EmptyStateWidget(
+          title: tr('noApps'),
+          subtitle: tr('onboardingAddAppsSubtitle'),
+          icon: Icons.auto_awesome_rounded,
+          actionLabel: tr('addApp'),
+          onActionPressed: () {
+            final homeState = context.findAncestorStateOfType<HomePageState>();
+            homeState?.switchToPage(1);
+          },
+          secondaryActionLabel: tr('discover'),
+          onSecondaryActionPressed: () {
+            final homeState = context.findAncestorStateOfType<HomePageState>();
+            homeState?.switchToPage(2);
+          },
+        ),
+      );
+    }
+
+    if (plusSettings.plusEnableHomeDashboard) {
+      return AppDashboard(
+        key: widget.key,
+        currentFilterMode: filter.statusFilter.isEmpty ? 'all' : filter.statusFilter.first,
+        onFilterChanged: (newFilter) {
+          setState(() {
+            if (newFilter == 'all') {
+              filter.statusFilter = {};
+            } else {
+              filter.statusFilter = {newFilter};
+            }
+          });
+        },
+        onSearchQuery: (query) {
+          setState(() {
+            filter.nameFilter = query;
+          });
+        },
+        onUrlInput: (url) {
+          // Handle URL input from dashboard
+        },
+        onCheckUpdates: refresh,
+      );
+    }
     final settingsProvider = context.watch<SettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();

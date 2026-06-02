@@ -475,18 +475,29 @@ class _AppGridTileState extends State<AppGridTile>
           ? CrossAxisAlignment.start
           : CrossAxisAlignment.center,
       children: [
-        Text(
-          widget.appInMemory.name,
-          maxLines: 2,
-          textAlign: textAlign,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: widget.appInMemory.app.pinned || widget.hasUpdate
-                ? FontWeight.bold
-                : FontWeight.w600,
-            letterSpacing: -0.2,
-          ),
+        Row(
+          mainAxisAlignment: textAlign == TextAlign.start
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                widget.appInMemory.name,
+                maxLines: 1,
+                textAlign: textAlign,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: widget.appInMemory.app.pinned || widget.hasUpdate
+                      ? FontWeight.bold
+                      : FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            _buildSourceBadge(context),
+          ],
         ),
         if (plusSettings.plusShowTagsInList &&
             widget.appInMemory.app.tags.isNotEmpty)
@@ -527,6 +538,35 @@ class _AppGridTileState extends State<AppGridTile>
         // Checking / Progress logic...
         _buildProgressIndicator(),
       ],
+    );
+  }
+
+  Widget _buildSourceBadge(BuildContext context) {
+    final url = widget.appInMemory.app.url.toLowerCase();
+    IconData iconData = Icons.link_rounded;
+    Color color = Theme.of(context).colorScheme.primary;
+
+    if (url.contains('github.com')) {
+      iconData = Icons.terminal_rounded;
+      color = const Color(0xFF24292E);
+    } else if (url.contains('f-droid.org')) {
+      iconData = Icons.android_rounded;
+      color = const Color(0xFF1976D2);
+    } else if (url.contains('gitlab.com')) {
+      iconData = Icons.account_tree_rounded;
+      color = const Color(0xFFFC6D26);
+    } else if (url.contains('codeberg.org')) {
+      iconData = Icons.code_rounded;
+      color = const Color(0xFF2185D0);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(iconData, size: 8, color: color),
     );
   }
 
