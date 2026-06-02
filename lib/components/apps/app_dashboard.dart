@@ -158,9 +158,10 @@ class _AppDashboardState extends State<AppDashboard>
             ],
 
             // Summary cards — staggered M3 entrance
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+            if (appsProvider.plusSettings.plusShowStatusHub)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                 children: [
                   _animated(
                     _card0Anim,

@@ -1048,8 +1048,11 @@
     "forceStopAll": "Force Stop All Apps",
     "forceStopAllDescription": "Attempt to force stop all tracked apps (requires Shizuku/Root)",
     "forceStoppedXApps": "Successfully force stopped {} apps",
-    "searchSuggestions": "Search Suggestions"
+    "searchSuggestions": "Search Suggestions",
+    "plusShowStatusHub": "Show Status Hub",
+    "plusShowStatusHubDescription": "Display summary cards for apps, updates, and storage at the top of the dashboard"
 }
+
 
 
 
