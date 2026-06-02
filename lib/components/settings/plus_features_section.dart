@@ -234,6 +234,16 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableEnhancedAnimations = val,
                     ),
+                  if (_matches(tr('plusShowStatusHub')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.info_outline_rounded,
+                      title: tr('plusShowStatusHub'),
+                      subtitle: tr('plusShowStatusHubDescription'),
+                      value: settings.plusShowStatusHub,
+                      onChanged: (val) => settings.plusShowStatusHub = val,
+                    ),
                   if (_matches(tr('plusHomeDashboard')))
                     _buildFeatureToggle(
                       context,

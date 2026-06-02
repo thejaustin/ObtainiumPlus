@@ -52,6 +52,13 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusShowStatusHub =>
+      _prefs?.getBool('plusShowStatusHub') ?? true;
+  set plusShowStatusHub(bool val) {
+    _prefs?.setBool('plusShowStatusHub', val);
+    notifyListeners();
+  }
+
   bool get plusUseCompactSettings =>
       _prefs?.getBool('plusUseCompactSettings') ?? false;
   set plusUseCompactSettings(bool val) {
