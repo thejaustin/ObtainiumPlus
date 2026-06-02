@@ -488,4 +488,25 @@ class AppFileService {
     responseClient.close();
     return downloadedFile;
   }
+
+  static Future<int> clearAllDownloadedApks() async {
+    int clearedCount = 0;
+    try {
+      final dirs = await initAppDirectories();
+      final apkDir = dirs['APKDir'];
+      if (apkDir != null && apkDir.existsSync()) {
+        final files = apkDir.listSync(recursive: true);
+        for (final file in files) {
+          if (file is File &&
+              (file.path.endsWith('.apk') || file.path.endsWith('.part'))) {
+            file.deleteSync();
+            clearedCount++;
+          }
+        }
+      }
+    } catch (e) {
+      talker.error('Failed to clear APKs: $e');
+    }
+    return clearedCount;
+  }
 }

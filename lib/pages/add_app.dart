@@ -13,6 +13,7 @@ import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -54,6 +55,15 @@ class AddAppPageState extends State<AddAppPage> {
   List<String> pickedCategories = [];
   int urlInputKey = 0;
   SourceProvider sourceProvider = SourceProvider();
+  Timer? _searchDebounce;
+  Map<String, MapEntry<String, List<String>>> liveResults = {};
+  bool liveSearching = false;
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
 
   void linkFn(String input) {
     try {
@@ -64,6 +74,64 @@ class AddAppPageState extends State<AddAppPage> {
       changeUserInput(input, true, false, updateUrlInput: true);
     } catch (e) {
       showError(e, context);
+    }
+  }
+
+  Future<void> runLiveSearch(String query) async {
+    if (query.length < 3) {
+      setState(() {
+        liveResults = {};
+        liveSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      liveSearching = true;
+    });
+
+    try {
+      final settingsProvider = context.read<SettingsProvider>();
+      final searchableSources =
+          sourceProvider.sources.where((e) => e.canSearch).toList();
+
+      final List<MapEntry<String, Map<String, List<String>>>?> searchResults =
+          await Future.wait(
+            searchableSources.map((source) async {
+              if (settingsProvider.searchDeselected.contains(source.name)) {
+                return null;
+              }
+              try {
+                // For live search, we use empty query settings
+                final res = await source.search(query, querySettings: {});
+                return MapEntry(source.name, res);
+              } catch (e) {
+                return null;
+              }
+            }),
+          );
+
+      final Map<String, MapEntry<String, List<String>>> aggregatedResults = {};
+      for (final result in searchResults) {
+        if (result == null) continue;
+        final sourceName = result.key;
+        result.value.forEach((url, info) {
+          aggregatedResults[url] = MapEntry(sourceName, info);
+        });
+      }
+
+      if (!mounted) return;
+      setState(() {
+        liveResults = aggregatedResults;
+      });
+    } catch (e) {
+      // Ignore background search errors
+    } finally {
+      if (mounted) {
+        setState(() {
+          liveSearching = false;
+        });
+      }
     }
   }
 
@@ -109,6 +177,20 @@ class AddAppPageState extends State<AddAppPage> {
               ? !sourceProvider.ifRequiredAppSpecificSettingsExist(source)
               : true;
           inferAppIdIfOptional = true;
+        }
+
+        // Trigger live search if not a valid direct URL
+        if (pickedSource == null ||
+            pickedSource.runtimeType.toString() == 'DirectAPKLink' ||
+            pickedSource.runtimeType.toString() == 'HTML') {
+          _searchDebounce?.cancel();
+          _searchDebounce = Timer(const Duration(milliseconds: 600), () {
+            if (mounted && userInput.isNotEmpty) {
+              runLiveSearch(userInput);
+            }
+          });
+        } else {
+          liveResults = {};
         }
       });
     }
@@ -767,6 +849,208 @@ class AddAppPageState extends State<AddAppPage> {
       ),
     );
 
+    Widget _buildAppPreview() {
+      if (pickedSource == null || userInput.isEmpty) return const SizedBox.shrink();
+      final colorScheme = Theme.of(context).colorScheme;
+      final plusSettings = context.watch<PlusSettingsProvider>();
+      if (!plusSettings.plusEnableModernAddAppPage) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: Material(
+          color: colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: colorScheme.outlineVariant.withOpacity(0.5),
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.get_app_rounded,
+                        color: colorScheme.primary,
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tr('appPreview'),
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          Text(
+                            pickedSource?.name ?? tr('unknown'),
+                            style: Theme.of(context).textTheme.titleLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            userInput,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (pickedSource!.enforceTrackOnly) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.errorContainer.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            size: 16, color: colorScheme.error),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            tr('trackOnlyAppDescription'),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.error,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget _buildLiveResults() {
+      if (!liveSearching && liveResults.isEmpty) return const SizedBox.shrink();
+
+      final colorScheme = Theme.of(context).colorScheme;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Row(
+              children: [
+                Text(
+                  tr('searchSuggestions'),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                if (liveSearching) ...[
+                  const SizedBox(width: 8),
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (liveSearching && liveResults.isEmpty)
+            const AppTileSkeleton(isGrid: false)
+          else
+            ...liveResults.entries.take(5).map((entry) {
+              final url = entry.key;
+              final name = entry.value.value.isNotEmpty ? entry.value.value[0] : '';
+              final sourceName = entry.value.key;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Material(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      linkFn(url);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: colorScheme.primaryContainer,
+                            child: Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  sourceName,
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: colorScheme.secondary,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: colorScheme.outline,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+        ],
+      );
+    }
+
     final scaffold = Scaffold(
       backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
       bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
@@ -788,6 +1072,8 @@ class AddAppPageState extends State<AddAppPage> {
                   getUrlInputRow(),
                   const SizedBox(height: 16),
                   if (pickedSource != null) getHTMLSourceOverrideDropdown(),
+                  _buildLiveResults(),
+                  _buildAppPreview(),
                   if (shouldShowSearchBar()) getSearchBarRow(),
                   if (pickedSource != null)
                     FutureBuilder(

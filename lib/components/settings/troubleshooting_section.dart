@@ -113,6 +113,31 @@ class TroubleshootingSection extends StatelessWidget {
         subtitle: tr('clearIconCacheDescription'),
         onTap: () => _clearIconCache(context),
       ),
+      if (context.watch<SettingsProvider>().plusDeveloperMode)
+        _buildCleanupTile(
+          context,
+          icon: Icons.block_flipped,
+          title: tr('forceStopAll'),
+          subtitle: tr('forceStopAllDescription'),
+          onTap: () async {
+            final appsProvider = context.read<AppsProvider>();
+            final appIds = appsProvider.apps.keys.toList();
+            int successCount = 0;
+            for (final id in appIds) {
+              try {
+                await AppInstallService.pm.forceStopApp(id);
+                successCount++;
+              } catch (_) {}
+            }
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(tr('forceStoppedXApps', args: [successCount.toString()])),
+                ),
+              );
+            }
+          },
+        ),
     ];
 
     if (items.isEmpty) return const SizedBox.shrink();
