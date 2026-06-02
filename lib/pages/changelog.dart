@@ -6,7 +6,8 @@ import 'package:http/http.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class ChangelogPage extends StatefulWidget {
-  const ChangelogPage({super.key});
+  final bool isModal;
+  const ChangelogPage({super.key, this.isModal = false});
 
   @override
   State<ChangelogPage> createState() => _ChangelogPageState();
@@ -23,8 +24,11 @@ class _ChangelogPageState extends State<ChangelogPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: Text(tr('viewChangelog'))),
+      backgroundColor: widget.isModal ? Colors.transparent : colorScheme.surface,
+      appBar: widget.isModal ? null : AppBar(title: Text(tr('viewChangelog'))),
       body: FutureBuilder<String>(
         future: _changelogFuture,
         builder: (context, snapshot) {
@@ -43,6 +47,16 @@ class _ChangelogPageState extends State<ChangelogPage> {
                 launchUrlString(href, mode: LaunchMode.externalApplication);
               }
             },
+            styleSheet: MarkdownStyleSheet(
+              h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+              h2: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+              p: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5),
+            ),
           );
         },
       ),

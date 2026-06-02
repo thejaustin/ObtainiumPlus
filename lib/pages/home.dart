@@ -83,7 +83,31 @@ class HomePageState extends State<HomePage> {
     initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
-      if (!sp.welcomeShown) {
+      var plusSettings = context.read<PlusSettingsProvider>();
+      const currentVersion = '1.4.3-p12';
+
+      if (plusSettings.plusLastSeenVersion != currentVersion) {
+        // Show Changelog on update
+        await showDialog(
+          context: context,
+          builder: (context) => GlassDialog(
+            title: "What's New in Obtainium+",
+            icon: Icons.auto_awesome_rounded,
+            content: const SizedBox(
+              height: 400,
+              width: double.maxFinite,
+              child: ChangelogPage(isModal: true),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('ok')),
+              ),
+            ],
+          ),
+        );
+        plusSettings.plusLastSeenVersion = currentVersion;
+      } else if (!sp.welcomeShown) {
         await showDialog(
           context: context,
           builder: (BuildContext ctx) {
