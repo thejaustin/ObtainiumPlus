@@ -139,10 +139,10 @@ class AppDownloadService {
 
     appsToInstall = moveStrToEnd(
       appsToInstall,
-      'app.obtainiumplus',
+      'dev.thejaustin.obtainiumplus',
       strB: 'imranr98_obtainium_github.com',
     );
-    appsToInstall = moveStrToEnd(appsToInstall, 'app.obtainiumplus.fdroid');
+    appsToInstall = moveStrToEnd(appsToInstall, 'dev.thejaustin.obtainiumplus.fdroid');
 
     List<Map<String, dynamic>> downloadResults = [];
     if (!forceParallelDownloads && !behaviorSettings.parallelDownloads) {

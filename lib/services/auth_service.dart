@@ -6,7 +6,7 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/custom_errors.dart';
 
 class AuthService {
-  static const _platform = MethodChannel('app.obtainiumplus/native');
+  static const _platform = MethodChannel('dev.thejaustin.obtainiumplus/native');
 
   /// Fetches an anonymous AuthBundle from an Aurora-style dispenser
   static Future<AuthBundle> fetchAnonymousBundle(String dispenserUrl) async {

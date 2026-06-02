@@ -87,7 +87,7 @@ class GooglePlayNative extends AppSource {
 
     var deviceId = authProvider.effectiveDeviceId;
     if (deviceId == 'native') {
-      const platform = MethodChannel('app.obtainiumplus/native');
+      const platform = MethodChannel('dev.thejaustin.obtainiumplus/native');
       deviceId =
           await platform.invokeMethod<String>('getGsfId') ?? '0000000000000000';
     }
