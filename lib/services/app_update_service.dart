@@ -35,7 +35,7 @@ class AppUpdateService {
   }
 
   static bool areVersionsDifferent(App app, String? installed, String latest) {
-    if (installed == null) return true;
+    if (installed == null) return false; // Not installed is not "different" for update purposes (usually handled separately)
     if (installed == latest) return false;
     final aggressive =
         app.additionalSettings['aggressiveVersionReconciliation'] == true ||
@@ -48,7 +48,36 @@ class AppUpdateService {
     if (reconciliation != null && reconciliation.key == true) {
       return false; // Reconciled as equal
     }
+
+    // Set ambiguous flag if they are likely identical but have different strings
+    if (isLikelyIdentical(installed, latest)) {
+      app.additionalSettings['isAmbiguousUpdate'] = true;
+    } else {
+      app.additionalSettings.remove('isAmbiguousUpdate');
+    }
+
     return true;
+  }
+
+  static bool isLikelyIdentical(String v1, String v2) {
+    String n1 = normalizeVersion(v1).toLowerCase();
+    String n2 = normalizeVersion(v2).toLowerCase();
+    if (n1 == n2) return true;
+
+    // Common noise suffixes
+    final noise = RegExp(
+      r'([-._](release|stable|plus|ose|shizukuplus|fork|latest|final|official))+$',
+    );
+    String sn1 = n1.replaceFirst(noise, '');
+    String sn2 = n2.replaceFirst(noise, '');
+    if (sn1 == sn2) return true;
+
+    // Check if one is a version-code-like suffix of the other (e.g. 1.2.3+123 vs 1.2.3)
+    final buildMetadata = RegExp(r'\+[0-9]+$');
+    if (sn1.replaceFirst(buildMetadata, '') ==
+        sn2.replaceFirst(buildMetadata, '')) return true;
+
+    return false;
   }
 
   static Future<App?> checkUpdate(

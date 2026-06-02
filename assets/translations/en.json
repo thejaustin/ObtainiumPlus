@@ -1029,8 +1029,16 @@
     "xiaomiBatteryTroubleshooting": "Xiaomi Battery Troubleshooting",
     "xiaomiBatteryTroubleshootingDescription": "Fix background update issues on Xiaomi devices",
     "xiaomiTroubleshootingTitle": "Xiaomi Background Update Fix",
-    "xiaomiTroubleshootingDescription": "Follow these steps to ensure background updates work reliably on MIUI/HyperOS"
+    "xiaomiTroubleshootingDescription": "Follow these steps to ensure background updates work reliably on MIUI/HyperOS",
+    "ambiguousUpdateTitle": "Likely Up-to-Date",
+    "ambiguousUpdateMessage": "Obtainium found a different version string ({}) compared to what's installed ({}), but they appear to be functionally identical. How would you like to proceed?",
+    "markAsSame": "Mark as Up-to-Date",
+    "installAnyway": "Install Anyway",
+    "ambiguousUpdate": "Ambiguous update found",
+    "devChannelWarningTitle": "Experimental Channel",
+    "devChannelWarningMessage": "Development builds may contain bugs and experimental features. Use with caution."
 }
+
 
 
 

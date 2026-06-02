@@ -55,6 +55,9 @@ class AppListTile extends StatelessWidget {
       (p) => p.checkingUpdateIds.contains(appInMemory.app.id),
     );
 
+    final isAmbiguous =
+        hasUpdate && appInMemory.app.additionalSettings['isAmbiguousUpdate'] == true;
+
     Widget getUpdateButton() {
       if (isCheckingUpdate) {
         return const Padding(
@@ -63,6 +66,54 @@ class AppListTile extends StatelessWidget {
             width: 20,
             height: 20,
             child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      }
+      if (isAmbiguous) {
+        return IconButton.filled(
+          icon: const Icon(Icons.help_outline_rounded),
+          onPressed: () {
+            AppHaptics.heavyImpact();
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(tr('ambiguousUpdateTitle')),
+                content: Text(
+                  tr(
+                    'ambiguousUpdateMessage',
+                    args: [
+                      appInMemory.app.installedVersion ?? '',
+                      appInMemory.app.latestVersion,
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      appInMemory.app.installedVersion =
+                          appInMemory.app.latestVersion;
+                      appsProvider.saveApps([appInMemory.app]);
+                      Navigator.pop(ctx);
+                    },
+                    child: Text(tr('markAsSame')),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      appsProvider.downloadAndInstallLatestApps([
+                        appInMemory.app.id,
+                      ], context);
+                      Navigator.pop(ctx);
+                    },
+                    child: Text(tr('installAnyway')),
+                  ),
+                ],
+              ),
+            );
+          },
+          tooltip: tr('ambiguousUpdate'),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onTertiaryContainer,
           ),
         );
       }

@@ -17,6 +17,7 @@ class AppGridTile extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   final bool hasUpdate;
+  final bool isAmbiguous;
 
   const AppGridTile({
     super.key,
@@ -25,6 +26,7 @@ class AppGridTile extends StatefulWidget {
     required this.onTap,
     required this.onLongPress,
     this.hasUpdate = false,
+    this.isAmbiguous = false,
   });
 
   @override
@@ -435,17 +437,28 @@ class _AppGridTileState extends State<AppGridTile>
                     width: badgeSize,
                     height: badgeSize,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: widget.isAmbiguous
+                          ? Theme.of(context).colorScheme.tertiary
+                          : Theme.of(context).colorScheme.primary,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Theme.of(context).colorScheme.surface,
                         width: 2,
                       ),
                       boxShadow: AppShadows.glow(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: widget.isAmbiguous
+                            ? Theme.of(context).colorScheme.tertiary
+                            : Theme.of(context).colorScheme.primary,
                         intensity: (_pulseAnimation.value - 1.0) * 2,
                       ),
                     ),
+                    child: widget.isAmbiguous
+                        ? Icon(
+                            Icons.help_outline_rounded,
+                            size: badgeSize * 0.7,
+                            color: Theme.of(context).colorScheme.onTertiary,
+                          )
+                        : null,
                   ),
                 );
               },
