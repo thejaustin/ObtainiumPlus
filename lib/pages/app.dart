@@ -855,11 +855,59 @@ Widget buildRepoRenameWarning({
       );
     }
 
+    Widget _buildDetailedSourceBadge() {
+      final url = app?.app.url.toLowerCase() ?? '';
+      IconData iconData = Icons.link_rounded;
+      Color color = Theme.of(context).colorScheme.primary;
+      String sourceName = tr('unknownSource');
+
+      if (url.contains('github.com')) {
+        iconData = Icons.terminal_rounded;
+        color = const Color(0xFF24292E);
+        sourceName = 'GitHub';
+      } else if (url.contains('f-droid.org')) {
+        iconData = Icons.android_rounded;
+        color = const Color(0xFF1976D2);
+        sourceName = 'F-Droid';
+      } else if (url.contains('gitlab.com')) {
+        iconData = Icons.account_tree_rounded;
+        color = const Color(0xFFFC6D26);
+        sourceName = 'GitLab';
+      } else if (url.contains('codeberg.org')) {
+        iconData = Icons.code_rounded;
+        color = const Color(0xFF2185D0);
+        sourceName = 'Codeberg';
+      }
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(iconData, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(
+              sourceName,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+
     getFullInfoColumn({bool small = false}) => Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(height: 0),
+        const SizedBox(height: 12),
         FutureBuilder(
           future: appsProvider.updateAppIcon(app?.app.id, ignoreCache: true),
           builder: (ctx, val) {
@@ -867,14 +915,31 @@ Widget buildRepoRenameWarning({
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      InkWell(
-                        onTap: app == null
-                            ? null
-                            : () => pm.openApp(app.app.id),
-                        child: Image.memory(
-                          app!.icon!,
-                          height: small ? 70 : 150,
-                          gaplessPlayback: true,
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            )
+                          ],
+                        ),
+                        child: InkWell(
+                          onTap: app == null
+                              ? null
+                              : () => pm.openApp(app.app.id),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.memory(
+                              app!.icon!,
+                              height: small ? 80 : 120,
+                              width: small ? 80 : 120,
+                              fit: BoxFit.contain,
+                              gaplessPlayback: true,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -882,22 +947,44 @@ Widget buildRepoRenameWarning({
                 : Container();
           },
         ),
-        SizedBox(height: small ? 10 : 24),
+        const SizedBox(height: 24),
+        Center(child: _buildDetailedSourceBadge()),
+        const SizedBox(height: 16),
         Text(
           app?.name ?? tr('app'),
           textAlign: TextAlign.center,
-          style: small
-              ? Theme.of(context).textTheme.displaySmall
-              : Theme.of(context).textTheme.displayLarge,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+              ),
         ),
         Text(
           tr('byX', args: [app?.author ?? tr('unknown')]),
           textAlign: TextAlign.center,
-          style: small
-              ? Theme.of(context).textTheme.headlineSmall
-              : Theme.of(context).textTheme.headlineMedium,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
         ),
-        SizedBox(height: behaviorSettings.highlightTouchTargets ? 2 : 8),
+        const SizedBox(height: 12),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              app?.app.id ?? '',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontFamily: 'monospace',
+                    letterSpacing: 0,
+                  ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
         InkWell(
           onTap: () {
             if (app?.app.url != null) {
@@ -913,43 +1000,16 @@ Widget buildRepoRenameWarning({
               context,
             ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
           },
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: behaviorSettings.highlightTouchTargets
-                      ? (Theme.of(context).brightness == Brightness.light
-                                ? Theme.of(context).primaryColor
-                                : Theme.of(context).primaryColorLight)
-                            .withOpacity(
-                              Theme.of(context).brightness == Brightness.light
-                                  ? 20 / 255
-                                  : 40 / 255,
-                            )
-                      : null,
+          child: Text(
+            app?.app.url ?? '',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
+                  decoration: TextDecoration.underline,
                 ),
-                padding: behaviorSettings.highlightTouchTargets
-                    ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
-                    : const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                margin: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
-                child: Text(
-                  app?.app.url ?? '',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                    decoration: TextDecoration.underline,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
           ),
-        ),
-        Text(
-          app?.app.id ?? '',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.labelSmall,
         ),
         getInfoColumn(),
         const SizedBox(height: 16),

@@ -171,6 +171,35 @@ class AppListTile extends StatelessWidget {
       );
     }
 
+    Widget getSourceBadge() {
+      final url = appInMemory.app.url.toLowerCase();
+      IconData iconData = Icons.link_rounded;
+      Color color = Theme.of(context).colorScheme.primary;
+
+      if (url.contains('github.com')) {
+        iconData = Icons.terminal_rounded;
+        color = const Color(0xFF24292E);
+      } else if (url.contains('f-droid.org')) {
+        iconData = Icons.android_rounded;
+        color = const Color(0xFF1976D2);
+      } else if (url.contains('gitlab.com')) {
+        iconData = Icons.account_tree_rounded;
+        color = const Color(0xFFFC6D26);
+      } else if (url.contains('codeberg.org')) {
+        iconData = Icons.code_rounded;
+        color = const Color(0xFF2185D0);
+      }
+
+      return Container(
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Icon(iconData, size: 10, color: color),
+      );
+    }
+
     final Color? displayCategoryColor =
         categoryColor ??
         (appInMemory.app.categories.isNotEmpty &&
@@ -430,18 +459,26 @@ class AppListTile extends StatelessWidget {
                               child: getAppIcon(),
                             ),
                           ),
-                          title: Text(
-                            appInMemory.name,
-                            maxLines: 1,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  overflow: TextOverflow.ellipsis,
-                                  fontWeight:
-                                      appInMemory.app.pinned || hasUpdate
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
-                                  letterSpacing: -0.2,
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  appInMemory.name,
+                                  maxLines: 1,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        overflow: TextOverflow.ellipsis,
+                                        fontWeight:
+                                            appInMemory.app.pinned || hasUpdate
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        letterSpacing: -0.2,
+                                      ),
                                 ),
+                              ),
+                              const SizedBox(width: 6),
+                              getSourceBadge(),
+                            ],
                           ),
                           subtitle: Row(
                             children: [

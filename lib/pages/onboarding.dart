@@ -331,12 +331,19 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   @override
   Widget build(BuildContext context) {
-    const pageDecoration = PageDecoration(
-      titleTextStyle: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w700),
-      bodyTextStyle: TextStyle(fontSize: 14.0),
-      bodyPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 8.0),
-      pageColor: Colors.transparent,
-      imagePadding: EdgeInsets.only(top: 16.0),
+    final pageDecoration = PageDecoration(
+      titleTextStyle: TextStyle(
+        fontSize: 28.0,
+        fontWeight: FontWeight.w800,
+        color: colorScheme.primary,
+        letterSpacing: -0.5,
+      ),
+      bodyTextStyle: const TextStyle(fontSize: 15.0, height: 1.5),
+      bodyPadding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 16.0),
+      pageColor: colorScheme.surface,
+      imagePadding: const EdgeInsets.only(top: 48.0, bottom: 24.0),
+      imageFlex: 3,
+      bodyFlex: 4,
     );
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -352,11 +359,18 @@ class _OnboardingPageState extends State<OnboardingPage>
         PageViewModel(
           title: 'Welcome to Obtainium+',
           body:
-              'Install and update Android apps directly from their source — GitHub, GitLab, F-Droid, and more — without an app store.\n\n✨ New in v1.4.3: Smoother setup, increased stability, a reorganized Settings menu, unified Add App page, and new Offline Update Queuing!',
-          image: Icon(
-            Icons.download_for_offline,
-            size: 80,
-            color: colorScheme.primary,
+              'The premium, high-performance way to manage Android apps directly from their source.\n\n✨ Enhanced stability\n✨ Reorganized Settings\n✨ Universal Search-as-you-type\n✨ Pro Status Dashboard',
+          image: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 100,
+              color: colorScheme.primary,
+            ),
           ),
           decoration: pageDecoration,
         ),
@@ -858,7 +872,7 @@ class _OnboardingPageState extends State<OnboardingPage>
         PageViewModel(
           title: 'Personalize',
           image: Icon(
-            Icons.auto_awesome_outlined,
+            Icons.palette_rounded,
             size: 80,
             color: colorScheme.tertiary,
           ),
@@ -868,46 +882,37 @@ class _OnboardingPageState extends State<OnboardingPage>
               return Column(
                 children: [
                   Text(
-                    tr('onboardingPersonalizeSubtitle'),
+                    'Customize your high-performance experience.',
                     textAlign: TextAlign.center,
                     style: pageDecoration.bodyTextStyle,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
                     context,
+                    icon: Icons.density_medium_rounded,
+                    title: 'Compact Mode',
+                    subtitle: 'Reduce padding for higher information density',
+                    iconColor: colorScheme.primary,
+                    onTap: () => settings.plusUseCompactSettings =
+                        !settings.plusUseCompactSettings,
+                  ),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.info_outline_rounded,
+                    title: 'Status Hub',
+                    subtitle: 'Show summary stats at the top of the dashboard',
+                    iconColor: colorScheme.secondary,
+                    onTap: () => settings.plusShowStatusHub =
+                        !settings.plusShowStatusHub,
+                  ),
+                  _buildFeatureCard(
+                    context,
                     icon: Icons.blur_on_outlined,
                     title: tr('glassmorphismUI'),
                     subtitle: tr('glassmorphismSubtitle'),
-                    iconColor: colorScheme.secondary,
+                    iconColor: colorScheme.tertiary,
                     onTap: () => settings.plusEnableGlassmorphism =
                         !settings.plusEnableGlassmorphism,
-                  ),
-                  _buildFeatureCard(
-                    context,
-                    icon: Icons.back_hand_outlined,
-                    title: tr('quickFilters'),
-                    subtitle: tr('quickFiltersSubtitle'),
-                    iconColor: colorScheme.secondary,
-                    onTap: () => settings.plusEnableQuickFilters =
-                        !settings.plusEnableQuickFilters,
-                  ),
-                  _buildFeatureCard(
-                    context,
-                    icon: Icons.grid_view_outlined,
-                    title: tr('grid'),
-                    subtitle: tr('gridViewSubtitle'),
-                    iconColor: colorScheme.secondary,
-                    onTap: () => settings.plusEnableGridView =
-                        !settings.plusEnableGridView,
-                  ),
-                  _buildFeatureCard(
-                    context,
-                    icon: Icons.swipe_outlined,
-                    title: tr('swipeActions'),
-                    subtitle: tr('swipeActionsSubtitle'),
-                    iconColor: colorScheme.secondary,
-                    onTap: () => settings.plusEnableSwipeActions =
-                        !settings.plusEnableSwipeActions,
                   ),
                 ],
               );

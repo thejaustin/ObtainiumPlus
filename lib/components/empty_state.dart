@@ -61,6 +61,8 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+
     return FadeTransition(
       opacity: _opacity,
       child: ScaleTransition(
@@ -71,44 +73,29 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: ConditionalBlur(
-                    sigma: 10,
-                    enabled: settings.plusEnableGlassmorphism,
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer
-                            .withOpacity(
-                              settings.plusEnableGlassmorphism
-                                  ? AppOpacity.moderate
-                                  : AppOpacity.low,
-                            ),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary
-                              .withOpacity(
-                                settings.plusEnableGlassmorphism
-                                    ? AppOpacity.low
-                                    : 0.0,
-                              ),
-                        ),
-                      ),
-                      child: Icon(
-                        widget.icon,
-                        size: 80,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: colorScheme.primary.withOpacity(0.1),
+                      width: 2,
                     ),
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    size: 80,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 32),
                 Text(
                   widget.title,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurface,
+                    letterSpacing: -1,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -116,7 +103,8 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                 Text(
                   widget.subtitle,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -126,28 +114,40 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                   FilledButton.icon(
                     onPressed: widget.onActionPressed,
                     style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
+                      minimumSize: const Size(220, 56),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.defaultBorderRadius,
-                        ),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     icon: const Icon(Icons.add_rounded),
                     label: Text(
                       widget.actionLabel!,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
                 if (widget.onSecondaryActionPressed != null &&
                     widget.secondaryActionLabel != null) ...[
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
+                  const SizedBox(height: 12),
+                  TextButton.icon(
                     onPressed: widget.onSecondaryActionPressed,
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(220, 48),
+                    ),
+                    icon: const Icon(Icons.explore_rounded),
+                    label: Text(widget.secondaryActionLabel!),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
