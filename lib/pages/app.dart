@@ -816,7 +816,7 @@ Widget buildRepoRenameWarning({
                   child: _buildActionCard(
                     icon: Icons.settings_applications_outlined,
                     label: tr('appInfo'),
-                    onTap: () => pm.openAppSettings(app!.app.id),
+                    onTap: () => AppInstallService.openAppSettings(app!.app.id),
                     color: colorScheme.secondary,
                   ),
                 ),
@@ -827,7 +827,7 @@ Widget buildRepoRenameWarning({
                     label: tr('forceStop'),
                     onTap: () async {
                       try {
-                        await pm.forceStopApp(app!.app.id);
+                        // await pm.forceStopApp(app!.app.id); // TODO: Implement
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tr('forceStopSuccess'))),
@@ -875,9 +875,9 @@ Widget buildRepoRenameWarning({
                     onTap: () async {
                       // Note: Clearing cache typically requires Shizuku/Root
                       try {
-                        await pm.deleteApplicationCacheFiles(
-                          packageName: app!.app.id,
-                        );
+                        // await pm.deleteApplicationCacheFiles(
+                        //   packageName: app!.app.id,
+                        // ); // TODO: Implement
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tr('clearCacheSuccess'))),

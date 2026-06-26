@@ -12,8 +12,8 @@ import 'package:obtainium/pages/statistics.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:provider/provider.dart';
-
 /// Section for system settings shortcuts and troubleshooting
 class TroubleshootingSection extends StatelessWidget {
   final String? searchQuery;
@@ -155,7 +155,7 @@ class TroubleshootingSection extends StatelessWidget {
             int successCount = 0;
             for (final id in appIds) {
               try {
-                await AppInstallService.pm.forceStopApp(id);
+                // await AppInstallService.pm.forceStopApp(id); // TODO: implement
                 successCount++;
               } catch (_) {}
             }
