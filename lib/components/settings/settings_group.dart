@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -70,6 +71,8 @@ class SettingsGroup extends StatelessWidget {
               ],
             ),
           ),
+        Consumer<PlusSettingsProvider>(
+          builder: (context, settings, _) {
             final radius = settings.plusOverrideIndividualCornerRadius
                 ? settings.plusSettingsCornerRadius
                 : settings.plusGlobalCornerRadius;

@@ -31,7 +31,7 @@ class AppBehaviorSection extends StatelessWidget {
         subtitle: tr('disablePageTransitionsDescription'),
         value: (s) => s.disablePageTransitions,
         onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) => _matches(tr('disablePageTransitions')), isAdvanced: true,
+        visible: (s) => _matches(tr('disablePageTransitions'), isAdvanced: true),
       ),
       // Haptic Feedback
       _buildFeatureToggle(
@@ -106,8 +106,7 @@ class AppBehaviorSection extends StatelessWidget {
             icon: Icons.settings_suggest_rounded,
             isExpandable: !isSearching,
             initiallyExpanded: false,
-            children: [
-
+            children: children,
           ),
         Consumer<BehaviorSettingsProvider>(
           builder: (context, settings, _) {

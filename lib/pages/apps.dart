@@ -1,5 +1,6 @@
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
+import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
