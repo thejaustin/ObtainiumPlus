@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -14,7 +14,7 @@ class BackgroundService {
   factory BackgroundService() => _instance;
 
   @pragma('vm:entry-point')
-  static Future<void> backgroundFetchHeadlessTask(HeadlessTask task) async {
+  static Future<void> backgroundFetchHeadlessTask(HeadlessEvent task) async {
     String taskId = task.taskId;
     bool isTimeout = task.timeout;
     if (isTimeout) {
@@ -40,29 +40,27 @@ class BackgroundService {
   }
 
   static void initForegroundService() {
-    if (!FlutterForegroundTask.isInitialized) {
-      FlutterForegroundTask.init(
-        androidNotificationOptions: AndroidNotificationOptions(
-          channelId: 'bg_update',
-          channelName: tr('foregroundService'),
-          channelDescription: tr('foregroundService'),
-          onlyAlertOnce: true,
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'bg_update',
+        channelName: tr('foregroundService'),
+        channelDescription: tr('foregroundService'),
+        onlyAlertOnce: true,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: false,
+        playSound: false,
+      ),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.repeat(
+          AppConstants.defaultUpdateIntervalMs,
         ),
-        iosNotificationOptions: const IOSNotificationOptions(
-          showNotification: false,
-          playSound: false,
-        ),
-        foregroundTaskOptions: ForegroundTaskOptions(
-          eventAction: ForegroundTaskEventAction.repeat(
-            AppConstants.defaultUpdateIntervalMs,
-          ),
-          autoRunOnBoot: true,
-          autoRunOnMyPackageReplaced: true,
-          allowWakeLock: true,
-          allowWifiLock: true,
-        ),
-      );
-    }
+        autoRunOnBoot: true,
+        autoRunOnMyPackageReplaced: true,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
   }
 
   static Future<ServiceRequestResult?> startForegroundService(

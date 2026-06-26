@@ -159,19 +159,19 @@ class AppShadows {
   }) {
     return [
       BoxShadow(
-        color: color.withOpacity(opacity * 0.4),
+        color: color.withValues(alpha: opacity * 0.4),
         blurRadius: 24 * blurFactor,
         spreadRadius: -2,
         offset: const Offset(0, 8),
       ),
       BoxShadow(
-        color: color.withOpacity(opacity * 0.6),
+        color: color.withValues(alpha: opacity * 0.6),
         blurRadius: 12 * blurFactor,
         spreadRadius: -1,
         offset: const Offset(0, 4),
       ),
       BoxShadow(
-        color: color.withOpacity(opacity),
+        color: color.withValues(alpha: opacity),
         blurRadius: 4 * blurFactor,
         spreadRadius: 0,
         offset: const Offset(0, 1),
@@ -183,12 +183,12 @@ class AppShadows {
   static List<BoxShadow> glow({required Color color, double intensity = 1.0}) {
     return [
       BoxShadow(
-        color: color.withOpacity(0.2 * intensity),
+        color: color.withValues(alpha: 0.2 * intensity),
         blurRadius: 20,
         spreadRadius: 2,
       ),
       BoxShadow(
-        color: color.withOpacity(0.1 * intensity),
+        color: color.withValues(alpha: 0.1 * intensity),
         blurRadius: 40,
         spreadRadius: 4,
       ),
