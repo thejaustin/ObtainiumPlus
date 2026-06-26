@@ -1,4 +1,3 @@
-import 'package:obtainium/utils/app_constants.dart';
 
 List<String> generateStandardVersionRegExStrings() {
   var basics = [
@@ -73,8 +72,9 @@ MapEntry<bool, String>? reconcileVersionDifferences(
   bool aggressive = false,
 }) {
   if (aggressive) {
-    if (templateVersion == comparisonVersion)
+    if (templateVersion == comparisonVersion) {
       return MapEntry(true, comparisonVersion);
+    }
     if (normalizeVersion(templateVersion) ==
         normalizeVersion(comparisonVersion)) {
       return MapEntry(true, comparisonVersion);

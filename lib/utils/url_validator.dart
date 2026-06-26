@@ -68,8 +68,7 @@ class URLValidator {
       RegExp(r'data:text/html', caseSensitive: false),
       // File protocol (local file access)
       RegExp(r'file:', caseSensitive: false),
-      // Excessive URL encoding (obfuscation attempt)
-      RegExp(r'%[0-9a-fA-F]{2}{5,}'),
+      RegExp(r'(?:%[0-9a-fA-F]{2}){5,}'),
     ];
 
     for (final pattern in suspiciousPatterns) {
