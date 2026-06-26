@@ -1066,9 +1066,10 @@ class AppsProvider with ChangeNotifier {
   Future<void> moveObbFile(File file, String appId) async {
     if (!file.path.toLowerCase().endsWith('.obb')) return;
 
-    // TODO: Does not support Android 11+
     if ((await DeviceInfoPlugin().androidInfo).version.sdkInt <= 29) {
       await Permission.storage.request();
+    } else {
+      await Permission.manageExternalStorage.request();
     }
 
     String obbDirPath = "${await getStorageRootPath()}/Android/obb/$appId";

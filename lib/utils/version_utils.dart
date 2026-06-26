@@ -25,6 +25,12 @@ List<String> generateStandardVersionRegExStrings() {
   for (var b in basics) {
     for (var pre in prefixes) {
       results.add('$pre$b');
+      for (var f in finals) {
+        results.add('$pre$b$f');
+        for (var p in preSuffixes) {
+          results.add('$pre$b$p$f');
+        }
+      }
       for (var p in preSuffixes) {
         for (var s in suffixes) {
           results.add('$pre$b$s');

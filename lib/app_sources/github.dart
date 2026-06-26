@@ -568,9 +568,9 @@ class GitHub extends AppSource {
       if (latestRelease != null &&
           (latestRelease['tag_name'] ?? latestRelease['name']) != null &&
           releases.isNotEmpty &&
-          latestRelease !=
+          (latestRelease['tag_name'] ?? latestRelease['name']) !=
               (releases[releases.length - 1]['tag_name'] ??
-                  releases[0]['name'])) {
+                  releases[releases.length - 1]['name'])) {
         var ind = releases.indexWhere(
           (element) =>
               (latestRelease['tag_name'] ?? latestRelease['name']) ==
@@ -805,9 +805,19 @@ class GitHub extends AppSource {
     var sp = SettingsProvider();
     await sp.initializeSettings();
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
+    
+    // Check for user profile URLs or @username
+    String apiQuery = query;
+    RegExp userProfileRegEx = RegExp(r'^https?://(?:www\.)?github\.com/([^/]+)/?$', caseSensitive: false);
+    if (userProfileRegEx.hasMatch(query)) {
+      apiQuery = 'user:${userProfileRegEx.firstMatch(query)!.group(1)}';
+    } else if (query.startsWith('@')) {
+      apiQuery = 'user:${query.substring(1)}';
+    }
+
     var results = await searchCommon(
       query,
-      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(query)}&per_page=100',
+      '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(apiQuery)}&per_page=100',
       'items',
       onHttpErrorCode: (Response res) {
         rateLimitErrorCheck(res);

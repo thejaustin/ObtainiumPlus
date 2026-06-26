@@ -81,7 +81,7 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   bool get plusShowAdvancedSettings =>
-      _prefs?.getBool('plusShowAdvancedSettings') ?? false;
+      _prefs?.getBool('plusShowAdvancedSettings') ?? true;
   set plusShowAdvancedSettings(bool val) {
     _prefs?.setBool('plusShowAdvancedSettings', val);
     notifyListeners();
