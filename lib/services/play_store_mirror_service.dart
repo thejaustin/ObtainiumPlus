@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_package_manager/android_package_manager.dart'
     hide LaunchMode;

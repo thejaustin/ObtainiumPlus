@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:easy_localization/easy_localization.dart';
+
 import 'package:obtainium/providers/update_settings_provider.dart';
 
 class OfflineService {
