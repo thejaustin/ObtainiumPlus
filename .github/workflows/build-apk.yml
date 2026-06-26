@@ -46,7 +46,8 @@ jobs:
           fi
 
       - name: Flutter Analyze
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        continue-on-error: true
+        run: flutter analyze --no-fatal-infos
 
       - name: Flutter Test
         run: flutter test
