@@ -12,8 +12,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
-import 'package:http/http.dart';
+
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/offline_service.dart';
@@ -105,10 +104,6 @@ class BackgroundUpdateService {
         }
       }
 
-      // --- Per-app/tag/category rule filtering ---
-      final bool isWifi =
-          netResult.contains(ConnectivityResult.wifi) ||
-          netResult.contains(ConnectivityResult.ethernet);
 
       toCheck.removeWhere((entry) {
         final app = appsProvider.apps[entry.key]?.app;
@@ -152,12 +147,15 @@ class BackgroundUpdateService {
           !appsProvider.updateSettings.isWithinUpdateSchedule();
 
       if (isFirstIteration) {
-        if (networkRestricted)
+        if (networkRestricted) {
           logs.add('BG update task: Network restriction in effect.');
-        if (chargingRestricted)
+        }
+        if (chargingRestricted) {
           logs.add('BG update task: Charging restriction in effect.');
-        if (scheduleRestricted)
+        }
+        if (scheduleRestricted) {
           logs.add('BG update task: Outside scheduled update window.');
+        }
       }
 
       // Skip update if any restriction is active (except for forced retries)
@@ -251,10 +249,12 @@ class BackgroundUpdateService {
                 int minRetryIntervalForThisApp = err is RateLimitError
                     ? (err.remainingMinutes * 60)
                     : (15 * 60);
-                if (minRetryIntervalForThisApp > maxRetryWaitSeconds)
+                if (minRetryIntervalForThisApp > maxRetryWaitSeconds) {
                   minRetryIntervalForThisApp = maxRetryWaitSeconds;
-                if (minRetryIntervalForThisApp > retryAfterXSeconds)
+                }
+                if (minRetryIntervalForThisApp > retryAfterXSeconds) {
                   retryAfterXSeconds = minRetryIntervalForThisApp;
+                }
               } else {
                 if (err is! RateLimitError) {
                   offlineService.addAppToRetryQueue(

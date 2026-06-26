@@ -56,7 +56,7 @@ class ThemeBuilder {
       chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(colorScheme),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(year2023: false),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(),
       iconTheme: IconThemeData(
         color: colorScheme.onSurface,
         opacity: 1.0,
@@ -91,14 +91,14 @@ class ThemeBuilder {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.half),
+          color: colorScheme.onSurfaceVariant.withValues(alpha: AppOpacity.half),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withOpacity(AppOpacity.half),
+          color: colorScheme.onSurfaceVariant.withValues(alpha: AppOpacity.half),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
@@ -304,7 +304,7 @@ class ThemeBuilder {
       activeTrackColor: colorScheme.primary,
       inactiveTrackColor: colorScheme.surfaceContainerHighest,
       thumbColor: colorScheme.primary,
-      overlayColor: colorScheme.primary.withOpacity(AppOpacity.hint),
+      overlayColor: colorScheme.primary.withValues(alpha: AppOpacity.hint),
       valueIndicatorColor: colorScheme.primaryContainer,
       valueIndicatorTextStyle: TextStyle(color: colorScheme.onPrimaryContainer),
     );
@@ -350,8 +350,8 @@ class ThemeBuilder {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       ),
-      dragHandleColor: colorScheme.onSurfaceVariant.withOpacity(
-        AppOpacity.moderate,
+      dragHandleColor: colorScheme.onSurfaceVariant.withValues(
+        alpha: AppOpacity.moderate,
       ),
       dragHandleSize: Size(expressive ? 40 : 32, 4),
       showDragHandle: true,
@@ -433,13 +433,13 @@ class ThemeBuilder {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.secondaryContainer,
-      disabledColor: colorScheme.onSurface.withOpacity(AppOpacity.hint),
+      disabledColor: colorScheme.onSurface.withValues(alpha: AppOpacity.hint),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
       secondaryLabelStyle: TextStyle(color: colorScheme.onSecondaryContainer),
       shape: expressive
           ? const StadiumBorder()
           : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      side: BorderSide(color: colorScheme.outline.withOpacity(AppOpacity.half)),
+      side: BorderSide(color: colorScheme.outline.withValues(alpha: AppOpacity.half)),
     );
   }
 

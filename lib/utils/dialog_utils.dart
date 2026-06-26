@@ -21,7 +21,7 @@ Future<T?> showAnimatedDialog<T>({
         MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black54,
     transitionDuration: Duration(milliseconds: (200 * speedMultiplier).round()),
-    pageBuilder: (context, _, __) => builder(context),
+    pageBuilder: (context, _, _) => builder(context),
     transitionBuilder: (context, anim, _, child) => ScaleTransition(
       scale: Tween<double>(
         begin: 0.85,

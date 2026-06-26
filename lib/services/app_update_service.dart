@@ -5,7 +5,7 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/custom_errors.dart';
+
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
@@ -18,8 +18,6 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_download_service.dart';
-import 'package:obtainium/services/app_install_service.dart';
-import 'package:obtainium/utils/app_utils.dart';
 
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/version_utils.dart';
@@ -75,7 +73,9 @@ class AppUpdateService {
     // Check if one is a version-code-like suffix of the other (e.g. 1.2.3+123 vs 1.2.3)
     final buildMetadata = RegExp(r'\+[0-9]+$');
     if (sn1.replaceFirst(buildMetadata, '') ==
-        sn2.replaceFirst(buildMetadata, '')) return true;
+        sn2.replaceFirst(buildMetadata, '')) {
+      return true;
+    }
 
     return false;
   }
