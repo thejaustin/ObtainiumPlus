@@ -758,6 +758,41 @@ Widget buildRepoRenameWarning({
       );
     }
 
+    Widget _buildActionCard({
+      required IconData icon,
+      required String label,
+      required VoidCallback onTap,
+      required Color color,
+    }) {
+      return Material(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     Widget _buildSystemActions() {
       if (app?.installedInfo == null) return const SizedBox.shrink();
       final colorScheme = Theme.of(context).colorScheme;
@@ -862,40 +897,6 @@ Widget buildRepoRenameWarning({
       );
     }
 
-    Widget _buildActionCard({
-      required IconData icon,
-      required String label,
-      required VoidCallback onTap,
-      required Color color,
-    }) {
-      return Material(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Column(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
 
     Widget _buildDetailedSourceBadge() {
       final url = app?.app.url.toLowerCase() ?? '';
