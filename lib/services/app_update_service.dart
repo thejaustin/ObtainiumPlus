@@ -94,7 +94,7 @@ class AppUpdateService {
     if (!ignoreCache && _updateCache.containsKey(appId)) {
       var (cachedApp, timestamp) = _updateCache[appId]!;
       if (DateTime.now().difference(timestamp) < _cacheTtl) {
-        return _areVersionsDifferent(
+        return areVersionsDifferent(
               currentApp,
               currentApp.installedVersion,
               cachedApp.latestVersion,
@@ -126,7 +126,7 @@ class AppUpdateService {
     // Update cache
     _updateCache[appId] = (newApp, DateTime.now());
 
-    return _areVersionsDifferent(
+    return areVersionsDifferent(
           newApp,
           newApp.installedVersion,
           newApp.latestVersion,
@@ -313,7 +313,7 @@ class AppUpdateService {
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
       App? app = apps[appIds[i]]!.app;
-      if (_areVersionsDifferent(app, app.installedVersion, app.latestVersion) &&
+      if (areVersionsDifferent(app, app.installedVersion, app.latestVersion) &&
           (!installedOnly || !nonInstalledOnly)) {
         if ((app.installedVersion == null &&
                 (nonInstalledOnly || !installedOnly) ||

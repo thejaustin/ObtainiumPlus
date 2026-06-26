@@ -1403,7 +1403,7 @@ class AppsPageState extends State<AppsPage> {
             );
     }
 
-    final plusSettings = context.watch<PlusSettingsProvider>();
+    
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,

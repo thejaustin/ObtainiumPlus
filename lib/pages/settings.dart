@@ -46,143 +46,17 @@ class _SettingsPageState extends State<SettingsPage> {
     _searchController.dispose();
     super.dispose();
   }
-@override
-Widget build(BuildContext context) {
-  final plusSettings = context.watch<PlusSettingsProvider>();
-  final screenWidth = MediaQuery.of(context).size.width;
-  final isLargeScreen = screenWidth > 900;
 
-  if (isLargeScreen) {
-    return _buildLargeScreenLayout(context, plusSettings);
-  }
+  @override
+  Widget build(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
-  return Scaffold(
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    body: CustomScrollView(
-      slivers: [
-        CustomAppBar(
-          title: tr('settings'),
-...
-Widget _buildLargeScreenLayout(BuildContext context, PlusSettingsProvider plusSettings) {
-  return Scaffold(
-    body: Row(
-      children: [
-        // Sidebar
-        Container(
-          width: 300,
-          decoration: BoxDecoration(
-            border: Border(
-              right: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-          ),
-          child: Column(
-            children: [
-              CustomAppBar(
-                title: tr('settings'),
-                automaticallyImplyLeading: true,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SearchBar(
-                  controller: _searchController,
-                  hintText: tr('searchSettings'),
-                  leading: const Icon(Icons.search),
-                  elevation: WidgetStateProperty.all(0),
-                  backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    _buildSidebarItem(context, tr('plusFeatures'), Icons.auto_awesome_rounded),
-                    _buildSidebarItem(context, tr('appearance'), Icons.palette_rounded),
-                    _buildSidebarItem(context, tr('appsString'), Icons.grid_view_rounded),
-                    _buildSidebarItem(context, tr('updates'), Icons.update_rounded),
-                    _buildSidebarItem(context, tr('installation'), Icons.install_mobile_rounded),
-                    _buildSidebarItem(context, tr('notifications'), Icons.notifications_active_rounded),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Main Content
-        Expanded(
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(24),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Density / Advanced toggles
-                    ExpressiveSettingsGroup(
-                      children: [
-                        SwitchListTile.adaptive(
-                          secondary: const Icon(Icons.density_medium_rounded),
-                          title: Text(tr('useCompactSettings')),
-                          value: plusSettings.plusUseCompactSettings,
-                          onChanged: (v) => plusSettings.plusUseCompactSettings = v,
-                        ),
-                        SwitchListTile.adaptive(
-                          secondary: const Icon(Icons.tune_rounded),
-                          title: Text(tr('showAdvancedSettings')),
-                          value: plusSettings.plusShowAdvancedSettings,
-                          onChanged: (v) => plusSettings.plusShowAdvancedSettings = v,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Load all sections, they will self-filter based on search
-                    PlusFeaturesSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
-                    ThemeSettingsSection(
-                      searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-                      androidInfoFuture: _androidInfoFuture,
-                      colorsNameMap: const <ColorSwatch<Object>, String>{},
-                    ),
-                    AppsViewSettingsSection(
-                      searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-                      onSetState: (fn) => setState(fn),
-                    ),
-                    UpdateSettingsSection(
-                      searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-                      showIntervalLabel: _showIntervalLabel,
-                      onIntervalLabelChange: (val) => setState(() => _showIntervalLabel = val),
-                      androidInfoFuture: _androidInfoFuture,
-                    ),
-                    InstallationSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
-                    NotificationSettingsSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
-                    AppBehaviorSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
-                    AdvancedSettingsSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
-                    TroubleshootingSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
-                    const SizedBox(height: 100),
-                  ]),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildSidebarItem(BuildContext context, String title, IconData icon) {
-  return ListTile(
-    leading: Icon(icon),
-    title: Text(title),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    onTap: () {
-      // For now, just a visual placeholder or scrolling logic
-      // Ideally this would jump to the section
-    },
-  );
-}
-
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          CustomAppBar(
+            title: tr('settings'),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60),
               child: Padding(
@@ -210,83 +84,44 @@ Widget _buildSidebarItem(BuildContext context, String title, IconData icon) {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // UI Density & Advanced Toggle
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: ExpressiveSettingsGroup(
-                    children: [
-                      SwitchListTile.adaptive(
-                        secondary: const Icon(Icons.density_medium_rounded),
-                        title: Text(
-                          tr('useCompactSettings'),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(tr('useCompactSettingsDescription')),
-                        value: plusSettings.plusUseCompactSettings,
-                        onChanged: (value) {
-                          AppHaptics.lightImpact();
-                          plusSettings.plusUseCompactSettings = value;
-                        },
-                      ),
-                      SwitchListTile.adaptive(
-                        secondary: const Icon(Icons.tune_rounded),
-                        title: Text(
-                          tr('showAdvancedSettings'),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(tr('showAdvancedSettingsDescription')),
-                        value: plusSettings.plusShowAdvancedSettings,
-                        onChanged: (value) {
-                          AppHaptics.lightImpact();
-                          plusSettings.plusShowAdvancedSettings = value;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
                 // 1. Obtainium+ Features (if master toggle is on or if searching)
-                PlusFeaturesSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
+                PlusFeaturesSection(searchQuery: _searchQuery),
 
                 // 2. Appearance & Theme
                 ThemeSettingsSection(
-                  searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+                  searchQuery: _searchQuery,
                   androidInfoFuture: _androidInfoFuture,
                   colorsNameMap: const <ColorSwatch<Object>, String>{},
                 ),
 
                 // 3. App List, Categories & Display
                 AppsViewSettingsSection(
-                  searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+                  searchQuery: _searchQuery,
                   onSetState: (fn) => setState(fn),
                 ),
 
                 // 4. Updates
                 UpdateSettingsSection(
-                  searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+                  searchQuery: _searchQuery,
                   showIntervalLabel: _showIntervalLabel,
                   onIntervalLabelChange: (val) => setState(() => _showIntervalLabel = val),
                   androidInfoFuture: _androidInfoFuture,
                 ),
 
                 // 5. Installation
-                InstallationSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
+                InstallationSection(searchQuery: _searchQuery),
 
                 // 6. Notifications (Enhancements)
-                NotificationSettingsSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
+                NotificationSettingsSection(searchQuery: _searchQuery),
 
                 // 7. App Behavior (Generic)
-                AppBehaviorSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
+                AppBehaviorSection(searchQuery: _searchQuery),
 
                 // 8. Advanced
-                AdvancedSettingsSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
+                AdvancedSettingsSection(searchQuery: _searchQuery),
 
                 // 9. Troubleshooting & Logs
-                TroubleshootingSection(searchQuery: _searchQuery, showAdvancedSettings: plusSettings.plusShowAdvancedSettings),
+                TroubleshootingSection(searchQuery: _searchQuery),
 
                 const SizedBox(height: 48),
                 _buildFooter(context),

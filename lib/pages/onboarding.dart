@@ -331,6 +331,8 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     final pageDecoration = PageDecoration(
       titleTextStyle: TextStyle(
         fontSize: 28.0,
@@ -345,8 +347,6 @@ class _OnboardingPageState extends State<OnboardingPage>
       imageFlex: 3,
       bodyFlex: 4,
     );
-
-    final colorScheme = Theme.of(context).colorScheme;
 
     return IntroductionScreen(
       key: introKey,
