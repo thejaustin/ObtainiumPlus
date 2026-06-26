@@ -153,12 +153,13 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
-              Switch(
-                value: value,
-                onChanged: (v) => setting.setValue(provider, v),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
+              Transform.scale(
                 scale: 0.7,
+                child: Switch(
+                  value: value,
+                  onChanged: (v) => setting.setValue(provider, v),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ],
           ),
