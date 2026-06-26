@@ -209,30 +209,6 @@ class AppsPageState extends State<AppsPage> {
       );
     }
 
-    if (plusSettings.plusEnableHomeDashboard) {
-      return AppDashboard(
-        key: widget.key,
-        currentFilterMode: filter.statusFilter.isEmpty ? 'all' : filter.statusFilter.first,
-        onFilterChanged: (newFilter) {
-          setState(() {
-            if (newFilter == 'all') {
-              filter.statusFilter = {};
-            } else {
-              filter.statusFilter = {newFilter};
-            }
-          });
-        },
-        onSearchQuery: (query) {
-          setState(() {
-            filter.nameFilter = query;
-          });
-        },
-        onUrlInput: (url) {
-          // Handle URL input from dashboard
-        },
-        onCheckUpdates: refresh,
-      );
-    }
     final settingsProvider = context.watch<SettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
@@ -1439,8 +1415,34 @@ class AppsPageState extends State<AppsPage> {
           child: CustomScrollView(
             physics: plusSettings.scrollPhysics,
             controller: scrollController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: <Widget>[
               CustomAppBar(title: tr('appsString')),
+              if (plusSettings.plusEnableHomeDashboard)
+                SliverToBoxAdapter(
+                  child: AppDashboard(
+                    key: widget.key,
+                    currentFilterMode: filter.statusFilter.isEmpty ? 'all' : filter.statusFilter.first,
+                    onFilterChanged: (newFilter) {
+                      setState(() {
+                        if (newFilter == 'all') {
+                          filter.statusFilter = {};
+                        } else {
+                          filter.statusFilter = {newFilter};
+                        }
+                      });
+                    },
+                    onSearchQuery: (query) {
+                      setState(() {
+                        filter.nameFilter = query;
+                      });
+                    },
+                    onUrlInput: (url) {
+                      // Handled by command center
+                    },
+                    onCheckUpdates: refresh,
+                  ),
+                ),
               if (plusSettings.plusEnableTags)
                 TagFilterBar(
                   activeTag: activeTag,

@@ -406,29 +406,44 @@ class AppInstallService {
         appId: apps[file.appId]!.app.id,
       );
     }
-    if (needsBGWorkaround) {
-      // In a background process, the await on AndroidPackageInstaller.installApk
-      // never returns because the process is killed after the install intent is
-      // launched. Pre-emptively mark the app as installed before the await so
-      // the version update is persisted even when the process dies. See upstream #896.
-      apps[file.appId]!.app.installedVersion =
-          apps[file.appId]!.app.latestVersion;
-      if (saveApps != null) {
-        await saveApps([apps[file.appId]!.app]);
+    int? code;
+    var allAPKs = [file.file.path];
+    allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
+
+    Future<void> executeBgWorkaroundIfNeeded() async {
+      if (needsBGWorkaround) {
+        apps[file.appId]!.app.installedVersion = apps[file.appId]!.app.latestVersion;
+        if (saveApps != null) {
+          await saveApps([apps[file.appId]!.app]);
+        }
       }
     }
-    int? code;
+
     if (!behaviorSettings.useShizuku) {
-      var allAPKs = [file.file.path];
-      allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
+      await executeBgWorkaroundIfNeeded();
       code = await AndroidPackageInstaller.installApk(
         apkFilePath: allAPKs.join(','),
       );
     } else {
-      code = await ShizukuApkInstaller().installAPK(
-        file.file.uri.toString(),
-        shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
-      );
+      try {
+        var fakeSource = shizukuPretendToBeGooglePlay ? "com.android.vending" : "";
+        if (additionalAPKs.isNotEmpty) {
+          var allUris = [file.file.uri.toString()];
+          allUris.addAll(additionalAPKs.map((a) => a.file.uri.toString()));
+          code = await ShizukuApkInstaller().installAABSplits(allUris, fakeSource);
+        } else {
+          code = await ShizukuApkInstaller().installAPK(file.file.uri.toString(), fakeSource);
+        }
+        if (code != 0 && code != 3) {
+          throw Exception("Shizuku failed with code $code");
+        }
+      } catch (e) {
+        logs.add('Shizuku install failed: $e, falling back to AndroidPackageInstaller');
+        await executeBgWorkaroundIfNeeded();
+        code = await AndroidPackageInstaller.installApk(
+          apkFilePath: allAPKs.join(','),
+        );
+      }
     }
     bool installed = false;
     if (code != null && code != 0 && code != 3) {
@@ -540,6 +555,8 @@ class AppInstallService {
 
     if ((await DeviceInfoPlugin().androidInfo).version.sdkInt <= 29) {
       await Permission.storage.request();
+    } else {
+      await Permission.manageExternalStorage.request();
     }
 
     String obbDirPath = "${await getStorageRootPath()}/Android/obb/$appId";

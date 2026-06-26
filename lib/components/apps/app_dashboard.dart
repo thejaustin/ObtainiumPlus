@@ -175,6 +175,7 @@ class _AppDashboardState extends State<AppDashboard>
                       label: tr('appsString'),
                       value: totalApps.toString(),
                       color: colorScheme.primary,
+                      onTap: () => widget.onFilterChanged('all'),
                       onLongPress: () {
                         AppHaptics.heavyImpact();
                         appsProvider.selectAll();
@@ -192,7 +193,13 @@ class _AppDashboardState extends State<AppDashboard>
                       color: updatesAvailable > 0
                           ? colorScheme.error
                           : colorScheme.secondary,
-                      onTap: updatesAvailable > 0 ? widget.onCheckUpdates : null,
+                      onTap: () {
+                        if (updatesAvailable > 0) {
+                          widget.onFilterChanged('updates');
+                        } else {
+                          widget.onCheckUpdates();
+                        }
+                      },
                       onLongPress: updatesAvailable > 0
                           ? () {
                               AppHaptics.heavyImpact();

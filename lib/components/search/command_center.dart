@@ -108,8 +108,12 @@ class _CommandCenterState extends State<CommandCenter> {
 
     // Check if it's a URL
     if (URLValidator.isValidSourceURL(value)) {
-      setState(() => _discoverResults = {});
-      return;
+      // Allow GitHub User Profiles to bypass this so they can be searched
+      RegExp userProfileRegEx = RegExp(r'^https?://(?:www\.)?github\.com/[^/]+/?$', caseSensitive: false);
+      if (!userProfileRegEx.hasMatch(value)) {
+        setState(() => _discoverResults = {});
+        return;
+      }
     }
 
     // Handle as Discovery Search
@@ -251,6 +255,7 @@ class _CommandCenterState extends State<CommandCenter> {
                 child: _query.isEmpty
                     ? _buildInitialState()
                     : ListView(
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         children: [
                           if (_localResults.isNotEmpty) ...[
@@ -263,7 +268,7 @@ class _CommandCenterState extends State<CommandCenter> {
                             _buildUrlActionContent(),
                             const SizedBox(height: 16),
                           ],
-                          if (_query.isNotEmpty && !isUrl) ...[
+                          if (_query.isNotEmpty && (!isUrl || RegExp(r'^https?://(?:www\.)?github\.com/[^/]+/?$', caseSensitive: false).hasMatch(_query))) ...[
                             _buildSectionHeader(tr('discover')),
                             _buildSearchResultsList(),
                           ],
@@ -366,23 +371,16 @@ class _CommandCenterState extends State<CommandCenter> {
     );
   }
 
-  void _openAddApp(String url) {
+  void _openAddApp(String url) async {
     Navigator.pop(context);
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddAppPage()),
-    ).then((_) {
-      // Small delay to ensure AddAppPage state is initialized
-      Future.delayed(const Duration(milliseconds: 200), () {
-        final homeState = globalNavigatorKey.currentContext
-            ?.findAncestorStateOfType<HomePageState>();
-        final addAppKey =
-            homeState?.pages[1].widget.key as GlobalKey<AddAppPageState>?;
-        if (addAppKey?.currentState != null) {
-          addAppKey!.currentState!.linkFn(url);
-        }
-      });
-    });
+    final homeState = globalNavigatorKey.currentContext?.findAncestorStateOfType<HomePageState>();
+    if (homeState != null) {
+      homeState.switchToPage(1);
+      while ((homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState == null) {
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+      (homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(url);
+    }
   }
 
   Widget _buildSearchResultsList() {
@@ -519,6 +517,7 @@ class _CommandCenterState extends State<CommandCenter> {
         .toList();
 
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

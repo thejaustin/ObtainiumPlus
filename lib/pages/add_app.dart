@@ -321,6 +321,8 @@ class AddAppPageState extends State<AddAppPage> {
         }
         if (app != null) {
           AppHaptics.selectionClick();
+          final homeState = globalNavigatorKey.currentContext?.findAncestorStateOfType<HomePageState>();
+          homeState?.switchToPage(0);
           showDraggableModalBottomSheet(
             context: globalNavigatorKey.currentContext ?? context,
             builder: (context, controller) => AppPage(
@@ -1056,6 +1058,7 @@ class AddAppPageState extends State<AddAppPage> {
       bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
       body: CustomScrollView(
         controller: widget.scrollController,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         physics: widget.isModal
             ? const BouncingScrollPhysics()
             : const AlwaysScrollableScrollPhysics(),
