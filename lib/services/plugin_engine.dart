@@ -1,6 +1,5 @@
 import 'package:flutter_js/flutter_js.dart';
 import 'package:obtainium/utils/logger.dart';
-import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 
 class PluginEngine {

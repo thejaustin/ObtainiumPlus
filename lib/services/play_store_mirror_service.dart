@@ -50,8 +50,9 @@ class PlayStoreMirrorService {
       // Ignore common system/google packages that we shouldn't manage
       if (pkg.packageName!.startsWith('com.android.') ||
           pkg.packageName!.startsWith('com.google.android.gms') ||
-          pkg.packageName == 'android')
+          pkg.packageName == 'android') {
         return false;
+      }
 
       return true;
     }).toList();
