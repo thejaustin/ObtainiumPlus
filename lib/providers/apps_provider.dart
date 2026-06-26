@@ -2271,6 +2271,8 @@ class AppsProvider with ChangeNotifier {
         .toList();
     return errors;
   }
+
+  void forceNotifyListeners() => notifyListeners();
 }
 
 class AppFilePicker extends StatefulWidget {
