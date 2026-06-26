@@ -360,8 +360,7 @@ class CategorySections extends StatelessWidget {
                   app.app.installedVersion,
                   app.app.latestVersion,
                 ),
-                isAmbiguous:
-                    app.app.additionalSettings['isAmbiguousUpdate'] == true,
+
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);

@@ -24,8 +24,9 @@ class _ContextualTipState extends State<ContextualTip> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    if (!settings.enableContextualTips || _dismissed)
+    if (!settings.enableContextualTips || _dismissed) {
       return const SizedBox.shrink();
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
