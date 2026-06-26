@@ -219,9 +219,7 @@ class BackgroundUpdateService {
             );
           }
           for (var entry in toCheck) {
-            if (!updates.any((u) => u.id == entry.key) &&
-                (errors == null ||
-                    !errors.idsByErrorString.containsKey(entry.key))) {
+            if (!updates.any((u) => u.id == entry.key)) {
               offlineService.clearAppFromRetryQueue(
                 entry.key,
                 appsProvider.updateSettings,
@@ -356,7 +354,7 @@ class BackgroundUpdateService {
             if (canInstallFlags[i]) toInstall.add(MapEntry(temp[i], 0));
           }
         }
-        if (toInstall.isNotEmpty && appsProvider.APKDir != null) {
+        if (toInstall.isNotEmpty) {
           try {
             await AppDownloadService.downloadAndInstallLatestApps(
               appIds: toInstall.map((e) => e.key).toList(),
@@ -366,8 +364,8 @@ class BackgroundUpdateService {
               plusSettings: appsProvider.plusSettings,
               updateSettings: appsProvider.updateSettings,
               logs: logs,
-              APKDir: appsProvider.APKDir!,
-              notifyListeners: appsProvider.notifyListeners,
+              APKDir: appsProvider.APKDir,
+              notifyListeners: appsProvider.forceNotifyListeners,
               saveApps: appsProvider.saveApps,
               removeApps: appsProvider.removeApps,
               checkUpdate: appsProvider.checkUpdate,
@@ -398,9 +396,8 @@ class BackgroundUpdateService {
         'updatesFound': updates.length,
         'success': true,
       };
-      if (appsProvider.APKDir == null) return;
       final file = File(
-        '${appsProvider.APKDir!.parent.path}/last_update_status.json',
+        '${appsProvider.APKDir.parent.path}/last_update_status.json',
       );
       await file.writeAsString(jsonEncode(status));
     } catch (e) {

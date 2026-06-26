@@ -3,8 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/models/app.dart';
-import 'package:obtainium/pages/add_app.dart';
+
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
