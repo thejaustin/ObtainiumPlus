@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/models/app.dart';
-import 'package:obtainium/models/app_in_memory.dart';
+
 import 'package:obtainium/services/app_install_service.dart';
 
 class AppRemovalService {

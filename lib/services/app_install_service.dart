@@ -519,6 +519,9 @@ class AppInstallService {
       if (APKFiles.isEmpty) {
         throw ObtainiumError(tr('noAPKFound'));
       }
+      if (firstTimeWithContext != null && !firstTimeWithContext.mounted) {
+        return false;
+      }
       try {
         var wasInstalled = await installApk(
           DownloadedApk(dir.appId, APKFiles[0]),
