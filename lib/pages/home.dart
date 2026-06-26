@@ -86,7 +86,7 @@ class HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
       var plusSettings = context.read<PlusSettingsProvider>();
-      const currentVersion = '1.4.3-p12';
+      const currentVersion = '1.4.3-p15';
 
       if (plusSettings.plusLastSeenVersion != currentVersion) {
         // Show Changelog on update
@@ -430,10 +430,16 @@ class HomePageState extends State<HomePage> {
                     return KeyEventResult.ignored;
                   },
                   child: NavigationBar(
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+                    labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+                    animationDuration: const Duration(milliseconds: 300),
                     destinations: pages
                         .map(
                           (e) => NavigationDestination(
                             icon: Icon(e.icon),
+                            selectedIcon: Icon(e.icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
                             label: tr(e.title),
                           ),
                         )

@@ -550,10 +550,12 @@ class GitHub extends AppSource {
                 var reg = RegExp(stdFormats.last);
                 var matchA = reg.firstMatch(nameA);
                 var matchB = reg.firstMatch(nameB);
-                return compareAlphaNumeric(
+                var res = compareAlphaNumeric(
                   (nameA as String).substring(matchA!.start, matchA.end),
                   (nameB as String).substring(matchB!.start, matchB.end),
                 );
+                if (res != 0) return res;
+                return compareAlphaNumeric(nameA, nameB);
               } else {
                 // 'name'
                 return compareAlphaNumeric(
