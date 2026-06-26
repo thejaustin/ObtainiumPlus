@@ -1,18 +1,18 @@
 import 'dart:async';
-import 'dart:convert';
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/models/app.dart';
+
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:equations/equations.dart';
+
 import 'package:crypto/crypto.dart';
 
 import 'package:obtainium/utils/app_constants.dart';
@@ -288,19 +288,15 @@ class SourceUtils {
     Map<String, dynamic> additionalSettings,
   ) async {
     var source = SourceProvider().getSource(app.app.url);
-    if (source != null) {
-      var details = await source.getLatestAPKDetails(
-        app.app.url,
-        additionalSettings,
-      );
-      var version = details.version;
-      if (version?.isNotEmpty != true) {
-        throw NoVersionError();
-      }
-      return version!;
-    } else {
-      return null;
+    var details = await source.getLatestAPKDetails(
+      app.app.url,
+      additionalSettings,
+    );
+    var version = details.version;
+    if (version.isNotEmpty != true) {
+      throw NoVersionError();
     }
+    return version;
   }
 
   static List<MapEntry<String, String>> filterApks(

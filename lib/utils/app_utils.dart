@@ -17,7 +17,7 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
   if (settings.disablePageTransitions) {
     return Navigator.of(context).push<T>(
       PageRouteBuilder<T>(
-        pageBuilder: (_, __, ___) => page,
+        pageBuilder: (context, _, __) => page,
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

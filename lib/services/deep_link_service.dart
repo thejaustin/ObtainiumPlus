@@ -6,10 +6,8 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
-import 'package:obtainium/main.dart';
 
 class DeepLinkService {
   DeepLinkService._();

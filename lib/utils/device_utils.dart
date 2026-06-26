@@ -18,8 +18,8 @@ class DeviceUtils {
   static Future<bool> isXiaomiDevice() async {
     try {
       final info = await getAndroidInfo();
-      final manufacturer = info.manufacturer?.toLowerCase() ?? '';
-      final brand = info.brand?.toLowerCase() ?? '';
+      final manufacturer = info.manufacturer.toLowerCase();
+      final brand = info.brand.toLowerCase();
       return [
         'xiaomi',
         'redmi',
