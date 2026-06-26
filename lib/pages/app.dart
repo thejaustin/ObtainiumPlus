@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/tag_editor.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
-import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_install_service.dart' hide pm;
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/apps.dart';
