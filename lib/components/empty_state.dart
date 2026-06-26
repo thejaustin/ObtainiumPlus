@@ -148,26 +148,5 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       ),
     );
   }
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.defaultBorderRadius,
-                        ),
-                      ),
-                    ),
-                    icon: const Icon(Icons.explore_rounded),
-                    label: Text(widget.secondaryActionLabel!),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 }
