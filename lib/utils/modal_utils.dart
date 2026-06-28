@@ -21,16 +21,16 @@ Future<T?> showDraggableModalBottomSheet<T>({
     barrierColor: Theme.of(context).colorScheme.scrim.withOpacity(0.3),
     builder: (context) {
       final settings = context.watch<SettingsProvider>();
-      return ConditionalBlur(
-        applyBlur: settings.plusEnableGlassmorphism,
-        sigmaX: 12,
-        sigmaY: 12,
+      return ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(
-              settings.plusEnableGlassmorphism ? 0.85 : 1.0,
-            ),
+        child: ConditionalBlur(
+          enabled: settings.plusEnableGlassmorphism,
+          sigma: 12,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(
+                settings.plusEnableGlassmorphism ? 0.85 : 1.0,
+              ),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
