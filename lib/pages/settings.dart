@@ -29,6 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _searchQuery = '';
   bool _showIntervalLabel = true;
   late Future<AndroidDeviceInfo> _androidInfoFuture;
+  int _selectedSectionIndex = 0;
 
   @override
   void initState() {
@@ -80,36 +81,104 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          if (_searchQuery.isEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 50,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    'Obtainium+',
+                    tr('theme'),
+                    tr('apps'),
+                    tr('updates'),
+                    tr('installation'),
+                    tr('notifications'),
+                    tr('behavior'),
+                    tr('advanced'),
+                    tr('troubleshooting')
+                  ].asMap().entries.map((entry) {
+                    final isSelected = _selectedSectionIndex == entry.key;
+                    final displayTitle = entry.value == 'theme' ? 'Visuals' 
+                        : entry.value == 'apps' ? 'Apps View'
+                        : entry.value == 'updates' ? 'Updates'
+                        : entry.value == 'installation' ? 'Installation'
+                        : entry.value == 'notifications' ? 'Notifications'
+                        : entry.value == 'behavior' ? 'Behavior'
+                        : entry.value == 'advanced' ? 'Advanced'
+                        : entry.value == 'troubleshooting' ? 'Troubleshooting'
+                        : entry.value;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ChoiceChip(
+                        label: Text(displayTitle),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() => _selectedSectionIndex = entry.key);
+                          }
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        side: BorderSide.none,
+                        showCheckmark: false,
+                        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+                        selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
-                  PlusFeaturesSection(searchQuery: _searchQuery),
-                  ThemeSettingsSection(
-                    searchQuery: _searchQuery,
-                    androidInfoFuture: _androidInfoFuture,
-                    colorsNameMap: const <ColorSwatch<Object>, String>{},
-                  ),
-                  AppsViewSettingsSection(
-                    searchQuery: _searchQuery,
-                    onSetState: (fn) => setState(fn),
-                  ),
-                  UpdateSettingsSection(
-                    searchQuery: _searchQuery,
-                    showIntervalLabel: _showIntervalLabel,
-                    onIntervalLabelChange: (val) => setState(() => _showIntervalLabel = val),
-                    androidInfoFuture: _androidInfoFuture,
-                  ),
-                  InstallationSection(searchQuery: _searchQuery),
-                  NotificationSettingsSection(searchQuery: _searchQuery),
-                  AppBehaviorSection(searchQuery: _searchQuery),
-                  AdvancedSettingsSection(searchQuery: _searchQuery),
-                  TroubleshootingSection(searchQuery: _searchQuery),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 0)
+                    PlusFeaturesSection(searchQuery: _searchQuery),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 1)
+                    ThemeSettingsSection(
+                      searchQuery: _searchQuery,
+                      androidInfoFuture: _androidInfoFuture,
+                      colorsNameMap: const <ColorSwatch<Object>, String>{},
+                    ),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 2)
+                    AppsViewSettingsSection(
+                      searchQuery: _searchQuery,
+                      onSetState: (fn) => setState(fn),
+                    ),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
+                    UpdateSettingsSection(
+                      searchQuery: _searchQuery,
+                      showIntervalLabel: _showIntervalLabel,
+                      onIntervalLabelChange: (val) => setState(() => _showIntervalLabel = val),
+                      androidInfoFuture: _androidInfoFuture,
+                    ),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 4)
+                    InstallationSection(searchQuery: _searchQuery),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 5)
+                    NotificationSettingsSection(searchQuery: _searchQuery),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 6)
+                    AppBehaviorSection(searchQuery: _searchQuery),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 7)
+                    AdvancedSettingsSection(searchQuery: _searchQuery),
+                  if (_searchQuery.isNotEmpty || _selectedSectionIndex == 8)
+                    TroubleshootingSection(searchQuery: _searchQuery),
                   const SizedBox(height: 48),
                   _buildFooter(context),
                   const SizedBox(height: 32),
                 ].asMap().entries.map((e) => TweenAnimationBuilder<double>(
+                  key: ValueKey('${e.key}_${_selectedSectionIndex}'),
                   tween: Tween(begin: 0.0, end: 1.0),
                   duration: Duration(milliseconds: 300 + (e.key * 75).clamp(0, 600)),
                   curve: Curves.easeOutCubic,
