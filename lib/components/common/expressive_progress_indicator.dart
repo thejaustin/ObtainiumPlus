@@ -117,7 +117,7 @@ class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator>
     // M3E spec: waveSpeed = wavelength/s → one full wave cycle per second
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 2000),
     )..repeat();
   }
 
@@ -219,34 +219,51 @@ class _SquigglyPainter extends CustomPainter {
         stopPaint,
       );
     } else {
-      // Indeterminate: wavelength=20dp, continuously shifting left, as a moving pill
+      // Indeterminate: wavelength=20dp, Google Play M3 Expressive style
       const double frequency = (2 * math.pi) / 20.0;
-      final double pillWidth = size.width * 0.45;
       
-      // xOffset moves the pill from left to right, wrapping smoothly
-      final double xOffset = -pillWidth + (size.width + 1.5 * pillWidth) * animationValue;
+      double easeInOut(double t) {
+        if (t <= 0.0) return 0.0;
+        if (t >= 1.0) return 1.0;
+        return 0.5 - 0.5 * math.cos(math.pi * t);
+      }
       
-      final double startX = math.max(0.0, xOffset);
-      final double endX = math.min(size.width, xOffset + pillWidth);
-      
-      if (endX > startX) {
-        path.moveTo(startX, centerY);
+      void drawSquigglyBar(double headT, double tailT) {
+        final double startX = size.width * easeInOut(tailT);
+        final double endX = size.width * easeInOut(headT);
+        if (endX <= startX + 0.1) return;
+        
+        final localPath = Path();
+        localPath.moveTo(startX, centerY);
+        final double lineLength = endX - startX;
+        
         for (double x = startX; x <= endX; x += 1.0) {
-          final double progressInPill = (x - xOffset) / pillWidth;
-          final double ramp = progressInPill < 0.15
-              ? progressInPill / 0.15
-              : progressInPill > 0.85
-                  ? (1.0 - progressInPill) / 0.15
+          final double progressInLine = (x - startX) / lineLength;
+          final double ramp = progressInLine < 0.1
+              ? progressInLine / 0.1
+              : progressInLine > 0.9
+                  ? (1.0 - progressInLine) / 0.1
                   : 1.0;
-                  
           final double currentAmplitude = amplitude * ramp;
           final double y = centerY +
-              math.sin(x * frequency - animationValue * 6 * math.pi) *
+              math.sin(x * frequency - animationValue * 16 * math.pi) *
                   currentAmplitude;
-          path.lineTo(x, y);
+          localPath.lineTo(x, y);
         }
-        canvas.drawPath(path, activePaint);
+        canvas.drawPath(localPath, activePaint);
       }
+      
+      // Bar 1
+      drawSquigglyBar(
+        (animationValue * 1.5).clamp(0.0, 1.0),
+        (animationValue * 1.5 - 0.5).clamp(0.0, 1.0),
+      );
+      
+      // Bar 2 (Starts later, moves faster to catch up/repeat)
+      drawSquigglyBar(
+        (animationValue * 2.0 - 1.0).clamp(0.0, 1.0),
+        (animationValue * 2.0 - 1.25).clamp(0.0, 1.0),
+      );
     }
   }
 
@@ -395,20 +412,32 @@ class _WavyCircularPainter extends CustomPainter {
       );
     } else {
       // Indeterminate circular wavy (expanding/contracting like Google Play)
-      final double spinAngle = animationValue * 2 * math.pi;
-      final double sweepOscillation = math.sin(animationValue * 2 * math.pi);
+      final double cycle = animationValue * 2 * math.pi; // 0 to 2pi
+      final double rotation = animationValue * 8 * math.pi; // base spin
       
-      final double segmentAngle = 0.8 * math.pi + sweepOscillation * 0.6 * math.pi;
-      final double rotationOffset = -sweepOscillation * 0.5 * math.pi;
+      // Sweep oscillates smoothly between min length (0.1 pi) and max length (1.5 pi)
+      final double sweepOscillation = (math.sin(cycle - math.pi / 2) + 1.0) / 2.0; // 0.0 to 1.0
+      final double segmentAngle = 0.1 * math.pi + sweepOscillation * 1.4 * math.pi;
       
-      final double startAngle = spinAngle + rotationOffset;
+      // Tail offset pushes the start forward when contracting
+      final double tailOffset = cycle - (math.sin(cycle) + 1.0) * math.pi / 2.0; 
+      
+      final double startAngle = rotation + tailOffset;
 
       for (double a = 0; a <= segmentAngle; a += 0.02) {
         final double totalAngle = startAngle + a;
+        final double progressInLine = a / segmentAngle;
+        final double ramp = progressInLine < 0.1
+            ? progressInLine / 0.1
+            : progressInLine > 0.9
+                ? (1.0 - progressInLine) / 0.1
+                : 1.0;
+        final double currentAmplitude = amplitude * ramp;
+        
         final double currentRadius =
             radius +
-            math.sin(totalAngle * waveCount - (animationValue * 6 * math.pi)) *
-                amplitude;
+            math.sin(totalAngle * waveCount - (animationValue * 12 * math.pi)) *
+                currentAmplitude;
         final x =
             center.dx + currentRadius * math.cos(totalAngle - math.pi / 2);
         final y =

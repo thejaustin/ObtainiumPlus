@@ -88,7 +88,7 @@ class AppFileService {
         if (!iconsCacheDir.existsSync()) {
           iconsCacheDir.createSync(recursive: true);
         }
-      } on FileSystemException {
+      } catch (e) {
         // External cache unavailable at runtime; fall through to internal storage
         cacheDirs = null;
       }
@@ -111,7 +111,7 @@ class AppFileService {
         if (!iconsCacheDir.existsSync()) {
           iconsCacheDir.createSync(recursive: true);
         }
-      } on FileSystemException catch (e, st) {
+      } catch (e, st) {
         // External storage creation failed, fall back to internal app documents directory
         Sentry.addBreadcrumb(
           Breadcrumb(
@@ -125,7 +125,7 @@ class AppFileService {
         if (!APKDir.existsSync()) {
           try {
             APKDir.createSync(recursive: true);
-          } on FileSystemException catch (fallbackErr, fallbackSt) {
+          } catch (fallbackErr, fallbackSt) {
             Sentry.captureException(
               fallbackErr,
               stackTrace: fallbackSt,
@@ -133,7 +133,7 @@ class AppFileService {
                 scope.setTag('storage_path', APKDir.path);
                 scope.setTag(
                   'error_code',
-                  fallbackErr.osError?.errorCode.toString() ?? 'unknown',
+                  (fallbackErr is FileSystemException) ? (fallbackErr.osError?.errorCode.toString() ?? 'unknown') : 'unknown',
                 );
               },
             );
@@ -141,7 +141,9 @@ class AppFileService {
           }
         }
         if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync(recursive: true);
+          try {
+            iconsCacheDir.createSync(recursive: true);
+          } catch (_) {}
         }
       }
     }
