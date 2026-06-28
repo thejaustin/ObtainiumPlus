@@ -13,6 +13,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -695,7 +696,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Load more'),
                 ),

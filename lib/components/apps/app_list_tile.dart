@@ -23,6 +23,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'dart:ui';
 
 class AppListTile extends StatelessWidget {
@@ -76,8 +77,9 @@ class AppListTile extends StatelessWidget {
             AppHaptics.heavyImpact();
             showDialog(
               context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(tr('ambiguousUpdateTitle')),
+              builder: (ctx) => GlassDialog(
+                icon: Icons.help_outline_rounded,
+                title: tr('ambiguousUpdateTitle'),
                 content: Text(
                   tr(
                     'ambiguousUpdateMessage',

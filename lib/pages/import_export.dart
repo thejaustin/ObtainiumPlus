@@ -13,6 +13,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/components/selection_modal.dart';
@@ -494,7 +495,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     const Column(
                       children: [
                         SizedBox(height: 14),
-                        LinearProgressIndicator(),
+                        ExpressiveProgressIndicator(),
                         SizedBox(height: 14),
                       ],
                     )

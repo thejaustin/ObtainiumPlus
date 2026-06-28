@@ -83,50 +83,48 @@ class _SettingsPageState extends State<SettingsPage> {
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // 1. Obtainium+ Features (if master toggle is on or if searching)
-                PlusFeaturesSection(searchQuery: _searchQuery),
-
-                // 2. Appearance & Theme
-                ThemeSettingsSection(
-                  searchQuery: _searchQuery,
-                  androidInfoFuture: _androidInfoFuture,
-                  colorsNameMap: const <ColorSwatch<Object>, String>{},
-                ),
-
-                // 3. App List, Categories & Display
-                AppsViewSettingsSection(
-                  searchQuery: _searchQuery,
-                  onSetState: (fn) => setState(fn),
-                ),
-
-                // 4. Updates
-                UpdateSettingsSection(
-                  searchQuery: _searchQuery,
-                  showIntervalLabel: _showIntervalLabel,
-                  onIntervalLabelChange: (val) => setState(() => _showIntervalLabel = val),
-                  androidInfoFuture: _androidInfoFuture,
-                ),
-
-                // 5. Installation
-                InstallationSection(searchQuery: _searchQuery),
-
-                // 6. Notifications (Enhancements)
-                NotificationSettingsSection(searchQuery: _searchQuery),
-
-                // 7. App Behavior (Generic)
-                AppBehaviorSection(searchQuery: _searchQuery),
-
-                // 8. Advanced
-                AdvancedSettingsSection(searchQuery: _searchQuery),
-
-                // 9. Troubleshooting & Logs
-                TroubleshootingSection(searchQuery: _searchQuery),
-
-                const SizedBox(height: 48),
-                _buildFooter(context),
-                const SizedBox(height: 32),
-              ]),
+              delegate: SliverChildListDelegate(
+                [
+                  PlusFeaturesSection(searchQuery: _searchQuery),
+                  ThemeSettingsSection(
+                    searchQuery: _searchQuery,
+                    androidInfoFuture: _androidInfoFuture,
+                    colorsNameMap: const <ColorSwatch<Object>, String>{},
+                  ),
+                  AppsViewSettingsSection(
+                    searchQuery: _searchQuery,
+                    onSetState: (fn) => setState(fn),
+                  ),
+                  UpdateSettingsSection(
+                    searchQuery: _searchQuery,
+                    showIntervalLabel: _showIntervalLabel,
+                    onIntervalLabelChange: (val) => setState(() => _showIntervalLabel = val),
+                    androidInfoFuture: _androidInfoFuture,
+                  ),
+                  InstallationSection(searchQuery: _searchQuery),
+                  NotificationSettingsSection(searchQuery: _searchQuery),
+                  AppBehaviorSection(searchQuery: _searchQuery),
+                  AdvancedSettingsSection(searchQuery: _searchQuery),
+                  TroubleshootingSection(searchQuery: _searchQuery),
+                  const SizedBox(height: 48),
+                  _buildFooter(context),
+                  const SizedBox(height: 32),
+                ].asMap().entries.map((e) => TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 300 + (e.key * 75).clamp(0, 600)),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 30 * (1 - value)),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: e.value,
+                )).toList(),
+              ),
             ),
           ),
         ],

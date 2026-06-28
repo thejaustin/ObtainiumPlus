@@ -20,7 +20,9 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/services/app_install_service.dart' hide pm;
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -229,6 +231,7 @@ class AppsPageState extends State<AppsPage> {
             return <App>[];
           })
           .whenComplete(() {
+            AppHaptics.heavyImpact();
             setState(() {
               refreshingSince = null;
             });
@@ -453,21 +456,66 @@ class AppsPageState extends State<AppsPage> {
       return [
         if (listedApps.isEmpty)
           SliverFillRemaining(
+            hasScrollBody: false,
             child: Center(
-              child: Text(
-                appsProvider.apps.isEmpty
-                    ? appsProvider.loadingApps
-                          ? tr('pleaseWait')
-                          : tr('noApps')
-                    : tr('noAppsForFilter'),
-                style: Theme.of(context).textTheme.headlineMedium,
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.elasticOut,
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: value,
+                          child: Opacity(
+                            opacity: value.clamp(0.0, 1.0),
+                            child: Icon(
+                              appsProvider.apps.isEmpty && !appsProvider.loadingApps
+                                  ? Icons.apps_outage_rounded
+                                  : appsProvider.loadingApps
+                                      ? Icons.hourglass_empty_rounded
+                                      : Icons.search_off_rounded,
+                              size: 80,
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      appsProvider.apps.isEmpty
+                          ? appsProvider.loadingApps
+                                ? tr('pleaseWait')
+                                : tr('noApps')
+                          : tr('noAppsForFilter'),
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (appsProvider.apps.isEmpty && !appsProvider.loadingApps) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Tap the + button to add your first app',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
         if (refreshingSince != null || appsProvider.loadingApps)
           SliverToBoxAdapter(
-            child: LinearProgressIndicator(
+            child: ExpressiveProgressIndicator(
               value: appsProvider.loadingApps
                   ? null
                   : appsProvider

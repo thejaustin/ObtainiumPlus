@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
@@ -50,7 +51,7 @@ Future<void> _runMassImport(
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
+    builder: (_) => const Center(child: ExpressiveCircularProgressIndicator()),
   );
 
   try {

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -23,6 +24,7 @@ class _ErrorAppState extends State<ErrorApp> {
   @override
   void initState() {
     super.initState();
+    AppHaptics.heavyImpact();
     _checkCrashLoop();
   }
 
@@ -65,11 +67,20 @@ class _ErrorAppState extends State<ErrorApp> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 30 * (1 - value)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -221,8 +232,12 @@ class _ErrorAppState extends State<ErrorApp> {
                       ),
                     ),
                   ),
-                ],
-              ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),

@@ -100,28 +100,49 @@ class AppFileService {
               'initAppDirectories: external cache unavailable, falling back to app storage',
         ),
       );
-      APKDir = Directory('${(await getAppStorageDir()).path}/apks');
-      if (!APKDir.existsSync()) {
-        try {
+      var baseDir = await getAppStorageDir();
+      APKDir = Directory('${baseDir.path}/apks');
+      iconsCacheDir = Directory('${baseDir.path}/icons');
+      
+      try {
+        if (!APKDir.existsSync()) {
           APKDir.createSync(recursive: true);
-        } on FileSystemException catch (e, st) {
-          Sentry.captureException(
-            e,
-            stackTrace: st,
-            withScope: (scope) {
-              scope.setTag('storage_path', APKDir.path);
-              scope.setTag(
-                'error_code',
-                e.osError?.errorCode.toString() ?? 'unknown',
-              );
-            },
-          );
-          rethrow;
         }
-      }
-      iconsCacheDir = Directory('${(await getAppStorageDir()).path}/icons');
-      if (!iconsCacheDir.existsSync()) {
-        iconsCacheDir.createSync(recursive: true);
+        if (!iconsCacheDir.existsSync()) {
+          iconsCacheDir.createSync(recursive: true);
+        }
+      } on FileSystemException catch (e, st) {
+        // External storage creation failed, fall back to internal app documents directory
+        Sentry.addBreadcrumb(
+          Breadcrumb(
+            message: 'initAppDirectories: external storage creation failed, falling back to internal storage',
+          ),
+        );
+        final fallback = await getApplicationDocumentsDirectory();
+        APKDir = Directory('${fallback.path}/apks');
+        iconsCacheDir = Directory('${fallback.path}/icons');
+        
+        if (!APKDir.existsSync()) {
+          try {
+            APKDir.createSync(recursive: true);
+          } on FileSystemException catch (fallbackErr, fallbackSt) {
+            Sentry.captureException(
+              fallbackErr,
+              stackTrace: fallbackSt,
+              withScope: (scope) {
+                scope.setTag('storage_path', APKDir.path);
+                scope.setTag(
+                  'error_code',
+                  fallbackErr.osError?.errorCode.toString() ?? 'unknown',
+                );
+              },
+            );
+            rethrow;
+          }
+        }
+        if (!iconsCacheDir.existsSync()) {
+          iconsCacheDir.createSync(recursive: true);
+        }
       }
     }
 
