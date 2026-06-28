@@ -1799,18 +1799,20 @@ class AppsProvider with ChangeNotifier {
         cachedIcon.writeAsBytes(icon.toList());
       }
       if (icon != null) {
+        final currentApp = apps[appId];
+        if (currentApp == null) return;
         apps.update(
-          apps[appId]!.app.id,
+          currentApp.app.id,
           (value) => AppInMemory(
-            apps[appId]!.app,
+            currentApp.app,
             value.downloadProgress,
             value.installedInfo,
             icon,
           ),
           ifAbsent: () => AppInMemory(
-            apps[appId]!.app,
+            currentApp.app,
             null,
-            apps[appId]?.installedInfo,
+            currentApp.installedInfo,
             icon,
           ),
         );
