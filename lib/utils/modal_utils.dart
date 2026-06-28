@@ -47,7 +47,8 @@ Future<T?> showDraggableModalBottomSheet<T>({
             builder: builder,
           ),
         ),
-      );
-    },
-  );
+      ),
+    );
+  },
+);
 }
