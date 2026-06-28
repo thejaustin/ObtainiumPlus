@@ -215,7 +215,11 @@ class AuthProvider with ChangeNotifier {
   Future<void> ensureValidPersonalToken() async {
     if (_microGEmail != null && isPersonalTokenExpired) {
       talker.info('microG token expired — refreshing silently');
-      await refreshMicroGToken();
+      try {
+        await refreshMicroGToken();
+      } catch (e, stack) {
+        talker.handle(e, stack, 'Silent microG token refresh failed');
+      }
     }
   }
 
@@ -233,7 +237,11 @@ class AuthProvider with ChangeNotifier {
       'microG token rejected (401) — invalidating and re-fetching',
     );
     await AuthService.invalidateMicroGToken(_personalBundle!.authToken);
-    await refreshMicroGToken();
+    try {
+      await refreshMicroGToken();
+    } catch (e, stack) {
+      talker.handle(e, stack, 'microG token refresh after 401 failed');
+    }
   }
 
   // ── Anonymous / dispenser ─────────────────────────────────────────────────
