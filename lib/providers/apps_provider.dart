@@ -571,23 +571,9 @@ class AppsProvider with ChangeNotifier {
       await viewSettings.initializeSettings(prefs);
       await plusSettings.initializeSettings(prefs);
 
-      var cacheDirs = await getExternalCacheDirectories();
-      if (cacheDirs?.isNotEmpty ?? false) {
-        APKDir = cacheDirs!.first;
-        iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync();
-        }
-      } else {
-        APKDir = Directory('${(await getAppStorageDir()).path}/apks');
-        if (!APKDir.existsSync()) {
-          APKDir.createSync();
-        }
-        iconsCacheDir = Directory('${(await getAppStorageDir()).path}/icons');
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync();
-        }
-      }
+      final dirs = await AppFileService.initAppDirectories();
+      APKDir = dirs['APKDir']!;
+      iconsCacheDir = dirs['iconsCacheDir']!;
       if (!isBg) {
         // Load Apps into memory (in background processes, this is done later instead of in the constructor)
         await loadApps();
@@ -1186,6 +1172,7 @@ class AppsProvider with ChangeNotifier {
               apps[id]!.app.apkUrls.first.value == 'placeholder';
       if (refreshBeforeDownload) {
         await checkUpdate(apps[id]!.app.id);
+        if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       }
       if (!trackOnly) {
         // ignore: use_build_context_synchronously
@@ -1235,6 +1222,7 @@ class AppsProvider with ChangeNotifier {
       DownloadedApk? downloadedFile,
       DownloadedDir? downloadedDir,
     ) async {
+      if (apps[id] == null) return;
       apps[id]?.downloadProgress = -1;
       notifyListeners();
       try {
@@ -1312,6 +1300,7 @@ class AppsProvider with ChangeNotifier {
       String id, {
       bool skipInstalls = false,
     }) async {
+      if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       bool willBeSilent = false;
       DownloadedApk? downloadedFile;
       DownloadedDir? downloadedDir;
@@ -1330,6 +1319,7 @@ class AppsProvider with ChangeNotifier {
           downloadedDir = downloadedArtifact as DownloadedDir;
         }
         id = downloadedFile?.appId ?? downloadedDir!.appId;
+        if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
         willBeSilent = await canInstallSilently(apps[id]!.app);
         if (!behaviorSettings.useShizuku) {
           if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
@@ -1418,6 +1408,7 @@ class AppsProvider with ChangeNotifier {
               apps[id]!.app.apkUrls.first.value == 'placeholder';
       if (refreshBeforeDownload) {
         await checkUpdate(apps[id]!.app.id);
+        if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       }
       if (apps[id]!.app.apkUrls.isNotEmpty ||
           apps[id]!.app.otherAssetUrls.isNotEmpty) {
