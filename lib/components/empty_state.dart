@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 class EmptyStateWidget extends StatefulWidget {
@@ -112,7 +113,10 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                     widget.actionLabel != null) ...[
                   const SizedBox(height: 48),
                   FilledButton.icon(
-                    onPressed: widget.onActionPressed,
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      widget.onActionPressed?.call();
+                    },
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(220, 56),
                       shape: RoundedRectangleBorder(
@@ -133,7 +137,10 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                     widget.secondaryActionLabel != null) ...[
                   const SizedBox(height: 12),
                   TextButton.icon(
-                    onPressed: widget.onSecondaryActionPressed,
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      widget.onSecondaryActionPressed?.call();
+                    },
                     style: TextButton.styleFrom(
                       minimumSize: const Size(220, 48),
                     ),

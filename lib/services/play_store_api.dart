@@ -49,21 +49,19 @@ final _urlRegex = RegExp(r'https://[^"\0\n]+');
 
 class PlayStoreApi {
   final String _baseUrl = 'https://android.clients.google.com/fdfe';
+  final AuthProvider authProvider;
+  final PlusSettingsProvider plusSettingsProvider;
 
   // Each PlayStoreApi instance has its own isolated HTTP client.
   final http.Client _client = _buildPlayStoreClient();
 
-  PlayStoreApi();
+  PlayStoreApi({required this.authProvider, required this.plusSettingsProvider});
 
   void dispose() => _client.close();
 
   /// Always reads the *current* active bundle from the provider so that a
   /// token refreshed mid-request (e.g. after a 401) is picked up on retry.
   Map<String, String> _buildHeaders() {
-    final authProvider = Provider.of<AuthProvider>(
-      globalNavigatorKey.currentContext!,
-      listen: false,
-    );
     final bundle = authProvider.activeBundle;
     if (bundle == null) throw ObtainiumError('No active auth bundle');
 
@@ -117,11 +115,7 @@ class PlayStoreApi {
 
   /// Checks the VPN requirement and throws if it is not met.
   Future<void> _assertVPNIfRequired() async {
-    final plusSettings = Provider.of<PlusSettingsProvider>(
-      globalNavigatorKey.currentContext!,
-      listen: false,
-    );
-    if (!plusSettings.requireVPNForPlayStore) return;
+    if (!plusSettingsProvider.requireVPNForPlayStore) return;
 
     final vpnActive = await AuthService.isVPNActive();
     if (!vpnActive) {
@@ -140,11 +134,6 @@ class PlayStoreApi {
     _assertAllowedHost(uri);
     await _assertVPNIfRequired();
     await _humanDelay();
-
-    final authProvider = Provider.of<AuthProvider>(
-      globalNavigatorKey.currentContext!,
-      listen: false,
-    );
 
     // Silently refresh if the token has passed its 55-min safe window.
     await authProvider.ensureValidPersonalToken();

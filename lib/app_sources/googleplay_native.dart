@@ -32,18 +32,17 @@ class GooglePlayNative extends AppSource {
       return APKDetails('Unknown', [], AppNames(appId, 'Google Play (Native)'));
     }
 
+    final plusSettingsProvider = Provider.of<PlusSettingsProvider>(ctx, listen: false);
+
     // Each call gets a fresh isolated client; dispose in finally to prevent leaks.
-    final api = PlayStoreApi();
+    final api = PlayStoreApi(authProvider: authProvider, plusSettingsProvider: plusSettingsProvider);
     try {
       final details = await api.getDetails(appId);
       if (details != null) {
         // Discard AFTER reading details — clears memory + invalidates AccountManager cache.
         // Awaiting ensures the APK download headers pipeline still has a valid bundle
         // if getRequestHeaders is called synchronously after this returns.
-        if (Provider.of<PlusSettingsProvider>(
-          ctx,
-          listen: false,
-        ).autoDiscardTokens) {
+        if (plusSettingsProvider.autoDiscardTokens) {
           await authProvider.clearBundle();
           talker.info('AuthBundle discarded after request (autoDiscardTokens)');
         }

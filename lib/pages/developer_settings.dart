@@ -619,13 +619,11 @@ class DeveloperSettingsPage extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        content: Row(
-          children: [
-            const ExpressiveCircularProgressIndicator(),
-            const SizedBox(width: 16),
-            Flexible(child: Text(tr('linkingAccount'))),
-          ],
+      builder: (_) => GlassDialog(
+        title: tr('linkingAccount'),
+        icon: Icons.sync_rounded,
+        content: const Center(
+          child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
         ),
       ),
     );

@@ -197,13 +197,14 @@ class _SquigglyPainter extends CustomPainter {
         final double ramp = progressAtX < 0.1
             ? progressAtX / 0.1
             : progressAtX > 0.95
-            ? (1.0 - progressAtX) / 0.05
-            : 1.0;
+                ? (1.0 - progressAtX) / 0.05
+                : 1.0;
+
+        final double currentAmplitude = amplitude * ramp;
         final double y =
             centerY +
-            math.sin((x * frequency) - (animationValue * math.pi * 2)) *
-                amplitude *
-                ramp;
+            math.sin(x * frequency - animationValue * 2 * math.pi) *
+                currentAmplitude;
         path.lineTo(x, y);
       }
       canvas.drawPath(path, activePaint);
@@ -218,17 +219,34 @@ class _SquigglyPainter extends CustomPainter {
         stopPaint,
       );
     } else {
-      // Indeterminate: wavelength=20dp (more energetic), full-width traveling wave
+      // Indeterminate: wavelength=20dp, continuously shifting left, as a moving pill
       const double frequency = (2 * math.pi) / 20.0;
-      path.moveTo(0, centerY);
-      for (double x = 0; x <= size.width; x += 1.0) {
-        final double y =
-            centerY +
-            math.sin((x * frequency) - (animationValue * math.pi * 2)) *
-                amplitude;
-        path.lineTo(x, y);
+      final double pillWidth = size.width * 0.45;
+      
+      // xOffset moves the pill from left to right, wrapping smoothly
+      final double xOffset = -pillWidth + (size.width + 1.5 * pillWidth) * animationValue;
+      
+      final double startX = math.max(0.0, xOffset);
+      final double endX = math.min(size.width, xOffset + pillWidth);
+      
+      if (endX > startX) {
+        path.moveTo(startX, centerY);
+        for (double x = startX; x <= endX; x += 1.0) {
+          final double progressInPill = (x - xOffset) / pillWidth;
+          final double ramp = progressInPill < 0.15
+              ? progressInPill / 0.15
+              : progressInPill > 0.85
+                  ? (1.0 - progressInPill) / 0.15
+                  : 1.0;
+                  
+          final double currentAmplitude = amplitude * ramp;
+          final double y = centerY +
+              math.sin(x * frequency - animationValue * 6 * math.pi) *
+                  currentAmplitude;
+          path.lineTo(x, y);
+        }
+        canvas.drawPath(path, activePaint);
       }
-      canvas.drawPath(path, activePaint);
     }
   }
 
@@ -344,7 +362,7 @@ class _WavyCircularPainter extends CustomPainter {
       final double sweepAngle = progress! * 2 * math.pi;
       if (sweepAngle <= 0) return;
 
-      for (double a = 0; a <= sweepAngle; a += 0.05) {
+      for (double a = 0; a <= sweepAngle; a += 0.02) {
         final double currentRadius =
             radius +
             math.sin(a * waveCount - (animationValue * 2 * math.pi)) *
@@ -376,15 +394,20 @@ class _WavyCircularPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
     } else {
-      // Indeterminate circular wavy
-      const double segmentAngle = math.pi * 0.6;
-      final double startAngle = animationValue * 2 * math.pi;
+      // Indeterminate circular wavy (expanding/contracting like Google Play)
+      final double spinAngle = animationValue * 2 * math.pi;
+      final double sweepOscillation = math.sin(animationValue * 2 * math.pi);
+      
+      final double segmentAngle = 0.8 * math.pi + sweepOscillation * 0.6 * math.pi;
+      final double rotationOffset = -sweepOscillation * 0.5 * math.pi;
+      
+      final double startAngle = spinAngle + rotationOffset;
 
-      for (double a = 0; a <= segmentAngle; a += 0.05) {
+      for (double a = 0; a <= segmentAngle; a += 0.02) {
         final double totalAngle = startAngle + a;
         final double currentRadius =
             radius +
-            math.sin(totalAngle * waveCount - (animationValue * 4 * math.pi)) *
+            math.sin(totalAngle * waveCount - (animationValue * 6 * math.pi)) *
                 amplitude;
         final x =
             center.dx + currentRadius * math.cos(totalAngle - math.pi / 2);

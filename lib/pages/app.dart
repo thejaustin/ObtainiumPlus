@@ -22,6 +22,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
@@ -1397,7 +1398,7 @@ Widget buildRepoRenameWarning({
           if (app?.downloadProgress != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-              child: LinearProgressIndicator(
+              child: ExpressiveProgressIndicator(
                 value: app!.downloadProgress! >= 0
                     ? app.downloadProgress! / 100
                     : null,

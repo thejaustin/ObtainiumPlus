@@ -12,6 +12,7 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
@@ -386,7 +387,7 @@ class AddAppPageState extends State<AddAppPage> {
         ),
         const SizedBox(width: 16),
         gettingAppInfo
-            ? const CircularProgressIndicator()
+            ? const Center(child: ExpressiveCircularProgressIndicator(strokeWidth: 3))
             : ElevatedButton(
                 onPressed:
                     doingSomething ||
@@ -642,7 +643,7 @@ class AddAppPageState extends State<AddAppPage> {
         ),
         const SizedBox(width: 16),
         searching
-            ? const CircularProgressIndicator()
+            ? const ExpressiveCircularProgressIndicator()
             : ElevatedButton(
                 onPressed: searchQuery.isEmpty || doingSomething
                     ? null
@@ -975,7 +976,7 @@ class AddAppPageState extends State<AddAppPage> {
                   const SizedBox(
                     width: 12,
                     height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                   ),
                 ],
               ],

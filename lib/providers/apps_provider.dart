@@ -1389,7 +1389,11 @@ class AppsProvider with ChangeNotifier {
     }
 
     if (errors.idsByErrorString.isNotEmpty) {
-      throw errors;
+      if (context != null) {
+        showError(errors, context);
+      } else {
+        throw errors;
+      }
     }
 
     return installedIds;
