@@ -120,11 +120,13 @@ class AuthService {
       return token;
     } on PlatformException catch (e) {
       talker.warning('getMicroGToken platform error [${e.code}]: ${e.message}');
-      // Surface the native error message directly — it's already user-friendly.
       var message = e.message ?? 'Failed to retrieve microG token (${e.code})';
       if (e.message?.contains('UnregisteredOnApiConsole') == true) {
         message =
             'microG error: UnregisteredOnApiConsole. Try signing out and back in to the account in microG Settings.';
+        // Instead of throwing an unhandled exception, return an empty string or a distinct value
+        // that won't crash the app globally, but can still be checked by callers.
+        return '';
       }
       throw ObtainiumError(message);
     } catch (e, stack) {
