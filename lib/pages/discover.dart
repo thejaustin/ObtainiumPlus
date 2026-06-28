@@ -94,6 +94,17 @@ class DiscoverPageState extends State<DiscoverPage> {
     super.dispose();
   }
 
+  void _openAddApp(String url) async {
+    final homeState = context.findAncestorStateOfType<HomePageState>();
+    if (homeState != null) {
+      homeState.switchToPage(1);
+      while ((homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState == null) {
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+      (homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(url);
+    }
+  }
+
   List<AppSource> get searchableSources =>
       sourceProvider.sources.where((e) => e.canSearch).toList();
 
@@ -308,18 +319,11 @@ class DiscoverPageState extends State<DiscoverPage> {
         ),
       ),
       trailing: FilledButton.tonal(
-        onPressed: () {
-          final addAppState = context
-              .findAncestorStateOfType<AddAppPageState>();
-          if (addAppState != null) addAppState.linkFn(url);
-        },
+        onPressed: () => _openAddApp(url),
         style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
         child: Text(tr('add')),
       ),
-      onTap: () {
-        final addAppState = context.findAncestorStateOfType<AddAppPageState>();
-        if (addAppState != null) addAppState.linkFn(url);
-      },
+      onTap: () => _openAddApp(url),
     );
   }
 
@@ -377,9 +381,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                 borderRadius: BorderRadius.circular(cardRadius),
                 onTap: () {
                   AppHaptics.selectionClick();
-                  final addAppState = context
-                      .findAncestorStateOfType<AddAppPageState>();
-                  if (addAppState != null) addAppState.linkFn(url);
+                  _openAddApp(url);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -434,9 +436,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                       FilledButton.tonal(
                         onPressed: () {
                           AppHaptics.selectionClick();
-                          final addAppState = context
-                              .findAncestorStateOfType<AddAppPageState>();
-                          if (addAppState != null) addAppState.linkFn(url);
+                          _openAddApp(url);
                         },
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
