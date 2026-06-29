@@ -172,6 +172,7 @@ class SettingsProvider with ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   // --- BehaviorSettingsProvider forwards ---
+  @Deprecated('Use BehaviorSettingsProvider.useShizuku')
   bool get useShizuku => prefs?.getBool('useShizuku') ?? false;
   bool get removeOnExternalUninstall =>
       prefs?.getBool('removeOnExternalUninstall') ?? false;
@@ -216,6 +217,7 @@ class SettingsProvider with ChangeNotifier {
   String get updateSettings => prefs?.getString('updateSettings') ?? '';
 
   // --- UpdateSettingsProvider forwards ---
+  @Deprecated('Use UpdateSettingsProvider.onlyCheckInstalledOrTrackOnlyApps')
   bool get onlyCheckInstalledOrTrackOnlyApps =>
       prefs?.getBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
   String get obtainiumReleaseChannel =>
@@ -224,6 +226,7 @@ class SettingsProvider with ChangeNotifier {
       prefs?.getString('autoUpdateRules') ?? '';
 
   // --- PlusSettingsProvider forwards ---
+  @Deprecated('Use PlusSettingsProvider.plusEnableGlassmorphism')
   bool get plusEnableGlassmorphism =>
       prefs?.getBool('plusEnableGlassmorphism') ?? true;
   bool get plusEnablePopupSlider =>
