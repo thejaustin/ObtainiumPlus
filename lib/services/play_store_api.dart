@@ -10,6 +10,7 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/main.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' show Random;
+import 'package:obtainium/protobuf/GooglePlay.pb.dart' as play_proto;
 
 // Domains the Play Store client is allowed to connect to.
 // Any redirect or response that targets outside this set is rejected.
@@ -166,6 +167,23 @@ class PlayStoreApi {
       talker.info('Play Store Details: $appId → ${response.statusCode}');
       if (response.statusCode == 200) {
         talker.debug('Play Store Details: ${response.bodyBytes.length} bytes');
+        try {
+          final wrapper = play_proto.ResponseWrapper.fromBuffer(response.bodyBytes);
+          if (wrapper.hasPayload() && wrapper.payload.hasDetailsResponse()) {
+            final appDetails = wrapper.payload.detailsResponse.item.details.appDetails;
+            return {
+              'appId': appId,
+              'status': 'fetched',
+              'title': appDetails.title,
+              'versionString': appDetails.versionString,
+              'versionCode': appDetails.versionCode.toInt(),
+              'recentChangesHtml': appDetails.recentChangesHtml,
+              'developerName': appDetails.developerName,
+            };
+          }
+        } catch (e) {
+          talker.warning('Failed to parse details protobuf: $e');
+        }
         return {'appId': appId, 'status': 'fetched'};
       }
       talker.warning('Play Store Details failed: ${response.statusCode}');
@@ -206,6 +224,24 @@ class PlayStoreApi {
       );
 
       if (response.statusCode == 200) {
+        try {
+          final wrapper = play_proto.ResponseWrapper.fromBuffer(response.bodyBytes);
+          if (wrapper.hasPayload() && wrapper.payload.hasDeliveryResponse()) {
+            final deliveryData = wrapper.payload.deliveryResponse.appDeliveryData;
+            final urls = <String>[];
+            if (deliveryData.hasDownloadUrl()) urls.add(deliveryData.downloadUrl);
+            for (final split in deliveryData.splitDeliveryData) {
+              if (split.hasDownloadUrl()) urls.add(split.downloadUrl);
+            }
+            if (urls.isNotEmpty) {
+              talker.info('Extracted ${urls.length} delivery URLs for $appId from protobuf');
+              return urls;
+            }
+          }
+        } catch (e) {
+          talker.warning('Failed to parse delivery protobuf: $e');
+        }
+
         final body = utf8.decode(response.bodyBytes, allowMalformed: true);
         final urls = _urlRegex
             .allMatches(body)
