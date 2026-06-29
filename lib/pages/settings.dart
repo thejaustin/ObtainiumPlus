@@ -121,7 +121,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           }
                         },
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
+                          borderRadius: BorderRadius.circular(plusSettings.plusGlobalCornerRadius),
                         ),
                         side: BorderSide.none,
                         showCheckmark: false,

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:provider/provider.dart';
 
@@ -625,16 +626,21 @@ class _GeneratedFormState extends State<GeneratedForm> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                               ),
-                              child: ChoiceChip(
-                                label: Text(e2.key),
-                                backgroundColor: Color(
-                                  e2.value.key,
-                                ).withOpacity(50/255),
-                                selectedColor: Color(e2.value.key),
-                                visualDensity: VisualDensity.compact,
-                                selected: e2.value.value,
-                                onSelected: (value) {
-                                  setState(() {
+                                child: ChoiceChip(
+                                  label: Text(e2.key),
+                                  backgroundColor: Color(
+                                    e2.value.key,
+                                  ).withOpacity(50/255),
+                                  selectedColor: Color(e2.value.key),
+                                  visualDensity: VisualDensity.compact,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      Provider.of<PlusSettingsProvider>(context, listen: false).plusGlobalCornerRadius.clamp(0.0, 16.0),
+                                    ),
+                                  ),
+                                  selected: e2.value.value,
+                                  onSelected: (value) {
+                                    setState(() {
                                     (values[fieldKey]
                                         as Map<String, MapEntry<int, bool>>)[e2
                                         .key] = MapEntry(

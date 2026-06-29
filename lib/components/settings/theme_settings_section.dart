@@ -510,6 +510,9 @@ class ThemeSettingsSection extends StatelessWidget {
                           settings.themeColor = color;
                         }
                       },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(settings.plusGlobalCornerRadius),
+                      ),
                     ),
                   );
                 }).toList(),
