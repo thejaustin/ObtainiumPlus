@@ -19,6 +19,7 @@ import 'package:obtainium/providers/installer_provider.dart';
 import 'package:obtainium/providers/source_config_provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
+import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_system_colors/dynamic_system_colors.dart';
@@ -340,6 +341,7 @@ class _ObtainiumState extends State<Obtainium> {
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final themeSettings = context.watch<ThemeSettingsProvider>();
     final appsProvider = context.read<AppsProvider>();
     final logs = context.read<LogsProvider>();
@@ -443,23 +445,21 @@ class _ObtainiumState extends State<Obtainium> {
             locale: context.locale,
             navigatorKey: globalNavigatorKey,
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              useMaterial3: true,
+            theme: ThemeBuilder.buildTheme(
               colorScheme: themeSettings.theme == ThemeSettings.dark
                   ? darkColorScheme
                   : lightColorScheme,
-              fontFamily: themeSettings.useSystemFont
-                  ? 'SystemFont'
-                  : 'Montserrat',
+              useSystemFont: themeSettings.useSystemFont,
+              plusEnableMaterialExpressive: plusSettings.plusEnableGlassmorphism,
+              cornerRadius: plusSettings.plusGlobalCornerRadius,
             ),
-            darkTheme: ThemeData(
-              useMaterial3: true,
+            darkTheme: ThemeBuilder.buildTheme(
               colorScheme: themeSettings.theme == ThemeSettings.light
                   ? lightColorScheme
                   : darkColorScheme,
-              fontFamily: themeSettings.useSystemFont
-                  ? 'SystemFont'
-                  : 'Montserrat',
+              useSystemFont: themeSettings.useSystemFont,
+              plusEnableMaterialExpressive: plusSettings.plusEnableGlassmorphism,
+              cornerRadius: plusSettings.plusGlobalCornerRadius,
             ),
             home: Shortcuts(
               shortcuts: <LogicalKeySet, Intent>{
