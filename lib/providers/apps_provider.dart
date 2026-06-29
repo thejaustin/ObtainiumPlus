@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
 
@@ -2268,6 +2269,27 @@ class AppsProvider with ChangeNotifier {
         .map((e) => [e, errorsMap[e].toString()])
         .toList();
     return errors;
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    _updateWidgetData();
+  }
+
+  Future<void> _updateWidgetData() async {
+    try {
+      int count = 0;
+      for (var entry in apps.entries) {
+        if (AppUpdateService.areVersionsDifferent(entry.value.app, entry.value.app.installedVersion, entry.value.app.latestVersion)) {
+          count++;
+        }
+      }
+      await HomeWidget.saveWidgetData<int>('pending_updates_count', count);
+      await HomeWidget.updateWidget(androidName: 'HomeWidgetProvider');
+    } catch (e) {
+      // Ignore widget update errors
+    }
   }
 
   void forceNotifyListeners() => notifyListeners();
