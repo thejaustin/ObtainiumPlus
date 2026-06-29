@@ -46,7 +46,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
       children: List.generate(visibleChildren.length, (index) {
         return Column(
           children: [
-            if (isCompact && visibleChildren[index] is ListTile)
+            if (isCompact)
               Theme(
                 data: Theme.of(context).copyWith(
                   visualDensity: VisualDensity.compact,
