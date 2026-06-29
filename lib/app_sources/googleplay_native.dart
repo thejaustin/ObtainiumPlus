@@ -46,10 +46,13 @@ class GooglePlayNative extends AppSource {
           await authProvider.clearBundle();
           talker.info('AuthBundle discarded after request (autoDiscardTokens)');
         }
+        final version = details['versionString'] as String? ?? 'Unknown';
+        final versionCode = details['versionCode'] as int? ?? 1;
+        final urls = await api.getDeliveryUrls(appId, versionCode);
         return APKDetails(
-          'Native Version', // TODO: parse version from Protobuf response
-          [],
-          AppNames(appId, 'Google Play (Native)'),
+          version,
+          urls,
+          AppNames(appId, details['developerName'] as String? ?? 'Google Play (Native)'),
         );
       }
     } on ObtainiumError {
