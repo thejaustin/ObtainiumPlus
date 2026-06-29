@@ -248,7 +248,8 @@ class ThemeBuilder {
   ) {
     return CardThemeData(
       color: colorScheme.surfaceContainerLow,
-      elevation: 0,
+      elevation: expressive ? 8 : 1,
+      shadowColor: colorScheme.shadow.withValues(alpha: expressive ? 0.15 : 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
           cornerRadius ?? (expressive ? 24 : 12),

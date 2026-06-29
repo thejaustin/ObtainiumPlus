@@ -655,12 +655,39 @@ class AppActionsFAB extends StatelessWidget {
             child: ConditionalBlur(
               enabled: settings.plusEnableGlassmorphism,
               sigma: 12,
-              child: FloatingActionButton.extended(
-                heroTag: 'fab_add',
-                onPressed: () => _showAddAppMenu(context),
-                icon: const Icon(Icons.add),
-                label: Text(tr('addApp')),
-                elevation: 4,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.tertiary,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: FloatingActionButton.extended(
+                  heroTag: 'fab_add',
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    _showAddAppMenu(context);
+                  },
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  hoverElevation: 0,
+                  focusElevation: 0,
+                  highlightElevation: 0,
+                  icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+                  label: Text(tr('addApp'), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                ),
               ),
             ),
           ),
@@ -671,11 +698,38 @@ class AppActionsFAB extends StatelessWidget {
     return Semantics(
       label: tr('addApp'),
       button: true,
-      child: FloatingActionButton.extended(
-        onPressed: () => _showAddAppMenu(context),
-        icon: const Icon(Icons.add),
-        label: Text(tr('addApp')),
-        elevation: 4,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.tertiary,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            AppHaptics.selectionClick();
+            _showAddAppMenu(context);
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          hoverElevation: 0,
+          focusElevation: 0,
+          highlightElevation: 0,
+          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+          label: Text(tr('addApp'), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+        ),
       ),
     );
   }
