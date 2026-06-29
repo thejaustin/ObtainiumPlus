@@ -487,7 +487,9 @@ class PlusFeaturesSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(
+                  settings.plusGlobalCornerRadius.clamp(0.0, 12.0),
+                ),
               ),
               child: Text(
                 tr('beta'),
