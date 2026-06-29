@@ -53,6 +53,10 @@ class ThemeBuilder {
       navigationBarTheme: _buildNavigationBarTheme(colorScheme),
       appBarTheme: _buildAppBarTheme(colorScheme),
       searchBarTheme: _buildSearchBarTheme(colorScheme),
+      elevatedButtonTheme: _buildElevatedButtonTheme(cornerRadius),
+      filledButtonTheme: _buildFilledButtonTheme(cornerRadius),
+      textButtonTheme: _buildTextButtonTheme(cornerRadius),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(cornerRadius),
       chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(colorScheme),
@@ -461,6 +465,50 @@ class ThemeBuilder {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
       elevation: 6,
+    );
+  }
+
+  static ElevatedButtonThemeData _buildElevatedButtonTheme(double? cornerRadius) {
+    if (cornerRadius == null) return const ElevatedButtonThemeData();
+    return ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
+        ),
+      ),
+    );
+  }
+
+  static FilledButtonThemeData _buildFilledButtonTheme(double? cornerRadius) {
+    if (cornerRadius == null) return const FilledButtonThemeData();
+    return FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
+        ),
+      ),
+    );
+  }
+
+  static TextButtonThemeData _buildTextButtonTheme(double? cornerRadius) {
+    if (cornerRadius == null) return const TextButtonThemeData();
+    return TextButtonThemeData(
+      style: TextButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
+        ),
+      ),
+    );
+  }
+
+  static OutlinedButtonThemeData _buildOutlinedButtonTheme(double? cornerRadius) {
+    if (cornerRadius == null) return const OutlinedButtonThemeData();
+    return OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
+        ),
+      ),
     );
   }
 }
