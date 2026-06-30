@@ -59,13 +59,6 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusShowQuickActions =>
-      _prefs?.getBool('plusShowQuickActions') ?? true;
-  set plusShowQuickActions(bool val) {
-    _prefs?.setBool('plusShowQuickActions', val);
-    notifyListeners();
-  }
-
   bool get plusShowStatusHub =>
       _prefs?.getBool('plusShowStatusHub') ?? true;
   set plusShowStatusHub(bool val) {

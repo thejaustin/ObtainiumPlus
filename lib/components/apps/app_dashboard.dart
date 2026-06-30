@@ -1,20 +1,14 @@
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/pages/home.dart';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:obtainium/components/omnibar.dart';
-import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_update_service.dart';
-import 'package:obtainium/pages/import_export.dart';
-import 'package:obtainium/pages/logs_page.dart';
-import 'package:obtainium/pages/statistics.dart';
-import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
@@ -288,15 +282,6 @@ class _AppDashboardState extends State<AppDashboard>
               ),
             ),
 
-          // Quick Actions Grid
-          if (appsProvider.plusSettings.plusShowQuickActions) ...[
-            _animated(
-              _updatesAnim,
-              _buildQuickActionsGrid(context, radius, colorScheme),
-            ),
-            const SizedBox(height: 24),
-          ],
-
           // Filter mode segmented button — slides in after cards
           _animated(
             _segmentedAnim,
@@ -441,7 +426,7 @@ class _AppDashboardState extends State<AppDashboard>
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: app.icon != null
-                ? Image.memory(app.icon!, fit: BoxFit.contain)
+                ? Image.memory(app.icon!, fit: BoxFit.contain, filterQuality: FilterQuality.medium)
                 : const Icon(Icons.apps_rounded, size: 24),
           ),
         ),
@@ -498,6 +483,7 @@ class _AppDashboardState extends State<AppDashboard>
                     fit: BoxFit.cover,
                     width: 64,
                     height: 64,
+                    filterQuality: FilterQuality.medium,
                   ),
                 )
               else
@@ -529,106 +515,6 @@ class _AppDashboardState extends State<AppDashboard>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildQuickActionsGrid(
-    BuildContext context,
-    double radius,
-    ColorScheme colorScheme,
-  ) {
-    final itemRadius = (radius * 0.5).clamp(12.0, 20.0);
-    final actions = [
-      (
-        icon: Icons.add_rounded,
-        label: tr('addApp'),
-        onTap: () {
-          AppHaptics.selectionClick();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddAppPage()),
-          );
-        }
-      ),
-      (
-        icon: Icons.explore_rounded,
-        label: tr('discover'),
-        onTap: () {
-          AppHaptics.selectionClick();
-          final homeState = context.findAncestorStateOfType<HomePageState>();
-          homeState?.switchToPage(2);
-        }
-      ),
-      (
-        icon: Icons.bar_chart_rounded,
-        label: tr('statistics'),
-        onTap: () {
-          AppHaptics.selectionClick();
-          pushRoute(context, const StatisticsPage());
-        }
-      ),
-      (
-        icon: Icons.import_export_rounded,
-        label: tr('importExport'),
-        onTap: () {
-          AppHaptics.selectionClick();
-          pushRoute(context, const ImportExportPage());
-        }
-      ),
-      (
-        icon: Icons.bug_report_outlined,
-        label: tr('logs'),
-        onTap: () {
-          AppHaptics.selectionClick();
-          pushRoute(context, const LogsPage());
-        }
-      ),
-      (
-        icon: Icons.history_edu_rounded,
-        label: tr('viewChangelog'),
-        onTap: () {
-          AppHaptics.selectionClick();
-          pushRoute(context, const ChangelogPage());
-        }
-      ),
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.1,
-      ),
-      itemCount: actions.length,
-      itemBuilder: (context, index) {
-        final action = actions[index];
-        return Material(
-          color: colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(itemRadius),
-          child: InkWell(
-            onTap: action.onTap,
-            borderRadius: BorderRadius.circular(itemRadius),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(action.icon, color: colorScheme.primary, size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  action.label,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -691,9 +577,15 @@ class _AppDashboardState extends State<AppDashboard>
               Expanded(
                 child: FilledButton.tonalIcon(
                   onPressed: () {
-                    // Navigate to export page with selected IDs
-                    // (Assuming ImportExportPage supports this or handled elsewhere)
                     AppHaptics.selectionClick();
+                    final urls = appsProvider.selectedAppIds
+                        .map((id) => appsProvider.apps[id]?.app.url)
+                        .whereType<String>()
+                        .join('\n');
+                    if (urls.isNotEmpty) {
+                      Share.share(urls, subject: 'Obtainium - ${tr('appsString')}');
+                    }
+                    appsProvider.clearSelection();
                   },
                   icon: const Icon(Icons.ios_share_rounded, size: 18),
                   label: Text(tr('share')),

@@ -983,6 +983,7 @@ Widget buildRepoRenameWarning({
                               width: small ? 80 : 120,
                               fit: BoxFit.contain,
                               gaplessPlayback: true,
+                              filterQuality: FilterQuality.medium,
                             ),
                           ),
                         ),

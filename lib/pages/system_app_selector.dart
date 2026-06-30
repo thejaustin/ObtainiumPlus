@@ -606,7 +606,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     if (icon != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.memory(icon, width: size, height: size, fit: BoxFit.cover),
+        child: Image.memory(icon, width: size, height: size, fit: BoxFit.cover, filterQuality: FilterQuality.medium),
       );
     }
     return AppIconShimmer(size: size);

@@ -26,6 +26,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _searchQuery = '';
   bool _showIntervalLabel = true;
   late Future<AndroidDeviceInfo> _androidInfoFuture;
@@ -45,6 +46,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -55,6 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           CustomAppBar(
             title: tr('settings'),
@@ -118,6 +121,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         onSelected: (selected) {
                           if (selected) {
                             setState(() => _selectedSectionIndex = entry.key);
+                            _scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                            );
                           }
                         },
                         shape: RoundedRectangleBorder(
