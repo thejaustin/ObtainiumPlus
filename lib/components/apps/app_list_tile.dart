@@ -338,10 +338,7 @@ class AppListTile extends StatelessWidget {
             horizontal: isCompact ? 4 : 8,
             vertical: isCompact ? 2 : 6,
           ),
-          child: ConditionalBlur(
-            enabled: plusSettings.plusEnableGlassmorphism,
-            sigma: 12,
-            child: Material(
+          child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onLongPress: onLongPress,
@@ -408,6 +405,14 @@ class AppListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius),
                     child: Stack(
                       children: [
+                        if (plusSettings.plusEnableGlassmorphism)
+                          Positioned.fill(
+                            child: ConditionalBlur(
+                              enabled: true,
+                              sigma: 12,
+                              child: Container(color: Colors.transparent),
+                            ),
+                          ),
                         if (plusSettings.plusEnableGlassmorphism)
                           Positioned.fill(
                             child: Container(
@@ -607,7 +612,6 @@ class AppListTile extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
           ),
         ),
       ),

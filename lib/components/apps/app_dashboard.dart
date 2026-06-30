@@ -3,13 +3,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_update_service.dart';
-import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
@@ -39,8 +37,6 @@ class _AppDashboardState extends State<AppDashboard>
     with SingleTickerProviderStateMixin {
   late AnimationController _entranceController;
   late Animation<double> _card0Anim;
-  late Animation<double> _card1Anim;
-  late Animation<double> _card2Anim;
   late Animation<double> _segmentedAnim;
   late Animation<double> _updatesAnim;
 
@@ -57,14 +53,6 @@ class _AppDashboardState extends State<AppDashboard>
     _card0Anim = CurvedAnimation(
       parent: _entranceController,
       curve: const Interval(0.0, 0.55, curve: curve),
-    );
-    _card1Anim = CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.08, 0.63, curve: curve),
-    );
-    _card2Anim = CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.16, 0.71, curve: curve),
     );
     _segmentedAnim = CurvedAnimation(
       parent: _entranceController,
@@ -122,15 +110,6 @@ class _AppDashboardState extends State<AppDashboard>
 
     final pinnedApps = apps.where((app) => app.app.pinned).toList();
 
-    DateTime? lastCheck;
-    for (var app in apps) {
-      if (app.app.lastUpdateCheck != null) {
-        if (lastCheck == null || app.app.lastUpdateCheck!.isAfter(lastCheck)) {
-          lastCheck = app.app.lastUpdateCheck;
-        }
-      }
-    }
-
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
@@ -157,97 +136,6 @@ class _AppDashboardState extends State<AppDashboard>
               const SizedBox(height: 20),
             ],
 
-            // Summary cards — staggered M3 entrance
-            if (appsProvider.plusSettings.plusShowStatusHub)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                children: [
-                  _animated(
-                    _card0Anim,
-                    _buildSummaryCard(
-                      context,
-                      icon: Icons.apps_rounded,
-                      label: tr('appsString'),
-                      value: totalApps.toString(),
-                      color: colorScheme.primary,
-                      onTap: () => widget.onFilterChanged('all'),
-                      onLongPress: () {
-                        AppHaptics.heavyImpact();
-                        appsProvider.selectAll();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  _animated(
-                    _card1Anim,
-                    _buildSummaryCard(
-                      context,
-                      icon: Icons.update_rounded,
-                      label: tr('updates'),
-                      value: updatesAvailable.toString(),
-                      color: updatesAvailable > 0
-                          ? colorScheme.error
-                          : colorScheme.secondary,
-                      onTap: () {
-                        if (updatesAvailable > 0) {
-                          widget.onFilterChanged('updates');
-                        } else {
-                          widget.onCheckUpdates();
-                        }
-                      },
-                      onLongPress: updatesAvailable > 0
-                          ? () {
-                              AppHaptics.heavyImpact();
-                              appsProvider.downloadAndInstallLatestApps(
-                                updateApps.map((e) => e.app.id).toList(),
-                                context,
-                              );
-                            }
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  _animated(
-                    _card2Anim,
-                    _buildSummaryCard(
-                      context,
-                      icon: Icons.history_rounded,
-                      label: tr('lastCheck'),
-                      value: lastCheck != null
-                          ? DateFormat.Md().add_jm().format(lastCheck.toLocal())
-                          : tr('never'),
-                      color: colorScheme.tertiary,
-                      onTap: widget.onCheckUpdates,
-                    ),
-                  ),
-
-                  // Storage Hub Card
-                  const SizedBox(width: 12),
-                  _animated(
-                    _updatesAnim,
-                    _buildSummaryCard(
-                      context,
-                      icon: Icons.storage_rounded,
-                      label: tr('storage'),
-                      value: tr('clean'),
-                      color: colorScheme.secondary,
-                      onTap: () async {
-                        AppHaptics.selectionClick();
-                        final count = await AppFileService.clearAllDownloadedApks();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(tr('clearedXApks', args: [count.toString()])),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
 
           const SizedBox(height: 24),
@@ -611,54 +499,4 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    VoidCallback? onTap,
-    VoidCallback? onLongPress,
-  }) {
-    final settings = context.watch<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
-    final itemRadius = (radius * 0.7).clamp(12.0, 24.0);
-
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(itemRadius),
-      child: Container(
-        width: 110,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(itemRadius),
-          border: Border.all(color: color.withOpacity(0.15)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
