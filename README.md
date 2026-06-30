@@ -2,7 +2,7 @@
 
 Get Android app updates straight from the source, styled with modern aesthetics and advanced developer options.
 
-Obtainium+ is a enhanced, telemetry-free fork of the original Obtainium client. It allows you to install and update apps directly from their releases pages, receive notifications when new releases are made available, and adds advanced diagnostic logging, reactive layout controls, and Google Play Store mirror integration.
+Obtainium+ is an enhanced, telemetry-free fork of the original Obtainium client. It allows you to install and update apps directly from their releases pages, receive notifications when new releases are made available, and adds advanced diagnostic logging, reactive layout controls, and Google Play Store mirror integration.
 
 ---
 
@@ -37,37 +37,7 @@ Obtainium+ is a enhanced, telemetry-free fork of the original Obtainium client. 
 
 ---
 
-## Currently supported App sources:
-- Open Source - General:
-  - [GitHub](https://github.com/)
-  - [GitLab](https://gitlab.com/)
-  - [Forgejo](https://forgejo.org/) ([Codeberg](https://codeberg.org/))
-  - [F-Droid](https://f-droid.org/)
-  - Third Party F-Droid Repos
-  - [IzzyOnDroid](https://android.izzysoft.de/)
-  - [SourceHut](https://git.sr.ht/)
-- Other - General:
-  - [APKPure](https://apkpure.net/)
-  - [Aptoide](https://aptoide.com/)
-  - [Uptodown](https://uptodown.com/)
-  - [Huawei AppGallery](https://appgallery.huawei.com/)
-  - [Tencent App Store](https://sj.qq.com/)
-  - [vivo App Store (CN)](https://h5.appstore.vivo.com.cn/)
-  - [RuStore](https://rustore.ru/)
-  - [Farsroid](https://www.farsroid.com)
-  - [CoolApk](https://coolapk.com/)
-  - [RockMods](https://rockmods.net/)
-  - [LiteAPKs](https://liteapks.com/)
-  - [APK4Free](https://apk4free.net/)
-  - Jenkins Jobs
-  - [APKMirror](https://apkmirror.com/) (Track-Only)
-- Other - App-Specific:
-  - [Telegram App](https://telegram.org/)
-  - [Neutron Code](https://neutroncode.com/)
-- Direct APK Link
-- "HTML" (Fallback): Any other URL that returns an HTML page with links to APK files
-
-## Finding App Configurations
+## App Configurations
 
 You can find crowdsourced app configurations at [apps.obtainium.imranr.dev](https://apps.obtainium.imranr.dev).
 
@@ -96,7 +66,3 @@ Verification info:
 | <img src="./assets/screenshots/1.apps.png" alt="Apps Page" /> | <img src="./assets/screenshots/2.dark_theme.png" alt="Dark Theme" />           | <img src="./assets/screenshots/3.material_you.png" alt="Material You" />    |
 | ------------------------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | <img src="./assets/screenshots/4.app.png" alt="App Page" />   | <img src="./assets/screenshots/5.app_opts.png" alt="App Options" /> | <img src="./assets/screenshots/6.app_webview.png" alt="App Web View" /> |
-
----
-
-— Antigravity (Gemini Agent)
