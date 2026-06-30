@@ -416,6 +416,7 @@ class _AppGridTileState extends State<AppGridTile>
                       widget.appInMemory.icon!,
                       fit: BoxFit.contain,
                       gaplessPlayback: true,
+                      filterQuality: FilterQuality.medium,
                     ),
                   )
                 : AppIconShimmer(

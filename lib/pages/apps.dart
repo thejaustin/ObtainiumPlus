@@ -1,3 +1,4 @@
+import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/pages/home.dart';
@@ -227,7 +228,7 @@ class AppsPageState extends State<AppsPage> {
       return appsProvider
           .checkUpdates()
           .catchError((e) {
-            showError(e is Map ? e['errors'] : e, context);
+            if (mounted) showError(e is Map ? e['errors'] : e, context);
             return <App>[];
           })
           .whenComplete(() {
@@ -570,11 +571,17 @@ class AppsPageState extends State<AppsPage> {
           future: appsProvider.updateAppIcon(listedApps[appIndex].app.id),
           builder: (ctx, val) {
             return listedApps[appIndex].icon != null
-                ? Image.memory(
-                    listedApps[appIndex].icon!,
-                    gaplessPlayback: true,
-                    opacity: AlwaysStoppedAnimation(
-                      listedApps[appIndex].installedInfo == null ? 0.6 : 1,
+                ? SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Image.memory(
+                      listedApps[appIndex].icon!,
+                      gaplessPlayback: true,
+                      filterQuality: FilterQuality.medium,
+                      fit: BoxFit.contain,
+                      opacity: AlwaysStoppedAnimation(
+                        listedApps[appIndex].installedInfo == null ? 0.6 : 1,
+                      ),
                     ),
                   )
                 : Row(
@@ -1397,6 +1404,7 @@ class AppsPageState extends State<AppsPage> {
 
     getFilterButtonsRow() {
       var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
+      final isGrid = viewSettings.globalViewMode == ViewMode.grid;
       return Row(
         children: [
           getSelectAllButton(),
@@ -1417,6 +1425,16 @@ class AppsPageState extends State<AppsPage> {
               isFilterOff ? Icons.search_rounded : Icons.search_off_rounded,
             ),
           ),
+          IconButton(
+            color: Theme.of(context).colorScheme.primary,
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
+            tooltip: isGrid ? tr('listView') : tr('gridView'),
+            onPressed: () {
+              viewSettings.globalViewMode =
+                  isGrid ? ViewMode.list : ViewMode.grid;
+            },
+            icon: Icon(isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded),
+          ),
           const SizedBox(width: 10),
           const VerticalDivider(),
           Expanded(
@@ -1430,6 +1448,53 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getDisplayedList() {
+      final isGrid = viewSettings.globalViewMode == ViewMode.grid;
+
+      if (isGrid) {
+        final width = MediaQuery.of(context).size.width;
+        final columnCount = viewSettings.gridColumnCount != 0
+            ? viewSettings.gridColumnCount
+            : width >= 600 ? 4 : width >= 400 ? 3 : 2;
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          sliver: SliverGrid(
+          delegate: SliverChildBuilderDelegate((ctx, index) {
+            final app = listedApps[index];
+            return AppGridTile(
+              appInMemory: app,
+              isSelected: selectedAppIds.contains(app.app.id),
+              hasUpdate: existingUpdates.contains(app.app.id),
+              onTap: () {
+                if (selectedAppIds.isNotEmpty) {
+                  toggleAppSelected(app.app);
+                } else {
+                  AppHaptics.selectionClick();
+                  showDraggableModalBottomSheet(
+                    context: context,
+                    builder: (context, controller) => AppPage(
+                      appId: app.app.id,
+                      isModal: true,
+                      scrollController: controller,
+                    ),
+                  );
+                }
+              },
+              onLongPress: () {
+                AppHaptics.selectionClick();
+                toggleAppSelected(app.app);
+              },
+            );
+          }, childCount: listedApps.length),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columnCount,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.8,
+          ),
+          ),
+        );
+      }
+
       return viewSettings.groupByCategory &&
               !(listedCategories.isEmpty ||
                   (listedCategories.length == 1 && listedCategories[0] == null))
@@ -1470,7 +1535,6 @@ class AppsPageState extends State<AppsPage> {
               if (plusSettings.plusEnableHomeDashboard)
                 SliverToBoxAdapter(
                   child: AppDashboard(
-                    key: widget.key,
                     currentFilterMode: filter.statusFilter.isEmpty ? 'all' : filter.statusFilter.first,
                     onFilterChanged: (newFilter) {
                       setState(() {

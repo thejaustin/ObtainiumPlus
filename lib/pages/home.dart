@@ -429,7 +429,15 @@ class HomePageState extends State<HomePage> {
                     }
                     return KeyEventResult.ignored;
                   },
-                  child: NavigationBar(
+                  child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.4),
+                    ),
+                    NavigationBar(
                     elevation: 0,
                     backgroundColor: Colors.transparent,
                     indicatorColor: Theme.of(context).colorScheme.primaryContainer,
@@ -450,7 +458,9 @@ class HomePageState extends State<HomePage> {
                     },
                     selectedIndex: currentIndex,
                   ),
+                  ],
                 ),
+              ),
               ),
       ),
     );

@@ -244,16 +244,6 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusShowStatusHub,
                       onChanged: (val) => settings.plusShowStatusHub = val,
                     ),
-                  if (_matches(tr('plusShowQuickActions')))
-                    _buildFeatureToggle(
-                      context,
-                      settings,
-                      icon: Icons.grid_view_rounded,
-                      title: tr('plusShowQuickActions'),
-                      subtitle: tr('plusShowQuickActionsDescription'),
-                      value: settings.plusShowQuickActions,
-                      onChanged: (val) => settings.plusShowQuickActions = val,
-                    ),
                   if (_matches(tr('plusHomeDashboard')))
                     _buildFeatureToggle(
                       context,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
-import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/app.dart';
@@ -163,7 +162,7 @@ class AppListTile extends StatelessWidget {
           child: appInMemory.icon != null
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(itemRadius),
-                  child: Image.memory(appInMemory.icon!, fit: BoxFit.cover),
+                  child: Image.memory(appInMemory.icon!, fit: BoxFit.cover, filterQuality: FilterQuality.medium),
                 )
               : Icon(
                   Icons.apps_rounded,

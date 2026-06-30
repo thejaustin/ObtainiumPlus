@@ -335,7 +335,7 @@ class _CommandCenterState extends State<CommandCenter> {
                   child: app.icon != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                          child: Image.memory(app.icon!, fit: BoxFit.cover),
+                          child: Image.memory(app.icon!, fit: BoxFit.cover, filterQuality: FilterQuality.medium),
                         )
                       : const Icon(Icons.apps_rounded),
                 ),

@@ -236,6 +236,13 @@ class AppsViewSettingsSection extends StatelessWidget {
             initiallyExpanded: false,
             children: iconWidgets,
           ),
+        if (viewWidgets.any((w) => w is! SizedBox))
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('viewMode'),
+            isExpandable: true,
+            initiallyExpanded: false,
+            children: viewWidgets,
+          ),
         if (displayWidgets.any((w) => w is! SizedBox))
           GenericBooleanControlGrid<ViewSettingsProvider>(
             title: tr('appTileDisplay'),
