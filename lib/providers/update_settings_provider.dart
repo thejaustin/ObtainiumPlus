@@ -111,7 +111,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get checkOnStart {
-    return prefs?.getBool('checkOnStart') ?? false;
+    return prefs?.safeBool('checkOnStart') ?? false;
   }
 
   set checkOnStart(bool checkOnStart) {
@@ -120,7 +120,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get onlyCheckInstalledOrTrackOnlyApps {
-    return prefs?.getBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
+    return prefs?.safeBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
   }
 
   set onlyCheckInstalledOrTrackOnlyApps(bool val) {
@@ -129,7 +129,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get checkUpdateOnDetailPage {
-    return prefs?.getBool('checkUpdateOnDetailPage') ?? true;
+    return prefs?.safeBool('checkUpdateOnDetailPage') ?? true;
   }
 
   set checkUpdateOnDetailPage(bool show) {
@@ -138,7 +138,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get enableBackgroundUpdates {
-    return prefs?.getBool('enableBackgroundUpdates') ?? true;
+    return prefs?.safeBool('enableBackgroundUpdates') ?? true;
   }
 
   set enableBackgroundUpdates(bool val) {
@@ -147,7 +147,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get bgUpdatesOnWiFiOnly {
-    return prefs?.getBool('bgUpdatesOnWiFiOnly') ?? false;
+    return prefs?.safeBool('bgUpdatesOnWiFiOnly') ?? false;
   }
 
   set bgUpdatesOnWiFiOnly(bool val) {
@@ -156,7 +156,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get bgUpdatesWhileChargingOnly {
-    return prefs?.getBool('bgUpdatesWhileChargingOnly') ?? false;
+    return prefs?.safeBool('bgUpdatesWhileChargingOnly') ?? false;
   }
 
   set bgUpdatesWhileChargingOnly(bool val) {
@@ -165,7 +165,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get useUpdateSchedule {
-    return prefs?.getBool('useUpdateSchedule') ?? false;
+    return prefs?.safeBool('useUpdateSchedule') ?? false;
   }
 
   set useUpdateSchedule(bool val) {
@@ -192,7 +192,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   List<int> get updateScheduleDays {
-    String? stored = prefs?.getString('updateScheduleDays');
+    String? stored = prefs?.safeString('updateScheduleDays');
     if (stored == null) return [1, 2, 3, 4, 5, 6, 7];
     return stored.split(',').map((e) => int.tryParse(e) ?? 1).toList();
   }
@@ -248,7 +248,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get useFGService {
-    return prefs?.getBool('useFGService') ?? false;
+    return prefs?.safeBool('useFGService') ?? false;
   }
 
   set useFGService(bool val) {
@@ -257,7 +257,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   String get obtainiumReleaseChannel {
-    return prefs?.getString('obtainiumReleaseChannel') ?? 'latest';
+    return prefs?.safeString('obtainiumReleaseChannel') ?? 'latest';
   }
 
   set obtainiumReleaseChannel(String channel) {
@@ -266,7 +266,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   Map<String, dynamic> get autoUpdateRules {
-    String? stored = prefs?.getString('autoUpdateRules');
+    String? stored = prefs?.safeString('autoUpdateRules');
     if (stored == null) return {};
     try {
       return jsonDecode(stored) as Map<String, dynamic>;
@@ -282,7 +282,7 @@ class UpdateSettingsProvider with ChangeNotifier {
 
   // --- Offline queue (app IDs to retry when back online) ---
   List<String> get offlineQueue {
-    final stored = prefs?.getString('offlineQueue');
+    final stored = prefs?.safeString('offlineQueue');
     if (stored == null) return [];
     try {
       return List<String>.from(jsonDecode(stored) as List);
@@ -298,7 +298,7 @@ class UpdateSettingsProvider with ChangeNotifier {
 
   // --- Persistent retry queue (app IDs with backoff info) ---
   Map<String, dynamic> get retryQueue {
-    final stored = prefs?.getString('retryQueue');
+    final stored = prefs?.safeString('retryQueue');
     if (stored == null) return {};
     try {
       return Map<String, dynamic>.from(jsonDecode(stored) as Map);

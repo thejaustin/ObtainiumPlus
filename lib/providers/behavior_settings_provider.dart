@@ -18,7 +18,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get useShizuku {
-    return prefs?.getBool('useShizuku') ?? false;
+    return prefs?.safeBool('useShizuku') ?? false;
   }
 
   set useShizuku(bool useShizuku) {
@@ -41,7 +41,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get removeOnExternalUninstall {
-    return prefs?.getBool('removeOnExternalUninstall') ?? false;
+    return prefs?.safeBool('removeOnExternalUninstall') ?? false;
   }
 
   set removeOnExternalUninstall(bool show) {
@@ -50,7 +50,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get disablePageTransitions {
-    return prefs?.getBool('disablePageTransitions') ?? false;
+    return prefs?.safeBool('disablePageTransitions') ?? false;
   }
 
   set disablePageTransitions(bool show) {
@@ -59,7 +59,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get reversePageTransitions {
-    return prefs?.getBool('reversePageTransitions') ?? false;
+    return prefs?.safeBool('reversePageTransitions') ?? false;
   }
 
   set reversePageTransitions(bool show) {
@@ -68,7 +68,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   Future<Uri?> getExportDir() async {
-    var uriString = prefs?.getString('exportDir');
+    var uriString = prefs?.safeString('exportDir');
     if (uriString != null) {
       Uri? uri = Uri.parse(uriString);
       if (!(await saf.canRead(uri) ?? false) ||
@@ -104,7 +104,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get autoExportOnChanges {
-    return prefs?.getBool('autoExportOnChanges') ?? false;
+    return prefs?.safeBool('autoExportOnChanges') ?? false;
   }
 
   set autoExportOnChanges(bool val) {
@@ -116,7 +116,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
     try {
       return prefs?.safeInt('exportSettings') ?? 1;
     } catch (e) {
-      var val = prefs?.getBool('exportSettings') == true ? 1 : 0;
+      var val = prefs?.safeBool('exportSettings') == true ? 1 : 0;
       prefs?.setInt('exportSettings', val);
       return val;
     }
@@ -128,7 +128,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get parallelDownloads {
-    return prefs?.getBool('parallelDownloads') ?? true;
+    return prefs?.safeBool('parallelDownloads') ?? true;
   }
 
   set parallelDownloads(bool val) {
@@ -137,7 +137,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get beforeNewInstallsShareToAppVerifier {
-    return prefs?.getBool('beforeNewInstallsShareToAppVerifier') ?? true;
+    return prefs?.safeBool('beforeNewInstallsShareToAppVerifier') ?? true;
   }
 
   set beforeNewInstallsShareToAppVerifier(bool val) {
@@ -146,7 +146,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get shizukuPretendToBeGooglePlay {
-    return prefs?.getBool('shizukuPretendToBeGooglePlay') ?? false;
+    return prefs?.safeBool('shizukuPretendToBeGooglePlay') ?? false;
   }
 
   set shizukuPretendToBeGooglePlay(bool val) {
@@ -164,7 +164,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get highlightTouchTargets {
-    return prefs?.getBool('highlightTouchTargets') ?? false;
+    return prefs?.safeBool('highlightTouchTargets') ?? false;
   }
 
   set highlightTouchTargets(bool val) {
@@ -173,7 +173,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get enableHapticFeedback {
-    return prefs?.getBool('enableHapticFeedback') ?? true;
+    return prefs?.safeBool('enableHapticFeedback') ?? true;
   }
 
   set enableHapticFeedback(bool enabled) {
@@ -183,7 +183,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get enableSwipeGestures {
-    return prefs?.getBool('enableSwipeGestures') ?? true;
+    return prefs?.safeBool('enableSwipeGestures') ?? true;
   }
 
   set enableSwipeGestures(bool enabled) {
@@ -192,7 +192,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   bool get enableUndoForAppRemoval {
-    return prefs?.getBool('enableUndoForAppRemoval') ?? true;
+    return prefs?.safeBool('enableUndoForAppRemoval') ?? true;
   }
 
   set enableUndoForAppRemoval(bool enabled) {
@@ -201,16 +201,16 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   AppSwipeAction get swipeRightAction =>
-      AppSwipeAction.values[prefs?.safeInt('swipeRightAction') ??
-          AppSwipeAction.update.index];
+      prefs?.safeEnum('swipeRightAction', AppSwipeAction.values) ??
+      AppSwipeAction.update;
   set swipeRightAction(AppSwipeAction val) {
     prefs?.setInt('swipeRightAction', val.index);
     notifyListeners();
   }
 
   AppSwipeAction get swipeLeftAction =>
-      AppSwipeAction.values[prefs?.safeInt('swipeLeftAction') ??
-          AppSwipeAction.togglePin.index];
+      prefs?.safeEnum('swipeLeftAction', AppSwipeAction.values) ??
+      AppSwipeAction.togglePin;
   set swipeLeftAction(AppSwipeAction val) {
     prefs?.setInt('swipeLeftAction', val.index);
     notifyListeners();
@@ -218,7 +218,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   /// Preferred update source: 'direct', 'play_store', 'aurora'
   String get preferredUpdateSource {
-    final val = prefs?.getString('preferredUpdateSource') ?? 'direct';
+    final val = prefs?.safeString('preferredUpdateSource') ?? 'direct';
     // Migrate deprecated 'github' and 'apkpure' values to 'direct'.
     if (val == 'github' || val == 'apkpure') {
       prefs?.setString('preferredUpdateSource', 'direct');
@@ -234,7 +234,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   /// Allow third-party sources for updates
   bool get allowThirdPartySources {
-    return prefs?.getBool('allowThirdPartySources') ?? true;
+    return prefs?.safeBool('allowThirdPartySources') ?? true;
   }
 
   set allowThirdPartySources(bool val) {
@@ -244,7 +244,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   /// Use app links for Google Play Store
   bool get usePlayStoreAppLinks {
-    return prefs?.getBool('usePlayStoreAppLinks') ?? true;
+    return prefs?.safeBool('usePlayStoreAppLinks') ?? true;
   }
 
   set usePlayStoreAppLinks(bool val) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -49,7 +50,7 @@ class PluginProvider with ChangeNotifier {
 
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
-    final data = _prefs?.getStringList('installed_plugins') ?? [];
+    final data = _prefs?.safeStringList('installed_plugins') ?? [];
     _plugins.addAll(data.map((e) => ObtainiumPlugin.fromJson(jsonDecode(e))));
     notifyListeners();
   }

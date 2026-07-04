@@ -12,133 +12,133 @@ class PlusSettingsProvider with ChangeNotifier {
 
   // Obtainium+ Features (Master Toggle)
   bool get enableAllPlusFeatures =>
-      _prefs?.getBool('enableAllPlusFeatures') ?? true;
+      _prefs?.safeBool('enableAllPlusFeatures') ?? true;
   set enableAllPlusFeatures(bool val) {
     _prefs?.setBool('enableAllPlusFeatures', val);
     notifyListeners();
   }
 
   // Visual & UI Enhancements
-  bool get plusEnableGridView => _prefs?.getBool('plusEnableGridView') ?? true;
+  bool get plusEnableGridView => _prefs?.safeBool('plusEnableGridView') ?? true;
   set plusEnableGridView(bool val) {
     _prefs?.setBool('plusEnableGridView', val);
     notifyListeners();
   }
 
   bool get plusEnableQuickFilters =>
-      _prefs?.getBool('plusEnableQuickFilters') ?? true;
+      _prefs?.safeBool('plusEnableQuickFilters') ?? true;
   set plusEnableQuickFilters(bool val) {
     _prefs?.setBool('plusEnableQuickFilters', val);
     notifyListeners();
   }
 
   bool get plusEnableIconCaching =>
-      _prefs?.getBool('plusEnableIconCaching') ?? true;
+      _prefs?.safeBool('plusEnableIconCaching') ?? true;
   set plusEnableIconCaching(bool val) {
     _prefs?.setBool('plusEnableIconCaching', val);
     notifyListeners();
   }
 
   bool get plusEnableEnhancedAnimations =>
-      _prefs?.getBool('plusEnableEnhancedAnimations') ?? true;
+      _prefs?.safeBool('plusEnableEnhancedAnimations') ?? true;
   set plusEnableEnhancedAnimations(bool val) {
     _prefs?.setBool('plusEnableEnhancedAnimations', val);
     notifyListeners();
   }
 
   bool get plusEnableMaterialExpressive =>
-      _prefs?.getBool('plusEnableMaterialExpressive') ?? true;
+      _prefs?.safeBool('plusEnableMaterialExpressive') ?? true;
   set plusEnableMaterialExpressive(bool val) {
     _prefs?.setBool('plusEnableMaterialExpressive', val);
     notifyListeners();
   }
 
   String get plusLastSeenVersion =>
-      _prefs?.getString('plusLastSeenVersion') ?? '';
+      _prefs?.safeString('plusLastSeenVersion') ?? '';
   set plusLastSeenVersion(String val) {
     _prefs?.setString('plusLastSeenVersion', val);
     notifyListeners();
   }
 
   bool get plusShowStatusHub =>
-      _prefs?.getBool('plusShowStatusHub') ?? true;
+      _prefs?.safeBool('plusShowStatusHub') ?? true;
   set plusShowStatusHub(bool val) {
     _prefs?.setBool('plusShowStatusHub', val);
     notifyListeners();
   }
 
   bool get plusUseCompactSettings =>
-      _prefs?.getBool('plusUseCompactSettings') ?? false;
+      _prefs?.safeBool('plusUseCompactSettings') ?? false;
   set plusUseCompactSettings(bool val) {
     _prefs?.setBool('plusUseCompactSettings', val);
     notifyListeners();
   }
 
   bool get plusShowAdvancedSettings =>
-      _prefs?.getBool('plusShowAdvancedSettings') ?? true;
+      _prefs?.safeBool('plusShowAdvancedSettings') ?? true;
   set plusShowAdvancedSettings(bool val) {
     _prefs?.setBool('plusShowAdvancedSettings', val);
     notifyListeners();
   }
 
   bool get plusEnableExperimentalCustomization =>
-      _prefs?.getBool('plusEnableExperimentalCustomization') ?? false;
+      _prefs?.safeBool('plusEnableExperimentalCustomization') ?? false;
   set plusEnableExperimentalCustomization(bool val) {
     _prefs?.setBool('plusEnableExperimentalCustomization', val);
     notifyListeners();
   }
 
   bool get plusEnableUpdateOwnership =>
-      _prefs?.getBool('plusEnableUpdateOwnership') ?? true;
+      _prefs?.safeBool('plusEnableUpdateOwnership') ?? true;
   set plusEnableUpdateOwnership(bool val) {
     _prefs?.setBool('plusEnableUpdateOwnership', val);
     notifyListeners();
   }
 
   bool get plusEnableUserPreapproval =>
-      _prefs?.getBool('plusEnableUserPreapproval') ?? true;
+      _prefs?.safeBool('plusEnableUserPreapproval') ?? true;
   set plusEnableUserPreapproval(bool val) {
     _prefs?.setBool('plusEnableUserPreapproval', val);
     notifyListeners();
   }
 
   bool get plusEnableSmartRetries =>
-      _prefs?.getBool('plusEnableSmartRetries') ?? true;
+      _prefs?.safeBool('plusEnableSmartRetries') ?? true;
   set plusEnableSmartRetries(bool val) {
     _prefs?.setBool('plusEnableSmartRetries', val);
     notifyListeners();
   }
 
   bool get plusDeduplicateRecents =>
-      _prefs?.getBool('plusDeduplicateRecents') ?? true;
+      _prefs?.safeBool('plusDeduplicateRecents') ?? true;
   set plusDeduplicateRecents(bool val) {
     _prefs?.setBool('plusDeduplicateRecents', val);
     notifyListeners();
   }
 
   bool get plusEnableBouncyPhysics =>
-      _prefs?.getBool('plusEnableBouncyPhysics') ?? true;
+      _prefs?.safeBool('plusEnableBouncyPhysics') ?? true;
   set plusEnableBouncyPhysics(bool val) {
     _prefs?.setBool('plusEnableBouncyPhysics', val);
     notifyListeners();
   }
 
   bool get plusEnableGlassmorphism =>
-      _prefs?.getBool('plusEnableGlassmorphism') ?? true;
+      _prefs?.safeBool('plusEnableGlassmorphism') ?? true;
   set plusEnableGlassmorphism(bool val) {
     _prefs?.setBool('plusEnableGlassmorphism', val);
     notifyListeners();
   }
 
   bool get plusEnablePopupSlider =>
-      _prefs?.getBool('plusEnablePopupSlider') ?? true;
+      _prefs?.safeBool('plusEnablePopupSlider') ?? true;
   set plusEnablePopupSlider(bool val) {
     _prefs?.setBool('plusEnablePopupSlider', val);
     notifyListeners();
   }
 
   bool get plusEnableResponsiveAppLayout =>
-      _prefs?.getBool('plusEnableResponsiveAppLayout') ?? true;
+      _prefs?.safeBool('plusEnableResponsiveAppLayout') ?? true;
   set plusEnableResponsiveAppLayout(bool val) {
     _prefs?.setBool('plusEnableResponsiveAppLayout', val);
     notifyListeners();
@@ -146,28 +146,28 @@ class PlusSettingsProvider with ChangeNotifier {
 
   // Modern UI Toggles
   bool get plusEnableModernAppPage =>
-      _prefs?.getBool('plusEnableModernAppPage') ?? true;
+      _prefs?.safeBool('plusEnableModernAppPage') ?? true;
   set plusEnableModernAppPage(bool val) {
     _prefs?.setBool('plusEnableModernAppPage', val);
     notifyListeners();
   }
 
   bool get plusEnableModernAddAppPage =>
-      _prefs?.getBool('plusEnableModernAddAppPage') ?? true;
+      _prefs?.safeBool('plusEnableModernAddAppPage') ?? true;
   set plusEnableModernAddAppPage(bool val) {
     _prefs?.setBool('plusEnableModernAddAppPage', val);
     notifyListeners();
   }
 
   bool get plusEnableModernAppListTile =>
-      _prefs?.getBool('plusEnableModernAppListTile') ?? true;
+      _prefs?.safeBool('plusEnableModernAppListTile') ?? true;
   set plusEnableModernAppListTile(bool val) {
     _prefs?.setBool('plusEnableModernAppListTile', val);
     notifyListeners();
   }
 
   // Feature Discovery
-  bool get plusEnableDiscover => _prefs?.getBool('plusEnableDiscover') ?? true;
+  bool get plusEnableDiscover => _prefs?.safeBool('plusEnableDiscover') ?? true;
   set plusEnableDiscover(bool val) {
     _prefs?.setBool('plusEnableDiscover', val);
     notifyListeners();
@@ -175,70 +175,70 @@ class PlusSettingsProvider with ChangeNotifier {
 
   // Advanced Logic
   bool get plusEnableAdvancedSorting =>
-      _prefs?.getBool('plusEnableAdvancedSorting') ?? true;
+      _prefs?.safeBool('plusEnableAdvancedSorting') ?? true;
   set plusEnableAdvancedSorting(bool val) {
     _prefs?.setBool('plusEnableAdvancedSorting', val);
     notifyListeners();
   }
 
   bool get plusEnableCategoryReorder =>
-      _prefs?.getBool('plusEnableCategoryReorder') ?? true;
+      _prefs?.safeBool('plusEnableCategoryReorder') ?? true;
   set plusEnableCategoryReorder(bool val) {
     _prefs?.setBool('plusEnableCategoryReorder', val);
     notifyListeners();
   }
 
   bool get plusEnableUpdateSchedule =>
-      _prefs?.getBool('plusEnableUpdateSchedule') ?? true;
+      _prefs?.safeBool('plusEnableUpdateSchedule') ?? true;
   set plusEnableUpdateSchedule(bool val) {
     _prefs?.setBool('plusEnableUpdateSchedule', val);
     notifyListeners();
   }
 
   bool get plusEnableSystemUpdateScanner =>
-      _prefs?.getBool('plusEnableSystemUpdateScanner') ?? false;
+      _prefs?.safeBool('plusEnableSystemUpdateScanner') ?? false;
   set plusEnableSystemUpdateScanner(bool val) {
     _prefs?.setBool('plusEnableSystemUpdateScanner', val);
     notifyListeners();
   }
 
   bool get plusEnableHomeDashboard =>
-      _prefs?.getBool('plusEnableHomeDashboard') ?? true;
+      _prefs?.safeBool('plusEnableHomeDashboard') ?? true;
   set plusEnableHomeDashboard(bool val) {
     _prefs?.setBool('plusEnableHomeDashboard', val);
     notifyListeners();
   }
 
   bool get plusShowAppBarSearch =>
-      _prefs?.getBool('plusShowAppBarSearch') ?? true;
+      _prefs?.safeBool('plusShowAppBarSearch') ?? true;
   set plusShowAppBarSearch(bool val) {
     _prefs?.setBool('plusShowAppBarSearch', val);
     notifyListeners();
   }
 
   bool get plusShowDashboardSearch =>
-      _prefs?.getBool('plusShowDashboardSearch') ?? true;
+      _prefs?.safeBool('plusShowDashboardSearch') ?? true;
   set plusShowDashboardSearch(bool val) {
     _prefs?.setBool('plusShowDashboardSearch', val);
     notifyListeners();
   }
 
   bool get plusShowFloatingSearch =>
-      _prefs?.getBool('plusShowFloatingSearch') ?? true;
+      _prefs?.safeBool('plusShowFloatingSearch') ?? true;
   set plusShowFloatingSearch(bool val) {
     _prefs?.setBool('plusShowFloatingSearch', val);
     notifyListeners();
   }
 
   bool get plusEnableSwipeActions =>
-      _prefs?.getBool('plusEnableSwipeActions') ?? true;
+      _prefs?.safeBool('plusEnableSwipeActions') ?? true;
   set plusEnableSwipeActions(bool val) {
     _prefs?.setBool('plusEnableSwipeActions', val);
     notifyListeners();
   }
 
   bool get plusEnableExpressiveProgress =>
-      _prefs?.getBool('plusEnableExpressiveProgress') ?? true;
+      _prefs?.safeBool('plusEnableExpressiveProgress') ?? true;
   set plusEnableExpressiveProgress(bool val) {
     _prefs?.setBool('plusEnableExpressiveProgress', val);
     notifyListeners();
@@ -266,48 +266,48 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   bool get plusOverrideIndividualCornerRadius =>
-      _prefs?.getBool('plusOverrideIndividualCornerRadius') ?? false;
+      _prefs?.safeBool('plusOverrideIndividualCornerRadius') ?? false;
   set plusOverrideIndividualCornerRadius(bool val) {
     _prefs?.setBool('plusOverrideIndividualCornerRadius', val);
     notifyListeners();
   }
 
-  bool get plusTopUILayout => _prefs?.getBool('plusTopUILayout') ?? false;
+  bool get plusTopUILayout => _prefs?.safeBool('plusTopUILayout') ?? false;
   set plusTopUILayout(bool val) {
     _prefs?.setBool('plusTopUILayout', val);
     notifyListeners();
   }
 
   // Developer Mode & UI Comparison
-  bool get plusDeveloperMode => _prefs?.getBool('plusDeveloperMode') ?? false;
+  bool get plusDeveloperMode => _prefs?.safeBool('plusDeveloperMode') ?? false;
   set plusDeveloperMode(bool val) {
     _prefs?.setBool('plusDeveloperMode', val);
     notifyListeners();
   }
 
   bool get plusShowLegacyUIComparison =>
-      _prefs?.getBool('plusShowLegacyUIComparison') ?? false;
+      _prefs?.safeBool('plusShowLegacyUIComparison') ?? false;
   set plusShowLegacyUIComparison(bool val) {
     _prefs?.setBool('plusShowLegacyUIComparison', val);
     notifyListeners();
   }
 
   bool get playStoreVerifiedOnly =>
-      _prefs?.getBool('playStoreVerifiedOnly') ?? true;
+      _prefs?.safeBool('playStoreVerifiedOnly') ?? true;
   set playStoreVerifiedOnly(bool val) {
     _prefs?.setBool('playStoreVerifiedOnly', val);
     notifyListeners();
   }
 
   bool get playStoreExcludeSystemApps =>
-      _prefs?.getBool('playStoreExcludeSystemApps') ?? false;
+      _prefs?.safeBool('playStoreExcludeSystemApps') ?? false;
   set playStoreExcludeSystemApps(bool val) {
     _prefs?.setBool('playStoreExcludeSystemApps', val);
     notifyListeners();
   }
 
   bool get playStoreNoAdsFilter =>
-      _prefs?.getBool('playStoreNoAdsFilter') ?? false;
+      _prefs?.safeBool('playStoreNoAdsFilter') ?? false;
   set playStoreNoAdsFilter(bool val) {
     _prefs?.setBool('playStoreNoAdsFilter', val);
     notifyListeners();
@@ -320,62 +320,62 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   bool get requireVPNForPlayStore =>
-      _prefs?.getBool('requireVPNForPlayStore') ?? false;
+      _prefs?.safeBool('requireVPNForPlayStore') ?? false;
   set requireVPNForPlayStore(bool val) {
     _prefs?.setBool('requireVPNForPlayStore', val);
     notifyListeners();
   }
 
-  bool get autoDiscardTokens => _prefs?.getBool('autoDiscardTokens') ?? true;
+  bool get autoDiscardTokens => _prefs?.safeBool('autoDiscardTokens') ?? true;
   set autoDiscardTokens(bool val) {
     _prefs?.setBool('autoDiscardTokens', val);
     notifyListeners();
   }
 
   // Quick-Add FAB menu item visibility
-  bool get plusFabShowSearch => _prefs?.getBool('plusFabShowSearch') ?? true;
+  bool get plusFabShowSearch => _prefs?.safeBool('plusFabShowSearch') ?? true;
   set plusFabShowSearch(bool val) {
     _prefs?.setBool('plusFabShowSearch', val);
     notifyListeners();
   }
 
   bool get plusFabShowAddByUrl =>
-      _prefs?.getBool('plusFabShowAddByUrl') ?? true;
+      _prefs?.safeBool('plusFabShowAddByUrl') ?? true;
   set plusFabShowAddByUrl(bool val) {
     _prefs?.setBool('plusFabShowAddByUrl', val);
     notifyListeners();
   }
 
   bool get plusFabShowGithubStarred =>
-      _prefs?.getBool('plusFabShowGithubStarred') ?? true;
+      _prefs?.safeBool('plusFabShowGithubStarred') ?? true;
   set plusFabShowGithubStarred(bool val) {
     _prefs?.setBool('plusFabShowGithubStarred', val);
     notifyListeners();
   }
 
   bool get plusFabShowGithubPersonalRepos =>
-      _prefs?.getBool('plusFabShowGithubPersonalRepos') ?? true;
+      _prefs?.safeBool('plusFabShowGithubPersonalRepos') ?? true;
   set plusFabShowGithubPersonalRepos(bool val) {
     _prefs?.setBool('plusFabShowGithubPersonalRepos', val);
     notifyListeners();
   }
 
   bool get plusFabShowImportInstalled =>
-      _prefs?.getBool('plusFabShowImportInstalled') ?? true;
+      _prefs?.safeBool('plusFabShowImportInstalled') ?? true;
   set plusFabShowImportInstalled(bool val) {
     _prefs?.setBool('plusFabShowImportInstalled', val);
     notifyListeners();
   }
 
   bool get plusEnableNotificationDigest =>
-      _prefs?.getBool('plusEnableNotificationDigest') ?? false;
+      _prefs?.safeBool('plusEnableNotificationDigest') ?? false;
   set plusEnableNotificationDigest(bool val) {
     _prefs?.setBool('plusEnableNotificationDigest', val);
     notifyListeners();
   }
 
   bool get plusEnableNotificationQuietHours =>
-      _prefs?.getBool('plusEnableNotificationQuietHours') ?? false;
+      _prefs?.safeBool('plusEnableNotificationQuietHours') ?? false;
   set plusEnableNotificationQuietHours(bool val) {
     _prefs?.setBool('plusEnableNotificationQuietHours', val);
     notifyListeners();
@@ -396,60 +396,60 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   bool get plusEnableMicroGHub =>
-      _prefs?.getBool('plusEnableMicroGHub') ?? true;
+      _prefs?.safeBool('plusEnableMicroGHub') ?? true;
   set plusEnableMicroGHub(bool val) {
     _prefs?.setBool('plusEnableMicroGHub', val);
     notifyListeners();
   }
 
   bool get plusEnableStandaloneInstaller =>
-      _prefs?.getBool('plusEnableStandaloneInstaller') ?? true;
+      _prefs?.safeBool('plusEnableStandaloneInstaller') ?? true;
   set plusEnableStandaloneInstaller(bool val) {
     _prefs?.setBool('plusEnableStandaloneInstaller', val);
     notifyListeners();
   }
 
-  bool get plusShowTagsInList => _prefs?.getBool('plusShowTagsInList') ?? true;
+  bool get plusShowTagsInList => _prefs?.safeBool('plusShowTagsInList') ?? true;
   set plusShowTagsInList(bool val) {
     _prefs?.setBool('plusShowTagsInList', val);
     notifyListeners();
   }
 
-  bool get plusEnableTags => _prefs?.getBool('plusEnableTags') ?? true;
+  bool get plusEnableTags => _prefs?.safeBool('plusEnableTags') ?? true;
   set plusEnableTags(bool val) {
     _prefs?.setBool('plusEnableTags', val);
     notifyListeners();
   }
 
   bool get plusEnableAutoUpdateRules =>
-      _prefs?.getBool('plusEnableAutoUpdateRules') ?? true;
+      _prefs?.safeBool('plusEnableAutoUpdateRules') ?? true;
   set plusEnableAutoUpdateRules(bool val) {
     _prefs?.setBool('plusEnableAutoUpdateRules', val);
     notifyListeners();
   }
 
   bool get plusEnableNotificationEnhancements =>
-      _prefs?.getBool('plusEnableNotificationEnhancements') ?? true;
+      _prefs?.safeBool('plusEnableNotificationEnhancements') ?? true;
   set plusEnableNotificationEnhancements(bool val) {
     _prefs?.setBool('plusEnableNotificationEnhancements', val);
     notifyListeners();
   }
 
   bool get backupEncryptionEnabled =>
-      _prefs?.getBool('backupEncryptionEnabled') ?? false;
+      _prefs?.safeBool('backupEncryptionEnabled') ?? false;
   set backupEncryptionEnabled(bool val) {
     _prefs?.setBool('backupEncryptionEnabled', val);
     notifyListeners();
   }
 
   List<String> get plusPinnedAppsOrder =>
-      _prefs?.getStringList('plusPinnedAppsOrder') ?? [];
+      _prefs?.safeStringList('plusPinnedAppsOrder') ?? [];
   set plusPinnedAppsOrder(List<String> val) {
     _prefs?.setStringList('plusPinnedAppsOrder', val);
     notifyListeners();
   }
 
-  bool get plusEnableBanWarnings => _prefs?.getBool('plusEnableBanWarnings') ?? false;
+  bool get plusEnableBanWarnings => _prefs?.safeBool('plusEnableBanWarnings') ?? false;
   set plusEnableBanWarnings(bool val) {
     _prefs?.setBool('plusEnableBanWarnings', val);
     notifyListeners();
@@ -461,7 +461,7 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? get plusDefaultStorePackage => _prefs?.getString('plusDefaultStorePackage');
+  String? get plusDefaultStorePackage => _prefs?.safeString('plusDefaultStorePackage');
   set plusDefaultStorePackage(String? val) {
     if (val == null) {
       _prefs?.remove('plusDefaultStorePackage');
@@ -471,7 +471,7 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? get plusDefaultStoreName => _prefs?.getString('plusDefaultStoreName');
+  String? get plusDefaultStoreName => _prefs?.safeString('plusDefaultStoreName');
   set plusDefaultStoreName(String? val) {
     if (val == null) {
       _prefs?.remove('plusDefaultStoreName');

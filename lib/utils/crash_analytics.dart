@@ -27,7 +27,7 @@ class CrashAnalytics {
     );
 
     // Track crash types
-    final crashTypes = prefs.getStringList(_keyCrashTypes) ?? [];
+    final crashTypes = prefs.safeStringList(_keyCrashTypes) ?? [];
     if (!crashTypes.contains(errorType)) {
       crashTypes.add(errorType);
       await prefs.setStringList(_keyCrashTypes, crashTypes);
@@ -49,7 +49,7 @@ class CrashAnalytics {
               prefs.safeInt(_keyLastCrashTime)!,
             )
           : null,
-      crashTypes: prefs.getStringList(_keyCrashTypes) ?? [],
+      crashTypes: prefs.safeStringList(_keyCrashTypes) ?? [],
     );
   }
 

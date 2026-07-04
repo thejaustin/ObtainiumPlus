@@ -14,8 +14,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   ThemeSettings get theme {
-    return ThemeSettings.values[prefs?.safeInt('theme') ??
-        ThemeSettings.system.index];
+    return prefs?.safeEnum('theme', ThemeSettings.values) ?? ThemeSettings.system;
   }
 
   set theme(ThemeSettings t) {
@@ -24,8 +23,8 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   DynamicSchemeVariant get themeVariant {
-    return DynamicSchemeVariant.values[prefs?.safeInt('themeVariant') ??
-        DynamicSchemeVariant.expressive.index];
+    return prefs?.safeEnum('themeVariant', DynamicSchemeVariant.values) ??
+        DynamicSchemeVariant.expressive;
   }
 
   set themeVariant(DynamicSchemeVariant t) {
@@ -44,7 +43,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   bool get useMaterialYou {
-    return prefs?.getBool('useMaterialYou') ?? false;
+    return prefs?.safeBool('useMaterialYou') ?? false;
   }
 
   set useMaterialYou(bool useMaterialYou) {
@@ -53,7 +52,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   bool get matchSystemMaterialStyle {
-    return prefs?.getBool('matchSystemMaterialStyle') ?? false;
+    return prefs?.safeBool('matchSystemMaterialStyle') ?? false;
   }
 
   set matchSystemMaterialStyle(bool matchSystemMaterialStyle) {
@@ -62,7 +61,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   bool get useBlackTheme {
-    return prefs?.getBool('useBlackTheme') ?? false;
+    return prefs?.safeBool('useBlackTheme') ?? false;
   }
 
   set useBlackTheme(bool useBlackTheme) {
@@ -71,7 +70,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   bool get useSystemFont {
-    return prefs?.getBool('useSystemFont') ?? false;
+    return prefs?.safeBool('useSystemFont') ?? false;
   }
 
   set useSystemFont(bool useSystemFont) {

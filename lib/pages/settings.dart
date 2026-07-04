@@ -35,6 +35,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    _selectedSectionIndex = (widget.initialTab ?? 0).clamp(0, 8);
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       setState(() {
