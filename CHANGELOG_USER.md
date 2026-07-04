@@ -1,3 +1,0 @@
-- **UI/UX Improvements:** The bottom navigation bar has been updated to Material 3 styling, showing labels only on the selected item.
-- **Robust Version Sorting:** Improved fallback behavior for Github apps using non-standard version tags (e.g., Shizuku+, Obtainium+). They now sort reliably and accurately based on version suffixes.
-- **Under The Hood:** Fixed several CI/CD linting rules and compilation issues for a more stable build pipeline.
