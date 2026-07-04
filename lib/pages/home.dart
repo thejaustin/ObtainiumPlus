@@ -20,6 +20,7 @@ import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -86,7 +87,7 @@ class HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
       var plusSettings = context.read<PlusSettingsProvider>();
-      const currentVersion = '1.4.3-p15';
+      const currentVersion = currentObtainiumPlusVersion;
 
       if (plusSettings.plusLastSeenVersion != currentVersion) {
         // Show Changelog on update
