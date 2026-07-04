@@ -7,6 +7,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'dart:ui';
@@ -88,9 +89,17 @@ class _AppGridTileState extends State<AppGridTile>
             ? (constraints.maxHeight * 0.7).clamp(40.0, 100.0)
             : (availableWidth * 0.65).clamp(40.0, 80.0);
 
-        // ... (existing radius/padding logic)
-        double iconBorderRadius = (iconSize * 0.18).clamp(8.0, 14.0);
-        double cardBorderRadius = (iconSize * 0.21).clamp(10.0, 16.0);
+        final plusSettings = context.watch<PlusSettingsProvider>();
+        final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+            ? plusSettings.plusHomeCornerRadius
+            : plusSettings.plusGlobalCornerRadius;
+        // Radii follow the user's corner-radius setting like every other
+        // card (previously derived from icon size and ignored it).
+        double cardBorderRadius = CardMetrics.cardFor(
+          baseRadius,
+          constraints.maxWidth,
+        );
+        double iconBorderRadius = CardMetrics.inner(baseRadius);
         double padding = (availableWidth * 0.1).clamp(8.0, 12.0);
         double badgeSize = (iconSize * 0.25).clamp(12.0, 18.0);
 
@@ -98,7 +107,6 @@ class _AppGridTileState extends State<AppGridTile>
           context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
         }
 
-        final plusSettings = context.watch<PlusSettingsProvider>();
         final curve = plusSettings.plusEnableEnhancedAnimations
             ? (plusSettings.plusEnableMaterialExpressive
                   ? AppConstants.expressiveStandard

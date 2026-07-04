@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -277,7 +278,7 @@ class _AppDashboardState extends State<AppDashboard>
     AppInMemory app,
     double radius,
   ) {
-    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
+    final itemRadius = CardMetrics.inner(radius);
     return Tooltip(
       message: app.name,
       child: InkWell(
@@ -322,7 +323,7 @@ class _AppDashboardState extends State<AppDashboard>
     AppInMemory app,
     double radius,
   ) {
-    final itemRadius = (radius * 0.5).clamp(10.0, 24.0);
+    final itemRadius = CardMetrics.inner(radius);
     return Tooltip(
       message: app.name,
       child: GestureDetector(
@@ -408,7 +409,7 @@ class _AppDashboardState extends State<AppDashboard>
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final count = appsProvider.selectedAppIds.length;
-    final itemRadius = (radius * 0.7).clamp(12.0, 24.0);
+    final itemRadius = CardMetrics.card(radius);
 
     return Container(
       width: double.infinity,
