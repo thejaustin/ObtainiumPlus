@@ -1,7 +1,6 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum ThemeSettings { system, light, dark }

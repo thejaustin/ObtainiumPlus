@@ -14,13 +14,11 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
-import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});

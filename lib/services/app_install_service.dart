@@ -15,8 +15,6 @@ import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/models/app_in_memory.dart';

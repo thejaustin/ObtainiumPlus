@@ -20,7 +20,6 @@ import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/tag_provider.dart';
-import 'package:obtainium/providers/installer_provider.dart';
 import 'package:obtainium/providers/source_config_provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';

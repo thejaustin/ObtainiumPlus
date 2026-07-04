@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/crash_analytics.dart';

@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/talker_screen.dart';
 import 'package:obtainium/utils/crash_analytics.dart';

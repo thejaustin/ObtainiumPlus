@@ -45,8 +45,6 @@ import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/mass_app_sources/githubstars.dart';
-import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 
 List<List<String>> stringMapListTo2DList(
   List<MapEntry<String, String>> mapList,

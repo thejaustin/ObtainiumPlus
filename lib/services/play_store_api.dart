@@ -7,8 +7,6 @@ import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/utils/logger.dart';
-import 'package:obtainium/main.dart';
-import 'package:provider/provider.dart';
 import 'dart:math' show Random;
 import 'package:obtainium/protobuf/GooglePlay.pb.dart' as play_proto;
 
