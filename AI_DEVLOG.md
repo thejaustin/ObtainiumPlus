@@ -26,6 +26,14 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-04 (evening) — Claude Code (Fable 5) [session 854c1d79 continued]
+
+**Goal:** full settings-crash audit + ShizukuPlus-style release notes.
+
+**Done:**
+- **Settings crash audit (p30)** — swept the entire settings build path: all FutureBuilders guarded (`hasData`/`?.` — the one `snapshot.data!` at update_settings_section:135 is hasData-guarded), all jsonDecode getters try/catch-wrapped, forcedLocale validated against supportedLocales, no unguarded list indexing. One remaining hazard fixed: range-bound pref values fed raw into Sliders/BorderRadius — clamped at getters (corner radii 0–40, gridColumnCount 0–6, categoryIconCount 0–20, banWarningThreshold 1–50, playStoreMinDownloads, updateIntervalSliderVal).
+- **Release notes (p31)** — replaced stale `CHANGELOG_USER.md` mechanism (same outdated "What's New" + literal `\n` on every release) with ShizukuPlus-style generation in build-apk.yml: commits since last v* tag categorized ✨ feat / 🐛 fix / 🔧 other (auto-bumps excluded), 🏗️ Build History (failed runs between releases via `gh run list`, needs `actions: read`), compare link. Verified rendering on v1.4.3-p31.
+
 ### 2026-07-04 (later) — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Goal:** continue fixes; user reported settings still broken → found definitive #217 root cause.
