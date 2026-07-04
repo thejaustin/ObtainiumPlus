@@ -258,7 +258,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
                         final url =
                             'https://play.google.com/store/apps/details?id=${update.appId}';
                         await appsProvider.addAppsByURL([url]);
-                        if (mounted) {
+                        if (mounted && context.mounted) {
                           setState(
                             () => _updates.removeWhere(
                               (u) => u.appId == update.appId,

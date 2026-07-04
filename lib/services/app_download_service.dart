@@ -157,7 +157,9 @@ class AppDownloadService {
             removeApps: removeApps,
             saveApps: saveApps,
             errors: errors,
-            context: context,
+            // context may be from a disposed widget by the time this loop
+            // iteration runs; only forward it while still mounted
+            context: context?.mounted == true ? context : null,
             notificationsProvider: notificationsProvider,
             useExisting: useExisting,
             isCancelled: isCancelled,
@@ -208,7 +210,7 @@ class AppDownloadService {
             notifyListeners: notifyListeners,
             saveApps: (appList) => saveApps(appList),
             notificationsProvider: notificationsProvider,
-            context: context,
+            context: context?.mounted == true ? context : null,
           );
           if (installed) installedIds.add(res['id'] as String);
         } catch (e) {
@@ -427,7 +429,7 @@ class AppDownloadService {
           apps[id]!.app.otherAssetUrls.isNotEmpty) {
         MapEntry<String, String>? tempFileUrl = await confirmAppFileUrl(
           apps[id]!.app,
-          context,
+          context?.mounted == true ? context : null,
           true,
           evenIfSingleChoice: true,
         );
@@ -548,7 +550,11 @@ class AppDownloadService {
         if (apps[id] == null) continue;
       }
       if (!trackOnly) {
-        apkUrl = await confirmAppFileUrl(apps[id]!.app, context, false);
+        apkUrl = await confirmAppFileUrl(
+          apps[id]!.app,
+          context?.mounted == true ? context : null,
+          false,
+        );
         if (apps[id] == null) continue;
       }
       if (apkUrl != null) {
@@ -564,7 +570,7 @@ class AppDownloadService {
           appsToInstall.add(id);
 
           // Android 14+ User Pre-approval for non-silent installs (context required)
-          if (context != null) {
+          if (context != null && context.mounted) {
             var osInfo = await DeviceInfoPlugin().androidInfo;
             final settingsProvider = Provider.of<SettingsProvider>(
               context,
@@ -851,7 +857,10 @@ class AppDownloadService {
       willBeSilent = await canInstallSilently(apps[id]!.app);
       await _checkInstallPermissions(settingsProvider, behaviorSettings, willBeSilent);
 
-      if (!willBeSilent && context != null && !behaviorSettings.useShizuku) {
+      if (!willBeSilent &&
+          context != null &&
+          context.mounted &&
+          !behaviorSettings.useShizuku) {
         await waitForUserToReturnToForeground(context);
       }
     } catch (e) {

@@ -152,6 +152,9 @@ class _OnboardingPageState extends State<OnboardingPage>
 
     try {
       final appsProvider = context.read<AppsProvider>();
+      // Read before the awaits: the flag must be set even if this widget is
+      // disposed mid-flow, or onboarding would show again on next launch
+      final settingsProvider = context.read<SettingsProvider>();
       List<App> appsToAdd = [];
 
       if (_addObtainiumPlus) {
@@ -188,7 +191,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       }
 
       // Ensure the flag is set so we don't show onboarding again
-      context.read<SettingsProvider>().welcomeShown = true;
+      settingsProvider.welcomeShown = true;
     } catch (e) {
       talker.warning('Error during onboarding finish: $e');
     } finally {
@@ -509,7 +512,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                         if (email != null) {
                           await auth.setMicroGEmail(email);
                           await auth.refreshMicroGToken();
-                          if (mounted) {
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Linked to $email')),
                             );
@@ -523,7 +526,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                               'If you are using a custom build of Obtainium+, you may need to '
                               'configure your own OAuth credentials or use anonymous dispensers.';
                         }
-                        if (mounted) {
+                        if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(message),

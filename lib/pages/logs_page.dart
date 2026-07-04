@@ -60,7 +60,7 @@ $logs''';
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       Clipboard.setData(ClipboardData(text: url.toString()));
-      showMessage(tr('copiedToClipboard'), context);
+      if (mounted) showMessage(tr('copiedToClipboard'), context);
     }
   }
 

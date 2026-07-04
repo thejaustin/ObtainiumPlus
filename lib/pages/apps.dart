@@ -550,7 +550,7 @@ class AppsPageState extends State<AppsPage> {
                       listedApps[appIndex].app.id,
                     ], globalNavigatorKey.currentContext)
                     .catchError((e) {
-                      showError(e, context);
+                      if (mounted) showError(e, context);
                       return <String>[];
                     });
               },
@@ -1014,11 +1014,13 @@ class AppsPageState extends State<AppsPage> {
                         globalNavigatorKey.currentContext,
                       )
                       .catchError((e) {
-                        showError(e, context);
+                        if (mounted) showError(e, context);
                         return <String>[];
                       })
                       .then((value) {
-                        if (value.isNotEmpty && shouldInstallUpdates) {
+                        if (value.isNotEmpty &&
+                            shouldInstallUpdates &&
+                            mounted) {
                           showMessage(tr('appsUpdated'), context);
                         }
                       });
@@ -1059,8 +1061,8 @@ class AppsPageState extends State<AppsPage> {
                 ) !=
                 null;
           }
+          if (!mounted) return;
           if (cont) {
-            // ignore: use_build_context_synchronously
             await showDialog<Map<String, dynamic>?>(
               context: context,
               builder: (BuildContext ctx) {
@@ -1088,7 +1090,7 @@ class AppsPageState extends State<AppsPage> {
             );
           }
         } catch (err) {
-          showError(err, context);
+          if (mounted) showError(err, context);
         }
       };
     }
@@ -1139,7 +1141,7 @@ class AppsPageState extends State<AppsPage> {
           );
         },
       ).whenComplete(() {
-        Navigator.of(context).pop();
+        if (mounted) Navigator.of(context).pop();
       });
     }
 

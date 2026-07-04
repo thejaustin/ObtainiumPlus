@@ -324,13 +324,17 @@ class AppInstallService {
     if (code == 0) {
       return true;
     } else if (code == 3) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(tr('installationCancelled'))));
+      if (context.mounted) {
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(tr('installationCancelled'))));
+      }
     } else if (code != null) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Installation failed with code: $code')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text('Installation failed with code: $code')),
+        );
+      }
     }
     return false;
   }

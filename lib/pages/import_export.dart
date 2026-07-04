@@ -91,6 +91,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           appsProvider
               .addAppsByURL(urls)
               .then((errors) {
+                if (!mounted) return;
                 if (errors.isEmpty) {
                   showMessage(
                     tr(
@@ -112,9 +113,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 }
               })
               .catchError((e) {
-                showError(e, context);
+                if (mounted) showError(e, context);
               })
               .whenComplete(() {
+                if (!mounted) return;
                 setState(() {
                   importInProgress = false;
                 });
@@ -132,12 +134,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
             bsp: behaviorSettings,
           )
           .then((String? result) {
-            if (result != null) {
+            if (result != null && mounted) {
               showMessage(tr('exportedTo', args: [result]), context);
             }
           })
           .catchError((e) {
-            showError(e, context);
+            if (mounted) showError(e, context);
           });
     }
 
@@ -156,6 +158,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 throw ObtainiumError(tr('invalidInput'));
               }
               appsProvider.import(data).then((value) {
+                if (!mounted) return;
                 appsProvider.addMissingCategories(context.read());
                 showMessage(
                   '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
@@ -167,9 +170,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           })
           .catchError((e) {
-            showError(e, context);
+            if (mounted) showError(e, context);
           })
           .whenComplete(() {
+            if (!mounted) return;
             setState(() {
               importInProgress = false;
             });
@@ -247,9 +251,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 querySettings: values,
               );
               if (urlsWithDescriptions.isNotEmpty) {
-                var selectedUrls =
-                    // ignore: use_build_context_synchronously
-                    await showDialog<List<String>?>(
+                if (!mounted) return;
+                var selectedUrls = await showDialog<List<String>?>(
                       context: context,
                       builder: (BuildContext ctx) {
                         return SelectionModal(
@@ -263,8 +266,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     selectedUrls,
                     sourceOverride: source,
                   );
+                  if (!mounted) return;
                   if (errors.isEmpty) {
-                    // ignore: use_build_context_synchronously
                     showMessage(
                       tr(
                         'importedX',
@@ -275,7 +278,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       context,
                     );
                   } else {
-                    // ignore: use_build_context_synchronously
                     showDialog(
                       context: context,
                       builder: (BuildContext ctx) {
@@ -293,9 +295,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
-            showError(e, context);
+            if (mounted) showError(e, context);
           })
           .whenComplete(() {
+            if (!mounted) return;
             setState(() {
               importInProgress = false;
             });
@@ -322,9 +325,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
               var urlsWithDescriptions = await source.getUrlsWithDescriptions(
                 values.values.map((e) => e.toString()).toList(),
               );
-              var selectedUrls =
-                  // ignore: use_build_context_synchronously
-                  await showDialog<List<String>?>(
+              if (!mounted) return;
+              var selectedUrls = await showDialog<List<String>?>(
                     context: context,
                     builder: (BuildContext ctx) {
                       return SelectionModal(entries: urlsWithDescriptions);
@@ -332,8 +334,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   );
               if (selectedUrls != null) {
                 var errors = await appsProvider.addAppsByURL(selectedUrls);
+                if (!mounted) return;
                 if (errors.isEmpty) {
-                  // ignore: use_build_context_synchronously
                   showMessage(
                     tr(
                       'importedX',
@@ -342,7 +344,6 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     context,
                   );
                 } else {
-                  // ignore: use_build_context_synchronously
                   showDialog(
                     context: context,
                     builder: (BuildContext ctx) {
@@ -357,9 +358,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
-            showError(e, context);
+            if (mounted) showError(e, context);
           })
           .whenComplete(() {
+            if (!mounted) return;
             setState(() {
               importInProgress = false;
             });
