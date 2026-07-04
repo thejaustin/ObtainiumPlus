@@ -59,6 +59,7 @@ jobs:
     if: "${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: Auto-bump version') }}"
     permissions:
       contents: write
+      actions: read # gh run list in the changelog's Build History section
 
     steps:
       - name: Checkout repository
@@ -189,28 +190,71 @@ jobs:
 
       - name: Generate Changelog
         id: build_changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          COMMIT_RANGE=$([ -z "$PREVIOUS_TAG" ] && echo "HEAD~1..HEAD" || echo "$PREVIOUS_TAG..HEAD")
-          
-          # Use user-friendly changelog if available
-          if [ -f "CHANGELOG_USER.md" ] && [ -s "CHANGELOG_USER.md" ]; then
-            USER_CHANGELOG=$(cat CHANGELOG_USER.md)
-            CHANGELOG="### What's New\n$USER_CHANGELOG\n\n### Developer Details\n"
-            CHANGELOG+=$(git log $COMMIT_RANGE --pretty=format:'* **%s** (%h)' --no-merges)
-          else
-            CHANGELOG=$(git log $COMMIT_RANGE --pretty=format:'* **%s** (%h)%n%b' --no-merges)
-            [ -z "$CHANGELOG" ] && CHANGELOG="No significant changes."
-          fi
-          
-          [ ${#CHANGELOG} -gt 10000 ] && CHANGELOG="${CHANGELOG:0:10000}... (truncated)"
+          TAG_NAME="${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || format('v{0}', steps.bump_version.outputs.version) }}"
+          PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | head -1)
+          {
+            printf '**Obtainium+ %s** — build #%s, commit `%s`, %s\n\n' \
+              "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || steps.bump_version.outputs.version }}" \
+              "${{ github.run_number }}" \
+              "${GITHUB_SHA:0:8}" \
+              "$(date -u '+%Y-%m-%d %H:%M UTC')"
 
-          printf "**Obtainium+ %s**\n\n- **Build #:** %s\n- **Commit:** %s\n- **Date:** %s\n\n%s\n" \
-            "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || 'Automated Build' }}" \
-            "${{ github.run_number }}" \
-            "${{ github.sha }}" \
-            "$(date)" \
-            "$CHANGELOG" > release_body.md
+            if [ -n "$PREV_TAG" ]; then
+              RANGE="${PREV_TAG}..HEAD"
+              echo "## Changes since ${PREV_TAG}"
+            else
+              RANGE="HEAD"
+              echo "## Recent Changes"
+            fi
+            echo
+
+            FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
+            if [ -n "$FEATS" ]; then
+              echo "### ✨ New Features"
+              echo "$FEATS"
+              echo
+            fi
+
+            FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
+            if [ -n "$FIXES" ]; then
+              echo "### 🐛 Bug Fixes"
+              echo "$FIXES"
+              echo
+            fi
+
+            OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
+            if [ -n "$OTHERS" ]; then
+              echo "### 🔧 Improvements & Maintenance"
+              echo "$OTHERS"
+              echo
+            fi
+
+            # Failed attempts between the previous release and this one
+            echo "### 🏗️ Build History"
+            if [ -n "$PREV_TAG" ]; then
+              PREV_DATE=$(git log -1 --format=%cI "$PREV_TAG")
+              FAILED_RUNS=$(gh run list --workflow "Build APK" --branch main --status failure --limit 20 \
+                --json databaseId,createdAt,url \
+                --jq --arg d "$PREV_DATE" '.[] | select(.createdAt > $d) | "- [Build #\(.databaseId)](\(.url)) (\(.createdAt))"' || true)
+            else
+              FAILED_RUNS=""
+            fi
+            if [ -n "$FAILED_RUNS" ]; then
+              echo "Failed attempts leading to this release:"
+              echo "$FAILED_RUNS"
+            else
+              echo "Build succeeded on the first attempt."
+            fi
+
+            if [ -n "$PREV_TAG" ]; then
+              echo
+              echo "---"
+              echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+            fi
+          } > release_body.md
 
       - name: Commit version bump
         if: steps.bump_version.outputs.version_changed == 'true'
