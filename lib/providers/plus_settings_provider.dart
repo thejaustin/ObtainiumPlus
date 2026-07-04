@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -244,21 +245,21 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   double get plusGlobalCornerRadius =>
-      _prefs?.getDouble('plusGlobalCornerRadius') ?? 20.0;
+      _prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0;
   set plusGlobalCornerRadius(double val) {
     _prefs?.setDouble('plusGlobalCornerRadius', val);
     notifyListeners();
   }
 
   double get plusHomeCornerRadius =>
-      _prefs?.getDouble('plusHomeCornerRadius') ?? 20.0;
+      _prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0;
   set plusHomeCornerRadius(double val) {
     _prefs?.setDouble('plusHomeCornerRadius', val);
     notifyListeners();
   }
 
   double get plusSettingsCornerRadius =>
-      _prefs?.getDouble('plusSettingsCornerRadius') ?? 16.0;
+      _prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0;
   set plusSettingsCornerRadius(double val) {
     _prefs?.setDouble('plusSettingsCornerRadius', val);
     notifyListeners();
@@ -312,7 +313,7 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get playStoreMinDownloads => _prefs?.getInt('playStoreMinDownloads') ?? 0;
+  int get playStoreMinDownloads => _prefs?.safeInt('playStoreMinDownloads') ?? 0;
   set playStoreMinDownloads(int val) {
     _prefs?.setInt('playStoreMinDownloads', val);
     notifyListeners();
@@ -381,14 +382,14 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   int get plusNotificationQuietHoursStart =>
-      _prefs?.getInt('plusNotificationQuietHoursStart') ?? 22;
+      _prefs?.safeInt('plusNotificationQuietHoursStart') ?? 22;
   set plusNotificationQuietHoursStart(int val) {
     _prefs?.setInt('plusNotificationQuietHoursStart', val);
     notifyListeners();
   }
 
   int get plusNotificationQuietHoursEnd =>
-      _prefs?.getInt('plusNotificationQuietHoursEnd') ?? 7;
+      _prefs?.safeInt('plusNotificationQuietHoursEnd') ?? 7;
   set plusNotificationQuietHoursEnd(int val) {
     _prefs?.setInt('plusNotificationQuietHoursEnd', val);
     notifyListeners();
@@ -454,7 +455,7 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get plusBanWarningThreshold => _prefs?.getInt('plusBanWarningThreshold') ?? 5;
+  int get plusBanWarningThreshold => _prefs?.safeInt('plusBanWarningThreshold') ?? 5;
   set plusBanWarningThreshold(int val) {
     _prefs?.setInt('plusBanWarningThreshold', val);
     notifyListeners();

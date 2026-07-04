@@ -1,5 +1,6 @@
 // Exposes functions used to save/load app settings
 
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -182,12 +183,12 @@ class SettingsProvider with ChangeNotifier {
       prefs?.getBool('reversePageTransitions') ?? false;
   bool get autoExportOnChanges =>
       prefs?.getBool('autoExportOnChanges') ?? false;
-  int get exportSettings => prefs?.getInt('exportSettings') ?? 1;
+  int get exportSettings => prefs?.safeInt('exportSettings') ?? 1;
   bool get parallelDownloads => prefs?.getBool('parallelDownloads') ?? true;
   bool get shizukuPretendToBeGooglePlay =>
       prefs?.getBool('shizukuPretendToBeGooglePlay') ?? false;
   double get animationSpeedMultiplier =>
-      prefs?.getDouble('animationSpeedMultiplier') ?? 1.0;
+      prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   bool get enableContextualTips =>
       prefs?.getBool('enableContextualTips') ?? true;
   set enableContextualTips(bool val) {
@@ -257,11 +258,11 @@ class SettingsProvider with ChangeNotifier {
   bool get plusFabShowImportInstalled =>
       prefs?.getBool('plusFabShowImportInstalled') ?? true;
   double get plusGlobalCornerRadius =>
-      prefs?.getDouble('plusGlobalCornerRadius') ?? 20.0;
+      prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0;
   double get plusHomeCornerRadius =>
-      prefs?.getDouble('plusHomeCornerRadius') ?? 20.0;
+      prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0;
   double get plusSettingsCornerRadius =>
-      prefs?.getDouble('plusSettingsCornerRadius') ?? 16.0;
+      prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0;
   bool get plusOverrideIndividualCornerRadius =>
       prefs?.getBool('plusOverrideIndividualCornerRadius') ?? false;
   bool get plusEnableNotificationDigest =>
@@ -277,7 +278,7 @@ class SettingsProvider with ChangeNotifier {
 
   // Stub for app bar style — returns AppBarStyle.
   AppBarStyle getAppBarStyleForPage(String page) {
-    final index = prefs?.getInt('appBarStyle_$page') ?? 0;
+    final index = prefs?.safeInt('appBarStyle_$page') ?? 0;
     return AppBarStyle.values[index];
   }
 

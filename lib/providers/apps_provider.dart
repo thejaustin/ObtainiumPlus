@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
@@ -69,7 +70,10 @@ List<String> generateStandardVersionRegExStrings() {
     '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+',
   ];
   var preSuffixes = ['-', '\\+'];
-  var suffixes = ['alpha', 'beta', 'ose', '[0-9]+'];
+  // 'p[0-9]+' covers patch-style suffixes like 1.4.3-p15 (used by
+  // Obtainium+ itself) — without it version detection gets auto-disabled
+  // and the installed version freezes (issue #218)
+  var suffixes = ['alpha', 'beta', 'ose', 'p[0-9]+', 'rc[0-9]+', '[0-9]+'];
   var finals = ['\\+[0-9]+', '[0-9]+'];
   List<String> results = [];
   for (var b in basics) {
@@ -1628,6 +1632,22 @@ class AppsProvider with ChangeNotifier {
       logs.add('Could not reconcile version formats for: ${app.id}');
       modded = true;
     }
+    // FIFTH, EVEN WITHOUT VERSION DETECTION, IF THE OS SAYS THE INSTALLED
+    // BUILD IS THE LATEST VERSION, RECORD THAT — otherwise an app updated
+    // outside the normal flow keeps prompting to update forever (issue #218)
+    if (!versionDetectionIsStandard &&
+        !trackOnly &&
+        realInstalledVersion != null &&
+        app.installedVersion != null &&
+        app.installedVersion != app.latestVersion &&
+        reconcileVersionDifferences(
+              realInstalledVersion,
+              app.latestVersion,
+            )?.key ==
+            true) {
+      app.installedVersion = app.latestVersion;
+      modded = true;
+    }
 
     return modded ? app : null;
   }
@@ -2045,7 +2065,7 @@ class AppsProvider with ChangeNotifier {
         try {
           final SharedPreferences prefs = await SharedPreferences.getInstance();
           final bool enableBanWarnings = prefs.getBool('plusEnableBanWarnings') ?? false;
-          final int threshold = prefs.getInt('plusBanWarningThreshold') ?? 5;
+          final int threshold = prefs.safeInt('plusBanWarningThreshold') ?? 5;
           if (enableBanWarnings && appIds.length > threshold) {
             NotificationsProvider().notify(DispenserBanWarningNotification(appIds.length));
           }

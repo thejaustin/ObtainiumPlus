@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -113,7 +114,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   int get exportSettings {
     try {
-      return prefs?.getInt('exportSettings') ?? 1;
+      return prefs?.safeInt('exportSettings') ?? 1;
     } catch (e) {
       var val = prefs?.getBool('exportSettings') == true ? 1 : 0;
       prefs?.setInt('exportSettings', val);
@@ -154,7 +155,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   double get animationSpeedMultiplier {
-    return prefs?.getDouble('animationSpeedMultiplier') ?? 1.0;
+    return prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   }
 
   set animationSpeedMultiplier(double multiplier) {
@@ -200,7 +201,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   AppSwipeAction get swipeRightAction =>
-      AppSwipeAction.values[prefs?.getInt('swipeRightAction') ??
+      AppSwipeAction.values[prefs?.safeInt('swipeRightAction') ??
           AppSwipeAction.update.index];
   set swipeRightAction(AppSwipeAction val) {
     prefs?.setInt('swipeRightAction', val.index);
@@ -208,7 +209,7 @@ class BehaviorSettingsProvider with ChangeNotifier {
   }
 
   AppSwipeAction get swipeLeftAction =>
-      AppSwipeAction.values[prefs?.getInt('swipeLeftAction') ??
+      AppSwipeAction.values[prefs?.safeInt('swipeLeftAction') ??
           AppSwipeAction.togglePin.index];
   set swipeLeftAction(AppSwipeAction val) {
     prefs?.setInt('swipeLeftAction', val.index);

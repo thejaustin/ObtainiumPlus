@@ -140,8 +140,100 @@ class MyTaskHandler extends TaskHandler {
   void onReceiveData(Object data) {}
 }
 
+/// Filters out expected Shizuku-related exceptions so they don't pollute
+/// the Sentry dashboard (binder restarts and pre-grant permission errors
+/// are normal operating conditions, not bugs).
+SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
+  final exceptions = event.exceptions;
+  if (exceptions == null || exceptions.isEmpty) return event;
+
+  bool hasShizukuFrame(SentryException ex) =>
+      (ex.stackTrace?.frames ?? []).any(
+        (f) =>
+            (f.package ?? '').toLowerCase().contains('shizuku') ||
+            (f.absPath ?? '').toLowerCase().contains('shizuku') ||
+            (f.module ?? '').toLowerCase().contains('shizuku'),
+      );
+
+  for (final ex in exceptions) {
+    final type = ex.type ?? '';
+    final value = (ex.value ?? '').toLowerCase();
+    if (type.contains('DeadObjectException')) return null;
+    if (type.contains('SecurityException') && value.contains('shizuku')) {
+      return null;
+    }
+    if (type.contains('RemoteException') && hasShizukuFrame(ex)) return null;
+    if (type.contains('PlatformException') &&
+        (value.contains('shizuku') || hasShizukuFrame(ex))) {
+      return null;
+    }
+  }
+  return event;
+}
+
 void main() async {
+  // Crash reporting was silently dropped in a May refactor (fb5a91c2) —
+  // without it, release-mode build failures like issue #217 are invisible.
+  const sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  if (sentryDsn.isEmpty) {
+    await _runObtainium();
+    return;
+  }
+  await SentryFlutter.init((options) {
+    options.dsn = sentryDsn;
+    options.tracesSampleRate = 0.2;
+    options.profilesSampleRate = 0.1;
+    options.enableAutoSessionTracking = true;
+    options.attachStacktrace = true;
+    options.sendDefaultPii = false;
+    options.attachScreenshot = false;
+    options.environment = kReleaseMode ? 'production' : 'development';
+    options.beforeSend = _filterShizukuNoise;
+  }, appRunner: _runObtainium);
+}
+
+Future<void> _runObtainium() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Replace the release-mode ErrorWidget (a bare grey rectangle — see issue
+  // #217) with a card that names the failure, so a broken widget is
+  // reportable instead of an anonymous blank page.
+  ErrorWidget.builder = (FlutterErrorDetails details) => Directionality(
+    textDirection: TextDirection.ltr,
+    child: Center(
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF442726),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Color(0xFFFFB4AB),
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Something went wrong rendering this part of the app.\nPlease screenshot this and report it on GitHub.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFFFFB4AB), fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              details.exception.toString(),
+              textAlign: TextAlign.center,
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Color(0xFFFFDAD6), fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
   try {
     ByteData data = await PlatformAssetBundle().load(
       'assets/ca/lets-encrypt-r3.pem',

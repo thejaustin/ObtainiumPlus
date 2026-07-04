@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -133,7 +134,7 @@ class AuthProvider with ChangeNotifier {
       await _prefs?.setStringList('play_store_dispensers', _dispensers);
     }
 
-    _authMode = AuthMode.values[_prefs?.getInt('auth_mode') ?? 2];
+    _authMode = AuthMode.values[_prefs?.safeInt('auth_mode') ?? 2];
     _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
 
     final profileJson = _prefs?.getString('selected_device_profile');
