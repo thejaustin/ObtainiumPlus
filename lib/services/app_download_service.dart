@@ -570,8 +570,8 @@ class AppDownloadService {
           appsToInstall.add(id);
 
           // Android 14+ User Pre-approval for non-silent installs (context required)
+          var osInfo = await DeviceInfoPlugin().androidInfo;
           if (context != null && context.mounted) {
-            var osInfo = await DeviceInfoPlugin().androidInfo;
             final settingsProvider = Provider.of<SettingsProvider>(
               context,
               listen: false,

@@ -312,7 +312,7 @@ class AddAppPageState extends State<AddAppPage> {
           );
         }
       } catch (e) {
-        if (mounted) showError(e, context);
+        if (context.mounted) showError(e, context);
       } finally {
         setState(() {
           gettingAppInfo = false;
@@ -476,7 +476,7 @@ class AddAppPageState extends State<AddAppPage> {
                       rethrow;
                     } else {
                       err.unexpected = true;
-                      if (mounted) showError(err, context);
+                      if (context.mounted) showError(err, context);
                       return null;
                     }
                   }
@@ -502,7 +502,7 @@ class AddAppPageState extends State<AddAppPage> {
           if (res.isEmpty) {
             throw ObtainiumError(tr('noResults'));
           }
-          if (!mounted) return;
+          if (!context.mounted) return;
           List<String>? selectedUrls = res.isEmpty
               ? []
               : await showDialog<List<String>?>(
@@ -527,7 +527,7 @@ class AddAppPageState extends State<AddAppPage> {
           }
         }
       } catch (e) {
-        if (mounted) showError(e, context);
+        if (context.mounted) showError(e, context);
       } finally {
         if (mounted) {
           setState(() {
