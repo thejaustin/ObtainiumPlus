@@ -1,4 +1,7 @@
 import 'dart:io';
+// TextDirection must be prefix-qualified: easy_localization re-exports
+// intl's TextDirection, which shadows the Flutter one.
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -200,7 +203,7 @@ Future<void> _runObtainium() async {
   // #217) with a card that names the failure, so a broken widget is
   // reportable instead of an anonymous blank page.
   ErrorWidget.builder = (FlutterErrorDetails details) => Directionality(
-    textDirection: TextDirection.ltr,
+    textDirection: ui.TextDirection.ltr,
     child: Center(
       child: Container(
         margin: const EdgeInsets.all(16),
