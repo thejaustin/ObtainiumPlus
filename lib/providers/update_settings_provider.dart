@@ -102,7 +102,10 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   double get updateIntervalSliderVal {
-    return prefs?.safeDouble('updateIntervalSliderVal') ?? 6.0;
+    return (prefs?.safeDouble('updateIntervalSliderVal') ?? 6.0).clamp(
+      0.0,
+      updateIntervalNodes.length.toDouble(),
+    );
   }
 
   set updateIntervalSliderVal(double val) {

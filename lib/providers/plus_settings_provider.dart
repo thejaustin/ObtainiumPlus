@@ -244,22 +244,24 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Range-bound prefs are clamped at the getter: imported/stale values can
+  // be arbitrary, and out-of-range ones break the Sliders bound to them.
   double get plusGlobalCornerRadius =>
-      _prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0;
+      (_prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0).clamp(0.0, 40.0);
   set plusGlobalCornerRadius(double val) {
     _prefs?.setDouble('plusGlobalCornerRadius', val);
     notifyListeners();
   }
 
   double get plusHomeCornerRadius =>
-      _prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0;
+      (_prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0).clamp(0.0, 40.0);
   set plusHomeCornerRadius(double val) {
     _prefs?.setDouble('plusHomeCornerRadius', val);
     notifyListeners();
   }
 
   double get plusSettingsCornerRadius =>
-      _prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0;
+      (_prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0).clamp(0.0, 40.0);
   set plusSettingsCornerRadius(double val) {
     _prefs?.setDouble('plusSettingsCornerRadius', val);
     notifyListeners();
@@ -313,7 +315,8 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get playStoreMinDownloads => _prefs?.safeInt('playStoreMinDownloads') ?? 0;
+  int get playStoreMinDownloads =>
+      (_prefs?.safeInt('playStoreMinDownloads') ?? 0).clamp(0, 1000000);
   set playStoreMinDownloads(int val) {
     _prefs?.setInt('playStoreMinDownloads', val);
     notifyListeners();
@@ -455,7 +458,8 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get plusBanWarningThreshold => _prefs?.safeInt('plusBanWarningThreshold') ?? 5;
+  int get plusBanWarningThreshold =>
+      (_prefs?.safeInt('plusBanWarningThreshold') ?? 5).clamp(1, 50);
   set plusBanWarningThreshold(int val) {
     _prefs?.setInt('plusBanWarningThreshold', val);
     notifyListeners();
