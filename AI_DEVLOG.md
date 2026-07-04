@@ -26,6 +26,13 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-04 (night) — Claude Code (Fable 5) [session 854c1d79 continued]
+
+**Done:**
+- **Backfilled 18 broken release bodies** (v1.4.3-p13…p30) — stale CHANGELOG_USER "What's New" replaced with categorized commits-since-previous-tag via GitHub API PATCH; hand-written Antigravity bodies and the p108 security warning left untouched.
+- **Search unification** — new `lib/services/app_search_service.dart`; Discover `runSearch`, Add App `runLiveSearch`, and command center `_runDiscoverSearch` all now share one fan-out/aggregate implementation (deselected sources + per-source query settings respected).
+- **Discover enhancements** — descriptions now shown in list tiles and grid cards (were fetched but dropped); clear button on search field; query reactive while typing (chips previously appeared only after unrelated rebuilds); result count row; grid/list toggle persisted as `discoverViewMode` in ViewSettingsProvider.
+
 ### 2026-07-04 (evening) — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Goal:** full settings-crash audit + ShizukuPlus-style release notes.
