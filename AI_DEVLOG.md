@@ -26,6 +26,12 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-04 (late night) — Claude Code (Fable 5) [session 854c1d79 continued]
+
+**Done:**
+- **Context-across-async-gap sweep COMPLETE** — all 56 remaining `use_build_context_synchronously` analyzer findings fixed (import_export, apps, app, add_app, developer_settings, onboarding, system_updates, microg_hub, logs_page, app_download_service, app_install_service, apps_provider). Analyzer count now **0**. Key patterns: `context.mounted` for captured build contexts (State.mounted doesn't satisfy closures), nullable contexts forwarded to install helpers sanitized to null when unmounted, onboarding captures SettingsProvider pre-await so welcomeShown always persists.
+- Lint debt from earlier entry is now closed.
+
 ### 2026-07-04 (night) — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Done:**
