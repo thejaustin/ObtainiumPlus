@@ -17,8 +17,11 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
@@ -59,7 +62,6 @@ const _fdroidCategories = <_Category>[
 
 class DiscoverPageState extends State<DiscoverPage> {
   bool searching = false;
-  bool _isGridView = true;
   bool _loadingMore = false;
   String searchQuery = '';
   String? _selectedCategory;
@@ -120,32 +122,12 @@ class DiscoverPageState extends State<DiscoverPage> {
     try {
       final settingsProvider = context.read<SettingsProvider>();
 
-      final List<MapEntry<String, Map<String, List<String>>>?> searchResults =
-          await Future.wait(
-            searchableSources.map((source) async {
-              if (settingsProvider.searchDeselected.contains(source.name))
-                return null;
-              try {
-                final res = await source.search(
-                  searchQuery,
-                  querySettings: sourceQuerySettings[source.name] ?? {},
-                );
-                return MapEntry(source.name, res);
-              } catch (e) {
-                talker.warning('Discover search failed for ${source.name}: $e');
-                return null;
-              }
-            }),
-          );
-
-      final Map<String, MapEntry<String, List<String>>> aggregatedResults = {};
-      for (final result in searchResults) {
-        if (result == null) continue;
-        final sourceName = result.key;
-        result.value.forEach((url, info) {
-          aggregatedResults[url] = MapEntry(sourceName, info);
-        });
-      }
+      final aggregatedResults = await AppSearchService.searchAllSources(
+        searchQuery,
+        sourceProvider: sourceProvider,
+        querySettings: sourceQuerySettings,
+        deselectedSources: settingsProvider.searchDeselected,
+      );
 
       if (!mounted) return;
       setState(() {
@@ -309,13 +291,26 @@ class DiscoverPageState extends State<DiscoverPage> {
         ),
       ),
       title: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        sourceName,
-        style: TextStyle(
-          fontSize: 11,
-          color: Theme.of(context).colorScheme.secondary,
-        ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (description.isNotEmpty)
+            Text(
+              description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          Text(
+            sourceName,
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+          ),
+        ],
       ),
+      isThreeLine: description.isNotEmpty,
       trailing: FilledButton.tonal(
         onPressed: () => _openAddApp(url),
         style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
@@ -329,6 +324,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     final result = results[url];
     if (result == null) return const SizedBox.shrink();
     final name = result.value.isNotEmpty ? result.value[0] : '';
+    final description = result.value.length > 1 ? result.value[1] : '';
     final sourceName = result.key;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -421,6 +417,19 @@ class DiscoverPageState extends State<DiscoverPage> {
                           letterSpacing: -0.2,
                         ),
                       ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 2),
                       Text(
                         sourceName,
@@ -430,7 +439,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
                       FilledButton.tonal(
                         onPressed: () {
                           AppHaptics.selectionClick();
@@ -502,6 +511,8 @@ class DiscoverPageState extends State<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final isGridView = viewSettings.discoverViewMode == ViewMode.grid;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
@@ -523,22 +534,42 @@ class DiscoverPageState extends State<DiscoverPage> {
                           onPressed: showSearchOptions,
                           tooltip: tr('searchOptions'),
                         ),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: runSearch,
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (searchQuery.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.clear),
+                                tooltip: 'Clear',
+                                onPressed: () {
+                                  _searchDebounce?.cancel();
+                                  _searchController.clear();
+                                  setState(() {
+                                    searchQuery = '';
+                                    results = {};
+                                  });
+                                },
+                              ),
+                            IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: runSearch,
+                            ),
+                          ],
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       onChanged: (value) {
-                        searchQuery = value;
-                        if (_selectedCategory != null) {
-                          setState(() {
+                        // setState so the clear button and per-source filter
+                        // chips react to the query as it is typed
+                        setState(() {
+                          searchQuery = value;
+                          if (_selectedCategory != null) {
                             _selectedCategory = null;
                             results = {};
-                          });
-                        }
+                          }
+                        });
                         _searchDebounce?.cancel();
                         _searchDebounce = Timer(
                           const Duration(milliseconds: 800),
@@ -595,23 +626,32 @@ class DiscoverPageState extends State<DiscoverPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    if (!searching)
+                      Text(
+                        plural('apps', results.length),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                    const Spacer(),
                     IconButton(
+                      tooltip: isGridView ? tr('listView') : tr('gridView'),
                       icon: Icon(
-                        _isGridView
+                        isGridView
                             ? Icons.view_list_rounded
                             : Icons.grid_view_rounded,
                       ),
-                      onPressed: () =>
-                          setState(() => _isGridView = !_isGridView),
+                      onPressed: () => viewSettings.discoverViewMode =
+                          isGridView ? ViewMode.list : ViewMode.grid,
                     ),
                   ],
                 ),
               ),
             ),
           if (searching)
-            _isGridView
+            isGridView
                 ? SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverGrid(
@@ -635,7 +675,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                   )
           else if (results.isNotEmpty)
-            _isGridView
+            isGridView
                 ? SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverGrid(

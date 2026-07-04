@@ -21,6 +21,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_search_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -92,33 +93,12 @@ class AddAppPageState extends State<AddAppPage> {
 
     try {
       final settingsProvider = context.read<SettingsProvider>();
-      final searchableSources =
-          sourceProvider.sources.where((e) => e.canSearch).toList();
 
-      final List<MapEntry<String, Map<String, List<String>>>?> searchResults =
-          await Future.wait(
-            searchableSources.map((source) async {
-              if (settingsProvider.searchDeselected.contains(source.name)) {
-                return null;
-              }
-              try {
-                // For live search, we use empty query settings
-                final res = await source.search(query, querySettings: {});
-                return MapEntry(source.name, res);
-              } catch (e) {
-                return null;
-              }
-            }),
-          );
-
-      final Map<String, MapEntry<String, List<String>>> aggregatedResults = {};
-      for (final result in searchResults) {
-        if (result == null) continue;
-        final sourceName = result.key;
-        result.value.forEach((url, info) {
-          aggregatedResults[url] = MapEntry(sourceName, info);
-        });
-      }
+      final aggregatedResults = await AppSearchService.searchAllSources(
+        query,
+        sourceProvider: sourceProvider,
+        deselectedSources: settingsProvider.searchDeselected,
+      );
 
       if (!mounted) return;
       setState(() {
