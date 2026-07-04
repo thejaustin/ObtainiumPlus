@@ -1199,14 +1199,14 @@ Widget buildRepoRenameWarning({
                     app?.app.id != null ? [app!.app.id] : [],
                     globalNavigatorKey.currentContext,
                   );
-                  if (res.isNotEmpty && !trackOnly && mounted) {
+                  if (res.isNotEmpty && !trackOnly && context.mounted) {
                     showMessage(successMessage, context);
                   }
-                  if (res.isNotEmpty && mounted) {
+                  if (res.isNotEmpty && context.mounted) {
                     Navigator.of(context).pop();
                   }
                 } catch (e) {
-                  if (mounted) showError(e, context);
+                  if (context.mounted) showError(e, context);
                 }
               }
             : null,

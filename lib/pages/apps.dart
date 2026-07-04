@@ -225,7 +225,7 @@ class AppsPageState extends State<AppsPage> {
       return appsProvider
           .checkUpdates()
           .catchError((e) {
-            if (mounted) showError(e is Map ? e['errors'] : e, context);
+            if (context.mounted) showError(e is Map ? e['errors'] : e, context);
             return <App>[];
           })
           .whenComplete(() {
@@ -550,7 +550,7 @@ class AppsPageState extends State<AppsPage> {
                       listedApps[appIndex].app.id,
                     ], globalNavigatorKey.currentContext)
                     .catchError((e) {
-                      if (mounted) showError(e, context);
+                      if (context.mounted) showError(e, context);
                       return <String>[];
                     });
               },
@@ -1014,13 +1014,13 @@ class AppsPageState extends State<AppsPage> {
                         globalNavigatorKey.currentContext,
                       )
                       .catchError((e) {
-                        if (mounted) showError(e, context);
+                        if (context.mounted) showError(e, context);
                         return <String>[];
                       })
                       .then((value) {
                         if (value.isNotEmpty &&
                             shouldInstallUpdates &&
-                            mounted) {
+                            context.mounted) {
                           showMessage(tr('appsUpdated'), context);
                         }
                       });
@@ -1061,7 +1061,7 @@ class AppsPageState extends State<AppsPage> {
                 ) !=
                 null;
           }
-          if (!mounted) return;
+          if (!context.mounted) return;
           if (cont) {
             await showDialog<Map<String, dynamic>?>(
               context: context,
@@ -1090,7 +1090,7 @@ class AppsPageState extends State<AppsPage> {
             );
           }
         } catch (err) {
-          if (mounted) showError(err, context);
+          if (context.mounted) showError(err, context);
         }
       };
     }
@@ -1141,7 +1141,7 @@ class AppsPageState extends State<AppsPage> {
           );
         },
       ).whenComplete(() {
-        if (mounted) Navigator.of(context).pop();
+        if (context.mounted) Navigator.of(context).pop();
       });
     }
 

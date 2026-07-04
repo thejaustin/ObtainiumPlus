@@ -91,7 +91,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           appsProvider
               .addAppsByURL(urls)
               .then((errors) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 if (errors.isEmpty) {
                   showMessage(
                     tr(
@@ -113,7 +113,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 }
               })
               .catchError((e) {
-                if (mounted) showError(e, context);
+                if (context.mounted) showError(e, context);
               })
               .whenComplete(() {
                 if (!mounted) return;
@@ -134,12 +134,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
             bsp: behaviorSettings,
           )
           .then((String? result) {
-            if (result != null && mounted) {
+            if (result != null && context.mounted) {
               showMessage(tr('exportedTo', args: [result]), context);
             }
           })
           .catchError((e) {
-            if (mounted) showError(e, context);
+            if (context.mounted) showError(e, context);
           });
     }
 
@@ -158,7 +158,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 throw ObtainiumError(tr('invalidInput'));
               }
               appsProvider.import(data).then((value) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 appsProvider.addMissingCategories(context.read());
                 showMessage(
                   '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
@@ -170,7 +170,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           })
           .catchError((e) {
-            if (mounted) showError(e, context);
+            if (context.mounted) showError(e, context);
           })
           .whenComplete(() {
             if (!mounted) return;
@@ -251,7 +251,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 querySettings: values,
               );
               if (urlsWithDescriptions.isNotEmpty) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 var selectedUrls = await showDialog<List<String>?>(
                       context: context,
                       builder: (BuildContext ctx) {
@@ -266,7 +266,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     selectedUrls,
                     sourceOverride: source,
                   );
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   if (errors.isEmpty) {
                     showMessage(
                       tr(
@@ -295,7 +295,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
-            if (mounted) showError(e, context);
+            if (context.mounted) showError(e, context);
           })
           .whenComplete(() {
             if (!mounted) return;
@@ -325,7 +325,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               var urlsWithDescriptions = await source.getUrlsWithDescriptions(
                 values.values.map((e) => e.toString()).toList(),
               );
-              if (!mounted) return;
+              if (!context.mounted) return;
               var selectedUrls = await showDialog<List<String>?>(
                     context: context,
                     builder: (BuildContext ctx) {
@@ -334,7 +334,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   );
               if (selectedUrls != null) {
                 var errors = await appsProvider.addAppsByURL(selectedUrls);
-                if (!mounted) return;
+                if (!context.mounted) return;
                 if (errors.isEmpty) {
                   showMessage(
                     tr(
@@ -358,7 +358,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           }()
           .catchError((e) {
-            if (mounted) showError(e, context);
+            if (context.mounted) showError(e, context);
           })
           .whenComplete(() {
             if (!mounted) return;
