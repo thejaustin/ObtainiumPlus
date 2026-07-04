@@ -146,7 +146,7 @@ class CategorySections extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              _buildCategoryStats(appsInCategory),
+              _buildCategoryStats(context, appsInCategory),
             ],
           ),
         ),
@@ -194,7 +194,8 @@ class CategorySections extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryStats(List<AppInMemory> apps) {
+  Widget _buildCategoryStats(BuildContext context, List<AppInMemory> apps) {
+    final colorScheme = Theme.of(context).colorScheme;
     final updateCount = apps
         .where(
           (a) => AppUpdateService.areVersionsDifferent(
@@ -212,20 +213,20 @@ class CategorySections extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.1),
+              color: colorScheme.error.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
+              border: Border.all(color: colorScheme.error.withOpacity(0.2)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.update_rounded, size: 12, color: Colors.redAccent),
+                Icon(Icons.update_rounded, size: 12, color: colorScheme.error),
                 const SizedBox(width: 4),
                 Text(
                   updateCount.toString(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
+                    color: colorScheme.error,
                   ),
                 ),
               ],
@@ -337,7 +338,7 @@ class CategorySections extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildCategoryStats(appsInCategory),
+            _buildCategoryStats(context, appsInCategory),
             if (enableReorder) ...[
               const SizedBox(width: 8),
               ReorderableDragStartListener(

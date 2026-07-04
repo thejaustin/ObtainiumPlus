@@ -17,6 +17,11 @@ class ThemeBuilder {
       useMaterial3: true,
       colorScheme: colorScheme,
       fontFamily: useSystemFont ? 'SystemFont' : 'Roboto',
+      // M3 sparkle ripple is the expressive touch feedback; shader-based, so
+      // it also avoids the clipped-ripple artifacts of the legacy ink splash
+      splashFactory: plusEnableMaterialExpressive
+          ? InkSparkle.splashFactory
+          : InkRipple.splashFactory,
       inputDecorationTheme: _buildInputDecorationTheme(
         colorScheme,
         plusEnableMaterialExpressive,

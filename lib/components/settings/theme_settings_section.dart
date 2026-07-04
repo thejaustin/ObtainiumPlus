@@ -508,7 +508,11 @@ class ThemeSettingsSection extends StatelessWidget {
                         }
                       },
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(context.read<PlusSettingsProvider>().plusGlobalCornerRadius),
+                        borderRadius: BorderRadius.circular(
+                          context
+                              .watch<PlusSettingsProvider>()
+                              .plusGlobalCornerRadius,
+                        ),
                       ),
                     ),
                   );
