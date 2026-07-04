@@ -15,7 +15,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   List<String> get bottomTabs {
-    return prefs?.getStringList('bottomTabs') ?? ['apps'];
+    return prefs?.safeStringList('bottomTabs') ?? ['apps'];
   }
 
   set bottomTabs(List<String> bottomTabs) {
@@ -24,8 +24,8 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   SortColumnSettings get sortColumn {
-    return SortColumnSettings.values[prefs?.safeInt('sortColumn') ??
-        SortColumnSettings.nameAuthor.index];
+    return prefs?.safeEnum('sortColumn', SortColumnSettings.values) ??
+        SortColumnSettings.nameAuthor;
   }
 
   set sortColumn(SortColumnSettings s) {
@@ -34,8 +34,8 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   SortOrderSettings get sortOrder {
-    return SortOrderSettings.values[prefs?.safeInt('sortOrder') ??
-        SortOrderSettings.ascending.index];
+    return prefs?.safeEnum('sortOrder', SortOrderSettings.values) ??
+        SortOrderSettings.ascending;
   }
 
   set sortOrder(SortOrderSettings s) {
@@ -44,7 +44,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   bool get showAppWebpage {
-    return prefs?.getBool('showAppWebpage') ?? false;
+    return prefs?.safeBool('showAppWebpage') ?? false;
   }
 
   set showAppWebpage(bool show) {
@@ -53,7 +53,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   bool get pinUpdates {
-    return prefs?.getBool('pinUpdates') ?? true;
+    return prefs?.safeBool('pinUpdates') ?? true;
   }
 
   set pinUpdates(bool show) {
@@ -62,7 +62,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   bool get buryNonInstalled {
-    return prefs?.getBool('buryNonInstalled') ?? false;
+    return prefs?.safeBool('buryNonInstalled') ?? false;
   }
 
   set buryNonInstalled(bool show) {
@@ -71,7 +71,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   bool get groupByCategory {
-    return prefs?.getBool('groupByCategory') ?? false;
+    return prefs?.safeBool('groupByCategory') ?? false;
   }
 
   set groupByCategory(bool show) {
@@ -80,7 +80,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   bool get categoriesCollapsedByDefault {
-    return prefs?.getBool('categoriesCollapsedByDefault') ?? false;
+    return prefs?.safeBool('categoriesCollapsedByDefault') ?? false;
   }
 
   set categoriesCollapsedByDefault(bool collapsed) {
@@ -91,7 +91,7 @@ class ViewSettingsProvider with ChangeNotifier {
   Map<String, int> get categories {
     try {
       return Map<String, int>.from(
-        jsonDecode(prefs?.getString('categories') ?? '{}'),
+        jsonDecode(prefs?.safeString('categories') ?? '{}'),
       );
     } catch (e) {
       return {};
@@ -121,7 +121,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   List<String> get categoryOrder {
-    return prefs?.getStringList('categoryOrder') ?? [];
+    return prefs?.safeStringList('categoryOrder') ?? [];
   }
 
   set categoryOrder(List<String> order) {
@@ -137,7 +137,8 @@ class ViewSettingsProvider with ChangeNotifier {
     } else if (appCount > 0) {
       defaultIndex = AppSortMethod.latestUpdates.index;
     }
-    return AppSortMethod.values[prefs?.safeInt('appSortMethod') ?? defaultIndex];
+    return prefs?.safeEnum('appSortMethod', AppSortMethod.values) ??
+        AppSortMethod.values[defaultIndex];
   }
 
   set appSortMethod(AppSortMethod method) {
@@ -146,7 +147,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   ViewMode get globalViewMode =>
-      ViewMode.values[prefs?.safeInt('globalViewMode') ?? ViewMode.list.index];
+      prefs?.safeEnum('globalViewMode', ViewMode.values) ?? ViewMode.list;
   set globalViewMode(ViewMode mode) {
     prefs?.setInt('globalViewMode', mode.index);
     notifyListeners();
@@ -158,40 +159,40 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get displayShowAppCount => prefs?.getBool('displayShowAppCount') ?? true;
+  bool get displayShowAppCount => prefs?.safeBool('displayShowAppCount') ?? true;
   set displayShowAppCount(bool val) {
     prefs?.setBool('displayShowAppCount', val);
     notifyListeners();
   }
 
   bool get displayShowFilterChips =>
-      prefs?.getBool('displayShowFilterChips') ?? true;
+      prefs?.safeBool('displayShowFilterChips') ?? true;
   set displayShowFilterChips(bool val) {
     prefs?.setBool('displayShowFilterChips', val);
     notifyListeners();
   }
 
-  bool get displayShowAuthor => prefs?.getBool('displayShowAuthor') ?? false;
+  bool get displayShowAuthor => prefs?.safeBool('displayShowAuthor') ?? false;
   set displayShowAuthor(bool val) {
     prefs?.setBool('displayShowAuthor', val);
     notifyListeners();
   }
 
-  bool get displayShowVersion => prefs?.getBool('displayShowVersion') ?? true;
+  bool get displayShowVersion => prefs?.safeBool('displayShowVersion') ?? true;
   set displayShowVersion(bool val) {
     prefs?.setBool('displayShowVersion', val);
     notifyListeners();
   }
 
-  bool get displayShowDate => prefs?.getBool('displayShowDate') ?? false;
+  bool get displayShowDate => prefs?.safeBool('displayShowDate') ?? false;
   set displayShowDate(bool val) {
     prefs?.setBool('displayShowDate', val);
     notifyListeners();
   }
 
   CategoryIconPosition get categoryIconPosition =>
-      CategoryIconPosition.values[prefs?.safeInt('categoryIconPosition') ??
-          CategoryIconPosition.leading.index];
+      prefs?.safeEnum('categoryIconPosition', CategoryIconPosition.values) ??
+      CategoryIconPosition.leading;
   set categoryIconPosition(CategoryIconPosition val) {
     prefs?.setInt('categoryIconPosition', val.index);
     notifyListeners();
@@ -204,26 +205,27 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   AppListDensity get appListDensity =>
-      AppListDensity.values[prefs?.safeInt('appListDensity') ??
-          AppListDensity.comfortable.index];
+      prefs?.safeEnum('appListDensity', AppListDensity.values) ??
+      AppListDensity.comfortable;
   set appListDensity(AppListDensity val) {
     prefs?.setInt('appListDensity', val.index);
     notifyListeners();
   }
 
   GridCategoryMode get gridCategoryMode =>
-      GridCategoryMode.values[prefs?.safeInt('gridCategoryMode') ??
-          GridCategoryMode.sections.index];
+      prefs?.safeEnum('gridCategoryMode', GridCategoryMode.values) ??
+      GridCategoryMode.sections;
   set gridCategoryMode(GridCategoryMode val) {
     prefs?.setInt('gridCategoryMode', val.index);
     notifyListeners();
   }
 
   NavigationDestinationLabelBehavior get navigationLabelBehavior =>
-      NavigationDestinationLabelBehavior.values[prefs?.safeInt(
-            'navigationLabelBehavior',
-          ) ??
-          0];
+      prefs?.safeEnum(
+        'navigationLabelBehavior',
+        NavigationDestinationLabelBehavior.values,
+      ) ??
+      NavigationDestinationLabelBehavior.values[0];
   set navigationLabelBehavior(NavigationDestinationLabelBehavior val) {
     prefs?.setInt('navigationLabelBehavior', val.index);
     notifyListeners();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SourceConfigProvider with ChangeNotifier {
@@ -10,7 +11,7 @@ class SourceConfigProvider with ChangeNotifier {
   }
 
   String? getSettingString(String settingId) {
-    String? str = _prefs?.getString(settingId);
+    String? str = _prefs?.safeString(settingId);
     return str?.isNotEmpty == true ? str : null;
   }
 
@@ -24,7 +25,7 @@ class SourceConfigProvider with ChangeNotifier {
   }
 
   bool getSettingBool(String settingId) {
-    return _prefs?.getBool(settingId) ?? false;
+    return _prefs?.safeBool(settingId) ?? false;
   }
 
   void setSettingBool(String settingId, bool value) {

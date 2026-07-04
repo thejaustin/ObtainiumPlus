@@ -2064,7 +2064,7 @@ class AppsProvider with ChangeNotifier {
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
         try {
           final SharedPreferences prefs = await SharedPreferences.getInstance();
-          final bool enableBanWarnings = prefs.getBool('plusEnableBanWarnings') ?? false;
+          final bool enableBanWarnings = prefs.safeBool('plusEnableBanWarnings') ?? false;
           final int threshold = prefs.safeInt('plusBanWarningThreshold') ?? 5;
           if (enableBanWarnings && appIds.length > threshold) {
             NotificationsProvider().notify(DispenserBanWarningNotification(appIds.length));

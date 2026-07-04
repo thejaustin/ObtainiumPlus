@@ -101,7 +101,7 @@ class KnownIssuesService {
       return [];
     }
 
-    final dismissed = prefs.getStringList(_dismissedKey) ?? [];
+    final dismissed = prefs.safeStringList(_dismissedKey) ?? [];
     return issues
         .where(
           (i) =>
@@ -114,7 +114,7 @@ class KnownIssuesService {
   static Future<void> dismissIssue(String issueId) async {
     final prefs = await SharedPreferences.getInstance();
     final dismissed = List<String>.from(
-      prefs.getStringList(_dismissedKey) ?? [],
+      prefs.safeStringList(_dismissedKey) ?? [],
     );
     if (!dismissed.contains(issueId)) {
       dismissed.add(issueId);
@@ -129,7 +129,7 @@ class KnownIssuesService {
         DateTime.fromMillisecondsSinceEpoch(cacheTs),
       );
       if (age.inHours < _cacheTtlHours) {
-        return prefs.getString(_cacheKey);
+        return prefs.safeString(_cacheKey);
       }
     }
 
@@ -148,6 +148,6 @@ class KnownIssuesService {
     } catch (_) {
       // Network unavailable — fall back to stale cache
     }
-    return prefs.getString(_cacheKey);
+    return prefs.safeString(_cacheKey);
   }
 }

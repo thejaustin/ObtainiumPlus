@@ -125,7 +125,7 @@ class AuthProvider with ChangeNotifier {
     _prefs = prefs;
 
     _dispensers =
-        _prefs?.getStringList('play_store_dispensers') ??
+        _prefs?.safeStringList('play_store_dispensers') ??
         [];
 
     // Migrate existing users off the default auroraoss.com dispenser to honor the maintainer's request
@@ -134,10 +134,10 @@ class AuthProvider with ChangeNotifier {
       await _prefs?.setStringList('play_store_dispensers', _dispensers);
     }
 
-    _authMode = AuthMode.values[_prefs?.safeInt('auth_mode') ?? 2];
-    _spoofedAndroidId = _prefs?.getString('spoofed_android_id');
+    _authMode = _prefs?.safeEnum('auth_mode', AuthMode.values) ?? AuthMode.values[2];
+    _spoofedAndroidId = _prefs?.safeString('spoofed_android_id');
 
-    final profileJson = _prefs?.getString('selected_device_profile');
+    final profileJson = _prefs?.safeString('selected_device_profile');
     if (profileJson != null) {
       try {
         _selectedProfile = DeviceProfile.fromJson(jsonDecode(profileJson));
@@ -147,7 +147,7 @@ class AuthProvider with ChangeNotifier {
     // One-time migration: move email from SharedPreferences → secure storage.
     // Uses try/finally so the plaintext key is always removed even if the
     // secure write fails (prefer losing the value over leaving it in plaintext).
-    final legacyEmail = _prefs?.getString('microg_email');
+    final legacyEmail = _prefs?.safeString('microg_email');
     if (legacyEmail != null) {
       try {
         await _storage.write(key: _kMicroGEmail, value: legacyEmail);

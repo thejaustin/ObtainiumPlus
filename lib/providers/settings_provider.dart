@@ -40,7 +40,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool checkAndFlipFirstRun() {
-    bool result = prefs?.getBool('firstRun') ?? true;
+    bool result = prefs?.safeBool('firstRun') ?? true;
     if (result) {
       prefs?.setBool('firstRun', false);
     }
@@ -48,7 +48,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get welcomeShown {
-    return prefs?.getBool('welcomeShown') ?? false;
+    return prefs?.safeBool('welcomeShown') ?? false;
   }
 
   set welcomeShown(bool welcomeShown) {
@@ -57,7 +57,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get googleVerificationWarningShown {
-    return prefs?.getBool('googleVerificationWarningShown') ?? false;
+    return prefs?.safeBool('googleVerificationWarningShown') ?? false;
   }
 
   set googleVerificationWarningShown(bool googleVerificationWarningShown) {
@@ -77,7 +77,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get hideTrackOnlyWarning {
-    return prefs?.getBool('hideTrackOnlyWarning') ?? false;
+    return prefs?.safeBool('hideTrackOnlyWarning') ?? false;
   }
 
   set hideTrackOnlyWarning(bool show) {
@@ -86,7 +86,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get hideAPKOriginWarning {
-    return prefs?.getBool('hideAPKOriginWarning') ?? false;
+    return prefs?.safeBool('hideAPKOriginWarning') ?? false;
   }
 
   set hideAPKOriginWarning(bool show) {
@@ -95,7 +95,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   String? getSettingString(String settingId) {
-    String? str = prefs?.getString(settingId);
+    String? str = prefs?.safeString(settingId);
     return str?.isNotEmpty == true ? str : null;
   }
 
@@ -105,7 +105,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool? getSettingBool(String settingId) {
-    return prefs?.getBool(settingId) ?? false;
+    return prefs?.safeBool(settingId) ?? false;
   }
 
   void setSettingBool(String settingId, bool value) {
@@ -114,7 +114,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Locale? get forcedLocale {
-    var flSegs = prefs?.getString('forcedLocale')?.split('-');
+    var flSegs = prefs?.safeString('forcedLocale')?.split('-');
     var fl = flSegs != null && flSegs.isNotEmpty
         ? Locale(flSegs[0], flSegs.length > 1 ? flSegs[1] : null)
         : null;
@@ -148,7 +148,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get showDebugOpts {
-    return prefs?.getBool('showDebugOpts') ?? false;
+    return prefs?.safeBool('showDebugOpts') ?? false;
   }
 
   set showDebugOpts(bool val) {
@@ -157,7 +157,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   List<String> get searchDeselected {
-    return prefs?.getStringList('searchDeselected') ??
+    return prefs?.safeStringList('searchDeselected') ??
         SourceProvider().sources.map((s) => s.name).toList();
   }
 
@@ -173,29 +173,29 @@ class SettingsProvider with ChangeNotifier {
 
   // --- BehaviorSettingsProvider forwards ---
   @Deprecated('Use BehaviorSettingsProvider.useShizuku')
-  bool get useShizuku => prefs?.getBool('useShizuku') ?? false;
+  bool get useShizuku => prefs?.safeBool('useShizuku') ?? false;
   bool get removeOnExternalUninstall =>
-      prefs?.getBool('removeOnExternalUninstall') ?? false;
+      prefs?.safeBool('removeOnExternalUninstall') ?? false;
   bool get disablePageTransitions =>
-      prefs?.getBool('disablePageTransitions') ?? false;
+      prefs?.safeBool('disablePageTransitions') ?? false;
   bool get reversePageTransitions =>
-      prefs?.getBool('reversePageTransitions') ?? false;
+      prefs?.safeBool('reversePageTransitions') ?? false;
   bool get autoExportOnChanges =>
-      prefs?.getBool('autoExportOnChanges') ?? false;
+      prefs?.safeBool('autoExportOnChanges') ?? false;
   int get exportSettings => prefs?.safeInt('exportSettings') ?? 1;
-  bool get parallelDownloads => prefs?.getBool('parallelDownloads') ?? true;
+  bool get parallelDownloads => prefs?.safeBool('parallelDownloads') ?? true;
   bool get shizukuPretendToBeGooglePlay =>
-      prefs?.getBool('shizukuPretendToBeGooglePlay') ?? false;
+      prefs?.safeBool('shizukuPretendToBeGooglePlay') ?? false;
   double get animationSpeedMultiplier =>
       prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   bool get enableContextualTips =>
-      prefs?.getBool('enableContextualTips') ?? true;
+      prefs?.safeBool('enableContextualTips') ?? true;
   set enableContextualTips(bool val) {
     prefs?.setBool('enableContextualTips', val);
     notifyListeners();
   }
 
-  bool get enableDeepLogging => prefs?.getBool('enableDeepLogging') ?? false;
+  bool get enableDeepLogging => prefs?.safeBool('enableDeepLogging') ?? false;
   set enableDeepLogging(bool val) {
     prefs?.setBool('enableDeepLogging', val);
     notifyListeners();
@@ -203,7 +203,7 @@ class SettingsProvider with ChangeNotifier {
 
   // preferredUpdateSource is in BehaviorSettingsProvider
   String get preferredUpdateSource {
-    final val = prefs?.getString('preferredUpdateSource') ?? 'direct';
+    final val = prefs?.safeString('preferredUpdateSource') ?? 'direct';
     if (val == 'github' || val == 'apkpure') return 'direct';
     return val;
   }
@@ -214,48 +214,48 @@ class SettingsProvider with ChangeNotifier {
   }
 
   // updateSettings shortcut (not a provider, just a string)
-  String get updateSettings => prefs?.getString('updateSettings') ?? '';
+  String get updateSettings => prefs?.safeString('updateSettings') ?? '';
 
   // --- UpdateSettingsProvider forwards ---
   @Deprecated('Use UpdateSettingsProvider.onlyCheckInstalledOrTrackOnlyApps')
   bool get onlyCheckInstalledOrTrackOnlyApps =>
-      prefs?.getBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
+      prefs?.safeBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
   String get obtainiumReleaseChannel =>
-      prefs?.getString('obtainiumReleaseChannel') ?? 'stable';
+      prefs?.safeString('obtainiumReleaseChannel') ?? 'stable';
   String get autoUpdateRules =>
-      prefs?.getString('autoUpdateRules') ?? '';
+      prefs?.safeString('autoUpdateRules') ?? '';
 
   // --- PlusSettingsProvider forwards ---
   @Deprecated('Use PlusSettingsProvider.plusEnableGlassmorphism')
   bool get plusEnableGlassmorphism =>
-      prefs?.getBool('plusEnableGlassmorphism') ?? true;
+      prefs?.safeBool('plusEnableGlassmorphism') ?? true;
   bool get plusEnablePopupSlider =>
-      prefs?.getBool('plusEnablePopupSlider') ?? true;
+      prefs?.safeBool('plusEnablePopupSlider') ?? true;
   bool get plusEnableExpressiveProgress =>
-      prefs?.getBool('plusEnableExpressiveProgress') ?? true;
+      prefs?.safeBool('plusEnableExpressiveProgress') ?? true;
   bool get plusEnableSmartRetries =>
-      prefs?.getBool('plusEnableSmartRetries') ?? true;
+      prefs?.safeBool('plusEnableSmartRetries') ?? true;
   bool get plusEnableAdvancedSorting =>
-      prefs?.getBool('plusEnableAdvancedSorting') ?? true;
+      prefs?.safeBool('plusEnableAdvancedSorting') ?? true;
   bool get plusEnableUserPreapproval =>
-      prefs?.getBool('plusEnableUserPreapproval') ?? true;
-  bool get plusDeveloperMode => prefs?.getBool('plusDeveloperMode') ?? false;
+      prefs?.safeBool('plusEnableUserPreapproval') ?? true;
+  bool get plusDeveloperMode => prefs?.safeBool('plusDeveloperMode') ?? false;
   bool get plusEnableSystemUpdateScanner =>
-      prefs?.getBool('plusEnableSystemUpdateScanner') ?? false;
-  bool get plusTopUILayout => prefs?.getBool('plusTopUILayout') ?? false;
+      prefs?.safeBool('plusEnableSystemUpdateScanner') ?? false;
+  bool get plusTopUILayout => prefs?.safeBool('plusTopUILayout') ?? false;
   bool get plusShowDashboardSearch =>
-      prefs?.getBool('plusShowDashboardSearch') ?? true;
+      prefs?.safeBool('plusShowDashboardSearch') ?? true;
   bool get plusShowFloatingSearch =>
-      prefs?.getBool('plusShowFloatingSearch') ?? true;
-  bool get plusFabShowSearch => prefs?.getBool('plusFabShowSearch') ?? true;
+      prefs?.safeBool('plusShowFloatingSearch') ?? true;
+  bool get plusFabShowSearch => prefs?.safeBool('plusFabShowSearch') ?? true;
   bool get plusFabShowAddByUrl =>
-      prefs?.getBool('plusFabShowAddByUrl') ?? true;
+      prefs?.safeBool('plusFabShowAddByUrl') ?? true;
   bool get plusFabShowGithubStarred =>
-      prefs?.getBool('plusFabShowGithubStarred') ?? true;
+      prefs?.safeBool('plusFabShowGithubStarred') ?? true;
   bool get plusFabShowGithubPersonalRepos =>
-      prefs?.getBool('plusFabShowGithubPersonalRepos') ?? true;
+      prefs?.safeBool('plusFabShowGithubPersonalRepos') ?? true;
   bool get plusFabShowImportInstalled =>
-      prefs?.getBool('plusFabShowImportInstalled') ?? true;
+      prefs?.safeBool('plusFabShowImportInstalled') ?? true;
   double get plusGlobalCornerRadius =>
       prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0;
   double get plusHomeCornerRadius =>
@@ -263,9 +263,9 @@ class SettingsProvider with ChangeNotifier {
   double get plusSettingsCornerRadius =>
       prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0;
   bool get plusOverrideIndividualCornerRadius =>
-      prefs?.getBool('plusOverrideIndividualCornerRadius') ?? false;
+      prefs?.safeBool('plusOverrideIndividualCornerRadius') ?? false;
   bool get plusEnableNotificationDigest =>
-      prefs?.getBool('plusEnableNotificationDigest') ?? false;
+      prefs?.safeBool('plusEnableNotificationDigest') ?? false;
   // plusSettings is accessed as a provider — return a reference to self
   // so code like `settings.plusSettings.someField` doesn't blow up at runtime.
   // For compile-time, the property just needs to exist with a valid type.
