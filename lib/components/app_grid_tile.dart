@@ -109,10 +109,7 @@ class _AppGridTileState extends State<AppGridTile>
           scale: _isPressed ? 0.95 : 1.0,
           duration: const Duration(milliseconds: 100),
           curve: curve,
-          child: ConditionalBlur(
-            enabled: plusSettings.plusEnableGlassmorphism,
-            sigma: 10,
-            child: AnimatedContainer(
+          child: AnimatedContainer(
               duration: Duration(
                 milliseconds: plusSettings.plusEnableEnhancedAnimations
                     ? AppConstants.shortAnimationMs
@@ -164,6 +161,16 @@ class _AppGridTileState extends State<AppGridTile>
                 borderRadius: BorderRadius.circular(cardBorderRadius),
                 child: Stack(
                   children: [
+                    // Backdrop blur clipped to the card — must stay inside
+                    // ClipRRect or it blurs the whole screen behind the tile
+                    if (plusSettings.plusEnableGlassmorphism)
+                      Positioned.fill(
+                        child: ConditionalBlur(
+                          enabled: true,
+                          sigma: 10,
+                          child: Container(color: Colors.transparent),
+                        ),
+                      ),
                     // Glass sheen
                     if (plusSettings.plusEnableGlassmorphism)
                       Positioned.fill(
@@ -346,7 +353,6 @@ class _AppGridTileState extends State<AppGridTile>
                 ),
               ),
             ),
-          ),
         );
       },
     );

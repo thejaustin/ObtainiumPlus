@@ -1108,19 +1108,19 @@ class AddAppPageState extends State<AddAppPage> {
           ? plusSettings.plusHomeCornerRadius
           : plusSettings.plusGlobalCornerRadius;
 
-      return ConditionalBlur(
-        enabled: plusSettings.plusEnableGlassmorphism,
-        sigma: 20,
-        child: Container(
-          decoration: BoxDecoration(
+      return ClipRRect(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(radius.clamp(20.0, 48.0)),
+        ),
+        child: ConditionalBlur(
+          enabled: plusSettings.plusEnableGlassmorphism,
+          sigma: 20,
+          child: Container(
             color: Theme.of(context).colorScheme.surface.withOpacity(
               plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
             ),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(radius.clamp(20.0, 48.0)),
-            ),
+            child: scaffold,
           ),
-          child: scaffold,
         ),
       );
     }
