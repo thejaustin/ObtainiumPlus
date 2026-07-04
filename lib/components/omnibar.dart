@@ -200,10 +200,7 @@ class _OmnibarState extends State<Omnibar> {
     return Semantics(
       label: _isUrl ? tr('appURLList') : tr('search'),
       textField: true,
-      child: ConditionalBlur(
-        enabled: settings.plusEnableGlassmorphism,
-        sigma: 10,
-        child: AnimatedContainer(
+      child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Easing.standard,
           decoration: BoxDecoration(
@@ -237,6 +234,16 @@ class _OmnibarState extends State<Omnibar> {
             borderRadius: BorderRadius.circular(itemRadius),
             child: Stack(
               children: [
+                // Backdrop blur clipped to the bar — must stay inside
+                // ClipRRect or it blurs the whole screen behind it
+                if (settings.plusEnableGlassmorphism)
+                  Positioned.fill(
+                    child: ConditionalBlur(
+                      enabled: true,
+                      sigma: 10,
+                      child: Container(color: Colors.transparent),
+                    ),
+                  ),
                 // Inner sheen
                 if (settings.plusEnableGlassmorphism)
                   Positioned.fill(
@@ -386,7 +393,6 @@ class _OmnibarState extends State<Omnibar> {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -636,58 +642,50 @@ class AppActionsFAB extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ConditionalBlur(
-            enabled: settings.plusEnableGlassmorphism,
-            sigma: 12,
-            child: FloatingActionButton.small(
-              heroTag: 'fab_search',
-              onPressed: () {
-                AppHaptics.selectionClick();
-                CommandCenter.show(context);
-              },
-              child: const Icon(Icons.search_rounded),
-            ),
+          FloatingActionButton.small(
+            heroTag: 'fab_search',
+            onPressed: () {
+              AppHaptics.selectionClick();
+              CommandCenter.show(context);
+            },
+            child: const Icon(Icons.search_rounded),
           ),
           const SizedBox(width: 12),
           Semantics(
             label: tr('addApp'),
             button: true,
-            child: ConditionalBlur(
-              enabled: settings.plusEnableGlassmorphism,
-              sigma: 12,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.tertiary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    )
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.tertiary,
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: FloatingActionButton.extended(
-                  heroTag: 'fab_add',
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    _showAddAppMenu(context);
-                  },
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  hoverElevation: 0,
-                  focusElevation: 0,
-                  highlightElevation: 0,
-                  icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-                  label: Text(tr('addApp'), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: FloatingActionButton.extended(
+                heroTag: 'fab_add',
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  _showAddAppMenu(context);
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                hoverElevation: 0,
+                focusElevation: 0,
+                highlightElevation: 0,
+                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+                label: Text(tr('addApp'), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
               ),
             ),
           ),

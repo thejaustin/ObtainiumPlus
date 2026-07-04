@@ -126,17 +126,12 @@ class _AppDashboardState extends State<AppDashboard>
               _card0Anim,
               _buildBatchActionsHub(context, appsProvider, radius),
             )
-          else ...[
+          else if (settings.plusShowDashboardSearch)
             // Omnibar - Unified Search/Add
-            if (settings.plusShowDashboardSearch) ...[
-              Omnibar(
-                onSearchQuery: widget.onSearchQuery,
-                onUrlInput: widget.onUrlInput,
-              ),
-              const SizedBox(height: 20),
-            ],
-
-          ],
+            Omnibar(
+              onSearchQuery: widget.onSearchQuery,
+              onUrlInput: widget.onUrlInput,
+            ),
 
           const SizedBox(height: 24),
 

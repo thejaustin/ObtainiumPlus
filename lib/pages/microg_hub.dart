@@ -1,12 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
-import 'package:obtainium/components/common/conditional_blur.dart';
-import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/models/app.dart';
@@ -128,7 +123,6 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final appsProvider = context.watch<AppsProvider>();
-    final plusSettings = context.watch<PlusSettingsProvider>();
 
     // Calculate overall progress from selected components
     double overallProgress = 0;
@@ -163,10 +157,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(tr('microGHub'))),
-      body: ConditionalBlur(
-        enabled: plusSettings.plusEnableGlassmorphism,
-        sigma: 15,
-        child: ListView(
+      body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _buildInfoCard(cs),
@@ -197,7 +188,6 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
               ),
             const SizedBox(height: 40),
           ],
-        ),
       ),
     );
   }

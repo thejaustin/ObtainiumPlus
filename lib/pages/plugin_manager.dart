@@ -1,9 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -20,15 +17,11 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
   @override
   Widget build(BuildContext context) {
     final pluginProvider = context.watch<PluginProvider>();
-    final settingsProvider = context.watch<SettingsProvider>();
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Plugin Manager')),
-      body: ConditionalBlur(
-        enabled: settingsProvider.plusEnableGlassmorphism,
-        sigma: 15,
-        child: ListView(
+      body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _buildInstallCard(cs, pluginProvider),
@@ -52,7 +45,6 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                 (plugin) => _buildPluginTile(cs, plugin, pluginProvider),
               ),
           ],
-        ),
       ),
     );
   }
