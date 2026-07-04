@@ -153,6 +153,13 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  ViewMode get discoverViewMode =>
+      prefs?.safeEnum('discoverViewMode', ViewMode.values) ?? ViewMode.grid;
+  set discoverViewMode(ViewMode mode) {
+    prefs?.setInt('discoverViewMode', mode.index);
+    notifyListeners();
+  }
+
   int get gridColumnCount =>
       (prefs?.safeInt('gridColumnCount') ?? 0).clamp(0, 6);
   set gridColumnCount(int val) {

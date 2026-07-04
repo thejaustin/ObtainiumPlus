@@ -11,6 +11,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
@@ -124,29 +125,12 @@ class _CommandCenterState extends State<CommandCenter> {
     setState(() => _isSearching = true);
     try {
       final settings = context.read<SettingsProvider>();
-      final searchableSources = _sourceProvider.sources
-          .where((e) => e.canSearch)
-          .toList();
 
-      final results = await Future.wait(
-        searchableSources.map((source) async {
-          if (settings.searchDeselected.contains(source.name)) return null;
-          try {
-            final res = await source.search(query);
-            return MapEntry(source.name, res);
-          } catch (_) {
-            return null;
-          }
-        }),
+      final aggregated = await AppSearchService.searchAllSources(
+        query,
+        sourceProvider: _sourceProvider,
+        deselectedSources: settings.searchDeselected,
       );
-
-      final Map<String, MapEntry<String, List<String>>> aggregated = {};
-      for (final res in results) {
-        if (res == null) continue;
-        res.value.forEach((url, info) {
-          aggregated[url] = MapEntry(res.key, info);
-        });
-      }
 
       if (mounted && _query == query) {
         setState(() {
