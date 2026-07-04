@@ -26,6 +26,17 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-04 (later) — Claude Code (Fable 5) [session 854c1d79 continued]
+
+**Goal:** continue fixes; user reported settings still broken → found definitive #217 root cause.
+
+**Done:**
+- **#217 DEFINITIVE root cause** — `importObtainiumData` (apps_provider.dart ~2242) restores settings keys typed by JSON runtime type; type flips (int↔double↔bool↔string) and stale enum indexes then throw TypeError/RangeError during SettingsPage build → whole page = release ErrorWidget (screenshot shows grey body + live bottom nav = exception at top of page build). Fixed in **p28**: safe_prefs extended with `safeString`/`safeStringList`/`safeEnum` (range-checked enum reads); ALL remaining getBool/getString/getStringList reads (164 sites) and all 13 enum-by-index reads converted. Tests extended.
+- **SettingsPage.initialTab** — was accepted but never applied; now clamped + used in initState.
+- **Cleanup batch (p27)** — 103 unused imports removed (40 files); `test_versions.dart` scratch file deleted; safeInt in crash_analytics/crash_tracker/known_issues_service; mounted-guards for context-across-async in home.dart deep links, installation_section Shizuku callback, logs_dialog.
+- **Verified:** grid/list toggle persists via `globalViewMode` pref (backlog item closed).
+- **Remaining known lint debt:** ~40 `use_build_context_synchronously` infos in add_app/app/apps/developer_settings/import_export/onboarding/system_updates — real crash class, fix in a future batch.
+
 ### 2026-07-04 — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Goal:** close out GitHub issues #217 and #218 with in-depth fixes; verify Sentry is clean.
