@@ -29,6 +29,7 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ### 2026-07-04 (late night) — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Done:**
+- **Theming audit** — found `plusEnableMaterialExpressive` wired to the *glassmorphism* toggle in main.dart (Expressive setting did nothing; glass toggle silently switched the whole design language) and `themeVariant` never passed to `ColorScheme.fromSeed` (variant picker inert for seeded themes). Both fixed. Swipe actions now use scheme roles instead of raw green/orange/blue/purple/red; category update badge redAccent → colorScheme.error; InkSparkle splash under Expressive; theme preset chips watch corner radius; command-center radii via CardMetrics.
 - **Context-across-async-gap sweep COMPLETE** — all 56 remaining `use_build_context_synchronously` analyzer findings fixed (import_export, apps, app, add_app, developer_settings, onboarding, system_updates, microg_hub, logs_page, app_download_service, app_install_service, apps_provider). Analyzer count now **0**. Key patterns: `context.mounted` for captured build contexts (State.mounted doesn't satisfy closures), nullable contexts forwarded to install helpers sanitized to null when unmounted, onboarding captures SettingsProvider pre-await so welcomeShown always persists.
 - Lint debt from earlier entry is now closed.
 
