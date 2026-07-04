@@ -59,7 +59,6 @@ jobs:
     if: "${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: Auto-bump version') }}"
     permissions:
       contents: write
-      actions: read # gh run list in the changelog's Build History section
 
     steps:
       - name: Checkout repository
@@ -190,8 +189,6 @@ jobs:
 
       - name: Generate Changelog
         id: build_changelog
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME="${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || format('v{0}', steps.bump_version.outputs.version) }}"
           PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | head -1)
@@ -230,23 +227,6 @@ jobs:
               echo "### 🔧 Improvements & Maintenance"
               echo "$OTHERS"
               echo
-            fi
-
-            # Failed attempts between the previous release and this one
-            echo "### 🏗️ Build History"
-            if [ -n "$PREV_TAG" ]; then
-              PREV_DATE=$(git log -1 --format=%cI "$PREV_TAG")
-              FAILED_RUNS=$(gh run list --workflow "Build APK" --branch main --status failure --limit 20 \
-                --json databaseId,createdAt,url \
-                --jq --arg d "$PREV_DATE" '.[] | select(.createdAt > $d) | "- [Build #\(.databaseId)](\(.url)) (\(.createdAt))"' || true)
-            else
-              FAILED_RUNS=""
-            fi
-            if [ -n "$FAILED_RUNS" ]; then
-              echo "Failed attempts leading to this release:"
-              echo "$FAILED_RUNS"
-            else
-              echo "Build succeeded on the first attempt."
             fi
 
             if [ -n "$PREV_TAG" ]; then
