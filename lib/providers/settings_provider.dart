@@ -257,11 +257,11 @@ class SettingsProvider with ChangeNotifier {
   bool get plusFabShowImportInstalled =>
       prefs?.safeBool('plusFabShowImportInstalled') ?? true;
   double get plusGlobalCornerRadius =>
-      prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0;
+      (prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0).clamp(0.0, 40.0);
   double get plusHomeCornerRadius =>
-      prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0;
+      (prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0).clamp(0.0, 40.0);
   double get plusSettingsCornerRadius =>
-      prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0;
+      (prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0).clamp(0.0, 40.0);
   bool get plusOverrideIndividualCornerRadius =>
       prefs?.safeBool('plusOverrideIndividualCornerRadius') ?? false;
   bool get plusEnableNotificationDigest =>

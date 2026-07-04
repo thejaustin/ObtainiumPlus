@@ -153,7 +153,8 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get gridColumnCount => prefs?.safeInt('gridColumnCount') ?? 0;
+  int get gridColumnCount =>
+      (prefs?.safeInt('gridColumnCount') ?? 0).clamp(0, 6);
   set gridColumnCount(int val) {
     prefs?.setInt('gridColumnCount', val);
     notifyListeners();
@@ -198,7 +199,8 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get categoryIconCount => prefs?.safeInt('categoryIconCount') ?? 0;
+  int get categoryIconCount =>
+      (prefs?.safeInt('categoryIconCount') ?? 0).clamp(0, 20);
   set categoryIconCount(int val) {
     prefs?.setInt('categoryIconCount', val);
     notifyListeners();
