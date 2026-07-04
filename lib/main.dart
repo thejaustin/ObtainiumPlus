@@ -518,10 +518,12 @@ class _ObtainiumState extends State<Obtainium> {
           } else {
             lightColorScheme = ColorScheme.fromSeed(
               seedColor: themeSettings.themeColor,
+              dynamicSchemeVariant: themeSettings.themeVariant,
             );
             darkColorScheme = ColorScheme.fromSeed(
               seedColor: themeSettings.themeColor,
               brightness: Brightness.dark,
+              dynamicSchemeVariant: themeSettings.themeVariant,
             );
           }
 
@@ -546,7 +548,8 @@ class _ObtainiumState extends State<Obtainium> {
                   ? darkColorScheme
                   : lightColorScheme,
               useSystemFont: themeSettings.useSystemFont,
-              plusEnableMaterialExpressive: plusSettings.plusEnableGlassmorphism,
+              plusEnableMaterialExpressive:
+                  plusSettings.plusEnableMaterialExpressive,
               cornerRadius: plusSettings.plusGlobalCornerRadius,
             ),
             darkTheme: ThemeBuilder.buildTheme(
@@ -554,7 +557,8 @@ class _ObtainiumState extends State<Obtainium> {
                   ? lightColorScheme
                   : darkColorScheme,
               useSystemFont: themeSettings.useSystemFont,
-              plusEnableMaterialExpressive: plusSettings.plusEnableGlassmorphism,
+              plusEnableMaterialExpressive:
+                  plusSettings.plusEnableMaterialExpressive,
               cornerRadius: plusSettings.plusGlobalCornerRadius,
             ),
             home: Shortcuts(

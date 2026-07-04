@@ -24,6 +24,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 
 class CommandCenter extends StatefulWidget {
   final String? initialQuery;
@@ -284,7 +285,7 @@ class _CommandCenterState extends State<CommandCenter> {
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
+    final itemRadius = CardMetrics.inner(radius);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -587,7 +588,7 @@ class _CommandCenterState extends State<CommandCenter> {
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final chipRadius = (radius * 0.5).clamp(8.0, 16.0);
+    final chipRadius = CardMetrics.inner(radius);
 
     return ActionChip(
       avatar: Icon(icon, size: 16),

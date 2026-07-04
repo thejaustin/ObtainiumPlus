@@ -47,21 +47,25 @@ class AppListView extends StatelessWidget {
         inst,
         latest,
       );
+      // Swipe surfaces use scheme roles instead of raw palette colors so
+      // they harmonize with Material You dynamic color in both brightnesses
+      final colorScheme = Theme.of(context).colorScheme;
+
       Widget getActionIcon(AppSwipeAction action) {
         switch (action) {
           case AppSwipeAction.update:
-            return const Icon(Icons.download, color: Colors.white);
+            return Icon(Icons.download, color: colorScheme.onPrimary);
           case AppSwipeAction.togglePin:
             return Icon(
               app.app.pinned ? Icons.push_pin_outlined : Icons.push_pin,
-              color: Colors.white,
+              color: colorScheme.onTertiary,
             );
           case AppSwipeAction.share:
-            return const Icon(Icons.share, color: Colors.white);
+            return Icon(Icons.share, color: colorScheme.onSecondary);
           case AppSwipeAction.launch:
-            return const Icon(Icons.launch, color: Colors.white);
+            return Icon(Icons.launch, color: colorScheme.onPrimaryContainer);
           case AppSwipeAction.delete:
-            return const Icon(Icons.delete, color: Colors.white);
+            return Icon(Icons.delete, color: colorScheme.onError);
           default:
             return const SizedBox.shrink();
         }
@@ -70,17 +74,17 @@ class AppListView extends StatelessWidget {
       Color getActionColor(AppSwipeAction action) {
         switch (action) {
           case AppSwipeAction.update:
-            return Colors.green;
+            return colorScheme.primary;
           case AppSwipeAction.togglePin:
-            return Colors.orange;
+            return colorScheme.tertiary;
           case AppSwipeAction.share:
-            return Colors.blue;
+            return colorScheme.secondary;
           case AppSwipeAction.launch:
-            return Colors.purple;
+            return colorScheme.primaryContainer;
           case AppSwipeAction.delete:
-            return Colors.red;
+            return colorScheme.error;
           default:
-            return Colors.grey;
+            return colorScheme.surfaceContainerHighest;
         }
       }
 
