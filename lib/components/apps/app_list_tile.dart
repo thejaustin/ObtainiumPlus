@@ -7,6 +7,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -132,11 +133,11 @@ class AppListTile extends StatelessWidget {
     }
 
     Widget getAppIcon() {
-      final itemRadius =
-          (plusSettings.plusOverrideIndividualCornerRadius
-              ? plusSettings.plusHomeCornerRadius
-              : plusSettings.plusGlobalCornerRadius) *
-          0.5;
+      final itemRadius = CardMetrics.inner(
+        plusSettings.plusOverrideIndividualCornerRadius
+            ? plusSettings.plusHomeCornerRadius
+            : plusSettings.plusGlobalCornerRadius,
+      );
 
       return Hero(
         tag: 'icon_${appInMemory.app.id}',

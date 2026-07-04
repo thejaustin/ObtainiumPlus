@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -332,7 +333,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
-    final cardRadius = (radius * 0.75).clamp(12.0, 24.0);
+    final cardRadius = CardMetrics.card(radius);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(cardRadius),
@@ -391,7 +392,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                               color: theme.colorScheme.primaryContainer
                                   .withOpacity(0.4),
                               borderRadius: BorderRadius.circular(
-                                cardRadius * 0.5,
+                                CardMetrics.inner(radius),
                               ),
                             ),
                             alignment: Alignment.center,
@@ -449,7 +450,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                           visualDensity: VisualDensity.compact,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
-                              cardRadius * 0.5,
+                              CardMetrics.inner(radius),
                             ),
                           ),
                         ),
