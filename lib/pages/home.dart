@@ -339,27 +339,31 @@ class HomePageState extends State<HomePage> {
     final currentIndex =
         selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
 
-    final pageBody = PageTransitionSwitcher(
-      duration: Duration(
-        milliseconds: behaviorSettings.disablePageTransitions ? 0 : 300,
-      ),
-      reverse: behaviorSettings.reversePageTransitions
-          ? !isReversing
-          : isReversing,
-      transitionBuilder: (
-        Widget child,
-        Animation<double> animation,
-        Animation<double> secondaryAnimation,
-      ) {
-        return SharedAxisTransition(
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
-          transitionType: SharedAxisTransitionType.horizontal,
-          child: child,
-        );
-      },
-      child: pages.elementAt(currentIndex).widget,
-    );
+    // With transitions disabled, render the page directly:
+    // PageTransitionSwitcher with Duration.zero can leave the incoming
+    // page at opacity 0 — a blank tab with no exception thrown.
+    final pageBody = behaviorSettings.disablePageTransitions
+        ? pages.elementAt(currentIndex).widget
+        : PageTransitionSwitcher(
+            duration: const Duration(milliseconds: 300),
+            reverse: behaviorSettings.reversePageTransitions
+                ? !isReversing
+                : isReversing,
+            transitionBuilder:
+                (
+                  Widget child,
+                  Animation<double> animation,
+                  Animation<double> secondaryAnimation,
+                ) {
+                  return SharedAxisTransition(
+                    animation: animation,
+                    secondaryAnimation: secondaryAnimation,
+                    transitionType: SharedAxisTransitionType.horizontal,
+                    child: child,
+                  );
+                },
+            child: pages.elementAt(currentIndex).widget,
+          );
 
     return PopScope(
       canPop: false,
