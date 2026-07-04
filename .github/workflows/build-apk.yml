@@ -97,6 +97,7 @@ jobs:
           NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
 
           sed -i "s/^version: .*/version: ${NEW_VERSION}+${NEW_BUILD}/" pubspec.yaml
+          sed -i "s/^const currentObtainiumPlusVersion = .*/const currentObtainiumPlusVersion = '${NEW_VERSION}';/" lib/utils/version_constant.dart
 
           if git diff --quiet pubspec.yaml; then
             echo "version_changed=false" >> $GITHUB_OUTPUT
@@ -216,7 +217,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pubspec.yaml
+          git add pubspec.yaml lib/utils/version_constant.dart
           git commit -m "chore: Auto-bump version to ${{ steps.bump_version.outputs.version }}"
           git push origin HEAD:main
 
