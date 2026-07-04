@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';
@@ -92,7 +93,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   int get updateInterval {
-    return prefs?.getInt('updateInterval') ?? 360;
+    return prefs?.safeInt('updateInterval') ?? 360;
   }
 
   set updateInterval(int min) {
@@ -101,7 +102,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   double get updateIntervalSliderVal {
-    return prefs?.getDouble('updateIntervalSliderVal') ?? 6.0;
+    return prefs?.safeDouble('updateIntervalSliderVal') ?? 6.0;
   }
 
   set updateIntervalSliderVal(double val) {
@@ -173,7 +174,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   int get updateScheduleStartHour {
-    return prefs?.getInt('updateScheduleStartHour') ?? 9;
+    return prefs?.safeInt('updateScheduleStartHour') ?? 9;
   }
 
   set updateScheduleStartHour(int val) {
@@ -182,7 +183,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   int get updateScheduleEndHour {
-    return prefs?.getInt('updateScheduleEndHour') ?? 23;
+    return prefs?.safeInt('updateScheduleEndHour') ?? 23;
   }
 
   set updateScheduleEndHour(int val) {
@@ -235,7 +236,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   DateTime get lastCompletedBGCheckTime {
-    int? temp = prefs?.getInt('lastCompletedBGCheckTime');
+    int? temp = prefs?.safeInt('lastCompletedBGCheckTime');
     return temp != null
         ? DateTime.fromMillisecondsSinceEpoch(temp)
         : DateTime.fromMillisecondsSinceEpoch(0);

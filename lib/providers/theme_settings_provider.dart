@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -14,7 +15,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   ThemeSettings get theme {
-    return ThemeSettings.values[prefs?.getInt('theme') ??
+    return ThemeSettings.values[prefs?.safeInt('theme') ??
         ThemeSettings.system.index];
   }
 
@@ -24,7 +25,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   DynamicSchemeVariant get themeVariant {
-    return DynamicSchemeVariant.values[prefs?.getInt('themeVariant') ??
+    return DynamicSchemeVariant.values[prefs?.safeInt('themeVariant') ??
         DynamicSchemeVariant.expressive.index];
   }
 
@@ -34,7 +35,7 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   Color get themeColor {
-    int? colorCode = prefs?.getInt('themeColor');
+    int? colorCode = prefs?.safeInt('themeColor');
     return (colorCode != null) ? Color(colorCode) : const Color(0xFF6438B5);
   }
 

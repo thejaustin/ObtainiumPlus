@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +24,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   SortColumnSettings get sortColumn {
-    return SortColumnSettings.values[prefs?.getInt('sortColumn') ??
+    return SortColumnSettings.values[prefs?.safeInt('sortColumn') ??
         SortColumnSettings.nameAuthor.index];
   }
 
@@ -33,7 +34,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   SortOrderSettings get sortOrder {
-    return SortOrderSettings.values[prefs?.getInt('sortOrder') ??
+    return SortOrderSettings.values[prefs?.safeInt('sortOrder') ??
         SortOrderSettings.ascending.index];
   }
 
@@ -130,13 +131,13 @@ class ViewSettingsProvider with ChangeNotifier {
 
   AppSortMethod get appSortMethod {
     int defaultIndex = AppSortMethod.defaultSort.index;
-    int appCount = prefs?.getInt('trackedAppCount') ?? 0;
+    int appCount = prefs?.safeInt('trackedAppCount') ?? 0;
     if (appCount > 20) {
       defaultIndex = AppSortMethod.nameAZ.index;
     } else if (appCount > 0) {
       defaultIndex = AppSortMethod.latestUpdates.index;
     }
-    return AppSortMethod.values[prefs?.getInt('appSortMethod') ?? defaultIndex];
+    return AppSortMethod.values[prefs?.safeInt('appSortMethod') ?? defaultIndex];
   }
 
   set appSortMethod(AppSortMethod method) {
@@ -145,13 +146,13 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   ViewMode get globalViewMode =>
-      ViewMode.values[prefs?.getInt('globalViewMode') ?? ViewMode.list.index];
+      ViewMode.values[prefs?.safeInt('globalViewMode') ?? ViewMode.list.index];
   set globalViewMode(ViewMode mode) {
     prefs?.setInt('globalViewMode', mode.index);
     notifyListeners();
   }
 
-  int get gridColumnCount => prefs?.getInt('gridColumnCount') ?? 0;
+  int get gridColumnCount => prefs?.safeInt('gridColumnCount') ?? 0;
   set gridColumnCount(int val) {
     prefs?.setInt('gridColumnCount', val);
     notifyListeners();
@@ -189,21 +190,21 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   CategoryIconPosition get categoryIconPosition =>
-      CategoryIconPosition.values[prefs?.getInt('categoryIconPosition') ??
+      CategoryIconPosition.values[prefs?.safeInt('categoryIconPosition') ??
           CategoryIconPosition.leading.index];
   set categoryIconPosition(CategoryIconPosition val) {
     prefs?.setInt('categoryIconPosition', val.index);
     notifyListeners();
   }
 
-  int get categoryIconCount => prefs?.getInt('categoryIconCount') ?? 0;
+  int get categoryIconCount => prefs?.safeInt('categoryIconCount') ?? 0;
   set categoryIconCount(int val) {
     prefs?.setInt('categoryIconCount', val);
     notifyListeners();
   }
 
   AppListDensity get appListDensity =>
-      AppListDensity.values[prefs?.getInt('appListDensity') ??
+      AppListDensity.values[prefs?.safeInt('appListDensity') ??
           AppListDensity.comfortable.index];
   set appListDensity(AppListDensity val) {
     prefs?.setInt('appListDensity', val.index);
@@ -211,7 +212,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   GridCategoryMode get gridCategoryMode =>
-      GridCategoryMode.values[prefs?.getInt('gridCategoryMode') ??
+      GridCategoryMode.values[prefs?.safeInt('gridCategoryMode') ??
           GridCategoryMode.sections.index];
   set gridCategoryMode(GridCategoryMode val) {
     prefs?.setInt('gridCategoryMode', val.index);
@@ -219,7 +220,7 @@ class ViewSettingsProvider with ChangeNotifier {
   }
 
   NavigationDestinationLabelBehavior get navigationLabelBehavior =>
-      NavigationDestinationLabelBehavior.values[prefs?.getInt(
+      NavigationDestinationLabelBehavior.values[prefs?.safeInt(
             'navigationLabelBehavior',
           ) ??
           0];
