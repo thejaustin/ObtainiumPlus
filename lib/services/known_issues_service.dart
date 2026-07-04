@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -122,7 +123,7 @@ class KnownIssuesService {
   }
 
   static Future<String?> _fetchWithCache(SharedPreferences prefs) async {
-    final cacheTs = prefs.getInt(_cacheTimestampKey);
+    final cacheTs = prefs.safeInt(_cacheTimestampKey);
     if (cacheTs != null) {
       final age = DateTime.now().difference(
         DateTime.fromMillisecondsSinceEpoch(cacheTs),

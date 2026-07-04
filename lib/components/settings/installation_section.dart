@@ -127,15 +127,18 @@ class InstallationSection extends StatelessWidget {
                 ShizukuApkInstaller().checkPermission().then(
                   (resCode) {
                     if (resCode == null) {
-                      _showError(
-                        context,
-                        ObtainiumError(tr('shizukuBinderNotFound')),
-                      );
+                      if (context.mounted) {
+                        _showError(
+                          context,
+                          ObtainiumError(tr('shizukuBinderNotFound')),
+                        );
+                      }
                       return;
                     }
                     behaviorSettings.useShizuku =
                         resCode.startsWith('authorized') ||
                         resCode.startsWith('granted');
+                    if (!context.mounted) return;
                     switch (resCode) {
                       case 'binder_not_found':
                         _showError(

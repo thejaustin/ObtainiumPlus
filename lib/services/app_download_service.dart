@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/app_sources/directAPKLink.dart';
-import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
@@ -13,7 +11,6 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -21,10 +18,8 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
-import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
-import 'package:flutter/foundation.dart'
     as foundation; // Alias to avoid conflict
 
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -32,7 +27,6 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 
 import 'package:obtainium/utils/source_utils.dart';
-import 'package:obtainium/services/app_crud_service.dart';
 
 class AppDownloadService {
   AppDownloadService._();

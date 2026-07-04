@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 
 /// Tracks crash analytics and provides insights for debugging
@@ -16,7 +17,7 @@ class CrashAnalytics {
     final prefs = await SharedPreferences.getInstance();
 
     // Increment crash count
-    final currentCount = prefs.getInt(_keyCrashCount) ?? 0;
+    final currentCount = prefs.safeInt(_keyCrashCount) ?? 0;
     await prefs.setInt(_keyCrashCount, currentCount + 1);
 
     // Record timestamp
@@ -42,10 +43,10 @@ class CrashAnalytics {
   static Future<CrashStats> getStats() async {
     final prefs = await SharedPreferences.getInstance();
     return CrashStats(
-      totalCrashes: prefs.getInt(_keyCrashCount) ?? 0,
-      lastCrashTime: prefs.getInt(_keyLastCrashTime) != null
+      totalCrashes: prefs.safeInt(_keyCrashCount) ?? 0,
+      lastCrashTime: prefs.safeInt(_keyLastCrashTime) != null
           ? DateTime.fromMillisecondsSinceEpoch(
-              prefs.getInt(_keyLastCrashTime)!,
+              prefs.safeInt(_keyLastCrashTime)!,
             )
           : null,
       crashTypes: prefs.getStringList(_keyCrashTypes) ?? [],
@@ -63,7 +64,7 @@ class CrashAnalytics {
   /// Check if app is in crash loop (>3 crashes in 10 minutes)
   static Future<bool> isInCrashLoop() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastCrash = prefs.getInt(_keyLastCrashTime);
+    final lastCrash = prefs.safeInt(_keyLastCrashTime);
     if (lastCrash == null) return false;
 
     final age = DateTime.now().difference(
@@ -72,7 +73,7 @@ class CrashAnalytics {
 
     if (age.inMinutes > 10) return false;
 
-    final count = prefs.getInt(_keyCrashCount) ?? 0;
+    final count = prefs.safeInt(_keyCrashCount) ?? 0;
     return count >= 3;
   }
 }

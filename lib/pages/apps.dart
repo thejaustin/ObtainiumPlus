@@ -23,10 +23,8 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/services/app_install_service.dart' hide pm;
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
-import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -35,7 +33,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:obtainium/components/category_editor_selector.dart';
-import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 
 class AppsPage extends StatefulWidget {

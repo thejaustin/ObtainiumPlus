@@ -1,11 +1,8 @@
-import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
-import 'package:obtainium/utils/version_utils.dart'; // For reconcileVersionDifferences
 
 class AppFilterService {
   AppFilterService._();

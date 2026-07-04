@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:obtainium/utils/safe_prefs.dart';
 
 /// Tracks crashes captured by Sentry so the app can prompt the user to
 /// follow the corresponding GitHub issue on next launch.
@@ -32,7 +33,7 @@ class CrashTracker {
   /// Returns true if there is a crash recorded within the last 48 hours.
   static Future<bool> hasPendingCrash() async {
     final prefs = await SharedPreferences.getInstance();
-    final timestamp = prefs.getInt(_keyTimestamp);
+    final timestamp = prefs.safeInt(_keyTimestamp);
     if (timestamp == null) return false;
     final age = DateTime.now().difference(
       DateTime.fromMillisecondsSinceEpoch(timestamp),

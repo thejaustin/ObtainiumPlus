@@ -1,7 +1,6 @@
 // Exposes functions used to save/load app settings
 
 import 'package:obtainium/utils/safe_prefs.dart';
-import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

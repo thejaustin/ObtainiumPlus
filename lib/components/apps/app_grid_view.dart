@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:animations/animations.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/apps/app_shortcuts_menu.dart';
 import 'package:obtainium/models/app_in_memory.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/services/app_update_service.dart';
-import 'package:obtainium/utils/version_utils.dart';
 import 'package:provider/provider.dart';
 
 class AppGridView extends StatelessWidget {

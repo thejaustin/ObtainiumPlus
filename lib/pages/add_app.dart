@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -18,8 +17,6 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/pages/app.dart';
-import 'package:obtainium/pages/import_export.dart';
-import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';

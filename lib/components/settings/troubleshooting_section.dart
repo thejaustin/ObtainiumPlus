@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/settings/logs_dialog.dart';
-import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/pages/statistics.dart';

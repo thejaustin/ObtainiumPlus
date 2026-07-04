@@ -124,6 +124,7 @@ class HomePageState extends State<HomePage> {
         );
         sp.welcomeShown = true;
       }
+      if (!mounted) return;
       if (!sp.googleVerificationWarningShown && DateTime.now().year == 2026) {
         await showDialog(
           context: context,
@@ -199,6 +200,7 @@ class HomePageState extends State<HomePage> {
           while (appsProvider.loadingApps) {
             await Future.delayed(const Duration(milliseconds: 10));
           }
+          if (!mounted) return;
 
           // See if we already have this app
           String standardizedUrl = SourceProvider()
@@ -243,14 +245,14 @@ class HomePageState extends State<HomePage> {
                 },
               ) !=
               null) {
-            // ignore: use_build_context_synchronously
+            if (!mounted) return;
             var appsProvider = context.read<AppsProvider>();
             var result = await appsProvider.import(
               action == 'app'
                   ? '{ "apps": [$dataStr] }'
                   : '{ "apps": $dataStr }',
             );
-            // ignore: use_build_context_synchronously
+            if (!mounted) return;
             showMessage(
               tr(
                 'importedX',
@@ -263,7 +265,7 @@ class HomePageState extends State<HomePage> {
           throw ObtainiumError(tr('unknown'));
         }
       } catch (e) {
-        showError(e, context);
+        if (mounted) showError(e, context);
       }
     }
 
