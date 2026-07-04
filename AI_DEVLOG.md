@@ -29,6 +29,9 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ### 2026-07-04 (night) — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Done:**
+- **CardMetrics radius system** (`lib/utils/card_metrics.dart`) — one derivation for all app-compartment cards: `card()` compact outer cards, `inner()` nested icons/buttons, `cardFor()` extent-driven grid tiles. Replaced five divergent factor+clamp combos in app_dashboard (×3), discover, app_list_tile icon; AppGridTile now follows the user corner-radius setting (previously derived from icon size only).
+- **Build History dropped from release notes** — removed from the workflow generator and stripped from v1.4.3-p31…p34 bodies via API.
+- **Bump-push race fixed** — CI "Commit version bump" now rebases before pushing (a concurrent dev push made run 28708699310 fail at the push step; APK/tests were fine).
 - **Backfilled 18 broken release bodies** (v1.4.3-p13…p30) — stale CHANGELOG_USER "What's New" replaced with categorized commits-since-previous-tag via GitHub API PATCH; hand-written Antigravity bodies and the p108 security warning left untouched.
 - **Search unification** — new `lib/services/app_search_service.dart`; Discover `runSearch`, Add App `runLiveSearch`, and command center `_runDiscoverSearch` all now share one fan-out/aggregate implementation (deselected sources + per-source query settings respected).
 - **Discover enhancements** — descriptions now shown in list tiles and grid cards (were fetched but dropped); clear button on search field; query reactive while typing (chips previously appeared only after unrelated rebuilds); result count row; grid/list toggle persisted as `discoverViewMode` in ViewSettingsProvider.
