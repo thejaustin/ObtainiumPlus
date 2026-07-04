@@ -941,7 +941,7 @@ class AppsProvider with ChangeNotifier {
       try {
         var wasInstalled = await installApk(
           DownloadedApk(dir.appId, APKFiles[0]),
-          firstTimeWithContext,
+          firstTimeWithContext?.mounted == true ? firstTimeWithContext : null,
           needsBGWorkaround: needsBGWorkaround,
           shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
           additionalAPKs: APKFiles.sublist(
@@ -1385,7 +1385,7 @@ class AppsProvider with ChangeNotifier {
     }
 
     if (errors.idsByErrorString.isNotEmpty) {
-      if (context != null) {
+      if (context != null && context.mounted) {
         showError(errors, context);
       } else {
         throw errors;
@@ -1418,10 +1418,9 @@ class AppsProvider with ChangeNotifier {
       }
       if (apps[id]!.app.apkUrls.isNotEmpty ||
           apps[id]!.app.otherAssetUrls.isNotEmpty) {
-        // ignore: use_build_context_synchronously
         MapEntry<String, String>? tempFileUrl = await confirmAppFileUrl(
           apps[id]!.app,
-          context,
+          context?.mounted == true ? context : null,
           true,
           evenIfSingleChoice: true,
         );

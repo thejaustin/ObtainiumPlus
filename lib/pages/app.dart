@@ -92,7 +92,7 @@ class _AppPageState extends State<AppPage> {
   void _showStoreChooser(BuildContext context, String appId) async {
     final installed = await _getInstalledStores();
     if (installed.isEmpty) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No supported stores found (Aurora Store, F-Droid, or Droidify)')),
         );
@@ -100,7 +100,7 @@ class _AppPageState extends State<AppPage> {
       return;
     }
 
-    if (mounted) {
+    if (context.mounted) {
       final plusSettings = context.read<PlusSettingsProvider>();
       showDialog(
         context: context,
@@ -556,7 +556,7 @@ Widget buildRepoRenameWarning({
                           app!.app.id,
                         ], context);
                       } catch (e) {
-                        showError(e, context);
+                        if (context.mounted) showError(e, context);
                       }
                     },
               child: Row(
@@ -1199,16 +1199,14 @@ Widget buildRepoRenameWarning({
                     app?.app.id != null ? [app!.app.id] : [],
                     globalNavigatorKey.currentContext,
                   );
-                  if (res.isNotEmpty && !trackOnly) {
-                    // ignore: use_build_context_synchronously
+                  if (res.isNotEmpty && !trackOnly && mounted) {
                     showMessage(successMessage, context);
                   }
                   if (res.isNotEmpty && mounted) {
                     Navigator.of(context).pop();
                   }
                 } catch (e) {
-                  // ignore: use_build_context_synchronously
-                  showError(e, context);
+                  if (mounted) showError(e, context);
                 }
               }
             : null,
@@ -1305,7 +1303,7 @@ Widget buildRepoRenameWarning({
                               app != null ? [app.app] : [],
                             )
                             .then((value) {
-                              if (value == true) {
+                              if (value == true && context.mounted) {
                                 Navigator.of(context).pop();
                               }
                             });

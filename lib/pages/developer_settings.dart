@@ -259,6 +259,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               title: Text(tr('standardAppLogs')),
               subtitle: Text(tr('legacyObtainiumLogs')),
               onTap: () => context.read<LogsProvider>().get().then((logs) {
+                if (!context.mounted) return;
                 if (logs.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(tr('noLogsFound'))),
@@ -708,7 +709,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
             );
 
-            if (confirm == true) {
+            if (confirm == true && context.mounted) {
               final success = await AppInstallService.installApkStandalone(
                 file,
                 context,
@@ -1117,13 +1118,13 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
     setState(() => _isLoading = true);
     try {
       await authProvider.refreshBundle(url);
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(tr('successfullyRetrievedToken'))),
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))));

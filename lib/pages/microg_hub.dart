@@ -87,7 +87,10 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       });
 
       if (addedAppIds.isNotEmpty) {
-        await appsProvider.downloadAndInstallLatestApps(addedAppIds, context);
+        await appsProvider.downloadAndInstallLatestApps(
+          addedAppIds,
+          mounted ? context : null,
+        );
       }
 
       // We don't pop immediately, but wait for progress to start or show success
