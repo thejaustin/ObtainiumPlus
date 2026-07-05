@@ -64,6 +64,21 @@ void main() {
     );
   }
 
+  /// EasyLocalization renders empty until its translation asset loads via
+  /// real async, so alternate real-async waits with frames until the page
+  /// mounts, then let the section entry animations play out.
+  Future<void> pumpUntilMounted(WidgetTester tester) async {
+    for (var i = 0; i < 40; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      if (tester.any(find.byType(SettingsPage))) break;
+    }
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -80,12 +95,7 @@ void main() {
         app = await buildSettingsApp(tab);
       });
       await tester.pumpWidget(app);
-      // Bounded pumps instead of pumpAndSettle: an indefinite animation
-      // anywhere on the page would make pumpAndSettle hang, and completed
-      // builds are all this test needs
-      for (var i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 400));
-      }
+      await pumpUntilMounted(tester);
       expect(tester.takeException(), isNull);
       expect(find.byType(SettingsPage), findsOneWidget);
     }, timeout: const Timeout(Duration(minutes: 1)));
@@ -110,9 +120,7 @@ void main() {
       app = await buildSettingsApp(0);
     });
     await tester.pumpWidget(app);
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(milliseconds: 400));
-    }
+    await pumpUntilMounted(tester);
     expect(tester.takeException(), isNull);
     expect(find.byType(SettingsPage), findsOneWidget);
   }, timeout: const Timeout(Duration(minutes: 1)));
