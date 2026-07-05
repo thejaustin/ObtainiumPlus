@@ -72,8 +72,14 @@ void main() {
     testWidgets('settings section $tab builds without throwing', (
       tester,
     ) async {
-      await EasyLocalization.ensureInitialized();
-      await tester.pumpWidget(await buildSettingsApp(tab));
+      late Widget app;
+      // Provider setup does real async work (platform channels, prefs) that
+      // never completes inside the widget test's fake-async zone
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(tab);
+      });
+      await tester.pumpWidget(app);
       // Bounded pumps instead of pumpAndSettle: an indefinite animation
       // anywhere on the page would make pumpAndSettle hang, and completed
       // builds are all this test needs
@@ -82,7 +88,7 @@ void main() {
       }
       expect(tester.takeException(), isNull);
       expect(find.byType(SettingsPage), findsOneWidget);
-    });
+    }, timeout: const Timeout(Duration(minutes: 1)));
   }
 
   testWidgets('settings page survives corrupted preference types', (
@@ -98,12 +104,16 @@ void main() {
       'plusEnableGlassmorphism': 'true', // string where bool expected
       'updateIntervalSliderVal': 9999.0, // beyond slider max
     });
-    await EasyLocalization.ensureInitialized();
-    await tester.pumpWidget(await buildSettingsApp(0));
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0);
+    });
+    await tester.pumpWidget(app);
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 400));
     }
     expect(tester.takeException(), isNull);
     expect(find.byType(SettingsPage), findsOneWidget);
-  });
+  }, timeout: const Timeout(Duration(minutes: 1)));
 }
