@@ -1,6 +1,7 @@
 // Exposes functions used to save/load app settings
 
 import 'package:obtainium/utils/safe_prefs.dart';
+import 'package:obtainium/utils/logger.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -28,10 +29,21 @@ class SettingsProvider with ChangeNotifier {
   // Not done in constructor as we want to be able to await it
   Future<void> initializeSettings() async {
     prefs = await SharedPreferences.getInstance();
-    defaultAppDir = (await getAppStorageDir()).path;
-    final info = await DeviceInfoPlugin().androidInfo;
-    isTV = info.systemFeatures.contains('android.hardware.type.television') ||
-        info.systemFeatures.contains('android.software.leanback');
+    // Neither platform lookup is worth failing all of settings init over —
+    // both have sane fallbacks (defaultAppDir stays null, isTV stays false)
+    try {
+      defaultAppDir = (await getAppStorageDir()).path;
+    } catch (e) {
+      talker.warning('Could not determine app storage dir: $e');
+    }
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      isTV =
+          info.systemFeatures.contains('android.hardware.type.television') ||
+          info.systemFeatures.contains('android.software.leanback');
+    } catch (e) {
+      isTV = false;
+    }
     notifyListeners();
   }
 
