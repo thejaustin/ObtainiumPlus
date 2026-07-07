@@ -26,6 +26,13 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-07 — Claude Code (Fable 5) [session 854c1d79 continued]
+**ROOT CAUSE of the persistent blank settings page found** (user report: "settings still broken"; Sentry silent because quota exhausted):
+- `lib/pages/settings.dart` section-chip row called `tr('apps')`, but `'apps'` is a **plural key (nested object)** in `assets/translations/en.json`. easy_localization casts the resolved value `as String?` → `TypeError: '_Map<String, dynamic>' is not a subtype of 'String?'` thrown while building the page **shell** (every tab) → release builds show a blank page. Fixed in 3a60cc5e by using the hardcoded display labels directly (the old `displayTitle` mapping already overrode everything to English; it was dead code because it compared raw keys against translated values).
+- Caught by the new `test/settings_page_test.dart` in CI — the test did its job. Rule: **never call plain `tr()` on plural keys** (`apps`, `url`, `minute`, `hour`, `day`, `apk`, etc. — see nested-object keys in en.json); use `plural()` or a literal.
+- Test flakiness fixed (760caf86): rootBundle translation load only completed for the first test in the file; now served from an in-memory `AssetLoader`.
+- Note: p41 does NOT contain the PageTransitionSwitcher blank-tab fix (c786fe0d) — CI was red from c786fe0d through d24625d8, so no release shipped it. First green build after 760caf86 is the first release with both fixes; user must update on-device to verify.
+
 ### 2026-07-04 (late night) — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **Done:**
