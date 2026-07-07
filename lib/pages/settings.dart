@@ -214,22 +214,29 @@ class _SettingsPageState extends State<SettingsPage> {
         const Divider(indent: 32, endIndent: 32),
         const SizedBox(height: 16),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _FooterIcon(
-              icon: Icons.code,
-              label: tr('appSource'),
-              url: settingsProvider.sourceUrl,
+            // Expanded so long labels wrap instead of overflowing the Row
+            Expanded(
+              child: _FooterIcon(
+                icon: Icons.code,
+                label: tr('appSource'),
+                url: settingsProvider.sourceUrl,
+              ),
             ),
-            _FooterIcon(
-              icon: Icons.help_outline_rounded,
-              label: tr('wiki'),
-              url: 'https://wiki.obtainium.imranr.dev/',
+            Expanded(
+              child: _FooterIcon(
+                icon: Icons.help_outline_rounded,
+                label: tr('wiki'),
+                url: 'https://wiki.obtainium.imranr.dev/',
+              ),
             ),
-            _FooterIcon(
-              icon: Icons.apps_rounded,
-              label: tr('crowdsourcedConfigsLabel'),
-              url: 'https://apps.obtainium.imranr.dev/',
+            Expanded(
+              child: _FooterIcon(
+                icon: Icons.apps_rounded,
+                label: tr('crowdsourcedConfigsLabel'),
+                url: 'https://apps.obtainium.imranr.dev/',
+              ),
             ),
           ],
         ),
@@ -257,6 +264,7 @@ class _FooterIcon extends StatelessWidget {
         ),
         Text(
           label,
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
