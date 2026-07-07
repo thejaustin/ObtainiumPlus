@@ -90,9 +90,26 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   }
 
+  // takeException only keeps the bare exception object; capture the full
+  // details so failures show the error-causing widget and source location
+  final errorDetails = <FlutterErrorDetails>[];
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    errorDetails.clear();
+    final baseHandler = FlutterError.onError;
+    FlutterError.onError = (details) {
+      errorDetails.add(details);
+      baseHandler?.call(details);
+    };
   });
+
+  void dumpErrorsIfAny(Object? exception) {
+    if (exception == null) return;
+    for (final d in errorDetails) {
+      // ignore: avoid_print
+      print('──── captured error detail ────\n$d');
+    }
+  }
 
   for (var tab = 0; tab <= 8; tab++) {
     testWidgets('settings section $tab builds without throwing', (
@@ -107,7 +124,9 @@ void main() {
       });
       await tester.pumpWidget(app);
       await pumpUntilMounted(tester);
-      expect(tester.takeException(), isNull);
+      final exception = tester.takeException();
+      dumpErrorsIfAny(exception);
+      expect(exception, isNull);
       expect(find.byType(SettingsPage), findsOneWidget);
     }, timeout: const Timeout(Duration(minutes: 1)));
   }
@@ -132,7 +151,9 @@ void main() {
     });
     await tester.pumpWidget(app);
     await pumpUntilMounted(tester);
-    expect(tester.takeException(), isNull);
+    final exception = tester.takeException();
+    dumpErrorsIfAny(exception);
+    expect(exception, isNull);
     expect(find.byType(SettingsPage), findsOneWidget);
   }, timeout: const Timeout(Duration(minutes: 1)));
 }
