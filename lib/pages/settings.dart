@@ -92,27 +92,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
+                  // Plain labels, not tr(): 'apps' is a plural (nested) key in
+                  // the translation JSON, and tr() on a nested key throws a
+                  // TypeError that blanks the whole page in release (#217)
+                  children: const [
                     'Obtainium+',
-                    tr('theme'),
-                    tr('apps'),
-                    tr('updates'),
-                    tr('installation'),
-                    tr('notifications'),
-                    tr('behavior'),
-                    tr('advanced'),
-                    tr('troubleshooting')
+                    'Visuals',
+                    'Apps View',
+                    'Updates',
+                    'Installation',
+                    'Notifications',
+                    'Behavior',
+                    'Advanced',
+                    'Troubleshooting',
                   ].asMap().entries.map((entry) {
                     final isSelected = _selectedSectionIndex == entry.key;
-                    final displayTitle = entry.value == 'theme' ? 'Visuals' 
-                        : entry.value == 'apps' ? 'Apps View'
-                        : entry.value == 'updates' ? 'Updates'
-                        : entry.value == 'installation' ? 'Installation'
-                        : entry.value == 'notifications' ? 'Notifications'
-                        : entry.value == 'behavior' ? 'Behavior'
-                        : entry.value == 'advanced' ? 'Advanced'
-                        : entry.value == 'troubleshooting' ? 'Troubleshooting'
-                        : entry.value;
+                    final displayTitle = entry.value;
 
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
