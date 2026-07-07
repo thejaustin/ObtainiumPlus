@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +21,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  // Serve translations from memory: the rootBundle load is real async that
+  // completes for the first test but hangs for later ones (static state in
+  // EasyLocalization), so tabs 1+ never mounted with the default loader
+  final translations =
+      jsonDecode(File('assets/translations/en.json').readAsStringSync())
+          as Map<String, dynamic>;
+
   Future<Widget> buildSettingsApp(int tab) async {
     final prefs = await SharedPreferences.getInstance();
     final settings = SettingsProvider();
@@ -37,6 +47,7 @@ void main() {
       supportedLocales: const [Locale('en')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
+      assetLoader: _MemoryAssetLoader(translations),
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: settings),
@@ -124,4 +135,13 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(SettingsPage), findsOneWidget);
   }, timeout: const Timeout(Duration(minutes: 1)));
+}
+
+class _MemoryAssetLoader extends AssetLoader {
+  final Map<String, dynamic> translations;
+  const _MemoryAssetLoader(this.translations);
+
+  @override
+  Future<Map<String, dynamic>> load(String path, Locale locale) async =>
+      translations;
 }
