@@ -90,25 +90,36 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   }
 
-  // takeException only keeps the bare exception object; capture the full
-  // details so failures show the error-causing widget and source location
-  final errorDetails = <FlutterErrorDetails>[];
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    errorDetails.clear();
+  });
+
+  // takeException only keeps the bare exception object; capture the full
+  // details (error-causing widget + source location) so CI failures are
+  // actionable. Must be installed inside the test body — the binding
+  // replaces FlutterError.onError after setUp — and restored before the
+  // binding's post-test check.
+  Future<void> pumpCapturingErrors(WidgetTester tester, Widget app) async {
+    final errorDetails = <FlutterErrorDetails>[];
     final baseHandler = FlutterError.onError;
     FlutterError.onError = (details) {
       errorDetails.add(details);
       baseHandler?.call(details);
     };
-  });
-
-  void dumpErrorsIfAny(Object? exception) {
-    if (exception == null) return;
-    for (final d in errorDetails) {
-      // ignore: avoid_print
-      print('──── captured error detail ────\n$d');
+    try {
+      await tester.pumpWidget(app);
+      await pumpUntilMounted(tester);
+    } finally {
+      FlutterError.onError = baseHandler;
     }
+    final exception = tester.takeException();
+    if (exception != null) {
+      for (final d in errorDetails) {
+        // ignore: avoid_print
+        print('──── captured error detail ────\n$d');
+      }
+    }
+    expect(exception, isNull);
   }
 
   for (var tab = 0; tab <= 8; tab++) {
@@ -122,11 +133,7 @@ void main() {
         await EasyLocalization.ensureInitialized();
         app = await buildSettingsApp(tab);
       });
-      await tester.pumpWidget(app);
-      await pumpUntilMounted(tester);
-      final exception = tester.takeException();
-      dumpErrorsIfAny(exception);
-      expect(exception, isNull);
+      await pumpCapturingErrors(tester, app);
       expect(find.byType(SettingsPage), findsOneWidget);
     }, timeout: const Timeout(Duration(minutes: 1)));
   }
@@ -149,11 +156,7 @@ void main() {
       await EasyLocalization.ensureInitialized();
       app = await buildSettingsApp(0);
     });
-    await tester.pumpWidget(app);
-    await pumpUntilMounted(tester);
-    final exception = tester.takeException();
-    dumpErrorsIfAny(exception);
-    expect(exception, isNull);
+    await pumpCapturingErrors(tester, app);
     expect(find.byType(SettingsPage), findsOneWidget);
   }, timeout: const Timeout(Duration(minutes: 1)));
 }
