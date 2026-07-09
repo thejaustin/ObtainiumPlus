@@ -290,6 +290,10 @@ class SettingsProvider with ChangeNotifier {
   // Stub for app bar style — returns AppBarStyle.
   AppBarStyle getAppBarStyleForPage(String page) {
     final index = prefs?.safeInt('appBarStyle_$page') ?? 0;
+    // Stored index can be stale after enum changes (#217 corruption class)
+    if (index < 0 || index >= AppBarStyle.values.length) {
+      return AppBarStyle.values[0];
+    }
     return AppBarStyle.values[index];
   }
 
