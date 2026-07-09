@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -23,7 +24,12 @@ class AppUpdateService {
     _updateCache.remove(appId);
   }
 
-  static bool areVersionsDifferent(App app, String? installed, String latest) {
+  static bool areVersionsDifferent(
+    App app,
+    String? installed,
+    String latest, {
+    bool ignoreOrdering = false,
+  }) {
     if (installed == null) return false; // Not installed is not "different" for update purposes (usually handled separately)
     if (installed == latest) return false;
     final aggressive =
@@ -38,6 +44,20 @@ class AppUpdateService {
       return false; // Reconciled as equal
     }
 
+    // Best-effort downgrade guard: after a sideload/manual install the stored
+    // latestVersion can lag behind the OS-reported installedVersion, and
+    // offering it as an "update" just makes the installer throw a
+    // DowngradeError. Only skip when the ordering is confidently known —
+    // unknown (null) must fall through to the old behavior so apps with
+    // unusual versioning schemes still get their updates offered.
+    if (!ignoreOrdering) {
+      final ordering = compareVersionStrings(installed, latest);
+      if (ordering != null && ordering > 0) {
+        _logDowngradeSuppression(app, installed, latest);
+        return false;
+      }
+    }
+
     // Set ambiguous flag if they are likely identical but have different strings
     if (isLikelyIdentical(installed, latest)) {
       app.additionalSettings['isAmbiguousUpdate'] = true;
@@ -46,6 +66,29 @@ class AppUpdateService {
     }
 
     return true;
+  }
+
+  // Downgrade suppressions already logged this session — areVersionsDifferent
+  // runs inside list builders, so log each app/version pair only once.
+  static final Set<String> _loggedDowngradeSuppressions = {};
+
+  static void _logDowngradeSuppression(
+    App app,
+    String installed,
+    String latest,
+  ) {
+    if (!_loggedDowngradeSuppressions.add('${app.id}|$installed|$latest')) {
+      return;
+    }
+    // Guarded zone: logging is best-effort and must never break update
+    // checks (LogsProvider needs sqflite, unavailable in unit tests).
+    runZonedGuarded(() {
+      LogsProvider().add(
+        'Not offering $latest as an update for ${app.id}: '
+        'installed version $installed appears newer',
+        level: LogLevels.warning,
+      );
+    }, (_, __) {});
   }
 
   static bool isLikelyIdentical(String v1, String v2) {
@@ -292,7 +335,7 @@ class AppUpdateService {
         settingsProvider.obtainiumReleaseChannel == 'dev';
     obt.additionalSettings['apkFilterRegEx'] = 'fdroid';
     obt.additionalSettings['invertAPKFilter'] = true;
-    return checkUpdateFn(obtainiumId);
+    return checkUpdateFn(obtainiumId, ignoreCache: ignoreCache);
   }
 
   static List<String> findExistingUpdates(

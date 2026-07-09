@@ -1002,10 +1002,16 @@ class AppsProvider with ChangeNotifier {
     logs.add(
       'Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
     );
+    // versionCode is int? in the plugin — null on Android 15 for apps using
+    // longVersionCode > Integer.MAX_VALUE. Fall back to 0 to skip downgrade check.
+    final newVersionCode = newInfo.versionCode ?? 0;
+    final existingVersionCode = appInfo?.versionCode ?? 0;
     if (appInfo != null &&
-        newInfo.versionCode! < appInfo.versionCode! &&
+        newVersionCode > 0 &&
+        existingVersionCode > 0 &&
+        newVersionCode < existingVersionCode &&
         !(await canDowngradeApps())) {
-      throw DowngradeError(appInfo.versionCode!, newInfo.versionCode!);
+      throw DowngradeError(existingVersionCode, newVersionCode);
     }
     if (needsBGWorkaround) {
       // The below 'await' will never return if we are in a background process
@@ -1607,6 +1613,9 @@ class AppsProvider with ChangeNotifier {
           app,
           app.installedVersion,
           app.latestVersion,
+          // This is a "do the version strings mismatch at all" check for
+          // format reconciliation, not an "is an update available" check
+          ignoreOrdering: true,
         ) &&
         versionDetectionIsStandard) {
       // App's reported installed and latest versions don't match (and it uses standard version detection)
