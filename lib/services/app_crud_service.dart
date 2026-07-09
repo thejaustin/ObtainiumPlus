@@ -331,6 +331,9 @@ class AppCRUDService {
           app,
           app.installedVersion,
           app.latestVersion,
+          // This is a "do the version strings mismatch at all" check for
+          // format reconciliation, not an "is an update available" check
+          ignoreOrdering: true,
         ) &&
         versionDetectionIsStandard) {
       var correctedInstalledVersion = reconcileVersionDifferences(

@@ -113,6 +113,86 @@ MapEntry<bool, String>? reconcileVersionDifferences(
   return MapEntry(false, templateVersion);
 }
 
+final RegExp _versionOrderingTokenRegExp = RegExp('[0-9]+|[^0-9]+');
+
+// Splits a version into numeric (int) and non-numeric (String) run tokens
+// after normalization. Returns null if the string contains no number at all
+// or a digit run too long to be a real version component.
+List<Object>? _versionOrderingTokens(String version) {
+  var v = normalizeVersion(version.trim()).toLowerCase();
+  List<Object> tokens = [];
+  bool hasNumber = false;
+  for (var match in _versionOrderingTokenRegExp.allMatches(v)) {
+    var part = match.group(0)!;
+    if (part.codeUnitAt(0) >= 0x30 && part.codeUnitAt(0) <= 0x39) {
+      var n = int.tryParse(part);
+      if (n == null) {
+        return null;
+      }
+      tokens.add(n);
+      hasNumber = true;
+    } else {
+      tokens.add(part);
+    }
+  }
+  if (!hasNumber) {
+    return null;
+  }
+  return tokens;
+}
+
+// Drops trailing '.0' segments ('1.4.0' -> '1.4') but only down to
+// [targetLength] — stripping unconditionally would turn same-length pairs
+// like '1.10.0' vs '1.9.5' into a bogus structural mismatch.
+void _stripTrailingZeroSegments(List<Object> tokens, int targetLength) {
+  while (tokens.length > targetLength &&
+      tokens.length >= 2 &&
+      tokens.last == 0 &&
+      tokens[tokens.length - 2] == '.') {
+    tokens.removeRange(tokens.length - 2, tokens.length);
+  }
+}
+
+// Best-effort semantic ordering of two version strings.
+// Returns a negative number if version1 is older than version2, zero if they
+// are semantically equal, a positive number if version1 is newer, or null
+// when the strings don't share a comparable shape — callers must treat null
+// as "unknown" and keep their pre-existing behavior.
+// Deliberately conservative: numeric segments compare numerically
+// ('1.4.3' < '1.4.10', '1.4.3-p36' < '1.4.3-p41') but any structural
+// difference in the non-numeric parts (dates vs semver, differing suffixes,
+// hashes, extra segments beyond trailing zeros) yields null so genuine
+// updates for oddly-versioned apps are never suppressed.
+int? compareVersionStrings(String version1, String version2) {
+  var tokens1 = _versionOrderingTokens(version1);
+  var tokens2 = _versionOrderingTokens(version2);
+  if (tokens1 == null || tokens2 == null) {
+    return null;
+  }
+  if (tokens1.length != tokens2.length) {
+    _stripTrailingZeroSegments(tokens1, tokens2.length);
+    _stripTrailingZeroSegments(tokens2, tokens1.length);
+    if (tokens1.length != tokens2.length) {
+      return null;
+    }
+  }
+  int result = 0;
+  for (var i = 0; i < tokens1.length; i++) {
+    var t1 = tokens1[i];
+    var t2 = tokens2[i];
+    if (t1 is int && t2 is int) {
+      if (result == 0 && t1 != t2) {
+        result = t1 < t2 ? -1 : 1;
+      }
+    } else if (t1 != t2) {
+      // Keep scanning the whole skeleton even after a numeric difference —
+      // any non-numeric mismatch means the pair is not confidently orderable
+      return null;
+    }
+  }
+  return result;
+}
+
 String normalizeVersion(String version) {
   // Remove leading 'v' or 'p' (case-insensitive) followed by a digit
   // e.g. v1.2.3 -> 1.2.3, p100 -> 100
