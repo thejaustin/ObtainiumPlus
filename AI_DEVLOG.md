@@ -26,6 +26,17 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-09 — Claude Code (Fable 5) [session 854c1d79 continued]
+
+**p41 "Cannot install an older version (versionCode 2376 → 2371)" ROOT-CAUSED and fixed → v1.4.3-p43 released (CI green, incl. new tests):**
+- Mechanism: `areVersionsDifferent` (app_update_service.dart) treated ANY string difference between installedVersion and latestVersion as "update available" (no ordering), and Plus-app aggressive reconciliation (app_crud_service.dart ~295) refreshes installedVersion from the OS while latestVersion stays stale from the last check. p36→p41 shipped within ~5h on 07-04; a check in that window went stale → p36 (2371) offered as an "update" over installed p41 (2376) → installer DowngradeError.
+- Fix (`7bc114bf`): new conservative `compareVersionStrings` in version_utils.dart (piecewise numeric, identical non-numeric skeleton required, null = unknown); `areVersionsDifferent` suppresses updates only when latest is *confidently* older (logged once per app/pair); `ignoreOrdering: true` at both reconciliation call sites preserves mismatch-detection semantics. Unknown ordering falls through to old behavior — never suppress updates for weird versioning. Tests: test/version_ordering_test.dart.
+- Same commit: foreground installer null-assert on versionCode replaced with `?? 0` skip (Android 15 longVersionCode), self-update now forwards `ignoreCache`.
+- `05b64ab9`: `getAppBarStyleForPage` enum index range-checked (#217 corruption class).
+- Read-only audit of other downgrade paths (6 findings, deferred): bg install re-derives from persisted state without fresh check; github/gitlab `fallbackToOlderReleases`+APK-filter mismatch reports older tag as latest; date-ordering non-monotonic; LetMeDowngrade makes stale offers real downgrades.
+- #219 closed as dup of #217. Session completion review: 21/24 asks verified done.
+- **UI/UX enhancement effort started** (user-directed, review-with-user before landing): two audit agents delivered — codebase design audit (AMOLED only ~30% black; expressive/predictive-back transitions inverted; 199 hardcoded radii vs CardMetrics in 5 files; 303 withOpacity; icons mixed 3 ways; motion tokens 96% unused; haptics strongest axis at 78 call sites; dead settings: matchSystemMaterialStyle, per-page AppBarStyle) + M3E research (Flutter core paused M3E pending Material decoupling — flutter#168813; adopt m3e_collection/loading_indicator_m3e, motor+heroine, smooth_sheets, haptic_feedback). 4-tier plan drafted; context-gathering agents (past-session rationale, repo docs, upstream Obtainium) running before implementation.
+
 ### 2026-07-07 — Claude Code (Fable 5) [session 854c1d79 continued]
 **ROOT CAUSE of the persistent blank settings page found** (user report: "settings still broken"; Sentry silent because quota exhausted):
 - `lib/pages/settings.dart` section-chip row called `tr('apps')`, but `'apps'` is a **plural key (nested object)** in `assets/translations/en.json`. easy_localization casts the resolved value `as String?` → `TypeError: '_Map<String, dynamic>' is not a subtype of 'String?'` thrown while building the page **shell** (every tab) → release builds show a blank page. Fixed in 3a60cc5e by using the hardcoded display labels directly (the old `displayTitle` mapping already overrode everything to English; it was dead code because it compared raw keys against translated values).
