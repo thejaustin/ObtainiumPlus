@@ -524,6 +524,7 @@
     "onlyShowSelected": "Only show selected",
     "matchSystemMaterialStyle": "Match system Material style",
     "matchSystemMaterialStyleDescription": "Align UI shapes and components with system-wide Material 3 defaults",
+    "matchSystemMaterialStyleSubtitle": "Use the system colors, font, and standard Material 3 shapes as-is. Overrides Expressive styling and custom corner radius while on; your other settings resume when turned off",
     "gridColumns": "Grid columns",
     "gridColumnsDescription": "Adjust the number of columns in the grid view dashboard",
     "gridCategoryDisplay": "Category grid display",

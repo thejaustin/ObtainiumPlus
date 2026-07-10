@@ -12,7 +12,27 @@ class ThemeBuilder {
     required bool useSystemFont,
     bool plusEnableMaterialExpressive = true,
     double? cornerRadius,
+    bool matchSystemMaterialStyle = false,
   }) {
+    // "Match system Material style": follow the device look as closely as
+    // possible — the (untouched) dynamic colour scheme, the system font, and
+    // stock Material 3 component shapes/elevations/motion. This is a
+    // presentation-time override only: the user's other saved toggles are
+    // simply not applied while it is on and take effect again when it is
+    // turned off.
+    if (matchSystemMaterialStyle) {
+      return ThemeData(
+        useMaterial3: true,
+        colorScheme: colorScheme,
+        fontFamily: 'SystemFont',
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      );
+    }
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
@@ -77,8 +97,11 @@ class ThemeBuilder {
       ),
       pageTransitionsTheme: PageTransitionsTheme(
         builders: {
+          // Expressive mode gets the modern M3 emphasized forward-fade
+          // transition; otherwise fall back to the system predictive-back
+          // transition
           TargetPlatform.android: plusEnableMaterialExpressive
-              ? const ZoomPageTransitionsBuilder()
+              ? const FadeForwardsPageTransitionsBuilder()
               : const PredictiveBackPageTransitionsBuilder(),
           TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
         },
@@ -253,8 +276,10 @@ class ThemeBuilder {
   ) {
     return CardThemeData(
       color: colorScheme.surfaceContainerLow,
-      elevation: expressive ? 8 : 1,
-      shadowColor: colorScheme.shadow.withValues(alpha: expressive ? 0.15 : 0.05),
+      // M3 tonal elevation: hierarchy comes from the surface container
+      // colour, not shadows (heavy shadows also read muddy on the pure-black
+      // AMOLED theme)
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
           cornerRadius ?? (expressive ? 24 : 12),

@@ -637,7 +637,7 @@ class ThemeSettingsSection extends StatelessWidget {
             tr('matchSystemMaterialStyle'),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          subtitle: Text(tr('matchSystemMaterialStyleDescription')),
+          subtitle: Text(tr('matchSystemMaterialStyleSubtitle')),
           value: settings.matchSystemMaterialStyle,
           onChanged: (value) {
             AppHaptics.selectionClick();
