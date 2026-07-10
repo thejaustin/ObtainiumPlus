@@ -510,11 +510,24 @@ class _ObtainiumState extends State<Obtainium> {
           // Decide on a colour/brightness scheme based on OS and user settings
           ColorScheme lightColorScheme;
           ColorScheme darkColorScheme;
+          // "Match system Material style" only has meaning when the system
+          // dynamic colour scheme is actually in use
+          final bool matchSystemStyle =
+              themeSettings.useMaterialYou &&
+              themeSettings.matchSystemMaterialStyle &&
+              lightDynamic != null &&
+              darkDynamic != null;
           if (lightDynamic != null &&
               darkDynamic != null &&
               themeSettings.useMaterialYou) {
-            lightColorScheme = lightDynamic.harmonized();
-            darkColorScheme = darkDynamic.harmonized();
+            // When matching the system style, keep the dynamic scheme
+            // untouched; otherwise harmonize it with the app's palette
+            lightColorScheme = matchSystemStyle
+                ? lightDynamic
+                : lightDynamic.harmonized();
+            darkColorScheme = matchSystemStyle
+                ? darkDynamic
+                : darkDynamic.harmonized();
           } else {
             lightColorScheme = ColorScheme.fromSeed(
               seedColor: themeSettings.themeColor,
@@ -527,14 +540,28 @@ class _ObtainiumState extends State<Obtainium> {
             );
           }
 
-          // set the background and surface colors to pure black in the amoled theme
+          // Rebuild the whole dark surface ladder near-black in the amoled
+          // theme (cards, dialogs, nav bar etc. use the container steps, not
+          // just `surface`), keeping the relative ordering so the M3 tonal
+          // hierarchy survives
           if (themeSettings.useBlackTheme) {
             darkColorScheme = darkColorScheme
-                .copyWith(surface: Colors.black)
+                .copyWith(
+                  surface: Colors.black,
+                  surfaceDim: Colors.black,
+                  surfaceContainerLowest: Colors.black,
+                  surfaceContainerLow: const Color(0xFF0A0A0A),
+                  surfaceContainer: const Color(0xFF121212),
+                  surfaceContainerHigh: const Color(0xFF1A1A1A),
+                  surfaceContainerHighest: const Color(0xFF212121),
+                )
                 .harmonized();
           }
 
-          if (themeSettings.useSystemFont) NativeFeatures.loadSystemFont();
+          // The system font is also needed when matching the system style
+          if (themeSettings.useSystemFont || matchSystemStyle) {
+            NativeFeatures.loadSystemFont();
+          }
 
           return MaterialApp(
             title: 'Obtainium',
@@ -551,6 +578,7 @@ class _ObtainiumState extends State<Obtainium> {
               plusEnableMaterialExpressive:
                   plusSettings.plusEnableMaterialExpressive,
               cornerRadius: plusSettings.plusGlobalCornerRadius,
+              matchSystemMaterialStyle: matchSystemStyle,
             ),
             darkTheme: ThemeBuilder.buildTheme(
               colorScheme: themeSettings.theme == ThemeSettings.light
@@ -560,6 +588,7 @@ class _ObtainiumState extends State<Obtainium> {
               plusEnableMaterialExpressive:
                   plusSettings.plusEnableMaterialExpressive,
               cornerRadius: plusSettings.plusGlobalCornerRadius,
+              matchSystemMaterialStyle: matchSystemStyle,
             ),
             home: Shortcuts(
               shortcuts: <LogicalKeySet, Intent>{
