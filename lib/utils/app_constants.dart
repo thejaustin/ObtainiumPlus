@@ -78,6 +78,27 @@ class AppConstants {
   /// Vertical padding for input fields
   static const double inputVerticalPadding = 16.0;
 
+  // Glassmorphism Tokens
+  // Unified from previously divergent call sites (GlassDialog: alpha 0.78 /
+  // sigma 24, modal_utils bottom sheet: alpha 0.85 / sigma 12, omnibar add
+  // sheet: alpha 0.78 / sigma 24). Backdrop blur must ALWAYS be clipped to
+  // the widget's bounds (ClipRRect or equivalent) or it bleeds over the
+  // content behind it and makes list text unreadable.
+  /// Canonical backdrop blur sigma for glass dialogs and sheets
+  static const double glassBlurSigma = 24.0;
+
+  /// Softer backdrop blur for lighter glass surfaces (draggable bottom sheets)
+  static const double glassBlurSigmaSoft = 12.0;
+
+  /// Canonical glass surface fill alpha (dialogs, omnibar add sheet)
+  static const double glassSurfaceAlpha = 0.78;
+
+  /// Stronger (more opaque) glass surface fill alpha (modal bottom sheets)
+  static const double glassSurfaceAlphaStrong = 0.85;
+
+  /// Hairline border alpha on glass surfaces
+  static const double glassBorderAlpha = 0.18;
+
   // Package IDs for thejaustin's "Plus" apps
   /// ObtainiumPlus Package ID
   static const String obtainiumPlusId = 'dev.thejaustin.obtainiumplus';

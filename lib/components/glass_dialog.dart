@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
@@ -27,8 +27,9 @@ class GlassDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
+    final radius = plusSettings.plusGlobalCornerRadius;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -38,16 +39,18 @@ class GlassDialog extends StatelessWidget {
         width: width,
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         decoration: BoxDecoration(
-          color: Theme.of(
-            context,
-          ).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
-          borderRadius: BorderRadius.circular(24),
+          color: Theme.of(context).colorScheme.surface.withValues(
+            alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
+          ),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(
             color: enableGlass
-                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.18)
-                : Theme.of(
-                    context,
-                  ).colorScheme.outline.withOpacity(AppOpacity.subtle),
+                ? Theme.of(context).colorScheme.onSurface.withValues(
+                    alpha: AppConstants.glassBorderAlpha,
+                  )
+                : Theme.of(context).colorScheme.outline.withValues(
+                    alpha: AppOpacity.subtle,
+                  ),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -56,8 +59,10 @@ class GlassDialog extends StatelessWidget {
             blurFactor: enableGlass ? 1.5 : 1.0,
           ),
         ),
+        // Blur must stay inside this ClipRRect so it is clipped to the
+        // dialog's bounds and never bleeds over the content behind it.
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(radius),
           child: Builder(
             builder: (context) {
               final inner = Column(
@@ -82,7 +87,10 @@ class GlassDialog extends StatelessWidget {
               );
               if (!enableGlass) return inner;
               return BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                filter: ImageFilter.blur(
+                  sigmaX: AppConstants.glassBlurSigma,
+                  sigmaY: AppConstants.glassBlurSigma,
+                ),
                 child: inner,
               );
             },
@@ -97,12 +105,12 @@ class GlassDialog extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest
-            .withOpacity(enableGlass ? 0.5 : 1.0),
+            .withValues(alpha: enableGlass ? AppOpacity.half : 1.0),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(
               context,
-            ).colorScheme.outline.withOpacity(AppOpacity.subtle),
+            ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1,
           ),
         ),
@@ -113,9 +121,8 @@ class GlassDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withOpacity(AppOpacity.half),
+                color: Theme.of(context).colorScheme.primaryContainer
+                    .withValues(alpha: AppOpacity.half),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -139,7 +146,7 @@ class GlassDialog extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.7),
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -155,14 +162,13 @@ class GlassDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest
+            .withValues(alpha: AppOpacity.medium),
         border: Border(
           top: BorderSide(
             color: Theme.of(
               context,
-            ).colorScheme.outline.withOpacity(AppOpacity.subtle),
+            ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1,
           ),
         ),
