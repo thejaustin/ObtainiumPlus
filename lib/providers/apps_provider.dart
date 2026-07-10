@@ -1392,10 +1392,18 @@ class AppsProvider with ChangeNotifier {
 
     if (errors.idsByErrorString.isNotEmpty) {
       if (context != null && context.mounted) {
+        // Install(s) failed (e.g. InstallError, DowngradeError) in a
+        // user-initiated flow — signal the negative outcome
+        AppHaptics.failure();
         showError(errors, context);
       } else {
         throw errors;
       }
+    } else if (context != null && installedIds.isNotEmpty) {
+      // All requested installs completed in a user-initiated (foreground)
+      // flow — signal the positive outcome (skipped for silent/background
+      // runs where context is null)
+      AppHaptics.success();
     }
 
     return installedIds;

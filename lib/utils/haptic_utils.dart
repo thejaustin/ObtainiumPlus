@@ -29,4 +29,19 @@ class AppHaptics {
   static void vibrate() {
     if (enabled) HapticFeedback.vibrate();
   }
+
+  // Semantic outcome haptics — app-wide convention:
+  // success = light impact, failure/error = heavy impact.
+  // Prefer these over the raw impact methods when signalling the outcome
+  // of an operation (e.g. install completed vs install failed).
+
+  /// Positive outcome (e.g. successful install or update).
+  static void success() {
+    lightImpact();
+  }
+
+  /// Negative outcome (e.g. failed install, downgrade error).
+  static void failure() {
+    heavyImpact();
+  }
 }
