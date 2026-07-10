@@ -16,7 +16,7 @@ import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/pages/add_app.dart';
-import 'package:obtainium/pages/home.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
@@ -30,11 +30,18 @@ class DiscoverPage extends StatefulWidget {
   final bool showAppBar;
   final bool showSearchBar;
   final String initialQuery;
+
+  /// When set (e.g. when Discover is embedded in the Add App page),
+  /// tapping a result passes its URL to this callback instead of
+  /// navigating to the Add App tab.
+  final ValueChanged<String>? onAppSelected;
+
   const DiscoverPage({
     super.key,
     this.showAppBar = true,
     this.showSearchBar = true,
     this.initialQuery = '',
+    this.onAppSelected,
   });
 
   @override
@@ -95,15 +102,13 @@ class DiscoverPageState extends State<DiscoverPage> {
     super.dispose();
   }
 
-  void _openAddApp(String url) async {
-    final homeState = context.findAncestorStateOfType<HomePageState>();
-    if (homeState != null) {
-      homeState.switchToPage(1);
-      while ((homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState == null) {
-        await Future.delayed(const Duration(milliseconds: 10));
-      }
-      (homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(url);
+  void _openAddApp(String url) {
+    if (widget.onAppSelected != null) {
+      widget.onAppSelected!(url);
+      return;
     }
+    // Standalone fallback: Add App is no longer a tab, open it as a route.
+    pushRoute(context, AddAppPage(initialUrl: url));
   }
 
   List<AppSource> get searchableSources =>

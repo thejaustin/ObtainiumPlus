@@ -15,7 +15,6 @@ import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/app.dart';
-import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -355,15 +354,11 @@ class _CommandCenterState extends State<CommandCenter> {
     );
   }
 
-  void _openAddApp(String url) async {
+  void _openAddApp(String url) {
     Navigator.pop(context);
-    final homeState = globalNavigatorKey.currentContext?.findAncestorStateOfType<HomePageState>();
-    if (homeState != null) {
-      homeState.switchToPage(1);
-      while ((homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState == null) {
-        await Future.delayed(const Duration(milliseconds: 10));
-      }
-      (homeState.pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState?.linkFn(url);
+    final ctx = globalNavigatorKey.currentContext;
+    if (ctx != null) {
+      pushRoute(ctx, AddAppPage(initialUrl: url));
     }
   }
 

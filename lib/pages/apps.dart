@@ -1,7 +1,8 @@
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
-import 'package:obtainium/pages/home.dart';
+import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -198,13 +199,7 @@ class AppsPageState extends State<AppsPage> {
           icon: Icons.auto_awesome_rounded,
           actionLabel: tr('addApp'),
           onActionPressed: () {
-            final homeState = context.findAncestorStateOfType<HomePageState>();
-            homeState?.switchToPage(1);
-          },
-          secondaryActionLabel: tr('discover'),
-          onSecondaryActionPressed: () {
-            final homeState = context.findAncestorStateOfType<HomePageState>();
-            homeState?.switchToPage(2);
+            pushRoute(context, const AddAppPage());
           },
         ),
       );

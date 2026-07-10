@@ -17,6 +17,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -27,11 +28,18 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 class AddAppPage extends StatefulWidget {
   final int? initialTab;
+
+  /// When set, the URL is fed into the form (via linkFn) as soon as the
+  /// page is built — used by deep links and search results that open the
+  /// Add App page as a pushed route.
+  final String? initialUrl;
+
   const AddAppPage({
     super.key,
     this.isModal = false,
     this.scrollController,
     this.initialTab,
+    this.initialUrl,
   });
 
   final bool isModal;
@@ -59,6 +67,19 @@ class AddAppPageState extends State<AddAppPage> {
   Timer? _searchDebounce;
   Map<String, MapEntry<String, List<String>>> liveResults = {};
   bool liveSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialUrl = widget.initialUrl;
+    if (initialUrl != null && initialUrl.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          linkFn(initialUrl);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -302,6 +323,11 @@ class AddAppPageState extends State<AddAppPage> {
           AppHaptics.selectionClick();
           final homeState = globalNavigatorKey.currentContext?.findAncestorStateOfType<HomePageState>();
           homeState?.switchToPage(0);
+          // Add App is a pushed route now (not a tab); close it so the
+          // user lands back on the Apps tab behind the app sheet.
+          if (!widget.isModal && mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
           showDraggableModalBottomSheet(
             context: globalNavigatorKey.currentContext ?? context,
             builder: (context, controller) => AppPage(
@@ -1034,10 +1060,7 @@ class AddAppPageState extends State<AddAppPage> {
       );
     }
 
-    final scaffold = Scaffold(
-      backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
-      body: CustomScrollView(
+    final formScrollView = CustomScrollView(
         controller: widget.scrollController,
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         physics: widget.isModal
@@ -1077,11 +1100,39 @@ class AddAppPageState extends State<AddAppPage> {
             ),
           ),
         ],
-      ),
+    );
+
+    final plusSettings = context.watch<PlusSettingsProvider>();
+
+    // Discover is merged into the Add App experience: when the page is
+    // idle (no URL typed, no source picked) the browse/discover content
+    // fills the space below the add-by-URL form. Tapping a result feeds
+    // its URL back into the form via linkFn.
+    final showDiscover = !widget.isModal &&
+        plusSettings.plusEnableDiscover &&
+        pickedSource == null &&
+        userInput.isEmpty;
+
+    final scaffold = Scaffold(
+      backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
+      bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
+      body: showDiscover
+          ? Column(
+              children: [
+                Flexible(child: formScrollView),
+                Expanded(
+                  child: DiscoverPage(
+                    showAppBar: false,
+                    showSearchBar: false,
+                    onAppSelected: (url) => linkFn(url),
+                  ),
+                ),
+              ],
+            )
+          : formScrollView,
     );
 
     if (widget.isModal) {
-      final plusSettings = context.watch<PlusSettingsProvider>();
       final radius = plusSettings.plusOverrideIndividualCornerRadius
           ? plusSettings.plusHomeCornerRadius
           : plusSettings.plusGlobalCornerRadius;
