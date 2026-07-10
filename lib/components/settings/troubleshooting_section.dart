@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/settings/logs_dialog.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
@@ -113,6 +114,23 @@ class TroubleshootingSection extends StatelessWidget {
           onTap: () {
             AppHaptics.selectionClick();
             pushRoute(context, const ChangelogPage());
+          },
+        ),
+      if (_matches(tr('plusShowChangelogAfterUpdate')))
+        SwitchListTile.adaptive(
+          secondary: Icon(
+            Icons.new_releases_outlined,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(
+            tr('plusShowChangelogAfterUpdate'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: Text(tr('plusShowChangelogAfterUpdateDescription')),
+          value: context.watch<PlusSettingsProvider>().plusShowChangelogAfterUpdate,
+          onChanged: (v) {
+            AppHaptics.selectionClick();
+            context.read<PlusSettingsProvider>().plusShowChangelogAfterUpdate = v;
           },
         ),
       if (!context.watch<SettingsProvider>().plusDeveloperMode)

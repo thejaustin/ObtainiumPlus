@@ -53,6 +53,13 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusShowChangelogAfterUpdate =>
+      _prefs?.safeBool('plusShowChangelogAfterUpdate') ?? true;
+  set plusShowChangelogAfterUpdate(bool val) {
+    _prefs?.setBool('plusShowChangelogAfterUpdate', val);
+    notifyListeners();
+  }
+
   String get plusLastSeenVersion =>
       _prefs?.safeString('plusLastSeenVersion') ?? '';
   set plusLastSeenVersion(String val) {

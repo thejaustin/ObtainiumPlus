@@ -89,6 +89,21 @@ class HomePageState extends State<HomePage> {
       var plusSettings = context.read<PlusSettingsProvider>();
       const currentVersion = currentObtainiumPlusVersion;
 
+      if (plusSettings.plusLastSeenVersion.isEmpty && !sp.welcomeShown) {
+        // Fresh install: record the current version silently so the
+        // "What's New" dialog only appears after a real update, and let
+        // the welcome dialog below take over.
+        plusSettings.plusLastSeenVersion = currentVersion;
+      }
+
+      if (plusSettings.plusLastSeenVersion != currentVersion &&
+          !plusSettings.plusShowChangelogAfterUpdate) {
+        // User opted out of the post-update changelog; still mark the
+        // version as seen so re-enabling the toggle later doesn't
+        // surface an outdated prompt.
+        plusSettings.plusLastSeenVersion = currentVersion;
+      }
+
       if (plusSettings.plusLastSeenVersion != currentVersion) {
         // Show Changelog on update
         await showDialog(
