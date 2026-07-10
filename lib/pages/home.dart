@@ -7,10 +7,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/pages/apps.dart';
-import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -20,6 +20,7 @@ import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -42,35 +43,20 @@ class NavigationPageItem {
 class HomePageState extends State<HomePage> {
   List<int> selectedIndexHistory = [];
   bool isReversing = false;
-  int prevAppCount = -1;
-  bool prevIsLoading = true;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
-  bool isLinkActivity = false;
 
   late List<NavigationPageItem> pages;
 
   @override
   void initState() {
     super.initState();
-    final plusSettings = context.read<PlusSettingsProvider>();
     pages = [
       NavigationPageItem(
         'appsString',
         Icons.apps_rounded,
         AppsPage(key: GlobalKey<AppsPageState>()),
       ),
-      NavigationPageItem(
-        'addApp',
-        Icons.add_rounded,
-        AddAppPage(key: GlobalKey<AddAppPageState>()),
-      ),
-      if (plusSettings.plusEnableDiscover)
-        NavigationPageItem(
-          'discover',
-          Icons.explore_rounded,
-          const DiscoverPage(),
-        ),
       NavigationPageItem(
         'importExport',
         Icons.import_export_rounded,
@@ -181,14 +167,10 @@ class HomePageState extends State<HomePage> {
     _appLinks = AppLinks();
 
     goToAddApp(String data) async {
-      switchToPage(1);
-      while ((pages[1].widget.key as GlobalKey<AddAppPageState>?)
-              ?.currentState ==
-          null) {
-        await Future.delayed(const Duration(microseconds: 1));
-      }
-      (pages[1].widget.key as GlobalKey<AddAppPageState>?)?.currentState
-          ?.linkFn(data);
+      // Add App is no longer a tab; open it as a pushed route and let
+      // AddAppPage feed the URL into its form via initialUrl -> linkFn.
+      if (!mounted) return;
+      await pushRoute(context, AddAppPage(initialUrl: data));
     }
 
     goToExistingApp(String appId) async {
@@ -205,7 +187,6 @@ class HomePageState extends State<HomePage> {
     }
 
     interpretLink(Uri uri) async {
-      isLinkActivity = true;
       var action = uri.host;
       var data = uri.path.length > 1 ? uri.path.substring(1) : "";
       try {
@@ -336,20 +317,8 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final appsProvider = context.watch<AppsProvider>();
     final settingsProvider = context.watch<SettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
-
-    if (!prevIsLoading &&
-        prevAppCount >= 0 &&
-        appsProvider.apps.length > prevAppCount &&
-        selectedIndexHistory.isNotEmpty &&
-        selectedIndexHistory.last == 1 &&
-        !isLinkActivity) {
-      switchToPage(0);
-    }
-    prevAppCount = appsProvider.apps.length;
-    prevIsLoading = appsProvider.loadingApps;
 
     final currentIndex =
         selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
@@ -384,12 +353,6 @@ class HomePageState extends State<HomePage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        if (isLinkActivity &&
-            selectedIndexHistory.length == 1 &&
-            selectedIndexHistory.last == 1) {
-          Navigator.of(context).pop();
-          return;
-        }
         setIsReversing(
           selectedIndexHistory.length >= 2
               ? selectedIndexHistory.reversed.toList()[1]
@@ -410,6 +373,12 @@ class HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
+        // The omnibar "+" — the single entry point for the combined
+        // add/search/discover flow, visible on every tab.
+        floatingActionButton: settingsProvider.isTV
+            ? null
+            : const AppActionsFAB(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: settingsProvider.isTV
             ? Row(
                 children: [
