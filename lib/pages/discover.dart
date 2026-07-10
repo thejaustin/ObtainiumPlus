@@ -469,42 +469,16 @@ class DiscoverPageState extends State<DiscoverPage> {
 
   Widget _buildCategoryChips() {
     return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'Browse F-Droid',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-              ),
-            ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _fdroidCategories.map((cat) {
-                final isSelected = _selectedCategory == cat.slug;
-                return FilterChip(
-                  avatar: Icon(cat.icon, size: 16),
-                  label: Text(cat.label),
-                  selected: isSelected,
-                  onSelected: (_) {
-                    if (isSelected) {
-                      _clearBrowse();
-                    } else {
-                      _startBrowse(cat.slug);
-                    }
-                  },
-                  showCheckmark: false,
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+      child: DiscoverCategoryRow(
+        selectedCategory: _selectedCategory,
+        onCategorySelected: (slug) {
+          AppHaptics.selectionClick();
+          if (slug == null || slug == _selectedCategory) {
+            _clearBrowse();
+          } else {
+            _startBrowse(slug);
+          }
+        },
       ),
     );
   }
@@ -741,6 +715,96 @@ class DiscoverPageState extends State<DiscoverPage> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Horizontal category pill row for the Discover content, styled to match
+/// the settings page's section-chip row. Extracted as a standalone widget
+/// so it can be reused when Discover is embedded in the Add App flow.
+class DiscoverCategoryRow extends StatelessWidget {
+  /// Currently selected category slug, or null for "All".
+  final String? selectedCategory;
+
+  /// Called with the tapped category slug, or null when "All" is tapped.
+  final ValueChanged<String?> onCategorySelected;
+
+  const DiscoverCategoryRow({
+    super.key,
+    required this.selectedCategory,
+    required this.onCategorySelected,
+  });
+
+  Widget _buildChip(
+    BuildContext context, {
+    required String label,
+    IconData? icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required double cornerRadius,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: ChoiceChip(
+        avatar: icon == null
+            ? null
+            : Icon(
+                icon,
+                size: 16,
+                color: isSelected
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurfaceVariant,
+              ),
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (_) => onTap(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius),
+        ),
+        side: BorderSide.none,
+        showCheckmark: false,
+        backgroundColor: colorScheme.surfaceContainer,
+        selectedColor: colorScheme.primaryContainer,
+        labelStyle: TextStyle(
+          color: isSelected
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onSurfaceVariant,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final cornerRadius = settings.plusGlobalCornerRadius;
+    return SizedBox(
+      height: 50,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildChip(
+            context,
+            label: tr('all'),
+            isSelected: selectedCategory == null,
+            onTap: () => onCategorySelected(null),
+            cornerRadius: cornerRadius,
+          ),
+          ..._fdroidCategories.map(
+            (cat) => _buildChip(
+              context,
+              label: cat.label,
+              icon: cat.icon,
+              isSelected: selectedCategory == cat.slug,
+              onTap: () => onCategorySelected(cat.slug),
+              cornerRadius: cornerRadius,
+            ),
+          ),
         ],
       ),
     );
