@@ -222,14 +222,20 @@ class AppsPageState extends State<AppsPage> {
       setState(() {
         refreshingSince = DateTime.now();
       });
+      var refreshFailed = false;
       return appsProvider
           .checkUpdates()
           .catchError((e) {
+            refreshFailed = true;
             if (context.mounted) showError(e is Map ? e['errors'] : e, context);
             return <App>[];
           })
           .whenComplete(() {
-            AppHaptics.heavyImpact();
+            if (refreshFailed) {
+              AppHaptics.heavyImpact();
+            } else {
+              AppHaptics.lightImpact();
+            }
             setState(() {
               refreshingSince = null;
             });
@@ -1530,7 +1536,19 @@ class AppsPageState extends State<AppsPage> {
             controller: scrollController,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: <Widget>[
-              CustomAppBar(title: tr('appsString')),
+              settingsProvider.getAppBarStyleForPage('apps') ==
+                      AppBarStyle.large
+                  ? SliverAppBar.large(
+                      automaticallyImplyLeading: false,
+                      title: Text(
+                        tr('appsString'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  : CustomAppBar(title: tr('appsString')),
               if (plusSettings.plusEnableHomeDashboard)
                 SliverToBoxAdapter(
                   child: AppDashboard(
