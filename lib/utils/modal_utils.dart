@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 /// Shows a modal bottom sheet that is draggable from its scrollable content.
@@ -18,37 +19,46 @@ Future<T?> showDraggableModalBottomSheet<T>({
     useSafeArea: useSafeArea,
     backgroundColor: Colors.transparent,
     elevation: 0,
-    barrierColor: Theme.of(context).colorScheme.scrim.withOpacity(0.3),
+    barrierColor: Theme.of(
+      context,
+    ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
     builder: (context) {
-      final settings = context.watch<SettingsProvider>();
+      final plusSettings = context.watch<PlusSettingsProvider>();
+      final enableGlass = plusSettings.plusEnableGlassmorphism;
+      // Blur must stay inside this ClipRRect so it is clipped to the
+      // sheet's bounds and never bleeds over the content behind it.
       return ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         child: ConditionalBlur(
-          enabled: settings.plusEnableGlassmorphism,
-          sigma: 12,
+          enabled: enableGlass,
+          sigma: AppConstants.glassBlurSigmaSoft,
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(
-                settings.plusEnableGlassmorphism ? 0.85 : 1.0,
+              color: Theme.of(context).colorScheme.surface.withValues(
+                alpha: enableGlass ? AppConstants.glassSurfaceAlphaStrong : 1.0,
               ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
-                width: 1,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               ),
             ),
-          ),
-          child: DraggableScrollableSheet(
-            initialChildSize: initialChildSize,
-            minChildSize: minChildSize,
-            maxChildSize: maxChildSize,
-            expand: false,
-            builder: builder,
+            child: DraggableScrollableSheet(
+              initialChildSize: initialChildSize,
+              minChildSize: minChildSize,
+              maxChildSize: maxChildSize,
+              expand: false,
+              builder: builder,
+            ),
           ),
         ),
-      ),
-    );
-  },
-);
+      );
+    },
+  );
 }

@@ -417,14 +417,18 @@ class AppActionsFAB extends StatelessWidget {
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+            color: colorScheme.surface.withOpacity(
+              enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
+            ),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),
             border: Border(
               top: BorderSide(
                 color: enableGlass
-                    ? colorScheme.onSurface.withOpacity(0.18)
+                    ? colorScheme.onSurface.withOpacity(
+                        AppConstants.glassBorderAlpha,
+                      )
                     : colorScheme.outline.withOpacity(AppOpacity.hint),
               ),
               left: BorderSide(
@@ -588,7 +592,10 @@ class AppActionsFAB extends StatelessWidget {
             top: Radius.circular(sheetRadius),
           ),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            filter: ImageFilter.blur(
+              sigmaX: AppConstants.glassBlurSigma,
+              sigmaY: AppConstants.glassBlurSigma,
+            ),
             child: sheet,
           ),
         );
