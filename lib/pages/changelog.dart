@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -63,35 +65,51 @@ class _ChangelogPageState extends State<ChangelogPage> {
     );
   }
 
+  /// Builds the changelog from GitHub release bodies (newest first).
+  /// Only stable releases are included: drafts, prereleases and non-`v`
+  /// tags (e.g. `dev-N` / `build-N`) are skipped.
   Future<String> _fetchChangelog() async {
     try {
       final response = await get(
         Uri.parse(
-          'https://raw.githubusercontent.com/thejaustin/ObtainiumPlus/main/CHANGELOG_USER.md',
+          'https://api.github.com/repos/thejaustin/ObtainiumPlus/releases?per_page=15',
         ),
+        headers: {'Accept': 'application/vnd.github+json'},
       );
       if (response.statusCode == 200) {
-        return response.body;
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          final buffer = StringBuffer();
+          for (final release in decoded) {
+            if (release is! Map) continue;
+            final tag = (release['tag_name'] ?? '').toString();
+            if (release['draft'] == true ||
+                release['prerelease'] == true ||
+                !tag.startsWith('v')) {
+              continue;
+            }
+            final name = (release['name'] ?? '').toString();
+            final body = (release['body'] ?? '').toString().trim();
+            buffer.writeln('# ${name.isNotEmpty ? name : tag}');
+            buffer.writeln();
+            if (body.isNotEmpty) {
+              buffer.writeln(body);
+              buffer.writeln();
+            }
+            buffer.writeln('---');
+            buffer.writeln();
+          }
+          if (buffer.isNotEmpty) {
+            return buffer.toString();
+          }
+        }
       }
     } catch (e) {
-      // Ignore network errors and fallback
+      // Ignore network errors and fall back below
     }
 
-    return '''
-# What's New in Obtainium+
-
-## Version 1.4.3
-*   **Smoother Onboarding**: We fixed an issue where the Google login prompt would appear unexpectedly during setup.
-*   **Increased Stability**: Resolved several crash issues that occurred during file downloads from unstable sources and when verifying installed apps.
-*   **Settings Reorganization**: We've cleaned up the Settings menu! You'll find a new "Installation" hub, and we've removed duplicate toggles so it's easier to customize your experience.
-*   **UI Polish**: The "Add App" page is now a unified, scrollable view instead of separate tabs, making it much easier to use.
-*   **Offline Mode**: Obtainium+ now supports queuing updates when you are offline; it will automatically check when your connection is restored.
-*   **Statistics Dashboard**: Check out the new Statistics page in the Troubleshooting section to see your update history and track app installations.
-
-## Earlier Updates
-*   **Improved Grid View**: We've significantly reduced the memory footprint when scrolling through large libraries of apps in Grid View.
-*   **Better Haptics**: Tactile feedback is now consistent across the entire app.
-*   **Modern Visuals**: The App Details and Add App screens now fully support "Glassmorphism" for a beautiful, modern look.
-''';
+    return '# Obtainium+\n\n'
+        '${tr('changelogFetchFailed')}\n\n'
+        '[GitHub Releases](https://github.com/thejaustin/ObtainiumPlus/releases)\n';
   }
 }
