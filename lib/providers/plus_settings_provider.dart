@@ -180,6 +180,13 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusDiscoverSuggestions =>
+      _prefs?.safeBool('plusDiscoverSuggestions') ?? true;
+  set plusDiscoverSuggestions(bool val) {
+    _prefs?.setBool('plusDiscoverSuggestions', val);
+    notifyListeners();
+  }
+
   // Advanced Logic
   bool get plusEnableAdvancedSorting =>
       _prefs?.safeBool('plusEnableAdvancedSorting') ?? true;
