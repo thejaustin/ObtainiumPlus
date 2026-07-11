@@ -21,8 +21,10 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_search_service.dart';
+import 'package:obtainium/services/discover_feed_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
@@ -81,6 +83,10 @@ class DiscoverPageState extends State<DiscoverPage> {
   Map<String, Map<String, dynamic>> sourceQuerySettings = {};
   Timer? _searchDebounce;
 
+  // Suggested-apps feed shown when Discover is idle (no query, no category).
+  List<DiscoverFeedApp> _suggestions = [];
+  bool _feedRequested = false;
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +106,20 @@ class DiscoverPageState extends State<DiscoverPage> {
     _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Loads the suggested-apps feed: cached content renders immediately,
+  /// then a background refresh (TTL-gated inside the service) replaces it
+  /// when fresh data lands. Any failure just leaves the feed empty/stale.
+  Future<void> _loadSuggestedFeed() async {
+    final cached = await DiscoverFeedService.getCachedFeed();
+    if (mounted && cached.isNotEmpty) {
+      setState(() => _suggestions = cached);
+    }
+    final fresh = await DiscoverFeedService.refreshFeedIfStale();
+    if (mounted && fresh != null && fresh.isNotEmpty) {
+      setState(() => _suggestions = fresh);
+    }
   }
 
   void _openAddApp(String url) {
@@ -326,8 +346,12 @@ class DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
-  Widget _buildAppGrid(String url, SettingsProvider settings) {
-    final result = results[url];
+  Widget _buildAppGrid(
+    String url,
+    SettingsProvider settings, {
+    Map<String, MapEntry<String, List<String>>>? from,
+  }) {
+    final result = (from ?? results)[url];
     if (result == null) return const SizedBox.shrink();
     final name = result.value.isNotEmpty ? result.value[0] : '';
     final description = result.value.length > 1 ? result.value[1] : '';
@@ -492,7 +516,28 @@ class DiscoverPageState extends State<DiscoverPage> {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final isGridView = viewSettings.discoverViewMode == ViewMode.grid;
+    final suggestionsEnabled = plusSettings.plusDiscoverSuggestions;
+    final showSuggestions =
+        suggestionsEnabled &&
+        searchQuery.isEmpty &&
+        _selectedCategory == null &&
+        !searching &&
+        results.isEmpty &&
+        _suggestions.isNotEmpty;
+    if (suggestionsEnabled && !_feedRequested) {
+      _feedRequested = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadSuggestedFeed();
+      });
+    }
+    final suggestionResults = showSuggestions
+        ? {
+            for (final s in _suggestions)
+              s.url: MapEntry(s.sourceName, [s.name, s.description]),
+          }
+        : <String, MapEntry<String, List<String>>>{};
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
@@ -601,6 +646,77 @@ class DiscoverPageState extends State<DiscoverPage> {
             ),
           // Category chips — visible when no search query is active
           if (searchQuery.isEmpty) _buildCategoryChips(),
+          // Suggested apps feed — shown while Discover is idle (no query,
+          // no category, no results). Reuses the same tiles as search.
+          if (showSuggestions) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+                child: Row(
+                  children: [
+                    Text(
+                      tr('discoverSuggestedHeader'),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: isGridView ? tr('listView') : tr('gridView'),
+                      icon: Icon(
+                        isGridView
+                            ? Icons.view_list_rounded
+                            : Icons.grid_view_rounded,
+                      ),
+                      onPressed: () => viewSettings.discoverViewMode =
+                          isGridView ? ViewMode.list : ViewMode.grid,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            isGridView
+                ? SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 200,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: 0.7,
+                          ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _buildAppGrid(
+                          suggestionResults.keys.elementAt(index),
+                          settings,
+                          from: suggestionResults,
+                        ),
+                        childCount: suggestionResults.length,
+                      ),
+                    ),
+                  )
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final url = suggestionResults.keys.elementAt(index);
+                      final result = suggestionResults[url];
+                      if (result == null) return const SizedBox.shrink();
+                      final name = result.value.isNotEmpty
+                          ? result.value[0]
+                          : '';
+                      final description = result.value.length > 1
+                          ? result.value[1]
+                          : '';
+                      return _buildListResultTile(
+                        url,
+                        name,
+                        description,
+                        result.key,
+                      );
+                    }, childCount: suggestionResults.length),
+                  ),
+          ],
           if (searching || results.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(

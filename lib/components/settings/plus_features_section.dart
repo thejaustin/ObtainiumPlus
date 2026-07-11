@@ -76,6 +76,17 @@ class PlusFeaturesSection extends StatelessWidget {
                       value: settings.plusEnableDiscover,
                       onChanged: (val) => settings.plusEnableDiscover = val,
                     ),
+                  if (_matches(tr('plusDiscoverSuggestions')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.auto_awesome_outlined,
+                      title: tr('plusDiscoverSuggestions'),
+                      subtitle: tr('plusDiscoverSuggestionsDescription'),
+                      value: settings.plusDiscoverSuggestions,
+                      onChanged: (val) =>
+                          settings.plusDiscoverSuggestions = val,
+                    ),
                   if (_matches(tr('importInstalledApps')))
                     ListTile(
                       leading: const Icon(Icons.install_mobile_rounded),
