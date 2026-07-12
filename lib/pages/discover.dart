@@ -12,6 +12,8 @@ import 'package:obtainium/app_sources/fdroid.dart';
 import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/discover_app_icon.dart';
+import 'package:obtainium/components/discover_section_header.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -25,7 +27,6 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/services/discover_feed_service.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
 class DiscoverPage extends StatefulWidget {
@@ -301,38 +302,35 @@ class DiscoverPageState extends State<DiscoverPage> {
     String url,
     String name,
     String description,
-    String sourceName,
-  ) {
+    String sourceName, {
+    String? iconUrl,
+  }) {
+    final settings = context.read<SettingsProvider>();
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withOpacity(AppOpacity.half),
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : '?',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-          ),
-        ),
+      leading: DiscoverAppIcon(
+        iconUrl: iconUrl,
+        sourceName: sourceName,
+        size: 44,
+        borderRadius: CardMetrics.inner(radius),
       ),
-      title: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
+      title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (description.isNotEmpty)
             Text(
               description,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall,
             ),
-          Text(
-            sourceName,
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
+          const SizedBox(height: 4),
+          DiscoverSourceChip(
+            sourceName: sourceName,
+            borderRadius: CardMetrics.inner(radius),
           ),
         ],
       ),
@@ -350,6 +348,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     String url,
     SettingsProvider settings, {
     Map<String, MapEntry<String, List<String>>>? from,
+    String? iconUrl,
   }) {
     final result = (from ?? results)[url];
     if (result == null) return const SizedBox.shrink();
@@ -414,25 +413,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                     children: [
                       Expanded(
                         child: Center(
-                          child: Container(
-                            width: 68,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer
-                                  .withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(
-                                CardMetrics.inner(radius),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
+                          child: DiscoverAppIcon(
+                            iconUrl: iconUrl,
+                            sourceName: sourceName,
+                            size: 64,
+                            borderRadius: CardMetrics.inner(radius),
                           ),
                         ),
                       ),
@@ -460,13 +445,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 2),
-                      Text(
-                        sourceName,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.secondary,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(height: 4),
+                      Center(
+                        child: DiscoverSourceChip(
+                          sourceName: sourceName,
+                          borderRadius: CardMetrics.inner(radius),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -538,6 +521,9 @@ class DiscoverPageState extends State<DiscoverPage> {
               s.url: MapEntry(s.sourceName, [s.name, s.description]),
           }
         : <String, MapEntry<String, List<String>>>{};
+    final suggestionIcons = showSuggestions
+        ? {for (final s in _suggestions) s.url: s.iconUrl}
+        : <String, String?>{};
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
@@ -650,29 +636,17 @@ class DiscoverPageState extends State<DiscoverPage> {
           // no category, no results). Reuses the same tiles as search.
           if (showSuggestions) ...[
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-                child: Row(
-                  children: [
-                    Text(
-                      tr('discoverSuggestedHeader'),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      tooltip: isGridView ? tr('listView') : tr('gridView'),
-                      icon: Icon(
-                        isGridView
-                            ? Icons.view_list_rounded
-                            : Icons.grid_view_rounded,
-                      ),
-                      onPressed: () => viewSettings.discoverViewMode =
-                          isGridView ? ViewMode.list : ViewMode.grid,
-                    ),
-                  ],
+              child: DiscoverSectionHeader(
+                title: tr('discoverSuggestedHeader'),
+                trailing: IconButton(
+                  tooltip: isGridView ? tr('listView') : tr('gridView'),
+                  icon: Icon(
+                    isGridView
+                        ? Icons.view_list_rounded
+                        : Icons.grid_view_rounded,
+                  ),
+                  onPressed: () => viewSettings.discoverViewMode =
+                      isGridView ? ViewMode.list : ViewMode.grid,
                 ),
               ),
             ),
@@ -688,11 +662,15 @@ class DiscoverPageState extends State<DiscoverPage> {
                             childAspectRatio: 0.7,
                           ),
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildAppGrid(
-                          suggestionResults.keys.elementAt(index),
-                          settings,
-                          from: suggestionResults,
-                        ),
+                        (context, index) {
+                          final url = suggestionResults.keys.elementAt(index);
+                          return _buildAppGrid(
+                            url,
+                            settings,
+                            from: suggestionResults,
+                            iconUrl: suggestionIcons[url],
+                          );
+                        },
                         childCount: suggestionResults.length,
                       ),
                     ),
@@ -713,6 +691,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                         name,
                         description,
                         result.key,
+                        iconUrl: suggestionIcons[url],
                       );
                     }, childCount: suggestionResults.length),
                   ),
