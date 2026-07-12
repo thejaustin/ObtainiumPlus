@@ -348,7 +348,9 @@ abstract class AppSource {
           : additionalSettings[e.key] ??
                 settingsProvider.getSettingString(e.key);
       if (val != null) {
-        results[e.key] = val;
+        // Switch items (e.g. GitHub's checkRepoRename) yield bools; this map
+        // is String-typed, so stringify instead of crashing on the cast.
+        results[e.key] = val is String ? val : val.toString();
       }
     }
     return results;
