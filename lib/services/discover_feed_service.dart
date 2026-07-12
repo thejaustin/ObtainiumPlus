@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/utils/logger.dart';
@@ -14,11 +15,17 @@ class DiscoverFeedApp {
   final String description;
   final String sourceName;
 
+  /// Remote icon URL for the app, when one could be found on the catalog
+  /// page or derived from the source URL. Nullable so cache entries written
+  /// before this field existed keep decoding cleanly.
+  final String? iconUrl;
+
   const DiscoverFeedApp({
     required this.url,
     required this.name,
     required this.description,
     required this.sourceName,
+    this.iconUrl,
   });
 
   Map<String, dynamic> toJson() => {
@@ -26,6 +33,7 @@ class DiscoverFeedApp {
     'name': name,
     'description': description,
     'sourceName': sourceName,
+    'iconUrl': iconUrl,
   };
 
   factory DiscoverFeedApp.fromJson(Map<String, dynamic> json) =>
@@ -34,6 +42,7 @@ class DiscoverFeedApp {
         name: (json['name'] as String?) ?? '',
         description: (json['description'] as String?) ?? '',
         sourceName: (json['sourceName'] as String?) ?? '',
+        iconUrl: json['iconUrl'] as String?,
       );
 }
 
@@ -170,12 +179,58 @@ class DiscoverFeedService {
           name: name,
           description: description,
           sourceName: _sourceLabelFor(url),
+          iconUrl: _iconUrlFor(anchor, url, payload),
         );
       } catch (_) {
         // Skip malformed deep links instead of failing the whole feed.
       }
     }
     return byUrl.values.toList();
+  }
+
+  /// Finds an icon URL for an app: prefer the `<img>` the catalog renders
+  /// inside the same app card as the deep-link anchor (the card layout is
+  /// `<div class="...card..."> <img ...> ... <a href="obtainium://...">`),
+  /// falling back to a URL derived from the app's source. Returns null when
+  /// nothing is derivable — callers must treat that as "no icon".
+  static String? _iconUrlFor(
+    Element anchor,
+    String url,
+    Map<String, dynamic> payload,
+  ) {
+    try {
+      // Walk up a few ancestors from the anchor until a node contains an
+      // <img> — that is the catalog card's app icon.
+      Element? node = anchor.parent;
+      for (var i = 0; i < 6 && node != null; i++, node = node.parent) {
+        final src = node.querySelector('img')?.attributes['src']?.trim();
+        if (src != null && src.startsWith('http')) return src;
+      }
+    } catch (_) {
+      // Fall through to derived icons.
+    }
+    return _deriveIconUrl(url, payload);
+  }
+
+  /// Derives an icon URL from the app's source URL when the catalog page
+  /// did not provide one. GitHub/Codeberg expose owner avatars at
+  /// `/<owner>.png`; IzzyOnDroid serves repo icons per package id.
+  static String? _deriveIconUrl(String url, Map<String, dynamic> payload) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return null;
+    final host = uri.host.toLowerCase();
+    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+    if ((host == 'github.com' || host == 'codeberg.org') &&
+        segments.isNotEmpty) {
+      return 'https://$host/${segments.first}.png?size=128';
+    }
+    if (host.contains('izzysoft.de')) {
+      final packageId = (payload['id'] as String?)?.trim();
+      if (packageId != null && packageId.isNotEmpty) {
+        return 'https://apt.izzysoft.de/fdroid/repo/$packageId/en-US/icon.png';
+      }
+    }
+    return null;
   }
 
   static String _sourceLabelFor(String url) {
