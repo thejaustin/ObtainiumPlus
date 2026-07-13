@@ -20,7 +20,6 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
-    as foundation; // Alias to avoid conflict
 
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
