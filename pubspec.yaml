@@ -50,6 +50,10 @@ dependencies:
   device_info_plus: ^12.4.0
   file_picker: ^11.0.2
   animations: ^2.1.2
+  loading_indicator_m3e: ^0.1.1
+  material_new_shapes: ^1.0.0
+  haptic_feedback: ^0.6.5
+  smooth_sheets: ^1.0.3
   android_package_installer: # TODO: See if PR will be accepted (dev may not be active), else remove this comment
     git:
       url: https://github.com/ImranR98/android_package_installer
