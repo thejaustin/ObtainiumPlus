@@ -135,17 +135,19 @@ class _SelectionModalState extends State<SelectionModal> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withValues(
+            alpha: enableGlass ? 0.78 : 1.0,
+          ),
           borderRadius: BorderRadius.circular(dialogRadius),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withOpacity(0.18)
-                : colorScheme.outline.withOpacity(AppOpacity.subtle),
+                ? colorScheme.onSurface.withValues(alpha: 0.18)
+                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(enableGlass ? 0.2 : 0.1),
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
               blurRadius: 20,
               spreadRadius: -5,
             ),
@@ -166,9 +168,9 @@ class _SelectionModalState extends State<SelectionModal> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withOpacity(0.08),
+                            Colors.white.withValues(alpha: 0.08),
                             Colors.transparent,
-                            Colors.black.withOpacity(0.02),
+                            Colors.black.withValues(alpha: 0.02),
                           ],
                           stops: const [0.0, 0.4, 1.0],
                         ),
@@ -214,8 +216,12 @@ class _SelectionModalState extends State<SelectionModal> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-            colorScheme.primaryContainer.withOpacity(enableGlass ? 0.15 : 0.25),
+            colorScheme.primaryContainer.withValues(
+              alpha: enableGlass ? 0.3 : 0.5,
+            ),
+            colorScheme.primaryContainer.withValues(
+              alpha: enableGlass ? 0.15 : 0.25,
+            ),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -227,7 +233,7 @@ class _SelectionModalState extends State<SelectionModal> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(AppOpacity.low),
+              color: colorScheme.primary.withValues(alpha: AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(Icons.list_alt_rounded, color: colorScheme.primary),
@@ -258,7 +264,7 @@ class _SelectionModalState extends State<SelectionModal> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(itemRadius),
           ),
           child: GeneratedForm(
@@ -326,7 +332,7 @@ class _SelectionModalState extends State<SelectionModal> {
                     style: TextStyle(
                       decoration: TextDecoration.underline,
                       fontSize: 12,
-                      color: colorScheme.onSurface.withOpacity(0.8),
+                      color: colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
               ],
@@ -342,7 +348,7 @@ class _SelectionModalState extends State<SelectionModal> {
                   style: TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 12,
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 );
 
@@ -355,10 +361,10 @@ class _SelectionModalState extends State<SelectionModal> {
               ? Container(
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(itemRadius),
                     border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.4),
+                      color: colorScheme.primary.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                   ),
@@ -388,13 +394,15 @@ class _SelectionModalState extends State<SelectionModal> {
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: entrySelections[entry] == true
-                        ? colorScheme.primaryContainer.withOpacity(0.55)
-                        : colorScheme.surfaceContainerHighest.withOpacity(0.42),
+                        ? colorScheme.primaryContainer.withValues(alpha: 0.55)
+                        : colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.42,
+                          ),
                     borderRadius: BorderRadius.circular(itemRadius),
                     border: Border.all(
                       color: entrySelections[entry] == true
-                          ? colorScheme.primary.withOpacity(0.65)
-                          : colorScheme.outline.withOpacity(0.15),
+                          ? colorScheme.primary.withValues(alpha: 0.65)
+                          : colorScheme.outline.withValues(alpha: 0.15),
                       width: 1.5,
                     ),
                   ),
@@ -431,7 +439,7 @@ class _SelectionModalState extends State<SelectionModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(radius)),
       ),
       child: Row(

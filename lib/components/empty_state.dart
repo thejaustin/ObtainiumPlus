@@ -74,10 +74,10 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withOpacity(0.15),
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       width: 2,
                     ),
                   ),
@@ -152,5 +152,4 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       ),
     );
   }
-
 }

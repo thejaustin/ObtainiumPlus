@@ -374,11 +374,13 @@ class DiscoverPageState extends State<DiscoverPage> {
                 (isDark
                         ? theme.colorScheme.surfaceContainerHigh
                         : theme.colorScheme.surface)
-                    .withOpacity(settings.plusEnableGlassmorphism ? 0.65 : 1.0),
+                    .withValues(
+                      alpha: settings.plusEnableGlassmorphism ? 0.65 : 1.0,
+                    ),
             borderRadius: BorderRadius.circular(cardRadius),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(
-                settings.plusEnableGlassmorphism ? 0.15 : 0.08,
+              color: theme.colorScheme.outline.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.15 : 0.08,
               ),
               width: 1.2,
             ),
@@ -393,7 +395,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.06),
+                          Colors.white.withValues(alpha: 0.06),
                           Colors.transparent,
                         ],
                       ),
@@ -528,8 +530,7 @@ class DiscoverPageState extends State<DiscoverPage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          if (widget.showAppBar)
-            CustomAppBar(title: tr('discover')),
+          if (widget.showAppBar) CustomAppBar(title: tr('discover')),
           if (widget.showSearchBar)
             SliverToBoxAdapter(
               child: Padding(
@@ -645,8 +646,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                         ? Icons.view_list_rounded
                         : Icons.grid_view_rounded,
                   ),
-                  onPressed: () => viewSettings.discoverViewMode =
-                      isGridView ? ViewMode.list : ViewMode.grid,
+                  onPressed: () => viewSettings.discoverViewMode = isGridView
+                      ? ViewMode.list
+                      : ViewMode.grid,
                 ),
               ),
             ),
@@ -661,18 +663,15 @@ class DiscoverPageState extends State<DiscoverPage> {
                             crossAxisSpacing: 16,
                             childAspectRatio: 0.7,
                           ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final url = suggestionResults.keys.elementAt(index);
-                          return _buildAppGrid(
-                            url,
-                            settings,
-                            from: suggestionResults,
-                            iconUrl: suggestionIcons[url],
-                          );
-                        },
-                        childCount: suggestionResults.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final url = suggestionResults.keys.elementAt(index);
+                        return _buildAppGrid(
+                          url,
+                          settings,
+                          from: suggestionResults,
+                          iconUrl: suggestionIcons[url],
+                        );
+                      }, childCount: suggestionResults.length),
                     ),
                   )
                 : SliverList(
@@ -809,7 +808,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                          child: ExpressiveCircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('Load more'),
                 ),

@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 
 /// Generic Control Grid for Boolean Settings
 /// Displays boolean settings in a compact grid layout
-class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidget {
+class GenericBooleanControlGrid<T extends ChangeNotifier>
+    extends StatelessWidget {
   final String title;
   final List<
     ({
@@ -43,15 +44,25 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: (isDark
-                          ? Theme.of(context).colorScheme.surfaceContainerLow
-                          : Theme.of(context).colorScheme.surface)
-                      .withOpacity(plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                  color:
+                      (isDark
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerLow
+                              : Theme.of(context).colorScheme.surface)
+                          .withValues(
+                            alpha: plusSettings.plusEnableGlassmorphism
+                                ? 0.7
+                                : 1.0,
+                          ),
                   borderRadius: BorderRadius.circular(20.0),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant.withOpacity(
-                      plusSettings.plusEnableGlassmorphism ? 0.4 : 0.2,
-                    ),
+                    color: Theme.of(context).colorScheme.outlineVariant
+                        .withValues(
+                          alpha: plusSettings.plusEnableGlassmorphism
+                              ? 0.4
+                              : 0.2,
+                        ),
                   ),
                 ),
                 child: Column(
@@ -61,10 +72,11 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ],
                     ),
@@ -81,11 +93,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
                       itemCount: settings.length,
                       itemBuilder: (context, index) {
                         final setting = settings[index];
-                        return _buildGridItem(
-                          context,
-                          provider,
-                          setting,
-                        );
+                        return _buildGridItem(context, provider, setting);
                       },
                     ),
                   ],
@@ -107,7 +115,8 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
       String? description,
       bool Function(T) getValue,
       void Function(T, bool) setValue,
-    }) setting,
+    })
+    setting,
   ) {
     final value = setting.getValue(provider);
     final theme = Theme.of(context);
@@ -123,13 +132,15 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: value
-                ? theme.colorScheme.primaryContainer.withOpacity(0.3)
-                : theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.3,
+                  ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: value
-                  ? theme.colorScheme.primary.withOpacity(0.5)
-                  : theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
           ),
           child: Column(
@@ -138,14 +149,18 @@ class GenericBooleanControlGrid<T extends ChangeNotifier> extends StatelessWidge
               Icon(
                 setting.icon,
                 size: 20,
-                color: value ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                color: value
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: 4),
               Text(
                 setting.label,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: value ? FontWeight.bold : FontWeight.normal,
-                  color: value ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                  color: value
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,

@@ -25,7 +25,8 @@ class ThemeSettingsSection extends StatelessWidget {
     super.key,
     required this.androidInfoFuture,
     required this.colorsNameMap,
-    this.searchQuery, this.showAdvancedSettings,
+    this.searchQuery,
+    this.showAdvancedSettings,
   });
 
   bool _matches(String text, {bool isAdvanced = false}) {
@@ -58,7 +59,8 @@ class ThemeSettingsSection extends StatelessWidget {
         subtitle: tr('plusPopupSliderDescription'),
         value: (s) => s.plusEnablePopupSlider,
         onChanged: (s, v) => s.plusEnablePopupSlider = v,
-        visible: (s) => _matches(tr('plusPopupSlider')), isAdvanced: true,
+        visible: (s) => _matches(tr('plusPopupSlider')),
+        isAdvanced: true,
       ),
       _buildFeatureToggle<PlusSettingsProvider>(
         context,
@@ -94,7 +96,8 @@ class ThemeSettingsSection extends StatelessWidget {
         subtitle: tr('plusTopUILayoutDescription'),
         value: (s) => s.plusTopUILayout,
         onChanged: (s, v) => s.plusTopUILayout = v,
-        visible: (s) => _matches(tr('plusTopUILayout')), isAdvanced: true,
+        visible: (s) => _matches(tr('plusTopUILayout')),
+        isAdvanced: true,
       ),
     ];
 
@@ -139,14 +142,13 @@ class ThemeSettingsSection extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.errorContainer.withOpacity(AppOpacity.medium),
+                    color: Theme.of(context).colorScheme.errorContainer
+                        .withValues(alpha: AppOpacity.medium),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Theme.of(
                         context,
-                      ).colorScheme.error.withOpacity(AppOpacity.low),
+                      ).colorScheme.error.withValues(alpha: AppOpacity.low),
                     ),
                   ),
                   child: Row(
@@ -199,7 +201,8 @@ class ThemeSettingsSection extends StatelessWidget {
         subtitle: tr('disablePageTransitionsDescription'),
         value: (s) => s.disablePageTransitions,
         onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) => _matches(tr('disablePageTransitions')), isAdvanced: true,
+        visible: (s) => _matches(tr('disablePageTransitions')),
+        isAdvanced: true,
       ),
       _buildFeatureToggle<BehaviorSettingsProvider>(
         context,
@@ -370,7 +373,7 @@ class ThemeSettingsSection extends StatelessWidget {
                   color: colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(radius),
                   border: Border.all(
-                    color: colorScheme.primary.withOpacity(0.2),
+                    color: colorScheme.primary.withValues(alpha: 0.2),
                     width: 2,
                   ),
                 ),
@@ -386,7 +389,7 @@ class ThemeSettingsSection extends StatelessWidget {
                   color: colorScheme.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(radius),
                   border: Border.all(
-                    color: colorScheme.outline.withOpacity(0.1),
+                    color: colorScheme.outline.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -674,10 +677,12 @@ class ThemeSettingsSection extends StatelessWidget {
                     segments: DynamicSchemeVariant.values.map((v) {
                       String name =
                           v.name.substring(0, 1).toUpperCase() +
-                          v.name.substring(1).replaceAllMapped(
-                            RegExp(r'(?=[A-Z])'),
-                            (Match m) => ' ',
-                          );
+                          v.name
+                              .substring(1)
+                              .replaceAllMapped(
+                                RegExp(r'(?=[A-Z])'),
+                                (Match m) => ' ',
+                              );
                       return ButtonSegment(value: v, label: Text(name));
                     }).toList(),
                     selected: {settings.themeVariant},
@@ -813,11 +818,14 @@ class ThemeSettingsSection extends StatelessWidget {
     required String subtitle,
     required bool Function(T) value,
     required void Function(T, bool) onChanged,
-    required bool Function(T) visible, bool isAdvanced = false,
+    required bool Function(T) visible,
+    bool isAdvanced = false,
   }) {
     return Consumer<T>(
       builder: (context, settings, child) {
-        if (!visible(settings) || (isAdvanced && !(showAdvancedSettings ?? false))) return const SizedBox.shrink();
+        if (!visible(settings) ||
+            (isAdvanced && !(showAdvancedSettings ?? false)))
+          return const SizedBox.shrink();
         return SwitchListTile.adaptive(
           secondary: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),

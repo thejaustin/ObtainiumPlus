@@ -41,7 +41,12 @@ class SettingsGroup extends StatelessWidget {
       children: [
         if (title != null)
           Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 24.0, bottom: 8.0, right: 12.0),
+            padding: const EdgeInsets.only(
+              left: 20.0,
+              top: 24.0,
+              bottom: 8.0,
+              right: 12.0,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -84,14 +89,14 @@ class SettingsGroup extends StatelessWidget {
                     (isDark
                             ? Theme.of(context).colorScheme.surfaceContainerLow
                             : Theme.of(context).colorScheme.surface)
-                        .withOpacity(
-                          settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                        .withValues(
+                          alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
                         ),
                 borderRadius: BorderRadius.circular(radius),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outlineVariant
-                      .withOpacity(
-                        settings.plusEnableGlassmorphism ? 0.4 : 0.2,
+                      .withValues(
+                        alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2,
                       ),
                   width: 1,
                 ),
@@ -108,7 +113,7 @@ class SettingsGroup extends StatelessWidget {
                           indent: 56,
                           endIndent: 16,
                           color: Theme.of(context).colorScheme.outlineVariant
-                              .withOpacity(AppOpacity.low),
+                              .withValues(alpha: AppOpacity.low),
                         ),
                     ],
                   );

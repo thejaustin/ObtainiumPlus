@@ -342,8 +342,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             sigma: 15,
             enabled: settings.plusEnableGlassmorphism,
             child: Container(
-              color: Theme.of(context).colorScheme.surface.withOpacity(
-                settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+              color: Theme.of(context).colorScheme.surface.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
               ),
             ),
           ),
@@ -451,8 +451,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   backgroundColor: WidgetStateProperty.all(
                     Theme.of(
                       context,
-                    ).colorScheme.surfaceContainerHigh.withOpacity(
-                      settings.plusEnableGlassmorphism ? AppOpacity.half : 1.0,
+                    ).colorScheme.surfaceContainerHigh.withValues(
+                      alpha: settings.plusEnableGlassmorphism
+                          ? AppOpacity.half
+                          : 1.0,
                     ),
                   ),
                   trailing: _isLoading
@@ -571,10 +573,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ],
                 ),
                 child: FloatingActionButton.extended(
@@ -589,10 +593,15 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   hoverElevation: 0,
                   focusElevation: 0,
                   highlightElevation: 0,
-                  icon: Icon(Icons.download_outlined, color: Theme.of(context).colorScheme.onPrimary),
+                  icon: Icon(
+                    Icons.download_outlined,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                   label: Text(
                     tr('importXApps', args: [_selectedCount.toString()]),
-                    style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -604,7 +613,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     if (icon != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.memory(icon, width: size, height: size, fit: BoxFit.cover, filterQuality: FilterQuality.medium),
+        child: Image.memory(
+          icon,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.medium,
+        ),
       );
     }
     return AppIconShimmer(size: size);
@@ -617,12 +632,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: 0,
       color: pkg.isSelected
-          ? Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
-          : Theme.of(
-              context,
-            ).colorScheme.surfaceContainerLow.withOpacity(AppOpacity.half),
+          ? Theme.of(context).colorScheme.primaryContainer.withValues(
+              alpha: AppOpacity.moderate,
+            )
+          : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
+              alpha: AppOpacity.half,
+            ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -664,7 +679,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -713,12 +728,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     return Card(
       elevation: 0,
       color: pkg.isSelected
-          ? Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate)
-          : Theme.of(
-              context,
-            ).colorScheme.surfaceContainerLow.withOpacity(AppOpacity.half),
+          ? Theme.of(context).colorScheme.primaryContainer.withValues(
+              alpha: AppOpacity.moderate,
+            )
+          : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
+              alpha: AppOpacity.half,
+            ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -755,7 +770,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.55),
+                    ).colorScheme.onSurface.withValues(alpha: 0.55),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -811,7 +826,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.secondaryContainer.withOpacity(AppOpacity.half),
+        ).colorScheme.secondaryContainer.withValues(alpha: AppOpacity.half),
         borderRadius: BorderRadius.circular(small ? 4 : 8),
       ),
       child: Text(

@@ -170,10 +170,8 @@ class _StatisticsPageState extends State<StatisticsPage>
                 AppHaptics.lightImpact();
                 showDraggableModalBottomSheet(
                   context: context,
-                  builder: (context, controller) => AddAppPage(
-                    isModal: true,
-                    scrollController: controller,
-                  ),
+                  builder: (context, controller) =>
+                      AddAppPage(isModal: true, scrollController: controller),
                 );
               },
             );
@@ -484,14 +482,15 @@ class _StatisticsPageState extends State<StatisticsPage>
                     enabled: settings.plusEnableGlassmorphism,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerLow
-                            .withOpacity(
-                              settings.plusEnableGlassmorphism ? 0.5 : 1.0,
-                            ),
+                        color: theme.colorScheme.surfaceContainerLow.withValues(
+                          alpha: settings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                        ),
                         borderRadius: BorderRadius.circular(itemRadius),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withOpacity(
-                            settings.plusEnableGlassmorphism ? 0.12 : 0.08,
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: settings.plusEnableGlassmorphism
+                                ? 0.12
+                                : 0.08,
                           ),
                           width: 1.2,
                         ),
@@ -505,7 +504,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: item.color.withOpacity(0.1),
+                                color: item.color.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -573,7 +572,9 @@ class _StatisticsPageState extends State<StatisticsPage>
         ? 0
         : counts.reduce((a, b) => a > b ? a : b);
     final primaryColor = theme.colorScheme.primary;
-    final bgColor = theme.colorScheme.surfaceContainerHighest.withOpacity(0.3);
+    final bgColor = theme.colorScheme.surfaceContainerHighest.withValues(
+      alpha: 0.3,
+    );
 
     return AnimatedBuilder(
       animation: _entranceController,
@@ -590,7 +591,7 @@ class _StatisticsPageState extends State<StatisticsPage>
             color: bgColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.05),
+              color: theme.colorScheme.outline.withValues(alpha: 0.05),
             ),
           ),
           child: CustomPaint(
@@ -702,7 +703,10 @@ class _ActivityPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [color.withOpacity(AppOpacity.medium), color.withOpacity(0.0)],
+        colors: [
+          color.withValues(alpha: AppOpacity.medium),
+          color.withValues(alpha: 0.0),
+        ],
       ).createShader(Rect.fromLTRB(0, 0, size.width, size.height));
 
     final path = Path();

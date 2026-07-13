@@ -115,13 +115,15 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                           (isDark
                                   ? colorScheme.surfaceContainerHighest
                                   : colorScheme.surface)
-                              .withOpacity(
-                                settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                              .withValues(
+                                alpha: settings.plusEnableGlassmorphism
+                                    ? 0.7
+                                    : 1.0,
                               ),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withOpacity(
-                          AppOpacity.medium,
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: AppOpacity.medium,
                         ),
                         width: 1,
                       ),
@@ -148,7 +150,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: colorScheme.primaryContainer
-                                          .withOpacity(AppOpacity.half),
+                                          .withValues(alpha: AppOpacity.half),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -232,7 +234,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                                               .bodyMedium
                                               ?.copyWith(
                                                 color: colorScheme.onSurface
-                                                    .withOpacity(0.9),
+                                                    .withValues(alpha: 0.9),
                                               ),
                                         ),
                                       ),

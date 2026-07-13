@@ -159,36 +159,36 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     return Scaffold(
       appBar: AppBar(title: Text(tr('microGHub'))),
       body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildInfoCard(cs),
-            const SizedBox(height: 24),
-            _buildProviderSection(cs),
-            const SizedBox(height: 24),
-            _buildComponentsSection(cs),
-            const SizedBox(height: 24),
-            _buildOptionsSection(cs),
-            const SizedBox(height: 32),
-            if (_isDownloading)
-              _buildProgressSection(cs, overallProgress, trackedCount)
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: FilledButton.icon(
-                  onPressed: _startDeployment,
-                  icon: const Icon(Icons.download_for_offline_outlined),
-                  label: Text(tr('startDeployment')),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 4,
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildInfoCard(cs),
+          const SizedBox(height: 24),
+          _buildProviderSection(cs),
+          const SizedBox(height: 24),
+          _buildComponentsSection(cs),
+          const SizedBox(height: 24),
+          _buildOptionsSection(cs),
+          const SizedBox(height: 32),
+          if (_isDownloading)
+            _buildProgressSection(cs, overallProgress, trackedCount)
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: FilledButton.icon(
+                onPressed: _startDeployment,
+                icon: const Icon(Icons.download_for_offline_outlined),
+                label: Text(tr('startDeployment')),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
+                  elevation: 4,
                 ),
               ),
-            const SizedBox(height: 40),
-          ],
+            ),
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }
@@ -200,7 +200,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   ) {
     return Card(
       elevation: 0,
-      color: cs.primaryContainer.withOpacity(0.3),
+      color: cs.primaryContainer.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -234,10 +234,10 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget _buildInfoCard(ColorScheme cs) {
     return Card(
       elevation: 0,
-      color: cs.secondaryContainer.withOpacity(AppOpacity.medium),
+      color: cs.secondaryContainer.withValues(alpha: AppOpacity.medium),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: cs.secondaryContainer.withOpacity(0.5)),
+        side: BorderSide(color: cs.secondaryContainer.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -262,7 +262,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                     tr('microGHubInfo'),
                     style: TextStyle(
                       fontSize: 13,
-                      color: cs.onSecondaryContainer.withOpacity(0.8),
+                      color: cs.onSecondaryContainer.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -297,17 +297,19 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? cs.primaryContainer.withOpacity(0.5)
-                  : cs.surfaceContainerHighest.withOpacity(0.3),
+                  ? cs.primaryContainer.withValues(alpha: 0.5)
+                  : cs.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? cs.primary : cs.outline.withOpacity(0.1),
+                color: isSelected
+                    ? cs.primary
+                    : cs.outline.withValues(alpha: 0.1),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: cs.primary.withOpacity(0.1),
+                        color: cs.primary.withValues(alpha: 0.1),
                         blurRadius: 10,
                         spreadRadius: 1,
                       ),
@@ -331,8 +333,8 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                 style: TextStyle(
                   fontSize: 11,
                   color: isSelected
-                      ? cs.onPrimaryContainer.withOpacity(0.7)
-                      : cs.onSurfaceVariant.withOpacity(0.5),
+                      ? cs.onPrimaryContainer.withValues(alpha: 0.7)
+                      : cs.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
               ),
               value: value,
@@ -403,7 +405,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: cs.surface.withOpacity(0.5),
+        color: cs.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: CheckboxListTile(
@@ -438,7 +440,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: cs.surface.withOpacity(0.5),
+            color: cs.surface.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20),
           ),
           child: SwitchListTile(

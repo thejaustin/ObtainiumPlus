@@ -45,14 +45,14 @@ class BooleanControlGrid extends StatelessWidget {
                                 context,
                               ).colorScheme.surfaceContainerHighest
                             : Theme.of(context).colorScheme.surface)
-                        .withOpacity(
-                          settings.plusEnableGlassmorphism ? 0.6 : 1.0,
+                        .withValues(
+                          alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0,
                         ),
                 borderRadius: BorderRadius.circular(24.0),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outlineVariant
-                      .withOpacity(
-                        settings.plusEnableGlassmorphism ? 0.4 : 0.1,
+                      .withValues(
+                        alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.1,
                       ),
                 ),
                 boxShadow: AppShadows.smooth(

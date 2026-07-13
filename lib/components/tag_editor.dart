@@ -37,12 +37,12 @@ Future<List<String>?> showTagEditor({
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.surface.withOpacity(enableGlass ? 0.85 : 1.0),
+              ).colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: Theme.of(
                   context,
-                ).colorScheme.outline.withOpacity(AppOpacity.subtle),
+                ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
                 width: 1,
               ),
               boxShadow: AppShadows.smooth(
@@ -194,11 +194,11 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
     decoration: BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          Theme.of(
-            context,
-          ).colorScheme.secondaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-          Theme.of(context).colorScheme.secondaryContainer.withOpacity(
-            enableGlass ? 0.15 : 0.25,
+          Theme.of(context).colorScheme.secondaryContainer.withValues(
+            alpha: enableGlass ? 0.3 : 0.5,
+          ),
+          Theme.of(context).colorScheme.secondaryContainer.withValues(
+            alpha: enableGlass ? 0.15 : 0.25,
           ),
         ],
         begin: Alignment.topLeft,
@@ -213,7 +213,7 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.secondary.withOpacity(AppOpacity.low),
+            ).colorScheme.secondary.withValues(alpha: AppOpacity.low),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -239,9 +239,9 @@ Widget _buildActions(BuildContext context, List<String> selectedTags) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
-      color: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+        alpha: AppOpacity.medium,
+      ),
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
     ),
     child: Row(

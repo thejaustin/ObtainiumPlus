@@ -48,9 +48,9 @@ class ExpressiveSettingsGroup extends StatelessWidget {
           children: [
             if (isCompact)
               Theme(
-                data: Theme.of(context).copyWith(
-                  visualDensity: VisualDensity.compact,
-                ),
+                data: Theme.of(
+                  context,
+                ).copyWith(visualDensity: VisualDensity.compact),
                 child: visibleChildren[index],
               )
             else
@@ -62,7 +62,7 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                 endIndent: 16,
                 color: Theme.of(
                   context,
-                ).colorScheme.outlineVariant.withOpacity(AppOpacity.low),
+                ).colorScheme.outlineVariant.withValues(alpha: AppOpacity.low),
               ),
           ],
         );
@@ -90,19 +90,23 @@ class ExpressiveSettingsGroup extends StatelessWidget {
                     children: [
                       Text(
                         title!.toUpperCase(),
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
                       ),
                       if (description != null || helpText != null) ...[
                         const SizedBox(height: 2),
                         Text(
                           description ?? helpText!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
                     ],
@@ -124,12 +128,14 @@ class ExpressiveSettingsGroup extends StatelessWidget {
               (isDark
                       ? Theme.of(context).colorScheme.surfaceContainerLow
                       : Theme.of(context).colorScheme.surface)
-                  .withOpacity(settings.plusEnableGlassmorphism ? 0.7 : 1.0),
+                  .withValues(
+                    alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                  ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant.withOpacity(
-                settings.plusEnableGlassmorphism ? 0.4 : 0.2,
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2,
               ),
               width: 1,
             ),

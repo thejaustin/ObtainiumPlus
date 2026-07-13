@@ -106,27 +106,29 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 (isDark
                         ? theme.colorScheme.surfaceContainerHigh
                         : theme.colorScheme.surface)
-                    .withOpacity(settings.plusEnableGlassmorphism ? 0.75 : 1.0),
+                    .withValues(
+                      alpha: settings.plusEnableGlassmorphism ? 0.75 : 1.0,
+                    ),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),
             border: Border(
               top: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(0.18)
-                    : theme.colorScheme.outlineVariant.withOpacity(
-                        AppOpacity.subtle,
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+                    : theme.colorScheme.outlineVariant.withValues(
+                        alpha: AppOpacity.subtle,
                       ),
                 width: 1.5,
               ),
               left: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(0.12)
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
                     : Colors.transparent,
               ),
               right: BorderSide(
                 color: settings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(0.12)
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
                     : Colors.transparent,
               ),
             ),
@@ -142,9 +144,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.08),
+                          Colors.white.withValues(alpha: 0.08),
                           Colors.transparent,
-                          Colors.black.withOpacity(0.02),
+                          Colors.black.withValues(alpha: 0.02),
                         ],
                         stops: const [0.0, 0.4, 1.0],
                       ),
@@ -516,7 +518,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             return FilterChip(
               label: Text(cat),
               selected: selected,
-              selectedColor: color.withOpacity(0.2),
+              selectedColor: color.withValues(alpha: 0.2),
               checkmarkColor: color,
               onSelected: (val) {
                 AppHaptics.selectionClick();
@@ -603,7 +605,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(

@@ -118,7 +118,8 @@ class HomePageState extends State<HomePage> {
             return GeneratedFormModal(
               title: tr('welcome'),
               items: const [],
-              message: "Welcome to Obtainium+!\n\nThis app allows you to install and update apps directly from their sources, bypassing traditional app stores.\n\nTo get started, tap the '+' button to add your first app.",
+              message:
+                  "Welcome to Obtainium+!\n\nThis app allows you to install and update apps directly from their sources, bypassing traditional app stores.\n\nTo get started, tap the '+' button to add your first app.",
               singleNullReturnButton: tr('ok'),
             );
           },
@@ -133,7 +134,8 @@ class HomePageState extends State<HomePage> {
             return GeneratedFormModal(
               title: tr('note'),
               items: const [],
-              message: "${tr('googleVerificationWarningP1')}\n\n${tr('googleVerificationWarningP3')}",
+              message:
+                  "${tr('googleVerificationWarningP1')}\n\n${tr('googleVerificationWarningP3')}",
               additionalWidgets: [
                 InkWell(
                   onTap: () {
@@ -320,8 +322,9 @@ class HomePageState extends State<HomePage> {
     final settingsProvider = context.watch<SettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
-    final currentIndex =
-        selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
+    final currentIndex = selectedIndexHistory.isEmpty
+        ? 0
+        : selectedIndexHistory.last;
 
     // With transitions disabled, render the page directly:
     // PageTransitionSwitcher with Duration.zero can leave the incoming
@@ -421,37 +424,47 @@ class HomePageState extends State<HomePage> {
                     return KeyEventResult.ignored;
                   },
                   child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.4),
-                    ),
-                    NavigationBar(
-                    elevation: 0,
-                    backgroundColor: Colors.transparent,
-                    indicatorColor: Theme.of(context).colorScheme.primaryContainer,
-                    labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                    animationDuration: const Duration(milliseconds: 300),
-                    destinations: pages
-                        .map(
-                          (e) => NavigationDestination(
-                            icon: Icon(e.icon),
-                            selectedIcon: Icon(e.icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
-                            label: tr(e.title),
-                          ),
-                        )
-                        .toList(),
-                    onDestinationSelected: (int index) async {
-                      AppHaptics.selectionClick();
-                      switchToPage(index);
-                    },
-                    selectedIndex: currentIndex,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+                      ),
+                      NavigationBar(
+                        elevation: 0,
+                        backgroundColor: Colors.transparent,
+                        indicatorColor: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer,
+                        labelBehavior:
+                            NavigationDestinationLabelBehavior.onlyShowSelected,
+                        animationDuration: const Duration(milliseconds: 300),
+                        destinations: pages
+                            .map(
+                              (e) => NavigationDestination(
+                                icon: Icon(e.icon),
+                                selectedIcon: Icon(
+                                  e.icon,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                ),
+                                label: tr(e.title),
+                              ),
+                            )
+                            .toList(),
+                        onDestinationSelected: (int index) async {
+                          AppHaptics.selectionClick();
+                          switchToPage(index);
+                        },
+                        selectedIndex: currentIndex,
+                      ),
+                    ],
                   ),
-                  ],
                 ),
-              ),
               ),
       ),
     );
