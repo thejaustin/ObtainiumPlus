@@ -26,6 +26,10 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-12 — Claude Code (Fable 5) — dev-environment setup
+- Added `CLAUDE.md` (build commands, crash rules from #217/p42/p43, test gotchas) and `scripts/dev/` (`check-syntax.sh`, `ci-status.sh`, `ci-build.sh`, `fetch-apk.sh`). Uncommitted — review and commit.
+- **Fixed syntax error in `lib/services/app_download_service.dart`** (orphan `as foundation;` line, shipped in `ef84a8e7`). CI never caught it because the file is unreachable: `app_download_service.dart` ← `background_update_service.dart` ← `background_service.dart` ← nothing — that whole service chain is dead code the compiler skips. Fix is local/uncommitted; decide whether to wire the chain up or leave it dormant.
+
 ### 2026-07-09 — Claude Code (Fable 5) [session 854c1d79 continued]
 
 **p41 "Cannot install an older version (versionCode 2376 → 2371)" ROOT-CAUSED and fixed → v1.4.3-p43 released (CI green, incl. new tests):**
