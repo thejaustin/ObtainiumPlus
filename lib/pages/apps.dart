@@ -325,8 +325,7 @@ class AppsPageState extends State<AppsPage> {
         result = ((a.name + a.author).toLowerCase()).compareTo(
           (b.name + b.author).toLowerCase(),
         );
-      } else if (viewSettings.sortColumn ==
-          SortColumnSettings.releaseDate) {
+      } else if (viewSettings.sortColumn == SortColumnSettings.releaseDate) {
         // Handle null dates: apps with unknown release dates are grouped at the end
         final aDate = a.app.releaseDate;
         final bDate = b.app.releaseDate;
@@ -472,13 +471,16 @@ class AppsPageState extends State<AppsPage> {
                           child: Opacity(
                             opacity: value.clamp(0.0, 1.0),
                             child: Icon(
-                              appsProvider.apps.isEmpty && !appsProvider.loadingApps
+                              appsProvider.apps.isEmpty &&
+                                      !appsProvider.loadingApps
                                   ? Icons.apps_outage_rounded
                                   : appsProvider.loadingApps
-                                      ? Icons.hourglass_empty_rounded
-                                      : Icons.search_off_rounded,
+                                  ? Icons.hourglass_empty_rounded
+                                  : Icons.search_off_rounded,
                               size: 80,
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.5),
                             ),
                           ),
                         );
@@ -491,19 +493,21 @@ class AppsPageState extends State<AppsPage> {
                                 ? tr('pleaseWait')
                                 : tr('noApps')
                           : tr('noAppsForFilter'),
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                       textAlign: TextAlign.center,
                     ),
-                    if (appsProvider.apps.isEmpty && !appsProvider.loadingApps) ...[
+                    if (appsProvider.apps.isEmpty &&
+                        !appsProvider.loadingApps) ...[
                       const SizedBox(height: 12),
                       Text(
                         'Tap the + button to add your first app',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -597,8 +601,8 @@ class AppsPageState extends State<AppsPage> {
                             ),
                             color:
                                 Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white.withOpacity(0.4)
-                                : Colors.white.withOpacity(0.3),
+                                ? Colors.white.withValues(alpha: 0.4)
+                                : Colors.white.withValues(alpha: 0.3),
                             colorBlendMode: BlendMode.modulate,
                             gaplessPlayback: true,
                           ),
@@ -655,7 +659,7 @@ class AppsPageState extends State<AppsPage> {
 
     Widget buildRepoMovedRow() {
       final colorScheme = Theme.of(context).colorScheme;
-      final infoColor = colorScheme.primary.withOpacity(0.7);
+      final infoColor = colorScheme.primary.withValues(alpha: 0.7);
       final textColor = colorScheme.onSurfaceVariant;
       return Padding(
         padding: const EdgeInsets.only(top: 2),
@@ -700,8 +704,9 @@ class AppsPageState extends State<AppsPage> {
                     ? (Theme.of(context).brightness == Brightness.light
                               ? Theme.of(context).primaryColor
                               : Theme.of(context).primaryColorLight)
-                          .withOpacity(
-                            Theme.of(context).brightness == Brightness.light
+                          .withValues(
+                            alpha:
+                                Theme.of(context).brightness == Brightness.light
                                 ? 20 / 255
                                 : 40 / 255,
                           )
@@ -755,7 +760,7 @@ class AppsPageState extends State<AppsPage> {
 
       var transparent = Theme.of(
         context,
-      ).colorScheme.surface.withOpacity(0).value;
+      ).colorScheme.surface.withValues(alpha: 0).value;
       List<double> stops = [
         ...listedApps[index].app.categories.asMap().entries.map(
           (e) =>
@@ -777,7 +782,7 @@ class AppsPageState extends State<AppsPage> {
               ...listedApps[index].app.categories.map(
                 (e) => Color(
                   viewSettings.categories[e] ?? transparent,
-                ).withOpacity(1),
+                ).withValues(alpha: 1),
               ),
               Color(transparent),
             ],
@@ -786,10 +791,10 @@ class AppsPageState extends State<AppsPage> {
         child: ListTile(
           autofocus: index == 0 && settingsProvider.isTV,
           tileColor: listedApps[index].app.pinned
-              ? Colors.grey.withOpacity(0.1)
+              ? Colors.grey.withValues(alpha: 0.1)
               : Colors.transparent,
-          selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(
-            listedApps[index].app.pinned ? 0.2 : 0.1,
+          selectedTileColor: Theme.of(context).colorScheme.primary.withValues(
+            alpha: listedApps[index].app.pinned ? 0.2 : 0.1,
           ),
           selected: selectedAppIds
               .map((e) => e)
@@ -1177,111 +1182,111 @@ class AppsPageState extends State<AppsPage> {
                   ),
                 ),
                 const Divider(),
-                  TextButton(
-                    onPressed: () {
-                      String urls = '';
-                      for (var a in selectedApps) {
-                        urls += '${a.url}\n';
-                      }
-                      urls = urls.substring(0, urls.length - 1);
-                      Share.share(
-                        urls,
-                        subject: 'Obtainium - ${tr('appsString')}',
-                      );
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      tr('shareSelectedAppURLs'),
-                      textAlign: TextAlign.center,
-                    ),
+                TextButton(
+                  onPressed: () {
+                    String urls = '';
+                    for (var a in selectedApps) {
+                      urls += '${a.url}\n';
+                    }
+                    urls = urls.substring(0, urls.length - 1);
+                    Share.share(
+                      urls,
+                      subject: 'Obtainium - ${tr('appsString')}',
+                    );
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    tr('shareSelectedAppURLs'),
+                    textAlign: TextAlign.center,
                   ),
-                  const Divider(),
-                  TextButton(
-                    onPressed: selectedAppIds.isEmpty
-                        ? null
-                        : () {
-                            String urls = '';
-                            for (var a in selectedApps) {
-                              urls +=
-                                  'https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/${Uri.encodeComponent(jsonEncode({'id': a.id, 'url': a.url, 'author': a.author, 'name': a.name, 'preferredApkIndex': a.preferredApkIndex, 'additionalSettings': jsonEncode(a.additionalSettings), 'overrideSource': a.overrideSource}))}\n\n';
-                            }
-                            Share.share(
-                              urls,
-                              subject: 'Obtainium - ${tr('appsString')}',
-                            );
-                          },
-                    child: Text(
-                      tr('shareAppConfigLinks'),
-                      textAlign: TextAlign.center,
-                    ),
+                ),
+                const Divider(),
+                TextButton(
+                  onPressed: selectedAppIds.isEmpty
+                      ? null
+                      : () {
+                          String urls = '';
+                          for (var a in selectedApps) {
+                            urls +=
+                                'https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/${Uri.encodeComponent(jsonEncode({'id': a.id, 'url': a.url, 'author': a.author, 'name': a.name, 'preferredApkIndex': a.preferredApkIndex, 'additionalSettings': jsonEncode(a.additionalSettings), 'overrideSource': a.overrideSource}))}\n\n';
+                          }
+                          Share.share(
+                            urls,
+                            subject: 'Obtainium - ${tr('appsString')}',
+                          );
+                        },
+                  child: Text(
+                    tr('shareAppConfigLinks'),
+                    textAlign: TextAlign.center,
                   ),
-                  const Divider(),
-                  TextButton(
-                    onPressed: selectedAppIds.isEmpty
-                        ? null
-                        : () {
-                            var encoder = const JsonEncoder.withIndent("    ");
-                            var exportJSON = encoder.convert(
-                              appsProvider.generateExportJSON(
-                                appIds: selectedApps.map((e) => e.id).toList(),
-                                overrideExportSettings: 0,
-                              ),
-                            );
-                            String fn =
-                                '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}-count-${selectedApps.length}';
-                            XFile f = XFile.fromData(
-                              Uint8List.fromList(utf8.encode(exportJSON)),
-                              mimeType: 'application/json',
-                              name: fn,
-                            );
-                            Share.shareXFiles(
-                              [f],
-                              fileNameOverrides: ['$fn.json'],
-                            );
-                          },
-                    child: Text(
-                      '${tr('share')} - ${tr('obtainiumExport')}',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const Divider(),
-                  TextButton(
-                    onPressed: () {
-                      appsProvider
-                          .downloadAppAssets(
-                            selectedApps.map((e) => e.id).toList(),
-                            globalNavigatorKey.currentContext ?? context,
-                          )
-                          .catchError(
-                            // ignore: invalid_return_type_for_catch_error
-                            (e) => showError(
-                              e,
-                              globalNavigatorKey.currentContext ?? context,
+                ),
+                const Divider(),
+                TextButton(
+                  onPressed: selectedAppIds.isEmpty
+                      ? null
+                      : () {
+                          var encoder = const JsonEncoder.withIndent("    ");
+                          var exportJSON = encoder.convert(
+                            appsProvider.generateExportJSON(
+                              appIds: selectedApps.map((e) => e.id).toList(),
+                              overrideExportSettings: 0,
                             ),
                           );
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      tr(
-                        'downloadX',
-                        args: [lowerCaseIfEnglish(tr('releaseAsset'))],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                          String fn =
+                              '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}-count-${selectedApps.length}';
+                          XFile f = XFile.fromData(
+                            Uint8List.fromList(utf8.encode(exportJSON)),
+                            mimeType: 'application/json',
+                            name: fn,
+                          );
+                          Share.shareXFiles(
+                            [f],
+                            fileNameOverrides: ['$fn.json'],
+                          );
+                        },
+                  child: Text(
+                    '${tr('share')} - ${tr('obtainiumExport')}',
+                    textAlign: TextAlign.center,
                   ),
-                  const Divider(),
-                  TextButton(
-                    onPressed: appsProvider.areDownloadsRunning()
-                        ? null
-                        : showMassMarkDialog,
-                    child: Text(
-                      tr('markSelectedAppsUpdated'),
-                      textAlign: TextAlign.center,
+                ),
+                const Divider(),
+                TextButton(
+                  onPressed: () {
+                    appsProvider
+                        .downloadAppAssets(
+                          selectedApps.map((e) => e.id).toList(),
+                          globalNavigatorKey.currentContext ?? context,
+                        )
+                        .catchError(
+                          // ignore: invalid_return_type_for_catch_error
+                          (e) => showError(
+                            e,
+                            globalNavigatorKey.currentContext ?? context,
+                          ),
+                        );
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    tr(
+                      'downloadX',
+                      args: [lowerCaseIfEnglish(tr('releaseAsset'))],
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  ],
-              ),
-            );
+                ),
+                const Divider(),
+                TextButton(
+                  onPressed: appsProvider.areDownloadsRunning()
+                      ? null
+                      : showMassMarkDialog,
+                  child: Text(
+                    tr('markSelectedAppsUpdated'),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          );
         },
       );
     }
@@ -1430,10 +1435,13 @@ class AppsPageState extends State<AppsPage> {
             style: const ButtonStyle(visualDensity: VisualDensity.compact),
             tooltip: isGrid ? tr('listView') : tr('gridView'),
             onPressed: () {
-              viewSettings.globalViewMode =
-                  isGrid ? ViewMode.list : ViewMode.grid;
+              viewSettings.globalViewMode = isGrid
+                  ? ViewMode.list
+                  : ViewMode.grid;
             },
-            icon: Icon(isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded),
+            icon: Icon(
+              isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
+            ),
           ),
           const SizedBox(width: 10),
           const VerticalDivider(),
@@ -1454,43 +1462,47 @@ class AppsPageState extends State<AppsPage> {
         final width = MediaQuery.of(context).size.width;
         final columnCount = viewSettings.gridColumnCount != 0
             ? viewSettings.gridColumnCount
-            : width >= 600 ? 4 : width >= 400 ? 3 : 2;
+            : width >= 600
+            ? 4
+            : width >= 400
+            ? 3
+            : 2;
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           sliver: SliverGrid(
-          delegate: SliverChildBuilderDelegate((ctx, index) {
-            final app = listedApps[index];
-            return AppGridTile(
-              appInMemory: app,
-              isSelected: selectedAppIds.contains(app.app.id),
-              hasUpdate: existingUpdates.contains(app.app.id),
-              onTap: () {
-                if (selectedAppIds.isNotEmpty) {
-                  toggleAppSelected(app.app);
-                } else {
+            delegate: SliverChildBuilderDelegate((ctx, index) {
+              final app = listedApps[index];
+              return AppGridTile(
+                appInMemory: app,
+                isSelected: selectedAppIds.contains(app.app.id),
+                hasUpdate: existingUpdates.contains(app.app.id),
+                onTap: () {
+                  if (selectedAppIds.isNotEmpty) {
+                    toggleAppSelected(app.app);
+                  } else {
+                    AppHaptics.selectionClick();
+                    showDraggableModalBottomSheet(
+                      context: context,
+                      builder: (context, controller) => AppPage(
+                        appId: app.app.id,
+                        isModal: true,
+                        scrollController: controller,
+                      ),
+                    );
+                  }
+                },
+                onLongPress: () {
                   AppHaptics.selectionClick();
-                  showDraggableModalBottomSheet(
-                    context: context,
-                    builder: (context, controller) => AppPage(
-                      appId: app.app.id,
-                      isModal: true,
-                      scrollController: controller,
-                    ),
-                  );
-                }
-              },
-              onLongPress: () {
-                AppHaptics.selectionClick();
-                toggleAppSelected(app.app);
-              },
-            );
-          }, childCount: listedApps.length),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columnCount,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 0.8,
-          ),
+                  toggleAppSelected(app.app);
+                },
+              );
+            }, childCount: listedApps.length),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnCount,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.8,
+            ),
           ),
         );
       }
@@ -1515,8 +1527,6 @@ class AppsPageState extends State<AppsPage> {
               }, childCount: listedApps.length),
             );
     }
-
-    
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1547,7 +1557,9 @@ class AppsPageState extends State<AppsPage> {
               if (plusSettings.plusEnableHomeDashboard)
                 SliverToBoxAdapter(
                   child: AppDashboard(
-                    currentFilterMode: filter.statusFilter.isEmpty ? 'all' : filter.statusFilter.first,
+                    currentFilterMode: filter.statusFilter.isEmpty
+                        ? 'all'
+                        : filter.statusFilter.first,
                     onFilterChanged: (newFilter) {
                       setState(() {
                         if (newFilter == 'all') {

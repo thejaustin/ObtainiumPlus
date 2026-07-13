@@ -39,18 +39,24 @@ void showAppShortcutsMenu(
     builder: (ctx) {
       final sheet = Container(
         decoration: BoxDecoration(
-          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withValues(
+            alpha: enableGlass ? 0.78 : 1.0,
+          ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: enableGlass
               ? Border(
                   top: BorderSide(
-                    color: colorScheme.onSurface.withOpacity(0.18),
+                    color: colorScheme.onSurface.withValues(alpha: 0.18),
                   ),
                   left: BorderSide(
-                    color: colorScheme.onSurface.withOpacity(AppOpacity.hint),
+                    color: colorScheme.onSurface.withValues(
+                      alpha: AppOpacity.hint,
+                    ),
                   ),
                   right: BorderSide(
-                    color: colorScheme.onSurface.withOpacity(AppOpacity.hint),
+                    color: colorScheme.onSurface.withValues(
+                      alpha: AppOpacity.hint,
+                    ),
                   ),
                 )
               : null,

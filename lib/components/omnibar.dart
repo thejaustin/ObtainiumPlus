@@ -201,198 +201,195 @@ class _OmnibarState extends State<Omnibar> {
       label: _isUrl ? tr('appURLList') : tr('search'),
       textField: true,
       child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Easing.standard,
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withOpacity(
-              settings.plusEnableGlassmorphism ? 0.45 : 0.7,
-            ),
-            borderRadius: BorderRadius.circular(itemRadius),
-            border: Border.all(
-              color: _isValidUrl
-                  ? colorScheme.primary.withOpacity(AppOpacity.half)
-                  : _urlError != null
-                  ? colorScheme.error.withOpacity(AppOpacity.half)
-                  : colorScheme.outline.withOpacity(
-                      settings.plusEnableGlassmorphism
-                          ? 0.15
-                          : AppOpacity.medium,
-                    ),
-              width: 1.5,
-            ),
-            boxShadow: settings.plusEnableGlassmorphism
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      spreadRadius: -2,
-                    ),
-                  ]
-                : null,
+        duration: const Duration(milliseconds: 200),
+        curve: Easing.standard,
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(
+            alpha: settings.plusEnableGlassmorphism ? 0.45 : 0.7,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(itemRadius),
-            child: Stack(
-              children: [
-                // Backdrop blur clipped to the bar — must stay inside
-                // ClipRRect or it blurs the whole screen behind it
-                if (settings.plusEnableGlassmorphism)
-                  Positioned.fill(
-                    child: ConditionalBlur(
-                      enabled: true,
-                      sigma: 10,
-                      child: Container(color: Colors.transparent),
-                    ),
+          borderRadius: BorderRadius.circular(itemRadius),
+          border: Border.all(
+            color: _isValidUrl
+                ? colorScheme.primary.withValues(alpha: AppOpacity.half)
+                : _urlError != null
+                ? colorScheme.error.withValues(alpha: AppOpacity.half)
+                : colorScheme.outline.withValues(
+                    alpha: settings.plusEnableGlassmorphism
+                        ? 0.15
+                        : AppOpacity.medium,
                   ),
-                // Inner sheen
-                if (settings.plusEnableGlassmorphism)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withOpacity(0.05),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
+            width: 1.5,
+          ),
+          boxShadow: settings.plusEnableGlassmorphism
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    spreadRadius: -2,
                   ),
-                Row(
-                  children: [
-                    // Icon indicating input type — AnimatedSwitcher for smooth transitions
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        transitionBuilder: (child, anim) => FadeTransition(
-                          opacity: anim,
-                          child: ScaleTransition(scale: anim, child: child),
-                        ),
-                        child: Icon(
-                          _isUrl
-                              ? (_isValidUrl ? Icons.link : Icons.link_off)
-                              : Icons.search,
-                          key: ValueKey(
-                            'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}',
-                          ),
-                          color: _isValidUrl
-                              ? colorScheme.primary
-                              : _urlError != null
-                              ? colorScheme.error
-                              : colorScheme.onSurfaceVariant,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-
-                    // Input field
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          hintText: _isUrl
-                              ? (_isValidUrl
-                                    ? tr('validUrlEnterToAdd')
-                                    : tr('invalidUrl'))
-                              : tr('searchOrEnterUrl'),
-                          hintStyle: TextStyle(
-                            color: colorScheme.onSurfaceVariant.withOpacity(
-                              0.7,
-                            ),
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 14,
-                          ),
-                        ),
-                        onChanged: _handleInput,
-                        onSubmitted: (value) {
-                          if (_isUrl && _isValidUrl) {
-                            widget.onUrlInput?.call(value);
-                          } else if (!_isUrl && value.isNotEmpty) {
-                            widget.onSearchQuery?.call(value);
-                          }
-                        },
-                        keyboardType: _isUrl
-                            ? TextInputType.url
-                            : TextInputType.text,
-                        textInputAction: TextInputAction.search,
-                      ),
-                    ),
-
-                    // Clear button
-                    if (_controller.text.isNotEmpty)
-                      Semantics(
-                        label: tr('clear'),
-                        button: true,
-                        child: IconButton(
-                          icon: const Icon(Icons.clear, size: 20),
-                          onPressed: () {
-                            _controller.clear();
-                            _handleInput('');
-                          },
-                          padding: const EdgeInsets.only(right: 8),
-                        ),
-                      ),
-
-                    // Add button (for URLs)
-                    if (_isUrl)
-                      Container(
-                        margin: const EdgeInsets.only(
-                          right: 6,
-                          top: 6,
-                          bottom: 6,
-                        ),
-                        child: Semantics(
-                          label: tr('add'),
-                          button: true,
-                          child: FilledButton.tonal(
-                            onPressed: _isValidUrl
-                                ? () =>
-                                      widget.onUrlInput?.call(_controller.text)
-                                : () {
-                                    // Show unsupported source dialog
-                                    final supportedSources = _sourceProvider
-                                        .sources
-                                        .where((s) => s.hosts.isNotEmpty)
-                                        .map((s) => s.name)
-                                        .toList();
-
-                                    showUnsupportedSourceDialog(
-                                      context: context,
-                                      suggestedSources: supportedSources
-                                          .take(8)
-                                          .toList(),
-                                      failedUrl: _controller.text,
-                                    );
-                                  },
-                            style: FilledButton.styleFrom(
-                              backgroundColor: _isValidUrl
-                                  ? colorScheme.primary
-                                  : null,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  itemRadius * 0.8,
-                                ),
-                              ),
-                            ),
-                            child: Text(_isValidUrl ? tr('add') : tr('error')),
-                          ),
-                        ),
-                      ),
-                  ],
+                ]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(itemRadius),
+          child: Stack(
+            children: [
+              // Backdrop blur clipped to the bar — must stay inside
+              // ClipRRect or it blurs the whole screen behind it
+              if (settings.plusEnableGlassmorphism)
+                Positioned.fill(
+                  child: ConditionalBlur(
+                    enabled: true,
+                    sigma: 10,
+                    child: Container(color: Colors.transparent),
+                  ),
                 ),
-              ],
-            ),
+              // Inner sheen
+              if (settings.plusEnableGlassmorphism)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.05),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              Row(
+                children: [
+                  // Icon indicating input type — AnimatedSwitcher for smooth transitions
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: ScaleTransition(scale: anim, child: child),
+                      ),
+                      child: Icon(
+                        _isUrl
+                            ? (_isValidUrl ? Icons.link : Icons.link_off)
+                            : Icons.search,
+                        key: ValueKey(
+                          'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}',
+                        ),
+                        color: _isValidUrl
+                            ? colorScheme.primary
+                            : _urlError != null
+                            ? colorScheme.error
+                            : colorScheme.onSurfaceVariant,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+
+                  // Input field
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        hintText: _isUrl
+                            ? (_isValidUrl
+                                  ? tr('validUrlEnterToAdd')
+                                  : tr('invalidUrl'))
+                            : tr('searchOrEnterUrl'),
+                        hintStyle: TextStyle(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
+                      ),
+                      onChanged: _handleInput,
+                      onSubmitted: (value) {
+                        if (_isUrl && _isValidUrl) {
+                          widget.onUrlInput?.call(value);
+                        } else if (!_isUrl && value.isNotEmpty) {
+                          widget.onSearchQuery?.call(value);
+                        }
+                      },
+                      keyboardType: _isUrl
+                          ? TextInputType.url
+                          : TextInputType.text,
+                      textInputAction: TextInputAction.search,
+                    ),
+                  ),
+
+                  // Clear button
+                  if (_controller.text.isNotEmpty)
+                    Semantics(
+                      label: tr('clear'),
+                      button: true,
+                      child: IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _controller.clear();
+                          _handleInput('');
+                        },
+                        padding: const EdgeInsets.only(right: 8),
+                      ),
+                    ),
+
+                  // Add button (for URLs)
+                  if (_isUrl)
+                    Container(
+                      margin: const EdgeInsets.only(
+                        right: 6,
+                        top: 6,
+                        bottom: 6,
+                      ),
+                      child: Semantics(
+                        label: tr('add'),
+                        button: true,
+                        child: FilledButton.tonal(
+                          onPressed: _isValidUrl
+                              ? () => widget.onUrlInput?.call(_controller.text)
+                              : () {
+                                  // Show unsupported source dialog
+                                  final supportedSources = _sourceProvider
+                                      .sources
+                                      .where((s) => s.hosts.isNotEmpty)
+                                      .map((s) => s.name)
+                                      .toList();
+
+                                  showUnsupportedSourceDialog(
+                                    context: context,
+                                    suggestedSources: supportedSources
+                                        .take(8)
+                                        .toList(),
+                                    failedUrl: _controller.text,
+                                  );
+                                },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _isValidUrl
+                                ? colorScheme.primary
+                                : null,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                itemRadius * 0.8,
+                              ),
+                            ),
+                          ),
+                          child: Text(_isValidUrl ? tr('add') : tr('error')),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ),
         ),
+      ),
     );
   }
 }
@@ -417,8 +414,8 @@ class AppActionsFAB extends StatelessWidget {
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withOpacity(
-              enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
+            color: colorScheme.surface.withValues(
+              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
             ),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
@@ -426,19 +423,19 @@ class AppActionsFAB extends StatelessWidget {
             border: Border(
               top: BorderSide(
                 color: enableGlass
-                    ? colorScheme.onSurface.withOpacity(
-                        AppConstants.glassBorderAlpha,
+                    ? colorScheme.onSurface.withValues(
+                        alpha: AppConstants.glassBorderAlpha,
                       )
-                    : colorScheme.outline.withOpacity(AppOpacity.hint),
+                    : colorScheme.outline.withValues(alpha: AppOpacity.hint),
               ),
               left: BorderSide(
-                color: colorScheme.onSurface.withOpacity(
-                  enableGlass ? 0.12 : 0,
+                color: colorScheme.onSurface.withValues(
+                  alpha: enableGlass ? 0.12 : 0,
                 ),
               ),
               right: BorderSide(
-                color: colorScheme.onSurface.withOpacity(
-                  enableGlass ? 0.12 : 0,
+                color: colorScheme.onSurface.withValues(
+                  alpha: enableGlass ? 0.12 : 0,
                 ),
               ),
             ),
@@ -470,8 +467,8 @@ class AppActionsFAB extends StatelessWidget {
                       title: tr('search'),
                       subtitle: tr('searchOrEnterUrl'),
                       iconColor: colorScheme.tertiary,
-                      containerColor: colorScheme.tertiaryContainer.withOpacity(
-                        AppOpacity.half,
+                      containerColor: colorScheme.tertiaryContainer.withValues(
+                        alpha: AppOpacity.half,
                       ),
                       onTap: () {
                         Navigator.pop(context);
@@ -625,7 +622,7 @@ class AppActionsFAB extends StatelessWidget {
         decoration: BoxDecoration(
           color:
               containerColor ??
-              colorScheme.primaryContainer.withOpacity(AppOpacity.half),
+              colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
           borderRadius: BorderRadius.circular(itemRadius),
         ),
         child: Icon(icon, color: iconColor ?? colorScheme.primary),
@@ -674,10 +671,12 @@ class AppActionsFAB extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ],
               ),
               child: FloatingActionButton.extended(
@@ -691,8 +690,16 @@ class AppActionsFAB extends StatelessWidget {
                 hoverElevation: 0,
                 focusElevation: 0,
                 highlightElevation: 0,
-                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-                label: Text(tr('addApp'), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                icon: Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                label: Text(
+                  tr('addApp'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
               ),
             ),
           ),
@@ -716,10 +723,12 @@ class AppActionsFAB extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: FloatingActionButton.extended(
@@ -733,7 +742,10 @@ class AppActionsFAB extends StatelessWidget {
           focusElevation: 0,
           highlightElevation: 0,
           icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-          label: Text(tr('addApp'), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+          label: Text(
+            tr('addApp'),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
         ),
       ),
     );

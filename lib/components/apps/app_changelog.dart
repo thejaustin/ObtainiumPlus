@@ -51,8 +51,14 @@ void showChangeLogDialog(
                   child: Markdown(
                     styleSheet: MarkdownStyleSheet(
                       blockquoteDecoration: BoxDecoration(
-                        color: context.watch<SettingsProvider>().plusEnableGlassmorphism
-                            ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4)
+                        color:
+                            context
+                                .watch<SettingsProvider>()
+                                .plusEnableGlassmorphism
+                            ? Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withValues(alpha: 0.4)
                             : Theme.of(context).cardColor,
                       ),
                     ),

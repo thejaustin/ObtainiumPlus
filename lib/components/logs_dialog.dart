@@ -81,12 +81,14 @@ $logs''';
       child: Container(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withValues(
+            alpha: enableGlass ? 0.78 : 1.0,
+          ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withOpacity(0.18)
-                : colorScheme.outline.withOpacity(AppOpacity.subtle),
+                ? colorScheme.onSurface.withValues(alpha: 0.18)
+                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -121,11 +123,11 @@ $logs''';
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withOpacity(enableGlass ? 0.3 : 0.5),
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(
-              enableGlass ? 0.15 : 0.25,
+            Theme.of(context).colorScheme.primaryContainer.withValues(
+              alpha: enableGlass ? 0.3 : 0.5,
+            ),
+            Theme.of(context).colorScheme.primaryContainer.withValues(
+              alpha: enableGlass ? 0.15 : 0.25,
             ),
           ],
           begin: Alignment.topLeft,
@@ -140,7 +142,7 @@ $logs''';
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.primary.withOpacity(AppOpacity.low),
+              ).colorScheme.primary.withValues(alpha: AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -173,7 +175,7 @@ $logs''';
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withOpacity(AppOpacity.half),
+                        .withValues(alpha: AppOpacity.half),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -208,7 +210,7 @@ $logs''';
                           color: Theme.of(context)
                               .colorScheme
                               .surfaceContainerHighest
-                              .withOpacity(AppOpacity.half),
+                              .withValues(alpha: AppOpacity.half),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -238,9 +240,9 @@ $logs''';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+          alpha: AppOpacity.medium,
+        ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(

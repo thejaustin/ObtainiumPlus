@@ -109,7 +109,10 @@ class _CommandCenterState extends State<CommandCenter> {
     // Check if it's a URL
     if (URLValidator.isValidSourceURL(value)) {
       // Allow GitHub User Profiles to bypass this so they can be searched
-      RegExp userProfileRegEx = RegExp(r'^https?://(?:www\.)?github\.com/[^/]+/?$', caseSensitive: false);
+      RegExp userProfileRegEx = RegExp(
+        r'^https?://(?:www\.)?github\.com/[^/]+/?$',
+        caseSensitive: false,
+      );
       if (!userProfileRegEx.hasMatch(value)) {
         setState(() => _discoverResults = {});
         return;
@@ -161,24 +164,30 @@ class _CommandCenterState extends State<CommandCenter> {
                 (isDark
                         ? theme.colorScheme.surfaceContainerHighest
                         : theme.colorScheme.surface)
-                    .withOpacity(plusSettings.plusEnableGlassmorphism ? 0.72 : 1.0),
+                    .withValues(
+                      alpha: plusSettings.plusEnableGlassmorphism ? 0.72 : 1.0,
+                    ),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
                 color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(0.18)
-                    : theme.colorScheme.outlineVariant.withOpacity(
-                        AppOpacity.subtle,
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+                    : theme.colorScheme.outlineVariant.withValues(
+                        alpha: AppOpacity.subtle,
                       ),
               ),
               left: BorderSide(
                 color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                    ? theme.colorScheme.onSurface.withValues(
+                        alpha: AppOpacity.hint,
+                      )
                     : Colors.transparent,
               ),
               right: BorderSide(
                 color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                    ? theme.colorScheme.onSurface.withValues(
+                        alpha: AppOpacity.hint,
+                      )
                     : Colors.transparent,
               ),
             ),
@@ -218,9 +227,12 @@ class _CommandCenterState extends State<CommandCenter> {
                           )
                         : null,
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHigh.withOpacity(
-                      plusSettings.plusEnableGlassmorphism ? 0.5 : 1.0,
-                    ),
+                    fillColor: theme.colorScheme.surfaceContainerHigh
+                        .withValues(
+                          alpha: plusSettings.plusEnableGlassmorphism
+                              ? 0.5
+                              : 1.0,
+                        ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
@@ -238,7 +250,8 @@ class _CommandCenterState extends State<CommandCenter> {
                 child: _query.isEmpty
                     ? _buildInitialState()
                     : ListView(
-                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         children: [
                           if (_localResults.isNotEmpty) ...[
@@ -251,7 +264,12 @@ class _CommandCenterState extends State<CommandCenter> {
                             _buildUrlActionContent(),
                             const SizedBox(height: 16),
                           ],
-                          if (_query.isNotEmpty && (!isUrl || RegExp(r'^https?://(?:www\.)?github\.com/[^/]+/?$', caseSensitive: false).hasMatch(_query))) ...[
+                          if (_query.isNotEmpty &&
+                              (!isUrl ||
+                                  RegExp(
+                                    r'^https?://(?:www\.)?github\.com/[^/]+/?$',
+                                    caseSensitive: false,
+                                  ).hasMatch(_query))) ...[
                             _buildSectionHeader(tr('discover')),
                             _buildSearchResultsList(),
                           ],
@@ -313,12 +331,20 @@ class _CommandCenterState extends State<CommandCenter> {
                   height: 48,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
                   child: app.icon != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                          child: Image.memory(app.icon!, fit: BoxFit.cover, filterQuality: FilterQuality.medium),
+                          borderRadius: BorderRadius.circular(
+                            itemRadius * 0.75,
+                          ),
+                          child: Image.memory(
+                            app.icon!,
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.medium,
+                          ),
                         )
                       : const Icon(Icons.apps_rounded),
                 ),
@@ -329,9 +355,8 @@ class _CommandCenterState extends State<CommandCenter> {
                     children: [
                       Text(
                         app.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
                         app.app.latestVersion,
@@ -475,7 +500,7 @@ class _CommandCenterState extends State<CommandCenter> {
       elevation: 0,
       color: Theme.of(
         context,
-      ).colorScheme.primaryContainer.withOpacity(AppOpacity.moderate),
+      ).colorScheme.primaryContainer.withValues(alpha: AppOpacity.moderate),
       child: ListTile(
         leading: const Icon(Icons.link),
         title: Text(tr('addAppFromUrl')),
@@ -515,7 +540,7 @@ class _CommandCenterState extends State<CommandCenter> {
                   size: 64,
                   color: Theme.of(
                     context,
-                  ).colorScheme.primary.withOpacity(AppOpacity.low),
+                  ).colorScheme.primary.withValues(alpha: AppOpacity.low),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -524,7 +549,7 @@ class _CommandCenterState extends State<CommandCenter> {
                     fontWeight: FontWeight.bold,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(AppOpacity.half),
+                    ).colorScheme.onSurface.withValues(alpha: AppOpacity.half),
                   ),
                 ),
               ],

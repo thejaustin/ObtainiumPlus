@@ -35,28 +35,30 @@ Future<T?> showAddAppSheet<T>({
         decoration: BoxDecoration(
           color: Theme.of(
             context,
-          ).colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          ).colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(
             top: BorderSide(
               color: enableGlass
-                  ? Theme.of(context).colorScheme.onSurface.withOpacity(0.18)
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.18)
                   : Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(AppOpacity.low),
+                    ).colorScheme.outline.withValues(alpha: AppOpacity.low),
             ),
             left: BorderSide(
               color: enableGlass
                   ? Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                    ).colorScheme.onSurface.withValues(alpha: AppOpacity.hint)
                   : Colors.transparent,
             ),
             right: BorderSide(
               color: enableGlass
                   ? Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(AppOpacity.hint)
+                    ).colorScheme.onSurface.withValues(alpha: AppOpacity.hint)
                   : Colors.transparent,
             ),
           ),
@@ -182,7 +184,7 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -209,7 +211,7 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
             size: 64,
             color: Theme.of(
               context,
-            ).colorScheme.primary.withOpacity(AppOpacity.half),
+            ).colorScheme.primary.withValues(alpha: AppOpacity.half),
           ),
           const SizedBox(height: 24),
           Text(tr('addApp'), style: Theme.of(context).textTheme.titleMedium),
@@ -217,7 +219,9 @@ class _AddAppSheetContentState extends State<_AddAppSheetContent>
           Text(
             tr('enterAppUrlOrSearch'),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),

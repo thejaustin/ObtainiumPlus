@@ -60,17 +60,19 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withValues(
+            alpha: enableGlass ? 0.78 : 1.0,
+          ),
           borderRadius: BorderRadius.circular(dialogRadius),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withOpacity(0.18)
-                : colorScheme.outline.withOpacity(AppOpacity.subtle),
+                ? colorScheme.onSurface.withValues(alpha: 0.18)
+                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(enableGlass ? 0.2 : 0.1),
+              color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
               blurRadius: 20,
               spreadRadius: -5,
             ),
@@ -137,7 +139,7 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.35),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       ),
       child: Row(
@@ -145,9 +147,9 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
           Expanded(
             child: Text(
               widget.title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ],

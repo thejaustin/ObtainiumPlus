@@ -203,8 +203,8 @@ class _AppDashboardState extends State<AppDashboard>
                     borderRadius: BorderRadius.circular(radius * 0.66),
                   ),
                   side: BorderSide(
-                    color: colorScheme.outline.withOpacity(
-                      settings.plusEnableGlassmorphism ? 0.3 : 0.15,
+                    color: colorScheme.outline.withValues(
+                      alpha: settings.plusEnableGlassmorphism ? 0.3 : 0.15,
                     ),
                   ),
                 ),
@@ -301,16 +301,22 @@ class _AppDashboardState extends State<AppDashboard>
             borderRadius: BorderRadius.circular(itemRadius),
             color: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: app.icon != null
-                ? Image.memory(app.icon!, fit: BoxFit.contain, filterQuality: FilterQuality.medium)
+                ? Image.memory(
+                    app.icon!,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.medium,
+                  )
                 : const Icon(Icons.apps_rounded, size: 24),
           ),
         ),
@@ -346,12 +352,14 @@ class _AppDashboardState extends State<AppDashboard>
             border: Border.all(
               color: Theme.of(
                 context,
-              ).colorScheme.error.withOpacity(AppOpacity.medium),
+              ).colorScheme.error.withValues(alpha: AppOpacity.medium),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.error.withOpacity(0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.error.withValues(alpha: 0.1),
                 blurRadius: 8,
                 spreadRadius: -2,
               ),
@@ -376,7 +384,7 @@ class _AppDashboardState extends State<AppDashboard>
                     Icons.apps_rounded,
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(AppOpacity.half),
+                    ).colorScheme.primary.withValues(alpha: AppOpacity.half),
                   ),
                 ),
               Positioned(
@@ -415,9 +423,9 @@ class _AppDashboardState extends State<AppDashboard>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withOpacity(0.15),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(itemRadius),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -467,7 +475,10 @@ class _AppDashboardState extends State<AppDashboard>
                         .whereType<String>()
                         .join('\n');
                     if (urls.isNotEmpty) {
-                      Share.share(urls, subject: 'Obtainium - ${tr('appsString')}');
+                      Share.share(
+                        urls,
+                        subject: 'Obtainium - ${tr('appsString')}',
+                      );
                     }
                     appsProvider.clearSelection();
                   },
@@ -485,7 +496,9 @@ class _AppDashboardState extends State<AppDashboard>
                 icon: const Icon(Icons.delete_outline_rounded),
                 style: IconButton.styleFrom(
                   foregroundColor: colorScheme.error,
-                  backgroundColor: colorScheme.errorContainer.withOpacity(0.3),
+                  backgroundColor: colorScheme.errorContainer.withValues(
+                    alpha: 0.3,
+                  ),
                 ),
               ),
             ],
@@ -494,5 +507,4 @@ class _AppDashboardState extends State<AppDashboard>
       ),
     );
   }
-
 }

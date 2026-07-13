@@ -118,249 +118,249 @@ class _AppGridTileState extends State<AppGridTile>
           duration: const Duration(milliseconds: 100),
           curve: curve,
           child: AnimatedContainer(
-              duration: Duration(
-                milliseconds: plusSettings.plusEnableEnhancedAnimations
-                    ? AppConstants.shortAnimationMs
-                    : 200,
-              ),
-              curve: plusSettings.plusEnableEnhancedAnimations
-                  ? Curves.easeOutCubic
-                  : Curves.easeInOut,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(cardBorderRadius),
+            duration: Duration(
+              milliseconds: plusSettings.plusEnableEnhancedAnimations
+                  ? AppConstants.shortAnimationMs
+                  : 200,
+            ),
+            curve: plusSettings.plusEnableEnhancedAnimations
+                ? Curves.easeOutCubic
+                : Curves.easeInOut,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(cardBorderRadius),
+              color: widget.isSelected
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.7)
+                  : widget.hasUpdate
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.errorContainer.withValues(alpha: 0.12)
+                  : Theme.of(context).colorScheme.surface.withValues(
+                      alpha: plusSettings.plusEnableGlassmorphism ? 0.45 : 1.0,
+                    ),
+              border: Border.all(
                 color: widget.isSelected
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withOpacity(0.7)
+                    ? Theme.of(context).colorScheme.primary
                     : widget.hasUpdate
                     ? Theme.of(
                         context,
-                      ).colorScheme.errorContainer.withOpacity(0.12)
-                    : Theme.of(context).colorScheme.surface.withOpacity(
-                        plusSettings.plusEnableGlassmorphism ? 0.45 : 1.0,
+                      ).colorScheme.error.withValues(alpha: AppOpacity.low)
+                    : widget.appInMemory.app.pinned
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3)
+                    : Theme.of(context).colorScheme.outline.withValues(
+                        alpha: plusSettings.plusEnableGlassmorphism ? 0.1 : 0,
                       ),
-                border: Border.all(
-                  color: widget.isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : widget.hasUpdate
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.error.withOpacity(AppOpacity.low)
-                      : widget.appInMemory.app.pinned
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                      : Theme.of(context).colorScheme.outline.withOpacity(
-                          plusSettings.plusEnableGlassmorphism ? 0.1 : 0,
-                        ),
-                  width:
-                      widget.isSelected ||
-                          widget.appInMemory.app.pinned ||
-                          widget.hasUpdate
-                      ? 1.5
-                      : 0.8,
-                ),
-                boxShadow: widget.isSelected
-                    ? AppShadows.glow(
-                        color: Theme.of(context).colorScheme.primary,
-                        intensity: 0.6,
-                      )
-                    : null,
+                width:
+                    widget.isSelected ||
+                        widget.appInMemory.app.pinned ||
+                        widget.hasUpdate
+                    ? 1.5
+                    : 0.8,
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(cardBorderRadius),
-                child: Stack(
-                  children: [
-                    // Backdrop blur clipped to the card — must stay inside
-                    // ClipRRect or it blurs the whole screen behind the tile
-                    if (plusSettings.plusEnableGlassmorphism)
-                      Positioned.fill(
-                        child: ConditionalBlur(
-                          enabled: true,
-                          sigma: 10,
-                          child: Container(color: Colors.transparent),
-                        ),
+              boxShadow: widget.isSelected
+                  ? AppShadows.glow(
+                      color: Theme.of(context).colorScheme.primary,
+                      intensity: 0.6,
+                    )
+                  : null,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(cardBorderRadius),
+              child: Stack(
+                children: [
+                  // Backdrop blur clipped to the card — must stay inside
+                  // ClipRRect or it blurs the whole screen behind the tile
+                  if (plusSettings.plusEnableGlassmorphism)
+                    Positioned.fill(
+                      child: ConditionalBlur(
+                        enabled: true,
+                        sigma: 10,
+                        child: Container(color: Colors.transparent),
                       ),
-                    // Glass sheen
-                    if (plusSettings.plusEnableGlassmorphism)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withOpacity(0.08),
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.02),
-                              ],
-                              stops: const [0.0, 0.4, 1.0],
-                            ),
+                    ),
+                  // Glass sheen
+                  if (plusSettings.plusEnableGlassmorphism)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.08),
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.02),
+                            ],
+                            stops: const [0.0, 0.4, 1.0],
                           ),
                         ),
                       ),
+                    ),
 
-                    // Quick Actions Menu
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: PopupMenuButton<String>(
-                          icon: Icon(
-                            Icons.more_vert_rounded,
-                            size: 18,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant
-                                .withOpacity(0.6),
+                  // Quick Actions Menu
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          size: 18,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 150),
+                        onSelected: (value) {
+                          AppHaptics.selectionClick();
+                          final appsProvider = context.read<AppsProvider>();
+                          switch (value) {
+                            case 'togglePin':
+                              widget.appInMemory.app.pinned =
+                                  !widget.appInMemory.app.pinned;
+                              appsProvider.saveApps([widget.appInMemory.app]);
+                              break;
+                            case 'settings':
+                              appsProvider.openAppSettings(
+                                widget.appInMemory.app.id,
+                              );
+                              break;
+                            case 'copyUrl':
+                              Clipboard.setData(
+                                ClipboardData(text: widget.appInMemory.app.url),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(tr('copiedToClipboard')),
+                                ),
+                              );
+                              break;
+                            case 'remove':
+                              appsProvider.removeAppsWithModal(context, [
+                                widget.appInMemory.app,
+                              ]);
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'togglePin',
+                            child: ListTile(
+                              leading: Icon(
+                                widget.appInMemory.app.pinned
+                                    ? Icons.push_pin_rounded
+                                    : Icons.push_pin_outlined,
+                                size: 20,
+                              ),
+                              title: Text(
+                                widget.appInMemory.app.pinned
+                                    ? tr('unpin')
+                                    : tr('pin'),
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                              dense: true,
+                            ),
                           ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 150),
-                          onSelected: (value) {
-                            AppHaptics.selectionClick();
-                            final appsProvider = context.read<AppsProvider>();
-                            switch (value) {
-                              case 'togglePin':
-                                widget.appInMemory.app.pinned =
-                                    !widget.appInMemory.app.pinned;
-                                appsProvider.saveApps([widget.appInMemory.app]);
-                                break;
-                              case 'settings':
-                                appsProvider.openAppSettings(
-                                  widget.appInMemory.app.id,
-                                );
-                                break;
-                              case 'copyUrl':
-                                Clipboard.setData(
-                                  ClipboardData(text: widget.appInMemory.app.url),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(tr('copiedToClipboard')),
-                                  ),
-                                );
-                                break;
-                              case 'remove':
-                                appsProvider.removeAppsWithModal(
-                                  context,
-                                  [widget.appInMemory.app],
-                                );
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'togglePin',
-                              child: ListTile(
-                                leading: Icon(
-                                  widget.appInMemory.app.pinned
-                                      ? Icons.push_pin_rounded
-                                      : Icons.push_pin_outlined,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  widget.appInMemory.app.pinned
-                                      ? tr('unpin')
-                                      : tr('pin'),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                dense: true,
+                          PopupMenuItem(
+                            value: 'settings',
+                            child: ListTile(
+                              leading: const Icon(
+                                Icons.settings_outlined,
+                                size: 20,
                               ),
-                            ),
-                            PopupMenuItem(
-                              value: 'settings',
-                              child: ListTile(
-                                leading: const Icon(
-                                  Icons.settings_outlined,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  tr('settings'),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                dense: true,
+                              title: Text(
+                                tr('settings'),
+                                style: const TextStyle(fontSize: 13),
                               ),
+                              dense: true,
                             ),
-                            PopupMenuItem(
-                              value: 'copyUrl',
-                              child: ListTile(
-                                leading: const Icon(Icons.copy_rounded, size: 20),
-                                title: Text(
-                                  tr('copyAppURL'),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                dense: true,
+                          ),
+                          PopupMenuItem(
+                            value: 'copyUrl',
+                            child: ListTile(
+                              leading: const Icon(Icons.copy_rounded, size: 20),
+                              title: Text(
+                                tr('copyAppURL'),
+                                style: const TextStyle(fontSize: 13),
                               ),
+                              dense: true,
                             ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'remove',
-                              child: ListTile(
-                                leading: Icon(
-                                  Icons.delete_outline_rounded,
+                          ),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: 'remove',
+                            child: ListTile(
+                              leading: Icon(
+                                Icons.delete_outline_rounded,
+                                color: Theme.of(context).colorScheme.error,
+                                size: 20,
+                              ),
+                              title: Text(
+                                tr('remove'),
+                                style: TextStyle(
                                   color: Theme.of(context).colorScheme.error,
-                                  size: 20,
+                                  fontSize: 13,
                                 ),
-                                title: Text(
-                                  tr('remove'),
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                dense: true,
                               ),
+                              dense: true,
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    Semantics(
-                      label: _buildSemanticLabel(),
-                      button: true,
-                      selected: widget.isSelected,
-                      child: GestureDetector(
-                        onTapDown: (_) => setState(() => _isPressed = true),
-                        onTapUp: (_) {
-                          setState(() => _isPressed = false);
-                          widget.onTap();
-                        },
-                        onTapCancel: () => setState(() => _isPressed = false),
-                        onLongPressStart: (_) {
-                          setState(() => _isPressed = true);
-                          AppHaptics.mediumImpact();
-                        },
-                        onLongPressEnd: (_) {
-                          setState(() => _isPressed = false);
-                          widget.onLongPress();
-                        },
-                        child: InkWell(
-                          onTap: null, // Handled by GestureDetector
-                          onLongPress: null, // Handled by GestureDetector
-                          borderRadius: BorderRadius.circular(cardBorderRadius),
-                          child: Padding(
-                            padding: EdgeInsets.all(padding),
-                            child: isHorizontal
-                                ? _buildHorizontalContent(
-                                    iconSize,
-                                    iconBorderRadius,
-                                    badgeSize,
-                                    plusSettings,
-                                  )
-                                : _buildVerticalContent(
-                                    iconSize,
-                                    iconBorderRadius,
-                                    badgeSize,
-                                    plusSettings,
-                                  ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  Semantics(
+                    label: _buildSemanticLabel(),
+                    button: true,
+                    selected: widget.isSelected,
+                    child: GestureDetector(
+                      onTapDown: (_) => setState(() => _isPressed = true),
+                      onTapUp: (_) {
+                        setState(() => _isPressed = false);
+                        widget.onTap();
+                      },
+                      onTapCancel: () => setState(() => _isPressed = false),
+                      onLongPressStart: (_) {
+                        setState(() => _isPressed = true);
+                        AppHaptics.mediumImpact();
+                      },
+                      onLongPressEnd: (_) {
+                        setState(() => _isPressed = false);
+                        widget.onLongPress();
+                      },
+                      child: InkWell(
+                        onTap: null, // Handled by GestureDetector
+                        onLongPress: null, // Handled by GestureDetector
+                        borderRadius: BorderRadius.circular(cardBorderRadius),
+                        child: Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: isHorizontal
+                              ? _buildHorizontalContent(
+                                  iconSize,
+                                  iconBorderRadius,
+                                  badgeSize,
+                                  plusSettings,
+                                )
+                              : _buildVerticalContent(
+                                  iconSize,
+                                  iconBorderRadius,
+                                  badgeSize,
+                                  plusSettings,
+                                ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+          ),
         );
       },
     );
@@ -395,7 +395,9 @@ class _AppGridTileState extends State<AppGridTile>
         Expanded(child: _buildAppInfo(plusSettings, TextAlign.start)),
         Icon(
           Icons.chevron_right_rounded,
-          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
         ),
       ],
     );
@@ -535,7 +537,7 @@ class _AppGridTileState extends State<AppGridTile>
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.secondaryContainer.withOpacity(0.4),
+                        ).colorScheme.secondaryContainer.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -578,7 +580,7 @@ class _AppGridTileState extends State<AppGridTile>
     return Container(
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Icon(iconData, size: 8, color: color),

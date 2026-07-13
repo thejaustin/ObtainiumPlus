@@ -131,7 +131,7 @@ class CategorySections extends StatelessWidget {
               end: const Alignment(-0.97, 0),
               colors: [
                 categoryColor ?? Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.surface.withOpacity(0.0),
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.0),
               ],
               stops: const [0.99, 1],
             ),
@@ -213,9 +213,11 @@ class CategorySections extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: colorScheme.error.withOpacity(0.1),
+              color: colorScheme.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: colorScheme.error.withOpacity(0.2)),
+              border: Border.all(
+                color: colorScheme.error.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
@@ -257,7 +259,7 @@ class CategorySections extends StatelessWidget {
         : null;
     final transparent = Theme.of(
       context,
-    ).colorScheme.surface.withOpacity(0.0).value;
+    ).colorScheme.surface.withValues(alpha: 0.0).value;
 
     final appsInCategory = listedApps
         .where(

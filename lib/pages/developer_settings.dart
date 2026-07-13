@@ -16,7 +16,8 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/pages/plugin_manager.dart';
-import 'package:android_package_manager/android_package_manager.dart' hide LaunchMode;
+import 'package:android_package_manager/android_package_manager.dart'
+    hide LaunchMode;
 import 'package:obtainium/pages/microg_hub.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/glass_dialog.dart';
@@ -54,9 +55,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.token_outlined),
               title: Text(tr('manageTokenDispensers')),
-              subtitle: Text(
-                tr('anonymousLoginTokensAAS'),
-              ),
+              subtitle: Text(tr('anonymousLoginTokensAAS')),
               trailing: const Icon(Icons.chevron_right),
               enabled:
                   context.watch<AuthProvider>().authMode != AuthMode.microG,
@@ -67,7 +66,8 @@ class DeveloperSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.account_circle_outlined),
                 title: Text(tr('microGAccount')),
                 subtitle: Text(
-                  context.watch<AuthProvider>().microGEmail ?? tr('noneSelected'),
+                  context.watch<AuthProvider>().microGEmail ??
+                      tr('noneSelected'),
                 ),
                 trailing: context.watch<AuthProvider>().microGEmail != null
                     ? IconButton(
@@ -85,27 +85,21 @@ class DeveloperSettingsPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.extension_outlined),
               title: Text(tr('pluginManager')),
-              subtitle: Text(
-                tr('jsRecipesPluginManager'),
-              ),
+              subtitle: Text(tr('jsRecipesPluginManager')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => pushRoute(context, const PluginManagerPage()),
             ),
             ListTile(
               leading: const Icon(Icons.phonelink_setup_outlined),
               title: Text(tr('deviceSpoofingMicroG')),
-              subtitle: Text(
-                tr('spoofGsfIdDeviceProfile'),
-              ),
+              subtitle: Text(tr('spoofGsfIdDeviceProfile')),
               onTap: () => _showSpoofingManager(context),
             ),
             if (plusSettings.plusEnableMicroGHub)
               ListTile(
                 leading: const Icon(Icons.hub_outlined),
                 title: Text(tr('microGDeploymentHub')),
-                subtitle: Text(
-                  tr('directlyDownloadInstallMicroG'),
-                ),
+                subtitle: Text(tr('directlyDownloadInstallMicroG')),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => pushRoute(context, const MicroGHubPage()),
               ),
@@ -113,9 +107,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.install_mobile_outlined),
                 title: Text(tr('standaloneApkInstaller')),
-                subtitle: Text(
-                  tr('installAnyApkStorage'),
-                ),
+                subtitle: Text(tr('installAnyApkStorage')),
                 trailing: const Icon(Icons.file_open_outlined),
                 onTap: () => _handleStandaloneInstall(context),
               ),
@@ -126,9 +118,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.verified_user_outlined),
               title: Text(tr('verifiedAppsOnly')),
-              subtitle: Text(
-                tr('onlyShowAppsVerifiedByPlayProtect'),
-              ),
+              subtitle: Text(tr('onlyShowAppsVerifiedByPlayProtect')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .playStoreVerifiedOnly,
@@ -139,9 +129,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.block_outlined),
               title: Text(tr('noAdsFilter')),
-              subtitle: Text(
-                tr('excludeAppsContainAds'),
-              ),
+              subtitle: Text(tr('excludeAppsContainAds')),
               value: context.watch<PlusSettingsProvider>().playStoreNoAdsFilter,
               onChanged: (val) =>
                   context.read<PlusSettingsProvider>().playStoreNoAdsFilter =
@@ -152,9 +140,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                 Icons.system_security_update_warning_outlined,
               ),
               title: Text(tr('excludeSystemApps')),
-              subtitle: Text(
-                tr('preventsUpdatingCriticalSystemComponents'),
-              ),
+              subtitle: Text(tr('preventsUpdatingCriticalSystemComponents')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .playStoreExcludeSystemApps,
@@ -167,9 +153,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.vpn_lock_outlined),
               title: Text(tr('requireVpnStrictIpPrivacy')),
-              subtitle: Text(
-                tr('blockAllNativePlayStoreTraffic'),
-              ),
+              subtitle: Text(tr('blockAllNativePlayStoreTraffic')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .requireVPNForPlayStore,
@@ -180,9 +164,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.auto_delete_outlined),
               title: Text(tr('autoDiscardTokens')),
-              subtitle: Text(
-                tr('immediatelyClearAuthTokens'),
-              ),
+              subtitle: Text(tr('immediatelyClearAuthTokens')),
               value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
               onChanged: (val) =>
                   context.read<PlusSettingsProvider>().autoDiscardTokens = val,
@@ -192,7 +174,15 @@ class DeveloperSettingsPage extends StatelessWidget {
               leading: const Icon(Icons.download_for_offline_outlined),
               title: Text(tr('minimumDownloadsFilter')),
               subtitle: Text(
-                tr('excludeAppsFewerThanDownloads', args: [context.watch<PlusSettingsProvider>().playStoreMinDownloads.toString()]),
+                tr(
+                  'excludeAppsFewerThanDownloads',
+                  args: [
+                    context
+                        .watch<PlusSettingsProvider>()
+                        .playStoreMinDownloads
+                        .toString(),
+                  ],
+                ),
               ),
             ),
             Slider(
@@ -216,18 +206,14 @@ class DeveloperSettingsPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.receipt_long_outlined),
               title: Text(tr('viewTalkerLogs')),
-              subtitle: Text(
-                tr('realtimeNetworkRequests'),
-              ),
+              subtitle: Text(tr('realtimeNetworkRequests')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => pushRoute(context, TalkerScreen(talker: talker)),
             ),
             ListTile(
               leading: const Icon(Icons.analytics_outlined),
               title: Text(tr('crashStatistics')),
-              subtitle: Text(
-                tr('localCrashFrequency'),
-              ),
+              subtitle: Text(tr('localCrashFrequency')),
               onTap: () async {
                 final stats = await CrashAnalytics.getStats();
                 if (context.mounted) {
@@ -237,11 +223,18 @@ class DeveloperSettingsPage extends StatelessWidget {
                       title: tr('localCrashStats'),
                       icon: Icons.analytics_outlined,
                       content: Text(
-                        tr('localCrashStatsContent', args: [
-                          stats.totalCrashes.toString(),
-                          stats.lastCrashTime != null ? stats.lastCrashTime.toString() : tr('never'),
-                          stats.crashTypes.isEmpty ? tr('none') : stats.crashTypes.join(", "),
-                        ]),
+                        tr(
+                          'localCrashStatsContent',
+                          args: [
+                            stats.totalCrashes.toString(),
+                            stats.lastCrashTime != null
+                                ? stats.lastCrashTime.toString()
+                                : tr('never'),
+                            stats.crashTypes.isEmpty
+                                ? tr('none')
+                                : stats.crashTypes.join(", "),
+                          ],
+                        ),
                       ),
                       actions: [
                         FilledButton(
@@ -261,9 +254,9 @@ class DeveloperSettingsPage extends StatelessWidget {
               onTap: () => context.read<LogsProvider>().get().then((logs) {
                 if (!context.mounted) return;
                 if (logs.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(tr('noLogsFound'))),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(tr('noLogsFound'))));
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -276,9 +269,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.upload_file_outlined),
               title: Text(tr('uploadLogsNewIssue')),
-              subtitle: Text(
-                tr('opensPrefilledGithubIssue'),
-              ),
+              subtitle: Text(tr('opensPrefilledGithubIssue')),
               onTap: () async {
                 final history = talker.history.reversed
                     .take(200)
@@ -310,9 +301,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.gesture_rounded),
               title: Text(tr('squigglyProgressBars')),
-              subtitle: Text(
-                tr('usePlayStoreStyleSinusoidal'),
-              ),
+              subtitle: Text(tr('usePlayStoreStyleSinusoidal')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusEnableExpressiveProgress,
@@ -327,7 +316,16 @@ class DeveloperSettingsPage extends StatelessWidget {
               leading: const Icon(Icons.rounded_corner_rounded),
               title: Text(tr('globalCornerRadius')),
               subtitle: Text(
-                tr('defaultRoundednessCards', args: [context.watch<PlusSettingsProvider>().plusGlobalCornerRadius.toInt().toString()]),
+                tr(
+                  'defaultRoundednessCards',
+                  args: [
+                    context
+                        .watch<PlusSettingsProvider>()
+                        .plusGlobalCornerRadius
+                        .toInt()
+                        .toString(),
+                  ],
+                ),
               ),
             ),
             Slider(
@@ -344,9 +342,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.tune_rounded),
               title: Text(tr('overrideIndividualRadii')),
-              subtitle: Text(
-                tr('fineTuneRoundedness'),
-              ),
+              subtitle: Text(tr('fineTuneRoundedness')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusOverrideIndividualCornerRadius,
@@ -363,7 +359,16 @@ class DeveloperSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.home_max_rounded),
                 title: Text(tr('homeScreenRadius')),
                 subtitle: Text(
-                  tr('roundednessDashboardElements', args: [context.watch<PlusSettingsProvider>().plusHomeCornerRadius.toInt().toString()]),
+                  tr(
+                    'roundednessDashboardElements',
+                    args: [
+                      context
+                          .watch<PlusSettingsProvider>()
+                          .plusHomeCornerRadius
+                          .toInt()
+                          .toString(),
+                    ],
+                  ),
                 ),
               ),
               Slider(
@@ -381,7 +386,16 @@ class DeveloperSettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.settings_suggest_rounded),
                 title: Text(tr('settingsRadius')),
                 subtitle: Text(
-                  tr('roundednessSettingsGroups', args: [context.watch<PlusSettingsProvider>().plusSettingsCornerRadius.toInt().toString()]),
+                  tr(
+                    'roundednessSettingsGroups',
+                    args: [
+                      context
+                          .watch<PlusSettingsProvider>()
+                          .plusSettingsCornerRadius
+                          .toInt()
+                          .toString(),
+                    ],
+                  ),
                 ),
               ),
               Slider(
@@ -403,9 +417,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.compare_arrows_outlined),
               title: Text(tr('legacyUiComparison')),
-              subtitle: Text(
-                tr('injectsFabsAppList'),
-              ),
+              subtitle: Text(tr('injectsFabsAppList')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusShowLegacyUIComparison,
@@ -418,9 +430,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.science_outlined),
               title: Text(tr('advancedTheming')),
-              subtitle: Text(
-                tr('unlocksExperimentalAdvancedTheming'),
-              ),
+              subtitle: Text(tr('unlocksExperimentalAdvancedTheming')),
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusEnableExperimentalCustomization,
@@ -436,9 +446,7 @@ class DeveloperSettingsPage extends StatelessWidget {
               leading: const Icon(Icons.flash_on_outlined),
               iconColor: Colors.red,
               title: Text(tr('triggerTestCrash')),
-              subtitle: Text(
-                tr('forcesCrashVerify'),
-              ),
+              subtitle: Text(tr('forcesCrashVerify')),
               onTap: () {
                 talker.warning(tr('userTriggeredTestCrash'));
                 throw Exception(tr('obtainiumTestCrash'));
@@ -447,9 +455,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.network_check_outlined),
               title: Text(tr('testNetworkLogging')),
-              subtitle: Text(
-                tr('sendsDummyRequest'),
-              ),
+              subtitle: Text(tr('sendsDummyRequest')),
               onTap: () async {
                 talker.info(tr('triggeringTestNetworkRequest'));
                 try {
@@ -524,17 +530,17 @@ class DeveloperSettingsPage extends StatelessWidget {
         final enableGlass = plusSettings.plusEnableGlassmorphism;
         final sheet = Container(
           decoration: BoxDecoration(
-            color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+            color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
-                color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2),
+                color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2),
               ),
               left: BorderSide(
-                color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+                color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
               ),
               right: BorderSide(
-                color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+                color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
               ),
             ),
           ),
@@ -545,9 +551,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.group_outlined),
                   title: Text(tr('anonymousDispenser')),
-                  subtitle: Text(
-                    tr('useThrowawayAccounts'),
-                  ),
+                  subtitle: Text(tr('useThrowawayAccounts')),
                   trailing: authProvider.authMode == AuthMode.anonymous
                       ? const Icon(Icons.check, color: Colors.green)
                       : null,
@@ -560,9 +564,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.person_outline),
                   title: Text(tr('personalMicroG')),
-                  subtitle: Text(
-                    tr('useRealAccount'),
-                  ),
+                  subtitle: Text(tr('useRealAccount')),
                   trailing: authProvider.authMode == AuthMode.microG
                       ? const Icon(Icons.check, color: Colors.green)
                       : null,
@@ -574,9 +576,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.security_outlined),
                   title: Text(tr('hybridSafetyFirst')),
-                  subtitle: Text(
-                    tr('anonymousForSearch'),
-                  ),
+                  subtitle: Text(tr('anonymousForSearch')),
                   trailing: authProvider.authMode == AuthMode.hybrid
                       ? const Icon(Icons.check, color: Colors.green)
                       : null,
@@ -633,16 +633,21 @@ class DeveloperSettingsPage extends StatelessWidget {
       await authProvider.refreshMicroGToken();
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr('linkedEmailSuccessfully', args: [email]))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('linkedEmailSuccessfully', args: [email]))),
+        );
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr('errorWithMessage', args: [e.toString().replaceFirst('ObtainiumError: ', '')])),
+            content: Text(
+              tr(
+                'errorWithMessage',
+                args: [e.toString().replaceFirst('ObtainiumError: ', '')],
+              ),
+            ),
           ),
         );
       }
@@ -690,8 +695,18 @@ class DeveloperSettingsPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(tr('packageNameLabel', args: [info.packageName ?? ''])),
-                    Text(tr('versionLabel', args: [info.versionName ?? '', info.versionCode?.toString() ?? ''])),
+                    Text(
+                      tr('packageNameLabel', args: [info.packageName ?? '']),
+                    ),
+                    Text(
+                      tr(
+                        'versionLabel',
+                        args: [
+                          info.versionName ?? '',
+                          info.versionCode?.toString() ?? '',
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Text(tr('proceedWithInstallation')),
                   ],
@@ -732,9 +747,9 @@ class DeveloperSettingsPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))),
+        );
       }
     }
   }
@@ -772,10 +787,10 @@ class DeveloperSettingsPage extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: color.withOpacity(AppOpacity.subtle),
+      color: color.withValues(alpha: AppOpacity.subtle),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withOpacity(AppOpacity.medium)),
+        side: BorderSide(color: color.withValues(alpha: AppOpacity.medium)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -801,7 +816,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             const SizedBox(height: 8),
             ExpressiveProgressIndicator(
               value: score / 100,
-              backgroundColor: color.withOpacity(AppOpacity.subtle),
+              backgroundColor: color.withValues(alpha: AppOpacity.subtle),
               color: color,
             ),
             const SizedBox(height: 8),
@@ -842,7 +857,14 @@ void showDeviceProfilePicker(BuildContext context) {
               leading: const Icon(Icons.phone_android_rounded),
               title: Text(p.name),
               subtitle: Text(
-                tr('deviceProfileAndroidVersion', args: [p.manufacturer, p.model, (p.sdkVersion - 21 + 5).toString()]),
+                tr(
+                  'deviceProfileAndroidVersion',
+                  args: [
+                    p.manufacturer,
+                    p.model,
+                    (p.sdkVersion - 21 + 5).toString(),
+                  ],
+                ),
               ),
               trailing: authProvider.selectedProfile.name == p.name
                   ? const Icon(Icons.check, color: Colors.green)
@@ -895,17 +917,17 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final content = Container(
       decoration: BoxDecoration(
-        color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(
-            color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2),
+            color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2),
           ),
           left: BorderSide(
-            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
           ),
           right: BorderSide(
-            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
           ),
         ),
       ),
@@ -997,17 +1019,17 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
 
     final content = Container(
       decoration: BoxDecoration(
-        color: cs.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(
-            color: cs.onSurface.withOpacity(enableGlass ? 0.18 : 0.2),
+            color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2),
           ),
           left: BorderSide(
-            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
           ),
           right: BorderSide(
-            color: cs.onSurface.withOpacity(enableGlass ? 0.12 : 0.0),
+            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
           ),
         ),
       ),
@@ -1125,9 +1147,9 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('errorWithMessage', args: [e.toString()]))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -1163,4 +1185,3 @@ Future<void> checkAndPromptBanWarnings(BuildContext context) async {
     }
   }
 }
-

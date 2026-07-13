@@ -26,7 +26,8 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_package_manager/android_package_manager.dart' hide LaunchMode;
+import 'package:android_package_manager/android_package_manager.dart'
+    hide LaunchMode;
 
 class AppPage extends StatefulWidget {
   const AppPage({
@@ -54,9 +55,21 @@ class _AppPageState extends State<AppPage> {
 
   Future<List<Map<String, String>>> _getInstalledStores() async {
     final stores = [
-      {'name': 'Aurora Store', 'package': 'com.aurora.store', 'scheme': 'market://details?id='},
-      {'name': 'F-Droid', 'package': 'org.fdroid.fdroid', 'scheme': 'market://details?id='},
-      {'name': 'Droidify', 'package': 'com.looker.droidify', 'scheme': 'market://details?id='},
+      {
+        'name': 'Aurora Store',
+        'package': 'com.aurora.store',
+        'scheme': 'market://details?id=',
+      },
+      {
+        'name': 'F-Droid',
+        'package': 'org.fdroid.fdroid',
+        'scheme': 'market://details?id=',
+      },
+      {
+        'name': 'Droidify',
+        'package': 'com.looker.droidify',
+        'scheme': 'market://details?id=',
+      },
     ];
     final List<Map<String, String>> installed = [];
     for (final store in stores) {
@@ -71,7 +84,11 @@ class _AppPageState extends State<AppPage> {
     return installed;
   }
 
-  Future<void> _openInStore(String storePackage, String storeScheme, String appId) async {
+  Future<void> _openInStore(
+    String storePackage,
+    String storeScheme,
+    String appId,
+  ) async {
     final intent = AndroidIntent(
       action: 'android.intent.action.VIEW',
       data: '$storeScheme$appId',
@@ -94,7 +111,11 @@ class _AppPageState extends State<AppPage> {
     if (installed.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No supported stores found (Aurora Store, F-Droid, or Droidify)')),
+          const SnackBar(
+            content: Text(
+              'No supported stores found (Aurora Store, F-Droid, or Droidify)',
+            ),
+          ),
         );
       }
       return;
@@ -113,13 +134,23 @@ class _AppPageState extends State<AppPage> {
               ...installed.map(
                 (store) => ListTile(
                   leading: const Icon(Icons.open_in_new),
-                  title: Text(store['name']!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(store['package']!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  trailing: plusSettings.plusDefaultStorePackage == store['package']
+                  title: Text(
+                    store['name']!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    store['package']!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing:
+                      plusSettings.plusDefaultStorePackage == store['package']
                       ? const Chip(label: Text('Default'))
                       : TextButton(
                           onPressed: () {
-                            plusSettings.plusDefaultStorePackage = store['package'];
+                            plusSettings.plusDefaultStorePackage =
+                                store['package'];
                             plusSettings.plusDefaultStoreName = store['name'];
                             Navigator.pop(ctx);
                             _showStoreChooser(context, appId);
@@ -156,7 +187,7 @@ class _AppPageState extends State<AppPage> {
     }
   }
 
-Widget buildRepoRenameWarning({
+  Widget buildRepoRenameWarning({
     required AppInMemory? app,
     required AppsProvider appsProvider,
     required Future<void> Function(String id) onUpdate,
@@ -286,7 +317,7 @@ Widget buildRepoRenameWarning({
                       style: ButtonStyle(
                         backgroundColor: WidgetStateProperty.fromMap({
                           WidgetState.disabled: colorScheme.onSurface
-                              .withOpacity(0.10),
+                              .withValues(alpha: 0.10),
                           WidgetState.any: Colors.transparent,
                         }),
                         side: WidgetStatePropertyAll(
@@ -299,19 +330,19 @@ Widget buildRepoRenameWarning({
                         elevation: WidgetStatePropertyAll(0),
                         overlayColor: WidgetStateProperty.fromMap({
                           WidgetState.disabled: colorScheme.onSurfaceVariant
-                              .withOpacity(0),
+                              .withValues(alpha: 0),
                           WidgetState.pressed: colorScheme.onSurfaceVariant
-                              .withOpacity(0.10),
+                              .withValues(alpha: 0.10),
                           WidgetState.focused: colorScheme.onSurfaceVariant
-                              .withOpacity(0.10),
+                              .withValues(alpha: 0.10),
                           WidgetState.hovered: colorScheme.onSurfaceVariant
-                              .withOpacity(0.08),
+                              .withValues(alpha: 0.08),
                           WidgetState.any: colorScheme.onSurfaceVariant
-                              .withOpacity(0),
+                              .withValues(alpha: 0),
                         }),
                         foregroundColor: WidgetStateProperty.fromMap({
                           WidgetState.disabled: colorScheme.onSurface
-                              .withOpacity(0.38),
+                              .withValues(alpha: 0.38),
                           WidgetState.any: colorScheme.onSurfaceVariant,
                         }),
                         textStyle: WidgetStatePropertyAll(textTheme.labelLarge),
@@ -391,10 +422,8 @@ Widget buildRepoRenameWarning({
     var updateSettings = context.watch<UpdateSettingsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
     var showAppWebpageFinal =
-        (viewSettings.showAppWebpage &&
-            !widget.showOppositeOfPreferredView) ||
-        (!viewSettings.showAppWebpage &&
-            widget.showOppositeOfPreferredView);
+        (viewSettings.showAppWebpage && !widget.showOppositeOfPreferredView) ||
+        (!viewSettings.showAppWebpage && widget.showOppositeOfPreferredView);
     getUpdate(String id, {bool resetVersion = false}) async {
       try {
         setState(() {
@@ -569,8 +598,9 @@ Widget buildRepoRenameWarning({
                           ? (Theme.of(context).brightness == Brightness.light
                                     ? Theme.of(context).primaryColor
                                     : Theme.of(context).primaryColorLight)
-                                .withOpacity(
-                                  Theme.of(context).brightness ==
+                                .withValues(
+                                  alpha:
+                                      Theme.of(context).brightness ==
                                           Brightness.light
                                       ? 20 / 255
                                       : 40 / 255,
@@ -656,7 +686,9 @@ Widget buildRepoRenameWarning({
               spacing: 8,
               runSpacing: 4,
               children: [
-                ...app?.app.tags.map((tag) => Chip(label: Text(tag))).toList() ??
+                ...app?.app.tags
+                        .map((tag) => Chip(label: Text(tag)))
+                        .toList() ??
                     [],
                 ActionChip(
                   avatar: const Icon(Icons.add, size: 18),
@@ -689,7 +721,11 @@ Widget buildRepoRenameWarning({
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      Icon(Icons.description_outlined, size: 18, color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        Icons.description_outlined,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         tr('about'),
@@ -709,7 +745,9 @@ Widget buildRepoRenameWarning({
                     color: Theme.of(context).colorScheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                   ),
                   child: GestureDetector(
@@ -727,9 +765,13 @@ Widget buildRepoRenameWarning({
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       styleSheet: MarkdownStyleSheet(
-                        p: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+                        p: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(height: 1.5),
                         blockquoteDecoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
@@ -765,7 +807,7 @@ Widget buildRepoRenameWarning({
       required Color color,
     }) {
       return Material(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -847,7 +889,10 @@ Widget buildRepoRenameWarning({
                     label: tr('website'),
                     onTap: () async {
                       if (app?.app.url != null) {
-                        launchUrlString(app!.app.url, mode: LaunchMode.externalApplication);
+                        launchUrlString(
+                          app!.app.url,
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     color: colorScheme.primary,
@@ -860,8 +905,12 @@ Widget buildRepoRenameWarning({
                     label: tr('safetyScan'),
                     onTap: () async {
                       if (app?.app.url != null) {
-                        final vtUrl = 'https://www.virustotal.com/gui/search/${Uri.encodeComponent(app!.app.url)}';
-                        launchUrlString(vtUrl, mode: LaunchMode.externalApplication);
+                        final vtUrl =
+                            'https://www.virustotal.com/gui/search/${Uri.encodeComponent(app!.app.url)}';
+                        launchUrlString(
+                          vtUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     color: Colors.blueAccent,
@@ -897,7 +946,6 @@ Widget buildRepoRenameWarning({
       );
     }
 
-
     Widget _buildDetailedSourceBadge() {
       final url = app?.app.url.toLowerCase() ?? '';
       IconData iconData = Icons.link_rounded;
@@ -925,9 +973,9 @@ Widget buildRepoRenameWarning({
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -937,9 +985,9 @@ Widget buildRepoRenameWarning({
             Text(
               sourceName,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -963,10 +1011,10 @@ Widget buildRepoRenameWarning({
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
-                            )
+                            ),
                           ],
                         ),
                         child: InkWell(
@@ -998,33 +1046,35 @@ Widget buildRepoRenameWarning({
           app?.name ?? tr('app'),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1,
-              ),
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1,
+          ),
         ),
         Text(
           tr('byX', args: [app?.author ?? tr('unknown')]),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 12),
         Center(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               app?.app.id ?? '',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontFamily: 'monospace',
-                    letterSpacing: 0,
-                  ),
+                fontFamily: 'monospace',
+                letterSpacing: 0,
+              ),
             ),
           ),
         ),
@@ -1050,9 +1100,9 @@ Widget buildRepoRenameWarning({
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.secondary,
-                  decoration: TextDecoration.underline,
-                ),
+              color: Theme.of(context).colorScheme.secondary,
+              decoration: TextDecoration.underline,
+            ),
           ),
         ),
         getInfoColumn(),
@@ -1076,7 +1126,8 @@ Widget buildRepoRenameWarning({
         builder: (BuildContext ctx) {
           return GlassDialog(
             title: tr('alreadyUpToDateQuestion'),
-            content: Container(), // Empty content as the question is in the title
+            content:
+                Container(), // Empty content as the question is in the title
             actions: [
               TextButton(
                 onPressed: () {
@@ -1173,7 +1224,8 @@ Widget buildRepoRenameWarning({
       final defaultStoreName = plusSettings.plusDefaultStoreName;
 
       return TextButton(
-        onPressed: !updating &&
+        onPressed:
+            !updating &&
                 (app?.app.installedVersion == null ||
                     AppUpdateService.areVersionsDifferent(
                       app!.app,
@@ -1213,11 +1265,11 @@ Widget buildRepoRenameWarning({
         child: Text(
           defaultStoreName != null
               ? (app?.app.installedVersion == null
-                  ? 'Install in $defaultStoreName'
-                  : 'Update in $defaultStoreName')
+                    ? 'Install in $defaultStoreName'
+                    : 'Update in $defaultStoreName')
               : (app?.app.installedVersion == null
-                  ? (!trackOnly ? tr('install') : tr('markInstalled'))
-                  : (!trackOnly ? tr('update') : tr('markUpdated'))),
+                    ? (!trackOnly ? tr('install') : tr('markInstalled'))
+                    : (!trackOnly ? tr('update') : tr('markUpdated'))),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -1248,7 +1300,9 @@ Widget buildRepoRenameWarning({
                       ? () => _showStoreChooser(context, app!.app.id)
                       : null,
                   style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
                     shape: const CircleBorder(),
                   ),
                 ),
@@ -1311,7 +1365,8 @@ Widget buildRepoRenameWarning({
                     }
                   },
                   itemBuilder: (context) {
-                    final isUpdating = app?.downloadProgress != null || updating;
+                    final isUpdating =
+                        app?.downloadProgress != null || updating;
                     return [
                       if (source != null &&
                           source.combinedAppSpecificSettingFormItems.isNotEmpty)
@@ -1343,8 +1398,7 @@ Widget buildRepoRenameWarning({
                           ),
                         ),
                       if (app?.app.installedVersion != null &&
-                          app?.app.installedVersion !=
-                              app?.app.latestVersion &&
+                          app?.app.installedVersion != app?.app.latestVersion &&
                           !isVersionDetectionStandard &&
                           !trackOnly)
                         PopupMenuItem(
@@ -1464,8 +1518,8 @@ Widget buildRepoRenameWarning({
           enabled: plusSettings.plusEnableGlassmorphism,
           sigma: 20,
           child: Container(
-            color: Theme.of(context).colorScheme.surface.withOpacity(
-              plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
+            color: Theme.of(context).colorScheme.surface.withValues(
+              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
             ),
             child: scaffold,
           ),

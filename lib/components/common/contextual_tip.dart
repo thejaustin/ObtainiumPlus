@@ -31,7 +31,9 @@ class _ContextualTipState extends State<ContextualTip> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: settings.plusEnableGlassmorphism
-          ? Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.45)
+          ? Theme.of(
+              context,
+            ).colorScheme.tertiaryContainer.withValues(alpha: 0.45)
           : Theme.of(context).colorScheme.tertiaryContainer,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -321,7 +321,8 @@ class AddAppPageState extends State<AddAppPage> {
         }
         if (app != null) {
           AppHaptics.selectionClick();
-          final homeState = globalNavigatorKey.currentContext?.findAncestorStateOfType<HomePageState>();
+          final homeState = globalNavigatorKey.currentContext
+              ?.findAncestorStateOfType<HomePageState>();
           homeState?.switchToPage(0);
           // Add App is a pushed route now (not a tab); close it so the
           // user lands back on the Apps tab behind the app sheet.
@@ -389,7 +390,9 @@ class AddAppPageState extends State<AddAppPage> {
         ),
         const SizedBox(width: 16),
         gettingAppInfo
-            ? const Center(child: ExpressiveCircularProgressIndicator(strokeWidth: 3))
+            ? const Center(
+                child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
+              )
             : ElevatedButton(
                 onPressed:
                     doingSomething ||
@@ -682,7 +685,10 @@ class AddAppPageState extends State<AddAppPage> {
               ),
             ),
             subtitle: Text(
-              tr('additionalOptsFor', args: [pickedSource?.name ?? tr('source')]),
+              tr(
+                'additionalOptsFor',
+                args: [pickedSource?.name ?? tr('source')],
+              ),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             children: [
@@ -711,7 +717,8 @@ class AddAppPageState extends State<AddAppPage> {
                         }
                       },
                     ),
-                    if (pickedSource != null && pickedSource!.appIdInferIsOptional)
+                    if (pickedSource != null &&
+                        pickedSource!.appIdInferIsOptional)
                       GeneratedForm(
                         key: const Key('inferAppIdIfOptional'),
                         items: [
@@ -859,10 +866,12 @@ class AddAppPageState extends State<AddAppPage> {
     );
 
     Widget _buildAppPreview() {
-      if (pickedSource == null || userInput.isEmpty) return const SizedBox.shrink();
+      if (pickedSource == null || userInput.isEmpty)
+        return const SizedBox.shrink();
       final colorScheme = Theme.of(context).colorScheme;
       final plusSettings = context.watch<PlusSettingsProvider>();
-      if (!plusSettings.plusEnableModernAddAppPage) return const SizedBox.shrink();
+      if (!plusSettings.plusEnableModernAddAppPage)
+        return const SizedBox.shrink();
 
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -873,7 +882,7 @@ class AddAppPageState extends State<AddAppPage> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: colorScheme.outlineVariant.withOpacity(0.5),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
               borderRadius: BorderRadius.circular(20),
             ),
@@ -885,7 +894,9 @@ class AddAppPageState extends State<AddAppPage> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withOpacity(0.3),
+                        color: colorScheme.primaryContainer.withValues(
+                          alpha: 0.3,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -901,7 +912,8 @@ class AddAppPageState extends State<AddAppPage> {
                         children: [
                           Text(
                             tr('appPreview'),
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
                                   color: colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -928,20 +940,22 @@ class AddAppPageState extends State<AddAppPage> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: colorScheme.errorContainer.withOpacity(0.2),
+                      color: colorScheme.errorContainer.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded,
-                            size: 16, color: colorScheme.error),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: colorScheme.error,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             tr('trackOnlyAppDescription'),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.error,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.error),
                           ),
                         ),
                       ],
@@ -971,9 +985,9 @@ class AddAppPageState extends State<AddAppPage> {
                 Text(
                   tr('searchSuggestions'),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (liveSearching) ...[
                   const SizedBox(width: 8),
@@ -992,13 +1006,17 @@ class AddAppPageState extends State<AddAppPage> {
           else
             ...liveResults.entries.take(5).map((entry) {
               final url = entry.key;
-              final name = entry.value.value.isNotEmpty ? entry.value.value[0] : '';
+              final name = entry.value.value.isNotEmpty
+                  ? entry.value.value[0]
+                  : '';
               final sourceName = entry.value.key;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Material(
-                  color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.3,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -1029,17 +1047,15 @@ class AddAppPageState extends State<AddAppPage> {
                               children: [
                                 Text(
                                   name,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   sourceName,
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: colorScheme.secondary,
-                                      ),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: colorScheme.secondary),
                                 ),
                               ],
                             ),
@@ -1061,45 +1077,45 @@ class AddAppPageState extends State<AddAppPage> {
     }
 
     final formScrollView = CustomScrollView(
-        controller: widget.scrollController,
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        physics: widget.isModal
-            ? const BouncingScrollPhysics()
-            : const AlwaysScrollableScrollPhysics(),
-        shrinkWrap: true,
-        slivers: <Widget>[
-          if (!widget.isModal) CustomAppBar(title: tr('addApp')),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  getUrlInputRow(),
-                  const SizedBox(height: 16),
-                  if (pickedSource != null) getHTMLSourceOverrideDropdown(),
-                  _buildLiveResults(),
-                  _buildAppPreview(),
-                  if (shouldShowSearchBar()) getSearchBarRow(),
-                  if (pickedSource != null)
-                    FutureBuilder(
-                      builder: (ctx, val) {
-                        return val.data != null && val.data!.isNotEmpty
-                            ? Text(
-                                val.data!,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              )
-                            : const SizedBox();
-                      },
-                      future: pickedSource?.getSourceNote(),
-                    ),
-                  if (pickedSource != null) getAdditionalOptsCol(),
-                ],
-              ),
+      controller: widget.scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      physics: widget.isModal
+          ? const BouncingScrollPhysics()
+          : const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: true,
+      slivers: <Widget>[
+        if (!widget.isModal) CustomAppBar(title: tr('addApp')),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                getUrlInputRow(),
+                const SizedBox(height: 16),
+                if (pickedSource != null) getHTMLSourceOverrideDropdown(),
+                _buildLiveResults(),
+                _buildAppPreview(),
+                if (shouldShowSearchBar()) getSearchBarRow(),
+                if (pickedSource != null)
+                  FutureBuilder(
+                    builder: (ctx, val) {
+                      return val.data != null && val.data!.isNotEmpty
+                          ? Text(
+                              val.data!,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            )
+                          : const SizedBox();
+                    },
+                    future: pickedSource?.getSourceNote(),
+                  ),
+                if (pickedSource != null) getAdditionalOptsCol(),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
     );
 
     final plusSettings = context.watch<PlusSettingsProvider>();
@@ -1108,13 +1124,16 @@ class AddAppPageState extends State<AddAppPage> {
     // idle (no URL typed, no source picked) the browse/discover content
     // fills the space below the add-by-URL form. Tapping a result feeds
     // its URL back into the form via linkFn.
-    final showDiscover = !widget.isModal &&
+    final showDiscover =
+        !widget.isModal &&
         plusSettings.plusEnableDiscover &&
         pickedSource == null &&
         userInput.isEmpty;
 
     final scaffold = Scaffold(
-      backgroundColor: widget.isModal ? Colors.transparent : Theme.of(context).colorScheme.surface,
+      backgroundColor: widget.isModal
+          ? Colors.transparent
+          : Theme.of(context).colorScheme.surface,
       bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
       body: showDiscover
           ? Column(
@@ -1145,8 +1164,8 @@ class AddAppPageState extends State<AddAppPage> {
           enabled: plusSettings.plusEnableGlassmorphism,
           sigma: 20,
           child: Container(
-            color: Theme.of(context).colorScheme.surface.withOpacity(
-              plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
+            color: Theme.of(context).colorScheme.surface.withValues(
+              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
             ),
             child: scaffold,
           ),

@@ -35,12 +35,14 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withOpacity(enableGlass ? 0.78 : 1.0),
+          color: colorScheme.surface.withValues(
+            alpha: enableGlass ? 0.78 : 1.0,
+          ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass
-                ? colorScheme.onSurface.withOpacity(0.18)
-                : colorScheme.outline.withOpacity(AppOpacity.subtle),
+                ? colorScheme.onSurface.withValues(alpha: 0.18)
+                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -80,7 +82,7 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.errorContainer.withOpacity(enableGlass ? 0.3 : 0.5),
+        ).colorScheme.errorContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Row(
@@ -90,7 +92,7 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.error.withOpacity(AppOpacity.low),
+              ).colorScheme.error.withValues(alpha: AppOpacity.low),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -121,12 +123,12 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.primaryContainer.withOpacity(AppOpacity.medium),
+            ).colorScheme.primaryContainer.withValues(alpha: AppOpacity.medium),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Theme.of(
                 context,
-              ).colorScheme.primary.withOpacity(AppOpacity.low),
+              ).colorScheme.primary.withValues(alpha: AppOpacity.low),
             ),
           ),
           child: Text(
@@ -154,7 +156,7 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest
-                  .withOpacity(AppOpacity.half),
+                  .withValues(alpha: AppOpacity.half),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -173,7 +175,7 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
                     fontStyle: FontStyle.italic,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -189,9 +191,9 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(AppOpacity.medium),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+          alpha: AppOpacity.medium,
+        ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
       child: Row(

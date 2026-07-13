@@ -224,10 +224,7 @@ class _OnboardingPageState extends State<OnboardingPage>
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget cardContent = ListTile(
-      leading: Icon(
-        icon,
-        color: iconColor ?? colorScheme.primary,
-      ),
+      leading: Icon(icon, color: iconColor ?? colorScheme.primary),
       title: Text(
         title,
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
@@ -241,23 +238,23 @@ class _OnboardingPageState extends State<OnboardingPage>
 
     Widget container = Container(
       decoration: BoxDecoration(
-        color: (isDark
-                ? colorScheme.surfaceContainerHigh
-                : colorScheme.surface)
-            .withOpacity(enableGlass ? 0.45 : 1.0),
+        color: (isDark ? colorScheme.surfaceContainerHigh : colorScheme.surface)
+            .withValues(alpha: enableGlass ? 0.45 : 1.0),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(enableGlass ? 0.3 : 0.1),
+          color: colorScheme.outlineVariant.withValues(
+            alpha: enableGlass ? 0.3 : 0.1,
+          ),
           width: 1,
         ),
         boxShadow: enableGlass
             ? []
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Material(
@@ -303,7 +300,9 @@ class _OnboardingPageState extends State<OnboardingPage>
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
           side: isGranted
-              ? BorderSide(color: Colors.green.withOpacity(AppOpacity.half))
+              ? BorderSide(
+                  color: Colors.green.withValues(alpha: AppOpacity.half),
+                )
               : null,
         ),
       ),
@@ -366,7 +365,7 @@ class _OnboardingPageState extends State<OnboardingPage>
           image: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.2),
+              color: colorScheme.primaryContainer.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -582,7 +581,10 @@ class _OnboardingPageState extends State<OnboardingPage>
                   Text(
                     tr('tokenDispensers'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -594,12 +596,18 @@ class _OnboardingPageState extends State<OnboardingPage>
                   if (auth.dispensers.isNotEmpty)
                     Card(
                       elevation: 0,
-                      color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
                           plusSettings.plusEnableMaterialExpressive ? 24 : 16,
                         ),
-                        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3)),
+                        side: BorderSide(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -615,7 +623,10 @@ class _OnboardingPageState extends State<OnboardingPage>
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete_outline, size: 18),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                    ),
                                     onPressed: () => auth.removeDispenser(d),
                                   ),
                                 ),

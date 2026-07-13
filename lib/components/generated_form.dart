@@ -280,10 +280,7 @@ class _TVTextFieldFocus extends StatefulWidget {
   final Widget child;
   final FocusNode textFocusNode;
 
-  const _TVTextFieldFocus({
-    required this.child,
-    required this.textFocusNode,
-  });
+  const _TVTextFieldFocus({required this.child, required this.textFocusNode});
 
   @override
   State<_TVTextFieldFocus> createState() => _TVTextFieldFocusState();
@@ -525,7 +522,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   Icon(
                     Icons.info_outline_rounded,
                     size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -626,21 +625,24 @@ class _GeneratedFormState extends State<GeneratedForm> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                               ),
-                                child: ChoiceChip(
-                                  label: Text(e2.key),
-                                  backgroundColor: Color(
-                                    e2.value.key,
-                                  ).withOpacity(50/255),
-                                  selectedColor: Color(e2.value.key),
-                                  visualDensity: VisualDensity.compact,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      Provider.of<PlusSettingsProvider>(context, listen: false).plusGlobalCornerRadius.clamp(0.0, 16.0),
-                                    ),
+                              child: ChoiceChip(
+                                label: Text(e2.key),
+                                backgroundColor: Color(
+                                  e2.value.key,
+                                ).withValues(alpha: 50 / 255),
+                                selectedColor: Color(e2.value.key),
+                                visualDensity: VisualDensity.compact,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    Provider.of<PlusSettingsProvider>(
+                                      context,
+                                      listen: false,
+                                    ).plusGlobalCornerRadius.clamp(0.0, 16.0),
                                   ),
-                                  selected: e2.value.value,
-                                  onSelected: (value) {
-                                    setState(() {
+                                ),
+                                selected: e2.value.value,
+                                onSelected: (value) {
+                                  setState(() {
                                     (values[fieldKey]
                                         as Map<String, MapEntry<int, bool>>)[e2
                                         .key] = MapEntry(

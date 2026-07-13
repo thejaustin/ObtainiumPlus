@@ -21,12 +21,19 @@ class _TalkerScreenState extends State<TalkerScreen> {
     final colorScheme = theme.colorScheme;
 
     // Filter logs
-    final filteredLogs = widget.talker.history.where((entry) {
-      final matchesSearch = entry.message.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          entry.title.toLowerCase().contains(_searchQuery.toLowerCase());
-      if (_filterType == 'ALL') return matchesSearch;
-      return matchesSearch && entry.title == _filterType;
-    }).toList().reversed.toList();
+    final filteredLogs = widget.talker.history
+        .where((entry) {
+          final matchesSearch =
+              entry.message.toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              entry.title.toLowerCase().contains(_searchQuery.toLowerCase());
+          if (_filterType == 'ALL') return matchesSearch;
+          return matchesSearch && entry.title == _filterType;
+        })
+        .toList()
+        .reversed
+        .toList();
 
     Color getTitleColor(String title) {
       switch (title) {
@@ -53,7 +60,10 @@ class _TalkerScreenState extends State<TalkerScreen> {
             tooltip: tr('copyAllToClipboard'),
             onPressed: () {
               final text = widget.talker.history
-                  .map((e) => '[${e.timestamp.toIso8601String()}] [${e.title}] ${e.message}')
+                  .map(
+                    (e) =>
+                        '[${e.timestamp.toIso8601String()}] [${e.title}] ${e.message}',
+                  )
                   .join('\n');
               Clipboard.setData(ClipboardData(text: text));
               ScaffoldMessenger.of(context).showSnackBar(
@@ -68,9 +78,9 @@ class _TalkerScreenState extends State<TalkerScreen> {
               setState(() {
                 widget.talker.clear();
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(tr('logHistoryCleared'))),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(tr('logHistoryCleared'))));
             },
           ),
         ],
@@ -84,10 +94,15 @@ class _TalkerScreenState extends State<TalkerScreen> {
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 4.0,
+                ),
                 child: Row(
                   children: [
                     const Icon(Icons.search_rounded),
@@ -110,10 +125,22 @@ class _TalkerScreenState extends State<TalkerScreen> {
                       underline: const SizedBox(),
                       items: [
                         DropdownMenuItem(value: 'ALL', child: Text(tr('all'))),
-                        DropdownMenuItem(value: 'INFO', child: Text(tr('info'))),
-                        DropdownMenuItem(value: 'WARNING', child: Text(tr('warning'))),
-                        DropdownMenuItem(value: 'EXCEPTION', child: Text(tr('errors'))),
-                        DropdownMenuItem(value: 'DEBUG', child: Text(tr('debug'))),
+                        DropdownMenuItem(
+                          value: 'INFO',
+                          child: Text(tr('info')),
+                        ),
+                        DropdownMenuItem(
+                          value: 'WARNING',
+                          child: Text(tr('warning')),
+                        ),
+                        DropdownMenuItem(
+                          value: 'EXCEPTION',
+                          child: Text(tr('errors')),
+                        ),
+                        DropdownMenuItem(
+                          value: 'DEBUG',
+                          child: Text(tr('debug')),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -135,7 +162,13 @@ class _TalkerScreenState extends State<TalkerScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.receipt_long_rounded, size: 64, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                        Icon(
+                          Icons.receipt_long_rounded,
+                          size: 64,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           tr('noLogsMatchesTheFilter'),
@@ -151,19 +184,29 @@ class _TalkerScreenState extends State<TalkerScreen> {
                       final titleColor = getTitleColor(log.title);
 
                       return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
                         elevation: 0,
-                        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ExpansionTile(
                           leading: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: titleColor.withOpacity(0.15),
+                              color: titleColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: titleColor.withOpacity(0.3)),
+                              border: Border.all(
+                                color: titleColor.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Text(
                               log.title,
@@ -188,7 +231,9 @@ class _TalkerScreenState extends State<TalkerScreen> {
                             '${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}:${log.timestamp.second.toString().padLeft(2, '0')}.${log.timestamp.millisecond.toString().padLeft(3, '0')}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.8,
+                              ),
                             ),
                           ),
                           children: [
