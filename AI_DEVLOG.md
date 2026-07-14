@@ -26,6 +26,21 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-14 — Antigravity CLI [session 74aad2b0]
+
+**Root-caused and fixed: new-app installs not surfaced in list view or update dialog**
+
+- **Root cause:** `areVersionsDifferent()` correctly returns `false` when `installedVersion == null` (uninstalled is not an "update"). However `findExistingUpdates(nonInstalledOnly: true)` called that function to discover uninstalled apps — so it always produced an empty list.
+- **Consequences:**
+  - The "Install X new apps" checkbox in the update-all dialog **never appeared** (`newInstallIdsAllOrSelected` was always empty).
+  - The quick-download button in the list tile was only shown when `installedVersion != null`, so uninstalled tracked apps had no install affordance from the list.
+  - Same gap in category sections (AppListTile/AppGridTile) and horizontal tile view.
+- **Fix (`3ee6d1cd`):** Three changes:
+  1. `findExistingUpdates` — detect the `nonInstalledOnly` path separately: any non-track-only app with a known `latestVersion` and `installedVersion == null` is a new-install candidate.
+  2. `apps.dart getSingleAppHorizTile` — add `needsInstall` flag so the download button appears for uninstalled non-track-only apps.
+  3. `category_sections.dart` — apply install-vs-update logic for both `AppListTile` and `AppGridTile`.
+- Note: **installing from the individual app-detail page already worked correctly** — this fix restores discoverability via list views and the batch update flow.
+
 ### 2026-07-12 — Claude Code (Fable 5) — dev-environment setup
 - Added `CLAUDE.md` (build commands, crash rules from #217/p42/p43, test gotchas) and `scripts/dev/` (`check-syntax.sh`, `ci-status.sh`, `ci-build.sh`, `fetch-apk.sh`). Uncommitted — review and commit.
 - **Fixed syntax error in `lib/services/app_download_service.dart`** (orphan `as foundation;` line, shipped in `ef84a8e7`). CI never caught it because the file is unreachable: `app_download_service.dart` ← `background_update_service.dart` ← `background_service.dart` ← nothing — that whole service chain is dead code the compiler skips. Fix is local/uncommitted; decide whether to wire the chain up or leave it dormant.
