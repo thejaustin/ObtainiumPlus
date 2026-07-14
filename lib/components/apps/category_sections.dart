@@ -170,11 +170,13 @@ class CategorySections extends StatelessWidget {
                 isSelected:
                     selectedAppIds.contains(app.app.id) ||
                     activeAppId == app.app.id,
-                hasUpdate: AppUpdateService.areVersionsDifferent(
-                  app.app,
-                  app.app.installedVersion,
-                  app.app.latestVersion,
-                ),
+                hasUpdate: app.app.installedVersion == null
+                    ? app.app.additionalSettings['trackOnly'] != true
+                    : AppUpdateService.areVersionsDifferent(
+                        app.app,
+                        app.app.installedVersion,
+                        app.app.latestVersion,
+                      ),
                 isAmbiguous:
                     app.app.additionalSettings['isAmbiguousUpdate'] == true,
                 onTap: () {
@@ -354,11 +356,13 @@ class CategorySections extends StatelessWidget {
             .map(
               (app) => AppListTile(
                 appInMemory: app,
-                hasUpdate: AppUpdateService.areVersionsDifferent(
-                  app.app,
-                  app.app.installedVersion,
-                  app.app.latestVersion,
-                ),
+                hasUpdate: app.app.installedVersion == null
+                    ? app.app.additionalSettings['trackOnly'] != true
+                    : AppUpdateService.areVersionsDifferent(
+                        app.app,
+                        app.app.installedVersion,
+                        app.app.latestVersion,
+                      ),
 
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
