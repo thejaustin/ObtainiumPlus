@@ -2130,12 +2130,25 @@ class AppsProvider with ChangeNotifier {
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
       App? app = apps[appIds[i]]!.app;
-      if (AppUpdateService.areVersionsDifferent(
-            app,
-            app.installedVersion,
-            app.latestVersion,
-          ) &&
-          (!installedOnly || !nonInstalledOnly)) {
+      // For installed apps: check if a newer version is available via areVersionsDifferent.
+      // For uninstalled apps (nonInstalledOnly): areVersionsDifferent always returns false
+      // when installedVersion is null, so we use a direct check instead —
+      // any uninstalled, non-track-only app with a known latestVersion is a candidate.
+      bool isCandidate;
+      if (app.installedVersion == null) {
+        isCandidate = !nonInstalledOnly
+            ? false
+            : app.additionalSettings['trackOnly'] != true &&
+                app.latestVersion.isNotEmpty;
+      } else {
+        isCandidate = AppUpdateService.areVersionsDifferent(
+              app,
+              app.installedVersion,
+              app.latestVersion,
+            ) &&
+            (!installedOnly || !nonInstalledOnly);
+      }
+      if (isCandidate) {
         if ((app.installedVersion == null &&
                 (nonInstalledOnly || !installedOnly) ||
             (app.installedVersion != null &&

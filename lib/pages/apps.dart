@@ -683,16 +683,25 @@ class AppsPageState extends State<AppsPage> {
 
     getSingleAppHorizTile(int index) {
       var showChangesFn = getChangeLogFn(context, listedApps[index].app);
+      var trackOnly =
+          listedApps[index].app.additionalSettings['trackOnly'] == true;
       var hasUpdate =
           listedApps[index].app.installedVersion != null &&
           listedApps[index].app.installedVersion !=
               listedApps[index].app.latestVersion;
+      // Also show the install button for uninstalled, non-track-only apps
+      var needsInstall =
+          !trackOnly && listedApps[index].app.installedVersion == null;
       Widget trailingRow = Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          hasUpdate ? getUpdateButton(index) : const SizedBox.shrink(),
-          hasUpdate ? const SizedBox(width: 5) : const SizedBox.shrink(),
+          (hasUpdate || needsInstall)
+              ? getUpdateButton(index)
+              : const SizedBox.shrink(),
+          (hasUpdate || needsInstall)
+              ? const SizedBox(width: 5)
+              : const SizedBox.shrink(),
           InkWell(
             onTap: showChangesFn,
             child: Container(
