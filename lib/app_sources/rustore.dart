@@ -16,17 +16,26 @@ class RuStore extends AppSource {
   }
 
   @override
-  String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
-    RegExp standardUrlRegEx = RegExp(
-      '^https?://(www\\.)?${getSourceRegex(hosts)}/catalog/app/+[^/]+',
-      caseSensitive: false,
-    );
-    RegExpMatch? match = standardUrlRegEx.firstMatch(url);
-    if (match == null) {
-      throw InvalidURLError(name);
-    }
-    return match.group(0)!;
+  @override
+  Future<Map<String, String>?> getRequestHeaders(
+      Map<String, dynamic> additionalSettings,
+      String url, {
+        bool forAPKDownload = false,
+      }) async {
+    return {
+      'ruStoreVerCode': '1105002',
+    };
   }
+
+  @override
+  String sourceSpecificStandardizeURL(
+    String url, {
+    bool forSelection = false,
+  }) => standardizeUrlWithRegex(
+    url,
+    subdomainPrefix: r'(www\.)?',
+    pathPattern: r'/catalog/app/+[^/]+',
+  );
 
   @override
   Future<String?> tryInferringAppId(
@@ -53,52 +62,55 @@ class RuStore extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    String? appId = await tryInferringAppId(standardUrl);
-    Response res0 = await sourceRequest(
+    final String? appId = await tryInferringAppId(standardUrl);
+    if (appId == null) {
+      throw NoReleasesError();
+    }
+    final Response overallInfoResponse = await sourceRequest(
       'https://backapi.rustore.ru/applicationData/overallInfo/$appId',
       additionalSettings,
     );
-    if (res0.statusCode != 200) {
-      throw getObtainiumHttpError(res0);
+    if (overallInfoResponse.statusCode != 200) {
+      throw getObtainiumHttpError(overallInfoResponse);
     }
-    var appDetails = (await decodeJsonBody(res0.bodyBytes))['body'];
-    if (appDetails['appId'] == null) {
+    final decoded = await decodeJsonBody(overallInfoResponse.bodyBytes);
+    final appDetails = decoded is Map ? decoded['body'] : null;
+    if (appDetails is! Map || appDetails['appId'] == null) {
       throw NoReleasesError();
     }
 
-    String appName = appDetails['appName'] ?? tr('app');
-    String author = appDetails['companyName'] ?? name;
-    String? dateStr = appDetails['appVerUpdatedAt'];
-    String? version = appDetails['versionName'];
-    String? changeLog = appDetails['whatsNew'];
-    if (version == null) {
+    final String appName = appDetails['appName'] ?? tr('app');
+    final String author = appDetails['companyName'] ?? name;
+    final String? dateStr = appDetails['appVerUpdatedAt'];
+    final String? version = appDetails['versionName'];
+    final String? changeLog = appDetails['whatsNew'];
+    if (version == null || version.isEmpty) {
       throw NoVersionError();
     }
     DateTime? relDate;
     if (dateStr != null) {
-      relDate = DateTime.parse(dateStr);
+      relDate = DateTime.tryParse(dateStr);
     }
 
-    Response res1 = await sourceRequest(
-      'https://backapi.rustore.ru/applicationData/v2/download-link',
+    final Response downloadLinksResponse = await sourceRequest(
+      'https://backapi.rustore.ru/v3/showcase/apps/download-link',
       additionalSettings,
       followRedirects: false,
-      postBody: {"appId": appDetails['appId'], "firstInstall": true},
+      postBody: {'appId': appDetails['appId'], 'firstInstall': true},
     );
-    var downloadDetails = (await decodeJsonBody(res1.bodyBytes))['body'];
-    try {
-      if (res1.statusCode != 200 ||
-          downloadDetails['downloadUrls'][0]['url'] == null) {
-        throw NoAPKError();
-      }
-    } catch (e) {
+    final downloadDetails = await decodeJsonBody(downloadLinksResponse.bodyBytes);
+    if (downloadLinksResponse.statusCode != 200 || downloadDetails == null) {
+      throw getObtainiumHttpError(downloadLinksResponse);
+    }
+    final url = downloadDetails['downloadUrls']?[0]?['url'] as String?;
+    if (url == null) {
       throw NoAPKError();
     }
 
     return APKDetails(
       version,
       getApkUrlsFromUrls([
-        (downloadDetails['downloadUrls'][0]['url'] as String).replaceAll(
+        url.replaceAll(
           RegExp('\\.zip\$'),
           '.apk',
         ),
