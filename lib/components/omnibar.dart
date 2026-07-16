@@ -398,7 +398,7 @@ class _OmnibarState extends State<Omnibar> {
 class AppActionsFAB extends StatelessWidget {
   const AppActionsFAB({super.key});
 
-  void _showAddAppMenu(BuildContext context) {
+  static void showAddAppMenu(BuildContext context) {
     final settings = context.read<SettingsProvider>();
     final enableGlass = settings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
@@ -600,7 +600,7 @@ class AppActionsFAB extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(
+  static Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
     required String title,
@@ -610,7 +610,7 @@ class AppActionsFAB extends StatelessWidget {
     Color? containerColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.watch<SettingsProvider>();
+    final settings = context.read<SettingsProvider>();
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
@@ -683,7 +683,7 @@ class AppActionsFAB extends StatelessWidget {
                 heroTag: 'fab_add',
                 onPressed: () {
                   AppHaptics.selectionClick();
-                  _showAddAppMenu(context);
+                  showAddAppMenu(context);
                 },
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -734,7 +734,7 @@ class AppActionsFAB extends StatelessWidget {
         child: FloatingActionButton.extended(
           onPressed: () {
             AppHaptics.selectionClick();
-            _showAddAppMenu(context);
+            showAddAppMenu(context);
           },
           backgroundColor: Colors.transparent,
           elevation: 0,

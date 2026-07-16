@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
@@ -7,6 +9,9 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:http/http.dart' as http;
+import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/pages/import_export.dart';
 
 /// Advanced / warnings settings section
 class AdvancedSettingsSection extends StatelessWidget {
@@ -80,6 +85,17 @@ class AdvancedSettingsSection extends StatelessWidget {
         helpUrl: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
         visible: _matches(tr('plusGitlabToken')),
       ),
+      if (_matches(tr('importExport')))
+        ListTile(
+          leading: const Icon(Icons.import_export_rounded),
+          title: Text(tr('importExport'), style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: const Text('Backup, restore, import, or export settings and apps'),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+          onTap: () {
+            AppHaptics.selectionClick();
+            pushRoute(context, const ImportExportPage());
+          },
+        ),
       const Divider(),
       if (_matches(tr('factoryReset')))
         ListTile(
@@ -198,58 +214,276 @@ class AdvancedSettingsSection extends StatelessWidget {
     required String helpUrl,
   }) {
     final settings = context.read<SettingsProvider>();
-    final controller = TextEditingController(
-      text: settings.getSettingString(settingId) ?? '',
-    );
-
     showDialog(
       context: context,
       builder: (ctx) => GlassDialog(
         title: title,
         icon: Icons.vpn_key_outlined,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: tr('plusTokenLabel'),
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () => controller.clear(),
+        content: _TokenConfigDialogContent(
+          title: title,
+          settingId: settingId,
+          helpUrl: helpUrl,
+          settings: settings,
+        ),
+      ),
+    );
+  }
+}
+
+class _TokenConfigDialogContent extends StatefulWidget {
+  final String title;
+  final String settingId;
+  final String helpUrl;
+  final SettingsProvider settings;
+
+  const _TokenConfigDialogContent({
+    required this.title,
+    required this.settingId,
+    required this.helpUrl,
+    required this.settings,
+  });
+
+  @override
+  State<_TokenConfigDialogContent> createState() => _TokenConfigDialogContentState();
+}
+
+class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
+  late TextEditingController _controller;
+  bool _isPolling = false;
+  String? _userCode;
+  String? _verificationUri;
+  String? _statusMessage;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.settings.getSettingString(widget.settingId) ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startOAuthFlow() async {
+    setState(() {
+      _isPolling = true;
+      _statusMessage = 'Starting connection...';
+      _userCode = null;
+      _verificationUri = null;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://github.com/login/device/code'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'client_id': 'Ov23liZc2J5VeeV8tS08',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final deviceCode = data['device_code'] as String;
+        final userCode = data['user_code'] as String;
+        final verificationUri = data['verification_uri'] as String;
+        final interval = (data['interval'] as int? ?? 5) + 1;
+
+        setState(() {
+          _userCode = userCode;
+          _verificationUri = verificationUri;
+          _statusMessage = 'Please open the verification link and enter the code below.';
+        });
+
+        _pollTimer?.cancel();
+        _pollTimer = Timer.periodic(Duration(seconds: interval), (timer) async {
+          await _pollForToken(deviceCode, timer);
+        });
+      } else {
+        setState(() {
+          _isPolling = false;
+          _statusMessage = 'Error connecting to GitHub. Please use manual PAT below.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isPolling = false;
+        _statusMessage = 'Error: $e. Please use manual PAT.';
+      });
+    }
+  }
+
+  Future<void> _pollForToken(String deviceCode, Timer timer) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://github.com/login/oauth/access_token'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'client_id': 'Ov23liZc2J5VeeV8tS08',
+          'device_code': deviceCode,
+          'grant_type': 'urn:ietf:params:oauth:grant-type:device_code',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['access_token'] != null) {
+          timer.cancel();
+          final token = data['access_token'] as String;
+          setState(() {
+            _controller.text = token;
+            _isPolling = false;
+            _userCode = null;
+            _statusMessage = 'Signed in successfully! Click Save.';
+          });
+          AppHaptics.selectionClick();
+        } else if (data['error'] == 'authorization_pending') {
+          // Keep polling
+        } else {
+          timer.cancel();
+          setState(() {
+            _isPolling = false;
+            _statusMessage = 'OAuth session expired or failed. Code: ${data['error']}';
+          });
+        }
+      }
+    } catch (_) {
+      // Ignore poll errors
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isGitHub = widget.settingId == 'github-creds';
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (isGitHub) ...[
+          if (!_isPolling && _userCode == null)
+            ElevatedButton.icon(
+              onPressed: _startOAuthFlow,
+              icon: const Icon(Icons.login),
+              label: const Text('Sign In via GitHub OAuth'),
+            )
+          else ...[
+            Center(
+              child: Card(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        _userCode ?? '',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _statusMessage ?? '',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              obscureText: true,
             ),
-            const SizedBox(height: 12),
-            InkWell(
-              onTap: () {
-                launchUrlString(helpUrl, mode: LaunchMode.externalApplication);
-              },
-              child: Text(
-                tr('plusTokenConfigHelp'),
-                style: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+            if (_verificationUri != null)
+              TextButton.icon(
+                onPressed: () {
+                  launchUrlString(_verificationUri!, mode: LaunchMode.externalApplication);
+                },
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('Open Verification Page'),
+              ),
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr('cancel')),
-          ),
-          TextButton(
-            onPressed: () {
-              AppHaptics.selectionClick();
-              settings.setSettingString(settingId, controller.text.trim());
-              Navigator.pop(ctx);
-            },
-            child: Text(tr('save')),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0),
+            child: Row(
+              children: [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text('OR USE MANUAL PAT', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                ),
+                Expanded(child: Divider()),
+              ],
+            ),
           ),
         ],
-      ),
+        TextField(
+          controller: _controller,
+          decoration: InputDecoration(
+            labelText: tr('plusTokenLabel'),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () => _controller.clear(),
+            ),
+          ),
+          obscureText: true,
+        ),
+        const SizedBox(height: 12),
+        InkWell(
+          onTap: () {
+            launchUrlString(widget.helpUrl, mode: LaunchMode.externalApplication);
+          },
+          child: Text(
+            tr('plusTokenConfigHelp'),
+            style: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('cancel')),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: () {
+                AppHaptics.selectionClick();
+                widget.settings.setSettingString(widget.settingId, _controller.text.trim());
+                Navigator.pop(context);
+              },
+              child: Text(tr('save')),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

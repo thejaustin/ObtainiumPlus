@@ -1072,7 +1072,11 @@
     "plusGitlabTokenDescription": "Sign in / set token to improve GitLab rate limits",
     "plusTokenConfigHelp": "Generate a Personal Access Token on the provider website to increase API rate limits.",
     "plusTokenConfigStatus": "Status: Configured / Signed In",
-    "plusTokenLabel": "Personal Access Token"
+    "plusTokenLabel": "Personal Access Token",
+    "plusEnableBottomNavBar": "Enable Bottom Navigation Bar",
+    "plusEnableBottomNavBarDescription": "Show the bottom navigation bar and navigation rail for multi-page layout (otherwise full-screen Apps view)",
+    "plusEnableFAB": "Enable Quick Action FAB",
+    "plusEnableFABDescription": "Show the floating '+' action button in the bottom right corner (otherwise shown in top app bar)"
 }
 
 

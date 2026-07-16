@@ -499,6 +499,18 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusEnableBottomNavBar => _prefs?.safeBool('plusEnableBottomNavBar') ?? false;
+  set plusEnableBottomNavBar(bool val) {
+    _prefs?.setBool('plusEnableBottomNavBar', val);
+    notifyListeners();
+  }
+
+  bool get plusEnableFAB => _prefs?.safeBool('plusEnableFAB') ?? true;
+  set plusEnableFAB(bool val) {
+    _prefs?.setBool('plusEnableFAB', val);
+    notifyListeners();
+  }
+
   ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
       ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
       : const AlwaysScrollableScrollPhysics();

@@ -4,6 +4,8 @@ import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/empty_state.dart';
+import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -1554,6 +1556,25 @@ class AppsPageState extends State<AppsPage> {
                       AppBarStyle.large
                   ? SliverAppBar.large(
                       automaticallyImplyLeading: false,
+                      actions: [
+                        if (!plusSettings.plusEnableFAB)
+                          IconButton(
+                            icon: const Icon(Icons.add_rounded),
+                            tooltip: tr('addApp'),
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              AppActionsFAB.showAddAppMenu(context);
+                            },
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.settings_rounded),
+                          tooltip: tr('settings'),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            pushRoute(context, const SettingsPage());
+                          },
+                        ),
+                      ],
                       title: Text(
                         tr('appsString'),
                         style: TextStyle(
@@ -1562,7 +1583,28 @@ class AppsPageState extends State<AppsPage> {
                         ),
                       ),
                     )
-                  : CustomAppBar(title: tr('appsString')),
+                  : CustomAppBar(
+                      title: tr('appsString'),
+                      actions: [
+                        if (!plusSettings.plusEnableFAB)
+                          IconButton(
+                            icon: const Icon(Icons.add_rounded),
+                            tooltip: tr('addApp'),
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              AppActionsFAB.showAddAppMenu(context);
+                            },
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.settings_rounded),
+                          tooltip: tr('settings'),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            pushRoute(context, const SettingsPage());
+                          },
+                        ),
+                      ],
+                    ),
               if (plusSettings.plusEnableHomeDashboard)
                 SliverToBoxAdapter(
                   child: AppDashboard(
