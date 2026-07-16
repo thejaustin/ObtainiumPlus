@@ -412,5 +412,13 @@
     "certificateHash": {
         "one": "Certificado Hash",
         "other": "Hashes certificado"
-    }
+    },
+    "plusEnableBanWarnings": "Protección contra bloqueos de Play Store",
+    "plusEnableBanWarningsDescription": "Avisar antes de enviar un gran número de comprobaciones de actualización a Google Play para proteger tu dirección IP de bloqueos temporales.",
+    "dispenserBanWarningTitle": "Advertencia de seguridad de conexión",
+    "dispenserBanWarningMessage": "Obtainium+ está a punto de comprobar {} aplicaciones de Google Play para actualizaciones. Hacer esto demasiado rápido o todo a la vez puede hacer que Google bloquee temporalmente tu dirección de internet (IP).",
+    "dispenserBanWarningChannel": "Advertencias de seguridad de conexión",
+    "dispenserBanWarningDescription": "Advierte antes de realizar un gran número de actualizaciones de Google Play para proteger tu dirección IP de bloqueos temporales.",
+    "anonymousLoginTokensAAS": "Claves anónimas para el acceso a Google Play Store",
+    "viewTalkerLogs": "Ver registros del sistema y de red"
 }

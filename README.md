@@ -1,68 +1,76 @@
 # ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium+
 
-Get Android app updates straight from the source, styled with modern aesthetics and advanced developer options.
+Android app updates straight from the source, with a gorgeous modern look and privacy-first features.
 
-Obtainium+ is an enhanced, telemetry-free fork of the original Obtainium client. It allows you to install and update apps directly from their releases pages, receive notifications when new releases are made available, and adds advanced diagnostic logging, reactive layout controls, and Google Play Store mirror integration.
+Obtainium+ is an independent, privacy-focused version (fork) of the original **Obtainium** app. It allows you to download, install, and update Android apps directly from their developers (like GitHub, GitLab, or custom websites) rather than relying on a commercial app store. You get the latest updates instantly, without third-party tracking, middle-men, or telemetry.
 
 ---
 
-### 🌟 Obtainium+ vs. Upstream Obtainium
+## 🌟 What makes Obtainium+ different?
 
-| Feature | Upstream Obtainium | Obtainium+ |
+While the original Obtainium is excellent, Obtainium+ elevates the experience with a modern interface, smart update management, and privacy-respecting tools.
+
+| Feature | Original Obtainium | Obtainium+ |
 | :--- | :--- | :--- |
-| **User Interface** | Standard Flutter Material Design | Curated modern Glassmorphic design with dynamic HSL gradients, blurs, and premium typography. |
-| **Play Store Support** | Direct APK links / Web scraper fallbacks | Full API Mirror Integration with support for custom **Anonymous Token Dispensers** and microG profiles. |
-| **Developer Diagnostics** | Standard command logs | Real-time structured network logger (Talker Integration) and local Crash Statistics Dashboard. |
-| **Settings Reactivity** | Requires app restarts for many switches | 100% reactive state management (`context.watch`) with instant, dynamic UI updates. |
-| **Community Privacy** | Hardcoded default third-party servers | Telemetry-free and default-free (no hardcoded server pings) to protect community resources and guarantee privacy. |
+| **Design & Look** | Standard Android design | A beautiful "glass-like" interface (glassmorphism) with smooth colors, subtle blurs, and modern text. |
+| **Play Store Mirroring** | Scrapes APK links | Secure, direct connections to Google Play mirrors using your own private servers (dispensers) or microG. |
+| **Troubleshooting & Logs** | Basic terminal logs | A built-in, easy-to-use diagnostics screen and local crash tracker to solve issues privately. |
+| **Instant Settings** | Requires app restarts to apply | Changes to look, feel, and updates apply instantly as you tap them. |
+| **Privacy First** | Uses some default third-party servers | Completely tracking-free. No pre-configured server addresses to protect public servers and guarantee your privacy. |
 
 ---
 
-## Key Additions in Obtainium+
+## 🚀 Key Features
 
-### 🎨 Glassmorphic Interface & Premium Polish
-*   **Modern Aesthetics:** Rebuilt the onboarding, cards, detail sheets, and settings headers to support smooth backdrop blurs, dynamic opacities, and premium HSL gradients.
-*   **Visual Audit Resolution:** Completely removed solid, high-contrast panels and overwhelming card glow borders to preserve a cohesive glassmorphic look.
+### 🎨 Beautiful, Modern Design (Glassmorphic Interface)
+Obtainium+ features a premium, clean design with smooth color transitions, soft backdrop blurs, and elegant layouts. Standard sharp boxes and high-contrast lines are replaced with a smooth visual style that is easy on the eyes.
 
-### 🔒 Anonymous Play Store Mirror Integration
-*   **Custom Token Dispensers:** Configure your own self-hosted anonymous token dispenser URL or hook in a custom microG account to retrieve updates straight from Google Play.
-*   **Telemetry-Free & Zero Defaults:** Contains absolutely no telemetry, and does not ship with any pre-configured default server URLs (such as `auroraoss.com`) to honor the maintainers' wishes and ensure maximum privacy.
+### 🔒 Play Store Updates (Without a Google Account)
+Update apps that are normally only available on the Google Play Store. To respect public resources and guarantee your privacy, Obtainium+ includes absolutely no hidden tracking and does not ship with any pre-configured servers. You can easily hook in your own secure servers (like a self-hosted token dispenser) or microG profile.
 
-### 🌐 Diagnostics & Live Log Viewers
-*   **Talker Integration:** Real-time structured logger capturing network requests, errors, and system warnings on a dedicated, localized diagnostics screen.
-*   **Crash Statistics:** A local crash statistics analyzer that tracks frequencies, error types, and logs without routing data to external services.
+### 🛑 Play Store Ban Protection
+If you check for updates on too many Play Store apps at once, Google might temporarily block your internet address (IP). Obtainium+ includes a safety slider (from 1 to 50 apps) that warns you when an automated update check is about to exceed your limit, keeping your connection safe.
 
-### 🔄 Dynamic Toggles & Providers
-*   **Fully Reactive Engine:** Swapped out once-off reading routines for reactive providers (`context.watch`) on all layout settings, app bar styles, quick-action FAB menus, and bottom sheets so they update instantly.
+### 🔄 Default App Store Redirection
+Obtainium+ automatically detects other app stores installed on your device (like F-Droid, Aurora Store, or Droidify). You can set a default store to route update buttons automatically, or tap to open any app page directly in your preferred store.
+
+### 🌐 Private Diagnostics & Troubleshooting
+If an app fails to update, you don't need to guess why. A built-in real-time logger captures network warnings, download errors, and system events. All crash statistics and error logs are stored safely on your device and are never sent to external servers.
 
 ---
 
-## App Configurations
+## 📦 Installation
 
-You can find crowdsourced app configurations at [apps.obtainium.imranr.dev](https://apps.obtainium.imranr.dev).
+Get the latest version directly from the [Releases](https://github.com/thejaustin/ObtainiumPlus/releases) page.
 
-If you can't find the configuration for an app you want, feel free to leave a request on the [discussions page](https://github.com/ImranR98/apps.obtainium.imranr.dev/discussions/new?category=app-requests).
+### 🔑 Security Verification
+To ensure you have a genuine, unmodified build of Obtainium+, you can verify these details:
+*   **Package ID:** `dev.thejaustin.obtainiumplus`
+*   **SHA-256 Signature Hash:**
+    `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
+*   **[PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index)** (used to verify official APK hashes)
 
-Or, contribute some configurations to the website by creating a PR at [this repo](https://github.com/ImranR98/apps.obtainium.imranr.dev).
+---
 
-## Installation
+## ❤️ Credits & Open Source Acknowledgments
 
-[<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png"
-    alt="Get it on GitHub"
-    height="80">](https://github.com/thejaustin/ObtainiumPlus/releases)
-     
-Verification info:
-- Package ID: `dev.thejaustin.obtainiumplus`
-- SHA-256 hash of signing certificate: `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
-- [PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index) (to verify APK hashes)
+Obtainium+ is built on the shoulders of giants. We are deeply grateful to the original creators and the open-source community:
 
-### 🚀 Major Additions in the Latest Release:
-*   **Default App Store Routing & Detection:** Auto-detects installed stores (F-Droid, Droidify, Aurora Store) on the details sheet. Users can choose to open an app in their preferred store or configure a default store to automatically route the main Install/Update buttons.
-*   **Customizable Dispenser Ban Warning Threshold:** Added a settings slider to adjust the bulk update threshold (from 1 to 50 apps). Alerts trigger when automated checks exceed this value to guard your IP from Google Play ban triggers.
-*   **Material 3 Expressive (M3E) Dynamic Alignment:** Ensured all newly added compartments, bubble buttons, dialogs, and text fields scale beautifully using M3E tokens and responsive dimensions. Fixed layout wrappers to prevent text or button overlaps.
+*   **[Obtainium (Upstream)](https://github.com/ImranR98/Obtainium):** The incredible parent project created by **ImranR98** that serves as the foundation for this fork.
+*   **[Talker](https://pub.dev/packages/talker):** Powers our real-time, user-friendly diagnostics and logging screen.
+*   **[Dynamic Color](https://pub.dev/packages/dynamic_color):** Enables the app interface to blend seamlessly with your Android system theme (Material You).
+*   **[Background Fetch](https://pub.dev/packages/background_fetch) & [Flutter Foreground Task](https://pub.dev/packages/flutter_foreground_task):** Power the reliable, battery-efficient background update checker.
+*   **[Easy Localization](https://pub.dev/packages/easy_localization):** Manages translation assets to make the app accessible in dozens of languages.
+*   **[Sentry Flutter](https://pub.dev/packages/sentry_flutter):** Powers our opt-in, telemetry-free crash analytics engine.
 
-## Screenshots
+---
 
-| <img src="./assets/screenshots/1.apps.png" alt="Apps Page" /> | <img src="./assets/screenshots/2.dark_theme.png" alt="Dark Theme" />           | <img src="./assets/screenshots/3.material_you.png" alt="Material You" />    |
-| ------------------------------------------------------ | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| <img src="./assets/screenshots/4.app.png" alt="App Page" />   | <img src="./assets/screenshots/5.app_opts.png" alt="App Options" /> | <img src="./assets/screenshots/6.app_webview.png" alt="App Web View" /> |
+## 📷 Screenshots
+
+| <img src="./assets/screenshots/1.apps.png" alt="Apps Page" /> | <img src="./assets/screenshots/2.dark_theme.png" alt="Dark Theme" /> | <img src="./assets/screenshots/3.material_you.png" alt="Material You" /> |
+| :---: | :---: | :---: |
+| **Apps List** | **Dark Theme** | **Material You Accent Colors** |
+
+| <img src="./assets/screenshots/4.app.png" alt="App Page" /> | <img src="./assets/screenshots/5.app_opts.png" alt="App Options" /> | <img src="./assets/screenshots/6.app_webview.png" alt="App Web View" /> |
+| :---: | :---: | :---: |
+| **App Detail Screen** | **App Update Settings** | **Built-in Web Scraping** |

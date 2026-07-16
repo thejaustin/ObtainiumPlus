@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/safe_prefs.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';
@@ -279,7 +280,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   set autoUpdateRules(Map<String, dynamic> val) {
-    prefs?.setString('autoUpdateRules', jsonEncode(val));
+    prefs?.setString('autoUpdateRules', safeJsonEncode(val));
     notifyListeners();
   }
 
@@ -295,7 +296,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   set offlineQueue(List<String> val) {
-    prefs?.setString('offlineQueue', jsonEncode(val));
+    prefs?.setString('offlineQueue', safeJsonEncode(val));
     notifyListeners();
   }
 
@@ -311,7 +312,7 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   set retryQueue(Map<String, dynamic> val) {
-    prefs?.setString('retryQueue', jsonEncode(val));
+    prefs?.setString('retryQueue', safeJsonEncode(val));
     notifyListeners();
   }
 }

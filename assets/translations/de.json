@@ -412,5 +412,13 @@
     "certificateHash": {
         "one": "Zertifikat Hash",
         "other": "Zertifikat Hashes"
-    }
+    },
+    "plusEnableBanWarnings": "Play Store Sperrschutz",
+    "plusEnableBanWarningsDescription": "Warnen, bevor eine große Anzahl von Update-Prüfungen an Google Play gesendet wird, um Ihre IP-Adresse vor temporären Sperren zu schützen.",
+    "dispenserBanWarningTitle": "Verbindungssicherheitswarnung",
+    "dispenserBanWarningMessage": "Obtainium+ ist im Begriff, {} Google Play-Apps auf Updates zu prüfen. Wenn Sie dies zu schnell oder auf einmal tun, kann dies dazu führen, dass Google Ihre Internetadresse (IP) vorübergehend sperrt.",
+    "dispenserBanWarningChannel": "Verbindungssicherheitswarnungen",
+    "dispenserBanWarningDescription": "Warnt, bevor eine große Anzahl von Google Play-Updates ausgeführt wird, um Ihre IP-Adresse vor temporären Sperren zu schützen.",
+    "anonymousLoginTokensAAS": "Anonyme Schlüssel für den Zugriff auf den Google Play Store",
+    "viewTalkerLogs": "System- und Netzwerkprotokolle anzeigen"
 }

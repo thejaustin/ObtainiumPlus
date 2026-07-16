@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -1833,7 +1834,14 @@ class AppsProvider with ChangeNotifier {
           ? (await cachedIcon.readAsBytes())
           : (await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon());
       if (icon != null && !alreadyCached) {
-        cachedIcon.writeAsBytes(icon.toList());
+        try {
+          if (!iconsCacheDir.existsSync()) {
+            await iconsCacheDir.create(recursive: true);
+          }
+          await cachedIcon.writeAsBytes(icon.toList());
+        } catch (e) {
+          LogsProvider().add('Failed to write cached icon for $appId: $e');
+        }
       }
       if (icon != null) {
         final currentApp = apps[appId];
@@ -1877,7 +1885,7 @@ class AppsProvider with ChangeNotifier {
           String filePath = '${(await getAppsDir()).path}/${app.id}.json';
           File(
             '$filePath.tmp',
-          ).writeAsStringSync(jsonEncode(app.toJson())); // #2089
+          ).writeAsStringSync(safeJsonEncode(app.toJson())); // #2089
           File('$filePath.tmp').renameSync(filePath);
         }
         try {

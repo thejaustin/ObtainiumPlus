@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/safe_prefs.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,7 +117,7 @@ class ViewSettingsProvider with ChangeNotifier {
         appsProvider.saveApps(changedApps);
       }
     }
-    prefs?.setString('categories', jsonEncode(cats));
+    prefs?.setString('categories', safeJsonEncode(cats));
     notifyListeners();
   }
 

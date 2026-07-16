@@ -412,5 +412,13 @@
     "certificateHash": {
         "one": "Hash do Certificado",
         "other": "Certificado Hashes"
-    }
+    },
+    "plusEnableBanWarnings": "Proteção contra banimento da Play Store",
+    "plusEnableBanWarningsDescription": "Avisar antes de enviar um grande número de verificações de atualização para a Google Play para proteger seu endereço IP de banimentos temporários.",
+    "dispenserBanWarningTitle": "Aviso de segurança de conexão",
+    "dispenserBanWarningMessage": "O Obtainium+ está prestes a verificar atualizações de {} aplicativos da Google Play. Fazer isso muito rápido ou tudo de uma vez pode fazer com que o Google bloqueie temporariamente seu endereço de internet (IP).",
+    "dispenserBanWarningChannel": "Avisos de segurança de conexão",
+    "dispenserBanWarningDescription": "Avisa antes de executar um grande número de atualizações da Google Play para proteger seu endereço IP de banimentos temporários.",
+    "anonymousLoginTokensAAS": "Chaves anônimas para acesso à Google Play Store",
+    "viewTalkerLogs": "Ver logs do sistema e de rede"
 }

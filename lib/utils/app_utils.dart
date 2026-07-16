@@ -73,6 +73,27 @@ dynamic safeJsonDecode(dynamic jsonValue, dynamic fallback) {
   }
 }
 
+/// Recursively sanitizes data to be JSON-safe, converting double.nan or infinity to null.
+dynamic sanitizeJsonValue(dynamic value) {
+  if (value is double) {
+    if (value.isNaN || value.isInfinite) {
+      return null;
+    }
+    return value;
+  } else if (value is Map) {
+    return value.map((key, val) => MapEntry(key, sanitizeJsonValue(val)));
+  } else if (value is List) {
+    return value.map((val) => sanitizeJsonValue(val)).toList();
+  }
+  return value;
+}
+
+/// Safely encodes a value to JSON, ensuring no NaN or infinity values cause crashes.
+String safeJsonEncode(dynamic value) {
+  return jsonEncode(sanitizeJsonValue(value));
+}
+
+
 List<MapEntry<String, String>> getApkUrlsFromUrls(List<String> urls) =>
     urls.map((e) {
       var segments = e.split('/').where((el) => el.trim().isNotEmpty);

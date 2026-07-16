@@ -424,5 +424,13 @@
     "certificateHash": {
         "one": "Хеш сертификата",
         "other": "Хеши сертификатов"
-    }
+    },
+    "plusEnableBanWarnings": "Защита от блокировки в Play Store",
+    "plusEnableBanWarningsDescription": "Предупреждать перед отправкой большого количества запросов обновлений в Google Play, чтобы защитить ваш IP-адрес от временных блокировок.",
+    "dispenserBanWarningTitle": "Предупреждение о безопасности соединения",
+    "dispenserBanWarningMessage": "Obtainium+ готовится проверить обновления для {} приложений Google Play. Слишком частая или одновременная проверка может привести к тому, что Google временно заблокирует ваш IP-адрес.",
+    "dispenserBanWarningChannel": "Предупреждения о безопасности соединения",
+    "dispenserBanWarningDescription": "Предупреждает перед запуском большого количества обновлений Google Play для защиты вашего IP-адреса от временных блокировок.",
+    "anonymousLoginTokensAAS": "Анонимные ключи для доступа к Google Play Store",
+    "viewTalkerLogs": "Просмотр системных и сетевых логов"
 }

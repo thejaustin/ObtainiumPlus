@@ -315,7 +315,7 @@ class _AppDashboardState extends State<AppDashboard>
                 ? Image.memory(
                     app.icon!,
                     fit: BoxFit.contain,
-                    filterQuality: FilterQuality.medium,
+                    filterQuality: FilterQuality.high,
                   )
                 : const Icon(Icons.apps_rounded, size: 24),
           ),
@@ -375,7 +375,7 @@ class _AppDashboardState extends State<AppDashboard>
                     fit: BoxFit.cover,
                     width: 64,
                     height: 64,
-                    filterQuality: FilterQuality.medium,
+                    filterQuality: FilterQuality.high,
                   ),
                 )
               else

@@ -63,7 +63,7 @@ class CategoryIconStack extends StatelessWidget {
                   icon!,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  filterQuality: FilterQuality.medium,
+                  filterQuality: FilterQuality.high,
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:obtainium/utils/app_utils.dart';
 import 'dart:math';
 
 import 'package:html/dom.dart';
@@ -135,7 +136,7 @@ class DiscoverFeedService {
     try {
       await prefs?.setString(
         _cacheKey,
-        jsonEncode(feed.map((e) => e.toJson()).toList()),
+        safeJsonEncode(feed.map((e) => e.toJson()).toList()),
       );
       await prefs?.setInt(
         _cacheTimestampKey,
