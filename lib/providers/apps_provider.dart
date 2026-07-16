@@ -1371,9 +1371,16 @@ class AppsProvider with ChangeNotifier {
         downloadResults.add(await downloadFn(id));
       }
     } else {
-      downloadResults = await Future.wait(
-        appsToInstall.map((id) => downloadFn(id, skipInstalls: true)),
+      List<Map<Object?, Object?>> results = List.filled(appsToInstall.length, {});
+      await _runWithConcurrencyLimit<int>(
+        List.generate(appsToInstall.length, (i) => i),
+        2, // Download at most 2 apps concurrently to avoid socket congestion
+        (index) async {
+          final id = appsToInstall[index];
+          results[index] = await downloadFn(id, skipInstalls: true);
+        },
       );
+      downloadResults = results;
     }
     for (var res in downloadResults) {
       if (!errors.appIdNames.containsKey(res['id'])) {
@@ -1512,10 +1519,10 @@ class AppsProvider with ChangeNotifier {
         await downloadFn(urlWithApp.key, urlWithApp.value);
       }
     } else {
-      await Future.wait(
-        filesToDownload.map(
-          (urlWithApp) => downloadFn(urlWithApp.key, urlWithApp.value),
-        ),
+      await _runWithConcurrencyLimit<MapEntry<MapEntry<String, String>, App>>(
+        filesToDownload,
+        2, // Download at most 2 app assets concurrently to optimize bandwidth
+        (urlWithApp) => downloadFn(urlWithApp.key, urlWithApp.value),
       );
     }
     if (errors.idsByErrorString.isNotEmpty) {
@@ -2095,8 +2102,10 @@ class AppsProvider with ChangeNotifier {
           }
         } catch (_) {}
 
-        await Future.wait(
-          appIds.map((appId) async {
+        await _runWithConcurrencyLimit<String>(
+          appIds,
+          3, // Check at most 3 apps concurrently to prevent rate limits & connection resets
+          (appId) async {
             App? newApp;
             try {
               newApp = await checkUpdate(appId);
@@ -2114,8 +2123,7 @@ class AppsProvider with ChangeNotifier {
             if (newApp != null) {
               updates.add(newApp);
             }
-          }),
-          eagerError: true,
+          },
         );
       } finally {
         gettingUpdates = false;
@@ -2483,6 +2491,26 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
         ),
       ],
     );
+  }
+
+  Future<void> _runWithConcurrencyLimit<T>(
+    List<T> items,
+    int limit,
+    Future<void> Function(T) action,
+  ) async {
+    if (items.isEmpty) return;
+    int index = 0;
+    Future<void> worker() async {
+      while (index < items.length) {
+        final current = index;
+        index++;
+        if (current >= items.length) break;
+        await action(items[current]);
+      }
+    }
+    final actualLimit = limit < items.length ? limit : items.length;
+    final workers = List.generate(actualLimit, (_) => worker());
+    await Future.wait(workers);
   }
 }
 
