@@ -1,5 +1,5 @@
 import 'package:obtainium/utils/safe_prefs.dart';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';

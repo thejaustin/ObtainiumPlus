@@ -1,6 +1,6 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.

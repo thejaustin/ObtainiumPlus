@@ -42,6 +42,7 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - "Anonymous login tokens (AAS) for Google Play Store access" ➔ **"Anonymous keys for Google Play Store access"**
   - "View Talker Logs" ➔ **"View System & Network Logs"** (retained "Diagnostics Log Viewer" as is).
   - Applied these changes to English (`en.json`) and translated them across all major localization files: Spanish (`es.json`), French (`fr.json`), German (`de.json`), Portuguese (`pt.json`), Brazilian Portuguese (`pt-BR.json`), Russian (`ru.json`), Italian (`it.json`), Simplified Chinese (`zh.json`), and Traditional Chinese (`zh-Hant-TW.json`).
+- **Fixed Duplicate Symbol Import Conflict**: Resolved a compilation error on `generateRandomLightColor` (shared by both `generated_form.dart` and `app_utils.dart`) in `apps_provider.dart` and other files by limiting `app_utils.dart` imports to `show safeJsonEncode`.
 
 ### 2026-07-14 — Antigravity CLI [session 74aad2b0]
 
