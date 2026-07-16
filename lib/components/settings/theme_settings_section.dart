@@ -125,8 +125,7 @@ class ThemeSettingsSection extends StatelessWidget {
         _buildColorPicker(context),
 
       // Advanced/Experimental Section
-      if (plusSettings.plusEnableExperimentalCustomization &&
-          advancedWidgets.any((w) => w is! SizedBox))
+      if (advancedWidgets.any((w) => w is! SizedBox))
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
