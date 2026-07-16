@@ -43,6 +43,12 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - "View Talker Logs" ➔ **"View System & Network Logs"** (retained "Diagnostics Log Viewer" as is).
   - Applied these changes to English (`en.json`) and translated them across all major localization files: Spanish (`es.json`), French (`fr.json`), German (`de.json`), Portuguese (`pt.json`), Brazilian Portuguese (`pt-BR.json`), Russian (`ru.json`), Italian (`it.json`), Simplified Chinese (`zh.json`), and Traditional Chinese (`zh-Hant-TW.json`).
 - **Fixed Duplicate Symbol Import Conflict**: Resolved a compilation error on `generateRandomLightColor` (shared by both `generated_form.dart` and `app_utils.dart`) in `apps_provider.dart` and other files by limiting `app_utils.dart` imports to `show safeJsonEncode`.
+- **Integrated Material 3 Expressive Loading Indicators**: Upgraded `ExpressiveCircularProgressIndicator` in `expressive_progress_indicator.dart` to use the rotating, morphing polygon `LoadingIndicatorM3E` (from the `loading_indicator_m3e` package) for indeterminate loading states.
+- **Implemented Elastic Bottom Sheets (`smooth_sheets`)**: Upgraded `showDraggableModalBottomSheet` in `modal_utils.dart` to use the `smooth_sheets` package (`ModalSheetRoute` and `Sheet`), enabling smooth, physics-based, elastic modal sheet dragging and scrolling transitions.
+- **Optimized Download Speeds and I/O Logistics**: Enhanced the streaming file download method in `app_file_service.dart`:
+  - Removed the overhead of `.asBroadcastStream()`, improving download throughput and lowering memory allocation.
+  - Checked the HTTP response status code early to abort immediately upon error, preventing unnecessary downloads of server error pages.
+  - Increased the chunk write buffer size from 32KB to 128KB to reduce disk write frequency and increase speed.
 
 ### 2026-07-14 — Antigravity CLI [session 74aad2b0]
 

@@ -447,6 +447,15 @@ class AppFileService {
     );
     HttpClient responseClient = responseWithClient.value.key;
     HttpClientResponse response = responseWithClient.value.value;
+
+    if (response.statusCode < 200 || response.statusCode > 299) {
+      responseClient.close();
+      if (tempDownloadedFile.existsSync()) {
+        deleteFile(tempDownloadedFile);
+      }
+      throw HttpException('Server returned status code ${response.statusCode}: ${response.reasonPhrase}');
+    }
+
     sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
 
     var received = 0;
@@ -456,10 +465,9 @@ class AppFileService {
       received = rangeStart;
     }
     const downloadUIUpdateInterval = Duration(milliseconds: 500);
-    const downloadBufferSize = 32 * 1024; // 32KB
+    const downloadBufferSize = 128 * 1024; // 128KB buffer for faster I/O throughput
     final downloadBuffer = BytesBuilder();
     await response
-        .asBroadcastStream()
         .map((chunk) {
           if (isCancelled?.call() == true) {
             throw DownloadCancelledError();
@@ -500,10 +508,7 @@ class AppFileService {
     if (onProgress != null) {
       onProgress(progress);
     }
-    if (response.statusCode < 200 || response.statusCode > 299) {
-      deleteFile(tempDownloadedFile);
-      throw response.reasonPhrase;
-    }
+
     if (tempDownloadedFile.existsSync()) {
       tempDownloadedFile.renameSync(downloadedFile.path);
     }

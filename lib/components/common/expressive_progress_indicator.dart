@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 
 /// A Material 3 Expressive "Wavy" progress indicator
 class ExpressiveProgressIndicator extends StatelessWidget {
@@ -77,13 +78,22 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
       );
     }
 
-    return WavyCircularProgressIndicator(
-      value: value,
-      color: color ?? Theme.of(context).colorScheme.primary,
-      backgroundColor:
-          backgroundColor ??
-          Theme.of(context).colorScheme.surfaceContainerHighest,
-      strokeWidth: strokeWidth,
+    if (value != null) {
+      return WavyCircularProgressIndicator(
+        value: value,
+        color: color ?? Theme.of(context).colorScheme.primary,
+        backgroundColor:
+            backgroundColor ??
+            Theme.of(context).colorScheme.surfaceContainerHighest,
+        strokeWidth: strokeWidth,
+      );
+    }
+
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: LoadingIndicatorM3E(
+        color: color ?? Theme.of(context).colorScheme.primary,
+      ),
     );
   }
 }
