@@ -65,20 +65,20 @@ class AdvancedSettingsSection extends StatelessWidget {
       _buildTokenConfigTile(
         context,
         icon: Icons.login_outlined,
-        title: 'GitHub API Login Token',
-        subtitle: 'Sign in / set token to improve GitHub rate limits',
+        title: tr('plusGithubToken'),
+        subtitle: tr('plusGithubTokenDescription'),
         settingId: 'github-creds',
         helpUrl: 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
-        visible: _matches('GitHub API Login Token'),
+        visible: _matches(tr('plusGithubToken')),
       ),
       _buildTokenConfigTile(
         context,
         icon: Icons.login_outlined,
-        title: 'GitLab API Login Token',
-        subtitle: 'Sign in / set token to improve GitLab rate limits',
+        title: tr('plusGitlabToken'),
+        subtitle: tr('plusGitlabTokenDescription'),
         settingId: 'gitlab-creds',
         helpUrl: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
-        visible: _matches('GitLab API Login Token'),
+        visible: _matches(tr('plusGitlabToken')),
       ),
       const Divider(),
       if (_matches(tr('factoryReset')))
@@ -178,7 +178,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         return ListTile(
           leading: Icon(icon, color: isConfigured ? Theme.of(context).colorScheme.primary : null),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(isConfigured ? 'Status: Configured / Signed In' : subtitle),
+          subtitle: Text(isConfigured ? tr('plusTokenConfigStatus') : subtitle),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
           onTap: () => _showTokenConfigDialog(
             context,
@@ -214,7 +214,7 @@ class AdvancedSettingsSection extends StatelessWidget {
             TextField(
               controller: controller,
               decoration: InputDecoration(
-                labelText: 'Personal Access Token',
+                labelText: tr('plusTokenLabel'),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
@@ -228,9 +228,9 @@ class AdvancedSettingsSection extends StatelessWidget {
               onTap: () {
                 launchUrlString(helpUrl, mode: LaunchMode.externalApplication);
               },
-              child: const Text(
-                'Generate a Personal Access Token on the provider website to increase API rate limits.',
-                style: TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+              child: Text(
+                tr('plusTokenConfigHelp'),
+                style: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
               ),
             ),
           ],
