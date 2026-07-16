@@ -362,7 +362,7 @@ class AppCRUDService {
   static Future<void> saveAppToDisk(App app) async {
     String filePath =
         '${(await AppFileService.getAppsDir()).path}/${app.id}.json';
-    File('$filePath.tmp').writeAsStringSync(jsonEncode(app.toJson()));
+    File('$filePath.tmp').writeAsStringSync(safeJsonEncode(app.toJson()));
     File('$filePath.tmp').renameSync(filePath);
   }
 

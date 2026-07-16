@@ -157,7 +157,7 @@ class AppListTile extends StatelessWidget {
                   child: Image.memory(
                     appInMemory.icon!,
                     fit: BoxFit.cover,
-                    filterQuality: FilterQuality.medium,
+                    filterQuality: FilterQuality.high,
                   ),
                 )
               : Icon(

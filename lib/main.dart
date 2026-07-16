@@ -26,7 +26,7 @@ import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dynamic_system_colors/dynamic_system_colors.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -109,11 +109,19 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   bool isTimeout = task.timeout;
   if (isTimeout) {
     print('BG update task timed out.');
-    BackgroundFetch.finish(taskId);
+    try {
+      BackgroundFetch.finish(taskId);
+    } catch (e) {
+      print('BackgroundFetch.finish failed: $e');
+    }
     return;
   }
   await bgUpdateCheck(taskId, null);
-  BackgroundFetch.finish(taskId);
+  try {
+    BackgroundFetch.finish(taskId);
+  } catch (e) {
+    print('BackgroundFetch.finish failed: $e');
+  }
 }
 
 @pragma('vm:entry-point')
@@ -169,6 +177,23 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
     if (type.contains('RemoteException') && hasShizukuFrame(ex)) return null;
     if (type.contains('PlatformException') &&
         (value.contains('shizuku') || hasShizukuFrame(ex))) {
+      return null;
+    }
+    // Filter out expected validation/user actions (ObtainiumError and subclasses)
+    if (type.contains('ObtainiumError') ||
+        type.contains('UnsupportedURLError') ||
+        type.contains('DownloadCancelledError') ||
+        type.contains('RateLimitError') ||
+        type.contains('InvalidURLError') ||
+        type.contains('NoReleasesError') ||
+        type.contains('NoAPKError') ||
+        type.contains('NoVersionError') ||
+        type.contains('DowngradeError') ||
+        type.contains('InstallError') ||
+        type.contains('IDChangedError') ||
+        type.contains('RepositoryRenamedError') ||
+        type.contains('BadDownloadError') ||
+        type.contains('NotImplementedError')) {
       return null;
     }
   }
@@ -409,27 +434,39 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Future<void> initPlatformState() async {
-    await BackgroundFetch.configure(
-      BackgroundFetchConfig(
-        minimumFetchInterval: 15,
-        stopOnTerminate: false,
-        startOnBoot: true,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.ANY,
-      ),
-      (String taskId) async {
-        await bgUpdateCheck(taskId, null);
-        BackgroundFetch.finish(taskId);
-      },
-      (String taskId) async {
-        context.read<LogsProvider>().add('BG update task timed out.');
-        BackgroundFetch.finish(taskId);
-      },
-    );
+    try {
+      await BackgroundFetch.configure(
+        BackgroundFetchConfig(
+          minimumFetchInterval: 15,
+          stopOnTerminate: false,
+          startOnBoot: true,
+          enableHeadless: true,
+          requiresBatteryNotLow: false,
+          requiresCharging: false,
+          requiresStorageNotLow: false,
+          requiresDeviceIdle: false,
+          requiredNetworkType: NetworkType.ANY,
+        ),
+        (String taskId) async {
+          await bgUpdateCheck(taskId, null);
+          try {
+            BackgroundFetch.finish(taskId);
+          } catch (e) {
+            print('BackgroundFetch.finish failed: $e');
+          }
+        },
+        (String taskId) async {
+          context.read<LogsProvider>().add('BG update task timed out.');
+          try {
+            BackgroundFetch.finish(taskId);
+          } catch (e) {
+            print('BackgroundFetch.finish failed: $e');
+          }
+        },
+      );
+    } catch (e) {
+      print('BackgroundFetch.configure failed: $e');
+    }
     if (!mounted) return;
   }
 
@@ -443,17 +480,21 @@ class _ObtainiumState extends State<Obtainium> {
     final logs = context.read<LogsProvider>();
     final notifs = context.read<NotificationsProvider>();
 
-    if (updateSettings.updateInterval == 0) {
-      stopForegroundService();
-      BackgroundFetch.stop();
-    } else {
-      if (updateSettings.useFGService) {
-        BackgroundFetch.stop();
-        startForegroundService(false);
-      } else {
+    try {
+      if (updateSettings.updateInterval == 0) {
         stopForegroundService();
-        BackgroundFetch.start();
+        BackgroundFetch.stop();
+      } else {
+        if (updateSettings.useFGService) {
+          BackgroundFetch.stop();
+          startForegroundService(false);
+        } else {
+          stopForegroundService();
+          BackgroundFetch.start();
+        }
       }
+    } catch (e) {
+      logs.add('BackgroundFetch operation failed: $e');
     }
 
     if (settingsProvider.prefs == null) {

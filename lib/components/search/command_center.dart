@@ -343,7 +343,7 @@ class _CommandCenterState extends State<CommandCenter> {
                           child: Image.memory(
                             app.icon!,
                             fit: BoxFit.cover,
-                            filterQuality: FilterQuality.medium,
+                            filterQuality: FilterQuality.high,
                           ),
                         )
                       : const Icon(Icons.apps_rounded),

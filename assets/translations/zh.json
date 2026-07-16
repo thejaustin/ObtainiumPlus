@@ -412,5 +412,13 @@
     "certificateHash": {
         "one": "证书散列",
         "other": "Hashes 证书"
-    }
+    },
+    "plusEnableBanWarnings": "Play Store 防封锁保护",
+    "plusEnableBanWarningsDescription": "在向 Google Play 发送大量更新检查前发出警告，以保护您的 IP 地址免受临时封锁。",
+    "dispenserBanWarningTitle": "连接安全警告",
+    "dispenserBanWarningMessage": "Obtainium+ 即将检查 {} 个 Google Play 应用的更新。操作过快或一次性检查过多可能会导致 Google 临时封锁您的 IP 地址。",
+    "dispenserBanWarningChannel": "连接安全警告",
+    "dispenserBanWarningDescription": "在运行大量 Google Play 更新前发出警告，以保护您的 IP 地址免受临时封锁。",
+    "anonymousLoginTokensAAS": "用于访问 Google Play 商店的匿名密钥",
+    "viewTalkerLogs": "查看系统和网络日志"
 }
