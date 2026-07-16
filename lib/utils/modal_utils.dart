@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:smooth_sheets/smooth_sheets.dart';
 
 /// Shows a modal bottom sheet that is draggable from its scrollable content.
 Future<T?> showDraggableModalBottomSheet<T>({
@@ -13,52 +14,48 @@ Future<T?> showDraggableModalBottomSheet<T>({
   double maxChildSize = 1.0,
   bool useSafeArea = true,
 }) {
-  return showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: useSafeArea,
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    barrierColor: Theme.of(
-      context,
-    ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
-    builder: (context) {
-      final plusSettings = context.watch<PlusSettingsProvider>();
-      final enableGlass = plusSettings.plusEnableGlassmorphism;
-      // Blur must stay inside this ClipRRect so it is clipped to the
-      // sheet's bounds and never bleeds over the content behind it.
-      return ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        child: ConditionalBlur(
-          enabled: enableGlass,
-          sigma: AppConstants.glassBlurSigmaSoft,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(
-                alpha: enableGlass ? AppConstants.glassSurfaceAlphaStrong : 1.0,
+  final plusSettings = context.read<PlusSettingsProvider>();
+  final enableGlass = plusSettings.plusEnableGlassmorphism;
+  final scrollController = ScrollController();
+
+  return Navigator.of(context).push<T>(
+    ModalSheetRoute<T>(
+      swipeDismissible: true,
+      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: ConditionalBlur(
+            enabled: enableGlass,
+            sigma: AppConstants.glassBlurSigmaSoft,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface.withValues(
+                  alpha: enableGlass ? AppConstants.glassSurfaceAlphaStrong : 1.0,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                ),
               ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outline.withValues(alpha: 0.15),
-                  width: 1,
+              child: SafeArea(
+                bottom: false,
+                top: useSafeArea,
+                child: Sheet(
+                  physics: const BouncingSheetPhysics(),
+                  scrollConfiguration: const SheetScrollConfiguration(),
+                  child: builder(context, scrollController),
                 ),
               ),
             ),
-            child: DraggableScrollableSheet(
-              initialChildSize: initialChildSize,
-              minChildSize: minChildSize,
-              maxChildSize: maxChildSize,
-              expand: false,
-              builder: builder,
-            ),
           ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }
