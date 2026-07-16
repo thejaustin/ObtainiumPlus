@@ -1061,7 +1061,18 @@
     "plusShowStatusHub": "Show Status Hub",
     "plusShowStatusHubDescription": "Display summary cards for apps, updates, and storage at the top of the dashboard",
     "plusShowQuickActions": "Show Quick Actions",
-    "plusShowQuickActionsDescription": "Display a grid of frequently used management tools on the dashboard"
+    "plusShowQuickActionsDescription": "Display a grid of frequently used management tools on the dashboard",
+    "plusUpdateCheckConcurrency": "Update Check Concurrency",
+    "plusUpdateCheckConcurrencyDescription": "Max concurrent update checks (lower avoids rate limits)",
+    "plusDownloadConcurrency": "Download Concurrency",
+    "plusDownloadConcurrencyDescription": "Max concurrent downloads (lower is smoother on low bandwidth)",
+    "plusGithubToken": "GitHub API Login Token",
+    "plusGithubTokenDescription": "Sign in / set token to improve GitHub rate limits",
+    "plusGitlabToken": "GitLab API Login Token",
+    "plusGitlabTokenDescription": "Sign in / set token to improve GitLab rate limits",
+    "plusTokenConfigHelp": "Generate a Personal Access Token on the provider website to increase API rate limits.",
+    "plusTokenConfigStatus": "Status: Configured / Signed In",
+    "plusTokenLabel": "Personal Access Token"
 }
 
 

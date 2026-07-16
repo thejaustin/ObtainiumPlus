@@ -99,8 +99,8 @@ class UpdateSettingsSection extends StatelessWidget {
         Consumer<SettingsProvider>(
           builder: (context, settings, _) => ListTile(
             leading: const Icon(Icons.speed_outlined),
-            title: const Text('Update Check Concurrency'),
-            subtitle: const Text('Max concurrent update checks (lower avoids rate limits)'),
+            title: Text(tr('plusUpdateCheckConcurrency')),
+            subtitle: Text(tr('plusUpdateCheckConcurrencyDescription')),
             trailing: DropdownButton<int>(
               value: settings.updateCheckConcurrencyLimit,
               onChanged: (val) {
@@ -120,8 +120,8 @@ class UpdateSettingsSection extends StatelessWidget {
         Consumer<SettingsProvider>(
           builder: (context, settings, _) => ListTile(
             leading: const Icon(Icons.download_for_offline_outlined),
-            title: const Text('Download Concurrency'),
-            subtitle: const Text('Max concurrent downloads (lower is smoother on low bandwidth)'),
+            title: Text(tr('plusDownloadConcurrency')),
+            subtitle: Text(tr('plusDownloadConcurrencyDescription')),
             trailing: DropdownButton<int>(
               value: settings.updateDownloadConcurrencyLimit,
               onChanged: (val) {
