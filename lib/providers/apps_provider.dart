@@ -2358,6 +2358,26 @@ class AppsProvider with ChangeNotifier {
   }
 
   void forceNotifyListeners() => notifyListeners();
+
+  Future<void> _runWithConcurrencyLimit<T>(
+    List<T> items,
+    int limit,
+    Future<void> Function(T) action,
+  ) async {
+    if (items.isEmpty) return;
+    int index = 0;
+    Future<void> worker() async {
+      while (index < items.length) {
+        final current = index;
+        index++;
+        if (current >= items.length) break;
+        await action(items[current]);
+      }
+    }
+    final actualLimit = limit < items.length ? limit : items.length;
+    final workers = List.generate(actualLimit, (_) => worker());
+    await Future.wait(workers);
+  }
 }
 
 class AppFilePicker extends StatefulWidget {
@@ -2491,26 +2511,6 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
         ),
       ],
     );
-  }
-
-  Future<void> _runWithConcurrencyLimit<T>(
-    List<T> items,
-    int limit,
-    Future<void> Function(T) action,
-  ) async {
-    if (items.isEmpty) return;
-    int index = 0;
-    Future<void> worker() async {
-      while (index < items.length) {
-        final current = index;
-        index++;
-        if (current >= items.length) break;
-        await action(items[current]);
-      }
-    }
-    final actualLimit = limit < items.length ? limit : items.length;
-    final workers = List.generate(actualLimit, (_) => worker());
-    await Future.wait(workers);
   }
 }
 
