@@ -1374,7 +1374,7 @@ class AppsProvider with ChangeNotifier {
       List<Map<Object?, Object?>> results = List.filled(appsToInstall.length, {});
       await _runWithConcurrencyLimit<int>(
         List.generate(appsToInstall.length, (i) => i),
-        2, // Download at most 2 apps concurrently to avoid socket congestion
+        settingsProvider.updateDownloadConcurrencyLimit,
         (index) async {
           final id = appsToInstall[index];
           results[index] = await downloadFn(id, skipInstalls: true);
@@ -1521,7 +1521,7 @@ class AppsProvider with ChangeNotifier {
     } else {
       await _runWithConcurrencyLimit<MapEntry<MapEntry<String, String>, App>>(
         filesToDownload,
-        2, // Download at most 2 app assets concurrently to optimize bandwidth
+        settingsProvider.updateDownloadConcurrencyLimit,
         (urlWithApp) => downloadFn(urlWithApp.key, urlWithApp.value),
       );
     }
@@ -2104,7 +2104,7 @@ class AppsProvider with ChangeNotifier {
 
         await _runWithConcurrencyLimit<String>(
           appIds,
-          3, // Check at most 3 apps concurrently to prevent rate limits & connection resets
+          settingsProvider.updateCheckConcurrencyLimit,
           (appId) async {
             App? newApp;
             try {

@@ -6,6 +6,7 @@ import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 /// Advanced / warnings settings section
 class AdvancedSettingsSection extends StatelessWidget {
@@ -60,6 +61,24 @@ class AdvancedSettingsSection extends StatelessWidget {
         value: (s) => s.enableContextualTips,
         onChanged: (s, v) => s.enableContextualTips = v,
         visible: (s) => _matches(tr('enableContextualTips')),
+      ),
+      _buildTokenConfigTile(
+        context,
+        icon: Icons.login_outlined,
+        title: 'GitHub API Login Token',
+        subtitle: 'Sign in / set token to improve GitHub rate limits',
+        settingId: 'github-creds',
+        helpUrl: 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
+        visible: _matches('GitHub API Login Token'),
+      ),
+      _buildTokenConfigTile(
+        context,
+        icon: Icons.login_outlined,
+        title: 'GitLab API Login Token',
+        subtitle: 'Sign in / set token to improve GitLab rate limits',
+        settingId: 'gitlab-creds',
+        helpUrl: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
+        visible: _matches('GitLab API Login Token'),
       ),
       const Divider(),
       if (_matches(tr('factoryReset')))
@@ -139,6 +158,98 @@ class AdvancedSettingsSection extends StatelessWidget {
           onChanged: (v) => onChanged(settings, v),
         );
       },
+    );
+  }
+
+  Widget _buildTokenConfigTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String settingId,
+    required String helpUrl,
+    required bool visible,
+  }) {
+    if (!visible) return const SizedBox.shrink();
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        final token = settings.getSettingString(settingId);
+        final isConfigured = token != null && token.isNotEmpty;
+        return ListTile(
+          leading: Icon(icon, color: isConfigured ? Theme.of(context).colorScheme.primary : null),
+          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          subtitle: Text(isConfigured ? 'Status: Configured / Signed In' : subtitle),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+          onTap: () => _showTokenConfigDialog(
+            context,
+            title: title,
+            settingId: settingId,
+            helpUrl: helpUrl,
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTokenConfigDialog(
+    BuildContext context, {
+    required String title,
+    required String settingId,
+    required String helpUrl,
+  }) {
+    final settings = context.read<SettingsProvider>();
+    final controller = TextEditingController(
+      text: settings.getSettingString(settingId) ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => GlassDialog(
+        title: title,
+        icon: Icons.vpn_key_outlined,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: 'Personal Access Token',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => controller.clear(),
+                ),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () {
+                launchUrlString(helpUrl, mode: LaunchMode.externalApplication);
+              },
+              child: const Text(
+                'Generate a Personal Access Token on the provider website to increase API rate limits.',
+                style: TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              settings.setSettingString(settingId, controller.text.trim());
+              Navigator.pop(ctx);
+            },
+            child: Text(tr('save')),
+          ),
+        ],
+      ),
     );
   }
 }
