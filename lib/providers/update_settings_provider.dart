@@ -1,5 +1,5 @@
 import 'package:obtainium/utils/safe_prefs.dart';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';

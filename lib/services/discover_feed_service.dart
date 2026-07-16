@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'dart:math';
 
 import 'package:html/dom.dart';
