@@ -49,6 +49,11 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - Removed the overhead of `.asBroadcastStream()`, improving download throughput and lowering memory allocation.
   - Checked the HTTP response status code early to abort immediately upon error, preventing unnecessary downloads of server error pages.
   - Increased the chunk write buffer size from 32KB to 128KB to reduce disk write frequency and increase speed.
+- **Implemented Concurrency Throttling for Network Operations**: Added a lightweight, lock-free concurrency pool manager (`_runWithConcurrencyLimit`) in `apps_provider.dart` to solve network rate-limiting and connection socket saturation:
+  - Throttled batch app update checks (`checkUpdates`) to a maximum of 3 concurrent requests.
+  - Throttled batch update downloads (`installUpdates`) to a maximum of 2 concurrent downloads.
+  - Throttled batch asset downloads (`downloadAppAssets`) to a maximum of 2 concurrent downloads.
+  - Keeps the order of execution aligned and prevents `RateLimitError` or socket resets.
 
 ### 2026-07-14 — Antigravity CLI [session 74aad2b0]
 
