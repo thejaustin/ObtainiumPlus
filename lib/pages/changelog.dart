@@ -84,8 +84,7 @@ class _ChangelogPageState extends State<ChangelogPage> {
             if (release is! Map) continue;
             final tag = (release['tag_name'] ?? '').toString();
             if (release['draft'] == true ||
-                release['prerelease'] == true ||
-                !tag.startsWith('v')) {
+                release['prerelease'] == true) {
               continue;
             }
             final name = (release['name'] ?? '').toString();

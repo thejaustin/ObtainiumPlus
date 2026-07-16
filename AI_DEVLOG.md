@@ -62,6 +62,13 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - **GitHub API Login Token**: Users can enter a personal access token centrally, boosting rate limits for all GitHub-based apps.
   - **GitLab API Login Token**: Users can configure their token globally for GitLab.
   - Tokens are saved securely to SharedPreferences and automatically inherited by the respective API clients.
+- **Implemented GitHub OAuth Device Authorization Flow**: Added a seamless "Sign In via GitHub OAuth" button inside the central token configuration dialog, allowing users to authenticate directly and obtain an access token without manual PAT creation.
+- **Added Bottom Navigation Bar & FAB Toggle Settings**:
+  * Added setting toggles in `plus_features_section.dart` (`plusEnableBottomNavBar` and `plusEnableFAB`).
+  * Phased out bottom navigation by default to maximize the full-screen Apps view.
+  * Added a settings gear and add-app shortcut in the top right corner of the `CustomAppBar` / `SliverAppBar`.
+  * Added a backup/restore/import/export shortcut tile directly within the Advanced Settings group and the Add App page app bar.
+- **Fixed Empty Startup Release Notes (Changelog)**: Resolved a bug in `changelog.dart` where tags not starting with `v` (like ObtainiumPlus's `1.4.3-p53`) were skipped, causing the startup changelog to load empty/fetch failed.
 
 ### 2026-07-14 — Antigravity CLI [session 74aad2b0]
 

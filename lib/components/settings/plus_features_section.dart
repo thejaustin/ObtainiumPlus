@@ -264,6 +264,26 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableHomeDashboard = val,
                     ),
+                  if (_matches(tr('plusEnableBottomNavBar')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.navigation_rounded,
+                      title: tr('plusEnableBottomNavBar'),
+                      subtitle: tr('plusEnableBottomNavBarDescription'),
+                      value: settings.plusEnableBottomNavBar,
+                      onChanged: (val) => settings.plusEnableBottomNavBar = val,
+                    ),
+                  if (_matches(tr('plusEnableFAB')))
+                    _buildFeatureToggle(
+                      context,
+                      settings,
+                      icon: Icons.add_circle_outline_rounded,
+                      title: tr('plusEnableFAB'),
+                      subtitle: tr('plusEnableFABDescription'),
+                      value: settings.plusEnableFAB,
+                      onChanged: (val) => settings.plusEnableFAB = val,
+                    ),
                 ],
               ),
 

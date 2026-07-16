@@ -18,6 +18,7 @@ import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/components/apps/app_tile_skeleton.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/discover.dart';
+import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -1084,7 +1085,20 @@ class AddAppPageState extends State<AddAppPage> {
           : const AlwaysScrollableScrollPhysics(),
       shrinkWrap: true,
       slivers: <Widget>[
-        if (!widget.isModal) CustomAppBar(title: tr('addApp')),
+        if (!widget.isModal)
+          CustomAppBar(
+            title: tr('addApp'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.import_export_rounded),
+                tooltip: tr('importExport'),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  pushRoute(context, const ImportExportPage());
+                },
+              ),
+            ],
+          ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),

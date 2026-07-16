@@ -321,10 +321,12 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
-    final currentIndex = selectedIndexHistory.isEmpty
-        ? 0
-        : selectedIndexHistory.last;
+    final showNavBar = plusSettings.plusEnableBottomNavBar;
+    final currentIndex = showNavBar
+        ? (selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last)
+        : 0;
 
     // With transitions disabled, render the page directly:
     // PageTransitionSwitcher with Duration.zero can leave the incoming
@@ -356,16 +358,18 @@ class HomePageState extends State<HomePage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        setIsReversing(
-          selectedIndexHistory.length >= 2
-              ? selectedIndexHistory.reversed.toList()[1]
-              : 0,
-        );
-        if (selectedIndexHistory.isNotEmpty) {
-          setState(() {
-            selectedIndexHistory.removeLast();
-          });
-          return;
+        if (showNavBar) {
+          setIsReversing(
+            selectedIndexHistory.length >= 2
+                ? selectedIndexHistory.reversed.toList()[1]
+                : 0,
+          );
+          if (selectedIndexHistory.isNotEmpty) {
+            setState(() {
+              selectedIndexHistory.removeLast();
+            });
+            return;
+          }
         }
         final clearSelected = (pages[0].widget.key as GlobalKey<AppsPageState>)
             .currentState!
@@ -378,11 +382,11 @@ class HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         // The omnibar "+" — the single entry point for the combined
         // add/search/discover flow, visible on every tab.
-        floatingActionButton: settingsProvider.isTV
-            ? null
-            : const AppActionsFAB(),
+        floatingActionButton: plusSettings.plusEnableFAB && !settingsProvider.isTV
+            ? const AppActionsFAB()
+            : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        body: settingsProvider.isTV
+        body: settingsProvider.isTV && showNavBar
             ? Row(
                 children: [
                   FocusTraversalGroup(
@@ -394,7 +398,7 @@ class HomePageState extends State<HomePage> {
                               label: Text(tr(e.title)),
                             ),
                           )
-                          .toList(),
+                           .toList(),
                       selectedIndex: currentIndex,
                       onDestinationSelected: switchToPage,
                       labelType: NavigationRailLabelType.all,
@@ -405,7 +409,7 @@ class HomePageState extends State<HomePage> {
                 ],
               )
             : pageBody,
-        bottomNavigationBar: settingsProvider.isTV
+        bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
             : FocusTraversalGroup(
                 child: Focus(
