@@ -94,6 +94,49 @@ class UpdateSettingsSection extends StatelessWidget {
           ),
         ),
 
+      // Concurrency Limit settings
+      if (_matches(tr('parallelDownloads'), isAdvanced: true))
+        Consumer<SettingsProvider>(
+          builder: (context, settings, _) => ListTile(
+            leading: const Icon(Icons.speed_outlined),
+            title: const Text('Update Check Concurrency'),
+            subtitle: const Text('Max concurrent update checks (lower avoids rate limits)'),
+            trailing: DropdownButton<int>(
+              value: settings.updateCheckConcurrencyLimit,
+              onChanged: (val) {
+                if (val != null) {
+                  settings.updateCheckConcurrencyLimit = val;
+                }
+              },
+              items: [1, 2, 3, 5, 10].map((limit) => DropdownMenuItem(
+                value: limit,
+                child: Text(limit.toString()),
+              )).toList(),
+            ),
+          ),
+        ),
+
+      if (_matches(tr('parallelDownloads'), isAdvanced: true))
+        Consumer<SettingsProvider>(
+          builder: (context, settings, _) => ListTile(
+            leading: const Icon(Icons.download_for_offline_outlined),
+            title: const Text('Download Concurrency'),
+            subtitle: const Text('Max concurrent downloads (lower is smoother on low bandwidth)'),
+            trailing: DropdownButton<int>(
+              value: settings.updateDownloadConcurrencyLimit,
+              onChanged: (val) {
+                if (val != null) {
+                  settings.updateDownloadConcurrencyLimit = val;
+                }
+              },
+              items: [1, 2, 3, 4, 5].map((limit) => DropdownMenuItem(
+                value: limit,
+                child: Text(limit.toString()),
+              )).toList(),
+            ),
+          ),
+        ),
+
       _buildAdditionalUpdateSettings(context),
     ];
 

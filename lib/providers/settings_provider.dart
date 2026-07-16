@@ -302,4 +302,16 @@ class SettingsProvider with ChangeNotifier {
 
   // Stub for export dir picker (moved to BehaviorSettingsProvider).
   Future<void> pickExportDir({bool remove = false}) async {}
+
+  int get updateCheckConcurrencyLimit => prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3;
+  set updateCheckConcurrencyLimit(int val) {
+    prefs?.setInt('updateCheckConcurrencyLimit', val);
+    notifyListeners();
+  }
+
+  int get updateDownloadConcurrencyLimit => prefs?.safeInt('updateDownloadConcurrencyLimit') ?? 2;
+  set updateDownloadConcurrencyLimit(int val) {
+    prefs?.setInt('updateDownloadConcurrencyLimit', val);
+    notifyListeners();
+  }
 }

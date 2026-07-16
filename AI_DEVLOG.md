@@ -54,6 +54,14 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - Throttled batch update downloads (`installUpdates`) to a maximum of 2 concurrent downloads.
   - Throttled batch asset downloads (`downloadAppAssets`) to a maximum of 2 concurrent downloads.
   - Keeps the order of execution aligned and prevents `RateLimitError` or socket resets.
+- **Added User Options for Batch Updating Concurrency**: Exposed settings in `SettingsProvider` and added dropdown menus inside the updates settings group (`update_settings_section.dart`):
+  - **Update Check Concurrency**: Users can configure the limit of concurrent update checks (choices: 1, 2, 3, 5, 10).
+  - **Download Concurrency**: Users can configure the limit of concurrent file downloads (choices: 1, 2, 3, 4, 5).
+  - Wired these settings dynamically into `apps_provider.dart` to replace previous hardcoded values.
+- **Implemented Central Source Logins & API Tokens Settings**: Added list tiles and pop-up configuration dialogs under the advanced settings group (`advanced_settings_section.dart`):
+  - **GitHub API Login Token**: Users can enter a personal access token centrally, boosting rate limits for all GitHub-based apps.
+  - **GitLab API Login Token**: Users can configure their token globally for GitLab.
+  - Tokens are saved securely to SharedPreferences and automatically inherited by the respective API clients.
 
 ### 2026-07-14 — Antigravity CLI [session 74aad2b0]
 
