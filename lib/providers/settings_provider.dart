@@ -194,6 +194,18 @@ class SettingsProvider with ChangeNotifier {
       prefs?.safeBool('reversePageTransitions') ?? false;
   bool get autoExportOnChanges =>
       prefs?.safeBool('autoExportOnChanges') ?? false;
+  set autoExportOnChanges(bool val) {
+    prefs?.setBool('autoExportOnChanges', val);
+    notifyListeners();
+  }
+
+  bool get highlightTouchTargets =>
+      prefs?.safeBool('highlightTouchTargets') ?? false;
+  set highlightTouchTargets(bool val) {
+    prefs?.setBool('highlightTouchTargets', val);
+    notifyListeners();
+  }
+
   int get exportSettings => prefs?.safeInt('exportSettings') ?? 1;
   bool get parallelDownloads => prefs?.safeBool('parallelDownloads') ?? true;
   bool get shizukuPretendToBeGooglePlay =>
