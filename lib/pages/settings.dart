@@ -35,7 +35,17 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _selectedSectionIndex = (widget.initialTab ?? 0).clamp(0, 8);
+    int initTab = widget.initialTab ?? 0;
+    if (initTab == 2) {
+      initTab = 1;
+    } else if (initTab == 3 || initTab == 4) {
+      initTab = 2;
+    } else if (initTab == 5 || initTab == 6) {
+      initTab = 3;
+    } else if (initTab == 7 || initTab == 8) {
+      initTab = 4;
+    }
+    _selectedSectionIndex = initTab.clamp(0, 4);
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       setState(() {
@@ -96,23 +106,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   children:
                       [
                         (label: 'Obtainium+', icon: Icons.auto_awesome_rounded),
-                        (label: 'Visuals', icon: Icons.palette_outlined),
-                        (label: 'Apps View', icon: Icons.grid_view_rounded),
-                        (label: 'Updates', icon: Icons.system_update_rounded),
+                        (label: 'Appearance', icon: Icons.palette_outlined),
                         (
-                          label: 'Installation',
-                          icon: Icons.install_mobile_rounded,
+                          label: 'Updates & Install',
+                          icon: Icons.system_update_rounded,
                         ),
-                        (
-                          label: 'Notifications',
-                          icon: Icons.notifications_outlined,
-                        ),
-                        (label: 'Behavior', icon: Icons.tune_rounded),
-                        (label: 'Advanced', icon: Icons.code_rounded),
-                        (
-                          label: 'Troubleshooting',
-                          icon: Icons.bug_report_outlined,
-                        ),
+                        (label: 'Behavior & Alerts', icon: Icons.tune_rounded),
+                        (label: 'Advanced & Debug', icon: Icons.code_rounded),
                       ].asMap().entries.map((entry) {
                         final isSelected = _selectedSectionIndex == entry.key;
                         final tab = entry.value;
@@ -184,18 +184,20 @@ class _SettingsPageState extends State<SettingsPage> {
                 [
                       if (_searchQuery.isNotEmpty || _selectedSectionIndex == 0)
                         PlusFeaturesSection(searchQuery: _searchQuery),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 1)
+                      if (_searchQuery.isNotEmpty ||
+                          _selectedSectionIndex == 1) ...[
                         ThemeSettingsSection(
                           searchQuery: _searchQuery,
                           androidInfoFuture: _androidInfoFuture,
                           colorsNameMap: const <ColorSwatch<Object>, String>{},
                         ),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 2)
                         AppsViewSettingsSection(
                           searchQuery: _searchQuery,
                           onSetState: (fn) => setState(fn),
                         ),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
+                      ],
+                      if (_searchQuery.isNotEmpty ||
+                          _selectedSectionIndex == 2) ...[
                         UpdateSettingsSection(
                           searchQuery: _searchQuery,
                           showIntervalLabel: _showIntervalLabel,
@@ -203,16 +205,18 @@ class _SettingsPageState extends State<SettingsPage> {
                               setState(() => _showIntervalLabel = val),
                           androidInfoFuture: _androidInfoFuture,
                         ),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 4)
                         InstallationSection(searchQuery: _searchQuery),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 5)
-                        NotificationSettingsSection(searchQuery: _searchQuery),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 6)
+                      ],
+                      if (_searchQuery.isNotEmpty ||
+                          _selectedSectionIndex == 3) ...[
                         AppBehaviorSection(searchQuery: _searchQuery),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 7)
+                        NotificationSettingsSection(searchQuery: _searchQuery),
+                      ],
+                      if (_searchQuery.isNotEmpty ||
+                          _selectedSectionIndex == 4) ...[
                         AdvancedSettingsSection(searchQuery: _searchQuery),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 8)
                         TroubleshootingSection(searchQuery: _searchQuery),
+                      ],
                       const SizedBox(height: 48),
                       _buildFooter(context),
                       const SizedBox(height: 32),
