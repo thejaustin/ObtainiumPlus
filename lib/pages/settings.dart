@@ -40,12 +40,14 @@ class _SettingsPageState extends State<SettingsPage> {
       initTab = 1;
     } else if (initTab == 3 || initTab == 4) {
       initTab = 2;
-    } else if (initTab == 5 || initTab == 6) {
+    } else if (initTab == 5) {
       initTab = 3;
-    } else if (initTab == 7 || initTab == 8) {
+    } else if (initTab == 6) {
       initTab = 4;
+    } else if (initTab == 7 || initTab == 8) {
+      initTab = 5;
     }
-    _selectedSectionIndex = initTab.clamp(0, 4);
+    _selectedSectionIndex = initTab.clamp(0, 5);
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       setState(() {
@@ -111,7 +113,11 @@ class _SettingsPageState extends State<SettingsPage> {
                           label: 'Updates & Install',
                           icon: Icons.system_update_rounded,
                         ),
-                        (label: 'Behavior & Alerts', icon: Icons.tune_rounded),
+                        (
+                          label: 'Notifications',
+                          icon: Icons.notifications_outlined,
+                        ),
+                        (label: 'Behavior', icon: Icons.tune_rounded),
                         (label: 'Advanced & Debug', icon: Icons.code_rounded),
                       ].asMap().entries.map((entry) {
                         final isSelected = _selectedSectionIndex == entry.key;
@@ -207,13 +213,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         InstallationSection(searchQuery: _searchQuery),
                       ],
-                      if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 3) ...[
-                        AppBehaviorSection(searchQuery: _searchQuery),
+                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
                         NotificationSettingsSection(searchQuery: _searchQuery),
-                      ],
+                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 4)
+                        AppBehaviorSection(searchQuery: _searchQuery),
                       if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 4) ...[
+                          _selectedSectionIndex == 5) ...[
                         AdvancedSettingsSection(searchQuery: _searchQuery),
                         TroubleshootingSection(searchQuery: _searchQuery),
                       ],
