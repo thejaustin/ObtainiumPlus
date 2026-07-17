@@ -1076,7 +1076,9 @@
     "plusEnableBottomNavBar": "Enable Bottom Navigation Bar",
     "plusEnableBottomNavBarDescription": "Show the bottom navigation bar and navigation rail for multi-page layout (otherwise full-screen Apps view)",
     "plusEnableFAB": "Enable Quick Action FAB",
-    "plusEnableFABDescription": "Show the floating '+' action button in the bottom right corner (otherwise shown in top app bar)"
+    "plusEnableFABDescription": "Show the floating '+' action button in the bottom right corner (otherwise shown in top app bar)",
+    "plusEnableSwipeActions": "Enable Swipe Actions",
+    "plusEnableSwipeActionsDescription": "Swipe left/right on app tiles to reveal quick actions like update, delete, or pin"
 }
 
 

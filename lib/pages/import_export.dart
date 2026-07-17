@@ -4,14 +4,12 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
@@ -34,19 +32,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
   Widget build(BuildContext context) {
     SourceProvider sourceProvider = SourceProvider();
     var appsProvider = context.watch<AppsProvider>();
-    var settingsProvider = context.watch<SettingsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
-
-    var outlineButtonStyle = ButtonStyle(
-      shape: WidgetStateProperty.all(
-        StadiumBorder(
-          side: BorderSide(
-            width: 1,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      ),
-    );
 
     urlListImport({String? initValue, bool overrideInitValid = false}) {
       showDialog<Map<String, dynamic>?>(
@@ -373,227 +359,277 @@ class _ImportExportPageState extends State<ImportExportPage> {
       sourceStrings[s.name] = [s.name];
     });
 
+    final colorScheme = Theme.of(context).colorScheme;
+
+    Widget _sectionCard({
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required List<Widget> actions,
+      Color? iconColor,
+    }) {
+      return Card.filled(
+        color: colorScheme.surfaceContainerLow,
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (iconColor ?? colorScheme.primary)
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: iconColor ?? colorScheme.primary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: actions,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: colorScheme.surface,
       body: CustomScrollView(
         slivers: <Widget>[
           CustomAppBar(title: tr('importExport')),
-          SliverFillRemaining(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FutureBuilder(
-                    future: behaviorSettings.getExportDir(),
-                      builder: (context, snapshot) {
-                        return Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextButton(
-                                    style: outlineButtonStyle,
-                                    onPressed: importInProgress
-                                        ? null
-                                        : () {
-                                            runObtainiumExport(pickOnly: true);
-                                          },
-                                    child: Text(
-                                      tr('pickExportDir'),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: TextButton(
-                                    style: outlineButtonStyle,
-                                    onPressed:
-                                        importInProgress ||
-                                            snapshot.data == null
-                                        ? null
-                                        : runObtainiumExport,
-                                    child: Text(
-                                      tr('obtainiumExport'),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextButton(
-                                    style: outlineButtonStyle,
-                                    onPressed: importInProgress
-                                        ? null
-                                        : runObtainiumImport,
-                                    child: Text(
-                                      tr('obtainiumImport'),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (snapshot.data != null)
-                              Column(
-                                children: [
-                                  const SizedBox(height: 16),
-                                  GeneratedForm(
-                                    items: [
-                                      [
-                                        GeneratedFormSwitch(
-                                          'autoExportOnChanges',
-                                          label: tr('autoExportOnChanges'),
-                                          defaultValue: behaviorSettings
-                                              .autoExportOnChanges,
-                                        ),
-                                      ],
-                                      [
-                                        GeneratedFormDropdown(
-                                          'exportSettings',
-                                          [
-                                            MapEntry('0', tr('none')),
-                                            MapEntry('1', tr('excludeSecrets')),
-                                            MapEntry('2', tr('all')),
-                                          ],
-                                          label: tr('includeSettings'),
-                                          defaultValue: behaviorSettings
-                                              .exportSettings
-                                              .toString(),
-                                        ),
-                                      ],
-                                    ],
-                                    onValueChanges: (value, valid, isBuilding) {
-                                      if (valid && !isBuilding) {
-                                        if (value['autoExportOnChanges'] !=
-                                            null) {
-                                          behaviorSettings.autoExportOnChanges =
-                                              value['autoExportOnChanges'] ==
-                                              true;
-                                        }
-                                        if (value['exportSettings'] != null) {
-                                          behaviorSettings.exportSettings =
-                                              int.parse(
-                                                value['exportSettings'],
-                                              );
-                                        }
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  if (importInProgress)
-                    const Column(
-                      children: [
-                        SizedBox(height: 14),
-                        ExpressiveProgressIndicator(),
-                        SizedBox(height: 14),
-                      ],
-                    )
-                  else
-                    Column(
-                      children: [
-                        SizedBox(height: 32),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: importInProgress
-                                    ? null
-                                    : () async {
-                                        var searchSourceName =
-                                            await showDialog<List<String>?>(
-                                              context: context,
-                                              builder: (BuildContext ctx) {
-                                                return SelectionModal(
-                                                  title: tr(
-                                                    'selectX',
-                                                    args: [
-                                                      tr(
-                                                        'source',
-                                                      ).toLowerCase(),
-                                                    ],
-                                                  ),
-                                                  entries: sourceStrings,
-                                                  selectedByDefault: false,
-                                                  onlyOneSelectionAllowed: true,
-                                                  titlesAreLinks: false,
-                                                );
-                                              },
-                                            ) ??
-                                            [];
-                                        var searchSource = sourceProvider
-                                            .sources
-                                            .where(
-                                              (e) => searchSourceName.contains(
-                                                e.name,
-                                              ),
-                                            )
-                                            .toList();
-                                        if (searchSource.isNotEmpty) {
-                                          runSourceSearch(searchSource[0]);
-                                        }
-                                      },
-                                child: Text(
-                                  tr(
-                                    'searchX',
-                                    args: [lowerCaseIfEnglish(tr('source'))],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: importInProgress ? null : urlListImport,
-                          child: Text(tr('importFromURLList')),
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: importInProgress ? null : runUrlImport,
-                          child: Text(tr('importFromURLsInFile')),
-                        ),
-                      ],
-                    ),
-                  ...sourceProvider.massUrlSources.map(
-                    (source) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 8),
-                        TextButton(
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── EXPORT section ─────────────────────────────────────
+                FutureBuilder(
+                  future: behaviorSettings.getExportDir(),
+                  builder: (context, snapshot) {
+                    return _sectionCard(
+                      icon: Icons.upload_rounded,
+                      title: tr('obtainiumExport'),
+                      subtitle: tr('exportedTo',
+                          args: [snapshot.data ?? tr('pickExportDir')]),
+                      iconColor: colorScheme.tertiary,
+                      actions: [
+                        FilledButton.icon(
                           onPressed: importInProgress
                               ? null
-                              : () {
-                                  runMassSourceImport(source);
-                                },
-                          child: Text(tr('importX', args: [source.name])),
+                              : () => runObtainiumExport(pickOnly: true),
+                          icon: const Icon(Icons.folder_open_rounded, size: 18),
+                          label: Text(tr('pickExportDir')),
                         ),
+                        OutlinedButton.icon(
+                          onPressed:
+                              importInProgress || snapshot.data == null
+                                  ? null
+                                  : runObtainiumExport,
+                          icon: const Icon(Icons.save_alt_rounded, size: 18),
+                          label: Text(tr('obtainiumExport')),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                // Auto-export settings (shown only when export dir is set)
+                FutureBuilder(
+                  future: behaviorSettings.getExportDir(),
+                  builder: (context, snapshot) {
+                    if (snapshot.data == null) return const SizedBox.shrink();
+                    return Card.outlined(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        child: GeneratedForm(
+                          items: [
+                            [
+                              GeneratedFormSwitch(
+                                'autoExportOnChanges',
+                                label: tr('autoExportOnChanges'),
+                                defaultValue:
+                                    behaviorSettings.autoExportOnChanges,
+                              ),
+                            ],
+                            [
+                              GeneratedFormDropdown(
+                                'exportSettings',
+                                [
+                                  MapEntry('0', tr('none')),
+                                  MapEntry('1', tr('excludeSecrets')),
+                                  MapEntry('2', tr('all')),
+                                ],
+                                label: tr('includeSettings'),
+                                defaultValue: behaviorSettings.exportSettings
+                                    .toString(),
+                              ),
+                            ],
+                          ],
+                          onValueChanges: (value, valid, isBuilding) {
+                            if (valid && !isBuilding) {
+                              if (value['autoExportOnChanges'] != null) {
+                                behaviorSettings.autoExportOnChanges =
+                                    value['autoExportOnChanges'] == true;
+                              }
+                              if (value['exportSettings'] != null) {
+                                behaviorSettings.exportSettings =
+                                    int.parse(value['exportSettings']);
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // ── IMPORT section ──────────────────────────────────────
+                _sectionCard(
+                  icon: Icons.download_rounded,
+                  title: tr('obtainiumImport'),
+                  subtitle: tr('importedAppsIdDisclaimer'),
+                  iconColor: colorScheme.primary,
+                  actions: [
+                    FilledButton.icon(
+                      onPressed:
+                          importInProgress ? null : runObtainiumImport,
+                      icon: const Icon(Icons.file_open_rounded, size: 18),
+                      label: Text(tr('obtainiumImport')),
+                    ),
+                  ],
+                ),
+
+                // ── Progress indicator ──────────────────────────────────
+                if (importInProgress)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: [
+                        ExpressiveProgressIndicator(),
+                        SizedBox(height: 8),
                       ],
                     ),
                   ),
-                  const Spacer(),
-                  const Divider(height: 32),
-                  Text(
-                    tr('importedAppsIdDisclaimer'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontSize: 12,
-                    ),
+
+                // ── SOURCE IMPORT section ───────────────────────────────
+                if (!importInProgress)
+                  _sectionCard(
+                    icon: Icons.manage_search_rounded,
+                    title: tr('searchX', args: [lowerCaseIfEnglish(tr('source'))]),
+                    subtitle: tr('importFromURLList'),
+                    iconColor: colorScheme.secondary,
+                    actions: [
+                      OutlinedButton.icon(
+                        onPressed: importInProgress
+                            ? null
+                            : () async {
+                                var searchSourceName =
+                                    await showDialog<List<String>?>(
+                                          context: context,
+                                          builder: (BuildContext ctx) {
+                                            return SelectionModal(
+                                              title: tr(
+                                                'selectX',
+                                                args: [
+                                                  tr('source').toLowerCase()
+                                                ],
+                                              ),
+                                              entries: sourceStrings,
+                                              selectedByDefault: false,
+                                              onlyOneSelectionAllowed: true,
+                                              titlesAreLinks: false,
+                                            );
+                                          },
+                                        ) ??
+                                    [];
+                                var searchSource = sourceProvider.sources
+                                    .where((e) =>
+                                        searchSourceName.contains(e.name))
+                                    .toList();
+                                if (searchSource.isNotEmpty) {
+                                  runSourceSearch(searchSource[0]);
+                                }
+                              },
+                        icon: const Icon(Icons.source_rounded, size: 18),
+                        label: Text(tr('searchX',
+                            args: [lowerCaseIfEnglish(tr('source'))])),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed:
+                            importInProgress ? null : urlListImport,
+                        icon: const Icon(Icons.list_alt_rounded, size: 18),
+                        label: Text(tr('importFromURLList')),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed:
+                            importInProgress ? null : runUrlImport,
+                        icon: const Icon(Icons.upload_file_rounded, size: 18),
+                        label: Text(tr('importFromURLsInFile')),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                ],
-              ),
+
+                // ── MASS SOURCE IMPORTS ─────────────────────────────────
+                if (!importInProgress &&
+                    sourceProvider.massUrlSources.isNotEmpty)
+                  _sectionCard(
+                    icon: Icons.cloud_download_rounded,
+                    title: tr('importX', args: ['…']),
+                    subtitle: '',
+                    iconColor: colorScheme.error,
+                    actions: [
+                      ...sourceProvider.massUrlSources.map(
+                        (source) => OutlinedButton.icon(
+                          onPressed: importInProgress
+                              ? null
+                              : () => runMassSourceImport(source),
+                          icon: const Icon(Icons.download_for_offline_rounded,
+                              size: 18),
+                          label: Text(tr('importX', args: [source.name])),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                const SizedBox(height: 24),
+              ]),
             ),
           ),
         ],
