@@ -85,10 +85,9 @@ class DownloadCancelledError extends ObtainiumError {
 
 class BadDownloadError extends ObtainiumError {
   final String? appId;
-  BadDownloadError({this.appId}) : super('Downloaded file is invalid or corrupted');
+  BadDownloadError({this.appId})
+    : super('Downloaded file is invalid or corrupted');
 }
-
-
 
 class NotImplementedError extends ObtainiumError {
   NotImplementedError() : super(tr('functionNotImplemented'));
@@ -101,7 +100,12 @@ class MultiAppMultiError extends ObtainiumError {
 
   MultiAppMultiError() : super(tr('placeholder'), unexpected: true);
 
-  void add(String appId, dynamic error, {String? appName, StackTrace? stackTrace}) {
+  void add(
+    String appId,
+    dynamic error, {
+    String? appName,
+    StackTrace? stackTrace,
+  }) {
     if (error is SocketException) {
       error = error.message;
     }
@@ -149,7 +153,9 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
           title: e is MultiAppMultiError
               ? tr(isError ? 'someErrors' : 'updates')
               : tr(isError ? 'unexpectedError' : 'unknown'),
-          icon: isError ? Icons.error_outline_rounded : Icons.info_outline_rounded,
+          icon: isError
+              ? Icons.error_outline_rounded
+              : Icons.info_outline_rounded,
           content: GestureDetector(
             onLongPress: () {
               Clipboard.setData(ClipboardData(text: e.toString()));

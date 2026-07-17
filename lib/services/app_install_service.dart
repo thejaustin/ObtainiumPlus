@@ -139,7 +139,9 @@ class AppInstallService {
     }
   }
 
-  static const _nativeChannel = MethodChannel('dev.thejaustin.obtainiumplus/native');
+  static const _nativeChannel = MethodChannel(
+    'dev.thejaustin.obtainiumplus/native',
+  );
 
   static Future<bool> setUpdateOwnership(String packageName) async {
     try {
@@ -216,7 +218,9 @@ class AppInstallService {
 
   static Future<bool> canInstallSilently(
     App app,
-    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
+    BehaviorSettingsProvider behaviorSettings,
+    PlusSettingsProvider plusSettings,
+    UpdateSettingsProvider updateSettings,
     LogsProvider logs,
   ) async {
     if (!updateSettings.enableBackgroundUpdates) {
@@ -289,7 +293,9 @@ class AppInstallService {
   static Future<bool> installApkStandalone(
     File file,
     BuildContext context,
-    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
+    BehaviorSettingsProvider behaviorSettings,
+    PlusSettingsProvider plusSettings,
+    UpdateSettingsProvider updateSettings,
     LogsProvider logs, {
     bool shizukuPretendToBeGooglePlay = false,
   }) async {
@@ -342,7 +348,9 @@ class AppInstallService {
   static Future<bool> installApk(
     DownloadedApk file,
     BuildContext? firstTimeWithContext,
-    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
+    BehaviorSettingsProvider behaviorSettings,
+    PlusSettingsProvider plusSettings,
+    UpdateSettingsProvider updateSettings,
     LogsProvider logs,
     Map<String, AppInMemory> apps, {
     bool needsBGWorkaround = false,
@@ -414,7 +422,8 @@ class AppInstallService {
 
     Future<void> executeBgWorkaroundIfNeeded() async {
       if (needsBGWorkaround) {
-        apps[file.appId]!.app.installedVersion = apps[file.appId]!.app.latestVersion;
+        apps[file.appId]!.app.installedVersion =
+            apps[file.appId]!.app.latestVersion;
         if (saveApps != null) {
           await saveApps([apps[file.appId]!.app]);
         }
@@ -428,19 +437,29 @@ class AppInstallService {
       );
     } else {
       try {
-        var fakeSource = shizukuPretendToBeGooglePlay ? "com.android.vending" : "";
+        var fakeSource = shizukuPretendToBeGooglePlay
+            ? "com.android.vending"
+            : "";
         if (additionalAPKs.isNotEmpty) {
           var allUris = [file.file.uri.toString()];
           allUris.addAll(additionalAPKs.map((a) => a.file.uri.toString()));
-          code = await ShizukuApkInstaller().installAABSplits(allUris, fakeSource);
+          code = await ShizukuApkInstaller().installAABSplits(
+            allUris,
+            fakeSource,
+          );
         } else {
-          code = await ShizukuApkInstaller().installAPK(file.file.uri.toString(), fakeSource);
+          code = await ShizukuApkInstaller().installAPK(
+            file.file.uri.toString(),
+            fakeSource,
+          );
         }
         if (code != 0 && code != 3) {
           throw Exception("Shizuku failed with code $code");
         }
       } catch (e) {
-        logs.add('Shizuku install failed: $e, falling back to AndroidPackageInstaller');
+        logs.add(
+          'Shizuku install failed: $e, falling back to AndroidPackageInstaller',
+        );
         await executeBgWorkaroundIfNeeded();
         code = await AndroidPackageInstaller.installApk(
           apkFilePath: allAPKs.join(','),
@@ -484,7 +503,9 @@ class AppInstallService {
   static Future<bool> installApkDir(
     DownloadedDir dir,
     BuildContext? firstTimeWithContext,
-    BehaviorSettingsProvider behaviorSettings, PlusSettingsProvider plusSettings, UpdateSettingsProvider updateSettings,
+    BehaviorSettingsProvider behaviorSettings,
+    PlusSettingsProvider plusSettings,
+    UpdateSettingsProvider updateSettings,
     LogsProvider logs,
     Map<String, AppInMemory> apps, {
     bool needsBGWorkaround = false,
@@ -575,4 +596,3 @@ class AppInstallService {
     return '/${(await AppFileService.getAppStorageDir()).uri.pathSegments.sublist(0, 3).join('/')}';
   }
 }
-

@@ -1,4 +1,3 @@
-
 List<String> generateStandardVersionRegExStrings() {
   var basics = [
     '[0-9]+',

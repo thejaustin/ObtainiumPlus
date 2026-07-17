@@ -19,7 +19,8 @@ class AppsViewSettingsSection extends StatelessWidget {
   const AppsViewSettingsSection({
     super.key,
     required this.onSetState,
-    this.searchQuery, this.showAdvancedSettings,
+    this.searchQuery,
+    this.showAdvancedSettings,
   });
 
   bool _matches(String text, {bool isAdvanced = false}) {
@@ -120,7 +121,8 @@ class AppsViewSettingsSection extends StatelessWidget {
         value: (s) => s.plusEnableResponsiveAppLayout,
         onChanged: (s, v) =>
             onSetState(() => s.plusEnableResponsiveAppLayout = v),
-        visible: (s) => _matches(tr('plusResponsiveLayout')), isAdvanced: true,
+        visible: (s) => _matches(tr('plusResponsiveLayout')),
+        isAdvanced: true,
       ),
       _buildFeatureToggle<PlusSettingsProvider>(
         context,
@@ -129,7 +131,8 @@ class AppsViewSettingsSection extends StatelessWidget {
         subtitle: tr('plusCategoryReorderDescription'),
         value: (s) => s.plusEnableCategoryReorder,
         onChanged: (s, v) => onSetState(() => s.plusEnableCategoryReorder = v),
-        visible: (s) => _matches(tr('plusCategoryReorder')), isAdvanced: true,
+        visible: (s) => _matches(tr('plusCategoryReorder')),
+        isAdvanced: true,
       ),
       _buildGridSettings(context),
     ];
@@ -279,7 +282,8 @@ class AppsViewSettingsSection extends StatelessWidget {
                   label: tr('showVersion'),
                   description: tr('showVersionDescription'),
                   getValue: (s) => s.displayShowVersion,
-                  setValue: (s, v) => onSetState(() => s.displayShowVersion = v),
+                  setValue: (s, v) =>
+                      onSetState(() => s.displayShowVersion = v),
                 ),
               if (_matches(tr('showDate')))
                 (
@@ -301,7 +305,8 @@ class AppsViewSettingsSection extends StatelessWidget {
                   label: tr('showAppBarSearch'),
                   description: tr('showAppBarSearchDescription'),
                   getValue: (s) => s.plusShowAppBarSearch,
-                  setValue: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusShowAppBarSearch = v),
                 ),
               if (_matches(tr('showDashboardSearch')))
                 (
@@ -309,7 +314,8 @@ class AppsViewSettingsSection extends StatelessWidget {
                   label: tr('showDashboardSearch'),
                   description: tr('showDashboardSearchDescription'),
                   getValue: (s) => s.plusShowDashboardSearch,
-                  setValue: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusShowDashboardSearch = v),
                 ),
               if (_matches(tr('showFloatingSearch')))
                 (
@@ -317,7 +323,8 @@ class AppsViewSettingsSection extends StatelessWidget {
                   label: tr('showFloatingSearch'),
                   description: tr('showFloatingSearchDescription'),
                   getValue: (s) => s.plusShowFloatingSearch,
-                  setValue: (s, v) => onSetState(() => s.plusShowFloatingSearch = v),
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusShowFloatingSearch = v),
                 ),
             ],
           ),
@@ -619,11 +626,14 @@ class AppsViewSettingsSection extends StatelessWidget {
     required String subtitle,
     required dynamic Function(T) value,
     required void Function(T, bool) onChanged,
-    required bool Function(T) visible, bool isAdvanced = false,
+    required bool Function(T) visible,
+    bool isAdvanced = false,
   }) {
     return Consumer<T>(
       builder: (context, settings, child) {
-        if (!visible(settings) || (isAdvanced && !(showAdvancedSettings ?? false))) return const SizedBox.shrink();
+        if (!visible(settings) ||
+            (isAdvanced && !(showAdvancedSettings ?? false)))
+          return const SizedBox.shrink();
         return SwitchListTile.adaptive(
           secondary: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),

@@ -27,7 +27,8 @@ class UpdateSettingsSection extends StatelessWidget {
     required this.showIntervalLabel,
     required this.onIntervalLabelChange,
     required this.androidInfoFuture,
-    this.searchQuery, this.showAdvancedSettings,
+    this.searchQuery,
+    this.showAdvancedSettings,
   });
 
   bool _matches(String text, {bool isAdvanced = false}) {
@@ -108,10 +109,14 @@ class UpdateSettingsSection extends StatelessWidget {
                   settings.updateCheckConcurrencyLimit = val;
                 }
               },
-              items: [1, 2, 3, 5, 10].map((limit) => DropdownMenuItem(
-                value: limit,
-                child: Text(limit.toString()),
-              )).toList(),
+              items: [1, 2, 3, 5, 10]
+                  .map(
+                    (limit) => DropdownMenuItem(
+                      value: limit,
+                      child: Text(limit.toString()),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ),
@@ -129,10 +134,14 @@ class UpdateSettingsSection extends StatelessWidget {
                   settings.updateDownloadConcurrencyLimit = val;
                 }
               },
-              items: [1, 2, 3, 4, 5].map((limit) => DropdownMenuItem(
-                value: limit,
-                child: Text(limit.toString()),
-              )).toList(),
+              items: [1, 2, 3, 4, 5]
+                  .map(
+                    (limit) => DropdownMenuItem(
+                      value: limit,
+                      child: Text(limit.toString()),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ),

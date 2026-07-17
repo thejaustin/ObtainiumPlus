@@ -168,7 +168,8 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get displayShowAppCount => prefs?.safeBool('displayShowAppCount') ?? true;
+  bool get displayShowAppCount =>
+      prefs?.safeBool('displayShowAppCount') ?? true;
   set displayShowAppCount(bool val) {
     prefs?.setBool('displayShowAppCount', val);
     notifyListeners();

@@ -27,11 +27,11 @@ class AppInMemory {
         : installedInfo?.signingInfo?.signingCertificateHistory;
 
     return signatures?.map((signature) {
-      final digest = sha256.convert(signature);
-      return digest.bytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-        .join(':');
-      }).toList() ??
-      [];
+          final digest = sha256.convert(signature);
+          return digest.bytes
+              .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+              .join(':');
+        }).toList() ??
+        [];
   }
 }

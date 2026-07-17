@@ -14,7 +14,11 @@ class PlusFeaturesSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
-  const PlusFeaturesSection({super.key, this.searchQuery, this.showAdvancedSettings});
+  const PlusFeaturesSection({
+    super.key,
+    this.searchQuery,
+    this.showAdvancedSettings,
+  });
 
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
@@ -394,7 +398,10 @@ class PlusFeaturesSection extends StatelessWidget {
                       onChanged: (val) =>
                           settings.plusEnableAdvancedSorting = val,
                     ),
-                  if (_matches(tr('plusEnableBanWarnings'), isAdvanced: true)) ...[
+                  if (_matches(
+                    tr('plusEnableBanWarnings'),
+                    isAdvanced: true,
+                  )) ...[
                     _buildFeatureToggle(
                       context,
                       settings,
@@ -409,10 +416,13 @@ class PlusFeaturesSection extends StatelessWidget {
                             builder: (context) => GlassDialog(
                               title: tr('plusEnableBanWarnings'),
                               icon: Icons.warning_amber_rounded,
-                              content: Text(tr('plusEnableBanWarningsDescription')),
+                              content: Text(
+                                tr('plusEnableBanWarningsDescription'),
+                              ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: Text(tr('cancel')),
                                 ),
                                 FilledButton(
@@ -432,28 +442,43 @@ class PlusFeaturesSection extends StatelessWidget {
                     ),
                     if (settings.plusEnableBanWarnings)
                       Padding(
-                        padding: const EdgeInsets.only(left: 72.0, right: 24.0, bottom: 12.0),
+                        padding: const EdgeInsets.only(
+                          left: 72.0,
+                          right: 24.0,
+                          bottom: 12.0,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              tr('plusBanWarningThresholdDescription', args: [settings.plusBanWarningThreshold.toString()]),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              tr(
+                                'plusBanWarningThresholdDescription',
+                                args: [
+                                  settings.plusBanWarningThreshold.toString(),
+                                ],
                               ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
                                 Expanded(
                                   child: Slider(
-                                    value: settings.plusBanWarningThreshold.toDouble(),
+                                    value: settings.plusBanWarningThreshold
+                                        .toDouble(),
                                     min: 1,
                                     max: 50,
                                     divisions: 49,
-                                    label: settings.plusBanWarningThreshold.toString(),
+                                    label: settings.plusBanWarningThreshold
+                                        .toString(),
                                     onChanged: (val) {
-                                      settings.plusBanWarningThreshold = val.round();
+                                      settings.plusBanWarningThreshold = val
+                                          .round();
                                     },
                                   ),
                                 ),
@@ -462,10 +487,15 @@ class PlusFeaturesSection extends StatelessWidget {
                                   alignment: Alignment.centerRight,
                                   child: Text(
                                     settings.plusBanWarningThreshold.toString(),
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -491,7 +521,8 @@ class PlusFeaturesSection extends StatelessWidget {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-    bool experimental = false, bool isAdvanced = false,
+    bool experimental = false,
+    bool isAdvanced = false,
   }) {
     return SwitchListTile.adaptive(
       secondary: Icon(icon),

@@ -160,7 +160,11 @@ class CategorySections extends StatelessWidget {
               crossAxisCount: columnCount,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-              childAspectRatio: 0.8,
+              childAspectRatio:
+                  (settingsProvider.displayShowVersion ||
+                      settingsProvider.displayShowAuthor)
+                  ? 0.72
+                  : 0.8,
             ),
             itemCount: appsInCategory.length,
             itemBuilder: (context, appIndex) {

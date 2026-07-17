@@ -135,7 +135,10 @@ class AppDownloadService {
       'dev.thejaustin.obtainiumplus',
       strB: 'imranr98_obtainium_github.com',
     );
-    appsToInstall = moveStrToEnd(appsToInstall, 'dev.thejaustin.obtainiumplus.fdroid');
+    appsToInstall = moveStrToEnd(
+      appsToInstall,
+      'dev.thejaustin.obtainiumplus.fdroid',
+    );
 
     List<Map<String, dynamic>> downloadResults = [];
     if (!forceParallelDownloads && !behaviorSettings.parallelDownloads) {
@@ -681,6 +684,7 @@ class AppDownloadService {
       }
     }
   }
+
   static Future<bool> _installApp({
     required String id,
     required bool willBeSilent,
@@ -854,7 +858,11 @@ class AppDownloadService {
 
       if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       willBeSilent = await canInstallSilently(apps[id]!.app);
-      await _checkInstallPermissions(settingsProvider, behaviorSettings, willBeSilent);
+      await _checkInstallPermissions(
+        settingsProvider,
+        behaviorSettings,
+        willBeSilent,
+      );
 
       if (!willBeSilent &&
           context != null &&

@@ -90,6 +90,7 @@ class _AppGridTileState extends State<AppGridTile>
             : (availableWidth * 0.65).clamp(40.0, 80.0);
 
         final plusSettings = context.watch<PlusSettingsProvider>();
+        final viewSettings = context.watch<ViewSettingsProvider>();
         final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
             ? plusSettings.plusHomeCornerRadius
             : plusSettings.plusGlobalCornerRadius;
@@ -346,12 +347,14 @@ class _AppGridTileState extends State<AppGridTile>
                                   iconBorderRadius,
                                   badgeSize,
                                   plusSettings,
+                                  viewSettings,
                                 )
                               : _buildVerticalContent(
                                   iconSize,
                                   iconBorderRadius,
                                   badgeSize,
                                   plusSettings,
+                                  viewSettings,
                                 ),
                         ),
                       ),
@@ -371,13 +374,14 @@ class _AppGridTileState extends State<AppGridTile>
     double iconBorderRadius,
     double badgeSize,
     PlusSettingsProvider plusSettings,
+    ViewSettingsProvider viewSettings,
   ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _buildIconStack(iconSize, iconBorderRadius, badgeSize),
         const SizedBox(height: 10),
-        _buildAppInfo(plusSettings, TextAlign.center),
+        _buildAppInfo(plusSettings, viewSettings, TextAlign.center),
       ],
     );
   }
@@ -387,12 +391,15 @@ class _AppGridTileState extends State<AppGridTile>
     double iconBorderRadius,
     double badgeSize,
     PlusSettingsProvider plusSettings,
+    ViewSettingsProvider viewSettings,
   ) {
     return Row(
       children: [
         _buildIconStack(iconSize, iconBorderRadius, badgeSize),
         const SizedBox(width: 20),
-        Expanded(child: _buildAppInfo(plusSettings, TextAlign.start)),
+        Expanded(
+          child: _buildAppInfo(plusSettings, viewSettings, TextAlign.start),
+        ),
         Icon(
           Icons.chevron_right_rounded,
           color: Theme.of(
@@ -485,7 +492,21 @@ class _AppGridTileState extends State<AppGridTile>
     );
   }
 
-  Widget _buildAppInfo(PlusSettingsProvider plusSettings, TextAlign textAlign) {
+  String _getVersionText() {
+    final app = widget.appInMemory.app;
+    final inst = app.installedVersion;
+    final latest = app.latestVersion;
+    if (widget.hasUpdate) {
+      return '${inst ?? '?'} → ${latest ?? '?'}';
+    }
+    return inst ?? tr('notInstalled');
+  }
+
+  Widget _buildAppInfo(
+    PlusSettingsProvider plusSettings,
+    ViewSettingsProvider viewSettings,
+    TextAlign textAlign,
+  ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: textAlign == TextAlign.start
@@ -516,6 +537,43 @@ class _AppGridTileState extends State<AppGridTile>
             _buildSourceBadge(context),
           ],
         ),
+        if (viewSettings.displayShowAuthor)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              tr('byX', args: [widget.appInMemory.author]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: textAlign,
+              style: TextStyle(
+                fontSize: 10,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        if (viewSettings.displayShowVersion)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              _getVersionText(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: textAlign,
+              style: TextStyle(
+                fontSize: 10,
+                color: widget.hasUpdate
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                fontWeight: widget.hasUpdate
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+          ),
         if (plusSettings.plusShowTagsInList &&
             widget.appInMemory.app.tags.isNotEmpty)
           Padding(

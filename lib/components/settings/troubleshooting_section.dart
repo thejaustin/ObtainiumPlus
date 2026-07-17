@@ -14,11 +14,16 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:provider/provider.dart';
+
 /// Section for system settings shortcuts and troubleshooting
 class TroubleshootingSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
-  const TroubleshootingSection({super.key, this.searchQuery, this.showAdvancedSettings});
+  const TroubleshootingSection({
+    super.key,
+    this.searchQuery,
+    this.showAdvancedSettings,
+  });
 
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
@@ -36,14 +41,17 @@ class TroubleshootingSection extends StatelessWidget {
           context,
           icon: Icons.info_outlined,
           title: tr('openAppInfo'),
-          onTap: () => AppInstallService.openAppSettings(AppConstants.obtainiumPlusId),
+          onTap: () =>
+              AppInstallService.openAppSettings(AppConstants.obtainiumPlusId),
         ),
       if (_matches(tr('notificationSettings')))
         _buildSystemShortcutTile(
           context,
           icon: Icons.notifications_active_outlined,
           title: tr('notificationSettings'),
-          onTap: () => AppInstallService.openNotificationSettings(AppConstants.obtainiumPlusId),
+          onTap: () => AppInstallService.openNotificationSettings(
+            AppConstants.obtainiumPlusId,
+          ),
         ),
       if (_matches(tr('batteryOptimizationSettings')))
         _buildSystemShortcutTile(
@@ -57,15 +65,18 @@ class TroubleshootingSection extends StatelessWidget {
           context,
           icon: Icons.install_mobile_outlined,
           title: tr('installUnknownApps'),
-          onTap: () =>
-              AppInstallService.openInstallUnknownAppsSettings(AppConstants.obtainiumPlusId),
+          onTap: () => AppInstallService.openInstallUnknownAppsSettings(
+            AppConstants.obtainiumPlusId,
+          ),
         ),
       if (_matches(tr('overlaySettings')))
         _buildSystemShortcutTile(
           context,
           icon: Icons.layers_outlined,
           title: tr('overlaySettings'),
-          onTap: () => AppInstallService.openOverlaySettings(AppConstants.obtainiumPlusId),
+          onTap: () => AppInstallService.openOverlaySettings(
+            AppConstants.obtainiumPlusId,
+          ),
         ),
       if (_matches(tr('usageAccessSettings')))
         _buildSystemShortcutTile(
@@ -80,7 +91,10 @@ class TroubleshootingSection extends StatelessWidget {
             Icons.bug_report_outlined,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          title: Text(tr('appLogs'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('appLogs'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('appLogsDescription')),
           onTap: () {
             AppHaptics.selectionClick();
@@ -96,7 +110,10 @@ class TroubleshootingSection extends StatelessWidget {
             Icons.bar_chart_rounded,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          title: Text(tr('statistics'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('statistics'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('statisticsDescription')),
           onTap: () {
             AppHaptics.selectionClick();
@@ -109,7 +126,10 @@ class TroubleshootingSection extends StatelessWidget {
             Icons.history_edu_rounded,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          title: Text(tr('viewChangelog'), style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(
+            tr('viewChangelog'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           subtitle: Text(tr('viewChangelogDescription')),
           onTap: () {
             AppHaptics.selectionClick();
@@ -127,10 +147,13 @@ class TroubleshootingSection extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: Text(tr('plusShowChangelogAfterUpdateDescription')),
-          value: context.watch<PlusSettingsProvider>().plusShowChangelogAfterUpdate,
+          value: context
+              .watch<PlusSettingsProvider>()
+              .plusShowChangelogAfterUpdate,
           onChanged: (v) {
             AppHaptics.selectionClick();
-            context.read<PlusSettingsProvider>().plusShowChangelogAfterUpdate = v;
+            context.read<PlusSettingsProvider>().plusShowChangelogAfterUpdate =
+                v;
           },
         ),
       if (!context.watch<SettingsProvider>().plusDeveloperMode)
@@ -179,7 +202,9 @@ class TroubleshootingSection extends StatelessWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(tr('forceStoppedXApps', args: [successCount.toString()])),
+                  content: Text(
+                    tr('forceStoppedXApps', args: [successCount.toString()]),
+                  ),
                 ),
               );
             }
@@ -196,7 +221,6 @@ class TroubleshootingSection extends StatelessWidget {
       initiallyExpanded: false,
       children: items,
     );
-
   }
 
   Widget _buildCleanupTile(
@@ -232,9 +256,9 @@ class TroubleshootingSection extends StatelessWidget {
   void _clearIconCache(BuildContext context) async {
     await StartupRepairService.clearIconCache();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('iconCacheCleared'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('iconCacheCleared'))));
     }
   }
 

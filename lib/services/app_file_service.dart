@@ -11,7 +11,8 @@ import 'package:http/io_client.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart' hide createHttpClient;
-import 'package:obtainium/utils/source_utils.dart' hide sourceRequestStreamResponse;
+import 'package:obtainium/utils/source_utils.dart'
+    hide sourceRequestStreamResponse;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -101,7 +102,7 @@ class AppFileService {
       var baseDir = await getAppStorageDir();
       APKDir = Directory('${baseDir.path}/apks');
       iconsCacheDir = Directory('${baseDir.path}/icons');
-      
+
       try {
         if (!APKDir.existsSync()) {
           APKDir.createSync(recursive: true);
@@ -113,13 +114,14 @@ class AppFileService {
         // External storage creation failed, fall back to internal app documents directory
         Sentry.addBreadcrumb(
           Breadcrumb(
-            message: 'initAppDirectories: external storage creation failed, falling back to internal storage',
+            message:
+                'initAppDirectories: external storage creation failed, falling back to internal storage',
           ),
         );
         final fallback = await getApplicationDocumentsDirectory();
         APKDir = Directory('${fallback.path}/apks');
         iconsCacheDir = Directory('${fallback.path}/icons');
-        
+
         if (!APKDir.existsSync()) {
           try {
             APKDir.createSync(recursive: true);
@@ -131,7 +133,9 @@ class AppFileService {
                 scope.setTag('storage_path', APKDir.path);
                 scope.setTag(
                   'error_code',
-                  (fallbackErr is FileSystemException) ? (fallbackErr.osError?.errorCode.toString() ?? 'unknown') : 'unknown',
+                  (fallbackErr is FileSystemException)
+                      ? (fallbackErr.osError?.errorCode.toString() ?? 'unknown')
+                      : 'unknown',
                 );
               },
             );
@@ -453,7 +457,9 @@ class AppFileService {
       if (tempDownloadedFile.existsSync()) {
         deleteFile(tempDownloadedFile);
       }
-      throw HttpException('Server returned status code ${response.statusCode}: ${response.reasonPhrase}');
+      throw HttpException(
+        'Server returned status code ${response.statusCode}: ${response.reasonPhrase}',
+      );
     }
 
     sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
@@ -465,7 +471,8 @@ class AppFileService {
       received = rangeStart;
     }
     const downloadUIUpdateInterval = Duration(milliseconds: 500);
-    const downloadBufferSize = 128 * 1024; // 128KB buffer for faster I/O throughput
+    const downloadBufferSize =
+        128 * 1024; // 128KB buffer for faster I/O throughput
     final downloadBuffer = BytesBuilder();
     await response
         .map((chunk) {

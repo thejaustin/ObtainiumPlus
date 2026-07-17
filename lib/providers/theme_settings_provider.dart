@@ -14,7 +14,8 @@ class ThemeSettingsProvider with ChangeNotifier {
   }
 
   ThemeSettings get theme {
-    return prefs?.safeEnum('theme', ThemeSettings.values) ?? ThemeSettings.system;
+    return prefs?.safeEnum('theme', ThemeSettings.values) ??
+        ThemeSettings.system;
   }
 
   set theme(ThemeSettings t) {

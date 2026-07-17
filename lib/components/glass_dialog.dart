@@ -48,9 +48,9 @@ class GlassDialog extends StatelessWidget {
                 ? Theme.of(context).colorScheme.onSurface.withValues(
                     alpha: AppConstants.glassBorderAlpha,
                   )
-                : Theme.of(context).colorScheme.outline.withValues(
-                    alpha: AppOpacity.subtle,
-                  ),
+                : Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -104,8 +104,9 @@ class GlassDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest
-            .withValues(alpha: enableGlass ? AppOpacity.half : 1.0),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+          alpha: enableGlass ? AppOpacity.half : 1.0,
+        ),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(
@@ -162,8 +163,9 @@ class GlassDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest
-            .withValues(alpha: AppOpacity.medium),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+          alpha: AppOpacity.medium,
+        ),
         border: Border(
           top: BorderSide(
             color: Theme.of(

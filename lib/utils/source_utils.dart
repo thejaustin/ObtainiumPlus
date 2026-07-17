@@ -16,6 +16,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:crypto/crypto.dart';
 
 import 'package:obtainium/utils/app_constants.dart';
+
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
 
@@ -103,8 +104,9 @@ sourceRequestStreamResponse(
 class SourceUtils {
   static bool isSupportedPackageFile(String fileNameOrUrl) {
     final lower = fileNameOrUrl.toLowerCase();
-    return AppConstants.supportedPackageExtensions
-        .any((ext) => lower.endsWith(ext));
+    return AppConstants.supportedPackageExtensions.any(
+      (ext) => lower.endsWith(ext),
+    );
   }
 
   static Future<Response> httpRequest(

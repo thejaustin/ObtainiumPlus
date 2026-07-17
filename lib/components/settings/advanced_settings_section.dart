@@ -18,7 +18,11 @@ class AdvancedSettingsSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
-  const AdvancedSettingsSection({super.key, this.searchQuery, this.showAdvancedSettings});
+  const AdvancedSettingsSection({
+    super.key,
+    this.searchQuery,
+    this.showAdvancedSettings,
+  });
 
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
@@ -73,7 +77,8 @@ class AdvancedSettingsSection extends StatelessWidget {
         title: tr('plusGithubToken'),
         subtitle: tr('plusGithubTokenDescription'),
         settingId: 'github-creds',
-        helpUrl: 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
+        helpUrl:
+            'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
         visible: _matches(tr('plusGithubToken')),
       ),
       _buildTokenConfigTile(
@@ -82,14 +87,20 @@ class AdvancedSettingsSection extends StatelessWidget {
         title: tr('plusGitlabToken'),
         subtitle: tr('plusGitlabTokenDescription'),
         settingId: 'gitlab-creds',
-        helpUrl: 'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
+        helpUrl:
+            'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
         visible: _matches(tr('plusGitlabToken')),
       ),
       if (_matches(tr('importExport')))
         ListTile(
           leading: const Icon(Icons.import_export_rounded),
-          title: Text(tr('importExport'), style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: const Text('Backup, restore, import, or export settings and apps'),
+          title: Text(
+            tr('importExport'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+            'Backup, restore, import, or export settings and apps',
+          ),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
           onTap: () {
             AppHaptics.selectionClick();
@@ -192,7 +203,10 @@ class AdvancedSettingsSection extends StatelessWidget {
         final token = settings.getSettingString(settingId);
         final isConfigured = token != null && token.isNotEmpty;
         return ListTile(
-          leading: Icon(icon, color: isConfigured ? Theme.of(context).colorScheme.primary : null),
+          leading: Icon(
+            icon,
+            color: isConfigured ? Theme.of(context).colorScheme.primary : null,
+          ),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
           subtitle: Text(isConfigured ? tr('plusTokenConfigStatus') : subtitle),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
@@ -244,7 +258,8 @@ class _TokenConfigDialogContent extends StatefulWidget {
   });
 
   @override
-  State<_TokenConfigDialogContent> createState() => _TokenConfigDialogContentState();
+  State<_TokenConfigDialogContent> createState() =>
+      _TokenConfigDialogContentState();
 }
 
 class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
@@ -285,9 +300,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'client_id': 'Ov23liZc2J5VeeV8tS08',
-        }),
+        body: jsonEncode({'client_id': 'Ov23liZc2J5VeeV8tS08'}),
       );
 
       if (response.statusCode == 200) {
@@ -300,7 +313,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         setState(() {
           _userCode = userCode;
           _verificationUri = verificationUri;
-          _statusMessage = 'Please open the verification link and enter the code below.';
+          _statusMessage =
+              'Please open the verification link and enter the code below.';
         });
 
         _pollTimer?.cancel();
@@ -310,7 +324,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       } else {
         setState(() {
           _isPolling = false;
-          _statusMessage = 'Error connecting to GitHub. Please use manual PAT below.';
+          _statusMessage =
+              'Error connecting to GitHub. Please use manual PAT below.';
         });
       }
     } catch (e) {
@@ -354,7 +369,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           timer.cancel();
           setState(() {
             _isPolling = false;
-            _statusMessage = 'OAuth session expired or failed. Code: ${data['error']}';
+            _statusMessage =
+                'OAuth session expired or failed. Code: ${data['error']}';
           });
         }
       }
@@ -401,7 +417,9 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -412,7 +430,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             if (_verificationUri != null)
               TextButton.icon(
                 onPressed: () {
-                  launchUrlString(_verificationUri!, mode: LaunchMode.externalApplication);
+                  launchUrlString(
+                    _verificationUri!,
+                    mode: LaunchMode.externalApplication,
+                  );
                 },
                 icon: const Icon(Icons.open_in_browser),
                 label: const Text('Open Verification Page'),
@@ -435,7 +456,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                 Expanded(child: Divider()),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text('OR USE MANUAL PAT', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                  child: Text(
+                    'OR USE MANUAL PAT',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
                 ),
                 Expanded(child: Divider()),
               ],
@@ -457,11 +481,17 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         const SizedBox(height: 12),
         InkWell(
           onTap: () {
-            launchUrlString(widget.helpUrl, mode: LaunchMode.externalApplication);
+            launchUrlString(
+              widget.helpUrl,
+              mode: LaunchMode.externalApplication,
+            );
           },
           child: Text(
             tr('plusTokenConfigHelp'),
-            style: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+            style: const TextStyle(
+              fontSize: 12,
+              decoration: TextDecoration.underline,
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -476,7 +506,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             TextButton(
               onPressed: () {
                 AppHaptics.selectionClick();
-                widget.settings.setSettingString(widget.settingId, _controller.text.trim());
+                widget.settings.setSettingString(
+                  widget.settingId,
+                  _controller.text.trim(),
+                );
                 Navigator.pop(context);
               },
               child: Text(tr('save')),

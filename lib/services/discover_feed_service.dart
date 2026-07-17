@@ -157,7 +157,9 @@ class DiscoverFeedService {
       if (href == null || !href.startsWith(_deepLinkPrefix)) continue;
       try {
         final payload =
-            jsonDecode(Uri.decodeComponent(href.substring(_deepLinkPrefix.length)))
+            jsonDecode(
+                  Uri.decodeComponent(href.substring(_deepLinkPrefix.length)),
+                )
                 as Map<String, dynamic>;
         final url = payload['url'] as String?;
         final name = (payload['name'] as String?)?.trim() ?? '';

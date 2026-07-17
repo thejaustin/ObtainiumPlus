@@ -20,11 +20,15 @@ class InstallerAppInfo {
   });
 }
 
-Future<List<InstallerAppInfo>> getApkInstallerApps([PlusSettingsProvider? plusSettings]) async {
-  if (plusSettings != null && !plusSettings.plusEnableStandaloneInstaller) return [];
+Future<List<InstallerAppInfo>> getApkInstallerApps([
+  PlusSettingsProvider? plusSettings,
+]) async {
+  if (plusSettings != null && !plusSettings.plusEnableStandaloneInstaller)
+    return [];
   if (!Platform.isAndroid) return [];
-  final rawList =
-      await _channel.invokeMethod<List<dynamic>>('queryApkInstallerActivities');
+  final rawList = await _channel.invokeMethod<List<dynamic>>(
+    'queryApkInstallerActivities',
+  );
   if (rawList == null) return [];
   return rawList.map((entry) {
     final map = Map<String, dynamic>.from(entry as Map);
@@ -50,12 +54,12 @@ Future<bool> installApkViaLegacy(
   required String expectedPackageName,
 }) async {
   if (!Platform.isAndroid) return false;
-  final result =
-      await _channel.invokeMethod<bool>('launchInstallIntent', <String, dynamic>{
-    'path': apkFilePath,
-    'package': targetPackage,
-    'activity': targetActivity,
-    'expectedPackageName': expectedPackageName,
-  });
+  final result = await _channel
+      .invokeMethod<bool>('launchInstallIntent', <String, dynamic>{
+        'path': apkFilePath,
+        'package': targetPackage,
+        'activity': targetActivity,
+        'expectedPackageName': expectedPackageName,
+      });
   return result ?? false;
 }

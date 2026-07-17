@@ -122,7 +122,10 @@ class OfflineService {
     return dueRetries;
   }
 
-  void clearAppFromRetryQueue(String appId, UpdateSettingsProvider settingsProvider) {
+  void clearAppFromRetryQueue(
+    String appId,
+    UpdateSettingsProvider settingsProvider,
+  ) {
     final queue = settingsProvider.retryQueue;
     if (queue.containsKey(appId)) {
       queue.remove(appId);
@@ -134,4 +137,3 @@ class OfflineService {
     unawaited(_subscription?.cancel() ?? Future.value());
   }
 }
-

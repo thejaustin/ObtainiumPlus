@@ -31,14 +31,16 @@ class TokenDispenserService {
     for (final baseUrl in _defaultDispensers) {
       try {
         final url = Uri.parse('$baseUrl/api/auth');
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            if (deviceModel != null) 'device': deviceModel,
-            if (locale != null) 'locale': locale,
-          }),
-        ).timeout(const Duration(seconds: 15));
+        final response = await http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                if (deviceModel != null) 'device': deviceModel,
+                if (locale != null) 'locale': locale,
+              }),
+            )
+            .timeout(const Duration(seconds: 15));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -55,6 +57,8 @@ class TokenDispenserService {
       }
     }
 
-    throw ObtainiumError('Failed to fetch anonymous token from all available dispensers.');
+    throw ObtainiumError(
+      'Failed to fetch anonymous token from all available dispensers.',
+    );
   }
 }

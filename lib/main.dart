@@ -159,13 +159,12 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
   final exceptions = event.exceptions;
   if (exceptions == null || exceptions.isEmpty) return event;
 
-  bool hasShizukuFrame(SentryException ex) =>
-      (ex.stackTrace?.frames ?? []).any(
-        (f) =>
-            (f.package ?? '').toLowerCase().contains('shizuku') ||
-            (f.absPath ?? '').toLowerCase().contains('shizuku') ||
-            (f.module ?? '').toLowerCase().contains('shizuku'),
-      );
+  bool hasShizukuFrame(SentryException ex) => (ex.stackTrace?.frames ?? []).any(
+    (f) =>
+        (f.package ?? '').toLowerCase().contains('shizuku') ||
+        (f.absPath ?? '').toLowerCase().contains('shizuku') ||
+        (f.module ?? '').toLowerCase().contains('shizuku'),
+  );
 
   for (final ex in exceptions) {
     final type = ex.type ?? '';
@@ -285,7 +284,8 @@ Future<void> _runObtainium() async {
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   final sp = SettingsProvider();
-  await sp.initializeSettings(); // This also gets prefs, but let's keep it for compatibility
+  await sp
+      .initializeSettings(); // This also gets prefs, but let's keep it for compatibility
 
   final plusSettings = PlusSettingsProvider();
   await plusSettings.initializeSettings(prefs);
@@ -408,7 +408,8 @@ class _ObtainiumState extends State<Obtainium> {
         notificationTitle: tr('foregroundService'),
         notificationText: tr('fgServiceNotice'),
         notificationIcon: NotificationIcon(
-          metaDataName: 'dev.thejaustin.obtainiumplus.service.NOTIFICATION_ICON',
+          metaDataName:
+              'dev.thejaustin.obtainiumplus.service.NOTIFICATION_ICON',
         ),
         callback: startCallback,
       );

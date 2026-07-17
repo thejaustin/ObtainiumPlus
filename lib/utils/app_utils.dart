@@ -93,7 +93,6 @@ String safeJsonEncode(dynamic value) {
   return jsonEncode(sanitizeJsonValue(value));
 }
 
-
 List<MapEntry<String, String>> getApkUrlsFromUrls(List<String> urls) =>
     urls.map((e) {
       var segments = e.split('/').where((el) => el.trim().isNotEmpty);

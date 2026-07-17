@@ -58,9 +58,9 @@ class BackgroundUpdateService {
       currentParams ??= {};
 
       bool firstEverUpdateTask =
-          DateTime.fromMillisecondsSinceEpoch(0).compareTo(
-            appsProvider.updateSettings.lastCompletedBGCheckTime,
-          ) ==
+          DateTime.fromMillisecondsSinceEpoch(
+            0,
+          ).compareTo(appsProvider.updateSettings.lastCompletedBGCheckTime) ==
           0;
 
       // Load Retry Queue and add due items using OfflineService
@@ -84,7 +84,9 @@ class BackgroundUpdateService {
                     ignoreAppsCheckedAfter: currentParams['toCheck'] == null
                         ? firstEverUpdateTask
                               ? null
-                              : appsProvider.updateSettings.lastCompletedBGCheckTime
+                              : appsProvider
+                                    .updateSettings
+                                    .lastCompletedBGCheckTime
                         : null,
                     onlyCheckInstalledOrTrackOnlyApps: appsProvider
                         .updateSettings
@@ -103,7 +105,6 @@ class BackgroundUpdateService {
           }
         }
       }
-
 
       toCheck.removeWhere((entry) {
         final app = appsProvider.apps[entry.key]?.app;
@@ -170,8 +171,7 @@ class BackgroundUpdateService {
       if (toCheck.isNotEmpty) {
         if (isFirstIteration) {
           var enoughTimePassed =
-              appsProvider.updateSettings.updateInterval !=
-                  0 &&
+              appsProvider.updateSettings.updateInterval != 0 &&
               appsProvider.updateSettings.lastCompletedBGCheckTime
                   .add(
                     Duration(
@@ -207,7 +207,6 @@ class BackgroundUpdateService {
           notificationsProvider.notify(notif, cancelExisting: true);
           updates = await appsProvider.checkUpdates(
             specificIds: toCheck.map((e) => e.key).toList(),
-            
           );
 
           for (var update in updates) {
@@ -385,8 +384,7 @@ class BackgroundUpdateService {
         break; // Finished both phases
       }
     }
-    appsProvider.updateSettings.lastCompletedBGCheckTime =
-        DateTime.now();
+    appsProvider.updateSettings.lastCompletedBGCheckTime = DateTime.now();
 
     // --- Save status for potential cloud sync ---
     try {
@@ -405,8 +403,3 @@ class BackgroundUpdateService {
     }
   }
 }
-
-
-
-
-
