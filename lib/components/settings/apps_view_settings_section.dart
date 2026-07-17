@@ -77,6 +77,15 @@ class AppsViewSettingsSection extends StatelessWidget {
       ),
       _buildFeatureToggle<PlusSettingsProvider>(
         context,
+        icon: Icons.add_box_outlined,
+        title: tr('plusModernAddAppPage'),
+        subtitle: tr('plusModernAddAppPageDescription'),
+        value: (s) => s.plusEnableModernAddAppPage,
+        onChanged: (s, v) => onSetState(() => s.plusEnableModernAddAppPage = v),
+        visible: (s) => _matches(tr('plusModernAddAppPage')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
         icon: Icons.dashboard_customize_outlined,
         title: tr('plusHomeDashboard'),
         subtitle: tr('plusHomeDashboardDescription'),
@@ -162,6 +171,15 @@ class AppsViewSettingsSection extends StatelessWidget {
         onChanged: (s, v) =>
             onSetState(() => s.plusEnableModernAppListTile = v),
         visible: (s) => _matches(tr('plusModernAppListTile')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.swipe_rounded,
+        title: tr('plusEnableSwipeActions'),
+        subtitle: tr('plusEnableSwipeActionsDescription'),
+        value: (s) => s.plusEnableSwipeActions,
+        onChanged: (s, v) => onSetState(() => s.plusEnableSwipeActions = v),
+        visible: (s) => _matches(tr('plusEnableSwipeActions')),
       ),
     ];
 
