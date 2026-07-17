@@ -18,6 +18,7 @@ import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -128,8 +129,8 @@ class DiscoverPageState extends State<DiscoverPage> {
       widget.onAppSelected!(url);
       return;
     }
-    // Standalone fallback: Add App is no longer a tab, open it as a route.
-    pushRoute(context, AddAppPage(initialUrl: url));
+    // Standalone fallback: Add App is no longer a tab, open it as a bottom sheet.
+    showAddAppSheet(context: context, initialUrl: url);
   }
 
   List<AppSource> get searchableSources =>

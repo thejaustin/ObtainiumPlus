@@ -2,6 +2,7 @@ import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -202,7 +203,7 @@ class AppsPageState extends State<AppsPage> {
           icon: Icons.auto_awesome_rounded,
           actionLabel: tr('addApp'),
           onActionPressed: () {
-            pushRoute(context, const AddAppPage());
+            showAddAppSheet(context: context);
           },
         ),
       );
