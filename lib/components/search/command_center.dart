@@ -244,7 +244,9 @@ class _CommandCenterState extends State<CommandCenter> {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              _buildSourceFilters(context),
+              const SizedBox(height: 8),
 
               // Content
               Expanded(
@@ -618,6 +620,56 @@ class _CommandCenterState extends State<CommandCenter> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(chipRadius),
+      ),
+    );
+  }
+
+  Widget _buildSourceFilters(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final searchableSources = _sourceProvider.sources
+        .where((e) => e.canSearch)
+        .toList();
+    if (searchableSources.isEmpty) return const SizedBox.shrink();
+
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final chipRadius = CardMetrics.inner(radius);
+
+    return SizedBox(
+      height: 48,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        itemCount: searchableSources.length,
+        itemBuilder: (context, index) {
+          final src = searchableSources[index];
+          final isSelected = !settings.searchDeselected.contains(src.name);
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              selected: isSelected,
+              label: Text(src.name),
+              onSelected: (bool selected) {
+                AppHaptics.selectionClick();
+                final newList = List<String>.from(settings.searchDeselected);
+                if (selected) {
+                  newList.remove(src.name);
+                } else {
+                  newList.add(src.name);
+                }
+                settings.searchDeselected = newList;
+                if (_query.isNotEmpty) {
+                  _handleSearch(_query);
+                }
+              },
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(chipRadius),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
