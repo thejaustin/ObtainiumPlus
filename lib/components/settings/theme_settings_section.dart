@@ -123,6 +123,15 @@ class ThemeSettingsSection extends StatelessWidget {
         _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.density_small_rounded,
+        title: tr('plusUseCompactSettings'),
+        subtitle: tr('plusUseCompactSettingsDescription'),
+        value: (s) => s.plusUseCompactSettings,
+        onChanged: (s, v) => s.plusUseCompactSettings = v,
+        visible: (s) => _matches(tr('plusUseCompactSettings')),
+      ),
 
       // Advanced/Experimental Section
       if (advancedWidgets.any((w) => w is! SizedBox))
