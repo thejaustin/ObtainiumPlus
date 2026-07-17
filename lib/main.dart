@@ -435,11 +435,14 @@ class _ObtainiumState extends State<Obtainium> {
     super.dispose();
   }
 
-  Future<void> initPlatformState() async {
+  Future<void> initPlatformState([int? fetchInterval]) async {
+    final finalInterval = fetchInterval == null || fetchInterval < 15
+        ? 15
+        : fetchInterval;
     try {
       await BackgroundFetch.configure(
         BackgroundFetchConfig(
-          minimumFetchInterval: 15,
+          minimumFetchInterval: finalInterval,
           stopOnTerminate: false,
           startOnBoot: true,
           enableHeadless: true,
@@ -481,6 +484,13 @@ class _ObtainiumState extends State<Obtainium> {
     final appsProvider = context.read<AppsProvider>();
     final logs = context.read<LogsProvider>();
     final notifs = context.read<NotificationsProvider>();
+
+    if (updateSettings.updateInterval != existingUpdateInterval) {
+      existingUpdateInterval = updateSettings.updateInterval;
+      if (existingUpdateInterval > 0) {
+        initPlatformState(existingUpdateInterval);
+      }
+    }
 
     try {
       if (updateSettings.updateInterval == 0) {
