@@ -35,6 +35,25 @@ class AdvancedSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> children = [
+      Consumer<PlusSettingsProvider>(
+        builder: (context, plusSettings, child) {
+          if (!_matches(tr('showAdvancedSettings')))
+            return const SizedBox.shrink();
+          return SwitchListTile.adaptive(
+            secondary: const Icon(Icons.settings_suggest_outlined),
+            title: Text(
+              tr('showAdvancedSettings'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('showAdvancedSettingsDescription')),
+            value: plusSettings.plusShowAdvancedSettings,
+            onChanged: (v) {
+              AppHaptics.selectionClick();
+              plusSettings.plusShowAdvancedSettings = v;
+            },
+          );
+        },
+      ),
       _buildSettingsToggle(
         context,
         icon: Icons.report_off_outlined,

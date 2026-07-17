@@ -64,6 +64,33 @@ class AppsViewSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> viewWidgets = [
+      _buildFeatureToggle<ViewSettingsProvider>(
+        context,
+        icon: Icons.web_outlined,
+        title: tr('showWebInAppView'),
+        subtitle: tr('showWebInAppViewDescription'),
+        value: (s) => s.showAppWebpage,
+        onChanged: (s, v) => onSetState(() => s.showAppWebpage = v),
+        visible: (s) => _matches(tr('showWebInAppView')),
+      ),
+      _buildFeatureToggle<ViewSettingsProvider>(
+        context,
+        icon: Icons.push_pin_outlined,
+        title: tr('pinUpdates'),
+        subtitle: tr('pinUpdatesDescription'),
+        value: (s) => s.pinUpdates,
+        onChanged: (s, v) => onSetState(() => s.pinUpdates = v),
+        visible: (s) => _matches(tr('pinUpdates')),
+      ),
+      _buildFeatureToggle<ViewSettingsProvider>(
+        context,
+        icon: Icons.archive_outlined,
+        title: tr('buryNonInstalled'),
+        subtitle: tr('buryNonInstalledDescription'),
+        value: (s) => s.buryNonInstalled,
+        onChanged: (s, v) => onSetState(() => s.buryNonInstalled = v),
+        visible: (s) => _matches(tr('buryNonInstalled')),
+      ),
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
