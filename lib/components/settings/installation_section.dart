@@ -61,6 +61,32 @@ class InstallationSection extends StatelessWidget {
                   behaviorSettings.beforeNewInstallsShareToAppVerifier = v,
             ),
 
+          // Use Play Store App Links
+          if (_matches(tr('usePlayStoreAppLinks')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.storefront_outlined),
+              title: Text(
+                tr('usePlayStoreAppLinks'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('usePlayStoreAppLinksDescription')),
+              value: behaviorSettings.usePlayStoreAppLinks,
+              onChanged: (v) => behaviorSettings.usePlayStoreAppLinks = v,
+            ),
+
+          // Allow Third-Party Sources
+          if (_matches(tr('allowThirdPartySources')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.source_outlined),
+              title: Text(
+                tr('allowThirdPartySources'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('allowThirdPartySourcesDescription')),
+              value: behaviorSettings.allowThirdPartySources,
+              onChanged: (v) => behaviorSettings.allowThirdPartySources = v,
+            ),
+
           // Smart Retries & Caching
           if (_matches(tr('plusSmartRetries')))
             SwitchListTile.adaptive(

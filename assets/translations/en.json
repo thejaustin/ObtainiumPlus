@@ -283,6 +283,7 @@
     "highlightTouchTargets": "Highlight less obvious touch targets",
     "pickExportDir": "Pick export directory",
     "autoExportOnChanges": "Automatically export on changes",
+    "autoExportOnChangesDescription": "Automatically export your app list to the selected export directory whenever apps are added, updated, or removed",
     "includeSettings": "Include settings",
     "filterVersionsByRegEx": "Filter versions by regular expression",
     "trySelectingSuggestedVersionCode": "Try selecting suggested versionCode APK",
