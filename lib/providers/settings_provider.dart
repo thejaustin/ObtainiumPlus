@@ -308,6 +308,11 @@ class SettingsProvider with ChangeNotifier {
     return AppBarStyle.values[index];
   }
 
+  void setAppBarStyleForPage(String page, AppBarStyle style) {
+    prefs?.setInt('appBarStyle_$page', style.index);
+    notifyListeners();
+  }
+
   // Stub for install permission (moved to BehaviorSettingsProvider).
   Future<bool> getInstallPermission({bool enforce = false}) async => true;
 
