@@ -590,11 +590,10 @@ class AppsViewSettingsSection extends StatelessWidget {
               selected: {currentStyle},
               onSelectionChanged: (value) {
                 onSetState(() {
-                  settingsProvider.prefs?.setInt(
-                    'appBarStyle_apps',
-                    value.first.index,
+                  settingsProvider.setAppBarStyleForPage(
+                    'apps',
+                    value.first,
                   );
-                  settingsProvider.notifyListeners();
                 });
               },
             ),

@@ -33,6 +33,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/services/app_download_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -1164,258 +1165,42 @@ class AppsProvider with ChangeNotifier {
     bool forceParallelDownloads = false,
     bool useExisting = true,
   }) async {
-    notificationsProvider =
-        notificationsProvider ?? context?.read<NotificationsProvider>();
-    List<String> appsToInstall = [];
-    List<String> trackOnlyAppsToUpdate = [];
-    // For all specified Apps, filter out those for which:
-    // 1. A URL cannot be picked
-    // 2. That cannot be installed silently (IF no buildContext was given for interactive install)
-    for (var id in appIds) {
-      if (apps[id] == null) {
-        throw ObtainiumError(tr('appNotFound'));
-      }
-      MapEntry<String, String>? apkUrl;
-      var trackOnly = apps[id]!.app.additionalSettings['trackOnly'] == true;
-      var refreshBeforeDownload =
-          apps[id]!.app.additionalSettings['refreshBeforeDownload'] == true ||
-          apps[id]!.app.apkUrls.isNotEmpty &&
-              apps[id]!.app.apkUrls.first.value == 'placeholder';
-      if (refreshBeforeDownload) {
-        await checkUpdate(apps[id]!.app.id);
-        if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
-      }
-      if (!trackOnly) {
-        // ignore: use_build_context_synchronously
-        apkUrl = await confirmAppFileUrl(apps[id]!.app, context, false);
-      }
-      if (apkUrl != null) {
-        int urlInd = apps[id]!.app.apkUrls
-            .map((e) => e.value)
-            .toList()
-            .indexOf(apkUrl.value);
-        if (urlInd >= 0 && urlInd != apps[id]!.app.preferredApkIndex) {
-          apps[id]!.app.preferredApkIndex = urlInd;
-          await saveApps([apps[id]!.app]);
-        }
-        if (context != null || await canInstallSilently(apps[id]!.app)) {
-          appsToInstall.add(id);
-        }
-      }
-      if (trackOnly) {
-        trackOnlyAppsToUpdate.add(id);
-      }
-    }
-    // Mark all specified track-only apps as latest
-    saveApps(
-      trackOnlyAppsToUpdate.map((e) {
-        var a = apps[e]!.app;
-        a.installedVersion = a.latestVersion;
-        return a;
-      }).toList(),
-    );
-
-    // Prepare to download+install Apps
-    MultiAppMultiError errors = MultiAppMultiError();
-    List<String> installedIds = [];
-
-    // Move Obtainium to the end of the line (let all other apps update first)
-    appsToInstall = moveStrToEnd(
-      appsToInstall,
-      obtainiumId,
-      strB: obtainiumTempId,
-    );
-    appsToInstall = moveStrToEnd(appsToInstall, '$obtainiumId.fdroid');
-
-    Future<void> installFn(
-      String id,
-      bool willBeSilent,
-      DownloadedApk? downloadedFile,
-      DownloadedDir? downloadedDir,
-    ) async {
-      if (apps[id] == null) return;
-      apps[id]?.downloadProgress = -1;
-      notifyListeners();
-      try {
-        bool sayInstalled = true;
-        var contextIfNewInstall = apps[id]?.installedInfo == null
-            ? context
-            : null;
-        bool needBGWorkaround =
-            willBeSilent && context == null && !behaviorSettings.useShizuku;
-        bool shizukuPretendToBeGooglePlay =
-            behaviorSettings.shizukuPretendToBeGooglePlay ||
-            apps[id]!.app.additionalSettings['shizukuPretendToBeGooglePlay'] ==
-                true;
-        if (downloadedFile != null) {
-          if (needBGWorkaround) {
-            // ignore: use_build_context_synchronously
-            installApk(
-              downloadedFile,
-              contextIfNewInstall,
-              needsBGWorkaround: true,
-              shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-            );
-          } else {
-            // ignore: use_build_context_synchronously
-            sayInstalled = await installApk(
-              downloadedFile,
-              contextIfNewInstall,
-              shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-            );
-          }
-        } else {
-          if (needBGWorkaround) {
-            // ignore: use_build_context_synchronously
-            installApkDir(
-              downloadedDir!,
-              contextIfNewInstall,
-              needsBGWorkaround: true,
-            );
-          } else {
-            // ignore: use_build_context_synchronously
-            sayInstalled = await installApkDir(
-              downloadedDir!,
-              contextIfNewInstall,
-              shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-            );
-          }
-        }
-        if (willBeSilent && context == null) {
-          if (!behaviorSettings.useShizuku) {
-            notificationsProvider?.notify(
-              SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
-            );
-          } else {
-            notificationsProvider?.notify(
-              SilentUpdateNotification(
-                [apps[id]!.app],
-                sayInstalled,
-                id: id.hashCode,
-              ),
-            );
-          }
-        }
-        if (sayInstalled) {
-          installedIds.add(id);
-          // Dismiss the update notification since the app was successfully installed
-          notificationsProvider?.cancel(UpdateNotification([]).id);
-        }
-      } finally {
-        apps[id]?.downloadProgress = null;
-        notifyListeners();
-      }
-    }
-
-    Future<Map<Object?, Object?>> downloadFn(
-      String id, {
-      bool skipInstalls = false,
-    }) async {
-      if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
-      bool willBeSilent = false;
-      DownloadedApk? downloadedFile;
-      DownloadedDir? downloadedDir;
-      try {
-        var downloadedArtifact =
-            // ignore: use_build_context_synchronously
-            await downloadApp(
-              apps[id]!.app,
-              context,
-              notificationsProvider: notificationsProvider,
-              useExisting: useExisting,
-            );
-        if (downloadedArtifact is DownloadedApk) {
-          downloadedFile = downloadedArtifact;
-        } else {
-          downloadedDir = downloadedArtifact as DownloadedDir;
-        }
-        id = downloadedFile?.appId ?? downloadedDir!.appId;
-        if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
-        willBeSilent = await canInstallSilently(apps[id]!.app);
-        if (!behaviorSettings.useShizuku) {
-          if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
-            throw ObtainiumError(tr('cancelled'));
-          }
-        } else {
-          switch ((await ShizukuApkInstaller().checkPermission())!) {
-            case 'services_not_found':
-              throw ObtainiumError(tr('shizukuBinderNotFound'));
-            case 'old_shizuku':
-              throw ObtainiumError(tr('shizukuOld'));
-            case 'old_android_with_adb':
-              throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
-            case 'denied':
-              throw ObtainiumError(tr('cancelled'));
-          }
-        }
-        if (!willBeSilent && context != null && !behaviorSettings.useShizuku) {
-          // ignore: use_build_context_synchronously
-          await waitForUserToReturnToForeground(context);
-        }
-      } catch (e) {
-        errors.add(id, e, appName: apps[id]?.name);
-      }
-      return {
-        'id': id,
-        'willBeSilent': willBeSilent,
-        'downloadedFile': downloadedFile,
-        'downloadedDir': downloadedDir,
-      };
-    }
-
-    List<Map<Object?, Object?>> downloadResults = [];
-    if (forceParallelDownloads || !behaviorSettings.parallelDownloads) {
-      for (var id in appsToInstall) {
-        downloadResults.add(await downloadFn(id));
-      }
-    } else {
-      List<Map<Object?, Object?>> results = List.filled(
-        appsToInstall.length,
-        {},
-      );
-      await _runWithConcurrencyLimit<int>(
-        List.generate(appsToInstall.length, (i) => i),
-        settingsProvider.updateDownloadConcurrencyLimit,
-        (index) async {
-          final id = appsToInstall[index];
-          results[index] = await downloadFn(id, skipInstalls: true);
-        },
-      );
-      downloadResults = results;
-    }
-    for (var res in downloadResults) {
-      if (!errors.appIdNames.containsKey(res['id'])) {
-        try {
-          await installFn(
-            res['id'] as String,
-            res['willBeSilent'] as bool,
-            res['downloadedFile'] as DownloadedApk?,
-            res['downloadedDir'] as DownloadedDir?,
+    try {
+      final installedIds =
+          await AppDownloadService.downloadAndInstallLatestApps(
+            appIds: appIds,
+            apps: apps,
+            settingsProvider: settingsProvider,
+            behaviorSettings: behaviorSettings,
+            plusSettings: plusSettings,
+            updateSettings: updateSettings,
+            logs: logs,
+            APKDir: APKDir,
+            notifyListeners: forceNotifyListeners,
+            saveApps: saveApps,
+            removeApps: removeApps,
+            checkUpdate: checkUpdate,
+            confirmAppFileUrl: confirmAppFileUrl,
+            canInstallSilently: canInstallSilently,
+            waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+            context: context,
+            notificationsProvider: notificationsProvider,
+            forceParallelDownloads: forceParallelDownloads,
+            useExisting: useExisting,
           );
-        } catch (e) {
-          var id = res['id'] as String;
-          errors.add(id, e, appName: apps[id]?.name);
-        }
+      if (context != null && installedIds.isNotEmpty) {
+        AppHaptics.success();
       }
-    }
-
-    if (errors.idsByErrorString.isNotEmpty) {
+      return installedIds;
+    } catch (errors) {
       if (context != null && context.mounted) {
-        // Install(s) failed (e.g. InstallError, DowngradeError) in a
-        // user-initiated flow — signal the negative outcome
         AppHaptics.failure();
         showError(errors, context);
+        return [];
       } else {
-        throw errors;
+        rethrow;
       }
-    } else if (context != null && installedIds.isNotEmpty) {
-      // All requested installs completed in a user-initiated (foreground)
-      // flow — signal the positive outcome (skipped for silent/background
-      // runs where context is null)
-      AppHaptics.success();
     }
-
-    return installedIds;
   }
 
   Future<List<String>> downloadAppAssets(
