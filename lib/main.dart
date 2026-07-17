@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:obtainium/pages/home.dart';
-import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
+import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -116,7 +117,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
     }
     return;
   }
-  await bgUpdateCheck(taskId, null);
+  await BackgroundUpdateService.bgUpdateCheck(taskId, null);
   try {
     BackgroundFetch.finish(taskId);
   } catch (e) {
@@ -135,12 +136,12 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     print('onStart(starter: ${starter.name})');
-    bgUpdateCheck('bg_check', null);
+    BackgroundUpdateService.bgUpdateCheck('bg_check', null);
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    bgUpdateCheck('bg_check', null);
+    BackgroundUpdateService.bgUpdateCheck('bg_check', null);
   }
 
   @override
@@ -449,7 +450,7 @@ class _ObtainiumState extends State<Obtainium> {
           requiredNetworkType: NetworkType.ANY,
         ),
         (String taskId) async {
-          await bgUpdateCheck(taskId, null);
+          await BackgroundUpdateService.bgUpdateCheck(taskId, null);
           try {
             BackgroundFetch.finish(taskId);
           } catch (e) {
