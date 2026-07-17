@@ -189,17 +189,25 @@ class _SettingsPageState extends State<SettingsPage> {
               delegate: SliverChildListDelegate(
                 [
                       if (_searchQuery.isNotEmpty || _selectedSectionIndex == 0)
-                        PlusFeaturesSection(searchQuery: _searchQuery),
+                        PlusFeaturesSection(
+                          searchQuery: _searchQuery,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
+                        ),
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 1) ...[
                         ThemeSettingsSection(
                           searchQuery: _searchQuery,
                           androidInfoFuture: _androidInfoFuture,
                           colorsNameMap: const <ColorSwatch<Object>, String>{},
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
                         ),
                         AppsViewSettingsSection(
                           searchQuery: _searchQuery,
                           onSetState: (fn) => setState(fn),
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
                         ),
                       ],
                       if (_searchQuery.isNotEmpty ||
@@ -210,17 +218,39 @@ class _SettingsPageState extends State<SettingsPage> {
                           onIntervalLabelChange: (val) =>
                               setState(() => _showIntervalLabel = val),
                           androidInfoFuture: _androidInfoFuture,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
                         ),
-                        InstallationSection(searchQuery: _searchQuery),
+                        InstallationSection(
+                          searchQuery: _searchQuery,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
+                        ),
                       ],
                       if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
-                        NotificationSettingsSection(searchQuery: _searchQuery),
+                        NotificationSettingsSection(
+                          searchQuery: _searchQuery,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
+                        ),
                       if (_searchQuery.isNotEmpty || _selectedSectionIndex == 4)
-                        AppBehaviorSection(searchQuery: _searchQuery),
+                        AppBehaviorSection(
+                          searchQuery: _searchQuery,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
+                        ),
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 5) ...[
-                        AdvancedSettingsSection(searchQuery: _searchQuery),
-                        TroubleshootingSection(searchQuery: _searchQuery),
+                        AdvancedSettingsSection(
+                          searchQuery: _searchQuery,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
+                        ),
+                        TroubleshootingSection(
+                          searchQuery: _searchQuery,
+                          showAdvancedSettings:
+                              plusSettings.plusShowAdvancedSettings,
+                        ),
                       ],
                       const SizedBox(height: 48),
                       _buildFooter(context),
