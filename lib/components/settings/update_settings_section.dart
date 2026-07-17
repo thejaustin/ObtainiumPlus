@@ -80,6 +80,34 @@ class UpdateSettingsSection extends StatelessWidget {
           ),
         ),
 
+      // Background updates on Wi-Fi only
+      if (_matches(tr('bgUpdatesOnWiFiOnly')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.wifi_outlined),
+            title: Text(
+              tr('bgUpdatesOnWiFiOnly'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            value: settings.bgUpdatesOnWiFiOnly,
+            onChanged: (v) => settings.bgUpdatesOnWiFiOnly = v,
+          ),
+        ),
+
+      // Background updates while charging only
+      if (_matches(tr('bgUpdatesWhileChargingOnly')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.battery_charging_full_outlined),
+            title: Text(
+              tr('bgUpdatesWhileChargingOnly'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            value: settings.bgUpdatesWhileChargingOnly,
+            onChanged: (v) => settings.bgUpdatesWhileChargingOnly = v,
+          ),
+        ),
+
       // Parallel downloads
       if (_matches(tr('parallelDownloads'), isAdvanced: true))
         Consumer<BehaviorSettingsProvider>(
