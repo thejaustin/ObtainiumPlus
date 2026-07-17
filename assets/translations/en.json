@@ -869,6 +869,8 @@
     "appBarStyleDescription": "Choose between a compact or large title application bar",
     "density_comfortable": "Comfortable",
     "density_compact": "Compact",
+    "plusUseCompactSettings": "Compact settings layout",
+    "plusUseCompactSettingsDescription": "Reduce padding and spacing between settings tiles for a denser view",
     "updateSchedule": "Update schedule",
     "autoUpdateRules": "Auto-update rules",
     "autoUpdateRulesDescription": "Manage automatic update behaviors and restrictions",
