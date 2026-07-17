@@ -10,30 +10,41 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/pages/statistics.dart';
 import 'package:obtainium/pages/changelog.dart';
+import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Section for system settings shortcuts and troubleshooting
-class TroubleshootingSection extends StatelessWidget {
+class TroubleshootingSection extends StatefulWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
+
   const TroubleshootingSection({
     super.key,
     this.searchQuery,
     this.showAdvancedSettings,
   });
 
+  @override
+  State<TroubleshootingSection> createState() => _TroubleshootingSectionState();
+}
+
+class _TroubleshootingSectionState extends State<TroubleshootingSection> {
+  int _devModeTapCount = 0;
+
   bool _matches(String text, {bool isAdvanced = false}) {
-    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
-    if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    if (isAdvanced && !(widget.showAdvancedSettings ?? false)) return false;
+    if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(widget.searchQuery!.toLowerCase());
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final bool isSearching =
+        widget.searchQuery != null && widget.searchQuery!.isNotEmpty;
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
     final items = [
       if (_matches(tr('openAppInfo')))
@@ -147,16 +158,13 @@ class TroubleshootingSection extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: Text(tr('plusShowChangelogAfterUpdateDescription')),
-          value: context
-              .watch<PlusSettingsProvider>()
-              .plusShowChangelogAfterUpdate,
+          value: plusSettings.plusShowChangelogAfterUpdate,
           onChanged: (v) {
             AppHaptics.selectionClick();
-            context.read<PlusSettingsProvider>().plusShowChangelogAfterUpdate =
-                v;
+            plusSettings.plusShowChangelogAfterUpdate = v;
           },
         ),
-      if (!context.watch<SettingsProvider>().plusDeveloperMode)
+      if (!plusSettings.plusDeveloperMode)
         ListTile(
           leading: Icon(
             Icons.help_outline,
@@ -167,6 +175,48 @@ class TroubleshootingSection extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: Text(tr('devOptionsHint')),
+          onTap: () {
+            setState(() {
+              _devModeTapCount++;
+            });
+            AppHaptics.lightImpact();
+            if (_devModeTapCount >= 7) {
+              plusSettings.plusDeveloperMode = true;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Developer & Diagnostics options enabled!'),
+                ),
+              );
+            } else if (_devModeTapCount > 2) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'You are ${7 - _devModeTapCount} steps away from being a developer.',
+                  ),
+                  duration: const Duration(milliseconds: 500),
+                ),
+              );
+            }
+          },
+        ),
+      if (plusSettings.plusDeveloperMode)
+        ListTile(
+          leading: Icon(
+            Icons.developer_mode_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: Text(
+            tr('developerAndDiagnostics'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+            'Configure advanced diagnostic tools and Play Store plugins',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            AppHaptics.selectionClick();
+            pushRoute(context, const DeveloperSettingsPage());
+          },
         ),
       const Divider(),
       _buildCleanupTile(
@@ -183,7 +233,7 @@ class TroubleshootingSection extends StatelessWidget {
         subtitle: tr('clearIconCacheDescription'),
         onTap: () => _clearIconCache(context),
       ),
-      if (context.watch<SettingsProvider>().plusDeveloperMode)
+      if (plusSettings.plusDeveloperMode)
         _buildCleanupTile(
           context,
           icon: Icons.block_flipped,
