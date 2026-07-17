@@ -169,9 +169,18 @@ class AppDownloadService {
         );
       }
     } else {
-      downloadResults = await Future.wait(
-        appsToInstall.map(
-          (id) => _downloadAppWrapper(
+      final List<Map<String, dynamic>> results = List.filled(
+        appsToInstall.length,
+        {},
+      );
+      int index = 0;
+      Future<void> worker() async {
+        while (index < appsToInstall.length) {
+          final current = index;
+          index++;
+          if (current >= appsToInstall.length) break;
+          final id = appsToInstall[current];
+          results[current] = await _downloadAppWrapper(
             id: id,
             apps: apps,
             settingsProvider: settingsProvider,
@@ -191,9 +200,17 @@ class AppDownloadService {
             useExisting: useExisting,
             skipInstalls: true,
             isCancelled: isCancelled,
-          ),
-        ),
-      );
+          );
+        }
+      }
+
+      final limit = updateSettings.updateDownloadConcurrencyLimit;
+      final actualLimit = limit < appsToInstall.length
+          ? limit
+          : appsToInstall.length;
+      final workers = List.generate(actualLimit, (_) => worker());
+      await Future.wait(workers);
+      downloadResults = results;
     }
     for (var res in downloadResults) {
       if (!errors.appIdNames.containsKey(res['id'])) {
