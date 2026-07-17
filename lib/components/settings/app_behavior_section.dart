@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/utils/locale_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 /// App behavior and interaction settings section
@@ -98,6 +102,28 @@ class AppBehaviorSection extends StatelessWidget {
                   if (value != null) settings.animationSpeedMultiplier = value;
                 },
               ),
+            );
+          },
+        ),
+      if (_matches(tr('language')))
+        Consumer<SettingsProvider>(
+          builder: (context, settings, child) {
+            final currentLocale = context.locale;
+            final matchedLocaleEntry = supportedLocales.firstWhere(
+              (entry) => entry.key.languageCode == currentLocale.languageCode,
+              orElse: () => supportedLocales.first,
+            );
+            return ListTile(
+              leading: const Icon(Icons.language_outlined),
+              title: Text(
+                tr('language'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(matchedLocaleEntry.value),
+              onTap: () {
+                AppHaptics.selectionClick();
+                _showLanguagePicker(context, settings);
+              },
             );
           },
         ),
@@ -223,6 +249,54 @@ class AppBehaviorSection extends StatelessWidget {
           subtitle: Text(subtitle),
           value: value(settings),
           onChanged: (v) => onChanged(settings, v),
+        );
+      },
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context, SettingsProvider settings) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return GlassDialog(
+          title: tr('language'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.5,
+            ),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: supportedLocales.length,
+              itemBuilder: (context, index) {
+                final entry = supportedLocales[index];
+                final isSelected =
+                    context.locale.languageCode == entry.key.languageCode;
+                return ListTile(
+                  title: Text(entry.value),
+                  trailing: isSelected
+                      ? Icon(
+                          Icons.check_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    settings.forcedLocale = entry.key;
+                    context.setLocale(entry.key);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('close')),
+            ),
+          ],
         );
       },
     );
