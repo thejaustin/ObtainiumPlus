@@ -10,6 +10,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -169,10 +170,10 @@ class HomePageState extends State<HomePage> {
     _appLinks = AppLinks();
 
     goToAddApp(String data) async {
-      // Add App is no longer a tab; open it as a pushed route and let
+      // Add App is no longer a tab; open it as a bottom sheet and let
       // AddAppPage feed the URL into its form via initialUrl -> linkFn.
       if (!mounted) return;
-      await pushRoute(context, AddAppPage(initialUrl: data));
+      showAddAppSheet(context: context, initialUrl: data);
     }
 
     goToExistingApp(String appId) async {

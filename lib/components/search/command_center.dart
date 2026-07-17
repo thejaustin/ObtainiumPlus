@@ -14,6 +14,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/pages/add_app.dart';
+import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs_page.dart';
@@ -383,7 +384,7 @@ class _CommandCenterState extends State<CommandCenter> {
     Navigator.pop(context);
     final ctx = globalNavigatorKey.currentContext;
     if (ctx != null) {
-      pushRoute(ctx, AddAppPage(initialUrl: url));
+      showAddAppSheet(context: ctx, initialUrl: url);
     }
   }
 
