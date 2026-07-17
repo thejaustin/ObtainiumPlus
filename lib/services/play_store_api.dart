@@ -54,7 +54,10 @@ class PlayStoreApi {
   // Each PlayStoreApi instance has its own isolated HTTP client.
   final http.Client _client = _buildPlayStoreClient();
 
-  PlayStoreApi({required this.authProvider, required this.plusSettingsProvider});
+  PlayStoreApi({
+    required this.authProvider,
+    required this.plusSettingsProvider,
+  });
 
   void dispose() => _client.close();
 
@@ -166,9 +169,12 @@ class PlayStoreApi {
       if (response.statusCode == 200) {
         talker.debug('Play Store Details: ${response.bodyBytes.length} bytes');
         try {
-          final wrapper = play_proto.ResponseWrapper.fromBuffer(response.bodyBytes);
+          final wrapper = play_proto.ResponseWrapper.fromBuffer(
+            response.bodyBytes,
+          );
           if (wrapper.hasPayload() && wrapper.payload.hasDetailsResponse()) {
-            final appDetails = wrapper.payload.detailsResponse.item.details.appDetails;
+            final appDetails =
+                wrapper.payload.detailsResponse.item.details.appDetails;
             return {
               'appId': appId,
               'status': 'fetched',
@@ -223,16 +229,22 @@ class PlayStoreApi {
 
       if (response.statusCode == 200) {
         try {
-          final wrapper = play_proto.ResponseWrapper.fromBuffer(response.bodyBytes);
+          final wrapper = play_proto.ResponseWrapper.fromBuffer(
+            response.bodyBytes,
+          );
           if (wrapper.hasPayload() && wrapper.payload.hasDeliveryResponse()) {
-            final deliveryData = wrapper.payload.deliveryResponse.appDeliveryData;
+            final deliveryData =
+                wrapper.payload.deliveryResponse.appDeliveryData;
             final urls = <String>[];
-            if (deliveryData.hasDownloadUrl()) urls.add(deliveryData.downloadUrl);
+            if (deliveryData.hasDownloadUrl())
+              urls.add(deliveryData.downloadUrl);
             for (final split in deliveryData.splitDeliveryData) {
               if (split.hasDownloadUrl()) urls.add(split.downloadUrl);
             }
             if (urls.isNotEmpty) {
-              talker.info('Extracted ${urls.length} delivery URLs for $appId from protobuf');
+              talker.info(
+                'Extracted ${urls.length} delivery URLs for $appId from protobuf',
+              );
               return urls;
             }
           }

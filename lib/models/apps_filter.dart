@@ -11,10 +11,7 @@ class AppsFilter {
   Set<String> statusFilter = {};
   String sourceFilter = '';
 
-  AppsFilter({
-    this.includeUptodate = true,
-    this.includeNonInstalled = true,
-  });
+  AppsFilter({this.includeUptodate = true, this.includeNonInstalled = true});
 
   Map<String, dynamic> toFormValuesMap() => {
     'appName': nameFilter,

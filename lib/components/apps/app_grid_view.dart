@@ -40,7 +40,10 @@ class AppGridView extends StatelessWidget {
         ? _calculateAdaptiveColumns(context)
         : viewSettings.gridColumnCount;
 
-    double childAspectRatio = 0.8;
+    double childAspectRatio =
+        (viewSettings.displayShowVersion || viewSettings.displayShowAuthor)
+        ? 0.72
+        : 0.8;
 
     if (apps.length <= 2 && viewSettings.gridColumnCount == 0) {
       columnCount = apps.length == 1 ? 1 : 2;

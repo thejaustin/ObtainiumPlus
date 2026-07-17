@@ -30,7 +30,8 @@ class AppUpdateService {
     String latest, {
     bool ignoreOrdering = false,
   }) {
-    if (installed == null) return false; // Not installed is not "different" for update purposes (usually handled separately)
+    if (installed == null)
+      return false; // Not installed is not "different" for update purposes (usually handled separately)
     if (installed == latest) return false;
     final aggressive =
         app.additionalSettings['aggressiveVersionReconciliation'] == true ||

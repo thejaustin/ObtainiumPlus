@@ -61,8 +61,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 final pm = AndroidPackageManager();
 final packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates});
 
-
-
 List<String> generateStandardVersionRegExStrings() {
   var basics = [
     '[0-9]+',
@@ -483,8 +481,8 @@ Future<PackageInfo?> getInstalledInfo(
   if (packageName != null) {
     try {
       return await pm.getPackageInfo(
-          packageName: packageName,
-          flags: packageInfoFlags
+        packageName: packageName,
+        flags: packageInfoFlags,
       );
     } catch (e) {
       if (printErr) {
@@ -1371,7 +1369,10 @@ class AppsProvider with ChangeNotifier {
         downloadResults.add(await downloadFn(id));
       }
     } else {
-      List<Map<Object?, Object?>> results = List.filled(appsToInstall.length, {});
+      List<Map<Object?, Object?>> results = List.filled(
+        appsToInstall.length,
+        {},
+      );
       await _runWithConcurrencyLimit<int>(
         List.generate(appsToInstall.length, (i) => i),
         settingsProvider.updateDownloadConcurrencyLimit,
@@ -1861,12 +1862,8 @@ class AppsProvider with ChangeNotifier {
             value.installedInfo,
             icon,
           ),
-          ifAbsent: () => AppInMemory(
-            currentApp.app,
-            null,
-            currentApp.installedInfo,
-            icon,
-          ),
+          ifAbsent: () =>
+              AppInMemory(currentApp.app, null, currentApp.installedInfo, icon),
         );
         notifyListeners();
       }
@@ -2095,10 +2092,13 @@ class AppsProvider with ChangeNotifier {
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
         try {
           final SharedPreferences prefs = await SharedPreferences.getInstance();
-          final bool enableBanWarnings = prefs.safeBool('plusEnableBanWarnings') ?? false;
+          final bool enableBanWarnings =
+              prefs.safeBool('plusEnableBanWarnings') ?? false;
           final int threshold = prefs.safeInt('plusBanWarningThreshold') ?? 5;
           if (enableBanWarnings && appIds.length > threshold) {
-            NotificationsProvider().notify(DispenserBanWarningNotification(appIds.length));
+            NotificationsProvider().notify(
+              DispenserBanWarningNotification(appIds.length),
+            );
           }
         } catch (_) {}
 
@@ -2155,9 +2155,10 @@ class AppsProvider with ChangeNotifier {
         isCandidate = !nonInstalledOnly
             ? false
             : app.additionalSettings['trackOnly'] != true &&
-                app.latestVersion.isNotEmpty;
+                  app.latestVersion.isNotEmpty;
       } else {
-        isCandidate = AppUpdateService.areVersionsDifferent(
+        isCandidate =
+            AppUpdateService.areVersionsDifferent(
               app,
               app.installedVersion,
               app.latestVersion,
@@ -2346,7 +2347,11 @@ class AppsProvider with ChangeNotifier {
     try {
       int count = 0;
       for (var entry in apps.entries) {
-        if (AppUpdateService.areVersionsDifferent(entry.value.app, entry.value.app.installedVersion, entry.value.app.latestVersion)) {
+        if (AppUpdateService.areVersionsDifferent(
+          entry.value.app,
+          entry.value.app.installedVersion,
+          entry.value.app.latestVersion,
+        )) {
           count++;
         }
       }
@@ -2374,6 +2379,7 @@ class AppsProvider with ChangeNotifier {
         await action(items[current]);
       }
     }
+
     final actualLimit = limit < items.length ? limit : items.length;
     final workers = List.generate(actualLimit, (_) => worker());
     await Future.wait(workers);
@@ -2412,7 +2418,9 @@ class _AppFilePickerState extends State<AppFilePicker> {
       title: widget.pickAnyAsset
           ? tr('selectX', args: [lowerCaseIfEnglish(tr('releaseAsset'))])
           : tr('pickAnAPK'),
-      icon: widget.pickAnyAsset ? Icons.file_present_rounded : Icons.android_rounded,
+      icon: widget.pickAnyAsset
+          ? Icons.file_present_rounded
+          : Icons.android_rounded,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -2576,9 +2584,8 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
                         ? null
                         : appsProvider.updateSettings.lastCompletedBGCheckTime
                   : null,
-              onlyCheckInstalledOrTrackOnlyApps: appsProvider
-                  .updateSettings
-                  .onlyCheckInstalledOrTrackOnlyApps,
+              onlyCheckInstalledOrTrackOnlyApps:
+                  appsProvider.updateSettings.onlyCheckInstalledOrTrackOnlyApps,
             )
             .map((e) => MapEntry(e, 0))),
   ];
@@ -2623,9 +2630,7 @@ Future<void> bgUpdateCheck(String taskId, Map<String, dynamic>? params) async {
     var enoughTimePassed =
         appsProvider.updateSettings.updateInterval != 0 &&
         appsProvider.updateSettings.lastCompletedBGCheckTime
-            .add(
-              Duration(minutes: appsProvider.updateSettings.updateInterval),
-            )
+            .add(Duration(minutes: appsProvider.updateSettings.updateInterval))
             .isBefore(DateTime.now());
     if (!enoughTimePassed) {
       // ignore: avoid_print

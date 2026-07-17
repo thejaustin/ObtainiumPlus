@@ -239,14 +239,14 @@ class _ImportExportPageState extends State<ImportExportPage> {
               if (urlsWithDescriptions.isNotEmpty) {
                 if (!context.mounted) return;
                 var selectedUrls = await showDialog<List<String>?>(
-                      context: context,
-                      builder: (BuildContext ctx) {
-                        return SelectionModal(
-                          entries: urlsWithDescriptions,
-                          selectedByDefault: false,
-                        );
-                      },
+                  context: context,
+                  builder: (BuildContext ctx) {
+                    return SelectionModal(
+                      entries: urlsWithDescriptions,
+                      selectedByDefault: false,
                     );
+                  },
+                );
                 if (selectedUrls != null && selectedUrls.isNotEmpty) {
                   var errors = await appsProvider.addAppsByURL(
                     selectedUrls,
@@ -313,11 +313,11 @@ class _ImportExportPageState extends State<ImportExportPage> {
               );
               if (!context.mounted) return;
               var selectedUrls = await showDialog<List<String>?>(
-                    context: context,
-                    builder: (BuildContext ctx) {
-                      return SelectionModal(entries: urlsWithDescriptions);
-                    },
-                  );
+                context: context,
+                builder: (BuildContext ctx) {
+                  return SelectionModal(entries: urlsWithDescriptions);
+                },
+              );
               if (selectedUrls != null) {
                 var errors = await appsProvider.addAppsByURL(selectedUrls);
                 if (!context.mounted) return;
@@ -382,8 +382,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: (iconColor ?? colorScheme.primary)
-                          .withValues(alpha: 0.12),
+                      color: (iconColor ?? colorScheme.primary).withValues(
+                        alpha: 0.12,
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -406,9 +407,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         Text(
                           subtitle,
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -416,11 +415,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 ],
               ),
               const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: actions,
-              ),
+              Wrap(spacing: 8, runSpacing: 8, children: actions),
             ],
           ),
         ),
@@ -443,8 +438,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     return _sectionCard(
                       icon: Icons.upload_rounded,
                       title: tr('obtainiumExport'),
-                      subtitle: tr('exportedTo',
-                          args: [snapshot.data ?? tr('pickExportDir')]),
+                      subtitle: tr(
+                        'exportedTo',
+                        args: [snapshot.data ?? tr('pickExportDir')],
+                      ),
                       iconColor: colorScheme.tertiary,
                       actions: [
                         FilledButton.icon(
@@ -455,10 +452,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                           label: Text(tr('pickExportDir')),
                         ),
                         OutlinedButton.icon(
-                          onPressed:
-                              importInProgress || snapshot.data == null
-                                  ? null
-                                  : runObtainiumExport,
+                          onPressed: importInProgress || snapshot.data == null
+                              ? null
+                              : runObtainiumExport,
                           icon: const Icon(Icons.save_alt_rounded, size: 18),
                           label: Text(tr('obtainiumExport')),
                         ),
@@ -475,7 +471,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     return Card.outlined(
                       margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                         child: GeneratedForm(
@@ -509,8 +506,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                     value['autoExportOnChanges'] == true;
                               }
                               if (value['exportSettings'] != null) {
-                                behaviorSettings.exportSettings =
-                                    int.parse(value['exportSettings']);
+                                behaviorSettings.exportSettings = int.parse(
+                                  value['exportSettings'],
+                                );
                               }
                             }
                           },
@@ -528,8 +526,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   iconColor: colorScheme.primary,
                   actions: [
                     FilledButton.icon(
-                      onPressed:
-                          importInProgress ? null : runObtainiumImport,
+                      onPressed: importInProgress ? null : runObtainiumImport,
                       icon: const Icon(Icons.file_open_rounded, size: 18),
                       label: Text(tr('obtainiumImport')),
                     ),
@@ -552,7 +549,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 if (!importInProgress)
                   _sectionCard(
                     icon: Icons.manage_search_rounded,
-                    title: tr('searchX', args: [lowerCaseIfEnglish(tr('source'))]),
+                    title: tr(
+                      'searchX',
+                      args: [lowerCaseIfEnglish(tr('source'))],
+                    ),
                     subtitle: tr('importFromURLList'),
                     iconColor: colorScheme.secondary,
                     actions: [
@@ -562,44 +562,45 @@ class _ImportExportPageState extends State<ImportExportPage> {
                             : () async {
                                 var searchSourceName =
                                     await showDialog<List<String>?>(
-                                          context: context,
-                                          builder: (BuildContext ctx) {
-                                            return SelectionModal(
-                                              title: tr(
-                                                'selectX',
-                                                args: [
-                                                  tr('source').toLowerCase()
-                                                ],
-                                              ),
-                                              entries: sourceStrings,
-                                              selectedByDefault: false,
-                                              onlyOneSelectionAllowed: true,
-                                              titlesAreLinks: false,
-                                            );
-                                          },
-                                        ) ??
+                                      context: context,
+                                      builder: (BuildContext ctx) {
+                                        return SelectionModal(
+                                          title: tr(
+                                            'selectX',
+                                            args: [tr('source').toLowerCase()],
+                                          ),
+                                          entries: sourceStrings,
+                                          selectedByDefault: false,
+                                          onlyOneSelectionAllowed: true,
+                                          titlesAreLinks: false,
+                                        );
+                                      },
+                                    ) ??
                                     [];
                                 var searchSource = sourceProvider.sources
-                                    .where((e) =>
-                                        searchSourceName.contains(e.name))
+                                    .where(
+                                      (e) => searchSourceName.contains(e.name),
+                                    )
                                     .toList();
                                 if (searchSource.isNotEmpty) {
                                   runSourceSearch(searchSource[0]);
                                 }
                               },
                         icon: const Icon(Icons.source_rounded, size: 18),
-                        label: Text(tr('searchX',
-                            args: [lowerCaseIfEnglish(tr('source'))])),
+                        label: Text(
+                          tr(
+                            'searchX',
+                            args: [lowerCaseIfEnglish(tr('source'))],
+                          ),
+                        ),
                       ),
                       OutlinedButton.icon(
-                        onPressed:
-                            importInProgress ? null : urlListImport,
+                        onPressed: importInProgress ? null : urlListImport,
                         icon: const Icon(Icons.list_alt_rounded, size: 18),
                         label: Text(tr('importFromURLList')),
                       ),
                       OutlinedButton.icon(
-                        onPressed:
-                            importInProgress ? null : runUrlImport,
+                        onPressed: importInProgress ? null : runUrlImport,
                         icon: const Icon(Icons.upload_file_rounded, size: 18),
                         label: Text(tr('importFromURLsInFile')),
                       ),
@@ -620,8 +621,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                           onPressed: importInProgress
                               ? null
                               : () => runMassSourceImport(source),
-                          icon: const Icon(Icons.download_for_offline_rounded,
-                              size: 18),
+                          icon: const Icon(
+                            Icons.download_for_offline_rounded,
+                            size: 18,
+                          ),
                           label: Text(tr('importX', args: [source.name])),
                         ),
                       ),
@@ -637,5 +640,3 @@ class _ImportExportPageState extends State<ImportExportPage> {
     );
   }
 }
-
-

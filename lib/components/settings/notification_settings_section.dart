@@ -8,7 +8,11 @@ import 'package:provider/provider.dart';
 class NotificationSettingsSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
-  const NotificationSettingsSection({super.key, this.searchQuery, this.showAdvancedSettings});
+  const NotificationSettingsSection({
+    super.key,
+    this.searchQuery,
+    this.showAdvancedSettings,
+  });
 
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;

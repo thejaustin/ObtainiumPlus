@@ -123,14 +123,18 @@ class ThemeBuilder {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: AppOpacity.half),
+          color: colorScheme.onSurfaceVariant.withValues(
+            alpha: AppOpacity.half,
+          ),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadius),
         borderSide: BorderSide(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: AppOpacity.half),
+          color: colorScheme.onSurfaceVariant.withValues(
+            alpha: AppOpacity.half,
+          ),
           width: AppConstants.enabledBorderWidth,
         ),
       ),
@@ -474,7 +478,9 @@ class ThemeBuilder {
       shape: expressive
           ? const StadiumBorder()
           : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      side: BorderSide(color: colorScheme.outline.withValues(alpha: AppOpacity.half)),
+      side: BorderSide(
+        color: colorScheme.outline.withValues(alpha: AppOpacity.half),
+      ),
     );
   }
 
@@ -499,7 +505,9 @@ class ThemeBuilder {
     );
   }
 
-  static ElevatedButtonThemeData _buildElevatedButtonTheme(double? cornerRadius) {
+  static ElevatedButtonThemeData _buildElevatedButtonTheme(
+    double? cornerRadius,
+  ) {
     if (cornerRadius == null) return const ElevatedButtonThemeData();
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -532,7 +540,9 @@ class ThemeBuilder {
     );
   }
 
-  static OutlinedButtonThemeData _buildOutlinedButtonTheme(double? cornerRadius) {
+  static OutlinedButtonThemeData _buildOutlinedButtonTheme(
+    double? cornerRadius,
+  ) {
     if (cornerRadius == null) return const OutlinedButtonThemeData();
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(

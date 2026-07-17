@@ -292,21 +292,51 @@ class FDroid extends AppSource {
   Future<FDroidBrowseResult> browseCategory(String slug, {int page = 1}) async {
     String catName = slug;
     switch (slug) {
-      case 'connectivity': catName = 'Connectivity'; break;
-      case 'development': catName = 'Development'; break;
-      case 'games': catName = 'Games'; break;
-      case 'graphics': catName = 'Graphics'; break;
-      case 'internet': catName = 'Internet'; break;
-      case 'money': catName = 'Money'; break;
-      case 'multimedia': catName = 'Multimedia'; break;
-      case 'navigation': catName = 'Navigation'; break;
-      case 'phone-sms': catName = 'Phone+%26+SMS'; break;
-      case 'reading': catName = 'Reading'; break;
-      case 'security': catName = 'Security'; break;
-      case 'system': catName = 'System'; break;
-      case 'theming': catName = 'Theming'; break;
-      case 'time': catName = 'Time'; break;
-      case 'writing': catName = 'Writing'; break;
+      case 'connectivity':
+        catName = 'Connectivity';
+        break;
+      case 'development':
+        catName = 'Development';
+        break;
+      case 'games':
+        catName = 'Games';
+        break;
+      case 'graphics':
+        catName = 'Graphics';
+        break;
+      case 'internet':
+        catName = 'Internet';
+        break;
+      case 'money':
+        catName = 'Money';
+        break;
+      case 'multimedia':
+        catName = 'Multimedia';
+        break;
+      case 'navigation':
+        catName = 'Navigation';
+        break;
+      case 'phone-sms':
+        catName = 'Phone+%26+SMS';
+        break;
+      case 'reading':
+        catName = 'Reading';
+        break;
+      case 'security':
+        catName = 'Security';
+        break;
+      case 'system':
+        catName = 'System';
+        break;
+      case 'theming':
+        catName = 'Theming';
+        break;
+      case 'time':
+        catName = 'Time';
+        break;
+      case 'writing':
+        catName = 'Writing';
+        break;
     }
 
     final String url = 'https://f-droid.org/en/categories/$catName/';
@@ -346,4 +376,3 @@ class FDroidBrowseResult {
   final bool hasMore;
   FDroidBrowseResult(this.apps, this.hasMore);
 }
-

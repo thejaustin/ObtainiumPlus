@@ -29,7 +29,9 @@ class _ChangelogPageState extends State<ChangelogPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: widget.isModal ? Colors.transparent : colorScheme.surface,
+      backgroundColor: widget.isModal
+          ? Colors.transparent
+          : colorScheme.surface,
       appBar: widget.isModal ? null : AppBar(title: Text(tr('viewChangelog'))),
       body: FutureBuilder<String>(
         future: _changelogFuture,
@@ -51,12 +53,12 @@ class _ChangelogPageState extends State<ChangelogPage> {
             },
             styleSheet: MarkdownStyleSheet(
               h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                  ),
-              h2: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+              h2: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               p: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5),
             ),
           );
@@ -83,8 +85,7 @@ class _ChangelogPageState extends State<ChangelogPage> {
           for (final release in decoded) {
             if (release is! Map) continue;
             final tag = (release['tag_name'] ?? '').toString();
-            if (release['draft'] == true ||
-                release['prerelease'] == true) {
+            if (release['draft'] == true || release['prerelease'] == true) {
               continue;
             }
             final name = (release['name'] ?? '').toString();

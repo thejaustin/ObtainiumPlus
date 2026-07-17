@@ -807,10 +807,13 @@ class GitHub extends AppSource {
     var sp = SettingsProvider();
     await sp.initializeSettings();
     var sourceConfigSettingValues = await getSourceConfigValues({}, sp);
-    
+
     // Check for user profile URLs or @username
     String apiQuery = query;
-    RegExp userProfileRegEx = RegExp(r'^https?://(?:www\.)?github\.com/([^/]+)/?$', caseSensitive: false);
+    RegExp userProfileRegEx = RegExp(
+      r'^https?://(?:www\.)?github\.com/([^/]+)/?$',
+      caseSensitive: false,
+    );
     if (userProfileRegEx.hasMatch(query)) {
       apiQuery = 'user:${userProfileRegEx.firstMatch(query)!.group(1)}';
     } else if (query.startsWith('@')) {

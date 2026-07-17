@@ -13,7 +13,11 @@ class InstallationSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
-  const InstallationSection({super.key, this.searchQuery, this.showAdvancedSettings});
+  const InstallationSection({
+    super.key,
+    this.searchQuery,
+    this.showAdvancedSettings,
+  });
 
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;

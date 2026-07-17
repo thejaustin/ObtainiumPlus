@@ -31,7 +31,8 @@ class Talker {
   }
 
   void handle(dynamic error, [StackTrace? stackTrace, String? message]) {
-    final msg = '${message ?? ""}: $error${stackTrace != null ? "\n$stackTrace" : ""}';
+    final msg =
+        '${message ?? ""}: $error${stackTrace != null ? "\n$stackTrace" : ""}';
     if (kDebugMode) print('[EXCEPTION] $msg');
     _add('EXCEPTION', msg);
   }

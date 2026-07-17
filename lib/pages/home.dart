@@ -382,7 +382,8 @@ class HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         // The omnibar "+" — the single entry point for the combined
         // add/search/discover flow, visible on every tab.
-        floatingActionButton: plusSettings.plusEnableFAB && !settingsProvider.isTV
+        floatingActionButton:
+            plusSettings.plusEnableFAB && !settingsProvider.isTV
             ? const AppActionsFAB()
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -398,7 +399,7 @@ class HomePageState extends State<HomePage> {
                               label: Text(tr(e.title)),
                             ),
                           )
-                           .toList(),
+                          .toList(),
                       selectedIndex: currentIndex,
                       onDestinationSelected: switchToPage,
                       labelType: NavigationRailLabelType.all,

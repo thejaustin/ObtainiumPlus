@@ -207,8 +207,8 @@ class _SquigglyPainter extends CustomPainter {
         final double ramp = progressAtX < 0.1
             ? progressAtX / 0.1
             : progressAtX > 0.95
-                ? (1.0 - progressAtX) / 0.05
-                : 1.0;
+            ? (1.0 - progressAtX) / 0.05
+            : 1.0;
 
         final double currentAmplitude = amplitude * ramp;
         final double y =
@@ -231,44 +231,45 @@ class _SquigglyPainter extends CustomPainter {
     } else {
       // Indeterminate: wavelength=20dp, Google Play M3 Expressive style
       const double frequency = (2 * math.pi) / 20.0;
-      
+
       double easeInOut(double t) {
         if (t <= 0.0) return 0.0;
         if (t >= 1.0) return 1.0;
         return 0.5 - 0.5 * math.cos(math.pi * t);
       }
-      
+
       void drawSquigglyBar(double headT, double tailT) {
         final double startX = size.width * easeInOut(tailT);
         final double endX = size.width * easeInOut(headT);
         if (endX <= startX + 0.1) return;
-        
+
         final localPath = Path();
         localPath.moveTo(startX, centerY);
         final double lineLength = endX - startX;
-        
+
         for (double x = startX; x <= endX; x += 1.0) {
           final double progressInLine = (x - startX) / lineLength;
           final double ramp = progressInLine < 0.1
               ? progressInLine / 0.1
               : progressInLine > 0.9
-                  ? (1.0 - progressInLine) / 0.1
-                  : 1.0;
+              ? (1.0 - progressInLine) / 0.1
+              : 1.0;
           final double currentAmplitude = amplitude * ramp;
-          final double y = centerY +
+          final double y =
+              centerY +
               math.sin(x * frequency - animationValue * 16 * math.pi) *
                   currentAmplitude;
           localPath.lineTo(x, y);
         }
         canvas.drawPath(localPath, activePaint);
       }
-      
+
       // Bar 1
       drawSquigglyBar(
         (animationValue * 1.5).clamp(0.0, 1.0),
         (animationValue * 1.5 - 0.5).clamp(0.0, 1.0),
       );
-      
+
       // Bar 2 (Starts later, moves faster to catch up/repeat)
       drawSquigglyBar(
         (animationValue * 2.0 - 1.0).clamp(0.0, 1.0),
@@ -424,14 +425,16 @@ class _WavyCircularPainter extends CustomPainter {
       // Indeterminate circular wavy (expanding/contracting like Google Play)
       final double cycle = animationValue * 2 * math.pi; // 0 to 2pi
       final double rotation = animationValue * 8 * math.pi; // base spin
-      
+
       // Sweep oscillates smoothly between min length (0.1 pi) and max length (1.5 pi)
-      final double sweepOscillation = (math.sin(cycle - math.pi / 2) + 1.0) / 2.0; // 0.0 to 1.0
-      final double segmentAngle = 0.1 * math.pi + sweepOscillation * 1.4 * math.pi;
-      
+      final double sweepOscillation =
+          (math.sin(cycle - math.pi / 2) + 1.0) / 2.0; // 0.0 to 1.0
+      final double segmentAngle =
+          0.1 * math.pi + sweepOscillation * 1.4 * math.pi;
+
       // Tail offset pushes the start forward when contracting
-      final double tailOffset = cycle - (math.sin(cycle) + 1.0) * math.pi / 2.0; 
-      
+      final double tailOffset = cycle - (math.sin(cycle) + 1.0) * math.pi / 2.0;
+
       final double startAngle = rotation + tailOffset;
 
       for (double a = 0; a <= segmentAngle; a += 0.02) {
@@ -440,10 +443,10 @@ class _WavyCircularPainter extends CustomPainter {
         final double ramp = progressInLine < 0.1
             ? progressInLine / 0.1
             : progressInLine > 0.9
-                ? (1.0 - progressInLine) / 0.1
-                : 1.0;
+            ? (1.0 - progressInLine) / 0.1
+            : 1.0;
         final double currentAmplitude = amplitude * ramp;
-        
+
         final double currentRadius =
             radius +
             math.sin(totalAngle * waveCount - (animationValue * 12 * math.pi)) *

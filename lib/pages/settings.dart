@@ -89,32 +89,49 @@ class _SettingsPageState extends State<SettingsPage> {
           if (_searchQuery.isEmpty)
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 50,
+                height: 52,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  // Plain labels, not tr(): 'apps' is a plural (nested) key in
-                  // the translation JSON, and tr() on a nested key throws a
-                  // TypeError that blanks the whole page in release (#217)
                   children:
-                      const [
-                        'Obtainium+',
-                        'Visuals',
-                        'Apps View',
-                        'Updates',
-                        'Installation',
-                        'Notifications',
-                        'Behavior',
-                        'Advanced',
-                        'Troubleshooting',
+                      [
+                        (label: 'Obtainium+', icon: Icons.auto_awesome_rounded),
+                        (label: 'Visuals', icon: Icons.palette_outlined),
+                        (label: 'Apps View', icon: Icons.grid_view_rounded),
+                        (label: 'Updates', icon: Icons.system_update_rounded),
+                        (
+                          label: 'Installation',
+                          icon: Icons.install_mobile_rounded,
+                        ),
+                        (
+                          label: 'Notifications',
+                          icon: Icons.notifications_outlined,
+                        ),
+                        (label: 'Behavior', icon: Icons.tune_rounded),
+                        (label: 'Advanced', icon: Icons.code_rounded),
+                        (
+                          label: 'Troubleshooting',
+                          icon: Icons.bug_report_outlined,
+                        ),
                       ].asMap().entries.map((entry) {
                         final isSelected = _selectedSectionIndex == entry.key;
-                        final displayTitle = entry.value;
+                        final tab = entry.value;
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
                           child: ChoiceChip(
-                            label: Text(displayTitle),
+                            avatar: Icon(
+                              tab.icon,
+                              size: 16,
+                              color: isSelected
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                            ),
+                            label: Text(tab.label),
                             selected: isSelected,
                             onSelected: (selected) {
                               if (selected) {
@@ -152,6 +169,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
+                              fontSize: 13,
                             ),
                           ),
                         );
@@ -234,36 +252,48 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_searchQuery.isNotEmpty) return const SizedBox.shrink();
 
     final settingsProvider = context.read<SettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final links = [
+      (
+        icon: Icons.code_rounded,
+        label: tr('appSource'),
+        url: settingsProvider.sourceUrl,
+        color: colorScheme.primary,
+      ),
+      (
+        icon: Icons.help_outline_rounded,
+        label: tr('wiki'),
+        url: 'https://wiki.obtainium.imranr.dev/',
+        color: colorScheme.secondary,
+      ),
+      (
+        icon: Icons.apps_rounded,
+        label: tr('crowdsourcedConfigsLabel'),
+        url: 'https://apps.obtainium.imranr.dev/',
+        color: colorScheme.tertiary,
+      ),
+    ];
+
     return Column(
       children: [
-        const Divider(indent: 32, endIndent: 32),
-        const SizedBox(height: 16),
+        Divider(
+          indent: 32,
+          endIndent: 32,
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
+        const SizedBox(height: 12),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Expanded so long labels wrap instead of overflowing the Row
-            Expanded(
+          children: links.map((link) {
+            return Expanded(
               child: _FooterIcon(
-                icon: Icons.code,
-                label: tr('appSource'),
-                url: settingsProvider.sourceUrl,
+                icon: link.icon,
+                label: link.label,
+                url: link.url,
+                accentColor: link.color,
               ),
-            ),
-            Expanded(
-              child: _FooterIcon(
-                icon: Icons.help_outline_rounded,
-                label: tr('wiki'),
-                url: 'https://wiki.obtainium.imranr.dev/',
-              ),
-            ),
-            Expanded(
-              child: _FooterIcon(
-                icon: Icons.apps_rounded,
-                label: tr('crowdsourcedConfigsLabel'),
-                url: 'https://apps.obtainium.imranr.dev/',
-              ),
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ],
     );
@@ -274,32 +304,49 @@ class _FooterIcon extends StatelessWidget {
   final IconData icon;
   final String label;
   final String url;
+  final Color? accentColor;
 
   const _FooterIcon({
     required this.icon,
     required this.label,
     required this.url,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          onPressed: () =>
-              launchUrlString(url, mode: LaunchMode.externalApplication),
-          icon: Icon(icon),
-          tooltip: label,
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = accentColor ?? colorScheme.primary;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => launchUrlString(url, mode: LaunchMode.externalApplication),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

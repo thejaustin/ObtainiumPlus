@@ -234,8 +234,7 @@ class SettingsProvider with ChangeNotifier {
       prefs?.safeBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
   String get obtainiumReleaseChannel =>
       prefs?.safeString('obtainiumReleaseChannel') ?? 'stable';
-  String get autoUpdateRules =>
-      prefs?.safeString('autoUpdateRules') ?? '';
+  String get autoUpdateRules => prefs?.safeString('autoUpdateRules') ?? '';
 
   // --- PlusSettingsProvider forwards ---
   @Deprecated('Use PlusSettingsProvider.plusEnableGlassmorphism')
@@ -303,13 +302,15 @@ class SettingsProvider with ChangeNotifier {
   // Stub for export dir picker (moved to BehaviorSettingsProvider).
   Future<void> pickExportDir({bool remove = false}) async {}
 
-  int get updateCheckConcurrencyLimit => prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3;
+  int get updateCheckConcurrencyLimit =>
+      prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3;
   set updateCheckConcurrencyLimit(int val) {
     prefs?.setInt('updateCheckConcurrencyLimit', val);
     notifyListeners();
   }
 
-  int get updateDownloadConcurrencyLimit => prefs?.safeInt('updateDownloadConcurrencyLimit') ?? 2;
+  int get updateDownloadConcurrencyLimit =>
+      prefs?.safeInt('updateDownloadConcurrencyLimit') ?? 2;
   set updateDownloadConcurrencyLimit(int val) {
     prefs?.setInt('updateDownloadConcurrencyLimit', val);
     notifyListeners();

@@ -465,7 +465,6 @@ ObtainiumError getObtainiumHttpError(Response res) {
   );
 }
 
-
 String? regExValidator(String? value) {
   if (value == null || value.isEmpty) {
     return null;

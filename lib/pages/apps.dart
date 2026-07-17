@@ -36,6 +36,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 
 class AppsPage extends StatefulWidget {
@@ -1469,6 +1470,30 @@ class AppsPageState extends State<AppsPage> {
     getDisplayedList() {
       final isGrid = viewSettings.globalViewMode == ViewMode.grid;
 
+      if (viewSettings.groupByCategory &&
+          !(listedCategories.isEmpty ||
+              (listedCategories.length == 1 && listedCategories[0] == null))) {
+        return CategorySections(
+          listedApps: listedApps,
+          listedCategories: listedCategories,
+          selectedAppIds: selectedAppIds,
+          toggleAppSelected: toggleAppSelected,
+          onAppTap: (app) {
+            AppHaptics.selectionClick();
+            showDraggableModalBottomSheet(
+              context: context,
+              builder: (context, controller) => AppPage(
+                appId: app.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          },
+          getChangeLogFn: getChangeLogFn,
+          getCachedCategoryColor: (colorVal) => Color(colorVal),
+        );
+      }
+
       if (isGrid) {
         final width = MediaQuery.of(context).size.width;
         final columnCount = viewSettings.gridColumnCount != 0
@@ -1518,25 +1543,11 @@ class AppsPageState extends State<AppsPage> {
         );
       }
 
-      return viewSettings.groupByCategory &&
-              !(listedCategories.isEmpty ||
-                  (listedCategories.length == 1 && listedCategories[0] == null))
-          ? SliverList(
-              delegate: SliverChildBuilderDelegate((
-                BuildContext context,
-                int index,
-              ) {
-                return getCategoryCollapsibleTile(index);
-              }, childCount: listedCategories.length),
-            )
-          : SliverList(
-              delegate: SliverChildBuilderDelegate((
-                BuildContext context,
-                int index,
-              ) {
-                return getSingleAppHorizTile(index);
-              }, childCount: listedApps.length),
-            );
+      return SliverList(
+        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+          return getSingleAppHorizTile(index);
+        }, childCount: listedApps.length),
+      );
     }
 
     return Scaffold(

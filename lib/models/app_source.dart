@@ -7,7 +7,6 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/source_utils.dart';
 
-
 abstract class AppSource {
   List<String> hosts = [];
   bool hostChanged = false;

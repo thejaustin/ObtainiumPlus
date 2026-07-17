@@ -21,6 +21,7 @@ class App {
   late String? changeLog;
   late String? overrideSource;
   bool allowIdChange = false;
+
   /// If non-null, the app's source has a new canonical URL and a rename is pending.
   String? pendingRepoRenameUrl;
 

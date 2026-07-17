@@ -21,7 +21,9 @@ Future<T?> showDraggableModalBottomSheet<T>({
   return Navigator.of(context).push<T>(
     ModalSheetRoute<T>(
       swipeDismissible: true,
-      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
+      barrierColor: Theme.of(
+        context,
+      ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
       builder: (context) {
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -31,14 +33,18 @@ Future<T?> showDraggableModalBottomSheet<T>({
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface.withValues(
-                  alpha: enableGlass ? AppConstants.glassSurfaceAlphaStrong : 1.0,
+                  alpha: enableGlass
+                      ? AppConstants.glassSurfaceAlphaStrong
+                      : 1.0,
                 ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(28),
                 ),
                 border: Border(
                   top: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.15),
                     width: 1,
                   ),
                 ),

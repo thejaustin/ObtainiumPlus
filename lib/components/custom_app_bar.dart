@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key, required this.title, this.bottom, this.actions});
+  const CustomAppBar({
+    super.key,
+    required this.title,
+    this.bottom,
+    this.actions,
+  });
 
   final String title;
   final PreferredSizeWidget? bottom;
@@ -11,7 +16,8 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   State<CustomAppBar> createState() => _CustomAppBarState();
 
   @override
-  Size get preferredSize => Size.fromHeight(100 + (bottom?.preferredSize.height ?? 0));
+  Size get preferredSize =>
+      Size.fromHeight(100 + (bottom?.preferredSize.height ?? 0));
 }
 
 class _CustomAppBarState extends State<CustomAppBar> {

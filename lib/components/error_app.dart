@@ -81,157 +81,165 @@ class _ErrorAppState extends State<ErrorApp> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Startup Recovery',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.bug_report_outlined,
-                          color: Colors.white,
-                        ),
-                        onPressed: _reportToGitHub,
-                        tooltip: tr('reportOnGitHub'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Obtainium+ encountered a persistent problem during launch. You can try to repair the app below:',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Startup Recovery',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.bug_report_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: _reportToGitHub,
+                                tooltip: tr('reportOnGitHub'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Obtainium+ encountered a persistent problem during launch. You can try to repair the app below:',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
-                  // Repair Actions Card
-                  Card(
-                    color: Colors.black26,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          _buildRepairTile(
-                            context,
-                            icon: Icons.image_not_supported_outlined,
-                            title: 'Clear Icon Cache',
-                            subtitle: 'Fixes crashes related to broken images',
-                            onTap: () async {
-                              await StartupRepairService.clearIconCache();
-                              if (context.mounted) _showRepairComplete(context);
-                            },
+                          // Repair Actions Card
+                          Card(
+                            color: Colors.black26,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  _buildRepairTile(
+                                    context,
+                                    icon: Icons.image_not_supported_outlined,
+                                    title: 'Clear Icon Cache',
+                                    subtitle:
+                                        'Fixes crashes related to broken images',
+                                    onTap: () async {
+                                      await StartupRepairService.clearIconCache();
+                                      if (context.mounted)
+                                        _showRepairComplete(context);
+                                    },
+                                  ),
+                                  _buildRepairTile(
+                                    context,
+                                    icon: Icons.layers_clear_outlined,
+                                    title: 'Clear Provider State',
+                                    subtitle: 'Resets corrupted app list data',
+                                    onTap: () async {
+                                      await StartupRepairService.clearProviderStates();
+                                      if (context.mounted)
+                                        _showRepairComplete(context);
+                                    },
+                                  ),
+                                  _buildRepairTile(
+                                    context,
+                                    icon: Icons.restart_alt_outlined,
+                                    title: 'Factory Reset',
+                                    subtitle:
+                                        'Wipe all settings (Highly effective)',
+                                    isDestructive: true,
+                                    onTap: () async {
+                                      await StartupRepairService.factoryReset();
+                                      if (context.mounted)
+                                        _showRepairComplete(context);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          _buildRepairTile(
-                            context,
-                            icon: Icons.layers_clear_outlined,
-                            title: 'Clear Provider State',
-                            subtitle: 'Resets corrupted app list data',
-                            onTap: () async {
-                              await StartupRepairService.clearProviderStates();
-                              if (context.mounted) _showRepairComplete(context);
-                            },
-                          ),
-                          _buildRepairTile(
-                            context,
-                            icon: Icons.restart_alt_outlined,
-                            title: 'Factory Reset',
-                            subtitle: 'Wipe all settings (Highly effective)',
-                            isDestructive: true,
-                            onTap: () async {
-                              await StartupRepairService.factoryReset();
-                              if (context.mounted) _showRepairComplete(context);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Technical Details:',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.maxFinite,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: SelectableText(
-                      widget.error,
-                      style: const TextStyle(
-                        color: Colors.yellowAccent,
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _reportToGitHub,
-                        icon: const Icon(Icons.launch_outlined),
-                        label: Text(tr('reportOnGitHub')),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.red.shade900,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      OutlinedButton.icon(
-                        onPressed: _followIssue,
-                        icon: const Icon(
-                          Icons.notifications_active_outlined,
-                          color: Colors.white70,
-                        ),
-                        label: Text(
-                          tr('followIssue'),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white54),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: SingleChildScrollView(
-                        child: SelectableText(
-                          widget.stackTrace,
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 10,
-                            fontFamily: 'monospace',
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Technical Details:',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.maxFinite,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: SelectableText(
+                              widget.error,
+                              style: const TextStyle(
+                                color: Colors.yellowAccent,
+                                fontSize: 12,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _reportToGitHub,
+                                icon: const Icon(Icons.launch_outlined),
+                                label: Text(tr('reportOnGitHub')),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.red.shade900,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              OutlinedButton.icon(
+                                onPressed: _followIssue,
+                                icon: const Icon(
+                                  Icons.notifications_active_outlined,
+                                  color: Colors.white70,
+                                ),
+                                label: Text(
+                                  tr('followIssue'),
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Colors.white54),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: SingleChildScrollView(
+                                child: SelectableText(
+                                  widget.stackTrace,
+                                  style: const TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 10,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),

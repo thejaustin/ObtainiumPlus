@@ -124,9 +124,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
 
-    _dispensers =
-        _prefs?.safeStringList('play_store_dispensers') ??
-        [];
+    _dispensers = _prefs?.safeStringList('play_store_dispensers') ?? [];
 
     // Migrate existing users off the default auroraoss.com dispenser to honor the maintainer's request
     if (_dispensers.contains('https://auroraoss.com/api/auth')) {
@@ -134,7 +132,8 @@ class AuthProvider with ChangeNotifier {
       await _prefs?.setStringList('play_store_dispensers', _dispensers);
     }
 
-    _authMode = _prefs?.safeEnum('auth_mode', AuthMode.values) ?? AuthMode.values[2];
+    _authMode =
+        _prefs?.safeEnum('auth_mode', AuthMode.values) ?? AuthMode.values[2];
     _spoofedAndroidId = _prefs?.safeString('spoofed_android_id');
 
     final profileJson = _prefs?.safeString('selected_device_profile');

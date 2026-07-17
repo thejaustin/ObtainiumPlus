@@ -32,10 +32,16 @@ class GooglePlayNative extends AppSource {
       return APKDetails('Unknown', [], AppNames(appId, 'Google Play (Native)'));
     }
 
-    final plusSettingsProvider = Provider.of<PlusSettingsProvider>(ctx, listen: false);
+    final plusSettingsProvider = Provider.of<PlusSettingsProvider>(
+      ctx,
+      listen: false,
+    );
 
     // Each call gets a fresh isolated client; dispose in finally to prevent leaks.
-    final api = PlayStoreApi(authProvider: authProvider, plusSettingsProvider: plusSettingsProvider);
+    final api = PlayStoreApi(
+      authProvider: authProvider,
+      plusSettingsProvider: plusSettingsProvider,
+    );
     try {
       final details = await api.getDetails(appId);
       if (details != null) {
@@ -52,7 +58,10 @@ class GooglePlayNative extends AppSource {
         return APKDetails(
           version,
           urls,
-          AppNames(appId, details['developerName'] as String? ?? 'Google Play (Native)'),
+          AppNames(
+            appId,
+            details['developerName'] as String? ?? 'Google Play (Native)',
+          ),
         );
       }
     } on ObtainiumError {

@@ -67,8 +67,7 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusShowStatusHub =>
-      _prefs?.safeBool('plusShowStatusHub') ?? true;
+  bool get plusShowStatusHub => _prefs?.safeBool('plusShowStatusHub') ?? true;
   set plusShowStatusHub(bool val) {
     _prefs?.setBool('plusShowStatusHub', val);
     notifyListeners();
@@ -466,7 +465,8 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableBanWarnings => _prefs?.safeBool('plusEnableBanWarnings') ?? false;
+  bool get plusEnableBanWarnings =>
+      _prefs?.safeBool('plusEnableBanWarnings') ?? false;
   set plusEnableBanWarnings(bool val) {
     _prefs?.setBool('plusEnableBanWarnings', val);
     notifyListeners();
@@ -479,7 +479,8 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? get plusDefaultStorePackage => _prefs?.safeString('plusDefaultStorePackage');
+  String? get plusDefaultStorePackage =>
+      _prefs?.safeString('plusDefaultStorePackage');
   set plusDefaultStorePackage(String? val) {
     if (val == null) {
       _prefs?.remove('plusDefaultStorePackage');
@@ -489,7 +490,8 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? get plusDefaultStoreName => _prefs?.safeString('plusDefaultStoreName');
+  String? get plusDefaultStoreName =>
+      _prefs?.safeString('plusDefaultStoreName');
   set plusDefaultStoreName(String? val) {
     if (val == null) {
       _prefs?.remove('plusDefaultStoreName');
@@ -499,7 +501,8 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get plusEnableBottomNavBar => _prefs?.safeBool('plusEnableBottomNavBar') ?? false;
+  bool get plusEnableBottomNavBar =>
+      _prefs?.safeBool('plusEnableBottomNavBar') ?? false;
   set plusEnableBottomNavBar(bool val) {
     _prefs?.setBool('plusEnableBottomNavBar', val);
     notifyListeners();

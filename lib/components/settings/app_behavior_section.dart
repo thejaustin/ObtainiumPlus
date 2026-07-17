@@ -10,7 +10,11 @@ class AppBehaviorSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
-  const AppBehaviorSection({super.key, this.searchQuery, this.showAdvancedSettings});
+  const AppBehaviorSection({
+    super.key,
+    this.searchQuery,
+    this.showAdvancedSettings,
+  });
 
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
@@ -31,7 +35,8 @@ class AppBehaviorSection extends StatelessWidget {
         subtitle: tr('disablePageTransitionsDescription'),
         value: (s) => s.disablePageTransitions,
         onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) => _matches(tr('disablePageTransitions'), isAdvanced: true),
+        visible: (s) =>
+            _matches(tr('disablePageTransitions'), isAdvanced: true),
       ),
       // Haptic Feedback
       _buildFeatureToggle(
@@ -149,7 +154,9 @@ class AppBehaviorSection extends StatelessWidget {
           children: [
             ListTile(
               leading: Icon(
-                isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined,
+                isRight
+                    ? Icons.swipe_right_outlined
+                    : Icons.swipe_left_outlined,
               ),
               title: Text(
                 isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
@@ -179,7 +186,7 @@ class AppBehaviorSection extends StatelessWidget {
                     selected: {
                       isRight
                           ? settings.swipeRightAction
-                          : settings.swipeLeftAction
+                          : settings.swipeLeftAction,
                     },
                     onSelectionChanged: (value) {
                       if (isRight) {
