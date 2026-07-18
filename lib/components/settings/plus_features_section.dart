@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
+import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:provider/provider.dart';
@@ -102,7 +103,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         AppHaptics.selectionClick();
-                        pushRoute(context, SystemAppSelector());
+                        showSystemAppSelectorSheet(context: context);
                       },
                     ),
                   if (_matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
