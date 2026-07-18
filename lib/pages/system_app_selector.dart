@@ -33,8 +33,15 @@ class SystemAppSelector extends StatefulWidget {
   /// When true, tapping an app pops the route with its URL string instead of
   /// toggling selection. Used by AddAppPage to pre-fill the URL field.
   final bool returnUrlOnSelect;
+  final bool isModal;
+  final ScrollController? scrollController;
 
-  const SystemAppSelector({super.key, this.returnUrlOnSelect = false});
+  const SystemAppSelector({
+    super.key,
+    this.returnUrlOnSelect = false,
+    this.isModal = false,
+    this.scrollController,
+  });
 
   @override
   State<SystemAppSelector> createState() => _SystemAppSelectorState();
@@ -331,6 +338,315 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     final allFilteredSelected =
         filteredApps.isNotEmpty && filteredApps.every((a) => a.isSelected);
 
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+
+    final viewWidget = _isLoading
+        ? const Center(
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: ExpressiveCircularProgressIndicator(),
+            ),
+          )
+        : filteredApps.isEmpty
+        ? EmptyStateWidget(
+            icon: Icons.apps_rounded,
+            title: tr('noMatchingApps'),
+            subtitle: tr('tryAdjustingFilters'),
+          )
+        : _viewMode == SystemAppViewMode.list
+        ? ListView.builder(
+            controller: widget.scrollController,
+            itemCount: filteredApps.length,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemBuilder: (_, index) =>
+                _buildAppTile(filteredApps[index], appsProvider),
+          )
+        : GridView.builder(
+            controller: widget.scrollController,
+            itemCount: filteredApps.length,
+            padding: const EdgeInsets.all(8),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: _gridColumnCount,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.75,
+            ),
+            itemBuilder: (_, index) =>
+                _buildGridAppTile(filteredApps[index], appsProvider),
+          );
+
+    if (widget.isModal) {
+      return ClipRRect(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(radius.clamp(20.0, 48.0)),
+        ),
+        child: ConditionalBlur(
+          enabled: plusSettings.plusEnableGlassmorphism,
+          sigma: 20,
+          child: Container(
+            color: Theme.of(context).colorScheme.surface.withValues(
+              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
+            ),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            tr('importInstalledApps'),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        if (!widget.returnUrlOnSelect &&
+                            filteredApps.isNotEmpty)
+                          IconButton(
+                            icon: Icon(
+                              allFilteredSelected
+                                  ? Icons.deselect_rounded
+                                  : Icons.select_all_rounded,
+                            ),
+                            tooltip: allFilteredSelected
+                                ? tr('deselectAll')
+                                : tr('selectAll'),
+                            onPressed: () => _toggleSelectAll(filteredApps),
+                          ),
+                        IconButton(
+                          icon: Icon(
+                            _viewMode == SystemAppViewMode.list
+                                ? Icons.grid_view_outlined
+                                : Icons.view_list_outlined,
+                          ),
+                          onPressed: () => setState(
+                            () =>
+                                _viewMode = _viewMode == SystemAppViewMode.list
+                                ? SystemAppViewMode.grid
+                                : SystemAppViewMode.list,
+                          ),
+                          tooltip: _viewMode == SystemAppViewMode.list
+                              ? tr('gridView')
+                              : tr('listView'),
+                        ),
+                        PopupMenuButton<SystemAppSortMethod>(
+                          icon: const Icon(Icons.sort_outlined),
+                          tooltip: tr('sortBy'),
+                          onSelected: (value) => setState(() {
+                            if (_sortMethod == value) {
+                              _sortAscending = !_sortAscending;
+                            } else {
+                              _sortMethod = value;
+                              _sortAscending = true;
+                            }
+                            _sortApps();
+                          }),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.nameAZ,
+                              child: Text(tr('nameAZ')),
+                            ),
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.nameZA,
+                              child: Text(tr('nameZA')),
+                            ),
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.recentlyUpdated,
+                              child: Text(tr('recentlyUpdated')),
+                            ),
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.recentlyInstalled,
+                              child: Text(tr('recentlyInstalled')),
+                            ),
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.size,
+                              child: Text(tr('size')),
+                            ),
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.systemFirst,
+                              child: Text(tr('systemAppsFirst')),
+                            ),
+                            PopupMenuItem(
+                              value: SystemAppSortMethod.userFirst,
+                              child: Text(tr('userAppsFirst')),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _showSystemApps
+                                ? Icons.system_update_rounded
+                                : Icons.person_outline_rounded,
+                          ),
+                          onPressed: () => setState(
+                            () => _showSystemApps = !_showSystemApps,
+                          ),
+                          tooltip: tr('showSystemApps'),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                          tooltip: tr('close'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: SearchBar(
+                      hintText: tr('searchApps'),
+                      leading: const Icon(Icons.search),
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                      elevation: WidgetStateProperty.all(0),
+                      backgroundColor: WidgetStateProperty.all(
+                        Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh.withValues(
+                          alpha: plusSettings.plusEnableGlassmorphism
+                              ? 0.5
+                              : 1.0,
+                        ),
+                      ),
+                      trailing: _isLoading
+                          ? null
+                          : [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: Text(
+                                  '${filteredApps.length}',
+                                  style: Theme.of(context).textTheme.labelMedium
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ),
+                            ],
+                    ),
+                  ),
+                  if (hasLabels) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 40,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: allLabels.length + 1,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return FilterChip(
+                              label: Text(tr('all')),
+                              selected: _selectedLabels.isEmpty,
+                              onSelected: (selected) {
+                                if (selected)
+                                  setState(() => _selectedLabels.clear());
+                              },
+                            );
+                          }
+                          final label = allLabels[index - 1];
+                          return FilterChip(
+                            label: Text(label),
+                            selected: _selectedLabels.contains(label),
+                            onSelected: (selected) => setState(() {
+                              if (selected)
+                                _selectedLabels.add(label);
+                              else
+                                _selectedLabels.remove(label);
+                            }),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Expanded(child: viewWidget),
+                ],
+              ),
+              floatingActionButton: widget.returnUrlOnSelect
+                  ? null
+                  : AnimatedScale(
+                      scale: _selectedCount > 0 ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutBack,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.tertiary,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: FloatingActionButton.extended(
+                          onPressed: _selectedCount == 0
+                              ? null
+                              : () {
+                                  AppHaptics.selectionClick();
+                                  _importSelectedApps(appsProvider);
+                                },
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          hoverElevation: 0,
+                          focusElevation: 0,
+                          highlightElevation: 0,
+                          icon: Icon(
+                            Icons.download_outlined,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                          label: Text(
+                            tr(
+                              'importXApps',
+                              args: [_selectedCount.toString()],
+                            ),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -349,7 +665,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ),
         ),
         actions: [
-          // Select all / deselect all
           if (!widget.returnUrlOnSelect && filteredApps.isNotEmpty)
             IconButton(
               icon: Icon(
@@ -362,8 +677,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   : tr('selectAll'),
               onPressed: () => _toggleSelectAll(filteredApps),
             ),
-
-          // View mode toggle
           IconButton(
             icon: Icon(
               _viewMode == SystemAppViewMode.list
@@ -379,8 +692,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                 ? tr('gridView')
                 : tr('listView'),
           ),
-
-          // Sort menu
           PopupMenuButton<SystemAppSortMethod>(
             icon: const Icon(Icons.sort_outlined),
             tooltip: tr('sortBy'),
@@ -424,8 +735,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               ),
             ],
           ),
-
-          // System apps toggle
           IconButton(
             icon: Icon(
               _showSystemApps

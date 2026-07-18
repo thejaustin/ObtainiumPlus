@@ -20,6 +20,7 @@ import 'package:obtainium/mass_app_sources/githubstars.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
+import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -541,7 +542,7 @@ class AppActionsFAB extends StatelessWidget {
                       subtitle: tr('importInstalledAppsDescription'),
                       onTap: () {
                         Navigator.pop(context);
-                        pushRoute(context, const SystemAppSelector());
+                        showSystemAppSelectorSheet(context: context);
                       },
                     ),
 
