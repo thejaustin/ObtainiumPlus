@@ -15,11 +15,14 @@ import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 /// Builds the full settings page for every section tab (issue #217): any
 /// exception thrown while building a section would blank the whole page in
 /// a release build, so this catches that class of regression in CI.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  FlutterSecureStorage.setMockInitialValues({});
 
   // Serve translations from memory: the rootBundle load is real async that
   // completes for the first test but hangs for later ones (static state in
