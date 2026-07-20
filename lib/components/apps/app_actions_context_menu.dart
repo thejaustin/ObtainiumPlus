@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/add_app_sheet.dart';
 
 class AppActionsContextMenu {
   static void show(BuildContext context, AppInMemory appInMemory, {VoidCallback? onEnterMultiSelect}) {
@@ -70,6 +71,24 @@ class AppActionsContextMenu {
                 
                 // Actions
                 ListTile(
+                  leading: const Icon(Icons.download_rounded),
+                  title: Text(tr('update')),
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    Navigator.pop(context);
+                    context.read<AppsProvider>().downloadAndInstallLatestApps([appInMemory.app.id], context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.edit_rounded),
+                  title: Text(tr('editApp')),
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    Navigator.pop(context);
+                    showAddAppSheet(context: context, appId: appInMemory.app.id);
+                  },
+                ),
+                ListTile(
                   leading: Icon(
                     appInMemory.app.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
                     color: theme.colorScheme.primary,
@@ -85,7 +104,7 @@ class AppActionsContextMenu {
                 ),
                 ListTile(
                   leading: const Icon(Icons.settings_outlined),
-                  title: Text(tr('settings')),
+                  title: Text(tr('systemSettings')),
                   onTap: () {
                     AppHaptics.selectionClick();
                     Navigator.pop(context);
