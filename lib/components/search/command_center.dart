@@ -399,6 +399,7 @@ class _CommandCenterState extends State<CommandCenter> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -551,6 +552,7 @@ class _CommandCenterState extends State<CommandCenter> {
                   });
                 },
               ),
+            ),
             ),
           );
         }),
