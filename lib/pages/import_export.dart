@@ -432,7 +432,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // ── EXPORT section ─────────────────────────────────────
-                FutureBuilder<String?>(
+                FutureBuilder<Uri?>(
                   future: behaviorSettings.getExportDir(),
                   builder: (context, snapshot) {
                     return _sectionCard(
@@ -440,7 +440,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       title: tr('obtainiumExport'),
                       subtitle: tr(
                         'exportedTo',
-                        args: [snapshot.data ?? tr('pickExportDir')],
+                        args: [snapshot.data?.toString() ?? tr('pickExportDir')],
                       ),
                       iconColor: colorScheme.tertiary,
                       actions: [

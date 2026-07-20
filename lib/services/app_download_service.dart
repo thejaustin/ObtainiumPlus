@@ -204,7 +204,7 @@ class AppDownloadService {
         }
       }
 
-      final limit = updateSettings.updateDownloadConcurrencyLimit;
+      final limit = settingsProvider.updateDownloadConcurrencyLimit;
       final actualLimit = limit < appsToInstall.length
           ? limit
           : appsToInstall.length;
