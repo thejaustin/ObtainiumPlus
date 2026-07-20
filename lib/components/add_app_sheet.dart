@@ -6,6 +6,7 @@ import 'package:obtainium/pages/add_app.dart';
 Future<T?> showAddAppSheet<T>({
   required BuildContext context,
   String? initialUrl,
+  String? appId,
 }) {
   return showModalBottomSheet<T>(
     context: context,
@@ -26,6 +27,7 @@ Future<T?> showAddAppSheet<T>({
             isModal: true,
             scrollController: scrollController,
             initialUrl: initialUrl,
+            appId: appId,
           );
         },
       );

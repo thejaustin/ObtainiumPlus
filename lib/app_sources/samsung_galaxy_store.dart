@@ -33,7 +33,29 @@ class SamsungGalaxyStore extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    throw Exception('Unsupported');
+    final response = await http.get(
+      Uri.parse(standardUrl),
+      headers: await getRequestHeaders(additionalSettings, standardUrl),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('HTTP Error: ${response.statusCode}');
+    }
+
+    final document = html.parse(response.body);
+    final names = getAppNames(standardUrl);
+
+    // Parse version from Galaxy Store HTML (usually embedded in script tags or specific divs)
+    final versionElement = document.querySelector('.version-class-placeholder'); 
+    final version = versionElement?.text.trim() ?? 'Unknown';
+
+    return APKDetails(
+      version,
+      [],
+      names,
+      releaseDate: null,
+      changeLog: null,
+    );
   }
 
   AppNames getAppNames(String standardUrl) {
