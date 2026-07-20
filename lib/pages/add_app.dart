@@ -83,7 +83,7 @@ class AddAppPageState extends State<AddAppPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           final appsProvider = context.read<AppsProvider>();
-          final app = appsProvider.apps.where((a) => a.id == appId).firstOrNull;
+          final app = appsProvider.apps[appId]?.app;
           if (app != null) {
             setState(() {
               userInput = app.url;
