@@ -432,7 +432,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // ── EXPORT section ─────────────────────────────────────
-                FutureBuilder(
+                FutureBuilder<String?>(
                   future: behaviorSettings.getExportDir(),
                   builder: (context, snapshot) {
                     return _sectionCard(
