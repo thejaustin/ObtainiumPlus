@@ -5,6 +5,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -523,7 +524,7 @@ class _CommandCenterState extends State<CommandCenter> {
                             if (errors.isNotEmpty) {
                               showError(errors[0][1], context);
                             } else {
-                              showToast(tr('appAdded'));
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
                               Navigator.pop(context);
                             }
                           }
@@ -540,7 +541,7 @@ class _CommandCenterState extends State<CommandCenter> {
                       if (errors.isNotEmpty) {
                         showError(errors[0][1], context);
                       } else {
-                        showToast(tr('appAdded'));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
                         Navigator.pop(context);
                       }
                     }
@@ -581,7 +582,7 @@ class _CommandCenterState extends State<CommandCenter> {
                   if (errors.isNotEmpty) {
                     showError(errors[0][1], context);
                   } else {
-                    showToast(tr('appAdded'));
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
                     Navigator.pop(context);
                   }
                 }

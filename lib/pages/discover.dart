@@ -4,6 +4,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';

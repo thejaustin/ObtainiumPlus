@@ -6,6 +6,7 @@ import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
