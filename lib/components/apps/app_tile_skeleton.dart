@@ -12,9 +12,15 @@ class AppTileSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<ViewSettingsProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-    final baseColor = colorScheme.surfaceContainerHighest;
-    final highlightColor = colorScheme.surfaceContainer;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final baseColor = isDark
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.65);
+    final highlightColor = isDark
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.85)
+        : colorScheme.surface;
 
     if (isGrid) {
       return Shimmer.fromColors(

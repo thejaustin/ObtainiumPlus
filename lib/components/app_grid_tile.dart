@@ -47,7 +47,7 @@ class _AppGridTileState extends State<AppGridTile>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     if (widget.hasUpdate) {
@@ -191,11 +191,12 @@ class _AppGridTileState extends State<AppGridTile>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.white.withValues(alpha: 0.08),
+                              _getSourceColor(context).withValues(alpha: 0.15),
+                              Colors.white.withValues(alpha: 0.05),
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.02),
+                              Colors.black.withValues(alpha: 0.05),
                             ],
-                            stops: const [0.0, 0.4, 1.0],
+                            stops: const [0.0, 0.2, 0.6, 1.0],
                           ),
                         ),
                       ),
@@ -376,13 +377,16 @@ class _AppGridTileState extends State<AppGridTile>
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
   ) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildIconStack(iconSize, iconBorderRadius, badgeSize),
-        const SizedBox(height: 10),
-        _buildAppInfo(plusSettings, viewSettings, TextAlign.center),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 12.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+          const SizedBox(height: 10),
+          _buildAppInfo(plusSettings, viewSettings, TextAlign.center),
+        ],
+      ),
     );
   }
 
@@ -616,23 +620,28 @@ class _AppGridTileState extends State<AppGridTile>
     );
   }
 
+  Color _getSourceColor(BuildContext context) {
+    final url = widget.appInMemory.app.url.toLowerCase();
+    if (url.contains('github.com')) return const Color(0xFF24292E);
+    if (url.contains('f-droid.org')) return const Color(0xFF1976D2);
+    if (url.contains('gitlab.com')) return const Color(0xFFFC6D26);
+    if (url.contains('codeberg.org')) return const Color(0xFF2185D0);
+    return Theme.of(context).colorScheme.primary;
+  }
+
   Widget _buildSourceBadge(BuildContext context) {
     final url = widget.appInMemory.app.url.toLowerCase();
     IconData iconData = Icons.link_rounded;
-    Color color = Theme.of(context).colorScheme.primary;
+    Color color = _getSourceColor(context);
 
     if (url.contains('github.com')) {
       iconData = Icons.terminal_rounded;
-      color = const Color(0xFF24292E);
     } else if (url.contains('f-droid.org')) {
       iconData = Icons.android_rounded;
-      color = const Color(0xFF1976D2);
     } else if (url.contains('gitlab.com')) {
       iconData = Icons.account_tree_rounded;
-      color = const Color(0xFFFC6D26);
     } else if (url.contains('codeberg.org')) {
       iconData = Icons.code_rounded;
-      color = const Color(0xFF2185D0);
     }
 
     return Container(
@@ -651,24 +660,27 @@ class _AppGridTileState extends State<AppGridTile>
         final isChecking = ctx.select<AppsProvider, bool>(
           (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
         );
-        if (widget.appInMemory.downloadProgress != null) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: ExpressiveProgressIndicator(
-              value: widget.appInMemory.downloadProgress! >= 0
-                  ? widget.appInMemory.downloadProgress! / 100
-                  : null,
-              height: 4,
-            ),
-          );
-        }
-        if (isChecking) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: ExpressiveProgressIndicator(value: null, height: 2),
-          );
-        }
-        return const SizedBox.shrink();
+        return ValueListenableBuilder<double?>(
+          valueListenable: widget.appInMemory.downloadProgressNotifier,
+          builder: (context, downloadProgress, child) {
+            if (downloadProgress != null) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ExpressiveProgressIndicator(
+                  value: downloadProgress >= 0 ? downloadProgress / 100 : null,
+                  height: 4,
+                ),
+              );
+            }
+            if (isChecking) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ExpressiveProgressIndicator(value: null, height: 2),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        );
       },
     );
   }

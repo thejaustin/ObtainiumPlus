@@ -80,7 +80,7 @@ class _CommandCenterState extends State<CommandCenter> {
       _query = value;
     });
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
+    _debounce = Timer(const Duration(milliseconds: 750), () {
       _handleSearch(value);
     });
   }
@@ -149,137 +149,154 @@ class _CommandCenterState extends State<CommandCenter> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isUrl = URLValidator.isValidSourceURL(_query);
+    final isUrl = URLValidator.isValidSourceURL(_query) && _query.contains('.');
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isDark = theme.brightness == Brightness.dark;
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: ConditionalBlur(
-        sigma: 24,
-        enabled: plusSettings.plusEnableGlassmorphism,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.85,
-          decoration: BoxDecoration(
-            color:
-                (isDark
-                        ? theme.colorScheme.surfaceContainerHighest
-                        : theme.colorScheme.surface)
-                    .withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism ? 0.72 : 1.0,
-                    ),
+    return SafeArea(
+      bottom: false,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
-                    : theme.colorScheme.outlineVariant.withValues(
-                        alpha: AppOpacity.subtle,
+            child: ConditionalBlur(
+              sigma: 24,
+              enabled: plusSettings.plusEnableGlassmorphism,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.85,
+                decoration: BoxDecoration(
+                  color:
+                      (isDark
+                              ? theme.colorScheme.surfaceContainerHighest
+                              : theme.colorScheme.surface)
+                          .withValues(
+                            alpha: plusSettings.plusEnableGlassmorphism
+                                ? 0.72
+                                : 1.0,
+                          ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: plusSettings.plusEnableGlassmorphism
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+                          : theme.colorScheme.outlineVariant.withValues(
+                              alpha: AppOpacity.subtle,
+                            ),
+                    ),
+                    left: BorderSide(
+                      color: plusSettings.plusEnableGlassmorphism
+                          ? theme.colorScheme.onSurface.withValues(
+                              alpha: AppOpacity.hint,
+                            )
+                          : Colors.transparent,
+                    ),
+                    right: BorderSide(
+                      color: plusSettings.plusEnableGlassmorphism
+                          ? theme.colorScheme.onSurface.withValues(
+                              alpha: AppOpacity.hint,
+                            )
+                          : Colors.transparent,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // Drag Handle
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 32,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-              ),
-              left: BorderSide(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(
-                        alpha: AppOpacity.hint,
-                      )
-                    : Colors.transparent,
-              ),
-              right: BorderSide(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(
-                        alpha: AppOpacity.hint,
-                      )
-                    : Colors.transparent,
+                    ),
+
+                    // Search Input
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        style: theme.textTheme.titleMedium,
+                        decoration: InputDecoration(
+                          hintText: tr('searchOrPasteUrl'),
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _query.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _controller.clear();
+                                    _onSearchChanged('');
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: theme.colorScheme.surfaceContainerHigh
+                              .withValues(
+                                alpha: plusSettings.plusEnableGlassmorphism
+                                    ? 0.5
+                                    : 1.0,
+                              ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                        ),
+                        onChanged: _onSearchChanged,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                    _buildSourceFilters(context),
+                    const SizedBox(height: 8),
+
+                    // Content
+                    Expanded(
+                      child: _query.isEmpty
+                          ? _buildInitialState()
+                          : ListView(
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              children: [
+                                if (_localResults.isNotEmpty) ...[
+                                  _buildSectionHeader(tr('myApps')),
+                                  ..._localResults.map(_buildLocalResult),
+                                  const SizedBox(height: 16),
+                                ],
+                                if (isUrl) ...[
+                                  _buildSectionHeader(tr('actions')),
+                                  _buildUrlActionContent(),
+                                  const SizedBox(height: 16),
+                                ],
+                                if (_query.isNotEmpty &&
+                                    (!isUrl ||
+                                        RegExp(
+                                          r'^https?://(?:www\.)?github\.com/[^/]+/?$',
+                                          caseSensitive: false,
+                                        ).hasMatch(_query))) ...[
+                                  _buildSectionHeader(tr('discover')),
+                                  _buildSearchResultsList(),
+                                ],
+                              ],
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          child: Column(
-            children: [
-              // Drag Handle
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 32,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
-              // Search Input
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  style: theme.textTheme.titleMedium,
-                  decoration: InputDecoration(
-                    hintText: tr('searchOrPasteUrl'),
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _query.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _controller.clear();
-                              _onSearchChanged('');
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHigh
-                        .withValues(
-                          alpha: plusSettings.plusEnableGlassmorphism
-                              ? 0.5
-                              : 1.0,
-                        ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  onChanged: _onSearchChanged,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-              _buildSourceFilters(context),
-              const SizedBox(height: 8),
-
-              // Content
-              Expanded(
-                child: _query.isEmpty
-                    ? _buildInitialState()
-                    : ListView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        children: [
-                          if (_localResults.isNotEmpty) ...[
-                            _buildSectionHeader(tr('myApps')),
-                            ..._localResults.map(_buildLocalResult),
-                            const SizedBox(height: 16),
-                          ],
-                          if (isUrl) ...[
-                            _buildSectionHeader(tr('actions')),
-                            _buildUrlActionContent(),
-                            const SizedBox(height: 16),
-                          ],
-                          if (_query.isNotEmpty &&
-                              (!isUrl ||
-                                  RegExp(
-                                    r'^https?://(?:www\.)?github\.com/[^/]+/?$',
-                                    caseSensitive: false,
-                                  ).hasMatch(_query))) ...[
-                            _buildSectionHeader(tr('discover')),
-                            _buildSearchResultsList(),
-                          ],
-                        ],
-                      ),
-              ),
-            ],
           ),
         ),
       ),
@@ -484,11 +501,51 @@ class _CommandCenterState extends State<CommandCenter> {
                     ),
                   ],
                 ),
-                trailing: Icon(
-                  Icons.add_circle_outline_rounded,
-                  color: theme.colorScheme.primary,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.tune_rounded),
+                      tooltip: tr('advancedOptions'),
+                      onPressed: () => _openAddApp(url),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      tooltip: tr('addApp'),
+                      onPressed: () {
+                        context.read<AppsProvider>().addAppsByURL([url]).then((
+                          errors,
+                        ) {
+                          if (mounted) {
+                            if (errors.isNotEmpty) {
+                              showError(errors[0][1], context);
+                            } else {
+                              showToast(tr('appAdded'));
+                              Navigator.pop(context);
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                onTap: () => _openAddApp(url),
+                onTap: () {
+                  context.read<AppsProvider>().addAppsByURL([url]).then((
+                    errors,
+                  ) {
+                    if (mounted) {
+                      if (errors.isNotEmpty) {
+                        showError(errors[0][1], context);
+                      } else {
+                        showToast(tr('appAdded'));
+                        Navigator.pop(context);
+                      }
+                    }
+                  });
+                },
               ),
             ),
           );
@@ -504,12 +561,46 @@ class _CommandCenterState extends State<CommandCenter> {
       color: Theme.of(
         context,
       ).colorScheme.primaryContainer.withValues(alpha: AppOpacity.moderate),
-      child: ListTile(
-        leading: const Icon(Icons.link),
-        title: Text(tr('addAppFromUrl')),
-        subtitle: Text(_query, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.arrow_forward),
-        onTap: () => _openAddApp(_query),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.download_rounded),
+            title: Text(tr('addApp')),
+            subtitle: Text(
+              _query,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.arrow_forward),
+            onTap: () {
+              // Quick Add inline
+              context.read<AppsProvider>().addAppsByURL([_query]).then((
+                errors,
+              ) {
+                if (mounted) {
+                  if (errors.isNotEmpty) {
+                    showError(errors[0][1], context);
+                  } else {
+                    showToast(tr('appAdded'));
+                    Navigator.pop(context);
+                  }
+                }
+              });
+            },
+          ),
+          Divider(
+            height: 1,
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          ListTile(
+            leading: const Icon(Icons.tune_rounded),
+            title: Text(tr('advancedOptions')),
+            trailing: const Icon(Icons.open_in_new),
+            onTap: () => _openAddApp(_query),
+          ),
+        ],
       ),
     );
   }

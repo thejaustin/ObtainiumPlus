@@ -9,11 +9,11 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final provider = PlusSettingsProvider();
-    
+
     await provider.initializeSettings(prefs);
-    
+
     expect(provider.backupEncryptionEnabled, false);
-    
+
     provider.backupEncryptionEnabled = true;
     expect(provider.backupEncryptionEnabled, true);
     expect(prefs.getBool('backupEncryptionEnabled'), true);

@@ -1446,14 +1446,20 @@ class _AppPageState extends State<AppPage> {
               ],
             ),
           ),
-          if (app?.downloadProgress != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
-              child: ExpressiveProgressIndicator(
-                value: app!.downloadProgress! >= 0
-                    ? app.downloadProgress! / 100
-                    : null,
-              ),
+          if (app != null)
+            ValueListenableBuilder<double?>(
+              valueListenable: app.downloadProgressNotifier,
+              builder: (context, downloadProgress, child) {
+                if (downloadProgress == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                  child: ExpressiveProgressIndicator(
+                    value: downloadProgress >= 0
+                        ? downloadProgress / 100
+                        : null,
+                  ),
+                );
+              },
             ),
         ],
       ),

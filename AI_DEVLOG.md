@@ -26,6 +26,25 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-07-19 — Antigravity CLI [session 3b6a88ff]
+
+**Material 3 Expressive Wave Animations, Navigation & Shading Polish:**
+- **M3 Expressive Wavy Progress Indicators**: Redesigned `_SquigglyPainter` and `_WavyCircularPainter` in `expressive_progress_indicator.dart`:
+  - Replaced clamped step calculations with cubic M3 ease curves for segment expansion and contraction.
+  - Implemented continuous `math.sin(math.pi * t)` smoothstep amplitude envelopes, eliminating flickering, sharp phase jumps, and wonky wave restarts during loading, update checking, downloading, and installing app updates.
+- **Navigation Modes Customization (Top Nav, Bottom Nav, No Nav / Minimalist Mode)**:
+  - Enhanced `HomePage` in `home.dart` to support Top Tab Navigation (`plusTopUILayout`), Bottom Navigation (`plusEnableBottomNavBar`), and No Nav / Minimalist Mode.
+  - In Minimalist Mode (`No Nav`), `AppsPage` acts as the primary Home Hub with Settings (`Icons.settings_rounded`) in the top-right corner of the app bar, Search & Add in the FAB / Omnibar, and bottom sorting/view mode controls.
+- **Silky Shimmer Skeleton Loaders**: Upgraded `AppIconShimmer` and `AppTileSkeleton` to calculate adaptive contrast base/highlight colors across light and dark themes, creating smooth shimmer sweeps during list and grid loading states.
+- **Category Chips & Empty State Visual Enhancements**: Upgraded selected category chips in `DiscoverCategoryRow` with vibrant `primaryContainer`-to-`tertiaryContainer` gradient fills and ambient glow shadows. Enhanced `EmptyStateWidget` icon container with a dual-tone gradient background fill and `AppShadows.glow` effect.
+- **Elevated Shading & Ambient Depth**: Upgraded `GlassDialog` headers and footers with smooth multi-stop linear gradient backgrounds, and updated `_buildBatchActionsHub` in `app_dashboard.dart` to use primary-to-tertiary multi-tone gradient fills with layered ambient shadows (`AppShadows.smooth`).
+- **GitLab Token Headers Integration**: Updated `GitLab.getRequestHeaders` in `gitlab.dart` to automatically attach `PRIVATE-TOKEN` when `gitlab-creds` is set, eliminating unauthenticated rate limits and allowing access to private GitLab repositories.
+- **1-Tap Rate-Limit Token Settings Action**: Enhanced `showMessage` in `custom_errors.dart` so that `RateLimitError` and `CredsNeededError` snackbars provide a direct `Settings` action button, letting users immediately configure GitHub OAuth / PAT tokens or GitLab tokens in 1 tap.
+- **Unified Add App & System App Import Flow**: Replaced full-screen route pushes with premium, glassmorphic `showAddAppSheet` and `showSystemAppSelectorSheet` draggable bottom sheets across `omnibar.dart`, `command_center.dart`, `apps.dart`, `discover.dart`, `home.dart`, and `plus_features_section.dart`.
+- **Dynamic Live Search Filter Chips**: Added horizontally scrolling source `FilterChip` bars to both `CommandCenter` and `DiscoverPage`. Toggling source filters live-refreshes search results instantly.
+- **Centralized Download Service Delegation**: Delegated `AppsProvider.downloadAndInstallLatestApps` to `AppDownloadService`, avoiding code duplication and unifying download concurrency limits.
+- **Encapsulated App Bar Settings**: Replaced raw `SharedPreferences` writes in `apps_view_settings_section.dart` with a structured `setAppBarStyleForPage` setter on `SettingsProvider`.
+
 ### 2026-07-16 — Antigravity CLI [session 3b6a88ff]
 
 **Fixed Multiple Top Crashes and Build Compilation Issues:**

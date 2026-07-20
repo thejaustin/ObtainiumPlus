@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:crypto/crypto.dart';
@@ -6,11 +7,16 @@ import 'package:obtainium/providers/source_provider.dart';
 
 class AppInMemory {
   late App app;
-  double? downloadProgress;
+  final ValueNotifier<double?> downloadProgressNotifier;
   PackageInfo? installedInfo;
   Uint8List? icon;
 
-  AppInMemory(this.app, this.downloadProgress, this.installedInfo, this.icon);
+  double? get downloadProgress => downloadProgressNotifier.value;
+  set downloadProgress(double? value) => downloadProgressNotifier.value = value;
+
+  AppInMemory(this.app, double? progress, this.installedInfo, this.icon)
+    : downloadProgressNotifier = ValueNotifier(progress);
+
   AppInMemory deepCopy() =>
       AppInMemory(app.deepCopy(), downloadProgress, installedInfo, icon);
 

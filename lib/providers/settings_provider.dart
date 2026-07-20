@@ -11,6 +11,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
 String obtainiumTempId = 'imranr98_obtainium_${GitHub().hosts[0]}';
@@ -20,6 +21,10 @@ Color obtainiumThemeColor = const Color(0xFF6438B5);
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
+  final Map<String, String> _secureCache = {};
+  static const List<String> _secureKeys = ['github-creds', 'gitlab-creds'];
+
   String? defaultAppDir;
   bool justStarted = true;
   bool isTV = false;
@@ -29,6 +34,24 @@ class SettingsProvider with ChangeNotifier {
   // Not done in constructor as we want to be able to await it
   Future<void> initializeSettings() async {
     prefs = await SharedPreferences.getInstance();
+
+    // Migrate existing plaintext keys to secure storage and cache them
+    for (final key in _secureKeys) {
+      if (prefs!.containsKey(key)) {
+        final plaintextVal = prefs!.getString(key);
+        if (plaintextVal != null && plaintextVal.isNotEmpty) {
+          await secureStorage.write(key: key, value: plaintextVal);
+          _secureCache[key] = plaintextVal;
+        }
+        await prefs!.remove(key); // Clear plaintext
+      } else {
+        final secureVal = await secureStorage.read(key: key);
+        if (secureVal != null) {
+          _secureCache[key] = secureVal;
+        }
+      }
+    }
+
     // Neither platform lookup is worth failing all of settings init over —
     // both have sane fallbacks (defaultAppDir stays null, isTV stays false)
     try {
@@ -107,12 +130,21 @@ class SettingsProvider with ChangeNotifier {
   }
 
   String? getSettingString(String settingId) {
+    if (_secureKeys.contains(settingId)) {
+      String? str = _secureCache[settingId];
+      return str?.isNotEmpty == true ? str : null;
+    }
     String? str = prefs?.safeString(settingId);
     return str?.isNotEmpty == true ? str : null;
   }
 
   void setSettingString(String settingId, String value) {
-    prefs?.setString(settingId, value);
+    if (_secureKeys.contains(settingId)) {
+      _secureCache[settingId] = value;
+      secureStorage.write(key: settingId, value: value); // fire and forget
+    } else {
+      prefs?.setString(settingId, value);
+    }
     notifyListeners();
   }
 

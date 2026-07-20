@@ -21,6 +21,8 @@ import 'package:obtainium/app_sources/apkpure.dart';
 import 'package:obtainium/app_sources/aptoide.dart';
 import 'package:obtainium/app_sources/apk4free.dart';
 import 'package:obtainium/app_sources/codeberg.dart';
+import 'package:obtainium/app_sources/bitbucket.dart';
+import 'package:obtainium/app_sources/gitea.dart';
 import 'package:obtainium/app_sources/coolapk.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
 import 'package:obtainium/app_sources/farsroid.dart';
@@ -456,13 +458,14 @@ Future<Response> httpClientResponseStreamToFinalResponse(
 }
 
 ObtainiumError getObtainiumHttpError(Response res) {
-  return ObtainiumError(
-    (res.reasonPhrase != null &&
-            res.reasonPhrase != null &&
-            res.reasonPhrase!.isNotEmpty)
-        ? res.reasonPhrase!
-        : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]),
-  );
+  String message = (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
+      ? res.reasonPhrase!
+      : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]);
+      
+  if (res.statusCode == 403 || res.statusCode == 429) {
+    message += ' (Rate Limit? Add an API Token/PAT in Settings to bypass)';
+  }
+  return ObtainiumError(message);
 }
 
 String? regExValidator(String? value) {
@@ -600,6 +603,8 @@ class SourceProvider {
     TelegramApp(),
     NeutronCode(),
     DirectAPKLink(),
+    Gitea(),
+    Bitbucket(),
     HTML(), // This should ALWAYS be the last option as they are tried in order
   ];
 

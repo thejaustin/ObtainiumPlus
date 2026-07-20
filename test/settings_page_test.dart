@@ -123,42 +123,46 @@ void main() {
   }
 
   for (var tab = 0; tab <= 8; tab++) {
-    testWidgets('settings section $tab builds without throwing', (
-      tester,
-    ) async {
+    testWidgets(
+      'settings section $tab builds without throwing',
+      (tester) async {
+        late Widget app;
+        // Provider setup does real async work (platform channels, prefs) that
+        // never completes inside the widget test's fake-async zone
+        await tester.runAsync(() async {
+          await EasyLocalization.ensureInitialized();
+          app = await buildSettingsApp(tab);
+        });
+        await pumpCapturingErrors(tester, app);
+        expect(find.byType(SettingsPage), findsOneWidget);
+      },
+      timeout: const Timeout(Duration(minutes: 1)),
+    );
+  }
+
+  testWidgets(
+    'settings page survives corrupted preference types',
+    (tester) async {
+      // The issue #217 corruption class: keys stored with the wrong type
+      // (JSON import) or stale enum indexes must not blank the page
+      SharedPreferences.setMockInitialValues({
+        'plusSettingsCornerRadius': 16, // int where double expected
+        'plusGlobalCornerRadius': 'oops', // string where double expected
+        'theme': 99, // out-of-range enum index
+        'themeVariant': -1, // negative enum index
+        'plusEnableGlassmorphism': 'true', // string where bool expected
+        'updateIntervalSliderVal': 9999.0, // beyond slider max
+      });
       late Widget app;
-      // Provider setup does real async work (platform channels, prefs) that
-      // never completes inside the widget test's fake-async zone
       await tester.runAsync(() async {
         await EasyLocalization.ensureInitialized();
-        app = await buildSettingsApp(tab);
+        app = await buildSettingsApp(0);
       });
       await pumpCapturingErrors(tester, app);
       expect(find.byType(SettingsPage), findsOneWidget);
-    }, timeout: const Timeout(Duration(minutes: 1)));
-  }
-
-  testWidgets('settings page survives corrupted preference types', (
-    tester,
-  ) async {
-    // The issue #217 corruption class: keys stored with the wrong type
-    // (JSON import) or stale enum indexes must not blank the page
-    SharedPreferences.setMockInitialValues({
-      'plusSettingsCornerRadius': 16, // int where double expected
-      'plusGlobalCornerRadius': 'oops', // string where double expected
-      'theme': 99, // out-of-range enum index
-      'themeVariant': -1, // negative enum index
-      'plusEnableGlassmorphism': 'true', // string where bool expected
-      'updateIntervalSliderVal': 9999.0, // beyond slider max
-    });
-    late Widget app;
-    await tester.runAsync(() async {
-      await EasyLocalization.ensureInitialized();
-      app = await buildSettingsApp(0);
-    });
-    await pumpCapturingErrors(tester, app);
-    expect(find.byType(SettingsPage), findsOneWidget);
-  }, timeout: const Timeout(Duration(minutes: 1)));
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
 }
 
 class _MemoryAssetLoader extends AssetLoader {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 
 /// A Material 3 Expressive "Wavy" progress indicator
 class ExpressiveProgressIndicator extends StatelessWidget {
@@ -78,22 +79,24 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
       );
     }
 
-    if (value != null) {
-      return WavyCircularProgressIndicator(
-        value: value,
-        color: color ?? Theme.of(context).colorScheme.primary,
-        backgroundColor:
-            backgroundColor ??
-            Theme.of(context).colorScheme.surfaceContainerHighest,
-        strokeWidth: strokeWidth,
+    final plusSettings = context.watch<PlusSettingsProvider>();
+
+    if (value == null && plusSettings.plusDevUseThirdPartyLoadingIndicator) {
+      return FittedBox(
+        fit: BoxFit.contain,
+        child: LoadingIndicatorM3E(
+          color: color ?? Theme.of(context).colorScheme.primary,
+        ),
       );
     }
 
-    return FittedBox(
-      fit: BoxFit.contain,
-      child: LoadingIndicatorM3E(
-        color: color ?? Theme.of(context).colorScheme.primary,
-      ),
+    return WavyCircularProgressIndicator(
+      value: value,
+      color: color ?? Theme.of(context).colorScheme.primary,
+      backgroundColor:
+          backgroundColor ??
+          Theme.of(context).colorScheme.surfaceContainerHighest,
+      strokeWidth: strokeWidth,
     );
   }
 }
@@ -213,7 +216,7 @@ class _SquigglyPainter extends CustomPainter {
         final double currentAmplitude = amplitude * ramp;
         final double y =
             centerY +
-            math.sin(x * frequency - animationValue * 2 * math.pi) *
+            math.sin(x * frequency - animationValue * 4 * math.pi) *
                 currentAmplitude;
         path.lineTo(x, y);
       }
@@ -229,52 +232,48 @@ class _SquigglyPainter extends CustomPainter {
         stopPaint,
       );
     } else {
-      // Indeterminate: wavelength=20dp, Google Play M3 Expressive style
-      const double frequency = (2 * math.pi) / 20.0;
+      // M3 Expressive Indeterminate: smooth morphing wave with M3 curve expansion/contraction
+      const double wavelength = 28.0;
+      const double frequency = (2 * math.pi) / wavelength;
+      final double phase = animationValue * 4 * math.pi;
 
-      double easeInOut(double t) {
-        if (t <= 0.0) return 0.0;
-        if (t >= 1.0) return 1.0;
-        return 0.5 - 0.5 * math.cos(math.pi * t);
+      // Smooth M3 curve for head & tail movement
+      double m3Ease(double t) {
+        t = t.clamp(0.0, 1.0);
+        return t < 0.5 ? 4 * t * t * t : 1 - math.pow(-2 * t + 2, 3) / 2;
       }
 
-      void drawSquigglyBar(double headT, double tailT) {
-        final double startX = size.width * easeInOut(tailT);
-        final double endX = size.width * easeInOut(headT);
-        if (endX <= startX + 0.1) return;
+      // First segment (main active wave)
+      final double head1 = m3Ease((animationValue * 1.6).clamp(0.0, 1.0));
+      final double tail1 = m3Ease((animationValue * 1.6 - 0.6).clamp(0.0, 1.0));
 
-        final localPath = Path();
-        localPath.moveTo(startX, centerY);
-        final double lineLength = endX - startX;
+      // Second segment (catch-up / follow-through wave)
+      final double head2 = m3Ease((animationValue * 1.6 - 0.5).clamp(0.0, 1.0));
+      final double tail2 = m3Ease((animationValue * 1.6 - 1.1).clamp(0.0, 1.0));
+
+      void drawWaveSegment(double startT, double endT) {
+        final double startX = size.width * startT;
+        final double endX = size.width * endT;
+        final double segmentWidth = endX - startX;
+        if (segmentWidth <= 1.0) return;
+
+        final segmentPath = Path();
+        segmentPath.moveTo(startX, centerY);
 
         for (double x = startX; x <= endX; x += 1.0) {
-          final double progressInLine = (x - startX) / lineLength;
-          final double ramp = progressInLine < 0.1
-              ? progressInLine / 0.1
-              : progressInLine > 0.9
-              ? (1.0 - progressInLine) / 0.1
-              : 1.0;
-          final double currentAmplitude = amplitude * ramp;
+          final double t = (x - startX) / segmentWidth;
+          // Smoothstep amplitude envelope: sin(pi * t) goes gracefully 0 -> 1 -> 0
+          final double envelope = math.sin(math.pi * t);
+          final double currentAmplitude = amplitude * envelope;
           final double y =
-              centerY +
-              math.sin(x * frequency - animationValue * 16 * math.pi) *
-                  currentAmplitude;
-          localPath.lineTo(x, y);
+              centerY + math.sin(x * frequency - phase) * currentAmplitude;
+          segmentPath.lineTo(x, y);
         }
-        canvas.drawPath(localPath, activePaint);
+        canvas.drawPath(segmentPath, activePaint);
       }
 
-      // Bar 1
-      drawSquigglyBar(
-        (animationValue * 1.5).clamp(0.0, 1.0),
-        (animationValue * 1.5 - 0.5).clamp(0.0, 1.0),
-      );
-
-      // Bar 2 (Starts later, moves faster to catch up/repeat)
-      drawSquigglyBar(
-        (animationValue * 2.0 - 1.0).clamp(0.0, 1.0),
-        (animationValue * 2.0 - 1.25).clamp(0.0, 1.0),
-      );
+      drawWaveSegment(tail1, head1);
+      drawWaveSegment(tail2, head2);
     }
   }
 
@@ -440,16 +439,12 @@ class _WavyCircularPainter extends CustomPainter {
       for (double a = 0; a <= segmentAngle; a += 0.02) {
         final double totalAngle = startAngle + a;
         final double progressInLine = a / segmentAngle;
-        final double ramp = progressInLine < 0.1
-            ? progressInLine / 0.1
-            : progressInLine > 0.9
-            ? (1.0 - progressInLine) / 0.1
-            : 1.0;
-        final double currentAmplitude = amplitude * ramp;
+        final double envelope = math.sin(math.pi * progressInLine);
+        final double currentAmplitude = amplitude * envelope;
 
         final double currentRadius =
             radius +
-            math.sin(totalAngle * waveCount - (animationValue * 12 * math.pi)) *
+            math.sin(totalAngle * waveCount - (animationValue * 4 * math.pi)) *
                 currentAmplitude;
         final x =
             center.dx + currentRadius * math.cos(totalAngle - math.pi / 2);

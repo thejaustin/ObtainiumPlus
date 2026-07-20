@@ -236,11 +236,14 @@ class SourceUtils {
   }
 
   static ObtainiumError getObtainiumHttpError(Response res) {
-    return ObtainiumError(
-      (res.reasonPhrase?.isNotEmpty == true)
-          ? res.reasonPhrase!
-          : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]),
-    );
+    String message = (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
+        ? res.reasonPhrase!
+        : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]);
+        
+    if (res.statusCode == 403 || res.statusCode == 429) {
+      message += ' (Rate Limit? Add an API Token/PAT in Settings to bypass)';
+    }
+    return ObtainiumError(message);
   }
 
   static String? regExValidator(String? value) {

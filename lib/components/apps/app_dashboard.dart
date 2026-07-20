@@ -423,9 +423,21 @@ class _AppDashboardState extends State<AppDashboard>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.15),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primaryContainer.withValues(alpha: 0.25),
+            colorScheme.tertiaryContainer.withValues(alpha: 0.12),
+          ],
+        ),
         borderRadius: BorderRadius.circular(itemRadius),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
+        boxShadow: AppShadows.smooth(
+          color: colorScheme.primary,
+          opacity: 0.08,
+          blurFactor: 0.6,
+        ),
       ),
       child: Column(
         children: [

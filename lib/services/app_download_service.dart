@@ -319,7 +319,7 @@ class AppDownloadService {
           int? prog = progress?.ceil();
           if (apps[app.id] != null) {
             apps[app.id]!.downloadProgress = progress;
-            notifyListeners();
+            // notifyListeners() removed here to prevent massive UI rebuilds
           }
           notif = DownloadNotification(app.finalName, prog ?? 100);
           if (prog != null && prevProg != prog) {

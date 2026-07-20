@@ -561,42 +561,49 @@ class AppListTile extends StatelessWidget {
                               ),
                           ],
                         ),
-                        trailing: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: appInMemory.downloadProgress != null
-                              ? SizedBox(
-                                  key: const ValueKey('download'),
-                                  width: 65,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        appInMemory.downloadProgress! >= 0
-                                            ? '${appInMemory.downloadProgress!.toInt()}%'
-                                            : tr('installing'),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
+                        trailing: ValueListenableBuilder<double?>(
+                          valueListenable: appInMemory.downloadProgressNotifier,
+                          builder: (context, downloadProgress, child) {
+                            return AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 250),
+                              child: downloadProgress != null
+                                  ? SizedBox(
+                                      key: const ValueKey('download'),
+                                      width: 65,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              downloadProgress >= 0
+                                                  ? '${downloadProgress.toInt()}%'
+                                                  : tr('installing'),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                             ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          ExpressiveProgressIndicator(
+                                            value: downloadProgress >= 0
+                                                ? downloadProgress / 100
+                                                : null,
+                                            height: 5,
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 6),
-                                      ExpressiveProgressIndicator(
-                                        value:
-                                            appInMemory.downloadProgress! >= 0
-                                            ? appInMemory.downloadProgress! /
-                                                  100
-                                            : null,
-                                        height: 5,
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : KeyedSubtree(
-                                  key: const ValueKey('info'),
-                                  child: trailingRow,
-                                ),
+                                    )
+                                  : KeyedSubtree(
+                                      key: const ValueKey('info'),
+                                      child: trailingRow,
+                                    ),
+                            );
+                          },
                         ),
                       ),
                     ],
