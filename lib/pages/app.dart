@@ -23,6 +23,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:android_intent_plus/android_intent.dart';
@@ -1223,55 +1224,57 @@ class _AppPageState extends State<AppPage> {
       final defaultStorePackage = plusSettings.plusDefaultStorePackage;
       final defaultStoreName = plusSettings.plusDefaultStoreName;
 
-      return TextButton(
-        onPressed:
-            !updating &&
-                (app?.app.installedVersion == null ||
-                    AppUpdateService.areVersionsDifferent(
-                      app!.app,
-                      app!.app.installedVersion,
-                      app!.app.latestVersion,
-                    )) &&
-                !areDownloadsRunning
-            ? () async {
-                if (defaultStorePackage != null && app?.app.id != null) {
-                  AppHaptics.heavyImpact();
-                  final scheme = defaultStorePackage == 'org.fdroid.fdroid'
-                      ? 'fdroid.app://details?id='
-                      : 'market://details?id=';
-                  await _openInStore(defaultStorePackage, scheme, app!.app.id);
-                  return;
-                }
-                try {
-                  var successMessage = app?.app.installedVersion == null
-                      ? tr('installed')
-                      : tr('appsUpdated');
-                  AppHaptics.heavyImpact();
-                  var res = await appsProvider.downloadAndInstallLatestApps(
-                    app?.app.id != null ? [app!.app.id] : [],
-                    globalNavigatorKey.currentContext,
-                  );
-                  if (res.isNotEmpty && !trackOnly && context.mounted) {
-                    showMessage(successMessage, context);
+      return ScaleTouchWrapper(
+        child: TextButton(
+          onPressed:
+              !updating &&
+                  (app?.app.installedVersion == null ||
+                      AppUpdateService.areVersionsDifferent(
+                        app!.app,
+                        app!.app.installedVersion,
+                        app!.app.latestVersion,
+                      )) &&
+                  !areDownloadsRunning
+              ? () async {
+                  if (defaultStorePackage != null && app?.app.id != null) {
+                    AppHaptics.heavyImpact();
+                    final scheme = defaultStorePackage == 'org.fdroid.fdroid'
+                        ? 'fdroid.app://details?id='
+                        : 'market://details?id=';
+                    await _openInStore(defaultStorePackage, scheme, app!.app.id);
+                    return;
                   }
-                  if (res.isNotEmpty && context.mounted) {
-                    Navigator.of(context).pop();
+                  try {
+                    var successMessage = app?.app.installedVersion == null
+                        ? tr('installed')
+                        : tr('appsUpdated');
+                    AppHaptics.heavyImpact();
+                    var res = await appsProvider.downloadAndInstallLatestApps(
+                      app?.app.id != null ? [app!.app.id] : [],
+                      globalNavigatorKey.currentContext,
+                    );
+                    if (res.isNotEmpty && !trackOnly && context.mounted) {
+                      showMessage(successMessage, context);
+                    }
+                    if (res.isNotEmpty && context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  } catch (e) {
+                    if (context.mounted) showError(e, context);
                   }
-                } catch (e) {
-                  if (context.mounted) showError(e, context);
                 }
-              }
-            : null,
-        child: Text(
-          defaultStoreName != null
-              ? (app?.app.installedVersion == null
-                    ? 'Install in $defaultStoreName'
-                    : 'Update in $defaultStoreName')
-              : (app?.app.installedVersion == null
-                    ? (!trackOnly ? tr('install') : tr('markInstalled'))
-                    : (!trackOnly ? tr('update') : tr('markUpdated'))),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+              : null,
+          child: Text(
+            defaultStoreName != null
+                ? (app?.app.installedVersion == null
+                      ? 'Install in $defaultStoreName'
+                      : 'Update in $defaultStoreName')
+                : (app?.app.installedVersion == null
+                      ? (!trackOnly ? tr('install') : tr('markInstalled'))
+                      : (!trackOnly ? tr('update') : tr('markUpdated'))),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       );
     }

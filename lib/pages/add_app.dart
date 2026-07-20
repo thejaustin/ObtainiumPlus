@@ -13,6 +13,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
@@ -35,6 +36,7 @@ class AddAppPage extends StatefulWidget {
   /// page is built — used by deep links and search results that open the
   /// Add App page as a pushed route.
   final String? initialUrl;
+  final String? appId;
 
   const AddAppPage({
     super.key,
@@ -42,6 +44,7 @@ class AddAppPage extends StatefulWidget {
     this.scrollController,
     this.initialTab,
     this.initialUrl,
+    this.appId,
   });
 
   final bool isModal;
@@ -74,7 +77,31 @@ class AddAppPageState extends State<AddAppPage> {
   void initState() {
     super.initState();
     final initialUrl = widget.initialUrl;
-    if (initialUrl != null && initialUrl.isNotEmpty) {
+    final appId = widget.appId;
+    
+    if (appId != null && appId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final appsProvider = context.read<AppsProvider>();
+          final app = appsProvider.apps.where((a) => a.id == appId).firstOrNull;
+          if (app != null) {
+            setState(() {
+              userInput = app.url;
+              urlInputKey++; // Force text field update
+              pickedSourceOverride = app.overrideSource;
+              previousPickedSourceOverride = app.overrideSource;
+              additionalSettings = Map.from(app.additionalSettings);
+              pickedCategories = List.from(app.categories);
+              inferAppIdIfOptional = false;
+            });
+            try {
+              sourceProvider.getSource(app.url);
+              changeUserInput(app.url, true, false, updateUrlInput: true, overrideSource: app.overrideSource);
+            } catch (_) {}
+          }
+        }
+      });
+    } else if (initialUrl != null && initialUrl.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           linkFn(initialUrl);
@@ -395,20 +422,22 @@ class AddAppPageState extends State<AddAppPage> {
             ? const Center(
                 child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
               )
-            : ElevatedButton(
-                onPressed:
-                    doingSomething ||
-                        pickedSource == null ||
-                        (pickedSource!
-                                .combinedAppSpecificSettingFormItems
-                                .isNotEmpty &&
-                            !additionalSettingsValid)
-                    ? null
-                    : () {
-                        AppHaptics.selectionClick();
-                        addApp();
-                      },
-                child: Text(tr('add')),
+            : ScaleTouchWrapper(
+                child: ElevatedButton(
+                  onPressed:
+                      doingSomething ||
+                          pickedSource == null ||
+                          (pickedSource!
+                                  .combinedAppSpecificSettingFormItems
+                                  .isNotEmpty &&
+                              !additionalSettingsValid)
+                      ? null
+                      : () {
+                          AppHaptics.selectionClick();
+                          addApp();
+                        },
+                  child: Text(widget.appId != null ? tr('save') : tr('add')),
+                ),
               ),
       ],
     );
