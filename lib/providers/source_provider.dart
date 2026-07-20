@@ -23,6 +23,8 @@ import 'package:obtainium/app_sources/apk4free.dart';
 import 'package:obtainium/app_sources/codeberg.dart';
 import 'package:obtainium/app_sources/bitbucket.dart';
 import 'package:obtainium/app_sources/gitea.dart';
+import '../app_sources/samsung_galaxy_store.dart';
+import '../app_sources/xda_developers.dart';
 import 'package:obtainium/app_sources/coolapk.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
 import 'package:obtainium/app_sources/farsroid.dart';
@@ -605,6 +607,8 @@ class SourceProvider {
     DirectAPKLink(),
     Gitea(),
     Bitbucket(),
+    SamsungGalaxyStore(),
+    XdaDevelopers(),
     HTML(), // This should ALWAYS be the last option as they are tried in order
   ];
 
