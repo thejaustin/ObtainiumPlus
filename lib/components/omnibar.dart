@@ -6,6 +6,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -618,22 +619,25 @@ class AppActionsFAB extends StatelessWidget {
         : settings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.5).clamp(8.0, 16.0);
 
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color:
-              containerColor ??
-              colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
+    return ScaleTouchWrapper(
+      onTap: onTap,
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color:
+                containerColor ??
+                colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
+            borderRadius: BorderRadius.circular(itemRadius),
+          ),
+          child: Icon(icon, color: iconColor ?? colorScheme.primary),
+        ),
+        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(itemRadius),
         ),
-        child: Icon(icon, color: iconColor ?? colorScheme.primary),
-      ),
-      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(itemRadius),
       ),
     );
   }

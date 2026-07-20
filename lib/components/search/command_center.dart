@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/modal_utils.dart';
@@ -330,20 +331,21 @@ class _CommandCenterState extends State<CommandCenter> {
       child: Material(
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(itemRadius),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(itemRadius),
-          onTap: () {
-            Navigator.pop(context);
-            showDraggableModalBottomSheet(
-              context: context,
-              builder: (context, controller) => AppPage(
-                appId: app.app.id,
-                isModal: true,
-                scrollController: controller,
-              ),
-            );
-          },
-          child: Padding(
+        child: ScaleTouchWrapper(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(itemRadius),
+            onTap: () {
+              Navigator.pop(context);
+              showDraggableModalBottomSheet(
+                context: context,
+                builder: (context, controller) => AppPage(
+                  appId: app.app.id,
+                  isModal: true,
+                  scrollController: controller,
+                ),
+              );
+            },
+            child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
@@ -447,10 +449,11 @@ class _CommandCenterState extends State<CommandCenter> {
             child: Material(
               color: theme.colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(itemRadius),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(itemRadius),
-                ),
+              child: ScaleTouchWrapper(
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(itemRadius),
+                  ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 4,
