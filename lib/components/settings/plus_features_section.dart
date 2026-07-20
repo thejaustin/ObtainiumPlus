@@ -507,6 +507,32 @@ class PlusFeaturesSection extends StatelessWidget {
                   ],
                 ],
               ),
+              // --- DEVELOPER OPTIONS ---
+              if (showAdvancedSettings ?? false)
+                ExpressiveSettingsGroup(
+                  title: isSearching ? null : 'Developer Options',
+                  icon: Icons.developer_mode_rounded,
+                  isExpandable: true,
+                  initiallyExpanded: false,
+                  children: [
+                    if (_matches(
+                      'third party loading indicator',
+                      isAdvanced: true,
+                    ))
+                      _buildFeatureToggle(
+                        context,
+                        settings,
+                        icon: Icons.refresh_rounded,
+                        title: 'Use 3rd Party Loading Indicator',
+                        subtitle:
+                            'Swaps custom M3E wavy indicator for the loading_indicator_m3e package for comparison.',
+                        value: settings.plusDevUseThirdPartyLoadingIndicator,
+                        onChanged: (val) =>
+                            settings.plusDevUseThirdPartyLoadingIndicator = val,
+                        experimental: true,
+                      ),
+                  ],
+                ),
             ],
           ],
         );

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -72,13 +73,24 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.15),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorScheme.primaryContainer.withValues(alpha: 0.35),
+                        colorScheme.tertiaryContainer.withValues(alpha: 0.2),
+                      ],
+                    ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.25),
                       width: 2,
+                    ),
+                    boxShadow: AppShadows.glow(
+                      color: colorScheme.primary,
+                      intensity: 0.5,
                     ),
                   ),
                   child: Icon(

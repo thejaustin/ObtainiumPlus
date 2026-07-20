@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:provider/provider.dart';
 
 class ObtainiumError {
@@ -141,10 +143,20 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
     context,
     listen: false,
   ).add(e.toString(), level: isError ? LogLevels.error : LogLevels.info);
+
   if (e is String || (e is ObtainiumError && !e.unexpected)) {
+    SnackBarAction? action;
+    if (e is RateLimitError || e is CredsNeededError) {
+      action = SnackBarAction(
+        label: tr('settings'),
+        onPressed: () {
+          pushRoute(context, const SettingsPage());
+        },
+      );
+    }
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(e.toString())));
+    ).showSnackBar(SnackBar(content: Text(e.toString()), action: action));
   } else {
     showDialog(
       context: context,

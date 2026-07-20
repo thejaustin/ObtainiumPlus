@@ -621,6 +621,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                                   }
                                   settingsProvider.searchDeselected =
                                       currentDeselected;
+                                  if (searchQuery.isNotEmpty) {
+                                    runSearch();
+                                  }
                                 },
                               );
                             }).toList(),
@@ -850,31 +853,53 @@ class DiscoverCategoryRow extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
-      child: ChoiceChip(
-        avatar: icon == null
-            ? null
-            : Icon(
-                icon,
-                size: 16,
-                color: isSelected
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurfaceVariant,
-              ),
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) => onTap(),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cornerRadius),
-        ),
-        side: BorderSide.none,
-        showCheckmark: false,
-        backgroundColor: colorScheme.surfaceContainer,
-        selectedColor: colorScheme.primaryContainer,
-        labelStyle: TextStyle(
-          color: isSelected
-              ? colorScheme.onPrimaryContainer
-              : colorScheme.onSurfaceVariant,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Container(
+        decoration: isSelected
+            ? BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.primaryContainer,
+                    colorScheme.tertiaryContainer,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(cornerRadius),
+                boxShadow: AppShadows.glow(
+                  color: colorScheme.primary,
+                  intensity: 0.35,
+                ),
+              )
+            : null,
+        child: ChoiceChip(
+          avatar: icon == null
+              ? null
+              : Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+          label: Text(label),
+          selected: isSelected,
+          onSelected: (_) => onTap(),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(cornerRadius),
+          ),
+          side: isSelected
+              ? BorderSide(
+                  color: colorScheme.primary.withValues(alpha: 0.3),
+                  width: 1,
+                )
+              : BorderSide.none,
+          showCheckmark: false,
+          backgroundColor: colorScheme.surfaceContainer,
+          selectedColor: Colors.transparent,
+          labelStyle: TextStyle(
+            color: isSelected
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurfaceVariant,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
     );

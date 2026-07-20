@@ -38,6 +38,10 @@ class URLValidator {
   /// Returns true if the URL is from an allowed scheme
   static bool isValidSourceURL(String url) {
     try {
+      url = url.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://$url';
+      }
       final uri = Uri.parse(url);
 
       // Check scheme is allowed

@@ -101,17 +101,24 @@ class GlassDialog extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool enableGlass) {
+    final theme = Theme.of(context);
+    final surfaceColor = theme.colorScheme.surfaceContainerHighest;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
-          alpha: enableGlass ? AppOpacity.half : 1.0,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            surfaceColor.withValues(alpha: enableGlass ? 0.65 : 1.0),
+            surfaceColor.withValues(alpha: enableGlass ? 0.35 : 0.85),
+          ],
         ),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+            color: theme.colorScheme.outline.withValues(
+              alpha: AppOpacity.subtle,
+            ),
             width: 1,
           ),
         ),
@@ -160,17 +167,24 @@ class GlassDialog extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaceColor = theme.colorScheme.surfaceContainerHighest;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
-          alpha: AppOpacity.medium,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            surfaceColor.withValues(alpha: AppOpacity.low),
+            surfaceColor.withValues(alpha: AppOpacity.medium),
+          ],
         ),
         border: Border(
           top: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+            color: theme.colorScheme.outline.withValues(
+              alpha: AppOpacity.subtle,
+            ),
             width: 1,
           ),
         ),

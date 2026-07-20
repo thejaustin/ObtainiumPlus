@@ -53,6 +53,13 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusDevUseThirdPartyLoadingIndicator =>
+      _prefs?.safeBool('plusDevUseThirdPartyLoadingIndicator') ?? false;
+  set plusDevUseThirdPartyLoadingIndicator(bool val) {
+    _prefs?.setBool('plusDevUseThirdPartyLoadingIndicator', val);
+    notifyListeners();
+  }
+
   bool get plusShowChangelogAfterUpdate =>
       _prefs?.safeBool('plusShowChangelogAfterUpdate') ?? true;
   set plusShowChangelogAfterUpdate(bool val) {

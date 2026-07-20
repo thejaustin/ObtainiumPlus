@@ -10,7 +10,10 @@ void main() {
 
     test('tryParseDateTime should return null for invalid dates', () {
       expect(tryParseDateTime('invalid-date'), isNull);
-      expect(tryParseDateTime('2023/10/26'), isNull); // Flutter DateTime expects hyphens
+      expect(
+        tryParseDateTime('2023/10/26'),
+        isNull,
+      ); // Flutter DateTime expects hyphens
       expect(tryParseDateTime(''), isNull);
     });
 

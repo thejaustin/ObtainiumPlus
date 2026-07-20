@@ -41,7 +41,8 @@ class NavigationPageItem {
   NavigationPageItem(this.title, this.icon, this.widget);
 }
 
-class HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  late TabController _tabController;
   List<int> selectedIndexHistory = [];
   bool isReversing = false;
   late AppLinks _appLinks;
@@ -70,6 +71,7 @@ class HomePageState extends State<HomePage> {
       ),
     ];
 
+    _tabController = TabController(length: pages.length, vsync: this);
     initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       var sp = context.read<SettingsProvider>();
@@ -295,6 +297,7 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> switchToPage(int index) async {
+    _tabController.animateTo(index);
     setIsReversing(index);
     if (index == 0) {
       while ((pages[0].widget.key as GlobalKey<AppsPageState>).currentState !=
@@ -324,8 +327,9 @@ class HomePageState extends State<HomePage> {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
 
-    final showNavBar = plusSettings.plusEnableBottomNavBar;
-    final currentIndex = showNavBar
+    final isTopNav = plusSettings.plusTopUILayout && !settingsProvider.isTV;
+    final showNavBar = plusSettings.plusEnableBottomNavBar && !isTopNav;
+    final currentIndex = (showNavBar || isTopNav)
         ? (selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last)
         : 0;
 
@@ -352,8 +356,75 @@ class HomePageState extends State<HomePage> {
                     child: child,
                   );
                 },
-            child: pages.elementAt(currentIndex).widget,
+            child: KeyedSubtree(
+              key: ValueKey(currentIndex),
+              child: pages.elementAt(currentIndex).widget,
+            ),
           );
+
+    if (isTopNav) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          setIsReversing(
+            selectedIndexHistory.length >= 2
+                ? selectedIndexHistory.reversed.toList()[1]
+                : 0,
+          );
+          if (selectedIndexHistory.isNotEmpty) {
+            setState(() {
+              selectedIndexHistory.removeLast();
+            });
+            _tabController.animateTo(
+              selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last,
+            );
+            return;
+          }
+          final clearSelected =
+              (pages[0].widget.key as GlobalKey<AppsPageState>).currentState!
+                  .clearSelected();
+          if (!clearSelected) {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          appBar: AppBar(
+            title: Text(
+              tr(pages[currentIndex].title),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            bottom: TabBar(
+              controller: _tabController,
+              onTap: (index) {
+                AppHaptics.selectionClick();
+                switchToPage(index);
+              },
+              tabs: pages
+                  .map((e) => Tab(icon: Icon(e.icon), text: tr(e.title)))
+                  .toList(),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_rounded),
+                tooltip: tr('settings'),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  pushRoute(context, const SettingsPage());
+                },
+              ),
+            ],
+          ),
+          floatingActionButton:
+              plusSettings.plusEnableFAB && !settingsProvider.isTV
+              ? const AppActionsFAB()
+              : null,
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          body: pageBody,
+        ),
+      );
+    }
 
     return PopScope(
       canPop: false,
@@ -478,7 +549,8 @@ class HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    super.dispose();
+    _tabController.dispose();
     _linkSubscription?.cancel();
+    super.dispose();
   }
 }

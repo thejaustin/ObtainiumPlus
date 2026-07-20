@@ -9,16 +9,24 @@ class AppIconShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
+    final baseColor = isDark
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.65);
+    final highlightColor = isDark
+        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.85)
+        : colorScheme.surface;
 
     return Shimmer.fromColors(
-      baseColor: colorScheme.surfaceContainerHighest,
-      highlightColor: colorScheme.surfaceContainer,
+      baseColor: baseColor,
+      highlightColor: highlightColor,
       child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
+          color: baseColor,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
