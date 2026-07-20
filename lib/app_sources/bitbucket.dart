@@ -50,13 +50,13 @@ class Bitbucket extends AppSource {
     );
 
     if (response.statusCode != 200) {
-      throw HttpException(response.statusCode);
+      throw Exception('HTTP Error: ${response.statusCode}');
     }
 
     final data = jsonDecode(response.body);
     final values = data['values'] as List<dynamic>?;
     if (values == null || values.isEmpty) {
-      throw NoAPKFoundError(name);
+      throw NoAPKError();
     }
 
     // Find the latest APK (assuming values are sorted by date descending, which Bitbucket usually does)
@@ -71,14 +71,14 @@ class Bitbucket extends AppSource {
         return APKDetails(
           version,
           [MapEntry(downloadName, downloadUrl)],
-          null, // Date
-          null, // Changelog
-          false,
+          names,
+          releaseDate: null,
+          changeLog: null,
         );
       }
     }
 
-    throw NoAPKFoundError(name);
+    throw NoAPKError();
   }
 
   AppNames getAppNames(String standardUrl) {
