@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
@@ -93,18 +94,21 @@ class PlusFeaturesSection extends StatelessWidget {
                           settings.plusDiscoverSuggestions = val,
                     ),
                   if (_matches(tr('importInstalledApps')))
-                    ListTile(
-                      leading: const Icon(Icons.install_mobile_rounded),
-                      title: Text(
-                        tr('importInstalledApps'),
-                        style: Theme.of(context).textTheme.bodyLarge,
+                    ScaleTouchWrapper(
+                      onTap: () {},
+                      child: ListTile(
+                        leading: const Icon(Icons.install_mobile_rounded),
+                        title: Text(
+                          tr('importInstalledApps'),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        subtitle: Text(tr('importInstalledAppsDescription')),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          showSystemAppSelectorSheet(context: context);
+                        },
                       ),
-                      subtitle: Text(tr('importInstalledAppsDescription')),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        AppHaptics.selectionClick();
-                        showSystemAppSelectorSheet(context: context);
-                      },
                     ),
                   if (_matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
                     _buildFeatureToggle(
@@ -551,37 +555,43 @@ class PlusFeaturesSection extends StatelessWidget {
     bool experimental = false,
     bool isAdvanced = false,
   }) {
-    return SwitchListTile.adaptive(
-      secondary: Icon(icon),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          ),
-          if (experimental)
-            Container(
-              margin: const EdgeInsets.only(left: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(
-                  settings.plusGlobalCornerRadius.clamp(0.0, 12.0),
-                ),
-              ),
-              child: Text(
-                tr('beta'),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onTertiaryContainer,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
+    return ScaleTouchWrapper(
+      onTap: () {}, // Enable scaling on touch
+      child: SwitchListTile.adaptive(
+        secondary: Icon(icon),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(title, style: Theme.of(context).textTheme.bodyLarge),
             ),
-        ],
+            if (experimental)
+              Container(
+                margin: const EdgeInsets.only(left: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(
+                    settings.plusGlobalCornerRadius.clamp(0.0, 12.0),
+                  ),
+                ),
+                child: Text(
+                  tr('beta'),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onTertiaryContainer,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        subtitle: Text(subtitle),
+        value: value,
+        onChanged: (val) {
+          AppHaptics.selectionClick();
+          onChanged(val);
+        },
       ),
-      subtitle: Text(subtitle),
-      value: value,
-      onChanged: onChanged,
     );
   }
 }

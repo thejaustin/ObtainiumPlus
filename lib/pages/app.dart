@@ -133,47 +133,56 @@ class _AppPageState extends State<AppPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ...installed.map(
-                (store) => ListTile(
-                  leading: const Icon(Icons.open_in_new),
-                  title: Text(
-                    store['name']!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                (store) => ScaleTouchWrapper(
+                  onTap: () {},
+                  child: ListTile(
+                    leading: const Icon(Icons.open_in_new),
+                    title: Text(
+                      store['name']!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      store['package']!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing:
+                        plusSettings.plusDefaultStorePackage == store['package']
+                        ? const Chip(label: Text('Default'))
+                        : TextButton(
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              plusSettings.plusDefaultStorePackage =
+                                  store['package'];
+                              plusSettings.plusDefaultStoreName = store['name'];
+                              Navigator.pop(ctx);
+                              _showStoreChooser(context, appId);
+                            },
+                            child: const Text('Set Default'),
+                          ),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(ctx);
+                      _openInStore(store['package']!, store['scheme']!, appId);
+                    },
                   ),
-                  subtitle: Text(
-                    store['package']!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing:
-                      plusSettings.plusDefaultStorePackage == store['package']
-                      ? const Chip(label: Text('Default'))
-                      : TextButton(
-                          onPressed: () {
-                            plusSettings.plusDefaultStorePackage =
-                                store['package'];
-                            plusSettings.plusDefaultStoreName = store['name'];
-                            Navigator.pop(ctx);
-                            _showStoreChooser(context, appId);
-                          },
-                          child: const Text('Set Default'),
-                        ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _openInStore(store['package']!, store['scheme']!, appId);
-                  },
                 ),
               ),
               if (plusSettings.plusDefaultStorePackage != null)
-                ListTile(
-                  leading: const Icon(Icons.clear),
-                  title: const Text('Clear Default Store'),
-                  onTap: () {
-                    plusSettings.plusDefaultStorePackage = null;
-                    plusSettings.plusDefaultStoreName = null;
-                    Navigator.pop(ctx);
-                    _showStoreChooser(context, appId);
-                  },
+                ScaleTouchWrapper(
+                  onTap: () {},
+                  child: ListTile(
+                    leading: const Icon(Icons.clear),
+                    title: const Text('Clear Default Store'),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      plusSettings.plusDefaultStorePackage = null;
+                      plusSettings.plusDefaultStoreName = null;
+                      Navigator.pop(ctx);
+                      _showStoreChooser(context, appId);
+                    },
+                  ),
                 ),
             ],
           ),
@@ -1241,7 +1250,11 @@ class _AppPageState extends State<AppPage> {
                     final scheme = defaultStorePackage == 'org.fdroid.fdroid'
                         ? 'fdroid.app://details?id='
                         : 'market://details?id=';
-                    await _openInStore(defaultStorePackage, scheme, app!.app.id);
+                    await _openInStore(
+                      defaultStorePackage,
+                      scheme,
+                      app!.app.id,
+                    );
                     return;
                   }
                   try {
@@ -1297,16 +1310,22 @@ class _AppPageState extends State<AppPage> {
                 const SizedBox(width: 16.0),
                 Expanded(child: getInstallOrUpdateButton()),
                 const SizedBox(width: 8.0),
-                IconButton(
-                  icon: const Icon(Icons.storefront_outlined),
-                  onPressed: app?.app.id != null
-                      ? () => _showStoreChooser(context, app!.app.id)
-                      : null,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
-                    shape: const CircleBorder(),
+                ScaleTouchWrapper(
+                  onTap: () {},
+                  child: IconButton(
+                    icon: const Icon(Icons.storefront_outlined),
+                    onPressed: app?.app.id != null
+                        ? () {
+                            AppHaptics.selectionClick();
+                            _showStoreChooser(context, app!.app.id);
+                          }
+                        : null,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                      shape: const CircleBorder(),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8.0),
