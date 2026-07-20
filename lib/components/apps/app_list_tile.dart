@@ -15,6 +15,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'dart:ui';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class AppListTile extends StatelessWidget {
   final AppInMemory appInMemory;
@@ -326,11 +327,15 @@ class AppListTile extends StatelessWidget {
         button: true,
         onTap: onTap,
         onLongPress: onLongPress,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 4 : 8,
-            vertical: isCompact ? 2 : 6,
-          ),
+        child: ScaleTouchWrapper(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          scaleDownFactor: 0.98,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 4 : 8,
+              vertical: isCompact ? 2 : 6,
+            ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -612,6 +617,7 @@ class AppListTile extends StatelessWidget {
               ),
             ),
           ),
+        ),
         ),
       ),
     );
