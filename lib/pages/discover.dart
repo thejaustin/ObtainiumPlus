@@ -4,6 +4,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -311,38 +312,50 @@ class DiscoverPageState extends State<DiscoverPage> {
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
-    return ListTile(
-      leading: DiscoverAppIcon(
-        iconUrl: iconUrl,
-        sourceName: sourceName,
-        size: 44,
-        borderRadius: CardMetrics.inner(radius),
-      ),
-      title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (description.isNotEmpty)
-            Text(
-              description,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
+    return ScaleTouchWrapper(
+      onTap: () {
+        AppHaptics.selectionClick();
+        _openAddApp(url);
+      },
+      child: ListTile(
+        leading: DiscoverAppIcon(
+          iconUrl: iconUrl,
+          sourceName: sourceName,
+          size: 44,
+          borderRadius: CardMetrics.inner(radius),
+        ),
+        title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (description.isNotEmpty)
+              Text(
+                description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            const SizedBox(height: 4),
+            DiscoverSourceChip(
+              sourceName: sourceName,
+              borderRadius: CardMetrics.inner(radius),
             ),
-          const SizedBox(height: 4),
-          DiscoverSourceChip(
-            sourceName: sourceName,
-            borderRadius: CardMetrics.inner(radius),
-          ),
-        ],
+          ],
+        ),
+        isThreeLine: description.isNotEmpty,
+        trailing: FilledButton.tonal(
+          onPressed: () {
+            AppHaptics.selectionClick();
+            _openAddApp(url);
+          },
+          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+          child: Text(tr('add')),
+        ),
+        onTap: () {
+          AppHaptics.selectionClick();
+          _openAddApp(url);
+        },
       ),
-      isThreeLine: description.isNotEmpty,
-      trailing: FilledButton.tonal(
-        onPressed: () => _openAddApp(url),
-        style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
-        child: Text(tr('add')),
-      ),
-      onTap: () => _openAddApp(url),
     );
   }
 
@@ -404,12 +417,13 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                   ),
                 ),
-              InkWell(
-                borderRadius: BorderRadius.circular(cardRadius),
-                onTap: () {
-                  AppHaptics.selectionClick();
-                  _openAddApp(url);
-                },
+              ScaleTouchWrapper(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    _openAddApp(url);
+                  },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -475,6 +489,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ],
                   ),
                 ),
+              ),
               ),
             ],
           ),
