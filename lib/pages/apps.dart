@@ -1,4 +1,5 @@
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/apps/app_actions_context_menu.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/pages/add_app.dart';
@@ -813,7 +814,19 @@ class AppsPageState extends State<AppsPage> {
               .map((e) => e)
               .contains(listedApps[index].app.id),
           onLongPress: () {
-            toggleAppSelected(listedApps[index].app);
+            if (selectedAppIds.isNotEmpty) {
+              AppHaptics.selectionClick();
+              toggleAppSelected(listedApps[index].app);
+            } else {
+              AppHaptics.heavyImpact();
+              AppActionsContextMenu.show(
+                context, 
+                listedApps[index],
+                onEnterMultiSelect: () {
+                  toggleAppSelected(listedApps[index].app);
+                },
+              );
+            }
           },
           leading: (settingsProvider.isTV)
               ? Checkbox(
@@ -1529,8 +1542,19 @@ class AppsPageState extends State<AppsPage> {
                   }
                 },
                 onLongPress: () {
-                  AppHaptics.selectionClick();
-                  toggleAppSelected(app.app);
+                  if (selectedAppIds.isNotEmpty) {
+                    AppHaptics.selectionClick();
+                    toggleAppSelected(app.app);
+                  } else {
+                    AppHaptics.heavyImpact();
+                    AppActionsContextMenu.show(
+                      context, 
+                      app,
+                      onEnterMultiSelect: () {
+                        toggleAppSelected(app.app);
+                      },
+                    );
+                  }
                 },
               );
             }, childCount: listedApps.length),
