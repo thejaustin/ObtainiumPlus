@@ -13,7 +13,7 @@ void main() {
   final hasLibChanges = danger.git.modifiedFiles.any((file) => file.startsWith('lib/'));
   
   if (hasLibChanges && !hasTestChanges) {
-    warn('🧪 It looks like you changed code in `lib/` but didn't add or update any tests in `test/`.');
+    warn('🧪 It looks like you changed code in `lib/` but didn\\'t add or update any tests in `test/`.');
   }
 
   // 3. Check for Android Manifest changes
