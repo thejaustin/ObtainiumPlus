@@ -434,6 +434,7 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Future<void> initPlatformState([int? fetchInterval]) async {
+    final updateSettings = context.read<UpdateSettingsProvider>();
     final finalInterval = fetchInterval == null || fetchInterval < 15
         ? 15
         : fetchInterval;
@@ -445,10 +446,12 @@ class _ObtainiumState extends State<Obtainium> {
           startOnBoot: true,
           enableHeadless: true,
           requiresBatteryNotLow: false,
-          requiresCharging: false,
+          requiresCharging: updateSettings.bgUpdateRequiresCharging,
           requiresStorageNotLow: false,
           requiresDeviceIdle: false,
-          requiredNetworkType: NetworkType.ANY,
+          requiredNetworkType: updateSettings.bgUpdateRequiresWifi
+              ? NetworkType.UNMETERED
+              : NetworkType.ANY,
         ),
         (String taskId) async {
           await BackgroundUpdateService.bgUpdateCheck(taskId, null);

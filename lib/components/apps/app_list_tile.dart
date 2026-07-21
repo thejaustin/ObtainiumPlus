@@ -152,21 +152,28 @@ class AppListTile extends StatelessWidget {
               context,
             ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           ),
-          child: appInMemory.icon != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(itemRadius),
-                  child: Image.memory(
-                    appInMemory.icon!,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            child: appInMemory.icon != null
+                ? ClipRRect(
+                    key: ValueKey('icon_${appInMemory.app.id}'),
+                    borderRadius: BorderRadius.circular(itemRadius),
+                    child: Image.memory(
+                      appInMemory.icon!,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  )
+                : Icon(
+                    key: const ValueKey('placeholder'),
+                    Icons.apps_rounded,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.5),
                   ),
-                )
-              : Icon(
-                  Icons.apps_rounded,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.5),
-                ),
+          ),
         ),
       );
     }

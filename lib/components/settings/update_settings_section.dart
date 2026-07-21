@@ -54,6 +54,30 @@ class UpdateSettingsSection extends StatelessWidget {
         _buildIntervalLabel(context),
         _buildIntervalSlider(context),
       ],
+      if (_matches(tr('bgUpdateRequiresWifi')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.wifi_outlined),
+            title: Text(
+              tr('bgUpdateRequiresWifi'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            value: settings.bgUpdateRequiresWifi,
+            onChanged: (v) => settings.bgUpdateRequiresWifi = v,
+          ),
+        ),
+      if (_matches(tr('bgUpdateRequiresCharging')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, settings, _) => SwitchListTile.adaptive(
+            secondary: const Icon(Icons.battery_charging_full_outlined),
+            title: Text(
+              tr('bgUpdateRequiresCharging'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            value: settings.bgUpdateRequiresCharging,
+            onChanged: (v) => settings.bgUpdateRequiresCharging = v,
+          ),
+        ),
       _buildForegroundServiceSection(context),
       if (_matches(tr('xiaomiBatteryTroubleshooting')))
         _buildXiaomiTroubleshooting(context),

@@ -6,6 +6,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/utils/network_utils.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -115,9 +116,14 @@ class DiscoverFeedService {
 
     List<DiscoverFeedApp> feed;
     try {
+      final networkQuality = await checkNetworkQuality();
+      final timeoutDuration = networkQuality == NetworkQuality.slow
+          ? const Duration(seconds: 8)
+          : const Duration(seconds: 15);
+
       final response = await http
           .get(Uri.parse(_feedUrl))
-          .timeout(const Duration(seconds: 20));
+          .timeout(timeoutDuration);
       if (response.statusCode != 200) return null;
       feed = _parseCatalogHtml(response.body);
     } catch (e) {

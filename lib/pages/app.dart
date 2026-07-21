@@ -22,6 +22,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/apps/app_version_history.dart';
+import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
@@ -1116,6 +1118,8 @@ class _AppPageState extends State<AppPage> {
           ),
         ),
         getInfoColumn(),
+        if (app != null) AppVersionHistoryWidget(app: app!.app),
+
         const SizedBox(height: 16),
         _buildSystemActions(),
         SizedBox(height: 85 + MediaQuery.paddingOf(context).bottom),

@@ -299,8 +299,10 @@ class AppUpdateService {
                     e.toString().toLowerCase().contains('clientexception') ||
                     e.toString().toLowerCase().contains('timeoutexception');
                 if (retries > 0 && isNetworkError) {
+                  final attempt = 3 - retries;
+                  final delays = [1, 2, 4];
                   retries--;
-                  await Future.delayed(const Duration(seconds: 2));
+                  await Future.delayed(Duration(seconds: delays[attempt]));
                   continue;
                 }
                 if ((e is RateLimitError || e is SocketException) &&

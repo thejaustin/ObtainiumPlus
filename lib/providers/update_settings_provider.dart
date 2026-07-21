@@ -168,6 +168,24 @@ class UpdateSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get bgUpdateRequiresWifi {
+    return prefs?.safeBool('bgUpdateRequiresWifi') ?? false;
+  }
+
+  set bgUpdateRequiresWifi(bool val) {
+    prefs?.setBool('bgUpdateRequiresWifi', val);
+    notifyListeners();
+  }
+
+  bool get bgUpdateRequiresCharging {
+    return prefs?.safeBool('bgUpdateRequiresCharging') ?? false;
+  }
+
+  set bgUpdateRequiresCharging(bool val) {
+    prefs?.setBool('bgUpdateRequiresCharging', val);
+    notifyListeners();
+  }
+
   bool get useUpdateSchedule {
     return prefs?.safeBool('useUpdateSchedule') ?? false;
   }
