@@ -245,7 +245,11 @@ class AddAppPageState extends State<AddAppPage> {
       bool userPickedTrackOnly, {
       bool ignoreHideSetting = false,
     }) async {
-      var useTrackOnly = userPickedTrackOnly || pickedSource!.enforceTrackOnly;
+      // Captured once, up front — pickedSource can go null via changeUserInput()
+      // while this dialog's await is pending, and its builder can re-run on
+      // an ancestor rebuild in the meantime (same race class as addApp()'s).
+      final sourceEnforcesTrackOnly = pickedSource!.enforceTrackOnly;
+      var useTrackOnly = userPickedTrackOnly || sourceEnforcesTrackOnly;
       if (useTrackOnly &&
           (!settingsProvider.hideTrackOnlyWarning || ignoreHideSetting)) {
         // ignore: use_build_context_synchronously
@@ -256,15 +260,13 @@ class AddAppPageState extends State<AddAppPage> {
               initValid: true,
               title: tr(
                 'xIsTrackOnly',
-                args: [
-                  pickedSource!.enforceTrackOnly ? tr('source') : tr('app'),
-                ],
+                args: [sourceEnforcesTrackOnly ? tr('source') : tr('app')],
               ),
               items: [
                 [GeneratedFormSwitch('hide', label: tr('dontShowAgain'))],
               ],
               message:
-                  '${pickedSource!.enforceTrackOnly ? tr('appsFromSourceAreTrackOnly') : tr('youPickedTrackOnly')}\n\n${tr('trackOnlyAppDescription')}',
+                  '${sourceEnforcesTrackOnly ? tr('appsFromSourceAreTrackOnly') : tr('youPickedTrackOnly')}\n\n${tr('trackOnlyAppDescription')}',
             );
           },
         );
@@ -306,9 +308,18 @@ class AddAppPageState extends State<AddAppPage> {
             (await getReleaseDateAsVersionConfirmationIfNeeded(
               userPickedTrackOnly,
             ))) {
-          var trackOnly = pickedSource!.enforceTrackOnly || userPickedTrackOnly;
+          // Re-read pickedSource here rather than trusting the value from
+          // before the awaits above: the URL field stays editable while
+          // those confirmation prompts are pending, and changeUserInput()
+          // sets pickedSource back to null if the edited input no longer
+          // resolves to a source (#231).
+          final source = pickedSource;
+          if (source == null) {
+            return;
+          }
+          var trackOnly = source.enforceTrackOnly || userPickedTrackOnly;
           app = await sourceProvider.getApp(
-            pickedSource!,
+            source,
             userInput.trim(),
             additionalSettings,
             trackOnlyOverride: trackOnly,
@@ -936,7 +947,7 @@ class AddAppPageState extends State<AddAppPage> {
                         color: colorScheme.primaryContainer.withValues(
                           alpha: 0.3,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(radius * 0.6),
                       ),
                       child: Icon(
                         Icons.get_app_rounded,
@@ -980,7 +991,7 @@ class AddAppPageState extends State<AddAppPage> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: colorScheme.errorContainer.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(radius * 0.4),
                     ),
                     child: Row(
                       children: [
@@ -1012,6 +1023,11 @@ class AddAppPageState extends State<AddAppPage> {
       if (!liveSearching && liveResults.isEmpty) return const SizedBox.shrink();
 
       final colorScheme = Theme.of(context).colorScheme;
+      final plusSettings = context.watch<PlusSettingsProvider>();
+      final resultRadius = (plusSettings.plusGlobalCornerRadius * 0.6).clamp(
+        8.0,
+        20.0,
+      );
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1056,9 +1072,9 @@ class AddAppPageState extends State<AddAppPage> {
                   color: colorScheme.surfaceContainerHighest.withValues(
                     alpha: 0.3,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(resultRadius),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(resultRadius),
                     onTap: () {
                       AppHaptics.selectionClick();
                       linkFn(url);

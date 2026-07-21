@@ -6,6 +6,8 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 
 class AppActionsContextMenu {
   static void show(
@@ -20,6 +22,9 @@ class AppActionsContextMenu {
       builder: (context) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
+        final plusSettings = context.watch<PlusSettingsProvider>();
+        final sheetRadius = plusSettings.plusGlobalCornerRadius.clamp(16.0, 32.0);
+        final iconRadius = CardMetrics.inner(sheetRadius);
 
         return Container(
           margin: const EdgeInsets.all(16),
@@ -27,7 +32,7 @@ class AppActionsContextMenu {
             color: isDark
                 ? theme.colorScheme.surfaceContainerHigh
                 : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(sheetRadius),
           ),
           child: SafeArea(
             child: Column(
@@ -43,7 +48,7 @@ class AppActionsContextMenu {
                         height: 40,
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(iconRadius),
                         ),
                         child: Icon(
                           Icons.apps_rounded,

@@ -710,7 +710,9 @@ class AppsPageState extends State<AppsPage> {
             onTap: showChangesFn,
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(
+                  (plusSettings.plusGlobalCornerRadius * 0.6).clamp(8.0, 20.0),
+                ),
                 color:
                     behaviorSettings.highlightTouchTargets &&
                         showChangesFn != null

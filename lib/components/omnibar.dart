@@ -663,6 +663,7 @@ class AppActionsFAB extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
     final showSearch =
         !settings.plusTopUILayout && settings.plusShowFloatingSearch;
+    final fabRadius = (settings.plusGlobalCornerRadius * 0.66).clamp(12.0, 28.0);
 
     if (showSearch) {
       return Row(
@@ -690,7 +691,7 @@ class AppActionsFAB extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(fabRadius),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(
@@ -742,7 +743,7 @@ class AppActionsFAB extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(fabRadius),
           boxShadow: [
             BoxShadow(
               color: Theme.of(
