@@ -57,6 +57,28 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   @override
+  void didUpdateWidget(SettingsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab && widget.initialTab != null) {
+      int initTab = widget.initialTab!;
+      if (initTab == 2) {
+        initTab = 1;
+      } else if (initTab == 3 || initTab == 4) {
+        initTab = 2;
+      } else if (initTab == 5) {
+        initTab = 3;
+      } else if (initTab == 6) {
+        initTab = 4;
+      } else if (initTab == 7 || initTab == 8) {
+        initTab = 5;
+      }
+      setState(() {
+        _selectedSectionIndex = initTab.clamp(0, 5);
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
