@@ -36,20 +36,24 @@ class SettingsProvider with ChangeNotifier {
     prefs = await SharedPreferences.getInstance();
 
     // Migrate existing plaintext keys to secure storage and cache them
-    for (final key in _secureKeys) {
-      if (prefs!.containsKey(key)) {
-        final plaintextVal = prefs!.getString(key);
-        if (plaintextVal != null && plaintextVal.isNotEmpty) {
-          await secureStorage.write(key: key, value: plaintextVal);
-          _secureCache[key] = plaintextVal;
-        }
-        await prefs!.remove(key); // Clear plaintext
-      } else {
-        final secureVal = await secureStorage.read(key: key);
-        if (secureVal != null) {
-          _secureCache[key] = secureVal;
+    try {
+      for (final key in _secureKeys) {
+        if (prefs!.containsKey(key)) {
+          final plaintextVal = prefs!.getString(key);
+          if (plaintextVal != null && plaintextVal.isNotEmpty) {
+            await secureStorage.write(key: key, value: plaintextVal);
+            _secureCache[key] = plaintextVal;
+          }
+          await prefs!.remove(key); // Clear plaintext
+        } else {
+          final secureVal = await secureStorage.read(key: key);
+          if (secureVal != null) {
+            _secureCache[key] = secureVal;
+          }
         }
       }
+    } catch (e) {
+      talker.warning('Could not initialize secure storage: $e');
     }
 
     // Neither platform lookup is worth failing all of settings init over —
@@ -141,7 +145,9 @@ class SettingsProvider with ChangeNotifier {
   void setSettingString(String settingId, String value) {
     if (_secureKeys.contains(settingId)) {
       _secureCache[settingId] = value;
-      secureStorage.write(key: settingId, value: value); // fire and forget
+      secureStorage.write(key: settingId, value: value).catchError((e) {
+        talker.warning('Could not write secure setting $settingId: $e');
+      });
     } else {
       prefs?.setString(settingId, value);
     }

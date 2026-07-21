@@ -95,6 +95,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
   });
 
   // takeException only keeps the bare exception object; capture the full

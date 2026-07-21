@@ -103,10 +103,14 @@ class _CommandCenterState extends State<CommandCenter> {
       final results = appsProvider
           .getAppValues()
           .map((app) {
-            final nameScore = fuzzyMatch(value, app.name);
-            final idScore = fuzzyMatch(value, app.app.id);
-            final maxScore = nameScore > idScore ? nameScore : idScore;
-            return MapEntry(app, maxScore);
+            final score = fuzzyMatchMulti(value, [
+              app.name,
+              app.app.id,
+              app.author,
+              app.app.url,
+              ...?app.app.categories,
+            ]);
+            return MapEntry(app, score);
           })
           .where((entry) => entry.value >= 0.3)
           .toList();

@@ -55,3 +55,38 @@ int _levenshtein(String a, String b) {
 
   return v1[b.length];
 }
+
+/// Computes fuzzy matching score for a search query against multiple target fields
+/// (e.g. app name, package ID, author, tags). Multi-token search queries match
+/// each word independently across any target field.
+double fuzzyMatchMulti(String query, List<String?> targets) {
+  if (query.trim().isEmpty) return 1.0;
+  final validTargets = targets
+      .where((t) => t != null && t.trim().isNotEmpty)
+      .cast<String>()
+      .toList();
+  if (validTargets.isEmpty) return 0.0;
+
+  final tokens = query
+      .toLowerCase()
+      .split(RegExp(r'\s+'))
+      .where((t) => t.isNotEmpty)
+      .toList();
+
+  if (tokens.isEmpty) return 1.0;
+
+  double totalScore = 0.0;
+  for (final token in tokens) {
+    double maxTokenScore = 0.0;
+    for (final target in validTargets) {
+      double score = fuzzyMatch(token, target);
+      if (score > maxTokenScore) {
+        maxTokenScore = score;
+      }
+    }
+    totalScore += maxTokenScore;
+  }
+
+  return totalScore / tokens.length;
+}
+
