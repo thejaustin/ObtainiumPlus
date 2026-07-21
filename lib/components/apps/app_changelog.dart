@@ -65,11 +65,18 @@ void showChangeLogDialog(
                     data: changeLog,
                     onTapLink: (text, href, title) {
                       if (href != null) {
+                        String targetUrl = href;
+                        if (!href.startsWith('http://') &&
+                            !href.startsWith('https://')) {
+                          try {
+                            final uri = Uri.parse(app.url);
+                            if (uri.hasScheme && uri.host.isNotEmpty) {
+                              targetUrl = '${uri.origin}/$href';
+                            }
+                          } catch (_) {}
+                        }
                         launchUrlString(
-                          href.startsWith('http://') ||
-                                  href.startsWith('https://')
-                              ? href
-                              : '${Uri.parse(app.url).origin}/$href',
+                          targetUrl,
                           mode: LaunchMode.externalApplication,
                         );
                       }
@@ -92,15 +99,20 @@ void showChangeLogDialog(
 }
 
 Null Function()? getChangeLogFn(BuildContext context, App app) {
-  AppSource appSource = SourceProvider().getSource(
-    app.url,
-    overrideSource: app.overrideSource,
-  );
+  AppSource? appSource;
+  try {
+    appSource = SourceProvider().getSource(
+      app.url,
+      overrideSource: app.overrideSource,
+    );
+  } catch (_) {
+    return null;
+  }
   String? changesUrl = appSource.changeLogPageFromStandardUrl(app.url);
   String? changeLog = app.changeLog;
   if (changeLog?.split('\n').length == 1) {
     if (RegExp(
-      r'(http|ftp|https)://([\w_-]+(?:(?:\\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?',
+      r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?',
     ).hasMatch(changeLog!)) {
       if (changesUrl == null) {
         changesUrl = changeLog;
