@@ -31,11 +31,17 @@ class RuStore extends AppSource {
   String sourceSpecificStandardizeURL(
     String url, {
     bool forSelection = false,
-  }) => standardizeUrlWithRegex(
-    url,
-    subdomainPrefix: r'(www\.)?',
-    pathPattern: r'/catalog/app/+[^/]+',
-  );
+  }) {
+    RegExp standardUrlRegEx = RegExp(
+      '^https?://(www\\.)?${getSourceRegex(hosts)}/catalog/app/[^/]+',
+      caseSensitive: false,
+    );
+    RegExpMatch? match = standardUrlRegEx.firstMatch(url);
+    if (match == null) {
+      throw InvalidURLError(name);
+    }
+    return match.group(0)!;
+  }
 
   @override
   Future<String?> tryInferringAppId(

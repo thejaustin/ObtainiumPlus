@@ -7,7 +7,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/services/app_install_service.dart' hide pm;
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
-import 'package:obtainium/pages/apps.dart';
+import 'package:obtainium/pages/apps.dart' hide getChangeLogFn;
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';

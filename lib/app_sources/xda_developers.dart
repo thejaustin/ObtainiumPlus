@@ -78,7 +78,7 @@ class XdaDevelopers extends AppSource {
       }
     }
 
-    throw NoAPKError(name);
+    throw NoAPKError();
   }
 }
 
