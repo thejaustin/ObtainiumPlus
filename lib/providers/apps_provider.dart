@@ -1239,6 +1239,9 @@ class AppsProvider with ChangeNotifier {
           true,
           evenIfSingleChoice: true,
         );
+        // The confirmAppFileUrl dialog above can stay open long enough for
+        // the app to be removed/untracked elsewhere in the meantime (#227-class race).
+        if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
         if (tempFileUrl != null) {
           var s = SourceProvider().getSource(
             apps[id]!.app.url,
@@ -1251,6 +1254,7 @@ class AppsProvider with ChangeNotifier {
               settingsProvider,
             )),
           };
+          if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
           fileUrl = MapEntry(
             tempFileUrl.key,
             await s.assetUrlPrefetchModifier(
@@ -1329,7 +1333,10 @@ class AppsProvider with ChangeNotifier {
       '${(await getAppStorageDir()).path}/app_data',
     );
     if (!appsDir.existsSync()) {
-      appsDir.createSync();
+      // recursive: true — the parent external-storage dir can be transiently
+      // missing on disk right after a storage clear/remount even though
+      // path_provider still returns its path (#226).
+      appsDir.createSync(recursive: true);
     }
     return appsDir;
   }
@@ -1545,9 +1552,15 @@ class AppsProvider with ChangeNotifier {
               } catch (err) {
                 if (err is FormatException) {
                   logs.add(
-                    'Corrupt JSON when loading App (will be ignored): $e',
+                    'Corrupt JSON when loading App (will be ignored): $err',
                   );
                   item.renameSync('${item.path}.corrupt');
+                } else if (err is FileSystemException) {
+                  // The file can vanish between listSync() and this read (concurrent
+                  // removal/storage clear) — skip it instead of aborting the whole load.
+                  logs.add(
+                    'Skipped missing/unreadable app file ${item.path}: $err',
+                  );
                 } else {
                   rethrow;
                 }
@@ -1630,9 +1643,19 @@ class AppsProvider with ChangeNotifier {
     if (apps[appId]?.icon == null) {
       var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
       var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
-      var icon = alreadyCached
-          ? (await cachedIcon.readAsBytes())
-          : (await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon());
+      Uint8List? icon;
+      if (alreadyCached) {
+        try {
+          icon = await cachedIcon.readAsBytes();
+        } catch (e) {
+          // The cache file can vanish between the existsSync() check above
+          // and this read (concurrent cache clear / low-storage cleanup) —
+          // fall back to re-fetching from the installed package (#235).
+          alreadyCached = false;
+          LogsProvider().add('Failed to read cached icon for $appId: $e');
+        }
+      }
+      icon ??= await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon();
       if (icon != null && !alreadyCached) {
         try {
           if (!iconsCacheDir.existsSync()) {
@@ -1805,7 +1828,13 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
-    App? currentApp = apps[appId]!.app;
+    // apps[appId] can go missing if the app was removed/untracked while
+    // this check was queued (e.g. a concurrent batch checkUpdates() slot,
+    // or the detail page's own auto-check racing a removal elsewhere) (#227).
+    App? currentApp = apps[appId]?.app;
+    if (currentApp == null) {
+      return null;
+    }
     // Pause update checks until the user resolves a pending repo rename.
     if (currentApp.hasPendingRepoRename) {
       return null;

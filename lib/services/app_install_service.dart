@@ -421,7 +421,9 @@ class AppInstallService {
     allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
 
     Future<void> executeBgWorkaroundIfNeeded() async {
-      if (needsBGWorkaround) {
+      // The getInstalledInfo/canDowngradeApps awaits above can outlast the app
+      // being removed/untracked elsewhere in the meantime — skip, don't crash.
+      if (needsBGWorkaround && apps[file.appId] != null) {
         apps[file.appId]!.app.installedVersion =
             apps[file.appId]!.app.latestVersion;
         if (saveApps != null) {
