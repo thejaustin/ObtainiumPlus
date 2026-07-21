@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
@@ -69,7 +70,9 @@ class _StatisticsPageState extends State<StatisticsPage>
       'logs': logs.map((l) => l.toMap()).toList(),
     };
 
-    final jsonStr = const JsonEncoder.withIndent('  ').convert(stats);
+    final jsonStr = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(sanitizeJsonValue(stats));
 
     try {
       final tempDir = await getTemporaryDirectory();
