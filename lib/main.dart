@@ -496,14 +496,20 @@ class _ObtainiumState extends State<Obtainium> {
     try {
       if (updateSettings.updateInterval == 0) {
         stopForegroundService();
-        BackgroundFetch.stop();
+        try {
+          await BackgroundFetch.stop();
+        } catch (_) {}
       } else {
         if (updateSettings.useFGService) {
-          BackgroundFetch.stop();
+          try {
+            await BackgroundFetch.stop();
+          } catch (_) {}
           startForegroundService(false);
         } else {
           stopForegroundService();
-          BackgroundFetch.start();
+          try {
+            await BackgroundFetch.start();
+          } catch (_) {}
         }
       }
     } catch (e) {

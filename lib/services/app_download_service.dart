@@ -169,9 +169,9 @@ class AppDownloadService {
         );
       }
     } else {
-      final List<Map<String, dynamic>> results = List.filled(
+      final List<Map<String, dynamic>> results = List.generate(
         appsToInstall.length,
-        {},
+        (_) => <String, dynamic>{},
       );
       int index = 0;
       Future<void> worker() async {
@@ -372,7 +372,12 @@ class AppDownloadService {
       }
 
       if (newInfo == null) {
-        downloadedFile.delete();
+        try {
+          downloadedFile.delete();
+        } catch (_) {}
+        try {
+          apkDir?.deleteSync(recursive: true);
+        } catch (_) {}
         throw ObtainiumError('Could not get ID from APK');
       }
 
