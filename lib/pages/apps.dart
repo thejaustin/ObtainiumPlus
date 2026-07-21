@@ -378,14 +378,16 @@ class AppsPageState extends State<AppsPage> {
 
     List<String> trackOnlyUpdateIdsAllOrSelected = [];
     existingUpdateIdsAllOrSelected = existingUpdateIdsAllOrSelected.where((id) {
-      if (appsProvider.apps[id]!.app.additionalSettings['trackOnly'] == true) {
+      final app = appsProvider.apps[id];
+      if (app != null && app.app.additionalSettings['trackOnly'] == true) {
         trackOnlyUpdateIdsAllOrSelected.add(id);
         return false;
       }
       return true;
     }).toList();
     newInstallIdsAllOrSelected = newInstallIdsAllOrSelected.where((id) {
-      if (appsProvider.apps[id]!.app.additionalSettings['trackOnly'] == true) {
+      final app = appsProvider.apps[id];
+      if (app != null && app.app.additionalSettings['trackOnly'] == true) {
         trackOnlyUpdateIdsAllOrSelected.add(id);
         return false;
       }
@@ -640,13 +642,10 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getChangesButtonString(int appIndex, bool hasChangeLogFn) {
-      return listedApps[appIndex].app.releaseDate == null
-          ? hasChangeLogFn
-                ? tr('changes')
-                : ''
-          : DateFormat(
-              'yyyy-MM-dd',
-            ).format(listedApps[appIndex].app.releaseDate!.toLocal());
+      final releaseDate = listedApps[appIndex].app.releaseDate;
+      return releaseDate == null
+          ? (hasChangeLogFn ? tr('changes') : '')
+          : DateFormat('yyyy-MM-dd').format(releaseDate.toLocal());
     }
 
     Widget buildAuthorText(int appIndex) {

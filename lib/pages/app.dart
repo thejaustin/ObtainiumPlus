@@ -445,11 +445,13 @@ class _AppPageState extends State<AppPage> {
         if (resetVersion) {
           appsProvider.apps[id]?.app.additionalSettings['versionDetection'] =
               true;
-          if (appsProvider.apps[id]?.app.installedVersion != null) {
-            appsProvider.apps[id]?.app.installedVersion =
-                appsProvider.apps[id]?.app.latestVersion;
+          final targetApp = appsProvider.apps[id];
+          if (targetApp != null) {
+            if (targetApp.app.installedVersion != null) {
+              targetApp.app.installedVersion = targetApp.app.latestVersion;
+            }
+            appsProvider.saveApps([targetApp.app]);
           }
-          appsProvider.saveApps([appsProvider.apps[id]!.app]);
         }
       } catch (err) {
         if (err is RepositoryRenamedError && context.mounted) {
@@ -561,9 +563,8 @@ class _AppPageState extends State<AppPage> {
                     ? InkWell(
                         onTap: changeLogFn,
                         child: Text(
-                          app?.app.releaseDate == null
-                              ? tr('changes')
-                              : app!.app.releaseDate!.toLocal().toString(),
+                          app?.app.releaseDate?.toLocal().toString() ??
+                              tr('changes'),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.labelSmall!
                               .copyWith(
