@@ -14,6 +14,8 @@ jobs:
     steps:
       
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -62,18 +64,128 @@ jobs:
       
       - name: Generate Changelog
         id: build_changelog
+        env:
+          # Pass through env, not direct ${{ }} interpolation into the script body below —
+          # pubspec.yaml's version is contributor-editable (any PR), and GitHub Actions
+          # substitutes ${{ }} into the run: script's literal text before bash parses it, so
+          # a version string containing a stray quote or $(...) could break out and execute
+          # as a shell command (CWE-94). Referencing $TAG_NAME_INPUT/$VERSION_INPUT below is
+          # safe: env var values pass through the process environment, not script text.
+          TAG_NAME_INPUT: ${{ steps.extract_version.outputs.tag }}
+          VERSION_INPUT: ${{ steps.extract_version.outputs.version }}
         run: |
-          if [ -f "CHANGELOG_USER.md" ] && [ -s "CHANGELOG_USER.md" ]; then
-            USER_CHANGELOG=$(cat CHANGELOG_USER.md)
-            CHANGELOG="### What's New\n$USER_CHANGELOG"
-          else
-            CHANGELOG="No significant changes provided."
-          fi
-          
-          printf "**Obtainium+ Release**\n\n- **Version:** %s\n- **Date:** %s\n\n%s\n" \
-            "${{ steps.extract_version.outputs.version }}" \
-            "$(date)" \
-            "$CHANGELOG" > release_body.md
+          TAG_NAME="$TAG_NAME_INPUT"
+          # Scope "recent releases" / previous-tag lookup to this version's family (e.g. v1.4.3*)
+          # so unrelated historical tags (old abandoned version bumps) don't leak into the rollup.
+          # The glob alone isn't enough — "v1.4.3*" also matches "v1.4.30" — so re-filter with a
+          # boundary requiring the family to end at a non-digit (or end of string).
+          VERSION_FAMILY=$(echo "$VERSION_INPUT" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
+          VERSION_FAMILY_RE=$(echo "$VERSION_FAMILY" | sed 's/\./\\./g')
+          ALL_TAGS=$(git tag --list "v${VERSION_FAMILY}*" --sort=-creatordate | grep -E "^v${VERSION_FAMILY_RE}([^0-9]|\$)")
+
+          # Find the previous release tag (ignoring the one just created for this run).
+          PREV_TAG=$(printf '%s\n' "$ALL_TAGS" | grep -v "^${TAG_NAME}$" | head -1)
+
+          # Most recent MAJOR release to spotlight in every release's notes, and the most recent
+          # CRITICAL FIX (a distinct, lower tier — a regression severe enough to call out, not new
+          # capability). Leave both blank ("") to omit a callout once nothing recent qualifies.
+          # Bump these by hand when a new headline release ships.
+          MAJOR_RELEASE=""
+          MAJOR_DESC=""
+          CRITICAL_RELEASE=""
+          CRITICAL_DESC=""
+
+          {
+            echo "# ${TAG_NAME}"
+            echo
+
+            if [ -f "CHANGELOG_USER.md" ] && [ -s "CHANGELOG_USER.md" ]; then
+              echo "### What's New"
+              cat CHANGELOG_USER.md
+              echo
+            fi
+
+            if [ -n "$PREV_TAG" ]; then
+              RANGE="${PREV_TAG}..HEAD"
+              echo "## Changes since ${PREV_TAG}"
+            else
+              RANGE="HEAD"
+              echo "## Recent Changes"
+            fi
+            echo
+
+            # Categorized commits
+            FEATS=$(git log "$RANGE" --no-merges --grep="^feat" --pretty=format:"- %s (%h)" || true)
+            if [ -n "$FEATS" ]; then
+              echo "### ✨ New Features"
+              echo "$FEATS"
+              echo
+            fi
+
+            # Split "^fix" commits into crash/stability fixes vs general bug fixes so a release
+            # that closed out Sentry crashes reads differently from routine fixes.
+            ALL_FIXES=$(git log "$RANGE" --no-merges --grep="^fix" --pretty=format:"- %s (%h)" || true)
+            CRASHES=$(printf '%s\n' "$ALL_FIXES" | grep -iE "sentry|crash|anr|OBTAINIUMPLUS-[0-9A-Z]+" || true)
+            FIXES=$(printf '%s\n' "$ALL_FIXES" | grep -ivE "sentry|crash|anr|OBTAINIUMPLUS-[0-9A-Z]+" || true)
+
+            if [ -n "$CRASHES" ]; then
+              echo "### 💥 Crash & Stability Fixes"
+              echo "$CRASHES"
+              echo
+            fi
+
+            if [ -n "$FIXES" ]; then
+              echo "### 🐛 Bug Fixes"
+              echo "$FIXES"
+              echo
+            fi
+
+            OTHERS=$(git log "$RANGE" --no-merges --grep="^feat" --grep="^fix" --invert-grep --pretty=format:"- %s (%h)" || true)
+            if [ -n "$OTHERS" ]; then
+              echo "### 🔧 Improvements & Refactors"
+              echo "$OTHERS"
+              echo
+            fi
+
+            # Surface how many distinct GitHub issues this release touches — just a visible
+            # signal so an unusually issue-dense release is easy to notice.
+            ISSUE_REFS=$(git log "$RANGE" --no-merges --pretty=format:"%s" | grep -oE '#[0-9]+' | sort -u | wc -l | tr -d ' ' || true)
+            if [ -n "$ISSUE_REFS" ] && [ "$ISSUE_REFS" -gt 0 ] 2>/dev/null; then
+              echo "_${ISSUE_REFS} distinct GitHub issue(s) referenced in this release._"
+              echo
+            fi
+
+            # Recent releases rollup (last 5 tags in this version family, current first).
+            echo
+            echo "## 📦 Recent Releases"
+            echo
+            if [ -n "$MAJOR_RELEASE" ]; then
+              echo "> 🚀 **Most recent major release — [${MAJOR_RELEASE}](https://github.com/${{ github.repository }}/releases/tag/${MAJOR_RELEASE})**"
+              echo "> ${MAJOR_DESC}"
+              echo
+            fi
+            if [ -n "$CRITICAL_RELEASE" ]; then
+              echo "> ⚠️ **Most recent critical fix — [${CRITICAL_RELEASE}](https://github.com/${{ github.repository }}/releases/tag/${CRITICAL_RELEASE})**"
+              echo "> ${CRITICAL_DESC}"
+              echo
+            fi
+            echo "| Release | Highlight |"
+            echo "|:--|:--|"
+            for t in $(printf '%s\n' "$ALL_TAGS" | head -5); do
+              SUBJ=$(git log -1 --pretty=%s "$t" 2>/dev/null | sed 's/|/\\|/g')
+              MARK=""
+              if [ "$t" = "$MAJOR_RELEASE" ]; then MARK=" 🚀 **major**"; fi
+              if [ "$t" = "$CRITICAL_RELEASE" ]; then MARK="${MARK} ⚠️ **critical fix**"; fi
+              if [ "$t" = "$TAG_NAME" ]; then MARK="${MARK} _(this release)_"; fi
+              echo "| [${t}](https://github.com/${{ github.repository }}/releases/tag/${t})${MARK} | ${SUBJ} |"
+            done
+
+            if [ -n "$PREV_TAG" ]; then
+              echo
+              echo "---"
+              echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+            fi
+          } > release_body.md
 
       - name: Create Draft Release
         uses: ncipollo/release-action@v1
@@ -82,5 +194,5 @@ jobs:
           tag: "${{ steps.extract_version.outputs.tag }}"
           prerelease: "${{ steps.extract_version.outputs.beta }}"
           draft: "true"
-          generateReleaseNotes: true
+          generateReleaseNotes: false
           bodyFile: release_body.md
