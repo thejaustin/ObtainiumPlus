@@ -57,9 +57,14 @@ class AppFilterService {
 
       if (filter.nameFilter.isNotEmpty || filter.authorFilter.isNotEmpty) {
         if (filter.nameFilter.isNotEmpty) {
-          final nameScore = fuzzyMatch(filter.nameFilter, app.name);
-          final idScore = fuzzyMatch(filter.nameFilter, app.app.id);
-          if (nameScore < 0.3 && idScore < 0.3) return false;
+          final score = fuzzyMatchMulti(filter.nameFilter, [
+            app.name,
+            app.app.id,
+            app.author,
+            app.app.url,
+            ...?app.app.categories,
+          ]);
+          if (score < 0.3) return false;
         }
 
         List<String> authorTokens = filter.authorFilter

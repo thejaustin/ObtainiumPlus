@@ -1,15 +1,12 @@
-import 'package:http/http.dart' as http;
-import 'package:html/parser.dart' as html;
-import '../custom_errors.dart';
-import '../models/app_source.dart';
-import '../models/app_source_helpers.dart';
-import '../utils/app_utils.dart';
+import 'package:html/parser.dart';
+import 'package:http/http.dart';
+import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/providers/source_provider.dart';
 
 class SamsungGalaxyStore extends AppSource {
   SamsungGalaxyStore() {
     name = 'Samsung Galaxy Store';
     hosts = ['apps.samsung.com', 'galaxystore.samsung.com'];
-    canSearch = false;
   }
 
   @override
@@ -22,7 +19,7 @@ class SamsungGalaxyStore extends AppSource {
     if (match == null) {
       throw InvalidURLError(name);
     }
-    return match.group(0)!.toLowerCase();
+    return match.group(0)!;
   }
 
   @override
@@ -33,28 +30,26 @@ class SamsungGalaxyStore extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    final response = await http.get(
-      Uri.parse(standardUrl),
-      headers: await getRequestHeaders(additionalSettings, standardUrl),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('HTTP Error: ${response.statusCode}');
+    Response res = await sourceRequest(standardUrl, additionalSettings);
+    if (res.statusCode != 200) {
+      throw getObtainiumHttpError(res);
     }
 
-    final document = html.parse(response.body);
-    final names = getAppNames(standardUrl);
-
-    // Parse version from Galaxy Store HTML (usually embedded in script tags or specific divs)
-    final versionElement = document.querySelector('.version-class-placeholder');
-    final version = versionElement?.text.trim() ?? 'Unknown';
-
-    return APKDetails(version, [], names, releaseDate: null, changeLog: null);
-  }
-
-  AppNames getAppNames(String standardUrl) {
+    var document = parse(res.body);
     Uri uri = Uri.parse(standardUrl);
     String appId = uri.queryParameters['appId'] ?? 'Unknown App';
-    return AppNames('Samsung', appId);
+    var names = AppNames(runtimeType.toString(), appId);
+
+    var versionElement = document.querySelector('.version-class-placeholder');
+    String version = versionElement?.text.trim() ?? 'Unknown';
+
+    return APKDetails(
+      version,
+      [],
+      names,
+      releaseDate: null,
+      changeLog: null,
+    );
   }
 }
+
