@@ -13,7 +13,6 @@ import 'package:http/http.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/models/html_asset_filter_details.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/app_source.dart';
