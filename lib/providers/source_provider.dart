@@ -460,13 +460,45 @@ Future<Response> httpClientResponseStreamToFinalResponse(
 }
 
 ObtainiumError getObtainiumHttpError(Response res) {
+  if (res.statusCode == 404) return NoReleasesError();
+
+  final reasonLower = res.reasonPhrase?.toLowerCase() ?? '';
+  final bodySample = res.body.length > 1000
+      ? res.body.substring(0, 1000).toLowerCase()
+      : res.body.toLowerCase();
+
+  final isRateLimit =
+      res.statusCode == 429 ||
+      res.statusCode == 403 ||
+      reasonLower.contains('rate limit') ||
+      reasonLower.contains('too many requests') ||
+      bodySample.contains('rate limit') ||
+      bodySample.contains('too many requests');
+
+  if (isRateLimit) {
+    final retryAfter = res.headers['retry-after'];
+    final secs = retryAfter != null ? int.tryParse(retryAfter) : null;
+    if (secs != null) return RateLimitError((secs / 60).ceil());
+
+    final resetHeader = res.headers['x-ratelimit-reset'];
+    if (resetHeader != null) {
+      final parsed = int.tryParse(resetHeader);
+      if (parsed != null) {
+        // x-ratelimit-reset is typically in seconds since epoch
+        final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final remainingMinutes = ((parsed - nowSeconds) / 60).ceil().clamp(
+          1,
+          9999,
+        );
+        return RateLimitError(remainingMinutes);
+      }
+    }
+    return RateLimitError(30); // Default to conservative 30 minutes
+  }
+
   String message = (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
       ? res.reasonPhrase!
       : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]);
-
-  if (res.statusCode == 403 || res.statusCode == 429) {
-    message += ' (Rate Limit? Add an API Token/PAT in Settings to bypass)';
-  }
   return ObtainiumError(message);
 }
 
