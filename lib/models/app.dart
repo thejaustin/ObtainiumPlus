@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/models/version_history_entry.dart';
 
 class App {
   late String id;
@@ -21,6 +22,7 @@ class App {
   late String? changeLog;
   late String? overrideSource;
   bool allowIdChange = false;
+  List<VersionHistoryEntry> versionHistory = [];
 
   /// If non-null, the app's source has a new canonical URL and a rename is pending.
   String? pendingRepoRenameUrl;
@@ -46,6 +48,7 @@ class App {
     this.overrideSource,
     this.allowIdChange = false,
     this.otherAssetUrls = const [],
+    this.versionHistory = const [],
   });
 
   @override
@@ -90,6 +93,7 @@ class App {
     overrideSource: overrideSource,
     allowIdChange: allowIdChange,
     otherAssetUrls: List.from(otherAssetUrls),
+    versionHistory: List.from(versionHistory),
   );
 
   factory App.fromJson(
@@ -140,6 +144,14 @@ class App {
       otherAssetUrls: assumed2DlistToStringMapList(
         safeJsonDecode(json['otherAssetUrls'], <dynamic>[]) as List<dynamic>,
       ),
+      versionHistory: json['versionHistory'] != null
+          ? (json['versionHistory'] as List<dynamic>)
+                .map(
+                  (e) =>
+                      VersionHistoryEntry.fromJson(e as Map<String, dynamic>),
+                )
+                .toList()
+          : [],
     );
   }
 
@@ -162,5 +174,6 @@ class App {
     'changeLog': changeLog,
     'overrideSource': overrideSource,
     'allowIdChange': allowIdChange,
+    'versionHistory': versionHistory.map((e) => e.toJson()).toList(),
   };
 }

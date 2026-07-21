@@ -3,6 +3,7 @@ import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/utils/fuzzy_search.dart';
 
 class AppFilterService {
   AppFilterService._();
@@ -55,18 +56,17 @@ class AppFilterService {
         return false;
 
       if (filter.nameFilter.isNotEmpty || filter.authorFilter.isNotEmpty) {
-        List<String> nameTokens = filter.nameFilter
-            .split(' ')
-            .where((e) => e.trim().isNotEmpty)
-            .toList();
+        if (filter.nameFilter.isNotEmpty) {
+          final nameScore = fuzzyMatch(filter.nameFilter, app.name);
+          final idScore = fuzzyMatch(filter.nameFilter, app.app.id);
+          if (nameScore < 0.3 && idScore < 0.3) return false;
+        }
+
         List<String> authorTokens = filter.authorFilter
             .split(' ')
             .where((e) => e.trim().isNotEmpty)
             .toList();
 
-        for (var t in nameTokens) {
-          if (!app.name.toLowerCase().contains(t.toLowerCase())) return false;
-        }
         for (var t in authorTokens) {
           if (!app.author.toLowerCase().contains(t.toLowerCase())) return false;
         }

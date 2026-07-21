@@ -13,6 +13,8 @@ import 'package:http/http.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/models/html_asset_filter_details.dart';
+import 'package:obtainium/models/version_history_entry.dart';
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
@@ -801,8 +803,50 @@ class SourceProvider {
       otherAssetUrls: apk.allAssetUrls
           .where((a) => apk.apkUrls.indexWhere((p) => a.key == p.key) < 0)
           .toList(),
+      versionHistory: _buildVersionHistory(currentApp, apk),
     );
     return source.endOfGetAppChanges(finalApp);
+  }
+
+  List<VersionHistoryEntry> _buildVersionHistory(
+    App? currentApp,
+    APKDetails apk,
+  ) {
+    if (currentApp == null) {
+      return [
+        VersionHistoryEntry(
+          version: apk.version,
+          changeLog: apk.changeLog,
+          releaseDate: apk.releaseDate,
+          detectedAt: DateTime.now(),
+        ),
+      ];
+    }
+    if (currentApp.latestVersion != apk.version) {
+      final newEntry = VersionHistoryEntry(
+        version: apk.version,
+        changeLog: apk.changeLog,
+        releaseDate: apk.releaseDate,
+        detectedAt: DateTime.now(),
+      );
+      final list = List<VersionHistoryEntry>.from(currentApp.versionHistory)
+        ..insert(0, newEntry);
+      return list.length > 5 ? list.sublist(0, 5) : list;
+    }
+
+    if (currentApp.versionHistory.isEmpty &&
+        currentApp.latestVersion.isNotEmpty) {
+      return [
+        VersionHistoryEntry(
+          version: currentApp.latestVersion,
+          changeLog: currentApp.changeLog,
+          releaseDate: currentApp.releaseDate,
+          detectedAt: DateTime.now(),
+        ),
+      ];
+    }
+
+    return currentApp.versionHistory;
   }
 
   // Returns errors in [results, errors] instead of throwing them

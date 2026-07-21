@@ -27,6 +27,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/fuzzy_search.dart';
 
 class CommandCenter extends StatefulWidget {
   final String? initialQuery;
@@ -99,14 +100,20 @@ class _CommandCenterState extends State<CommandCenter> {
     // Search local apps
     final appsProvider = context.read<AppsProvider>();
     setState(() {
-      _localResults = appsProvider
+      final results = appsProvider
           .getAppValues()
-          .where((app) {
-            return app.name.toLowerCase().contains(value.toLowerCase()) ||
-                app.app.id.toLowerCase().contains(value.toLowerCase());
+          .map((app) {
+            final nameScore = fuzzyMatch(value, app.name);
+            final idScore = fuzzyMatch(value, app.app.id);
+            final maxScore = nameScore > idScore ? nameScore : idScore;
+            return MapEntry(app, maxScore);
           })
-          .take(5)
+          .where((entry) => entry.value >= 0.3)
           .toList();
+
+      results.sort((a, b) => b.value.compareTo(a.value));
+
+      _localResults = results.map((entry) => entry.key).take(5).toList();
     });
 
     // Check if it's a URL

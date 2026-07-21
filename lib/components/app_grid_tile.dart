@@ -437,20 +437,27 @@ class _AppGridTileState extends State<AppGridTile>
                     )
                   : null,
             ),
-            child: widget.appInMemory.icon != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(iconBorderRadius),
-                    child: Image.memory(
-                      widget.appInMemory.icon!,
-                      fit: BoxFit.contain,
-                      gaplessPlayback: true,
-                      filterQuality: FilterQuality.high,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeIn,
+              switchOutCurve: Curves.easeOut,
+              child: widget.appInMemory.icon != null
+                  ? ClipRRect(
+                      key: ValueKey('icon_${widget.appInMemory.app.id}'),
+                      borderRadius: BorderRadius.circular(iconBorderRadius),
+                      child: Image.memory(
+                        widget.appInMemory.icon!,
+                        fit: BoxFit.contain,
+                        gaplessPlayback: true,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    )
+                  : AppIconShimmer(
+                      key: const ValueKey('shimmer'),
+                      size: iconSize,
+                      borderRadius: iconBorderRadius,
                     ),
-                  )
-                : AppIconShimmer(
-                    size: iconSize,
-                    borderRadius: iconBorderRadius,
-                  ),
+            ),
           ),
         ),
         if (widget.hasUpdate)
