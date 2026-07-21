@@ -709,31 +709,82 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildColorPicker(BuildContext context) {
+    final List<({String name, Color color})> presetColors = const [
+      (name: 'Purple', color: Color(0xFF6438B5)),
+      (name: 'Ocean', color: Color(0xFF0288D1)),
+      (name: 'Teal', color: Color(0xFF00897B)),
+      (name: 'Sunset', color: Color(0xFFF4511E)),
+      (name: 'Rose', color: Color(0xFFD81B60)),
+      (name: 'Amber', color: Color(0xFFFFB300)),
+    ];
+
     return Consumer<ThemeSettingsProvider>(
       builder: (context, settings, child) {
         if (settings.useMaterialYou) {
           return const SizedBox.shrink();
         }
-        return ListTile(
-          leading: const Icon(Icons.color_lens_outlined),
-          title: Text(
-            tr('selectX', args: [tr('colour').toLowerCase()]),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text("${ColorTools.nameThatColor(settings.themeColor)}"),
-          trailing: ColorIndicator(
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            color: settings.themeColor,
-            onSelect: () async {
-              AppHaptics.lightImpact();
-              final Color colorBeforeDialog = settings.themeColor;
-              if (!(await _showColorPickerDialog(context, settings))) {
-                settings.themeColor = colorBeforeDialog;
-              }
-            },
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.color_lens_outlined),
+              title: Text(
+                tr('selectX', args: [tr('colour').toLowerCase()]),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(ColorTools.nameThatColor(settings.themeColor)),
+              trailing: ColorIndicator(
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                color: settings.themeColor,
+                onSelect: () async {
+                  AppHaptics.lightImpact();
+                  final Color colorBeforeDialog = settings.themeColor;
+                  if (!(await _showColorPickerDialog(context, settings))) {
+                    settings.themeColor = colorBeforeDialog;
+                  }
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: presetColors.map((preset) {
+                    final bool isSelected =
+                        settings.themeColor.value == preset.color.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ActionChip(
+                        avatar: CircleAvatar(
+                          backgroundColor: preset.color,
+                          radius: 8,
+                        ),
+                        label: Text(preset.name),
+                        backgroundColor: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(context).colorScheme.surfaceContainer,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          settings.themeColor = preset.color;
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
