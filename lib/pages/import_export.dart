@@ -440,7 +440,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       title: tr('obtainiumExport'),
                       subtitle: tr(
                         'exportedTo',
-                        args: [snapshot.data?.toString() ?? tr('pickExportDir')],
+                        args: [
+                          snapshot.data?.toString() ?? tr('pickExportDir'),
+                        ],
                       ),
                       iconColor: colorScheme.tertiary,
                       actions: [

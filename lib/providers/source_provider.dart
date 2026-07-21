@@ -463,7 +463,7 @@ ObtainiumError getObtainiumHttpError(Response res) {
   String message = (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
       ? res.reasonPhrase!
       : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]);
-      
+
   if (res.statusCode == 403 || res.statusCode == 429) {
     message += ' (Rate Limit? Add an API Token/PAT in Settings to bypass)';
   }

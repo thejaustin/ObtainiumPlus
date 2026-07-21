@@ -78,7 +78,7 @@ class AddAppPageState extends State<AddAppPage> {
     super.initState();
     final initialUrl = widget.initialUrl;
     final appId = widget.appId;
-    
+
     if (appId != null && appId.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -96,7 +96,13 @@ class AddAppPageState extends State<AddAppPage> {
             });
             try {
               sourceProvider.getSource(app.url);
-              changeUserInput(app.url, true, false, updateUrlInput: true, overrideSource: app.overrideSource);
+              changeUserInput(
+                app.url,
+                true,
+                false,
+                updateUrlInput: true,
+                overrideSource: app.overrideSource,
+              );
             } catch (_) {}
           }
         }

@@ -570,14 +570,21 @@ class AppsProvider with ChangeNotifier {
     });
     () async {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await settingsProvider.initializeSettings();
-      await themeSettings.initializeSettings(prefs);
-      await updateSettings.initializeSettings(prefs);
-      await behaviorSettings.initializeSettings(prefs);
-      await viewSettings.initializeSettings(prefs);
-      await plusSettings.initializeSettings(prefs);
 
-      final dirs = await AppFileService.initAppDirectories();
+      final initFutures = Future.wait([
+        settingsProvider.initializeSettings(),
+        themeSettings.initializeSettings(prefs),
+        updateSettings.initializeSettings(prefs),
+        behaviorSettings.initializeSettings(prefs),
+        viewSettings.initializeSettings(prefs),
+        plusSettings.initializeSettings(prefs),
+      ]);
+
+      final dirsFuture = AppFileService.initAppDirectories();
+
+      await initFutures;
+      final dirs = await dirsFuture;
+
       APKDir = dirs['APKDir']!;
       iconsCacheDir = dirs['iconsCacheDir']!;
       if (!isBg) {

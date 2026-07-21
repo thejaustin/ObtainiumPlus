@@ -383,7 +383,9 @@ class DiscoverPageState extends State<DiscoverPage> {
       child: ConditionalBlur(
         sigma: 12,
         enabled: settings.plusEnableGlassmorphism,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color:
                 (isDark
@@ -409,10 +411,20 @@ class DiscoverPageState extends State<DiscoverPage> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.06),
-                          Colors.transparent,
-                        ],
+                        colors: isDark
+                            ? [
+                                Colors.white.withValues(alpha: 0.15),
+                                Colors.white.withValues(alpha: 0.05),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.2),
+                              ]
+                            : [
+                                Colors.white.withValues(alpha: 0.7),
+                                Colors.white.withValues(alpha: 0.2),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.05),
+                              ],
+                        stops: const [0.0, 0.3, 0.8, 1.0],
                       ),
                     ),
                   ),
@@ -424,72 +436,72 @@ class DiscoverPageState extends State<DiscoverPage> {
                     AppHaptics.selectionClick();
                     _openAddApp(url);
                   },
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: DiscoverAppIcon(
-                            iconUrl: iconUrl,
-                            sourceName: sourceName,
-                            size: 64,
-                            borderRadius: CardMetrics.inner(radius),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      if (description.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            height: 1.2,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 4),
-                      Center(
-                        child: DiscoverSourceChip(
-                          sourceName: sourceName,
-                          borderRadius: CardMetrics.inner(radius),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      FilledButton.tonal(
-                        onPressed: () {
-                          AppHaptics.selectionClick();
-                          _openAddApp(url);
-                        },
-                        style: FilledButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              CardMetrics.inner(radius),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: Center(
+                            child: DiscoverAppIcon(
+                              iconUrl: iconUrl,
+                              sourceName: sourceName,
+                              size: 64,
+                              borderRadius: CardMetrics.inner(radius),
                             ),
                           ),
                         ),
-                        child: Text(tr('add')),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        if (description.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        Center(
+                          child: DiscoverSourceChip(
+                            sourceName: sourceName,
+                            borderRadius: CardMetrics.inner(radius),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        FilledButton.tonal(
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            _openAddApp(url);
+                          },
+                          style: FilledButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                CardMetrics.inner(radius),
+                              ),
+                            ),
+                          ),
+                          child: Text(tr('add')),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               ),
             ],
           ),

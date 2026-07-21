@@ -8,7 +8,7 @@ class Gitea extends AppSource {
   Gitea() {
     name = 'Gitea (Self-Hosted)';
     hosts = []; // Generic, relies on overrideSource or specific URL matching
-    
+
     additionalSourceAppSpecificSettingFormItems =
         gh.additionalSourceAppSpecificSettingFormItems;
 

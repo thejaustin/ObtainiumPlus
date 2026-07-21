@@ -13,6 +13,7 @@ import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class AppDashboard extends StatefulWidget {
   final String currentFilterMode;
@@ -281,43 +282,46 @@ class _AppDashboardState extends State<AppDashboard>
     final itemRadius = CardMetrics.inner(radius);
     return Tooltip(
       message: app.name,
-      child: InkWell(
-        onTap: () {
-          AppHaptics.selectionClick();
-          showDraggableModalBottomSheet(
-            context: context,
-            builder: (context, controller) => AppPage(
-              appId: app.app.id,
-              isModal: true,
-              scrollController: controller,
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(itemRadius),
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(itemRadius),
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            border: Border.all(
+      child: ScaleTouchWrapper(
+        onTap: () {},
+        child: InkWell(
+          onTap: () {
+            AppHaptics.selectionClick();
+            showDraggableModalBottomSheet(
+              context: context,
+              builder: (context, controller) => AppPage(
+                appId: app.app.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(itemRadius),
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(itemRadius),
               color: Theme.of(
                 context,
-              ).colorScheme.primary.withValues(alpha: 0.2),
-              width: 1.5,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: app.icon != null
-                ? Image.memory(
-                    app.icon!,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
-                  )
-                : const Icon(Icons.apps_rounded, size: 24),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: app.icon != null
+                  ? Image.memory(
+                      app.icon!,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    )
+                  : const Icon(Icons.apps_rounded, size: 24),
+            ),
           ),
         ),
       ),
@@ -332,78 +336,81 @@ class _AppDashboardState extends State<AppDashboard>
     final itemRadius = CardMetrics.inner(radius);
     return Tooltip(
       message: app.name,
-      child: GestureDetector(
-        onTap: () {
-          AppHaptics.selectionClick();
-          showDraggableModalBottomSheet(
-            context: context,
-            builder: (context, controller) => AppPage(
-              appId: app.app.id,
-              isModal: true,
-              scrollController: controller,
-            ),
-          );
-        },
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(itemRadius),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.error.withValues(alpha: AppOpacity.medium),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
+      child: ScaleTouchWrapper(
+        onTap: () {},
+        child: GestureDetector(
+          onTap: () {
+            AppHaptics.selectionClick();
+            showDraggableModalBottomSheet(
+              context: context,
+              builder: (context, controller) => AppPage(
+                appId: app.app.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          },
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(itemRadius),
+              border: Border.all(
                 color: Theme.of(
                   context,
-                ).colorScheme.error.withValues(alpha: 0.1),
-                blurRadius: 8,
-                spreadRadius: -2,
+                ).colorScheme.error.withValues(alpha: AppOpacity.medium),
+                width: 1.5,
               ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              if (app.icon != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(itemRadius - 2),
-                  child: Image.memory(
-                    app.icon!,
-                    fit: BoxFit.cover,
-                    width: 64,
-                    height: 64,
-                    filterQuality: FilterQuality.high,
-                  ),
-                )
-              else
-                Center(
-                  child: Icon(
-                    Icons.apps_rounded,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: AppOpacity.half),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.error.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  spreadRadius: -2,
                 ),
-              Positioned(
-                right: 4,
-                top: 4,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.surface,
-                      width: 1.5,
+              ],
+            ),
+            child: Stack(
+              children: [
+                if (app.icon != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(itemRadius - 2),
+                    child: Image.memory(
+                      app.icon!,
+                      fit: BoxFit.cover,
+                      width: 64,
+                      height: 64,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  )
+                else
+                  Center(
+                    child: Icon(
+                      Icons.apps_rounded,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: AppOpacity.half),
+                    ),
+                  ),
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -419,103 +426,128 @@ class _AppDashboardState extends State<AppDashboard>
     final count = appsProvider.selectedAppIds.length;
     final itemRadius = CardMetrics.card(radius);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primaryContainer.withValues(alpha: 0.25),
-            colorScheme.tertiaryContainer.withValues(alpha: 0.12),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(itemRadius),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.25)),
-        boxShadow: AppShadows.smooth(
-          color: colorScheme.primary,
-          opacity: 0.08,
-          blurFactor: 0.6,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.library_add_check_rounded, color: colorScheme.primary),
-              const SizedBox(width: 12),
-              Text(
-                tr('plural_apps', args: [count.toString()]),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: () => appsProvider.clearSelection(),
-                icon: const Icon(Icons.close_rounded, size: 18),
-                label: Text(tr('cancel')),
-              ),
-            ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(itemRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.primaryContainer.withValues(alpha: 0.25),
+                colorScheme.tertiaryContainer.withValues(alpha: 0.12),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(itemRadius),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: 0.25),
+            ),
+            boxShadow: AppShadows.smooth(
+              color: colorScheme.primary,
+              opacity: 0.08,
+              blurFactor: 0.6,
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
+          child: Column(
             children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    AppHaptics.heavyImpact();
-                    appsProvider.downloadAndInstallLatestApps(
-                      appsProvider.selectedAppIds.toList(),
-                      context,
-                    );
-                    appsProvider.clearSelection();
-                  },
-                  icon: const Icon(Icons.download_rounded, size: 18),
-                  label: Text(tr('update')),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.tonalIcon(
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    final urls = appsProvider.selectedAppIds
-                        .map((id) => appsProvider.apps[id]?.app.url)
-                        .whereType<String>()
-                        .join('\n');
-                    if (urls.isNotEmpty) {
-                      Share.share(
-                        urls,
-                        subject: 'Obtainium - ${tr('appsString')}',
-                      );
-                    }
-                    appsProvider.clearSelection();
-                  },
-                  icon: const Icon(Icons.ios_share_rounded, size: 18),
-                  label: Text(tr('share')),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                onPressed: () {
-                  AppHaptics.heavyImpact();
-                  appsProvider.removeApps(appsProvider.selectedAppIds.toList());
-                  appsProvider.clearSelection();
-                },
-                icon: const Icon(Icons.delete_outline_rounded),
-                style: IconButton.styleFrom(
-                  foregroundColor: colorScheme.error,
-                  backgroundColor: colorScheme.errorContainer.withValues(
-                    alpha: 0.3,
+              Row(
+                children: [
+                  Icon(
+                    Icons.library_add_check_rounded,
+                    color: colorScheme.primary,
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Text(
+                    tr('plural_apps', args: [count.toString()]),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  ScaleTouchWrapper(
+                    onTap: () {},
+                    child: TextButton.icon(
+                      onPressed: () => appsProvider.clearSelection(),
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      label: Text(tr('cancel')),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ScaleTouchWrapper(
+                      onTap: () {},
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          AppHaptics.heavyImpact();
+                          appsProvider.downloadAndInstallLatestApps(
+                            appsProvider.selectedAppIds.toList(),
+                            context,
+                          );
+                          appsProvider.clearSelection();
+                        },
+                        icon: const Icon(Icons.download_rounded, size: 18),
+                        label: Text(tr('update')),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ScaleTouchWrapper(
+                      onTap: () {},
+                      child: FilledButton.tonalIcon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          final urls = appsProvider.selectedAppIds
+                              .map((id) => appsProvider.apps[id]?.app.url)
+                              .whereType<String>()
+                              .join('\n');
+                          if (urls.isNotEmpty) {
+                            Share.share(
+                              urls,
+                              subject: 'Obtainium - ${tr('appsString')}',
+                            );
+                          }
+                          appsProvider.clearSelection();
+                        },
+                        icon: const Icon(Icons.ios_share_rounded, size: 18),
+                        label: Text(tr('share')),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ScaleTouchWrapper(
+                    onTap: () {},
+                    child: IconButton.filledTonal(
+                      onPressed: () {
+                        AppHaptics.heavyImpact();
+                        appsProvider.removeApps(
+                          appsProvider.selectedAppIds.toList(),
+                        );
+                        appsProvider.clearSelection();
+                      },
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      style: IconButton.styleFrom(
+                        foregroundColor: colorScheme.error,
+                        backgroundColor: colorScheme.errorContainer.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

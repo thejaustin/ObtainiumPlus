@@ -280,36 +280,56 @@ class AppUpdateService {
         });
         // ------------------------------------------
 
-        await Future.wait(
-          appIds.map((appId) async {
+        final int maxConcurrency = 5;
+        int index = 0;
+
+        Future<void> worker() async {
+          while (index < appIds.length) {
+            final appId = appIds[index++];
             App? newApp;
-            try {
-              newApp = await checkUpdateFn(appId);
-            } catch (e, stackTrace) {
-              if ((e is RateLimitError || e is SocketException) &&
-                  throwErrorsForRetry) {
-                rethrow;
+            int retries = 3;
+            while (retries >= 0) {
+              try {
+                newApp = await checkUpdateFn(appId);
+                break;
+              } catch (e, stackTrace) {
+                final isNetworkError =
+                    e is SocketException ||
+                    e is TimeoutException ||
+                    e.toString().toLowerCase().contains('clientexception') ||
+                    e.toString().toLowerCase().contains('timeoutexception');
+                if (retries > 0 && isNetworkError) {
+                  retries--;
+                  await Future.delayed(const Duration(seconds: 2));
+                  continue;
+                }
+                if ((e is RateLimitError || e is SocketException) &&
+                    throwErrorsForRetry) {
+                  rethrow;
+                }
+                if (e is IDChangedError) {
+                  e.appId = appId;
+                }
+                if (e is DowngradeError && e.appId == null) {
+                  e.appId = appId;
+                }
+                if (e is InvalidURLError && e.appId == null) e.appId = appId;
+                if (e is NoReleasesError && e.appId == null) e.appId = appId;
+                if (e is NoAPKError && e.appId == null) e.appId = appId;
+                if (e is NoVersionError && e.appId == null) e.appId = appId;
+                // Safely get app name with null check
+                final appName = apps[appId]?.name;
+                errors.add(appId, e, appName: appName, stackTrace: stackTrace);
+                break;
               }
-              if (e is IDChangedError) {
-                e.appId = appId;
-              }
-              if (e is DowngradeError && e.appId == null) {
-                e.appId = appId;
-              }
-              if (e is InvalidURLError && e.appId == null) e.appId = appId;
-              if (e is NoReleasesError && e.appId == null) e.appId = appId;
-              if (e is NoAPKError && e.appId == null) e.appId = appId;
-              if (e is NoVersionError && e.appId == null) e.appId = appId;
-              // Safely get app name with null check
-              final appName = apps[appId]?.name;
-              errors.add(appId, e, appName: appName, stackTrace: stackTrace);
             }
             if (newApp != null) {
               updates.add(newApp);
             }
-          }),
-          eagerError: true,
-        );
+          }
+        }
+
+        await Future.wait(List.generate(maxConcurrency, (_) => worker()));
       } finally {
         setGettingUpdates?.call(false);
       }
