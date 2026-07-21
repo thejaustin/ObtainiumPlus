@@ -328,65 +328,81 @@ class _OmnibarState extends State<Omnibar> {
                   ),
 
                   // Clear button
-                  if (_controller.text.isNotEmpty)
-                    Semantics(
-                      label: tr('clear'),
-                      button: true,
-                      child: IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
-                        onPressed: () {
-                          _controller.clear();
-                          _handleInput('');
-                        },
-                        padding: const EdgeInsets.only(right: 8),
-                      ),
-                    ),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    child: _controller.text.isNotEmpty
+                        ? Semantics(
+                            label: tr('clear'),
+                            button: true,
+                            child: IconButton(
+                              icon: const Icon(Icons.clear, size: 20),
+                              onPressed: () {
+                                _controller.clear();
+                                _handleInput('');
+                              },
+                              padding: const EdgeInsets.only(right: 8),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
 
                   // Add button (for URLs)
-                  if (_isUrl)
-                    Container(
-                      margin: const EdgeInsets.only(
-                        right: 6,
-                        top: 6,
-                        bottom: 6,
-                      ),
-                      child: Semantics(
-                        label: tr('add'),
-                        button: true,
-                        child: FilledButton.tonal(
-                          onPressed: _isValidUrl
-                              ? () => widget.onUrlInput?.call(_controller.text)
-                              : () {
-                                  // Show unsupported source dialog
-                                  final supportedSources = _sourceProvider
-                                      .sources
-                                      .where((s) => s.hosts.isNotEmpty)
-                                      .map((s) => s.name)
-                                      .toList();
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    child: _isUrl
+                        ? Container(
+                            margin: const EdgeInsets.only(
+                              right: 6,
+                              top: 6,
+                              bottom: 6,
+                            ),
+                            child: Semantics(
+                              label: tr('add'),
+                              button: true,
+                              child: FilledButton.tonal(
+                                onPressed: _isValidUrl
+                                    ? () => widget.onUrlInput?.call(
+                                        _controller.text,
+                                      )
+                                    : () {
+                                        // Show unsupported source dialog
+                                        final supportedSources = _sourceProvider
+                                            .sources
+                                            .where((s) => s.hosts.isNotEmpty)
+                                            .map((s) => s.name)
+                                            .toList();
 
-                                  showUnsupportedSourceDialog(
-                                    context: context,
-                                    suggestedSources: supportedSources
-                                        .take(8)
-                                        .toList(),
-                                    failedUrl: _controller.text,
-                                  );
-                                },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _isValidUrl
-                                ? colorScheme.primary
-                                : null,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                itemRadius * 0.8,
+                                        showUnsupportedSourceDialog(
+                                          context: context,
+                                          suggestedSources: supportedSources
+                                              .take(8)
+                                              .toList(),
+                                          failedUrl: _controller.text,
+                                        );
+                                      },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _isValidUrl
+                                      ? colorScheme.primary
+                                      : null,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      itemRadius * 0.8,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  _isValidUrl ? tr('add') : tr('error'),
+                                ),
                               ),
                             ),
-                          ),
-                          child: Text(_isValidUrl ? tr('add') : tr('error')),
-                        ),
-                      ),
-                    ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ],

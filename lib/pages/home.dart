@@ -13,6 +13,7 @@ import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
+import 'dart:ui';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -451,6 +452,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
       },
       child: Scaffold(
+        extendBody: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         // The omnibar "+" — the single entry point for the combined
         // add/search/discover flow, visible on every tab.
@@ -484,62 +486,78 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             : pageBody,
         bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
-            : FocusTraversalGroup(
-                child: Focus(
-                  onKeyEvent: (node, event) {
-                    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-                    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-                      switchToPage((currentIndex + 1) % pages.length);
-                      return KeyEventResult.handled;
-                    }
-                    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-                      switchToPage(
-                        (currentIndex - 1 + pages.length) % pages.length,
-                      );
-                      return KeyEventResult.handled;
-                    }
-                    return KeyEventResult.ignored;
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-                      ),
-                      NavigationBar(
-                        elevation: 0,
-                        backgroundColor: Colors.transparent,
-                        indicatorColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        labelBehavior:
-                            NavigationDestinationLabelBehavior.onlyShowSelected,
-                        animationDuration: const Duration(milliseconds: 300),
-                        destinations: pages
-                            .map(
-                              (e) => NavigationDestination(
-                                icon: Icon(e.icon),
-                                selectedIcon: Icon(
-                                  e.icon,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                                label: tr(e.title),
-                              ),
-                            )
-                            .toList(),
-                        onDestinationSelected: (int index) async {
-                          AppHaptics.selectionClick();
-                          switchToPage(index);
+            : ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.8),
+                    child: FocusTraversalGroup(
+                      child: Focus(
+                        onKeyEvent: (node, event) {
+                          if (event is! KeyDownEvent)
+                            return KeyEventResult.ignored;
+                          if (event.logicalKey ==
+                              LogicalKeyboardKey.arrowRight) {
+                            switchToPage((currentIndex + 1) % pages.length);
+                            return KeyEventResult.handled;
+                          }
+                          if (event.logicalKey ==
+                              LogicalKeyboardKey.arrowLeft) {
+                            switchToPage(
+                              (currentIndex - 1 + pages.length) % pages.length,
+                            );
+                            return KeyEventResult.handled;
+                          }
+                          return KeyEventResult.ignored;
                         },
-                        selectedIndex: currentIndex,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.4),
+                            ),
+                            NavigationBar(
+                              elevation: 0,
+                              backgroundColor: Colors.transparent,
+                              indicatorColor: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              labelBehavior: NavigationDestinationLabelBehavior
+                                  .onlyShowSelected,
+                              animationDuration: const Duration(
+                                milliseconds: 300,
+                              ),
+                              destinations: pages
+                                  .map(
+                                    (e) => NavigationDestination(
+                                      icon: Icon(e.icon),
+                                      selectedIcon: Icon(
+                                        e.icon,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
+                                      ),
+                                      label: tr(e.title),
+                                    ),
+                                  )
+                                  .toList(),
+                              onDestinationSelected: (int index) async {
+                                AppHaptics.selectionClick();
+                                switchToPage(index);
+                              },
+                              selectedIndex: currentIndex,
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

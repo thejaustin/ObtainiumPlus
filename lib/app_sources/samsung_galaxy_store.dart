@@ -9,7 +9,7 @@ class SamsungGalaxyStore extends AppSource {
   SamsungGalaxyStore() {
     name = 'Samsung Galaxy Store';
     hosts = ['apps.samsung.com', 'galaxystore.samsung.com'];
-    canSearch = false; 
+    canSearch = false;
   }
 
   @override
@@ -46,16 +46,10 @@ class SamsungGalaxyStore extends AppSource {
     final names = getAppNames(standardUrl);
 
     // Parse version from Galaxy Store HTML (usually embedded in script tags or specific divs)
-    final versionElement = document.querySelector('.version-class-placeholder'); 
+    final versionElement = document.querySelector('.version-class-placeholder');
     final version = versionElement?.text.trim() ?? 'Unknown';
 
-    return APKDetails(
-      version,
-      [],
-      names,
-      releaseDate: null,
-      changeLog: null,
-    );
+    return APKDetails(version, [], names, releaseDate: null, changeLog: null);
   }
 
   AppNames getAppNames(String standardUrl) {

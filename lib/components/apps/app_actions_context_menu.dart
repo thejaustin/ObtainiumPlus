@@ -8,7 +8,11 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 
 class AppActionsContextMenu {
-  static void show(BuildContext context, AppInMemory appInMemory, {VoidCallback? onEnterMultiSelect}) {
+  static void show(
+    BuildContext context,
+    AppInMemory appInMemory, {
+    VoidCallback? onEnterMultiSelect,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -16,11 +20,13 @@ class AppActionsContextMenu {
       builder: (context) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        
+
         return Container(
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? theme.colorScheme.surfaceContainerHigh : theme.colorScheme.surface,
+            color: isDark
+                ? theme.colorScheme.surfaceContainerHigh
+                : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
           ),
           child: SafeArea(
@@ -51,13 +57,17 @@ class AppActionsContextMenu {
                           children: [
                             Text(
                               appInMemory.app.name,
-                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               appInMemory.app.author,
-                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -68,7 +78,7 @@ class AppActionsContextMenu {
                   ),
                 ),
                 const Divider(height: 1),
-                
+
                 // Actions
                 ListTile(
                   leading: const Icon(Icons.download_rounded),
@@ -76,7 +86,9 @@ class AppActionsContextMenu {
                   onTap: () {
                     AppHaptics.selectionClick();
                     Navigator.pop(context);
-                    context.read<AppsProvider>().downloadAndInstallLatestApps([appInMemory.app.id], context);
+                    context.read<AppsProvider>().downloadAndInstallLatestApps([
+                      appInMemory.app.id,
+                    ], context);
                   },
                 ),
                 ListTile(
@@ -85,12 +97,17 @@ class AppActionsContextMenu {
                   onTap: () {
                     AppHaptics.selectionClick();
                     Navigator.pop(context);
-                    showAddAppSheet(context: context, appId: appInMemory.app.id);
+                    showAddAppSheet(
+                      context: context,
+                      appId: appInMemory.app.id,
+                    );
                   },
                 ),
                 ListTile(
                   leading: Icon(
-                    appInMemory.app.pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                    appInMemory.app.pinned
+                        ? Icons.push_pin_rounded
+                        : Icons.push_pin_outlined,
                     color: theme.colorScheme.primary,
                   ),
                   title: Text(appInMemory.app.pinned ? tr('unpin') : tr('pin')),
@@ -108,7 +125,9 @@ class AppActionsContextMenu {
                   onTap: () {
                     AppHaptics.selectionClick();
                     Navigator.pop(context);
-                    context.read<AppsProvider>().openAppSettings(appInMemory.app.id);
+                    context.read<AppsProvider>().openAppSettings(
+                      appInMemory.app.id,
+                    );
                   },
                 ),
                 ListTile(
@@ -135,19 +154,27 @@ class AppActionsContextMenu {
                   ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error),
-                  title: Text(tr('remove'), style: TextStyle(color: theme.colorScheme.error)),
+                  leading: Icon(
+                    Icons.delete_outline_rounded,
+                    color: theme.colorScheme.error,
+                  ),
+                  title: Text(
+                    tr('remove'),
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                   onTap: () {
                     AppHaptics.heavyImpact();
                     Navigator.pop(context);
-                    context.read<AppsProvider>().removeAppsWithModal(context, [appInMemory.app]);
+                    context.read<AppsProvider>().removeAppsWithModal(context, [
+                      appInMemory.app,
+                    ]);
                   },
                 ),
               ],
             ),
           ),
         );
-      }
+      },
     );
   }
 }

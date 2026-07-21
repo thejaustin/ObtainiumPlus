@@ -285,26 +285,24 @@ Future<void> _runObtainium() async {
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   final sp = SettingsProvider();
-  await sp
-      .initializeSettings(); // This also gets prefs, but let's keep it for compatibility
-
   final plusSettings = PlusSettingsProvider();
-  await plusSettings.initializeSettings(prefs);
+  final themeSettings = ThemeSettingsProvider();
+  final behaviorSettings = BehaviorSettingsProvider();
+  final viewSettings = ViewSettingsProvider();
+  final updateSettings = UpdateSettingsProvider();
+
+  await Future.wait([
+    sp.initializeSettings(),
+    plusSettings.initializeSettings(prefs),
+    themeSettings.initializeSettings(prefs),
+    behaviorSettings.initializeSettings(prefs),
+    viewSettings.initializeSettings(prefs),
+    updateSettings.initializeSettings(prefs),
+  ]);
+
   plusSettings.addListener(() {
     sp.notifyPlusSettingsChanged();
   });
-
-  final themeSettings = ThemeSettingsProvider();
-  await themeSettings.initializeSettings(prefs);
-
-  final behaviorSettings = BehaviorSettingsProvider();
-  await behaviorSettings.initializeSettings(prefs);
-
-  final viewSettings = ViewSettingsProvider();
-  await viewSettings.initializeSettings(prefs);
-
-  final updateSettings = UpdateSettingsProvider();
-  await updateSettings.initializeSettings(prefs);
 
   FlutterForegroundTask.initCommunicationPort();
   runApp(

@@ -42,8 +42,9 @@ class Bitbucket extends AppSource {
     final workspace = names.author;
     final repo = names.name;
 
-    final apiUrl = 'https://api.bitbucket.org/2.0/repositories/$workspace/$repo/downloads';
-    
+    final apiUrl =
+        'https://api.bitbucket.org/2.0/repositories/$workspace/$repo/downloads';
+
     final response = await http.get(
       Uri.parse(apiUrl),
       headers: await getRequestHeaders(additionalSettings, apiUrl),
@@ -65,9 +66,13 @@ class Bitbucket extends AppSource {
       if (downloadName != null && downloadName.toLowerCase().endsWith('.apk')) {
         final downloadUrl = download['links']['self']['href'];
         // Note: Bitbucket doesn't have a strict 'version' attached to simple downloads unless parsed from name
-        final versionMatch = RegExp(r'v?(\d+\.\d+(\.\d+)?)', caseSensitive: false).firstMatch(downloadName);
-        final version = versionMatch?.group(1) ?? downloadName.replaceAll('.apk', '');
-        
+        final versionMatch = RegExp(
+          r'v?(\d+\.\d+(\.\d+)?)',
+          caseSensitive: false,
+        ).firstMatch(downloadName);
+        final version =
+            versionMatch?.group(1) ?? downloadName.replaceAll('.apk', '');
+
         return APKDetails(
           version,
           [MapEntry(downloadName, downloadUrl)],

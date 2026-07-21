@@ -40,13 +40,14 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
       duration: const Duration(milliseconds: 100),
       reverseDuration: const Duration(milliseconds: 150),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDownFactor).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      ),
-    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDownFactor)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          ),
+        );
   }
 
   @override
@@ -63,7 +64,7 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
 
   void _onPointerUp(PointerUpEvent event) {
     _controller.reverse();
-    // We let the inner GestureDetector or InkWell handle the actual onTap 
+    // We let the inner GestureDetector or InkWell handle the actual onTap
     // callback so we don't fire twice, but we can do haptics here if we want.
     // However, if we do haptics here, we'll fire haptics even if the tap was cancelled
     // by scrolling. It's better to let the widget itself handle taps, or only
@@ -77,8 +78,9 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
-    
-    if (!plusSettings.plusEnableEnhancedAnimations || (widget.onTap == null && widget.onLongPress == null)) {
+
+    if (!plusSettings.plusEnableEnhancedAnimations ||
+        (widget.onTap == null && widget.onLongPress == null)) {
       // Just return child if animation disabled. We assume the child has its own onTap logic (like InkWell).
       return widget.child;
     }

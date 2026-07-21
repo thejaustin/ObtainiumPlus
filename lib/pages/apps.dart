@@ -820,7 +820,7 @@ class AppsPageState extends State<AppsPage> {
             } else {
               AppHaptics.heavyImpact();
               AppActionsContextMenu.show(
-                context, 
+                context,
                 listedApps[index],
                 onEnterMultiSelect: () {
                   toggleAppSelected(listedApps[index].app);
@@ -1548,7 +1548,7 @@ class AppsPageState extends State<AppsPage> {
                   } else {
                     AppHaptics.heavyImpact();
                     AppActionsContextMenu.show(
-                      context, 
+                      context,
                       app,
                       onEnterMultiSelect: () {
                         toggleAppSelected(app.app);

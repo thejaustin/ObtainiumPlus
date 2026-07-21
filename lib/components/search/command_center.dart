@@ -265,34 +265,80 @@ class _CommandCenterState extends State<CommandCenter> {
                     // Content
                     Expanded(
                       child: _query.isEmpty
-                          ? _buildInitialState()
-                          : ListView(
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.onDrag,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                          ? AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: _buildInitialState(),
+                            )
+                          : AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: ListView(
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                children: [
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOutCubic,
+                                    child: _localResults.isNotEmpty
+                                        ? Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              _buildSectionHeader(tr('myApps')),
+                                              ..._localResults.map(
+                                                _buildLocalResult,
+                                              ),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOutCubic,
+                                    child: isUrl
+                                        ? Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              _buildSectionHeader(
+                                                tr('actions'),
+                                              ),
+                                              _buildUrlActionContent(),
+                                              const SizedBox(height: 16),
+                                            ],
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOutCubic,
+                                    child:
+                                        (_query.isNotEmpty &&
+                                            (!isUrl ||
+                                                RegExp(
+                                                  r'^https?://(?:www\.)?github\.com/[^/]+/?$',
+                                                  caseSensitive: false,
+                                                ).hasMatch(_query)))
+                                        ? Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              _buildSectionHeader(
+                                                tr('discover'),
+                                              ),
+                                              _buildSearchResultsList(),
+                                            ],
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ],
                               ),
-                              children: [
-                                if (_localResults.isNotEmpty) ...[
-                                  _buildSectionHeader(tr('myApps')),
-                                  ..._localResults.map(_buildLocalResult),
-                                  const SizedBox(height: 16),
-                                ],
-                                if (isUrl) ...[
-                                  _buildSectionHeader(tr('actions')),
-                                  _buildUrlActionContent(),
-                                  const SizedBox(height: 16),
-                                ],
-                                if (_query.isNotEmpty &&
-                                    (!isUrl ||
-                                        RegExp(
-                                          r'^https?://(?:www\.)?github\.com/[^/]+/?$',
-                                          caseSensitive: false,
-                                        ).hasMatch(_query))) ...[
-                                  _buildSectionHeader(tr('discover')),
-                                  _buildSearchResultsList(),
-                                ],
-                              ],
                             ),
                     ),
                   ],
@@ -329,8 +375,16 @@ class _CommandCenterState extends State<CommandCenter> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(itemRadius),
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(itemRadius),
+          side: BorderSide(
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
         child: ScaleTouchWrapper(
           child: InkWell(
             borderRadius: BorderRadius.circular(itemRadius),
@@ -346,59 +400,62 @@ class _CommandCenterState extends State<CommandCenter> {
               );
             },
             child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                    ),
+                    child: app.icon != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              itemRadius * 0.75,
+                            ),
+                            child: Image.memory(
+                              app.icon!,
+                              fit: BoxFit.cover,
+                              filterQuality: FilterQuality.high,
+                            ),
+                          )
+                        : const Icon(Icons.apps_rounded),
                   ),
-                  child: app.icon != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            itemRadius * 0.75,
-                          ),
-                          child: Image.memory(
-                            app.icon!,
-                            fit: BoxFit.cover,
-                            filterQuality: FilterQuality.high,
-                          ),
-                        )
-                      : const Icon(Icons.apps_rounded),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        app.name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        app.app.latestVersion,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          app.name,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                      ),
-                    ],
+                        Text(
+                          app.app.latestVersion,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ],
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -455,104 +512,108 @@ class _CommandCenterState extends State<CommandCenter> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(itemRadius),
                   ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                    color: theme.colorScheme.primaryContainer,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
                   ),
-                  child: Center(
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
+                  leading: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                      color: theme.colorScheme.primaryContainer,
                     ),
-                  ),
-                ),
-                title: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                    child: Center(
                       child: Text(
-                        source,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSecondaryContainer,
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
                           fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.tune_rounded),
-                      tooltip: tr('advancedOptions'),
-                      onPressed: () => _openAddApp(url),
+                  ),
+                  title: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.add_circle_outline_rounded,
-                        color: theme.colorScheme.primary,
+                  ),
+                  subtitle: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          source,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSecondaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      tooltip: tr('addApp'),
-                      onPressed: () {
-                        context.read<AppsProvider>().addAppsByURL([url]).then((
-                          errors,
-                        ) {
-                          if (mounted) {
-                            if (errors.isNotEmpty) {
-                              showError(errors[0][1], context);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
-                              Navigator.pop(context);
-                            }
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                onTap: () {
-                  context.read<AppsProvider>().addAppsByURL([url]).then((
-                    errors,
-                  ) {
-                    if (mounted) {
-                      if (errors.isNotEmpty) {
-                        showError(errors[0][1], context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
-                        Navigator.pop(context);
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.tune_rounded),
+                        tooltip: tr('advancedOptions'),
+                        onPressed: () => _openAddApp(url),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                        tooltip: tr('addApp'),
+                        onPressed: () {
+                          context.read<AppsProvider>().addAppsByURL([url]).then(
+                            (errors) {
+                              if (mounted) {
+                                if (errors.isNotEmpty) {
+                                  showError(errors[0][1], context);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(tr('appAdded'))),
+                                  );
+                                  Navigator.pop(context);
+                                }
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    context.read<AppsProvider>().addAppsByURL([url]).then((
+                      errors,
+                    ) {
+                      if (mounted) {
+                        if (errors.isNotEmpty) {
+                          showError(errors[0][1], context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(tr('appAdded'))),
+                          );
+                          Navigator.pop(context);
+                        }
                       }
-                    }
-                  });
-                },
+                    });
+                  },
+                ),
               ),
-            ),
             ),
           );
         }),
@@ -587,7 +648,9 @@ class _CommandCenterState extends State<CommandCenter> {
                   if (errors.isNotEmpty) {
                     showError(errors[0][1], context);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
                     Navigator.pop(context);
                   }
                 }
