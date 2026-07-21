@@ -910,18 +910,20 @@ class AddAppPageState extends State<AddAppPage> {
       if (!plusSettings.plusEnableModernAddAppPage)
         return const SizedBox.shrink();
 
+      final radius = plusSettings.plusGlobalCornerRadius;
+
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         child: Material(
           color: colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(radius),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(radius),
             ),
             child: Column(
               children: [
