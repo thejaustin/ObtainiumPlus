@@ -10,6 +10,9 @@ import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'dart:async';
+import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/services/background_update_service.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 
@@ -42,6 +45,11 @@ class UpdateSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> children = [
+      if (_matches(tr('runBgCheckNow')))
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: _RunBgUpdateCheckNowButton(),
+        ),
       if (_matches(tr('bgUpdateCheckInterval'))) ...[
         _buildIntervalLabel(context),
         _buildIntervalSlider(context),
@@ -806,6 +814,67 @@ class UpdateSettingsSection extends StatelessWidget {
           fontSize: 12,
           letterSpacing: 1.2,
         ),
+      ),
+    );
+  }
+}
+
+class _RunBgUpdateCheckNowButton extends StatefulWidget {
+  const _RunBgUpdateCheckNowButton();
+
+  @override
+  State<_RunBgUpdateCheckNowButton> createState() =>
+      _RunBgUpdateCheckNowButtonState();
+}
+
+class _RunBgUpdateCheckNowButtonState
+    extends State<_RunBgUpdateCheckNowButton> {
+  bool _isRunning = false;
+
+  Future<void> _trigger() async {
+    if (_isRunning) return;
+    setState(() => _isRunning = true);
+    // Read the provider before the async gap so we don't touch context after.
+    final LogsProvider logs = context.read<LogsProvider>();
+    await logs.add(
+      'Manual background update check triggered from settings',
+      level: LogLevels.info,
+    );
+    try {
+      final String taskId = 'manual_${DateTime.now().millisecondsSinceEpoch}';
+      await BackgroundUpdateService.bgUpdateCheck(taskId, null);
+      await logs.add(
+        'Manual background update check completed',
+        level: LogLevels.info,
+      );
+    } catch (e) {
+      unawaited(
+        logs.add(
+          'Manual background update check failed: $e',
+          level: LogLevels.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isRunning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.tonal(
+        onPressed: _isRunning ? null : _trigger,
+        style: FilledButton.styleFrom(
+          textStyle: Theme.of(context).textTheme.bodyLarge,
+        ),
+        child: _isRunning
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text('runBgCheckNow'.tr()),
       ),
     );
   }
