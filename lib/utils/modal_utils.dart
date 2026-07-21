@@ -25,36 +25,36 @@ Future<T?> showDraggableModalBottomSheet<T>({
         context,
       ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
       builder: (context) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: ConditionalBlur(
-            enabled: enableGlass,
-            sigma: AppConstants.glassBlurSigmaSoft,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withValues(
-                  alpha: enableGlass
-                      ? AppConstants.glassSurfaceAlphaStrong
-                      : 1.0,
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(28),
-                ),
-                border: Border(
-                  top: BorderSide(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.15),
-                    width: 1,
+        return Sheet(
+          physics: const BouncingSheetPhysics(),
+          scrollConfiguration: const SheetScrollConfiguration(),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            child: ConditionalBlur(
+              enabled: enableGlass,
+              sigma: AppConstants.glassBlurSigmaSoft,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface.withValues(
+                    alpha: enableGlass
+                        ? AppConstants.glassSurfaceAlphaStrong
+                        : 1.0,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
                   ),
                 ),
-              ),
-              child: SafeArea(
-                bottom: false,
-                top: useSafeArea,
-                child: Sheet(
-                  physics: const BouncingSheetPhysics(),
-                  scrollConfiguration: const SheetScrollConfiguration(),
+                child: SafeArea(
+                  bottom: false,
+                  top: useSafeArea,
                   child: builder(context, scrollController),
                 ),
               ),

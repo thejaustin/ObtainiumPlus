@@ -173,11 +173,15 @@ class AppFileService {
           .where((element) => element.statSync().modified.isBefore(cutoff))
           .forEach((partialApk) {
             if (!areDownloadsRunning) {
-              unawaited(partialApk.delete(recursive: true));
+              try {
+                partialApk.deleteSync(recursive: true);
+              } catch (e) {
+                // Ignore errors deleting individual files
+              }
             }
           });
     } catch (e) {
-      // Ignore errors listing/deleting directory
+      // Ignore errors listing directory
     }
   }
 

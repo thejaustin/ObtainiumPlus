@@ -150,10 +150,8 @@ class AppCRUDService {
                 )
                 .forEach((element) {
                   try {
-                    unawaited(element.delete(recursive: true));
-                  } catch (e) {
-                    logs.add('Error deleting APK file ${element.path}: $e');
-                  }
+                    element.deleteSync(recursive: true);
+                  } catch (_) {}
                 });
             if (apps.containsKey(appId)) {
               apps.remove(appId);

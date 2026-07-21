@@ -11,9 +11,13 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 
+import 'package:obtainium/utils/app_utils.dart';
+
 Uint8List _encodeJson(Map<String, dynamic> data) {
   var encoder = const JsonEncoder.withIndent("    ");
-  return Uint8List.fromList(utf8.encode(encoder.convert(data)));
+  return Uint8List.fromList(
+    utf8.encode(encoder.convert(sanitizeJsonValue(data))),
+  );
 }
 
 class AppExportService {
@@ -53,7 +57,7 @@ class AppExportService {
     final String password = args['password'];
 
     var encoder = const JsonEncoder.withIndent("    ");
-    final jsonStr = encoder.convert(finalExport);
+    final jsonStr = encoder.convert(sanitizeJsonValue(finalExport));
 
     final salt = DateTime.now().millisecondsSinceEpoch.toString();
     final keyHash = sha256.convert(utf8.encode(password + salt)).bytes;

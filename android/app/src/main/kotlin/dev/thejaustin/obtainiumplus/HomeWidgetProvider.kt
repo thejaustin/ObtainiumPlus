@@ -15,8 +15,11 @@ class HomeWidgetProvider : HomeWidgetProvider() {
                 val pendingUpdates = widgetData.getInt("pending_updates_count", 0)
                 setTextViewText(R.id.pending_updates_count, pendingUpdates.toString())
 
-                val intent = Intent(context, MainActivity::class.java)
-                val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                val pendingIntent = es.antonborri.home_widget.HomeWidgetLaunchIntent.getActivity(
+                    context,
+                    MainActivity::class.java,
+                    android.net.Uri.parse("obtainium://widget")
+                )
                 setOnClickPendingIntent(R.id.quick_action_button, pendingIntent)
             }
             appWidgetManager.updateAppWidget(widgetId, views)

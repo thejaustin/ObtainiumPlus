@@ -531,7 +531,7 @@ class AppsPageState extends State<AppsPage> {
                             .where(
                               (element) =>
                                   !(element.app.lastUpdateCheck?.isBefore(
-                                        refreshingSince!,
+                                        refreshingSince ?? DateTime.now(),
                                       ) ??
                                       true),
                             )
