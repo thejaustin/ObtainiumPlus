@@ -24,6 +24,7 @@ abstract class AppSource {
   List<String> excludeCommonSettingKeys = [];
   bool urlsAlwaysHaveExtension = false;
   bool allowIncludeZips = false;
+  bool allowIncludeTarballs = false;
 
   AppSource() {
     name = runtimeType.toString();
@@ -303,6 +304,30 @@ abstract class AppSource {
           GeneratedFormTextField(
             'zippedApkFilterRegEx',
             label: tr('zippedApkFilterRegEx'),
+            required: false,
+            additionalValidators: [
+              (value) {
+                return SourceUtils.regExValidator(value);
+              },
+            ],
+          ),
+        ],
+      ]);
+    }
+
+    if (allowIncludeTarballs) {
+      moreConditionalItems.addAll([
+        [
+          GeneratedFormSwitch(
+            'includeTarballs',
+            label: tr('includeTarballs'),
+            defaultValue: false,
+          ),
+        ],
+        [
+          GeneratedFormTextField(
+            'tarballedApkFilterRegEx',
+            label: tr('tarballedApkFilterRegEx'),
             required: false,
             additionalValidators: [
               (value) {

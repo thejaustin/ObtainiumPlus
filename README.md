@@ -10,6 +10,43 @@ Obtainium+ is an independent, privacy-focused version (fork) of the original **O
 
 While the original Obtainium is excellent, Obtainium+ elevates the experience with a modern interface, smart update management, and privacy-respecting tools.
 
+Currently supported App sources:
+- Open Source - General:
+  - [GitHub](https://github.com/)
+  - [GitLab](https://gitlab.com/)
+  - [Forgejo](https://forgejo.org/) ([Codeberg](https://codeberg.org/))
+  - [F-Droid](https://f-droid.org/)
+  - Third Party F-Droid Repos
+  - [IzzyOnDroid](https://android.izzysoft.de/)
+  - [SourceHut](https://git.sr.ht/)
+- Other - General:
+  - [APKPure](https://apkpure.net/)
+  - [Aptoide](https://aptoide.com/)
+  - [Uptodown](https://uptodown.com/)
+  - [itch.io](https://itch.io/)
+  - [Huawei AppGallery](https://appgallery.huawei.com/)
+  - [Tencent App Store](https://sj.qq.com/)
+  - [vivo App Store (CN)](https://h5.appstore.vivo.com.cn/)
+  - [RuStore](https://rustore.ru/)
+  - [Farsroid](https://www.farsroid.com)
+  - [CoolApk](https://coolapk.com/)
+  - [LiteAPKs](https://liteapks.com/)
+  - [APK4Free](https://apk4free.net/)
+  - Jenkins Jobs
+  - [APKMirror](https://apkmirror.com/) (Track-Only)
+  - [RockMods](https://rockmods.net/) (Track-Only)
+- Other - App-Specific:
+  - [Telegram App](https://telegram.org/)
+  - [Neutron Code](https://neutroncode.com/)
+- Direct APK Link
+- "HTML" (Fallback): Any other URL that returns an HTML page with links to APK files
+
+You can find crowdsourced app configurations at [apps.obtainium.page](https://apps.obtainium.page).
+
+If you can't find the configuration for an app you want, feel free to leave a request on the [discussions page](https://github.com/ImranR98/apps.obtainium.page/discussions/new?category=app-requests).
+
+Or, contribute some configurations to the website by creating a PR at [this repo](https://github.com/ImranR98/apps.obtainium.page).
+
 | Feature | Original Obtainium | Obtainium+ |
 | :--- | :--- | :--- |
 | **Design & Look** | Standard Android design | A beautiful "glass-like" interface (glassmorphism) with smooth colors, subtle blurs, and modern text. |
@@ -36,6 +73,29 @@ Obtainium+ automatically detects other app stores installed on your device (like
 
 ### 🌐 Private Diagnostics & Troubleshooting
 If an app fails to update, you don't need to guess why. A built-in real-time logger captures network warnings, download errors, and system events. All crash statistics and error logs are stored safely on your device and are never sent to external servers.
+
+## Troubleshooting
+
+### App not updating even when a new version is available
+- **Check the source settings** — Some sources require additional configuration (e.g., GitHub releases need the correct repository URL format)
+- **Check if the source is supported** — Not all sources support version checking equally; some use HTML scraping which may be slower
+- **Check the update interval** — By default, apps update every 6 hours. You can change this in app settings
+- **Try force-refreshing** — Pull down on the apps list to force a refresh
+
+### Source additions failing with 403 Forbidden
+- Some sources block requests from unknown user agents or regions
+- GitHub-based sources may need a Personal Access Token if you're hitting rate limits
+- Some APK hosts (APKMirror, etc.) may require cookies or specific headers
+
+### Flutter-related issues
+- Obtainium+ is built with Flutter. If the app crashes on startup, try:
+  - Clearing app data and reinstalling
+  - Ensuring your Android version meets the minimum requirement
+  - Checking if you have the latest Google Play Services
+
+### APK verification failures
+- If you see "Signature verification failed", ensure you haven't modified the APK after download
+- The SHA-256 hash in the app settings should match the downloaded APK
 
 ---
 

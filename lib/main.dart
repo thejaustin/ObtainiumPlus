@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
 import 'package:obtainium/services/background_update_service.dart';
@@ -27,7 +28,7 @@ import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+import 'package:dynamic_system_colors/dynamic_system_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -273,10 +274,15 @@ Future<void> _runObtainium() async {
   } catch (e) {
     // Already added, do nothing (see #375)
   }
+  await initializeDateFormatting();
   await EasyLocalization.ensureInitialized();
   if ((await DeviceInfoPlugin().androidInfo).version.sdkInt >= 29) {
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent),
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.transparent,
+        statusBarColor: Colors.transparent,
+        systemStatusBarContrastEnforced: false,
+      ),
     );
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
@@ -347,7 +353,89 @@ class Obtainium extends StatefulWidget {
 }
 
 class _ObtainiumState extends State<Obtainium> {
-  var existingUpdateInterval = -1;
+  var _lastUpdateInterval = -1;
+  var _lastUseFGService = false;
+  var _firstRunHandled = false;
+
+  void _manageServices(UpdateSettingsProvider updateSettings, LogsProvider logs) {
+    var interval = updateSettings.updateInterval;
+    var useFG = updateSettings.useFGService;
+    if (interval == _lastUpdateInterval && useFG == _lastUseFGService) return;
+    _lastUpdateInterval = interval;
+    _lastUseFGService = useFG;
+    try {
+      if (interval == 0) {
+        stopForegroundService();
+        try {
+          BackgroundFetch.stop().catchError((_) {});
+        } catch (_) {}
+      } else if (useFG) {
+        try {
+          BackgroundFetch.stop().catchError((_) {});
+        } catch (_) {}
+        startForegroundService(false);
+      } else {
+        stopForegroundService();
+        try {
+          BackgroundFetch.start().catchError((_) {});
+        } catch (_) {}
+      }
+    } catch (e) {
+      logs.add('BackgroundFetch operation failed: $e');
+    }
+  }
+
+  void _handleFirstRun(
+    SettingsProvider settings,
+    AppsProvider apps,
+    LogsProvider logs,
+    BuildContext context,
+  ) {
+    if (settings.prefs == null) {
+      settings.initializeSettings();
+      return;
+    }
+    if (_firstRunHandled) return;
+    _firstRunHandled = true;
+    var isFirstRun = settings.checkAndFlipFirstRun();
+    if (isFirstRun) {
+      logs.add('This is the first ever run of Obtainium.');
+      if (!fdroid) {
+        getInstalledInfo(obtainiumId)
+            .then((value) {
+              if (value?.versionName != null) {
+                apps.saveApps([
+                  App(
+                    obtainiumId,
+                    obtainiumUrl,
+                    'ImranR98',
+                    'Obtainium',
+                    value!.versionName,
+                    value.versionName!,
+                    [],
+                    0,
+                    {
+                      'versionDetection': true,
+                      'apkFilterRegEx': 'fdroid',
+                      'invertAPKFilter': true,
+                    },
+                    null,
+                    false,
+                  ),
+                ], onlyIfExists: false);
+              }
+            })
+            .catchError((err) {
+              logs.add('Failed to add Obtainium on first run: $err');
+            });
+      }
+    }
+    if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
+        (settings.forcedLocale == null &&
+            context.deviceLocale != context.locale)) {
+      settings.resetLocaleSafe(context);
+    }
+  }
 
   @override
   void initState() {
@@ -365,7 +453,10 @@ class _ObtainiumState extends State<Obtainium> {
       await FlutterForegroundTask.requestNotificationPermission();
     }
     if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      var settingsProvider = context.read<SettingsProvider>();
+      if (settingsProvider.showBatteryOptimizationPrompt) {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
     }
   }
 
@@ -422,14 +513,8 @@ class _ObtainiumState extends State<Obtainium> {
     }
   }
 
-  // void onReceiveForegroundServiceData(Object data) {
-  //   print('onReceiveTaskData: $data');
-  // }
-
   @override
   void dispose() {
-    // Remove a callback to receive data sent from the TaskHandler.
-    // FlutterForegroundTask.removeTaskDataCallback(onReceiveForegroundServiceData);
     super.dispose();
   }
 
@@ -493,72 +578,8 @@ class _ObtainiumState extends State<Obtainium> {
       }
     }
 
-    try {
-      if (updateSettings.updateInterval == 0) {
-        stopForegroundService();
-        try {
-          BackgroundFetch.stop().catchError((_) {});
-        } catch (_) {}
-      } else {
-        if (updateSettings.useFGService) {
-          try {
-            BackgroundFetch.stop().catchError((_) {});
-          } catch (_) {}
-          startForegroundService(false);
-        } else {
-          stopForegroundService();
-          try {
-            BackgroundFetch.start().catchError((_) {});
-          } catch (_) {}
-        }
-      }
-    } catch (e) {
-      logs.add('BackgroundFetch operation failed: $e');
-    }
-
-    if (settingsProvider.prefs == null) {
-      settingsProvider.initializeSettings();
-    } else {
-      bool isFirstRun = settingsProvider.checkAndFlipFirstRun();
-      if (isFirstRun) {
-        logs.add('This is the first ever run of Obtainium.');
-        // If this is the first run, add Obtainium to the Apps list
-        if (!fdroid) {
-          getInstalledInfo(obtainiumId)
-              .then((value) {
-                if (value?.versionName != null) {
-                  appsProvider.saveApps([
-                    App(
-                      obtainiumId,
-                      obtainiumUrl,
-                      'ImranR98',
-                      'Obtainium',
-                      value!.versionName,
-                      value.versionName!,
-                      [],
-                      0,
-                      {
-                        'versionDetection': true,
-                        'apkFilterRegEx': 'fdroid',
-                        'invertAPKFilter': true,
-                      },
-                      null,
-                      false,
-                    ),
-                  ], onlyIfExists: false);
-                }
-              })
-              .catchError((err) {
-                print(err);
-              });
-        }
-      }
-      if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
-          (settingsProvider.forcedLocale == null &&
-              context.deviceLocale != context.locale)) {
-        settingsProvider.resetLocaleSafe(context);
-      }
-    }
+    _manageServices(updateSettings, logs);
+    _handleFirstRun(settingsProvider, appsProvider, logs, context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifs.checkLaunchByNotif();
