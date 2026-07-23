@@ -137,7 +137,12 @@ class AppConstants {
   };
 
   /// Supported app package file extensions
-  static const List<String> supportedPackageExtensions = ['.apk', '.xapk'];
+  static const List<String> supportedPackageExtensions = [
+    '.apk',
+    '.xapk',
+    '.apkm',
+    '.apks',
+  ];
 }
 
 /// Centralised opacity values used across the app.

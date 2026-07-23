@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
@@ -137,7 +138,11 @@ class _ImportExportPageState extends State<ImportExportPage> {
               importInProgress = true;
             });
             if (result != null) {
-              String data = File(result.files.single.path!).readAsStringSync();
+              var path = result.files.single.path;
+              if (path == null) {
+                throw ObtainiumError(tr('noFilePickerAvailable'));
+              }
+              String data = File(path).readAsStringSync();
               try {
                 jsonDecode(data);
               } catch (e) {
@@ -156,7 +161,13 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           })
           .catchError((e) {
-            if (context.mounted) showError(e, context);
+            if (context.mounted) {
+              if (e is PlatformException || e is MissingPluginException) {
+                showError(ObtainiumError(tr('noFilePickerAvailable')), context);
+              } else {
+                showError(e, context);
+              }
+            }
           })
           .whenComplete(() {
             if (!mounted) return;
@@ -167,27 +178,37 @@ class _ImportExportPageState extends State<ImportExportPage> {
     }
 
     runUrlImport() {
-      FilePicker.pickFiles().then((result) {
-        if (result != null) {
-          urlListImport(
-            overrideInitValid: true,
-            initValue: RegExp('https?://[^"]+')
-                .allMatches(File(result.files.single.path!).readAsStringSync())
-                .map((e) => e.input.substring(e.start, e.end))
-                .toSet()
-                .toList()
-                .where((url) {
-                  try {
-                    sourceProvider.getSource(url);
-                    return true;
-                  } catch (e) {
-                    return false;
-                  }
-                })
-                .join('\n'),
-          );
-        }
-      });
+      FilePicker.pickFiles()
+          .then((result) {
+            if (result != null) {
+              var path = result.files.single.path;
+              if (path == null) return;
+              urlListImport(
+                overrideInitValid: true,
+                initValue: RegExp('https?://[^"]+')
+                    .allMatches(File(path).readAsStringSync())
+                    .map((e) => e.input.substring(e.start, e.end))
+                    .toSet()
+                    .toList()
+                    .where((url) {
+                      try {
+                        sourceProvider.getSource(url);
+                        return true;
+                      } catch (e) {
+                        return false;
+                      }
+                    })
+                    .join('\n'),
+              );
+            }
+          })
+          .catchError((e) {
+            if (e is PlatformException || e is MissingPluginException) {
+              showError(ObtainiumError(tr('noFilePickerAvailable')), context);
+            } else {
+              showError(e, context);
+            }
+          });
     }
 
     runSourceSearch(AppSource source) {
