@@ -22,7 +22,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/io_client.dart';
 import 'package:obtainium/app_sources/directAPKLink.dart';
 import 'package:obtainium/app_sources/html.dart';
@@ -47,6 +46,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:http/http.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter_archive/flutter_archive.dart';
+import 'package:archive/archive.dart' as archive;
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -661,6 +661,11 @@ class AppsProvider with ChangeNotifier {
       notifyListeners();
     }
     try {
+      if (app.apkUrls.isEmpty) throw NoAPKError();
+      if (app.preferredApkIndex >= app.apkUrls.length) {
+        app.preferredApkIndex = app.apkUrls.length - 1;
+      }
+      if (app.preferredApkIndex < 0) app.preferredApkIndex = 0;
       AppSource source = SourceProvider().getSource(
         app.url,
         overrideSource: app.overrideSource,
@@ -723,20 +728,31 @@ class AppsProvider with ChangeNotifier {
         notificationsProvider?.notify(notif);
       }
       PackageInfo? newInfo;
+      var originalAssetName = app.apkUrls[app.preferredApkIndex].key
+          .toLowerCase();
       var isAPK = downloadedFile.path.toLowerCase().endsWith('.apk');
       var isXAPK = downloadedFile.path.toLowerCase().endsWith('.xapk');
+      var isTarball =
+          originalAssetName.endsWith('.tar.gz') ||
+          originalAssetName.endsWith('.tgz') ||
+          originalAssetName.endsWith('.tar.bz2') ||
+          originalAssetName.endsWith('.tar.xz');
       Directory? apkDir;
       if (isAPK) {
         newInfo = await pm.getPackageArchiveInfo(
           archiveFilePath: downloadedFile.path,
         );
       } else {
-        // Assume XAPK or ZIP
+        // Assume XAPK, ZIP, or tarball
         String apkDirPath = '${downloadedFile.path}-dir';
-        await unzipFile(downloadedFile.path, '${downloadedFile.path}-dir');
+        if (isTarball) {
+          await extractTarballFile(downloadedFile.path, apkDirPath);
+        } else {
+          await unzipFile(downloadedFile.path, apkDirPath);
+        }
         apkDir = Directory(apkDirPath);
         var apks = apkDir
-            .listSync()
+            .listSync(recursive: true)
             .where((e) => e.path.toLowerCase().endsWith('.apk'))
             .toList();
 
@@ -752,9 +768,18 @@ class AppsProvider with ChangeNotifier {
           apks = [temp!, ...apks];
         }
 
-        if (app.additionalSettings['zippedApkFilterRegEx']?.isNotEmpty ==
-            true) {
-          var reg = RegExp(app.additionalSettings['zippedApkFilterRegEx']);
+        String? filterRegEx;
+        if (isTarball &&
+            app.additionalSettings['tarballedApkFilterRegEx']?.isNotEmpty ==
+                true) {
+          filterRegEx = app.additionalSettings['tarballedApkFilterRegEx'];
+        } else if (!isTarball &&
+            app.additionalSettings['zippedApkFilterRegEx']?.isNotEmpty ==
+                true) {
+          filterRegEx = app.additionalSettings['zippedApkFilterRegEx'];
+        }
+        if (filterRegEx != null) {
+          var reg = RegExp(filterRegEx);
           apks.removeWhere((apk) {
             var shouldDelete = !reg.hasMatch(apk.uri.pathSegments.last);
             if (shouldDelete) {
@@ -805,12 +830,15 @@ class AppsProvider with ChangeNotifier {
       if (isAPK) {
         return DownloadedApk(app.id, downloadedFile);
       } else {
-        return DownloadedDir(
-          app.id,
-          downloadedFile,
-          apkDir!,
-          isXAPK ? DownloadedDirType.XAPK : DownloadedDirType.ZIP,
-        );
+        DownloadedDirType dirType;
+        if (isXAPK) {
+          dirType = DownloadedDirType.XAPK;
+        } else if (isTarball) {
+          dirType = DownloadedDirType.TARBALL;
+        } else {
+          dirType = DownloadedDirType.ZIP;
+        }
+        return DownloadedDir(app.id, downloadedFile, apkDir!, dirType);
       }
     } finally {
       notificationsProvider?.cancel(notifId);
@@ -906,6 +934,54 @@ class AppsProvider with ChangeNotifier {
       zipFile: File(filePath),
       destinationDir: Directory(destinationPath),
     );
+  }
+
+  Future<void> extractTarballFile(
+    String filePath,
+    String destinationPath,
+  ) async {
+    final bytes = await File(filePath).readAsBytes();
+    List<int> decompressed;
+
+    // Detect compression by magic bytes (file extension may be wrong after download)
+    if (bytes.length >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b) {
+      // gzip
+      decompressed = archive.GZipDecoder().decodeBytes(bytes);
+    } else if (bytes.length >= 3 &&
+        bytes[0] == 0x42 &&
+        bytes[1] == 0x5a &&
+        bytes[2] == 0x68) {
+      // bzip2 ('BZh')
+      decompressed = archive.BZip2Decoder().decodeBytes(bytes);
+    } else if (bytes.length >= 6 &&
+        bytes[0] == 0xfd &&
+        bytes[1] == 0x37 &&
+        bytes[2] == 0x7a &&
+        bytes[3] == 0x58 &&
+        bytes[4] == 0x5a &&
+        bytes[5] == 0x00) {
+      // xz
+      decompressed = archive.XZDecoder().decodeBytes(bytes);
+    } else {
+      // Assume uncompressed tar
+      decompressed = bytes;
+    }
+
+    final tarArchive = archive.TarDecoder().decodeBytes(decompressed);
+    final destDir = Directory(destinationPath);
+    if (!destDir.existsSync()) {
+      destDir.createSync(recursive: true);
+    }
+    for (final file in tarArchive.files) {
+      if (file.isFile) {
+        final content = file.content;
+        if (content == null) continue;
+        final outPath = '${destDir.path}/${file.name}';
+        final outFile = File(outPath);
+        outFile.createSync(recursive: true);
+        outFile.writeAsBytesSync(content);
+      }
+    }
   }
 
   Future<bool> installApkDir(
@@ -1018,7 +1094,9 @@ class AppsProvider with ChangeNotifier {
         existingVersionCode > 0 &&
         newVersionCode < existingVersionCode &&
         !(await canDowngradeApps())) {
-      throw DowngradeError(existingVersionCode, newVersionCode);
+      if (settingsProvider.showAppDowngradeError) {
+        throw DowngradeError(existingVersionCode, newVersionCode);
+      }
     }
     if (needsBGWorkaround) {
       // The below 'await' will never return if we are in a background process
@@ -1062,6 +1140,23 @@ class AppsProvider with ChangeNotifier {
     }
     await saveApps([apps[file.appId]!.app]);
     return installed;
+  }
+
+  Future<void> _shareToAppVerifier(
+    DownloadedApk file,
+    BuildContext context,
+  ) async {
+    if (!settingsProvider.beforeNewInstallsShareToAppVerifier) return;
+    if (await getInstalledInfo('dev.soupslurpr.appverifier') == null) return;
+    XFile f = XFile.fromData(
+      file.file.readAsBytesSync(),
+      mimeType: 'application/vnd.android.package-archive',
+    );
+    Fluttertoast.showToast(
+      msg: tr('appVerifierInstructionToast'),
+      toastLength: Toast.LENGTH_LONG,
+    );
+    await Share.shareXFiles([f]);
   }
 
   Future<String> getStorageRootPath() async {
@@ -1109,6 +1204,20 @@ class AppsProvider with ChangeNotifier {
         urlsToSelectFrom[app.preferredApkIndex >= 0
             ? app.preferredApkIndex
             : 0];
+    // When picking any asset, use the APK filter regex to pre-select the best matching
+    // asset by default, without hiding other assets from the user.
+    if (pickAnyAsset &&
+        app.additionalSettings['apkFilterRegEx'] is String &&
+        (app.additionalSettings['apkFilterRegEx'] as String).isNotEmpty) {
+      var matching = filterApks(
+        urlsToSelectFrom,
+        app.additionalSettings['apkFilterRegEx'],
+        app.additionalSettings['invertAPKFilter'] == true,
+      );
+      if (matching.isNotEmpty) {
+        appFileUrl = matching.first;
+      }
+    }
     // get device supported architecture
     List<String> archs = (await DeviceInfoPlugin().androidInfo).supportedAbis;
 
@@ -1628,12 +1737,9 @@ class AppsProvider with ChangeNotifier {
       );
     }
     // Delete externally uninstalled Apps if needed
-    if (removedAppIds.isNotEmpty) {
-      if (removedAppIds.isNotEmpty) {
-        if (behaviorSettings.removeOnExternalUninstall) {
-          await removeApps(removedAppIds);
-        }
-      }
+    if (removedAppIds.isNotEmpty &&
+        behaviorSettings.removeOnExternalUninstall) {
+      await removeApps(removedAppIds);
     }
     loadingApps = false;
     notifyListeners();
@@ -1680,7 +1786,6 @@ class AppsProvider with ChangeNotifier {
           ifAbsent: () =>
               AppInMemory(currentApp.app, null, currentApp.installedInfo, icon),
         );
-        notifyListeners();
       }
     }
   }
@@ -1690,7 +1795,6 @@ class AppsProvider with ChangeNotifier {
     bool attemptToCorrectInstallStatus = true,
     bool onlyIfExists = true,
   }) async {
-    attemptToCorrectInstallStatus = attemptToCorrectInstallStatus;
     await Future.wait(
       apps.map((a) async {
         var app = a.deepCopy();
@@ -2018,7 +2122,7 @@ class AppsProvider with ChangeNotifier {
       shouldExportSettings = overrideExportSettings;
     }
     if (shouldExportSettings > 0) {
-      var settingsValueKeys = settingsProvider.prefs?.getKeys();
+      var settingsValueKeys = settingsProvider.prefs?.getKeys().toSet();
       if (shouldExportSettings < 2) {
         settingsValueKeys?.removeWhere((k) => k.endsWith('-creds'));
       }

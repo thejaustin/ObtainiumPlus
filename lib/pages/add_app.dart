@@ -6,7 +6,6 @@ import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -199,7 +198,7 @@ class AddAppPageState extends State<AddAppPage> {
                 overrideSource: pickedSourceOverride,
               )
             : null;
-        if (pickedSource.runtimeType != source.runtimeType ||
+        if (pickedSource?.runtimeType != source.runtimeType ||
             overrideChanged ||
             (prevHost != null && prevHost != source?.hosts[0])) {
           pickedSource = source;
@@ -560,6 +559,8 @@ class AddAppPageState extends State<AddAppPage> {
                 }),
           )).where((a) => a != null).toList();
 
+          if (!mounted) return;
+
           // Interleave results instead of simple reduce
           Map<String, MapEntry<String, List<String>>> res = {};
           var si = 0;
@@ -744,27 +745,47 @@ class AddAppPageState extends State<AddAppPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   children: [
-                    GeneratedForm(
-                      key: Key(
-                        '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
-                      ),
-                      items: [
-                        ...pickedSource!.combinedAppSpecificSettingFormItems,
-                        ...(pickedSourceOverride != null
-                            ? pickedSource!.sourceConfigSettingFormItems.map(
-                                (e) => [e],
-                              )
-                            : []),
-                      ],
-                      onValueChanges: (values, valid, isBuilding) {
-                        if (!isBuilding) {
-                          setState(() {
-                            additionalSettings = values;
-                            additionalSettingsValid = valid;
-                          });
+                    () {
+                      var formItems =
+                          pickedSource!.combinedAppSpecificSettingFormItems;
+                      if (settingsProvider.includePrereleasesByDefault ||
+                          settingsProvider.shizukuPretendToBeGooglePlay) {
+                        for (var row in formItems) {
+                          for (var item in row) {
+                            if (item.key == 'includePrereleases' &&
+                                settingsProvider.includePrereleasesByDefault) {
+                              item.defaultValue = true;
+                            }
+                            if (item.key == 'shizukuPretendToBeGooglePlay' &&
+                                settingsProvider
+                                    .shizukuPretendToBeGooglePlay) {
+                              item.defaultValue = true;
+                            }
+                          }
                         }
-                      },
-                    ),
+                      }
+                      return GeneratedForm(
+                        key: Key(
+                          '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+                        ),
+                        items: [
+                          ...formItems,
+                          ...(pickedSourceOverride != null
+                              ? pickedSource!.sourceConfigSettingFormItems.map(
+                                  (e) => [e],
+                                )
+                              : []),
+                        ],
+                        onValueChanges: (values, valid, isBuilding) {
+                          if (!isBuilding) {
+                            setState(() {
+                              additionalSettings = values;
+                              additionalSettingsValid = valid;
+                            });
+                          }
+                        },
+                      );
+                    }(),
                     if (pickedSource != null &&
                         pickedSource!.appIdInferIsOptional)
                       GeneratedForm(
@@ -896,7 +917,7 @@ class AddAppPageState extends State<AddAppPage> {
           InkWell(
             onTap: () {
               launchUrlString(
-                'https://apps.obtainium.imranr.dev/',
+                'https://apps.obtainium.page/',
                 mode: LaunchMode.externalApplication,
               );
             },

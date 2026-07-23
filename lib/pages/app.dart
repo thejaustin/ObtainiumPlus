@@ -13,6 +13,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
@@ -525,7 +526,10 @@ class _AppPageState extends State<AppPage> {
         infoLines = '${tr('xIsTrackOnly', args: [tr('app')])}\n$infoLines';
       }
       if (installedVersionIsEstimate) {
-        infoLines = '${tr('pseudoVersionInUse')}\n$infoLines';
+        var realVersion = app?.installedInfo?.versionName;
+        infoLines = realVersion != null
+            ? '${tr('pseudoVersionInUse')} (OS installed $realVersion)\n$infoLines'
+            : '${tr('pseudoVersionInUse')}\n$infoLines';
       }
       if ((app?.app.apkUrls.length ?? 0) > 0) {
         infoLines =
@@ -1277,6 +1281,16 @@ class _AppPageState extends State<AppPage> {
                     if (res.isNotEmpty && context.mounted) {
                       Navigator.of(context).pop();
                     }
+                    if (res.isNotEmpty) {
+                      var np = context.read<NotificationsProvider>();
+                      np.cancel(UpdateNotification([]).id);
+                      np.cancel(
+                        SilentUpdateAttemptNotification(
+                          [],
+                          id: res[0].hashCode,
+                        ).id,
+                      );
+                    }
                   } catch (e) {
                     if (context.mounted) showError(e, context);
                   }
@@ -1527,6 +1541,7 @@ class _AppPageState extends State<AppPage> {
                   SliverToBoxAdapter(
                     child: Column(children: [getFullInfoColumn()]),
                   ),
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
                 ],
               ),
         onRefresh: () async {

@@ -34,6 +34,7 @@ import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/app_sources/gitlab.dart';
 import 'package:obtainium/app_sources/huaweiappgallery.dart';
+import 'package:obtainium/app_sources/itchio.dart';
 import 'package:obtainium/app_sources/izzyondroid.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/app_sources/jenkins.dart';
@@ -624,6 +625,7 @@ class SourceProvider {
     APKPure(),
     Aptoide(),
     Uptodown(),
+    ItchIO(),
     HuaweiAppGallery(),
     Tencent(),
     VivoAppStore(),
@@ -631,10 +633,10 @@ class SourceProvider {
     Apk4Free(),
     Farsroid(),
     CoolApk(),
-    RockMods(),
     LiteAPKs(),
     Jenkins(),
     APKMirror(),
+    RockMods(),
     TelegramApp(),
     NeutronCode(),
     DirectAPKLink(),

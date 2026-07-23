@@ -5,19 +5,35 @@ import 'package:obtainium/utils/logger.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/main.dart';
-import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
-String obtainiumTempId = 'imranr98_obtainium_${GitHub().hosts[0]}';
+String obtainiumTempId = 'imranr98_obtainium_github.com';
 String obtainiumId = 'dev.thejaustin.obtainiumplus';
 String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 Color obtainiumThemeColor = const Color(0xFF6438B5);
+
+// Handles 2 and 3-segment BCP-47 tags (e.g. "zh-Hant-TW"); a naive split
+// on '-' with only 2 segments taken would misparse the country code as the
+// script subtag and cause forcedLocale to silently fail to match on relaunch.
+Locale? tryParseLocale(String? localeString) {
+  if (localeString == null) return null;
+  var split = localeString.split('-');
+  if (split.length == 3) {
+    return Locale.fromSubtags(languageCode: split[0], countryCode: split[2]);
+  }
+  if (split.length == 2) {
+    return Locale(split[0], split[1]);
+  }
+  if (split.isNotEmpty) {
+    return Locale(split[0]);
+  }
+  return null;
+}
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
@@ -164,10 +180,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Locale? get forcedLocale {
-    var flSegs = prefs?.safeString('forcedLocale')?.split('-');
-    var fl = flSegs != null && flSegs.isNotEmpty
-        ? Locale(flSegs[0], flSegs.length > 1 ? flSegs[1] : null)
-        : null;
+    var fl = tryParseLocale(prefs?.getString('forcedLocale'));
     var set = supportedLocales.where((element) => element.key == fl).isNotEmpty
         ? fl
         : null;
@@ -203,6 +216,33 @@ class SettingsProvider with ChangeNotifier {
 
   set showDebugOpts(bool val) {
     prefs?.setBool('showDebugOpts', val);
+    notifyListeners();
+  }
+
+  bool get showAppDowngradeError {
+    return prefs?.getBool('showAppDowngradeError') ?? true;
+  }
+
+  set showAppDowngradeError(bool show) {
+    prefs?.setBool('showAppDowngradeError', show);
+    notifyListeners();
+  }
+
+  bool get showBatteryOptimizationPrompt {
+    return prefs?.getBool('showBatteryOptimizationPrompt') ?? true;
+  }
+
+  set showBatteryOptimizationPrompt(bool show) {
+    prefs?.setBool('showBatteryOptimizationPrompt', show);
+    notifyListeners();
+  }
+
+  bool get includePrereleasesByDefault {
+    return prefs?.getBool('includePrereleasesByDefault') ?? false;
+  }
+
+  set includePrereleasesByDefault(bool val) {
+    prefs?.setBool('includePrereleasesByDefault', val);
     notifyListeners();
   }
 
