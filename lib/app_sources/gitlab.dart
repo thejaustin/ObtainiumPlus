@@ -211,6 +211,10 @@ class GitLab extends AppSource {
           .join('.apk\n')
           .split('.xapk)')
           .join('.xapk\n')
+          .split('.apkm)')
+          .join('.apkm\n')
+          .split('.apks)')
+          .join('.apks\n')
           .split('\n')
           .where(
             (s) =>

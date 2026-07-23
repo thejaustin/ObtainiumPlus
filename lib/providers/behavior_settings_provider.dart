@@ -1,6 +1,7 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -88,7 +89,11 @@ class BehaviorSettingsProvider with ChangeNotifier {
     var currentOneWayDataSyncDir = await getExportDir();
     Uri? newOneWayDataSyncDir;
     if (!remove) {
-      newOneWayDataSyncDir = (await saf.openDocumentTree());
+      try {
+        newOneWayDataSyncDir = (await saf.openDocumentTree());
+      } catch (_) {
+        throw ObtainiumError(tr('noFilePickerAvailable'));
+      }
     }
     if (currentOneWayDataSyncDir?.path != newOneWayDataSyncDir?.path) {
       if (newOneWayDataSyncDir == null) {

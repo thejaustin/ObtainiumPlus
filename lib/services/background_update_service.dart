@@ -279,15 +279,27 @@ class BackgroundUpdateService {
           updates.map((App app) => appsProvider.canInstallSilently(app)),
         );
         List<App> toNotify = [];
+        List<App> trackOnlyToNotify = [];
+        List<App> exemptToNotify = [];
         for (var i = 0; i < updates.length; i++) {
           if (networkRestricted || chargingRestricted || !silentFlags[i]) {
             if (updates[i].additionalSettings['skipUpdateNotifications'] !=
                 true) {
-              toNotify.add(updates[i]);
+              if (updates[i].additionalSettings['trackOnly'] == true) {
+                trackOnlyToNotify.add(updates[i]);
+              } else if (updates[i]
+                      .additionalSettings['exemptFromBackgroundUpdates'] ==
+                  true) {
+                exemptToNotify.add(updates[i]);
+              } else {
+                toNotify.add(updates[i]);
+              }
             }
           }
         }
 
+        // Sent as separate notifications so cancelling one type doesn't
+        // cancel the others.
         if (toNotify.isNotEmpty) {
           if (appsProvider.plusSettings.plusEnableNotificationDigest) {
             notificationsProvider.notify(UpdateNotification(toNotify));
@@ -298,6 +310,16 @@ class BackgroundUpdateService {
               );
             }
           }
+        }
+        if (trackOnlyToNotify.isNotEmpty) {
+          notificationsProvider.notify(
+            TrackOnlyUpdateNotification(trackOnlyToNotify),
+          );
+        }
+        if (exemptToNotify.isNotEmpty) {
+          notificationsProvider.notify(
+            TrackOnlyUpdateNotification(exemptToNotify),
+          );
         }
         if (toThrow.rawErrors.isNotEmpty) {
           for (var element in toThrow.idsByErrorString.entries) {
