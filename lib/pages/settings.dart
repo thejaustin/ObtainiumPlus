@@ -59,7 +59,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void didUpdateWidget(SettingsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.initialTab != oldWidget.initialTab && widget.initialTab != null) {
+    if (widget.initialTab != oldWidget.initialTab &&
+        widget.initialTab != null) {
       int initTab = widget.initialTab!;
       if (initTab == 2) {
         initTab = 1;

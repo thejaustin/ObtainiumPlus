@@ -190,7 +190,7 @@ class AddAppPageState extends State<AddAppPage> {
           urlInputKey++;
         }
         var prevHost = pickedSource?.hosts.isNotEmpty == true
-            ? pickedSource?.hosts[0]
+            ? pickedSource?.hosts.firstOrNull
             : null;
         var source = valid
             ? sourceProvider.getSource(
@@ -198,9 +198,9 @@ class AddAppPageState extends State<AddAppPage> {
                 overrideSource: pickedSourceOverride,
               )
             : null;
-        if (pickedSource?.runtimeType != source.runtimeType ||
+        if (pickedSource?.sourceIdentifier != source?.sourceIdentifier ||
             overrideChanged ||
-            (prevHost != null && prevHost != source?.hosts[0])) {
+            (prevHost != null && prevHost != source?.hosts.firstOrNull)) {
           pickedSource = source;
           pickedSource?.runOnAddAppInputChange(userInput);
           additionalSettings = source != null
@@ -757,8 +757,7 @@ class AddAppPageState extends State<AddAppPage> {
                               item.defaultValue = true;
                             }
                             if (item.key == 'shizukuPretendToBeGooglePlay' &&
-                                settingsProvider
-                                    .shizukuPretendToBeGooglePlay) {
+                                settingsProvider.shizukuPretendToBeGooglePlay) {
                               item.defaultValue = true;
                             }
                           }

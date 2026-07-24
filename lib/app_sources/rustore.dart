@@ -14,53 +14,33 @@ class RuStore extends AppSource {
     naiveStandardVersionDetection = true;
     showReleaseDateAsVersionToggle = true;
     changeLogIfAnyIsMarkDown = false;
+    inferAppIdFromUrlPath = true;
   }
 
   @override
-  @override
   Future<Map<String, String>?> getRequestHeaders(
-      Map<String, dynamic> additionalSettings,
-      String url, {
-        bool forAPKDownload = false,
-      }) async {
-    return {
-      'ruStoreVerCode': '1105002',
-    };
+    Map<String, dynamic> additionalSettings,
+    String url, {
+    bool forAPKDownload = false,
+  }) async {
+    return {'ruStoreVerCode': '1105002'};
   }
 
   @override
   String sourceSpecificStandardizeURL(
     String url, {
     bool forSelection = false,
-  }) {
-    RegExp standardUrlRegEx = RegExp(
-      '^https?://(www\\.)?${getSourceRegex(hosts)}/catalog/app/[^/]+',
-      caseSensitive: false,
-    );
-    RegExpMatch? match = standardUrlRegEx.firstMatch(url);
-    if (match == null) {
-      throw InvalidURLError(name);
-    }
-    return match.group(0)!;
-  }
-
-  @override
-  Future<String?> tryInferringAppId(
-    String standardUrl, {
-    Map<String, dynamic> additionalSettings = const {},
-  }) async {
-    return Uri.parse(standardUrl).pathSegments.last;
-  }
+  }) => standardizeUrlWithRegex(
+    url,
+    subdomainPrefix: r'(www\.)?',
+    pathPattern: r'/catalog/app/+[^/]+',
+  );
 
   Future<dynamic> decodeJsonBody(Uint8List bytes) async {
     try {
       return jsonDecode((await CharsetDetector.autoDecode(bytes)).string);
     } catch (e) {
-      try {
-        return jsonDecode(utf8.decode(bytes));
-      } catch (_) {
-        rethrow;
-      }
+      return jsonDecode(utf8.decode(bytes));
     }
   }
 
@@ -69,62 +49,66 @@ class RuStore extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async {
-    final String? appId = await tryInferringAppId(standardUrl);
-    if (appId == null) {
-      throw NoReleasesError();
-    }
-    final Response overallInfoResponse = await sourceRequest(
-      'https://backapi.rustore.ru/applicationData/overallInfo/$appId',
-      additionalSettings,
-    );
-    if (overallInfoResponse.statusCode != 200) {
-      throw getObtainiumHttpError(overallInfoResponse);
-    }
-    final decoded = await decodeJsonBody(overallInfoResponse.bodyBytes);
-    final appDetails = decoded is Map ? decoded['body'] : null;
-    if (appDetails is! Map || appDetails['appId'] == null) {
-      throw NoReleasesError();
-    }
+    try {
+      final String? appId = await tryInferringAppId(standardUrl);
+      if (appId == null) {
+        throw NoReleasesError();
+      }
+      final Response overallInfoResponse = await sourceRequest(
+        'https://backapi.rustore.ru/applicationData/overallInfo/$appId',
+        additionalSettings,
+      );
+      if (overallInfoResponse.statusCode != 200) {
+        throw getObtainiumHttpError(overallInfoResponse);
+      }
+      final decoded = await decodeJsonBody(overallInfoResponse.bodyBytes);
+      final appDetails = decoded is Map ? decoded['body'] : null;
+      if (appDetails is! Map || appDetails['appId'] == null) {
+        throw NoReleasesError();
+      }
 
-    final String appName = appDetails['appName'] ?? tr('app');
-    final String author = appDetails['companyName'] ?? name;
-    final String? dateStr = appDetails['appVerUpdatedAt'];
-    final String? version = appDetails['versionName'];
-    final String? changeLog = appDetails['whatsNew'];
-    if (version == null || version.isEmpty) {
-      throw NoVersionError();
-    }
-    DateTime? relDate;
-    if (dateStr != null) {
-      relDate = DateTime.tryParse(dateStr);
-    }
+      final String appName = appDetails['appName'] ?? tr('app');
+      final String author = appDetails['companyName'] ?? name;
+      final String? dateStr = appDetails['appVerUpdatedAt'];
+      final String? version = appDetails['versionName'];
+      final String? changeLog = appDetails['whatsNew'];
+      if (version == null || version.isEmpty) {
+        throw NoVersionError();
+      }
+      DateTime? relDate;
+      if (dateStr != null) {
+        relDate = DateTime.tryParse(dateStr);
+      }
 
-    final Response downloadLinksResponse = await sourceRequest(
-      'https://backapi.rustore.ru/v3/showcase/apps/download-link',
-      additionalSettings,
-      followRedirects: false,
-      postBody: {'appId': appDetails['appId'], 'firstInstall': true},
-    );
-    final downloadDetails = await decodeJsonBody(downloadLinksResponse.bodyBytes);
-    if (downloadLinksResponse.statusCode != 200 || downloadDetails == null) {
-      throw getObtainiumHttpError(downloadLinksResponse);
-    }
-    final url = downloadDetails['downloadUrls']?[0]?['url'] as String?;
-    if (url == null) {
-      throw NoAPKError();
-    }
+      // Uses the v3 showcase endpoint (not v2/download-link): RuStore's API
+      // changed and the old endpoint started returning 400 errors.
+      final Response downloadLinksResponse = await sourceRequest(
+        'https://backapi.rustore.ru/v3/showcase/apps/download-link',
+        additionalSettings,
+        followRedirects: false,
+        postBody: {'appId': appDetails['appId'], 'firstInstall': true},
+      );
+      final downloadDetails = await decodeJsonBody(
+        downloadLinksResponse.bodyBytes,
+      );
+      if (downloadLinksResponse.statusCode != 200 || downloadDetails == null) {
+        throw getObtainiumHttpError(downloadLinksResponse);
+      }
+      final url = downloadDetails['downloadUrls']?[0]?['url'] as String?;
+      if (url == null) {
+        throw NoAPKError();
+      }
 
-    return APKDetails(
-      version,
-      getApkUrlsFromUrls([
-        url.replaceAll(
-          RegExp('\\.zip\$'),
-          '.apk',
-        ),
-      ]),
-      AppNames(author, appName),
-      releaseDate: relDate,
-      changeLog: changeLog,
-    );
+      return APKDetails(
+        version,
+        // RuStore returns a .zip URL for what is actually an APK.
+        getApkUrlsFromUrls([url.replaceAll(RegExp(r'\.zip$'), '.apk')]),
+        AppNames(author, appName),
+        releaseDate: relDate,
+        changeLog: changeLog,
+      );
+    } catch (e) {
+      rethrowOrWrapError(e);
+    }
   }
 }

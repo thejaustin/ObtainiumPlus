@@ -9,24 +9,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
-import 'package:battery_plus/battery_plus.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:crypto/crypto.dart';
 import 'dart:typed_data';
 
-import 'package:android_intent_plus/flag.dart';
-import 'package:android_package_installer/android_package_installer.dart';
+import 'package:android_system_font/android_system_font.dart';
 import 'package:android_package_manager/android_package_manager.dart';
+import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:crypto/crypto.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/io_client.dart';
-import 'package:obtainium/app_sources/directAPKLink.dart';
-import 'package:obtainium/app_sources/html.dart';
-import 'package:obtainium/components/generated_form.dart';
-import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/app_in_memory.dart';
@@ -57,93 +50,63 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/version_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final pm = AndroidPackageManager();
+import 'package:obtainium/providers/apps_provider_import_export.dart';
+import 'package:obtainium/providers/apps_provider_install.dart';
+import 'package:obtainium/providers/apps_provider_lifecycle.dart';
+import 'package:obtainium/providers/apps_provider_updates.dart';
+
+export 'apps_provider_import_export.dart';
+export 'apps_provider_install.dart';
+export 'apps_provider_lifecycle.dart';
+export 'apps_provider_updates.dart';
+
+// Named constants for magic numbers and hardcoded values
+const int _defaultRetries = 3;
+const int _retryDelaySeconds = 5;
+const int _partialHashCheckStartingSize = 1024;
+const int _partialHashCheckLowerLimit = 128;
+const int _partialHashCheckDecrement = 256;
+const int _maxDownloadPolls = 43;
+const int _downloadPollIntervalSeconds = 7;
+const int _progressUpdateIntervalMs = 500;
+const int _downloadBufferSize = 32 * 1024;
+const int _downloadProgressFallback = 30;
+const int _bgUpdateMaxAttempts = 4;
+const int _bgUpdateMaxRetryWaitSeconds = 30;
+const int _bgClientExceptionRetryWaitSeconds = 15 * 60;
+
+final packageManager = AndroidPackageManager();
 final packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates});
 
-List<String> generateStandardVersionRegExStrings() {
-  var basics = [
-    '[0-9]+',
-    '[0-9]+\\.[0-9]+',
-    '[0-9]+\\.[0-9]+\\.[0-9]+',
-    '[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+',
-  ];
-  var preSuffixes = ['-', '\\+'];
-  // 'p[0-9]+' covers patch-style suffixes like 1.4.3-p15 (used by
-  // Obtainium+ itself) — without it version detection gets auto-disabled
-  // and the installed version freezes (issue #218)
-  var suffixes = ['alpha', 'beta', 'ose', 'p[0-9]+', 'rc[0-9]+', '[0-9]+'];
-  var finals = ['\\+[0-9]+', '[0-9]+'];
-  List<String> results = [];
-  for (var b in basics) {
-    results.add(b);
-    for (var p in preSuffixes) {
-      for (var s in suffixes) {
-        results.add('$b$s');
-        results.add('$b$p$s');
-        for (var f in finals) {
-          results.add('$b$s$f');
-          results.add('$b$p$s$f');
-        }
-      }
-    }
-  }
-  return results;
-}
-
-List<String> standardVersionRegExStrings =
-    generateStandardVersionRegExStrings();
-
-Set<String> findStandardFormatsForVersion(String version, bool strict) {
-  // If !strict, even a substring match is valid
-  Set<String> results = {};
-  for (var pattern in standardVersionRegExStrings) {
-    if (RegExp(
-      '${strict ? '^' : ''}$pattern${strict ? '\$' : ''}',
-    ).hasMatch(version)) {
-      results.add(pattern);
-    }
-  }
-  return results;
-}
-
-List<String> moveStrToEnd(List<String> arr, String str, {String? strB}) {
-  String? temp;
+/// Removes all matching elements and appends the last match to the end.
+/// This is intentionally deduplicating — only one instance is re-added.
+List<T> _moveToEnd<T extends Object>(List<T> arr, bool Function(T) match) {
+  T? temp;
   arr.removeWhere((element) {
-    bool res = element == str || element == strB;
-    if (res) {
+    if (match(element)) {
       temp = element;
+      return true;
     }
-    return res;
+    return false;
   });
   if (temp != null) {
-    arr = [...arr, temp!];
+    arr.add(temp as T);
   }
   return arr;
 }
 
+List<String> moveStrToEnd(List<String> arr, String str, {String? strB}) =>
+    _moveToEnd(arr, (e) => e == str || e == strB);
+
+/// See [_moveToEnd] for semantic details.
 List<MapEntry<String, int>> moveStrToEndMapEntryWithCount(
   List<MapEntry<String, int>> arr,
   MapEntry<String, int> str, {
   MapEntry<String, int>? strB,
-}) {
-  MapEntry<String, int>? temp;
-  arr.removeWhere((element) {
-    bool resA = element.key == str.key;
-    bool resB = element.key == strB?.key;
-    if (resA) {
-      temp = str;
-    } else if (resB) {
-      temp = strB;
-    }
-    return resA || resB;
-  });
-  if (temp != null) {
-    arr = [...arr, temp!];
-  }
-  return arr;
-}
+}) => _moveToEnd(arr, (e) => e.key == str.key || e.key == strB?.key);
 
 Future<File> downloadFileWithRetry(
   String url,
@@ -153,9 +116,10 @@ Future<File> downloadFileWithRetry(
   String destDir, {
   bool useExisting = true,
   Map<String, String>? headers,
-  int retries = 3,
+  int retries = _defaultRetries,
   bool allowInsecure = false,
   LogsProvider? logs,
+  CancellationToken? cancellationToken,
 }) async {
   try {
     return await downloadFile(
@@ -168,10 +132,16 @@ Future<File> downloadFileWithRetry(
       headers: headers,
       allowInsecure: allowInsecure,
       logs: logs,
+      cancellationToken: cancellationToken,
     );
   } catch (e) {
-    if (retries > 0 && e is ClientException) {
-      await Future.delayed(const Duration(seconds: 5));
+    // A cancellation is not one of the retryable error types, so it naturally
+    // falls through to rethrow below.
+    if (retries > 0 &&
+        (e is ClientException ||
+            e is SocketException ||
+            e is TimeoutException)) {
+      await Future.delayed(const Duration(seconds: _retryDelaySeconds));
       return await downloadFileWithRetry(
         url,
         fileName,
@@ -183,6 +153,7 @@ Future<File> downloadFileWithRetry(
         retries: (retries - 1),
         allowInsecure: allowInsecure,
         logs: logs,
+        cancellationToken: cancellationToken,
       );
     } else {
       rethrow;
@@ -191,21 +162,22 @@ Future<File> downloadFileWithRetry(
 }
 
 String hashListOfLists(List<List<int>> data) {
-  var bytes = utf8.encode(jsonEncode(data));
-  var digest = sha256.convert(bytes);
-  var hash = digest.toString();
-  return hash.hashCode.toString();
+  final bytes = utf8.encode(jsonEncode(data));
+  return sha256.convert(bytes).toString().substring(0, 8);
 }
 
 Future<String> checkPartialDownloadHashDynamic(
   String url, {
-  int startingSize = 1024,
-  int lowerLimit = 128,
+  int startingSize = _partialHashCheckStartingSize,
+  int lowerLimit = _partialHashCheckLowerLimit,
   Map<String, String>? headers,
   bool allowInsecure = false,
 }) async {
-  for (int i = startingSize; i >= lowerLimit; i -= 256) {
-    List<String> ab = await Future.wait([
+  for (int i = startingSize; i >= lowerLimit; i -= _partialHashCheckDecrement) {
+    // Both requests fetch the same byte range to confirm the hash is
+    // stable. The loop decrements on mismatch; when two consecutive
+    // requests agree, the hash is considered valid.
+    final List<String> ab = await Future.wait([
       checkPartialDownloadHash(
         url,
         i,
@@ -232,18 +204,25 @@ Future<String> checkPartialDownloadHash(
   Map<String, String>? headers,
   bool allowInsecure = false,
 }) async {
-  var req = Request('GET', Uri.parse(url));
+  final req = Request('GET', Uri.parse(url));
   if (headers != null) {
     req.headers.addAll(headers);
   }
   req.headers[HttpHeaders.rangeHeader] = 'bytes=0-$bytesToGrab';
-  var client = IOClient(createHttpClient(allowInsecure));
-  var response = await client.send(req);
-  if (response.statusCode < 200 || response.statusCode > 299) {
-    throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'));
+  final client = IOClient(createHttpClient(allowInsecure));
+  try {
+    final response = await client.send(req);
+    if (response.statusCode < 200 || response.statusCode > 299) {
+      throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'))
+        ..url = url;
+    }
+    final List<List<int>> bytes = await response.stream
+        .take(bytesToGrab)
+        .toList();
+    return hashListOfLists(bytes);
+  } finally {
+    client.close();
   }
-  List<List<int>> bytes = await response.stream.take(bytesToGrab).toList();
-  return hashListOfLists(bytes);
 }
 
 Future<String?> checkETagHeader(
@@ -251,23 +230,27 @@ Future<String?> checkETagHeader(
   Map<String, String>? headers,
   bool allowInsecure = false,
 }) async {
-  // Send the initial request but cancel it as soon as you have the headers
-  var reqHeaders = headers ?? {};
-  var req = Request('GET', Uri.parse(url));
+  final reqHeaders = headers ?? {};
+  final req = Request('GET', Uri.parse(url));
   req.headers.addAll(reqHeaders);
-  var client = IOClient(createHttpClient(allowInsecure));
-  StreamedResponse response = await client.send(req);
-  var resHeaders = response.headers;
-  client.close();
-  return resHeaders[HttpHeaders.etagHeader]
-      ?.replaceAll('"', '')
-      .hashCode
-      .toString();
+  final client = IOClient(createHttpClient(allowInsecure));
+  try {
+    final StreamedResponse response = await client.send(req);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return null;
+    }
+    final etag = response.headers[HttpHeaders.etagHeader]?.replaceAll('"', '');
+    return etag != null
+        ? sha256.convert(utf8.encode(etag)).toString().substring(0, 12)
+        : null;
+  } finally {
+    client.close();
+  }
 }
 
 void deleteFile(File file) {
   try {
-    file.deleteSync(recursive: true);
+    file.deleteSync();
   } on PathAccessException catch (e) {
     throw ObtainiumError(
       tr('fileDeletionError', args: [e.path ?? tr('unknown')]),
@@ -275,6 +258,66 @@ void deleteFile(File file) {
   }
 }
 
+/// Waits for a concurrent download to finish by polling the temp file size.
+/// Returns the completed file if one is available, or null if a fresh download is needed.
+Future<File?> _waitForConcurrentDownload(
+  File tempDownloadedFile,
+  File downloadedFile,
+  LogsProvider? logs,
+) async {
+  unawaited(
+    logs?.add(
+      'Partial download exists - will wait: ${tempDownloadedFile.uri.pathSegments.last}',
+    ),
+  );
+  int currentTempFileSize = await tempDownloadedFile.length();
+  int pollCount = 0;
+  while (pollCount < _maxDownloadPolls) {
+    pollCount++;
+    await Future.delayed(const Duration(seconds: _downloadPollIntervalSeconds));
+    if (tempDownloadedFile.existsSync()) {
+      final int newTempFileSize;
+      try {
+        newTempFileSize = await tempDownloadedFile.length();
+      } on FileSystemException {
+        return downloadedFile.existsSync() ? downloadedFile : null;
+      }
+      if (newTempFileSize > currentTempFileSize) {
+        currentTempFileSize = newTempFileSize;
+        unawaited(
+          logs?.add(
+            'Existing partial download still in progress: ${tempDownloadedFile.uri.pathSegments.last}',
+          ),
+        );
+      } else {
+        unawaited(
+          logs?.add(
+            'Ignoring existing partial download: ${tempDownloadedFile.uri.pathSegments.last}',
+          ),
+        );
+        break;
+      }
+    } else {
+      return downloadedFile.existsSync() ? downloadedFile : null;
+    }
+  }
+  if (downloadedFile.existsSync()) {
+    unawaited(
+      logs?.add(
+        'Existing partial download completed - not repeating: ${tempDownloadedFile.uri.pathSegments.last}',
+      ),
+    );
+    return downloadedFile;
+  }
+  unawaited(
+    logs?.add(
+      'Existing partial download not in progress: ${tempDownloadedFile.uri.pathSegments.last}',
+    ),
+  );
+  return null;
+}
+
+/// Downloads a file to [destDir] with progress reporting, resuming partial downloads when supported.
 Future<File> downloadFile(
   String url,
   String fileName,
@@ -285,25 +328,31 @@ Future<File> downloadFile(
   Map<String, String>? headers,
   bool allowInsecure = false,
   LogsProvider? logs,
+  CancellationToken? cancellationToken,
 }) async {
-  // Send the initial request but cancel it as soon as you have the headers
-  var reqHeaders = headers ?? {};
-  var req = Request('GET', Uri.parse(url));
-  req.headers.addAll(reqHeaders);
-  var headersClient = IOClient(createHttpClient(allowInsecure));
-  StreamedResponse headersResponse = await headersClient.send(req);
-  var resHeaders = headersResponse.headers;
+  final reqHeaders = headers ?? {};
+  final headersClient = IOClient(createHttpClient(allowInsecure));
+
+  final getReq = Request('GET', Uri.parse(url));
+  getReq.headers.addAll(reqHeaders);
+  final headersResponse = await headersClient.send(getReq);
+
+  final resHeaders = headersResponse.headers;
 
   // Use the headers to decide what the file extension is, and
   // whether it supports partial downloads (range request), and
   // what the total size of the file is (if provided)
   String ext = resHeaders['content-disposition']?.split('.').last ?? 'apk';
-  if (ext.endsWith('"') || ext.endsWith("other")) {
+  if (ext.endsWith('"')) {
     ext = ext.substring(0, ext.length - 1);
   }
-  if (((Uri.tryParse(url)?.path ?? url).toLowerCase().endsWith('.apk') ||
-          ext == 'attachment') &&
-      ext != 'apk') {
+  final urlPath = Uri.tryParse(url)?.path ?? url;
+  if (AppSource.isApkOrContainerFile(urlPath)) {
+    // Preserve the real extension (.apk/.xapk/.apkm/.apks) so XAPK/APKS
+    // bundles are still detected and extracted downstream rather than forced
+    // to .apk and handed to the APK parser.
+    ext = urlPath.split('.').last.toLowerCase();
+  } else if (ext == 'attachment') {
     ext = 'apk';
   }
   fileName = fileNameHasExt
@@ -324,15 +373,12 @@ Future<File> downloadFile(
 
   // If you have an existing file that is usable,
   // decide whether you can use it (either return full or resume partial)
-  var fullContentLength = headersResponse.contentLength;
+  final fullContentLength = headersResponse.contentLength;
   if (useExisting && downloadedFile.existsSync()) {
-    var length = downloadedFile.lengthSync();
+    final length = downloadedFile.lengthSync();
     if (fullContentLength == null || !rangeFeatureEnabled) {
-      // If there is no content length reported, assume it the existing file is fully downloaded
-      // Also if the range feature is not supported, don't trust the content length if any (#1542)
       return downloadedFile;
     } else {
-      // Check if resume needed/possible
       if (length == fullContentLength) {
         return downloadedFile;
       }
@@ -342,156 +388,326 @@ Future<File> downloadFile(
     }
   }
 
-  // Download to a '.temp' file (to distinguish btn. complete/incomplete files)
-  File tempDownloadedFile = File('${downloadedFile.path}.part');
+  final File tempDownloadedFile = File('${downloadedFile.path}.part');
 
   // If there is already a temp file, a download may already be in progress - account for this (see #2073)
-  bool tempFileExists = tempDownloadedFile.existsSync();
+  final bool tempFileExists = tempDownloadedFile.existsSync();
   if (tempFileExists && useExisting) {
-    logs?.add(
-      'Partial download exists - will wait: ${tempDownloadedFile.uri.pathSegments.last}',
+    final result = await _waitForConcurrentDownload(
+      tempDownloadedFile,
+      downloadedFile,
+      logs,
     );
-    bool isDownloading = true;
-    int currentTempFileSize = await tempDownloadedFile.length();
-    bool shouldReturn = false;
-    while (isDownloading) {
-      await Future.delayed(Duration(seconds: 7));
-      if (tempDownloadedFile.existsSync()) {
-        int newTempFileSize = await tempDownloadedFile.length();
-        if (newTempFileSize > currentTempFileSize) {
-          currentTempFileSize = newTempFileSize;
-          logs?.add(
-            'Existing partial download still in progress: ${tempDownloadedFile.uri.pathSegments.last}',
-          );
-        } else {
-          logs?.add(
-            'Ignoring existing partial download: ${tempDownloadedFile.uri.pathSegments.last}',
-          );
-          break;
-        }
-      } else {
-        shouldReturn = downloadedFile.existsSync();
-      }
-    }
-    if (shouldReturn) {
-      logs?.add(
-        'Existing partial download completed - not repeating: ${tempDownloadedFile.uri.pathSegments.last}',
-      );
-      return downloadedFile;
-    } else {
-      logs?.add(
-        'Existing partial download not in progress: ${tempDownloadedFile.uri.pathSegments.last}',
-      );
-    }
+    if (result != null) return result;
   }
 
   // If the range feature is not available (or you need to start a ranged req from 0),
   // complete the already-started request, else cancel it and start a ranged request,
   // and open the file for writing in the appropriate mode
-  var targetFileLength = useExisting && tempDownloadedFile.existsSync()
-      ? tempDownloadedFile.lengthSync()
-      : null;
+  final targetFileLength = () {
+    if (!useExisting) return null;
+    try {
+      if (tempDownloadedFile.existsSync()) {
+        return tempDownloadedFile.lengthSync();
+      }
+    } on FileSystemException {
+      // File disappeared between existsSync and lengthSync
+    }
+    return null;
+  }();
   int rangeStart = targetFileLength ?? 0;
   IOSink? sink;
-  req = Request('GET', Uri.parse(url));
-  req.headers.addAll(reqHeaders);
+  bool sentRangeRequest = false;
   if (rangeFeatureEnabled && fullContentLength != null && rangeStart > 0) {
     reqHeaders.addAll({'range': 'bytes=$rangeStart-${fullContentLength - 1}'});
     sink = tempDownloadedFile.openWrite(mode: FileMode.writeOnlyAppend);
+    sentRangeRequest = true;
   } else if (tempDownloadedFile.existsSync()) {
     deleteFile(tempDownloadedFile);
   }
-  var responseWithClient = await sourceRequestStreamResponse(
+  final responseWithClient = await sourceRequestStreamResponse(
     'GET',
     url,
     reqHeaders,
-    {},
+    {'allowInsecure': allowInsecure},
   );
-  HttpClient responseClient = responseWithClient.value.key;
-  HttpClientResponse response = responseWithClient.value.value;
-  sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
+  final HttpClient responseClient = responseWithClient.value.key;
+  final HttpClientResponse response = responseWithClient.value.value;
+  try {
+    // If we requested a byte range to resume a partial download but the server
+    // ignored it and returned the full file (200 instead of 206 Partial
+    // Content), appending would corrupt the file - discard the partial data and
+    // start the download over from the beginning.
+    if (sentRangeRequest && response.statusCode == HttpStatus.ok) {
+      await sink?.close();
+      sink = null;
+      rangeStart = 0;
+      if (tempDownloadedFile.existsSync()) {
+        deleteFile(tempDownloadedFile);
+      }
+    }
+    sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
 
-  // Perform the download
-  var received = 0;
-  double? progress;
-  DateTime? lastProgressUpdate; // Track last progress update time
-  if (rangeStart > 0 && fullContentLength != null) {
-    received = rangeStart;
-  }
-  const downloadUIUpdateInterval = Duration(milliseconds: 500);
-  const downloadBufferSize = 32 * 1024; // 32KB
-  final downloadBuffer = BytesBuilder();
-  await response
-      .asBroadcastStream()
-      .map((chunk) {
-        received += chunk.length;
-        final now = DateTime.now();
-        if (onProgress != null &&
-            (lastProgressUpdate == null ||
-                now.difference(lastProgressUpdate!) >=
-                    downloadUIUpdateInterval)) {
-          progress = fullContentLength != null
-              ? clampDouble((received / fullContentLength) * 100, 0, 100)
-              : 30;
-          onProgress(progress);
-          lastProgressUpdate = now;
+    var received = 0;
+    double? progress;
+    DateTime? lastProgressUpdate; // Track last progress update time
+    if (rangeStart > 0 && fullContentLength != null) {
+      received = rangeStart;
+    }
+
+    const downloadUIUpdateInterval = Duration(
+      milliseconds: _progressUpdateIntervalMs,
+    );
+    const downloadBufferSizeLocal = _downloadBufferSize;
+
+    // Check status code BEFORE finishing the download stream so we can
+    // abort early on errors and avoid wasting bandwidth reading a body
+    // the server already rejected.
+    if (response.statusCode < 200 || response.statusCode > 299) {
+      await sink.close();
+      sink = null;
+      await response.drain<void>().catchError((_) {
+        unawaited(
+          logs?.add('Failed to drain response body', level: LogLevel.warning),
+        );
+      });
+      if (tempDownloadedFile.existsSync()) {
+        deleteFile(tempDownloadedFile);
+      }
+      throw ObtainiumError(
+        response.reasonPhrase.isNotEmpty
+            ? response.reasonPhrase
+            : tr(
+                'errorWithHttpStatusCode',
+                args: [response.statusCode.toString()],
+              ),
+      )..url = url;
+    }
+
+    final downloadBuffer = BytesBuilder();
+    try {
+      await response
+          .map((chunk) {
+            cancellationToken?.throwIfCancelled();
+            received += chunk.length;
+            final now = DateTime.now();
+            if (onProgress != null &&
+                (lastProgressUpdate == null ||
+                    now.difference(lastProgressUpdate!) >=
+                        downloadUIUpdateInterval)) {
+              progress = fullContentLength != null
+                  ? (received / fullContentLength * 100).clamp(0, 100)
+                  : _downloadProgressFallback.toDouble();
+              onProgress(progress, received, fullContentLength);
+              lastProgressUpdate = now;
+            }
+            return chunk;
+          })
+          .transform(
+            StreamTransformer<List<int>, List<int>>.fromHandlers(
+              handleData: (List<int> data, EventSink<List<int>> s) {
+                downloadBuffer.add(data);
+                if (downloadBuffer.length >= downloadBufferSizeLocal) {
+                  s.add(downloadBuffer.takeBytes());
+                }
+              },
+              handleDone: (EventSink<List<int>> s) {
+                if (downloadBuffer.isNotEmpty) {
+                  s.add(downloadBuffer.takeBytes());
+                }
+                s.close();
+              },
+            ),
+          )
+          .pipe(sink);
+    } catch (e) {
+      // Release the file handle, ignoring "file already closed" races that can
+      // happen when the stream is torn down mid-write. The .part file is kept so
+      // the download can be resumed later.
+      try {
+        await sink.close();
+      } catch (_) {
+        sink = null;
+      }
+      // Surface a cancellation as such (even if the underlying stream error was
+      // a file/socket error caused by the abort) so callers handle it silently.
+      if (e is CancellationException ||
+          (cancellationToken?.isCancelled ?? false)) {
+        throw CancellationException();
+      }
+      rethrow;
+    }
+    await sink.close();
+    sink = null;
+    progress = null;
+    if (onProgress != null) {
+      onProgress(progress, null, null);
+    }
+    try {
+      if (tempDownloadedFile.existsSync()) {
+        if (downloadedFile.existsSync()) {
+          try {
+            tempDownloadedFile.renameSync(downloadedFile.path);
+          } catch (firstErr) {
+            try {
+              downloadedFile.deleteSync();
+              tempDownloadedFile.renameSync(downloadedFile.path);
+            } catch (secondErr) {
+              unawaited(
+                logs?.add(
+                  'Rename of temp download failed: $firstErr / $secondErr. Temp file left at ${tempDownloadedFile.path}',
+                  level: LogLevel.warning,
+                ),
+              );
+            }
+          }
+        } else {
+          tempDownloadedFile.renameSync(downloadedFile.path);
         }
-        return chunk;
-      })
-      .transform(
-        StreamTransformer<List<int>, List<int>>.fromHandlers(
-          handleData: (List<int> data, EventSink<List<int>> s) {
-            downloadBuffer.add(data);
-            if (downloadBuffer.length >= downloadBufferSize) {
-              s.add(downloadBuffer.takeBytes());
-            }
-          },
-          handleDone: (EventSink<List<int>> s) {
-            if (downloadBuffer.isNotEmpty) {
-              s.add(downloadBuffer.takeBytes());
-            }
-            s.close();
-          },
-        ),
-      )
-      .pipe(sink);
-  await sink.close();
-  progress = null;
-  if (onProgress != null) {
-    onProgress(progress);
+      }
+    } on FileSystemException {
+      // File disappeared between existence check and operation.
+      // The temp file may have been cleaned up by another process.
+      // Return the downloaded file if it still exists; otherwise the
+      // caller will re-download.
+      if (!downloadedFile.existsSync() && !tempDownloadedFile.existsSync()) {
+        rethrow;
+      }
+    }
+    return downloadedFile;
+  } finally {
+    responseClient.close();
+    unawaited(
+      sink?.close().catchError((_) {
+        logs?.add('Failed to close download sink', level: LogLevel.warning);
+      }),
+    );
   }
-  if (response.statusCode < 200 || response.statusCode > 299) {
-    deleteFile(tempDownloadedFile);
-    throw response.reasonPhrase;
+}
+
+/// Best-effort probe of a download's size via its Content-Length header. Returns
+/// null when the server doesn't report it (or the request fails), so callers can
+/// treat the size as unknown ("when possible").
+Future<int?> getDownloadSize(
+  String url, {
+  Map<String, String>? headers,
+  bool allowInsecure = false,
+}) async {
+  final reqHeaders = headers ?? {};
+  final client = IOClient(createHttpClient(allowInsecure));
+  try {
+    final getReq = Request('GET', Uri.parse(url));
+    getReq.headers.addAll(reqHeaders);
+    final response = await client.send(getReq);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return null;
+    }
+    final length = response.contentLength;
+    return (length != null && length > 0) ? length : null;
+  } on SocketException {
+    return null;
+  } on TimeoutException {
+    return null;
+  } on ClientException {
+    return null;
+  } on HandshakeException {
+    return null;
+  } catch (e) {
+    unawaited(
+      LogsProvider().add(
+        'Unexpected error in getDownloadSize: $e',
+        level: LogLevel.error,
+      ),
+    );
+    return null;
+  } finally {
+    client.close();
   }
-  if (tempDownloadedFile.existsSync()) {
-    tempDownloadedFile.renameSync(downloadedFile.path);
+}
+
+/// Formats a byte count as a short human-readable string (e.g. "5.0 MB").
+String formatBytes(int bytes) {
+  if (bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  var size = bytes.toDouble();
+  var unit = 0;
+  while (size >= 1024 && unit < units.length - 1) {
+    size /= 1024;
+    unit++;
   }
-  responseClient.close();
-  return downloadedFile;
+  final value = unit == 0 ? size.toStringAsFixed(0) : size.toStringAsFixed(1);
+  return '$value ${units[unit]}';
+}
+
+/// Formats download progress as "received / total" (e.g. "5.0 MB / 20.0 MB"),
+/// or just the received amount when the total is unknown. Returns null when no
+/// bytes have been received yet.
+String? formatDownloadSize(int? receivedBytes, int? totalBytes) {
+  if (receivedBytes == null) return null;
+  if (totalBytes != null && totalBytes > 0) {
+    return '${formatBytes(receivedBytes)} / ${formatBytes(totalBytes)}';
+  }
+  return formatBytes(receivedBytes);
 }
 
 Future<List<PackageInfo>> getAllInstalledInfo() async {
-  return await pm.getInstalledPackages(flags: packageInfoFlags) ?? [];
+  return await packageManager.getInstalledPackages(flags: packageInfoFlags) ??
+      [];
 }
 
 Future<PackageInfo?> getInstalledInfo(
-  String? packageName, {
-  bool printErr = true,
-}) async {
+  String? packageName,
+) async {
   if (packageName != null) {
     try {
-      return await pm.getPackageInfo(
+      return await packageManager.getPackageInfo(
         packageName: packageName,
         flags: packageInfoFlags,
       );
-    } catch (e) {
-      if (printErr) {
-        print(e); // OK
-      }
-    }
+    } catch (_) {}
   }
   return null;
+}
+
+/// Snapshot of a package's install state, taken before an install so that
+/// [waitForPackageInstall] can later tell whether the install landed.
+class InstallBaseline {
+  final bool wasInstalled;
+  final int? updateTime;
+  const InstallBaseline(this.wasInstalled, this.updateTime);
+}
+
+/// Captures the current install state of [appId] to compare against later.
+Future<InstallBaseline> captureInstallBaseline(String appId) async {
+  final info = await getInstalledInfo(appId);
+  return InstallBaseline(info != null, info?.lastUpdateTime);
+}
+
+/// Polls for an install that can't report completion synchronously (a silent
+/// background install, or a hand-off to an external installer). Returns true as
+/// soon as the package appears (when it wasn't installed before) or its update
+/// timestamp changes relative to [baseline] — a version-agnostic signal that
+/// also works with pseudo-versions — or false if neither happens within
+/// [attempts] × [interval].
+Future<bool> waitForPackageInstall(
+  String appId,
+  InstallBaseline baseline, {
+  required int attempts,
+  Duration interval = const Duration(milliseconds: 500),
+}) async {
+  for (var attempt = 0; attempt < attempts; attempt++) {
+  final info = await getInstalledInfo(appId);
+    if (info != null) {
+      if (!baseline.wasInstalled) return true;
+      final updateTimeAfter = info.lastUpdateTime;
+      if (baseline.updateTime == null ||
+          (updateTimeAfter != null && updateTimeAfter != baseline.updateTime)) {
+        return true;
+      }
+    }
+    await Future.delayed(interval);
+  }
+  return false;
 }
 
 Future<Directory> getAppStorageDir() async =>
@@ -499,10 +715,28 @@ Future<Directory> getAppStorageDir() async =>
     await getApplicationDocumentsDirectory();
 
 class AppsProvider with ChangeNotifier {
+  // Static, app-lifetime cross-instance save-notification bus; intentionally
+  // never closed. The foreground instance subscribes so it can detect saves
+  // made by background tasks and reload as needed.
+  // ignore: close_sinks
+  static final StreamController<void> _eventsController =
+      StreamController<void>.broadcast();
+
   // In memory App state (should always be kept in sync with local storage versions)
   Map<String, AppInMemory> apps = {};
   bool loadingApps = false;
-  bool gettingUpdates = false;
+
+  // Active per-app download cancellation tokens, keyed by app ID.
+  final Map<String, CancellationToken> _downloadCancellations = {};
+
+  /// Non-null when the provider failed to initialize. Callers can check this
+  /// before assuming the provider is in a usable state.
+  String? initError;
+
+  /// Non-null while a [checkUpdates] batch is in flight. Serves as both an
+  /// atomic guard (preventing concurrent batches) and a deduplication
+  /// mechanism: subsequent callers receive the existing completer's future.
+  Completer<List<App>>? updateCheckCompleter;
   LogsProvider logs = LogsProvider();
 
   bool isSelectionMode = false;
@@ -541,13 +775,31 @@ class AppsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Serializes concurrent loadApps() calls without busy-waiting.
+  Completer<void>? appsLoadingCompleter;
+
+  // Coalesces bursts of saveApps()/removeApps() into a single auto-export.
+  Timer? _autoExportDebounce;
+
+  // Set in dispose() to guard against deferred callbacks running post-disposal.
+  bool _disposed = false;
+
+  // Tracks whether a background save occurred since the last load.
+  bool _needsBgReload = false;
+  StreamSubscription<void>? _eventSubscription;
+
   // Variables to keep track of the app foreground status (installs can't run in the background)
   bool isForeground = true;
-  late Stream<FGBGType>? foregroundStream;
-  late StreamSubscription<FGBGType>? foregroundSubscription;
-  late Directory APKDir;
-  late Directory iconsCacheDir;
-  late SettingsProvider settingsProvider = SettingsProvider();
+  bool _isBg = false;
+
+  /// Whether this provider runs in the background (WorkManager) isolate rather
+  /// than the main UI isolate.
+  bool get isBg => _isBg;
+  Stream<FGBGType>? foregroundStream;
+  StreamSubscription<FGBGType>? foregroundSubscription;
+  late final SettingsProvider settingsProvider;
+  Directory? _apkDir;
+  Directory? _iconsCacheDir;
   late ThemeSettingsProvider themeSettings = ThemeSettingsProvider();
   late UpdateSettingsProvider updateSettings = UpdateSettingsProvider();
   late BehaviorSettingsProvider behaviorSettings = BehaviorSettingsProvider();
@@ -556,10 +808,103 @@ class AppsProvider with ChangeNotifier {
   final Completer<void> _initCompleter = Completer<void>();
   Future<void> get initializationDone => _initCompleter.future;
 
-  Iterable<AppInMemory> getAppValues({bool deepCopy = true}) =>
-      deepCopy ? apps.values.map((a) => a.deepCopy()) : apps.values;
+  Iterable<AppInMemory> getAppValues({bool deepCopy = true}) {
+    _reloadIfBgSaved();
+    return deepCopy ? apps.values.map((a) => a.deepCopy()) : apps.values;
+  }
 
-  AppsProvider({isBg = false}) {
+  Directory get apkDir {
+    if (_apkDir == null) {
+      throw StateError(
+        'apkDir not initialized - wait for async init to complete',
+      );
+    }
+    return _apkDir!;
+  }
+
+  Directory get iconsCacheDir {
+    if (_iconsCacheDir == null) {
+      throw StateError(
+        'iconsCacheDir not initialized - wait for async init to complete',
+      );
+    }
+    return _iconsCacheDir!;
+  }
+
+  void _reloadIfBgSaved() {
+    if (!_needsBgReload) return;
+    _needsBgReload = false;
+    loadApps().catchError((e) {
+      unawaited(
+        logs.add(
+          'Reload after background save failed: $e',
+          level: LogLevel.error,
+        ),
+      );
+    });
+  }
+
+  /// Public wrapper around the protected [notifyListeners] so the provider's
+  /// part-file extensions can request listeners to rebuild.
+  void notify() => notifyListeners();
+
+  /// Registers a cancellation token for an in-flight download of [appId].
+  CancellationToken registerDownloadCancellation(String appId) {
+    final token = CancellationToken();
+    _downloadCancellations[appId] = token;
+    return token;
+  }
+
+  /// Clears the cancellation token once a download of [appId] finishes.
+  void clearDownloadCancellation(String appId) {
+    _downloadCancellations.remove(appId);
+  }
+
+  /// Requests cancellation of an ongoing download for [appId], if any.
+  void cancelDownload(String appId) {
+    _downloadCancellations[appId]?.cancel();
+    final entry = apps[appId];
+    if (entry != null && entry.downloadProgress != null) {
+      entry.downloadProgress = null;
+    }
+    notify();
+  }
+
+  /// Waits for any in-flight [loadApps] to finish, so concurrent callers
+  /// serialize instead of busy-waiting on a polling loop.
+  Future<void> waitForAppsToLoad() async {
+    final completer = appsLoadingCompleter;
+    if (completer != null) {
+      await completer.future;
+      await waitForAppsToLoad();
+    }
+  }
+
+  /// Schedules a debounced automatic export. Coalesces the many per-app
+  /// save/remove operations that happen in bursts into a single export.
+  /// No-op (cheaply returns) if auto-export is disabled inside [export].
+  void scheduleAutoExport() {
+    _autoExportDebounce?.cancel();
+    _autoExportDebounce = Timer(const Duration(seconds: 2), () {
+      if (!_disposed) {
+        export(isAuto: true).catchError((e) {
+          unawaited(
+            logs.add('Auto-export failed: $e', level: LogLevel.warning),
+          );
+          return null;
+        });
+      }
+    });
+  }
+
+  AppsProvider({
+    bool isBg = false,
+    SettingsProvider? settingsProvider,
+    LogsProvider? logsProvider,
+  }) {
+    _isBg = isBg;
+    this.settingsProvider = settingsProvider ?? SettingsProvider();
+    logs = logsProvider ?? LogsProvider();
     // Subscribe to changes in the app foreground status
     foregroundStream = FGBGEvents.instance.stream.asBroadcastStream();
     foregroundSubscription = foregroundStream?.listen((event) async {
@@ -568,6 +913,15 @@ class AppsProvider with ChangeNotifier {
         await loadApps();
       }
     });
+    if (!_isBg) {
+      _eventSubscription = _eventsController.stream.listen((_) {
+        _needsBgReload = true;
+      });
+      // Let the download notification's Cancel action reach this provider,
+      // including taps routed through the FLN background isolate.
+      NotificationsProvider.onDownloadCancelRequested = cancelDownload;
+      NotificationsProvider.listenForDownloadCancelFromMain();
+    }
     () async {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -585,14 +939,13 @@ class AppsProvider with ChangeNotifier {
       await initFutures;
       final dirs = await dirsFuture;
 
-      APKDir = dirs['APKDir']!;
-      iconsCacheDir = dirs['iconsCacheDir']!;
+      _apkDir = dirs['APKDir']!;
+      _iconsCacheDir = dirs['iconsCacheDir']!;
       if (!isBg) {
-        // Load Apps into memory (in background processes, this is done later instead of in the constructor)
         await loadApps();
         // Delete any partial APKs (if safe to do so)
         var cutoff = DateTime.now().subtract(const Duration(days: 7));
-        APKDir.listSync()
+        apkDir.listSync()
             .where((element) => element.statSync().modified.isBefore(cutoff))
             .forEach((partialApk) {
               if (!areDownloadsRunning()) {
@@ -601,7 +954,12 @@ class AppsProvider with ChangeNotifier {
             });
       }
       _initCompleter.complete();
-    }();
+    }().catchError((e) {
+      initError = e.toString();
+      unawaited(
+        logs.add('AppsProvider async init error: $e', level: LogLevel.error),
+      );
+    });
   }
 
   Future<File> handleAPKIDChange(
@@ -2235,7 +2593,10 @@ class AppsProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     foregroundSubscription?.cancel();
+    _autoExportDebounce?.cancel();
+    _eventSubscription?.cancel();
     super.dispose();
   }
 
@@ -2243,13 +2604,13 @@ class AppsProvider with ChangeNotifier {
     List<String> urls, {
     AppSource? sourceOverride,
   }) async {
-    List<dynamic> results = await SourceProvider().getAppsByURLNaive(
+    final List<dynamic> results = await SourceProvider().getAppsByURLNaive(
       urls,
-      alreadyAddedUrls: apps.values.map((e) => e.app.url).toList(),
+      alreadyAddedUrls: apps.values.map((e) => e.app.url).toSet(),
       sourceOverride: sourceOverride,
     );
-    List<App> pps = results[0];
-    Map<String, dynamic> errorsMap = results[1];
+    final List<App> pps = results[0];
+    final Map<String, dynamic> errorsMap = results[1];
     for (var app in pps) {
       if (apps.containsKey(app.id)) {
         errorsMap.addAll({app.id: tr('appAlreadyAdded')});
@@ -2257,7 +2618,7 @@ class AppsProvider with ChangeNotifier {
         await saveApps([app], onlyIfExists: false);
       }
     }
-    List<List<String>> errors = errorsMap.keys
+    final List<List<String>> errors = errorsMap.keys
         .map((e) => [e, errorsMap[e].toString()])
         .toList();
     return errors;

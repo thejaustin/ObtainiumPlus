@@ -385,7 +385,7 @@ class BackgroundUpdateService {
               plusSettings: appsProvider.plusSettings,
               updateSettings: appsProvider.updateSettings,
               logs: logs,
-              APKDir: appsProvider.APKDir,
+              APKDir: appsProvider.apkDir,
               notifyListeners: appsProvider.forceNotifyListeners,
               saveApps: appsProvider.saveApps,
               removeApps: appsProvider.removeApps,
@@ -417,7 +417,7 @@ class BackgroundUpdateService {
         'success': true,
       };
       final file = File(
-        '${appsProvider.APKDir.parent.path}/last_update_status.json',
+        '${appsProvider.apkDir.parent.path}/last_update_status.json',
       );
       await file.writeAsString(jsonEncode(status));
     } catch (e) {

@@ -23,6 +23,7 @@ Currently supported App sources:
   - [APKPure](https://apkpure.net/)
   - [Aptoide](https://aptoide.com/)
   - [Uptodown](https://uptodown.com/)
+  - [APKCombo](https://apkcombo.com/)
   - [itch.io](https://itch.io/)
   - [Huawei AppGallery](https://appgallery.huawei.com/)
   - [Tencent App Store](https://sj.qq.com/)
@@ -32,9 +33,10 @@ Currently supported App sources:
   - [CoolApk](https://coolapk.com/)
   - [LiteAPKs](https://liteapks.com/)
   - [APK4Free](https://apk4free.net/)
+  - [SourceForge](https://sourceforge.net/)
   - Jenkins Jobs
-  - [APKMirror](https://apkmirror.com/) (Track-Only)
-  - [RockMods](https://rockmods.net/) (Track-Only)
+  - [APKMirror](https://apkmirror.com/) *(Track-Only)*
+  - [RockMods](https://rockmods.net/) *(Track-Only)*
 - Other - App-Specific:
   - [Telegram App](https://telegram.org/)
   - [Neutron Code](https://neutroncode.com/)
@@ -43,9 +45,9 @@ Currently supported App sources:
 
 You can find crowdsourced app configurations at [apps.obtainium.page](https://apps.obtainium.page).
 
-If you can't find the configuration for an app you want, feel free to leave a request on the [discussions page](https://github.com/ImranR98/apps.obtainium.page/discussions/new?category=app-requests).
+If you can't find the configuration for an app you want, feel free to leave a request on the [issues page](https://github.com/ImranR98/apps.obtainium.imranr.dev/issues).
 
-Or, contribute some configurations to the website by creating a PR at [this repo](https://github.com/ImranR98/apps.obtainium.page).
+Or, contribute some configurations to the website by creating a PR at [this repo](https://github.com/ImranR98/apps.obtainium.imranr.dev).
 
 | Feature | Original Obtainium | Obtainium+ |
 | :--- | :--- | :--- |

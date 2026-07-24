@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 // TextDirection must be prefix-qualified: easy_localization re-exports
 // intl's TextDirection, which shadows the Flutter one.
@@ -8,11 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -30,13 +31,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_system_colors/dynamic_system_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:background_fetch/background_fetch.dart';
-import 'package:easy_localization/easy_localization.dart';
-// ignore: implementation_imports
-import 'package:easy_localization/src/easy_localization_controller.dart';
-// ignore: implementation_imports
-import 'package:easy_localization/src/localization.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+import 'package:workmanager/workmanager.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -61,11 +57,8 @@ List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('tr'), 'Türkçe'),
   MapEntry(Locale('uk'), 'Українська'),
   MapEntry(Locale('da'), 'Dansk'),
-  MapEntry(
-    Locale('en', 'EO'),
-    'Esperanto',
-  ), // https://github.com/aissat/easy_localization/issues/220#issuecomment-846035493
-  MapEntry(Locale('in'), 'Bahasa Indonesia'),
+  MapEntry(Locale('en', 'EO'), 'Esperanto'),
+  MapEntry(Locale('id'), 'Bahasa Indonesia'),
   MapEntry(Locale('ko'), '한국어'),
   MapEntry(Locale('ca'), 'Català'),
   MapEntry(Locale('ar'), 'العربية'),
@@ -74,36 +67,14 @@ List<MapEntry<Locale, String>> supportedLocales = const [
 ];
 const fallbackLocale = Locale('en');
 const localeDir = 'assets/translations';
-var fdroid = false;
+bool isFdroidBuild = false;
 
+/// Global navigator key, used to navigate from outside the widget tree
+/// (e.g. tapping a notification).
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 
-Future<void> loadTranslations() async {
-  // See easy_localization/issues/210
-  await EasyLocalizationController.initEasyLocation();
-  var s = SettingsProvider();
-  await s.initializeSettings();
-  var forceLocale = s.forcedLocale;
-  final controller = EasyLocalizationController(
-    saveLocale: true,
-    forceLocale: forceLocale,
-    fallbackLocale: fallbackLocale,
-    supportedLocales: supportedLocales.map((e) => e.key).toList(),
-    assetLoader: const RootBundleAssetLoader(),
-    useOnlyLangCode: false,
-    useFallbackTranslations: true,
-    path: localeDir,
-    onLoadError: (FlutterError e) {
-      throw e;
-    },
-  );
-  await controller.loadTranslations();
-  Localization.load(
-    controller.locale,
-    translations: controller.translations,
-    fallbackTranslations: controller.fallbackTranslations,
-  );
-}
+/// Unique task name used by WorkManager for periodic background update checks.
+const _workManagerTaskName = 'obtainiumBgUpdateCheck';
 
 @pragma('vm:entry-point')
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
@@ -264,6 +235,15 @@ Future<void> _runObtainium() async {
       ),
     ),
   );
+  ui.PlatformDispatcher.instance.onError = (error, stack) {
+    unawaited(
+      LogsProvider().add(
+        'Uncaught platform error: $error\n$stack',
+        level: LogLevel.error,
+      ),
+    );
+    return true;
+  };
   try {
     ByteData data = await PlatformAssetBundle().load(
       'assets/ca/lets-encrypt-r3.pem',
@@ -338,11 +318,11 @@ Future<void> _runObtainium() async {
         path: localeDir,
         fallbackLocale: fallbackLocale,
         useOnlyLangCode: false,
+        useFallbackTranslations: true,
         child: const Obtainium(),
       ),
     ),
   );
-  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
 }
 
 class Obtainium extends StatefulWidget {
@@ -353,9 +333,9 @@ class Obtainium extends StatefulWidget {
 }
 
 class _ObtainiumState extends State<Obtainium> {
-  var _lastUpdateInterval = -1;
-  var _lastUseFGService = false;
   var _firstRunHandled = false;
+  var _launchByNotifChecked = false;
+  var _fontLoaded = false;
 
   void _manageServices(UpdateSettingsProvider updateSettings, LogsProvider logs) {
     var interval = updateSettings.updateInterval;
@@ -388,7 +368,7 @@ class _ObtainiumState extends State<Obtainium> {
   void _handleFirstRun(
     SettingsProvider settings,
     AppsProvider apps,
-    LogsProvider logs,
+    Logger logger,
     BuildContext context,
   ) {
     if (settings.prefs == null) {
@@ -397,42 +377,43 @@ class _ObtainiumState extends State<Obtainium> {
     }
     if (_firstRunHandled) return;
     _firstRunHandled = true;
-    var isFirstRun = settings.checkAndFlipFirstRun();
+    final isFirstRun = settings.checkAndFlipFirstRun();
     if (isFirstRun) {
-      logs.add('This is the first ever run of Obtainium.');
-      if (!fdroid) {
+      logger.info('This is the first ever run of Obtainium.');
+      if (!isFdroidBuild) {
         getInstalledInfo(obtainiumId)
             .then((value) {
               if (value?.versionName != null) {
-                apps.saveApps([
+                unawaited(apps.saveApps([
                   App(
-                    obtainiumId,
-                    obtainiumUrl,
-                    'ImranR98',
-                    'Obtainium',
-                    value!.versionName,
-                    value.versionName!,
-                    [],
-                    0,
-                    {
+                    id: obtainiumId,
+                    url: obtainiumUrl,
+                    author: 'ImranR98',
+                    name: 'Obtainium',
+                    installedVersion: value!.versionName,
+                    latestVersion: value.versionName!,
+                    apkUrls: [],
+                    preferredApkIndex: 0,
+                    additionalSettings: {
                       'versionDetection': true,
                       'apkFilterRegEx': 'fdroid',
                       'invertAPKFilter': true,
                     },
-                    null,
-                    false,
+                    lastUpdateCheck: null,
+                    pinned: false,
                   ),
-                ], onlyIfExists: false);
+                ], onlyIfExists: false));
               }
             })
             .catchError((err) {
-              logs.add('Failed to add Obtainium on first run: $err');
+              logger.error('Failed to add Obtainium on first run', err);
             });
       }
     }
+    final currentLang = context.locale.languageCode;
+    final deviceLang = context.deviceLocale.languageCode;
     if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
-        (settings.forcedLocale == null &&
-            context.deviceLocale != context.locale)) {
+        (settings.forcedLocale == null && deviceLang != currentLang)) {
       settings.resetLocaleSafe(context);
     }
   }
@@ -440,9 +421,19 @@ class _ObtainiumState extends State<Obtainium> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      requestNonOptionalPermissions();
+      final settingsProvider = context.read<SettingsProvider>();
+      final appsProvider = context.read<AppsProvider>();
+      final logger = context.read<Logger>();
+      final notifs = context.read<NotificationsProvider>();
+
+      unawaited(_scheduleWorkManager());
+      _handleFirstRun(settingsProvider, appsProvider, logger, context);
+
+      if (!_launchByNotifChecked) {
+        _launchByNotifChecked = true;
+        notifs.checkLaunchByNotif();
+      }
     });
   }
 
@@ -515,6 +506,7 @@ class _ObtainiumState extends State<Obtainium> {
 
   @override
   void dispose() {
+    LogsProvider.close();
     super.dispose();
   }
 
@@ -581,13 +573,10 @@ class _ObtainiumState extends State<Obtainium> {
     _manageServices(updateSettings, logs);
     _handleFirstRun(settingsProvider, appsProvider, logs, context);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifs.checkLaunchByNotif();
-    });
-
     return WithForegroundTask(
       child: DynamicColorBuilder(
         builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+          setAppLocale(context.locale);
           // Decide on a colour/brightness scheme based on OS and user settings
           ColorScheme lightColorScheme;
           ColorScheme darkColorScheme;

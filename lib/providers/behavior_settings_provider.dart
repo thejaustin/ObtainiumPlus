@@ -27,6 +27,50 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String get installerMode {
+    final stored = prefs?.safeString('installMethod');
+    if (stored != null && InstallerMode.values.any((m) => m.name == stored)) {
+      return stored;
+    }
+    return useShizuku ? InstallerMode.shizuku.name : InstallerMode.system.name;
+  }
+
+  set installerMode(String mode) {
+    final resolved = InstallerMode.values.any((m) => m.name == mode)
+        ? mode
+        : InstallerMode.system.name;
+    prefs?.setString('installMethod', resolved);
+    notifyListeners();
+  }
+
+  String? get externalInstallerPackage {
+    final str = prefs?.safeString('externalInstallerPackage');
+    return str?.isNotEmpty == true ? str : null;
+  }
+
+  set externalInstallerPackage(String? val) {
+    if (val == null || val.isEmpty) {
+      prefs?.remove('externalInstallerPackage');
+    } else {
+      prefs?.setString('externalInstallerPackage', val);
+    }
+    notifyListeners();
+  }
+
+  String? get externalInstallerComponent {
+    final str = prefs?.safeString('externalInstallerComponent');
+    return str?.isNotEmpty == true ? str : null;
+  }
+
+  set externalInstallerComponent(String? val) {
+    if (val == null || val.isEmpty) {
+      prefs?.remove('externalInstallerComponent');
+    } else {
+      prefs?.setString('externalInstallerComponent', val);
+    }
+    notifyListeners();
+  }
+
   Future<bool> getInstallPermission({bool enforce = false}) async {
     while (!(await Permission.requestInstallPackages.isGranted)) {
       talker.info(tr('pleaseAllowInstallPerm'));
