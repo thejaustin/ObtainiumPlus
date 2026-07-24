@@ -1,4 +1,4 @@
-import 'package:obtainium/utils/haptic_utils.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,12 +9,14 @@ import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/components/selection_modal.dart';
+import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -29,11 +31,24 @@ class ImportExportPage extends StatefulWidget {
 class _ImportExportPageState extends State<ImportExportPage> {
   bool importInProgress = false;
 
+  // Cache the export-dir future so unrelated rebuilds (e.g. from the
+  // watched BehaviorSettingsProvider) don't re-trigger the async prefs read
+  // and cause the FutureBuilders below to flicker back to their loading
+  // state. Only recompute when the underlying stored value actually changes.
+  Future<Uri?>? _exportDirFuture;
+  String? _lastExportDirKey;
+
   @override
   Widget build(BuildContext context) {
     SourceProvider sourceProvider = SourceProvider();
     var appsProvider = context.watch<AppsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
+
+    final exportDirKey = behaviorSettings.prefs?.getString('exportDir');
+    if (_exportDirFuture == null || exportDirKey != _lastExportDirKey) {
+      _lastExportDirKey = exportDirKey;
+      _exportDirFuture = behaviorSettings.getExportDir();
+    }
 
     urlListImport({String? initValue, bool overrideInitValid = false}) {
       showDialog<Map<String, dynamic>?>(
@@ -133,32 +148,36 @@ class _ImportExportPageState extends State<ImportExportPage> {
     runObtainiumImport() {
       AppHaptics.selectionClick();
       FilePicker.pickFiles()
-          .then((result) {
+          .then((result) async {
+            if (result == null) {
+              if (!context.mounted) return;
+              showMessage(tr('cancelled'), context);
+              return;
+            }
+            if (result.files.isEmpty) {
+              return;
+            }
             setState(() {
               importInProgress = true;
             });
-            if (result != null) {
-              var path = result.files.single.path;
-              if (path == null) {
-                throw ObtainiumError(tr('noFilePickerAvailable'));
-              }
-              String data = File(path).readAsStringSync();
-              try {
-                jsonDecode(data);
-              } catch (e) {
-                throw ObtainiumError(tr('invalidInput'));
-              }
-              appsProvider.import(data).then((value) {
-                if (!context.mounted) return;
-                appsProvider.addMissingCategories(context.read());
-                showMessage(
-                  '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
-                  context,
-                );
-              });
-            } else {
-              // User canceled the picker
+            var path = result.files.single.path;
+            if (path == null) {
+              throw ObtainiumError(tr('noFilePickerAvailable'));
             }
+            String data = await File(path).readAsString();
+            try {
+              jsonDecode(data);
+            } catch (e) {
+              throw ObtainiumError(tr('invalidInput'));
+            }
+            appsProvider.import(data).then((value) {
+              if (!context.mounted) return;
+              appsProvider.addMissingCategories(context.read());
+              showMessage(
+                '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
+                context,
+              );
+            });
           })
           .catchError((e) {
             if (context.mounted) {
@@ -179,14 +198,15 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
     runUrlImport() {
       FilePicker.pickFiles()
-          .then((result) {
+          .then((result) async {
             if (result != null) {
               var path = result.files.single.path;
               if (path == null) return;
+              var data = await File(path).readAsString();
               urlListImport(
                 overrideInitValid: true,
-                initValue: RegExp('https?://[^"]+')
-                    .allMatches(File(path).readAsStringSync())
+                initValue: RegExp(r'https?://[^\s"]+')
+                    .allMatches(data)
                     .map((e) => e.input.substring(e.start, e.end))
                     .toSet()
                     .toList()
@@ -195,6 +215,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         sourceProvider.getSource(url);
                         return true;
                       } catch (e) {
+                        unawaited(
+                          LogsProvider().add(
+                            'URL parse error in filter: $e',
+                            level: LogLevel.error,
+                          ),
+                        );
                         return false;
                       }
                     })
@@ -454,7 +480,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               delegate: SliverChildListDelegate([
                 // ── EXPORT section ─────────────────────────────────────
                 FutureBuilder<Uri?>(
-                  future: behaviorSettings.getExportDir(),
+                  future: _exportDirFuture,
                   builder: (context, snapshot) {
                     return _sectionCard(
                       icon: Icons.upload_rounded,
@@ -488,7 +514,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
                 // Auto-export settings (shown only when export dir is set)
                 FutureBuilder(
-                  future: behaviorSettings.getExportDir(),
+                  future: _exportDirFuture,
                   builder: (context, snapshot) {
                     if (snapshot.data == null) return const SizedBox.shrink();
                     return Card.outlined(

@@ -5,12 +5,14 @@ import 'package:obtainium/utils/logger.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:shared_storage/shared_storage.dart' as saf;
 
 String obtainiumTempId = 'imranr98_obtainium_github.com';
 String obtainiumId = 'dev.thejaustin.obtainiumplus';
@@ -22,9 +24,13 @@ Color obtainiumThemeColor = const Color(0xFF6438B5);
 // script subtag and cause forcedLocale to silently fail to match on relaunch.
 Locale? tryParseLocale(String? localeString) {
   if (localeString == null) return null;
-  var split = localeString.split('-');
+  final split = localeString.split('-');
   if (split.length == 3) {
-    return Locale.fromSubtags(languageCode: split[0], countryCode: split[2]);
+    return Locale.fromSubtags(
+      languageCode: split[0],
+      scriptCode: split[1],
+      countryCode: split[2],
+    );
   }
   if (split.length == 2) {
     return Locale(split[0], split[1]);
@@ -45,9 +51,24 @@ class SettingsProvider with ChangeNotifier {
   bool justStarted = true;
   bool isTV = false;
 
-  String sourceUrl = 'https://github.com/ImranR98/Obtainium';
+  T? _get<T>(String key) {
+    final value = prefs?.get(key);
+    if (value is T) return value;
+    return null;
+  }
 
-  // Not done in constructor as we want to be able to await it
+  bool? _getBool(String key) => _get<bool>(key);
+  int? _getInt(String key) => _get<int>(key);
+  double? _getDouble(String key) => _get<double>(key);
+  String? _getString(String key) => _get<String>(key);
+
+  final String sourceUrl = obtainiumUrl;
+
+  /// Platform properties that are stable for the process lifetime but expensive
+  /// to fetch (platform channel round-trips). Cached across all provider instances.
+  static String? _cachedDefaultAppDir;
+  static bool? _cachedIsTV;
+
   Future<void> initializeSettings() async {
     prefs = await SharedPreferences.getInstance();
 
@@ -180,8 +201,9 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Locale? get forcedLocale {
-    var fl = tryParseLocale(prefs?.getString('forcedLocale'));
-    var set = supportedLocales.where((element) => element.key == fl).isNotEmpty
+    final fl = tryParseLocale(_getString('forcedLocale'));
+    final set =
+        supportedLocales.where((element) => element.key == fl).isNotEmpty
         ? fl
         : null;
     return set;
@@ -202,7 +224,9 @@ class SettingsProvider with ChangeNotifier {
       a.length == b.length && a.union(b).length == a.length;
 
   void resetLocaleSafe(BuildContext context) {
-    if (context.supportedLocales.contains(context.deviceLocale)) {
+    if (context.supportedLocales.any(
+      (l) => l.languageCode == context.deviceLocale.languageCode,
+    )) {
       context.resetLocale();
     } else {
       context.setLocale(context.fallbackLocale!);
@@ -220,7 +244,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get showAppDowngradeError {
-    return prefs?.getBool('showAppDowngradeError') ?? true;
+    return _getBool('showAppDowngradeError') ?? true;
   }
 
   set showAppDowngradeError(bool show) {
@@ -238,7 +262,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get includePrereleasesByDefault {
-    return prefs?.getBool('includePrereleasesByDefault') ?? false;
+    return _getBool('includePrereleasesByDefault') ?? false;
   }
 
   set includePrereleasesByDefault(bool val) {
@@ -275,6 +299,21 @@ class SettingsProvider with ChangeNotifier {
   set autoExportOnChanges(bool val) {
     prefs?.setBool('autoExportOnChanges', val);
     notifyListeners();
+  }
+
+  String get installerMode =>
+      prefs?.safeString('installMethod') ??
+      (prefs?.safeBool('useShizuku') ?? false
+          ? InstallerMode.shizuku.name
+          : InstallerMode.system.name);
+  String? get externalInstallerPackage {
+    final str = prefs?.safeString('externalInstallerPackage');
+    return str?.isNotEmpty == true ? str : null;
+  }
+
+  String? get externalInstallerComponent {
+    final str = prefs?.safeString('externalInstallerComponent');
+    return str?.isNotEmpty == true ? str : null;
   }
 
   bool get highlightTouchTargets =>
@@ -372,9 +411,21 @@ class SettingsProvider with ChangeNotifier {
   // For compile-time, the property just needs to exist with a valid type.
   SettingsProvider get plusSettings => this;
 
-  // Forwarding method stubs for callers that still reference SettingsProvider
-  // for things that moved to BehaviorSettingsProvider.
-  Future<Uri?> getExportDir() async => null;
+  // Forwarding methods for callers that still reference SettingsProvider
+  // for things that moved to BehaviorSettingsProvider. Mirrors
+  // BehaviorSettingsProvider's implementation against the same prefs keys.
+  Future<Uri?> getExportDir() async {
+    final uriString = prefs?.safeString('exportDir');
+    if (uriString == null) return null;
+    Uri? uri = Uri.parse(uriString);
+    if (!(await saf.canRead(uri) ?? false) ||
+        !(await saf.canWrite(uri) ?? false)) {
+      uri = null;
+      await prefs?.remove('exportDir');
+      notifyListeners();
+    }
+    return uri;
+  }
 
   // Stub for app bar style — returns AppBarStyle.
   AppBarStyle getAppBarStyleForPage(String page) {
@@ -394,8 +445,32 @@ class SettingsProvider with ChangeNotifier {
   // Stub for install permission (moved to BehaviorSettingsProvider).
   Future<bool> getInstallPermission({bool enforce = false}) async => true;
 
-  // Stub for export dir picker (moved to BehaviorSettingsProvider).
-  Future<void> pickExportDir({bool remove = false}) async {}
+  Future<void> pickExportDir({bool remove = false}) async {
+    final existingSAFPerms = (await saf.persistedUriPermissions()) ?? [];
+    final currentOneWayDataSyncDir = await getExportDir();
+    Uri? newOneWayDataSyncDir;
+    if (!remove) {
+      try {
+        newOneWayDataSyncDir = (await saf.openDocumentTree());
+      } catch (_) {
+        throw ObtainiumError(tr('noFilePickerAvailable'));
+      }
+    }
+    if (currentOneWayDataSyncDir?.path != newOneWayDataSyncDir?.path) {
+      if (newOneWayDataSyncDir == null) {
+        await prefs?.remove('exportDir');
+      } else {
+        await prefs?.setString('exportDir', newOneWayDataSyncDir.toString());
+      }
+      notifyListeners();
+    }
+    for (var e in existingSAFPerms) {
+      await saf.releasePersistableUriPermission(e.uri);
+    }
+  }
+
+  bool get enableBackgroundUpdates =>
+      prefs?.safeBool('enableBackgroundUpdates') ?? true;
 
   int get updateCheckConcurrencyLimit =>
       prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3;

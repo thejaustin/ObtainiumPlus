@@ -16,6 +16,8 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
+import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
 import io.flutter.embedding.android.FlutterActivity
@@ -26,11 +28,50 @@ class MainActivity : FlutterActivity() {
     private val CHANNEL = "app.obtainiumplus/native"
     private val REQUEST_ACCOUNT_PICKER = 1001
 
+    private companion object {
+        const val EXTERNAL_INSTALL_CHANNEL = "dev.imranr.obtainium/external_install"
+        const val APK_MIME = "application/vnd.android.package-archive"
+    }
+
     // Holds the pending result while the native account picker Activity is open.
     private var pendingPickerResult: MethodChannel.Result? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        intent?.let {
+            setIntent(transformShareIntent(it))
+        }
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        val newIntent = transformShareIntent(intent)
+        setIntent(newIntent)
+        super.onNewIntent(newIntent)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            EXTERNAL_INSTALL_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "listInstallTargets" -> result.success(listInstallTargets())
+                "contentUriForFile" -> {
+                    val path = call.argument<String>("path")
+                    if (path.isNullOrEmpty()) {
+                        result.error("BAD_ARGS", "Missing file path", null)
+                    } else {
+                        try {
+                            result.success(contentUriForFile(path))
+                        } catch (e: Exception) {
+                            result.error("URI_FAILED", e.message, null)
+                        }
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "getGsfId" -> {
@@ -223,6 +264,55 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    /**
+     * One entry per app able to handle an APK install intent. Apps that expose
+     * several install-capable activities are collapsed to a single entry (the
+     * first match, preferring ACTION_VIEW), so the picker shows each app once.
+     */
+    private fun listInstallTargets(): List<Map<String, String>> {
+        val seenPackages = HashSet<String>()
+        val targets = ArrayList<Map<String, String>>()
+        val probe = Uri.parse("content://$packageName.probe/sample.apk")
+        val actions = listOf(Intent.ACTION_VIEW, Intent.ACTION_INSTALL_PACKAGE)
+        for (action in actions) {
+            @Suppress("DEPRECATION")
+            val intent = Intent(action).setDataAndType(probe, APK_MIME)
+            for (resolved in packageManager.queryIntentActivities(intent, 0)) {
+                val info = resolved.activityInfo ?: continue
+                val pkg = info.packageName ?: continue
+                if (pkg == packageName) continue
+                val activity = info.name ?: continue
+                if (!seenPackages.add(pkg)) continue
+                targets.add(mapOf("package" to pkg, "activity" to activity))
+            }
+        }
+        return targets
+    }
+
+    /** Exposes a downloaded file through the app's FileProvider as a content:// URI. */
+    private fun contentUriForFile(path: String): String {
+        val uri = FileProvider.getUriForFile(this, packageName, File(path))
+        return uri.toString()
+    }
+
+    /** Redirects a shared-text SEND intent to the obtainium://add/ deep link the app already handles. */
+    private fun transformShareIntent(intent: Intent): Intent {
+        if (intent.action == Intent.ACTION_SEND && intent.type?.startsWith("text/") == true) {
+            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+            val match = sharedText?.let { """https?://[^\s]+""".toRegex().find(it) }
+            if (match != null) {
+                val url = match.value.trimEnd('.', ',', ';', '!', '?', ')')
+                intent.apply {
+                    action = Intent.ACTION_VIEW
+                    data = Uri.parse("obtainium://add/${Uri.encode(url)}")
+                }
+            } else {
+                Toast.makeText(this, "No URL found in shared text", Toast.LENGTH_SHORT).show()
+            }
+        }
+        return intent
     }
 
     private fun isRooted(): Boolean {

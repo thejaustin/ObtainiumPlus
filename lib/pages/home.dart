@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:animations/animations.dart';
 import 'package:app_links/app_links.dart';
@@ -16,6 +17,7 @@ import 'package:obtainium/pages/import_export.dart';
 import 'dart:ui';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/pages/changelog.dart';
@@ -195,7 +197,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     interpretLink(Uri uri) async {
       var action = uri.host;
-      var data = uri.path.length > 1 ? uri.path.substring(1) : "";
+      // Also accept a `?url=` query param as an alternative to the path
+      // segment, for deep links that prefer explicit query encoding.
+      var data =
+          uri.queryParameters['url'] ??
+          (uri.path.length > 1 ? uri.path.substring(1) : "");
       try {
         if (action == 'add') {
           // Ensure apps are loaded
@@ -211,7 +217,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               .standardizeUrl(data);
 
           AppInMemory? existingApp = appsProvider.apps.values
-              .where((AppInMemory a) => a.app.url == standardizedUrl)
+              .where(
+                (AppInMemory a) =>
+                    a.app.url == standardizedUrl || a.app.url == data,
+              )
               .firstOrNull;
 
           if (existingApp != null) {
@@ -249,11 +258,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ) !=
               null) {
             if (!mounted) return;
+            dynamic parsedData;
+            try {
+              parsedData = jsonDecode(dataStr);
+            } catch (e) {
+              unawaited(
+                LogsProvider().add(
+                  'Failed to decode deep-link JSON: $e',
+                  level: LogLevel.error,
+                ),
+              );
+              throw ObtainiumError(tr('invalidInput'));
+            }
             var appsProvider = context.read<AppsProvider>();
             var result = await appsProvider.import(
-              action == 'app'
-                  ? '{ "apps": [$dataStr] }'
-                  : '{ "apps": $dataStr }',
+              jsonEncode({
+                'apps': action == 'app' ? [parsedData] : parsedData,
+              }),
             );
             if (!mounted) return;
             showMessage(

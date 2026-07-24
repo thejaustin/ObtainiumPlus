@@ -245,7 +245,10 @@ class AppsPageState extends State<AppsPage> {
         appsProvider.apps.isNotEmpty &&
         settingsProvider.checkJustStarted() &&
         updateSettings.checkOnStart) {
-      _refreshIndicatorKey.currentState?.show();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _refreshIndicatorKey.currentState?.show();
+      });
     }
 
     var listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
@@ -1717,9 +1720,7 @@ class _AppIconWidgetState extends State<AppIconWidget> {
                     gaplessPlayback: true,
                     filterQuality: FilterQuality.medium,
                     fit: BoxFit.contain,
-                    opacity: AlwaysStoppedAnimation(
-                      widget.installed ? 1 : 0.6,
-                    ),
+                    opacity: AlwaysStoppedAnimation(widget.installed ? 1 : 0.6),
                   ),
                 )
               : Row(
