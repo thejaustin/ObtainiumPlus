@@ -36,6 +36,10 @@ class MainActivity : FlutterActivity() {
     // Holds the pending result while the native account picker Activity is open.
     private var pendingPickerResult: MethodChannel.Result? = null
 
+    // A share intent that arrived before the Flutter engine attached; replayed
+    // once configureFlutterEngine runs so the share isn't silently dropped.
+    private var pendingShareIntent: Intent? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         intent?.let {
             setIntent(transformShareIntent(it))
@@ -46,11 +50,19 @@ class MainActivity : FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         val newIntent = transformShareIntent(intent)
         setIntent(newIntent)
-        super.onNewIntent(newIntent)
+        try {
+            super.onNewIntent(newIntent)
+        } catch (_: Exception) {
+            pendingShareIntent = newIntent
+        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        pendingShareIntent?.let {
+            super.onNewIntent(it)
+            pendingShareIntent = null
+        }
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             EXTERNAL_INSTALL_CHANNEL,
@@ -267,12 +279,11 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * One entry per app able to handle an APK install intent. Apps that expose
-     * several install-capable activities are collapsed to a single entry (the
-     * first match, preferring ACTION_VIEW), so the picker shows each app once.
+     * One entry per install-capable activity across all apps. Apps that expose
+     * several install-capable activities return all of them so the user can
+     * pick the specific intent they want.
      */
     private fun listInstallTargets(): List<Map<String, String>> {
-        val seenPackages = HashSet<String>()
         val targets = ArrayList<Map<String, String>>()
         val probe = Uri.parse("content://$packageName.probe/sample.apk")
         val actions = listOf(Intent.ACTION_VIEW, Intent.ACTION_INSTALL_PACKAGE)
@@ -284,7 +295,6 @@ class MainActivity : FlutterActivity() {
                 val pkg = info.packageName ?: continue
                 if (pkg == packageName) continue
                 val activity = info.name ?: continue
-                if (!seenPackages.add(pkg)) continue
                 targets.add(mapOf("package" to pkg, "activity" to activity))
             }
         }

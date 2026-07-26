@@ -2,10 +2,10 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:animations/animations.dart';
 import 'package:app_links/app_links.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:animations/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/omnibar.dart';
@@ -212,9 +212,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           if (!mounted) return;
 
           // See if we already have this app
-          String standardizedUrl = SourceProvider()
-              .getSource(data)
-              .standardizeUrl(data);
+          String? standardizedUrl;
+          try {
+            standardizedUrl = SourceProvider()
+                .getSource(data)
+                .standardizeUrl(data);
+          } catch (_) {
+            standardizedUrl = null;
+          }
 
           AppInMemory? existingApp = appsProvider.apps.values
               .where(
@@ -244,7 +249,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     items: const [],
                     additionalWidgets: [
                       ExpansionTile(
-                        title: const Text('Raw JSON'),
+                        title: Text(tr('rawJson')),
                         children: [
                           Text(
                             dataStr,
@@ -295,18 +300,21 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     // Check initial link if app was in cold state (terminated)
     final appLink = await _appLinks.getInitialLink();
-    var initLinked = false;
     if (appLink != null) {
       await interpretLink(appLink);
-      initLinked = true;
     }
-    // Handle link when app is in warm state (front or background)
+    // Handle link when app is in warm state (front or background). Compare
+    // against the initial link (rather than a one-shot skip flag) so a
+    // genuinely new link arriving right after cold start isn't swallowed.
+    var dedupeInitial = appLink != null;
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) async {
-      if (!initLinked) {
-        await interpretLink(uri);
-      } else {
-        initLinked = false;
+      if (dedupeInitial) {
+        dedupeInitial = false;
+        if (uri == appLink) {
+          return;
+        }
       }
+      await interpretLink(uri);
     });
   }
 

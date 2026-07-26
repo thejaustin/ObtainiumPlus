@@ -32,12 +32,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_system_colors/dynamic_system_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
-import 'package:workmanager/workmanager.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
-  MapEntry(Locale('zh'), '简体中文'),
   MapEntry(Locale('zh', 'Hant_TW'), '臺灣話'),
+  MapEntry(Locale('zh'), '简体中文'),
   MapEntry(Locale('it'), 'Italiano'),
   MapEntry(Locale('ja'), '日本語'),
   MapEntry(Locale('hu'), 'Magyar'),
@@ -48,8 +48,8 @@ List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('pl'), 'Polski'),
   MapEntry(Locale('ru'), 'Русский'),
   MapEntry(Locale('bs'), 'Bosanski'),
-  MapEntry(Locale('pt'), 'Português'),
   MapEntry(Locale('pt', 'BR'), 'Brasileiro'),
+  MapEntry(Locale('pt'), 'Português'),
   MapEntry(Locale('cs'), 'Česky'),
   MapEntry(Locale('sv'), 'Svenska'),
   MapEntry(Locale('nl'), 'Nederlands'),
@@ -72,9 +72,6 @@ bool isFdroidBuild = false;
 /// Global navigator key, used to navigate from outside the widget tree
 /// (e.g. tapping a notification).
 final globalNavigatorKey = GlobalKey<NavigatorState>();
-
-/// Unique task name used by WorkManager for periodic background update checks.
-const _workManagerTaskName = 'obtainiumBgUpdateCheck';
 
 @pragma('vm:entry-point')
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
@@ -380,29 +377,34 @@ class _ObtainiumState extends State<Obtainium> {
     final isFirstRun = settings.checkAndFlipFirstRun();
     if (isFirstRun) {
       logger.info('This is the first ever run of Obtainium.');
+      if (!settings.isTV) {
+        unawaited(Permission.notification.request());
+      }
       if (!isFdroidBuild) {
         getInstalledInfo(obtainiumId)
             .then((value) {
               if (value?.versionName != null) {
-                unawaited(apps.saveApps([
-                  App(
-                    id: obtainiumId,
-                    url: obtainiumUrl,
-                    author: 'ImranR98',
-                    name: 'Obtainium',
-                    installedVersion: value!.versionName,
-                    latestVersion: value.versionName!,
-                    apkUrls: [],
-                    preferredApkIndex: 0,
-                    additionalSettings: {
-                      'versionDetection': true,
-                      'apkFilterRegEx': 'fdroid',
-                      'invertAPKFilter': true,
-                    },
-                    lastUpdateCheck: null,
-                    pinned: false,
-                  ),
-                ], onlyIfExists: false));
+                unawaited(
+                  apps.saveApps([
+                    App(
+                      id: obtainiumId,
+                      url: obtainiumUrl,
+                      author: 'ImranR98',
+                      name: 'Obtainium',
+                      installedVersion: value!.versionName,
+                      latestVersion: value.versionName!,
+                      apkUrls: [],
+                      preferredApkIndex: 0,
+                      additionalSettings: {
+                        'versionDetection': true,
+                        'apkFilterRegEx': 'fdroid',
+                        'invertAPKFilter': true,
+                      },
+                      lastUpdateCheck: null,
+                      pinned: false,
+                    ),
+                  ], onlyIfExists: false),
+                );
               }
             })
             .catchError((err) {
@@ -415,6 +417,8 @@ class _ObtainiumState extends State<Obtainium> {
     if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
         (settings.forcedLocale == null && deviceLang != currentLang)) {
       settings.resetLocaleSafe(context);
+    } else if (settings.forcedLocale != null) {
+      context.setLocale(settings.forcedLocale!);
     }
   }
 
@@ -424,10 +428,9 @@ class _ObtainiumState extends State<Obtainium> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final settingsProvider = context.read<SettingsProvider>();
       final appsProvider = context.read<AppsProvider>();
-      final logger = context.read<Logger>();
+      final logger = AppLogger(logs: context.read<LogsProvider>());
       final notifs = context.read<NotificationsProvider>();
 
-      unawaited(_scheduleWorkManager());
       _handleFirstRun(settingsProvider, appsProvider, logger, context);
 
       if (!_launchByNotifChecked) {
@@ -571,7 +574,7 @@ class _ObtainiumState extends State<Obtainium> {
     }
 
     _manageServices(updateSettings, logs);
-    _handleFirstRun(settingsProvider, appsProvider, logs, context);
+    _handleFirstRun(settingsProvider, appsProvider, AppLogger(logs: logs), context);
 
     return WithForegroundTask(
       child: DynamicColorBuilder(
