@@ -655,9 +655,7 @@ Future<List<PackageInfo>> getAllInstalledInfo() async {
       [];
 }
 
-Future<PackageInfo?> getInstalledInfo(
-  String? packageName,
-) async {
+Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   if (packageName != null) {
     try {
       return await packageManager.getPackageInfo(
@@ -696,7 +694,7 @@ Future<bool> waitForPackageInstall(
   Duration interval = const Duration(milliseconds: 500),
 }) async {
   for (var attempt = 0; attempt < attempts; attempt++) {
-  final info = await getInstalledInfo(appId);
+    final info = await getInstalledInfo(appId);
     if (info != null) {
       if (!baseline.wasInstalled) return true;
       final updateTimeAfter = info.lastUpdateTime;
@@ -710,9 +708,18 @@ Future<bool> waitForPackageInstall(
   return false;
 }
 
-Future<Directory> getAppStorageDir() async =>
-    await getExternalStorageDirectory() ??
-    await getApplicationDocumentsDirectory();
+Future<Directory> getAppStorageDir() async {
+  try {
+    final extDir = await getExternalStorageDirectory();
+    if (extDir != null) {
+      if (!extDir.existsSync()) {
+        extDir.createSync(recursive: true);
+      }
+      return extDir;
+    }
+  } catch (_) {}
+  return await getApplicationDocumentsDirectory();
+}
 
 class AppsProvider with ChangeNotifier {
   // Static, app-lifetime cross-instance save-notification bus; intentionally
@@ -737,6 +744,12 @@ class AppsProvider with ChangeNotifier {
   /// atomic guard (preventing concurrent batches) and a deduplication
   /// mechanism: subsequent callers receive the existing completer's future.
   Completer<List<App>>? updateCheckCompleter;
+
+  /// Update-check progress (0..1), or null when no check is running. Exposed as
+  /// a [ValueNotifier] so the progress bar can rebuild on frequent ticks
+  /// WITHOUT triggering a full [notify] (which would rerun the expensive app
+  /// list pipeline on every listener each tick and stutter the UI).
+  final ValueNotifier<double?> refreshProgress = ValueNotifier<double?>(null);
   LogsProvider logs = LogsProvider();
 
   bool isSelectionMode = false;
@@ -807,6 +820,7 @@ class AppsProvider with ChangeNotifier {
   late PlusSettingsProvider plusSettings = PlusSettingsProvider();
   final Completer<void> _initCompleter = Completer<void>();
   Future<void> get initializationDone => _initCompleter.future;
+  Directory? cachedAppsDir;
 
   Iterable<AppInMemory> getAppValues({bool deepCopy = true}) {
     _reloadIfBgSaved();
@@ -942,6 +956,8 @@ class AppsProvider with ChangeNotifier {
       _apkDir = dirs['APKDir']!;
       _iconsCacheDir = dirs['iconsCacheDir']!;
       if (!isBg) {
+        loadingApps = true;
+        notify();
         await loadApps();
         // Delete any partial APKs (if safe to do so)
         var cutoff = DateTime.now().subtract(const Duration(days: 7));
@@ -2597,6 +2613,7 @@ class AppsProvider with ChangeNotifier {
     foregroundSubscription?.cancel();
     _autoExportDebounce?.cancel();
     _eventSubscription?.cancel();
+    refreshProgress.dispose();
     super.dispose();
   }
 

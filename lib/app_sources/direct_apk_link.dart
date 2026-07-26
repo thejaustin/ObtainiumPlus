@@ -10,8 +10,10 @@ import 'package:obtainium/providers/source_provider.dart';
 class DirectAPKLink extends AppSource {
   final HTML html = HTML();
 
+  @override
+  String get name => tr('directAPKLink');
+
   DirectAPKLink() {
-    name = 'Direct APK link';
     versionDetectionDisallowed = true;
     excludeCommonSettingKeys = [
       'versionExtractionRegEx',
@@ -24,11 +26,11 @@ class DirectAPKLink extends AppSource {
   }
 
   @override
-  List<List<GeneratedFormItem>> get additionalSourceAppSpecificSettingFormItems => [
+  List<List<GeneratedFormItem>>
+  get additionalSourceAppSpecificSettingFormItems => [
     ...html.additionalSourceAppSpecificSettingFormItems.where(
-      (element) => element
-          .where((element) => element.key == 'requestHeader')
-          .isNotEmpty,
+      (element) =>
+          element.where((element) => element.key == 'requestHeader').isNotEmpty,
     ),
     [
       GeneratedFormDropdown(

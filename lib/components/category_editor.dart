@@ -139,6 +139,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
       context,
       title: tr('deleteCategoriesQuestion'),
       content: Text(tr('categoryDeleteWarning')),
+      autofocusConfirm: context.read<SettingsProvider>().isTV,
     );
     if (!confirmed) return;
     final cats = Map<String, int>.from(settingsProvider.categories)
@@ -170,7 +171,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
         ColorPickerType.wheel: true,
       },
       title: Text(
-        tr('selectX', args: [tr('colour').toLowerCase()]),
+        tr('selectX', args: [lowerCaseUnlessLang(tr('colour'), 'de')]),
         style: Theme.of(context).textTheme.titleLarge,
       ),
       wheelDiameter: 192,
@@ -242,15 +243,17 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
             style: textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _nameCtrl,
-            autofocus: !_isEditing,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(labelText: tr('categoryName')),
-            onChanged: (value) => _nameNotifier.value = value,
-            onSubmitted: (_) {
-              if (_nameCtrl.text.trim().isNotEmpty) _save();
-            },
+          ConnectedCard(
+            child: TextField(
+              controller: _nameCtrl,
+              autofocus: !_isEditing,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(labelText: tr('categoryName')),
+              onChanged: (value) => _nameNotifier.value = value,
+              onSubmitted: (_) {
+                if (_nameCtrl.text.trim().isNotEmpty) _save();
+              },
+            ),
           ),
           const SizedBox(height: 20),
           Text(tr('colour'), style: textTheme.titleSmall),
@@ -430,35 +433,58 @@ class _CategorySelectorState extends State<CategorySelector> {
       );
     }
 
-    return Wrap(
-      alignment: widget.alignment,
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final name in names)
-          Tooltip(
-            message: tr('editCategory'),
-            child: Semantics(
-              // Expose the long-press-to-edit gesture to assistive tech.
-              onLongPress: () => _edit(name),
-              child: GestureDetector(
-                onLongPress: () => _edit(name),
-                child: FilterChip(
-                  avatar: CircleAvatar(
-                    backgroundColor: Color(categories[name] ?? 0xFFCCCCCC),
-                    radius: 7,
-                  ),
-                  label: Text(name),
-                  selected: _selected.contains(name),
-                  onSelected: (v) => _toggle(name, v),
-                  selectedColor: Color(
-                    categories[name] ?? 0xFFCCCCCC,
-                  ).withValues(alpha: 0.22),
-                  showCheckmark: true,
-                ),
-              ),
-            ),
+    if (names.isEmpty && widget.allowCreate) {
+      return Wrap(
+        alignment: widget.alignment,
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          ActionChip(
+            avatar: const Icon(Icons.add, size: 18),
+            label: Text(tr('newCategory')),
+            onPressed: _create,
           ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Wrap(
+            alignment: widget.alignment,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final name in names)
+                Tooltip(
+                  message: tr('editCategory'),
+                  child: Semantics(
+                    onLongPress: () => _edit(name),
+                    child: GestureDetector(
+                      onLongPress: () => _edit(name),
+                      child: FilterChip(
+                        avatar: CircleAvatar(
+                          backgroundColor:
+                              Color(categories[name] ?? 0xFFCCCCCC),
+                          radius: 7,
+                        ),
+                        label: Text(name),
+                        selected: _selected.contains(name),
+                        onSelected: (v) => _toggle(name, v),
+                        selectedColor: Color(
+                          categories[name] ?? 0xFFCCCCCC,
+                        ).withValues(alpha: 0.22),
+                        showCheckmark: true,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (widget.allowCreate) const SizedBox(width: 8),
         if (widget.allowCreate)
           ActionChip(
             avatar: const Icon(Icons.add, size: 18),
@@ -481,27 +507,49 @@ class CategoryManager extends StatelessWidget {
     final categories = context.watch<SettingsProvider>().categories;
     final names = categories.keys.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (names.isEmpty)
+    if (names.isEmpty) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
           Text(
             tr('noCategories'),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: cs.onSurfaceVariant),
           ),
-        for (final name in names)
+          const Spacer(),
           ActionChip(
-            avatar: CircleAvatar(
-              backgroundColor: Color(categories[name]!),
-              radius: 7,
-            ),
-            label: Text(name),
-            onPressed: () => showCategoryEditor(context, existingName: name),
+            avatar: const Icon(Icons.add, size: 18),
+            label: Text(tr('newCategory')),
+            onPressed: () => showCategoryEditor(context),
           ),
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final name in names)
+                ActionChip(
+                  avatar: CircleAvatar(
+                    backgroundColor: Color(categories[name]!),
+                    radius: 7,
+                  ),
+                  label: Text(name),
+                  onPressed: () =>
+                      showCategoryEditor(context, existingName: name),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
           label: Text(tr('newCategory')),

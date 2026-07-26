@@ -11,8 +11,10 @@ import 'package:obtainium/providers/source_provider.dart';
 class FDroidRepo extends AppSource {
   bool _appIdFoundInUrl = false;
 
+  @override
+  String get name => tr('fdroidThirdPartyRepo');
+
   FDroidRepo() {
-    name = 'F-Droid third-party repo';
     canSearch = true;
     includeAdditionalOptsInMainSearch = true;
     neverAutoSelect = true;
@@ -20,7 +22,8 @@ class FDroidRepo extends AppSource {
   }
 
   @override
-  List<List<GeneratedFormItem>> get additionalSourceAppSpecificSettingFormItems => [
+  List<List<GeneratedFormItem>>
+  get additionalSourceAppSpecificSettingFormItems => [
     [
       GeneratedFormTextField(
         'appIdOrName',
@@ -110,9 +113,7 @@ class FDroidRepo extends AppSource {
       final appId = Uri.parse(inputUrl).queryParameters['appId'];
       _appIdFoundInUrl = appId != null;
     } catch (e) {
-      unawaited(
-        LogsProvider().add('Failed to parse appId from URL: $e'),
-      );
+      unawaited(LogsProvider().add('Failed to parse appId from URL: $e'));
     }
   }
 

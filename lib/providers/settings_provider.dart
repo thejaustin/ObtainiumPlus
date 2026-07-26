@@ -1,5 +1,7 @@
 // Exposes functions used to save/load app settings
 
+import 'dart:convert';
+
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/logger.dart';
 
@@ -18,6 +20,9 @@ String obtainiumTempId = 'imranr98_obtainium_github.com';
 String obtainiumId = 'dev.thejaustin.obtainiumplus';
 String obtainiumUrl = 'https://github.com/thejaustin/ObtainiumPlus';
 Color obtainiumThemeColor = const Color(0xFF6438B5);
+
+String lowerCaseUnlessLang(String str, String lang) =>
+    currentLanguageCode == lang ? str : str.toLowerCase();
 
 // Handles 2 and 3-segment BCP-47 tags (e.g. "zh-Hant-TW"); a naive split
 // on '-' with only 2 segments taken would misparse the country code as the
@@ -40,6 +45,8 @@ Locale? tryParseLocale(String? localeString) {
   }
   return null;
 }
+
+enum ActionBannerMode { all, updatesOnly, none }
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
@@ -280,6 +287,24 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  ActionBannerMode get actionBannerMode {
+    final stored = prefs?.safeString('actionBannerMode');
+    if (stored != null &&
+        ActionBannerMode.values.any((m) => m.name == stored)) {
+      return ActionBannerMode.values.byName(stored);
+    }
+    final legacyBool = prefs?.safeBool('showActionBannerForUpdateOnly');
+    if (legacyBool != null) {
+      return legacyBool ? ActionBannerMode.updatesOnly : ActionBannerMode.all;
+    }
+    return ActionBannerMode.updatesOnly;
+  }
+
+  set actionBannerMode(ActionBannerMode mode) {
+    prefs?.setString('actionBannerMode', mode.name);
+    notifyListeners();
+  }
+
   // ---------------------------------------------------------------------------
   // Forwarding getters for settings that moved to dedicated providers.
   // Files still referencing these via SettingsProvider continue to compile.
@@ -314,6 +339,18 @@ class SettingsProvider with ChangeNotifier {
   String? get externalInstallerComponent {
     final str = prefs?.safeString('externalInstallerComponent');
     return str?.isNotEmpty == true ? str : null;
+  }
+
+  // --- ViewSettingsProvider forwards ---
+  // Mirrors ViewSettingsProvider.categories against the same prefs key.
+  Map<String, int> get categories {
+    try {
+      return Map<String, int>.from(
+        jsonDecode(prefs?.safeString('categories') ?? '{}'),
+      );
+    } catch (e) {
+      return {};
+    }
   }
 
   bool get highlightTouchTargets =>

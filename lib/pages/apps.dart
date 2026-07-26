@@ -31,6 +31,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -1763,6 +1764,293 @@ class _AppIconWidgetState extends State<AppIconWidget> {
           ),
         );
       },
+    );
+  }
+
+  void showSelectedAppActions() {
+    if (!mounted) return;
+    final listedApps = context.read<AppsProvider>().getAppValues().toList();
+    final selectedApps = listedApps
+        .map((e) => e.app)
+        .where((a) => selectedAppIds.contains(a.id))
+        .toSet();
+    if (selectedApps.isNotEmpty) {
+      showMoreOptionsBottomSheet(context, selectedApps);
+    }
+  }
+}
+
+class _RefreshProgressBar extends StatelessWidget {
+  const _RefreshProgressBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final progressNotifier = context.read<AppsProvider>().refreshProgress;
+    return ValueListenableBuilder<double?>(
+      valueListenable: progressNotifier,
+      builder: (context, refreshProgress, _) {
+        if (refreshProgress == null) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(32, 0, 32, 8),
+            child: LinearProgressIndicator(value: refreshProgress),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BulkUpdateDialog extends StatefulWidget {
+  final List<String> existingUpdateIds;
+  final List<String> newInstallIds;
+  final List<String> trackOnlyUpdateIds;
+  final int totalApps;
+  final Map<String, AppInMemory> apps;
+
+  const _BulkUpdateDialog({
+    required this.existingUpdateIds,
+    required this.newInstallIds,
+    required this.trackOnlyUpdateIds,
+    required this.totalApps,
+    required this.apps,
+  });
+
+  @override
+  State<_BulkUpdateDialog> createState() => _BulkUpdateDialogState();
+}
+
+class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
+  late Set<String> selectedIds;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedIds = {...widget.existingUpdateIds, ...widget.trackOnlyUpdateIds};
+    if (widget.existingUpdateIds.isEmpty) {
+      selectedIds.addAll(widget.newInstallIds);
+    }
+  }
+
+  bool get allSelected => selectedIds.length == widget.totalApps;
+
+  void _toggleAll() {
+    setState(() {
+      if (allSelected) {
+        selectedIds.clear();
+      } else {
+        selectedIds = {
+          ...widget.existingUpdateIds,
+          ...widget.newInstallIds,
+          ...widget.trackOnlyUpdateIds,
+        };
+      }
+    });
+  }
+
+  Widget _sectionHeader(String label, List<String> ids, ColorScheme cs) {
+    if (ids.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: cs.primary,
+            ),
+          ),
+          Text(
+            ' (${ids.length})',
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _appCheckRow(String id, ColorScheme cs) {
+    final aim = widget.apps[id];
+    if (aim == null) return const SizedBox.shrink();
+    final isNewInstall = aim.app.installedVersion == null;
+    final isUpdate =
+        aim.app.installedVersion != null &&
+        aim.app.installedVersion != aim.app.latestVersion;
+    final versionLabel = isUpdate
+        ? '${aim.app.installedVersion} → ${aim.app.latestVersion}'
+        : aim.app.latestVersion;
+    return CheckboxListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.only(left: 4, right: 4),
+      visualDensity: VisualDensity.compact,
+      value: selectedIds.contains(id),
+      onChanged: (checked) {
+        setState(() {
+          if (checked == true) {
+            selectedIds.add(id);
+          } else {
+            selectedIds.remove(id);
+          }
+        });
+      },
+      secondary: AppIcon(
+        bytes: aim.icon,
+        size: 36,
+        radius: 8,
+        dimmed: isNewInstall,
+      ),
+      title: Text(
+        aim.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 14),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (aim.author.isNotEmpty)
+            Text(
+              tr('byX', args: [aim.author]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+          if (versionLabel.isNotEmpty)
+            Text(
+              versionLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            ),
+        ],
+      ),
+      controlAffinity: ListTileControlAffinity.leading,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return AlertDialog(
+      scrollable: true,
+      title: Text(
+        tr('changeX', args: [plural('apps', widget.totalApps).toLowerCase()]),
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Checkbox(
+                  value: allSelected,
+                  tristate: selectedIds.isNotEmpty && !allSelected,
+                  onChanged: (_) => _toggleAll(),
+                  visualDensity: VisualDensity.compact,
+                ),
+                TextButton(
+                  onPressed: _toggleAll,
+                  child: Text(
+                    allSelected
+                        ? tr('deselectX', args: [widget.totalApps.toString()])
+                        : tr('selectAll'),
+                  ),
+                ),
+              ],
+            ),
+            _sectionHeader(tr('updates'), widget.existingUpdateIds, cs),
+            ...widget.existingUpdateIds.map((id) => _appCheckRow(id, cs)),
+            _sectionHeader(tr('nonInstalledApps'), widget.newInstallIds, cs),
+            ...widget.newInstallIds.map((id) => _appCheckRow(id, cs)),
+            if (widget.trackOnlyUpdateIds.isNotEmpty) ...[
+              _sectionHeader(tr('trackOnly'), widget.trackOnlyUpdateIds, cs),
+              ...widget.trackOnlyUpdateIds.map((id) => _appCheckRow(id, cs)),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          autofocus: context.read<SettingsProvider>().isTV,
+          onPressed: () {
+            Navigator.of(context).pop(null);
+          },
+          child: Text(tr('cancel')),
+        ),
+        FilledButton(
+          onPressed: selectedIds.isEmpty
+              ? null
+              : () {
+                  context.read<SettingsProvider>().selectionClick();
+                  Navigator.of(context).pop(selectedIds);
+                },
+          child: Text(tr('continue')),
+        ),
+      ],
+    );
+  }
+}
+
+class _TVSearchBar extends StatefulWidget {
+  const _TVSearchBar({
+    required this.controller,
+    required this.onChanged,
+    required this.trailing,
+    required this.hintText,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final List<Widget> trailing;
+  final String hintText;
+
+  @override
+  State<_TVSearchBar> createState() => _TVSearchBarState();
+}
+
+class _TVSearchBarState extends State<_TVSearchBar> {
+  final FocusNode _textFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _textFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TvTextFieldFocus(
+          textFocusNode: _textFocus,
+          borderRadius: 28,
+          child: TextField(
+            focusNode: _textFocus,
+            controller: widget.controller,
+            onChanged: widget.onChanged,
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              prefixIcon: const Icon(Icons.search_rounded),
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(28)),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: widget.trailing,
+        ),
+      ],
     );
   }
 }

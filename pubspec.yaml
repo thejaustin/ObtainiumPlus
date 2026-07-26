@@ -2,7 +2,7 @@ name: obtainium
 description: Get Android app updates straight from the source.
 publish_to: 'none'
 
-version: 1.6.0-p1+2399
+version: 1.6.10-p1+2400
 
 environment:
   sdk: ^3.12.0
@@ -54,7 +54,7 @@ dependencies:
       ref: 6dbcdf2c2045e326f59c062f542724aedf73cb6e
   crypto: ^3.0.7
   bcrypt: ^1.2.0
-  app_links: ^7.2.0
+  app_links: ^7.2.1
   equations: ^6.0.0
   flex_color_picker: ^3.8.0
   android_system_font: # TODO: Forked dependency; watch upstream for releases
@@ -70,7 +70,7 @@ dependencies:
   battery_plus: ^7.1.0
   flutter_charset_detector: ^6.0.0
   protobuf: ^3.1.0
-  flutter_markdown_plus: ^1.0.11
+  flutter_markdown_plus: ^1.0.12
   workmanager: ^0.9.0+3
 
 dev_dependencies:

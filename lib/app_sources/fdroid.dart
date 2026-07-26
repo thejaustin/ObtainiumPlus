@@ -13,16 +13,19 @@ import 'package:obtainium/providers/source_provider.dart';
 
 class FDroid extends AppSource {
   static const _maxChangeLogCodeUnits = 2048;
+  @override
+  String get name => tr('fdroid');
+
   FDroid() {
     hosts = ['f-droid.org'];
-    name = 'F-Droid official';
     naiveStandardVersionDetection = true;
     canSearch = true;
     inferAppIdFromUrlPath = true;
   }
 
   @override
-  List<List<GeneratedFormItem>> get additionalSourceAppSpecificSettingFormItems => [
+  List<List<GeneratedFormItem>>
+  get additionalSourceAppSpecificSettingFormItems => [
     [
       GeneratedFormTextField(
         'filterVersionsByRegEx',

@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:bcrypt/bcrypt.dart';
 import 'package:crypto/crypto.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -16,8 +17,10 @@ import 'package:obtainium/providers/source_provider.dart';
 /// Token generation adapted from https://github.com/XiaoMengXinX/FuckCoolapkTokenV2
 /// and https://github.com/Coolapk-UWP/Coolapk-UWP
 class CoolApk extends AppSource {
+  @override
+  String get name => tr('coolApk');
+
   CoolApk() {
-    name = 'CoolApk';
     hosts = ['coolapk.com'];
     allowSubDomains = true;
     naiveStandardVersionDetection = true;
@@ -120,7 +123,11 @@ class CoolApk extends AppSource {
     Map<String, dynamic> additionalSettings,
   ) async {
     final String url = '$apiUrl/v6/apk/download?pn=$appId&aid=$aid';
-    final res = await sourceRequest(url, additionalSettings, followRedirects: false);
+    final res = await sourceRequest(
+      url,
+      additionalSettings,
+      followRedirects: false,
+    );
     if (res.statusCode >= 300 && res.statusCode < 400) {
       final String location = res.headers['location'] ?? '';
       return location;
