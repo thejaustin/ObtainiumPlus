@@ -87,7 +87,7 @@ class AppUpdateService {
       LogsProvider().add(
         'Not offering $latest as an update for ${app.id}: '
         'installed version $installed appears newer',
-        level: LogLevels.warning,
+        level: LogLevel.warning,
       );
     }, (_, __) {});
   }

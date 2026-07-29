@@ -1515,6 +1515,45 @@ class _AppPageState extends State<AppPage> {
       ),
     );
 
+    buildScrollableBody() {
+      final scrollableBody = showAppWebpageFinal
+          ? PopScope(
+              canPop: false,
+              onPopInvoked: (didPop) {
+                if (didPop) return;
+                Navigator.of(context).pop();
+              },
+              child: getAppWebView(),
+            )
+          : CustomScrollView(
+              controller: widget.scrollController,
+              physics: widget.isModal
+                  ? const BouncingScrollPhysics()
+                  : const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Column(children: [getFullInfoColumn()]),
+                ),
+                const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
+              ],
+            );
+      // Modal mode already dismisses via the sheet's own swipeDismissible
+      // drag; skip RefreshIndicator there so it doesn't swallow that
+      // downward drag as a pull-to-refresh instead of letting it bubble up
+      // to the sheet.
+      if (widget.isModal) {
+        return scrollableBody;
+      }
+      return RefreshIndicator(
+        onRefresh: () async {
+          if (app != null) {
+            getUpdate(app.app.id);
+          }
+        },
+        child: scrollableBody,
+      );
+    }
+
     final scaffold = Scaffold(
       appBar: widget.isModal
           ? null
@@ -1522,34 +1561,7 @@ class _AppPageState extends State<AppPage> {
       backgroundColor: widget.isModal
           ? Colors.transparent
           : Theme.of(context).colorScheme.surface,
-      body: RefreshIndicator(
-        child: showAppWebpageFinal
-            ? PopScope(
-                canPop: false,
-                onPopInvoked: (didPop) {
-                  if (didPop) return;
-                  Navigator.of(context).pop();
-                },
-                child: getAppWebView(),
-              )
-            : CustomScrollView(
-                controller: widget.scrollController,
-                physics: widget.isModal
-                    ? const BouncingScrollPhysics()
-                    : const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Column(children: [getFullInfoColumn()]),
-                  ),
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
-                ],
-              ),
-        onRefresh: () async {
-          if (app != null) {
-            getUpdate(app.app.id);
-          }
-        },
-      ),
+      body: buildScrollableBody(),
       bottomSheet: getBottomSheetMenu(),
     );
 
