@@ -134,7 +134,8 @@ class ThemeSettingsSection extends StatelessWidget {
       ),
 
       // Advanced/Experimental Section
-      if (advancedWidgets.any((w) => w is! SizedBox))
+      if (plusSettings.enableAllPlusFeatures &&
+          advancedWidgets.any((w) => w is! SizedBox))
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(

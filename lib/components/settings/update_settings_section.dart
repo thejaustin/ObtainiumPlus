@@ -354,46 +354,6 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureToggle(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required dynamic Function(dynamic) value,
-    required void Function(dynamic, bool) onChanged,
-    required bool Function(dynamic) visible,
-    required Type providerType,
-  }) {
-    if (providerType == SettingsProvider) {
-      return Consumer<SettingsProvider>(
-        builder: (context, settings, child) {
-          if (!visible(settings)) return const SizedBox.shrink();
-          return SwitchListTile.adaptive(
-            secondary: Icon(icon),
-            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text(subtitle),
-            value: value(settings),
-            onChanged: (v) => onChanged(settings, v),
-          );
-        },
-      );
-    } else if (providerType == UpdateSettingsProvider) {
-      return Consumer<UpdateSettingsProvider>(
-        builder: (context, settings, child) {
-          if (!visible(settings)) return const SizedBox.shrink();
-          return SwitchListTile.adaptive(
-            secondary: Icon(icon),
-            title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text(subtitle),
-            value: value(settings),
-            onChanged: (v) => onChanged(settings, v),
-          );
-        },
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
   Widget _buildAdditionalUpdateSettings(BuildContext context) {
     return Consumer3<
       UpdateSettingsProvider,
@@ -434,7 +394,9 @@ class UpdateSettingsSection extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.tertiaryContainer,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(
+                          plusSettings.plusGlobalCornerRadius.clamp(0.0, 12.0),
+                        ),
                       ),
                       child: Text(
                         tr('beta'),

@@ -32,7 +32,9 @@ class AppsViewSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
-    final plusSettings = context.watch<PlusSettingsProvider>();
+    final plusFeaturesEnabled = context.select<PlusSettingsProvider, bool>(
+      (s) => s.enableAllPlusFeatures,
+    );
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category'))
@@ -193,7 +195,7 @@ class AppsViewSettingsSection extends StatelessWidget {
     ];
 
     final bool showFabMenuGrid =
-        plusSettings.enableAllPlusFeatures &&
+        plusFeaturesEnabled &&
         (_matches(tr('fabShowSearch')) ||
             _matches(tr('fabShowAddByUrl')) ||
             _matches(tr('fabShowGithubStarred')) ||
@@ -426,7 +428,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (sortingWidgets.any((w) => w is! SizedBox))
+        if (plusFeaturesEnabled && sortingWidgets.any((w) => w is! SizedBox))
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusSectionOrganizationSorting'),
             isExpandable: true,
@@ -464,8 +466,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusSettings.enableAllPlusFeatures &&
-            searchWidgets.any((w) => w is! SizedBox))
+        if (plusFeaturesEnabled && searchWidgets.any((w) => w is! SizedBox))
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('searchSettings'),
             settings: [
