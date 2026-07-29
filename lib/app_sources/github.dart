@@ -456,8 +456,14 @@ class GitHub extends AppSource {
       if (b == null) return 1;
 
       if (isDateOnly) {
-        final dateA = dates.putIfAbsent(a, () => _getReleaseDateFromRelease(a, useLatestAssetDateAsReleaseDate));
-        final dateB = dates.putIfAbsent(b, () => _getReleaseDateFromRelease(b, useLatestAssetDateAsReleaseDate));
+        final dateA = dates.putIfAbsent(
+          a,
+          () => _getReleaseDateFromRelease(a, useLatestAssetDateAsReleaseDate),
+        );
+        final dateB = dates.putIfAbsent(
+          b,
+          () => _getReleaseDateFromRelease(b, useLatestAssetDateAsReleaseDate),
+        );
         return (dateA ?? DateTime(1)).compareTo(dateB ?? DateTime(0));
       }
 
@@ -466,8 +472,14 @@ class GitHub extends AppSource {
       final stdFormats = formats[a]!.intersection(formats[b]!);
 
       if (sortMethod == 'smartname-datefallback' && stdFormats.isEmpty) {
-        final dateA = _getReleaseDateFromRelease(a, useLatestAssetDateAsReleaseDate);
-        final dateB = _getReleaseDateFromRelease(b, useLatestAssetDateAsReleaseDate);
+        final dateA = _getReleaseDateFromRelease(
+          a,
+          useLatestAssetDateAsReleaseDate,
+        );
+        final dateB = _getReleaseDateFromRelease(
+          b,
+          useLatestAssetDateAsReleaseDate,
+        );
         return (dateA ?? DateTime(1)).compareTo(dateB ?? DateTime(0));
       }
 

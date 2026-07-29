@@ -346,7 +346,9 @@ class AppListTile extends StatelessWidget {
         children: [
           if (hasUpdate) ...[_updateButton(context), const SizedBox(width: 8)],
           HighlightableButton(
-            highlight: context.watch<BehaviorSettingsProvider>().highlightTouchTargets,
+            highlight: context
+                .watch<BehaviorSettingsProvider>()
+                .highlightTouchTargets,
             onPressed: showChangesFn,
             label: Column(
               mainAxisAlignment: MainAxisAlignment.center,

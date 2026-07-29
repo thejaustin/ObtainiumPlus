@@ -166,7 +166,8 @@ Future<http.Response> httpClientResponseStreamToFinalResponse(
 );
 
 /// Delegates to [HttpService.getHttpError].
-ObtainiumError getObtainiumHttpError(Response res) => HttpService().getHttpError(res);
+ObtainiumError getObtainiumHttpError(Response res) =>
+    HttpService().getHttpError(res);
 
 /// Delegates to [VersionService.regExValidator].
 String? regExValidator(String? value) => VersionService().regExValidator(value);

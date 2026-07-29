@@ -124,7 +124,13 @@ Null Function()? getChangeLogFn(BuildContext context, App app) {
       ? null
       : () {
           if (changeLog != null) {
-            showChangeLogDialog(context, app, changesUrl, appSource!, changeLog);
+            showChangeLogDialog(
+              context,
+              app,
+              changesUrl,
+              appSource!,
+              changeLog,
+            );
           } else {
             launchUrlString(changesUrl!, mode: LaunchMode.externalApplication);
           }

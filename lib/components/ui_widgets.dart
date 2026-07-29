@@ -438,11 +438,7 @@ Widget _wrapChildWithRadius(Widget w, BorderRadius radius) {
     final r = radius;
     final isFirst = r.topLeft.x == connectedTileBigRadius;
     final isLast = r.bottomLeft.x == connectedTileBigRadius;
-    return ConnectedCard(
-      isFirst: isFirst,
-      isLast: isLast,
-      child: w,
-    );
+    return ConnectedCard(isFirst: isFirst, isLast: isLast, child: w);
   }
   if (w is ConnectedCard) {
     final r = radius;
@@ -468,8 +464,7 @@ List<Widget> shapeCardTiles(List<Widget> children) {
       continue;
     }
     final prevIsTile = i > 0 && _isTile(children[i - 1]);
-    final nextIsTile =
-        i < children.length - 1 && _isTile(children[i + 1]);
+    final nextIsTile = i < children.length - 1 && _isTile(children[i + 1]);
     result.add(
       _wrapChildWithRadius(
         w,

@@ -50,9 +50,7 @@ class XdaDevelopers extends AppSource {
     var names = AppNames(runtimeType.toString(), threadName);
 
     // Find all links to attachments that end in .apk
-    var attachmentLinks = document.querySelectorAll(
-      'a[href*="attachments/"]',
-    );
+    var attachmentLinks = document.querySelectorAll('a[href*="attachments/"]');
 
     for (var link in attachmentLinks) {
       String text = link.text.trim().toLowerCase();
@@ -81,4 +79,3 @@ class XdaDevelopers extends AppSource {
     throw NoAPKError();
   }
 }
-
