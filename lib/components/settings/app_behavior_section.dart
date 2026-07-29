@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/locale_constants.dart';
@@ -139,6 +141,7 @@ class AppBehaviorSection extends StatelessWidget {
             initiallyExpanded: false,
             children: children,
           ),
+        _buildDiscoverySafetyGroup(context, isSearching),
         Consumer<BehaviorSettingsProvider>(
           builder: (context, settings, _) {
             if (!settings.enableSwipeGestures &&
@@ -226,6 +229,158 @@ class AppBehaviorSection extends StatelessWidget {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDiscoverySafetyGroup(BuildContext context, bool isSearching) {
+    return Consumer<PlusSettingsProvider>(
+      builder: (context, settings, child) {
+        if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
+
+        final items = [
+          if (_matches(tr('plusDiscover')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.explore_outlined),
+              title: Text(
+                tr('plusDiscover'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusDiscoverDescription')),
+              value: settings.plusEnableDiscover,
+              onChanged: (val) {
+                AppHaptics.selectionClick();
+                settings.plusEnableDiscover = val;
+              },
+            ),
+          if (_matches(tr('plusDiscoverSuggestions')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.auto_awesome_outlined),
+              title: Text(
+                tr('plusDiscoverSuggestions'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusDiscoverSuggestionsDescription')),
+              value: settings.plusDiscoverSuggestions,
+              onChanged: (val) {
+                AppHaptics.selectionClick();
+                settings.plusDiscoverSuggestions = val;
+              },
+            ),
+          if (_matches(tr('importInstalledApps')))
+            ListTile(
+              leading: const Icon(Icons.install_mobile_rounded),
+              title: Text(
+                tr('importInstalledApps'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('importInstalledAppsDescription')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                AppHaptics.selectionClick();
+                showSystemAppSelectorSheet(context: context);
+              },
+            ),
+          if (_matches(tr('plusEnableBanWarnings'), isAdvanced: true)) ...[
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.warning_amber_rounded),
+              title: Text(
+                tr('plusEnableBanWarnings'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusEnableBanWarningsDescription')),
+              value: settings.plusEnableBanWarnings,
+              onChanged: (val) async {
+                if (val) {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => GlassDialog(
+                      title: tr('plusEnableBanWarnings'),
+                      icon: Icons.warning_amber_rounded,
+                      content: Text(tr('plusEnableBanWarningsDescription')),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(tr('cancel')),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text(tr('enable')),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    settings.plusEnableBanWarnings = true;
+                  }
+                } else {
+                  settings.plusEnableBanWarnings = false;
+                }
+              },
+            ),
+            if (settings.plusEnableBanWarnings)
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 72.0,
+                  right: 24.0,
+                  bottom: 12.0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr(
+                        'plusBanWarningThresholdDescription',
+                        args: [settings.plusBanWarningThreshold.toString()],
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Slider(
+                            value: settings.plusBanWarningThreshold.toDouble(),
+                            min: 1,
+                            max: 50,
+                            divisions: 49,
+                            label: settings.plusBanWarningThreshold.toString(),
+                            onChanged: (val) {
+                              settings.plusBanWarningThreshold = val.round();
+                            },
+                          ),
+                        ),
+                        Container(
+                          width: 40,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            settings.plusBanWarningThreshold.toString(),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ];
+
+        if (items.isEmpty) return const SizedBox.shrink();
+
+        return ExpressiveSettingsGroup(
+          title: isSearching ? null : tr('appDiscoveryAndSafety'),
+          icon: Icons.explore_outlined,
+          isExpandable: !isSearching,
+          initiallyExpanded: false,
+          children: items,
         );
       },
     );

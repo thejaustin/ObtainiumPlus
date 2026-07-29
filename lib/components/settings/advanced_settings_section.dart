@@ -109,6 +109,24 @@ class AdvancedSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.autoExportOnChanges = v,
         visible: (s) => _matches(tr('autoExportOnChanges'), isAdvanced: true),
       ),
+      Consumer<PlusSettingsProvider>(
+        builder: (context, plusSettings, child) {
+          if (!plusSettings.enableAllPlusFeatures ||
+              !_matches(tr('backupEncryption'), isAdvanced: true)) {
+            return const SizedBox.shrink();
+          }
+          return SwitchListTile.adaptive(
+            secondary: const Icon(Icons.enhanced_encryption_outlined),
+            title: Text(
+              tr('backupEncryption'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('backupEncryptionDescription')),
+            value: plusSettings.backupEncryptionEnabled,
+            onChanged: (v) => plusSettings.backupEncryptionEnabled = v,
+          );
+        },
+      ),
       _buildTokenConfigTile(
         context,
         icon: Icons.login_outlined,

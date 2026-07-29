@@ -748,7 +748,10 @@ class ThemeSettingsSection extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 4.0,
+              ),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -770,8 +773,9 @@ class ThemeSettingsSection extends StatelessWidget {
                           color: isSelected
                               ? Theme.of(context).colorScheme.onPrimaryContainer
                               : Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                           fontSize: 12,
                         ),
                         onPressed: () {
@@ -882,7 +886,10 @@ class ThemeSettingsSection extends StatelessWidget {
   }) {
     return Consumer<T>(
       builder: (context, settings, child) {
+        final plusGatedOff =
+            settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
         if (!visible(settings) ||
+            plusGatedOff ||
             (isAdvanced && !(showAdvancedSettings ?? false)))
           return const SizedBox.shrink();
         return SwitchListTile.adaptive(
