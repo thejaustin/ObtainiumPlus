@@ -663,7 +663,10 @@ class AppActionsFAB extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
     final showSearch =
         !settings.plusTopUILayout && settings.plusShowFloatingSearch;
-    final fabRadius = (settings.plusGlobalCornerRadius * 0.66).clamp(12.0, 28.0);
+    final fabRadius = (settings.plusGlobalCornerRadius * 0.66).clamp(
+      12.0,
+      28.0,
+    );
 
     if (showSearch) {
       return Row(

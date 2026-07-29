@@ -43,13 +43,6 @@ class SamsungGalaxyStore extends AppSource {
     var versionElement = document.querySelector('.version-class-placeholder');
     String version = versionElement?.text.trim() ?? 'Unknown';
 
-    return APKDetails(
-      version,
-      [],
-      names,
-      releaseDate: null,
-      changeLog: null,
-    );
+    return APKDetails(version, [], names, releaseDate: null, changeLog: null);
   }
 }
-

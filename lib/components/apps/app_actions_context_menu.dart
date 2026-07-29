@@ -23,7 +23,10 @@ class AppActionsContextMenu {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
         final plusSettings = context.watch<PlusSettingsProvider>();
-        final sheetRadius = plusSettings.plusGlobalCornerRadius.clamp(16.0, 32.0);
+        final sheetRadius = plusSettings.plusGlobalCornerRadius.clamp(
+          16.0,
+          32.0,
+        );
         final iconRadius = CardMetrics.inner(sheetRadius);
 
         return Container(

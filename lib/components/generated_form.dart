@@ -568,9 +568,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       values[fieldKey] as Map<String, MapEntry<int, bool>>?;
                   temp ??= {};
                   if (temp[label] == null) {
-                    var singleSelect =
-                        item
-                            .singleSelect;
+                    var singleSelect = item.singleSelect;
                     var someSelected = temp.entries
                         .where((element) => element.value.value)
                         .isNotEmpty;
@@ -592,100 +590,93 @@ class _GeneratedFormState extends State<GeneratedForm> {
               if ((values[fieldKey] as Map<String, MapEntry<int, bool>>?)
                           ?.isNotEmpty ==
                       true &&
-                  item
-                      .showLabelWhenNotEmpty)
+                  item.showLabelWhenNotEmpty)
                 Column(
-                  crossAxisAlignment:
-                      item.alignment ==
-                          WrapAlignment.center
+                  crossAxisAlignment: item.alignment == WrapAlignment.center
                       ? CrossAxisAlignment.center
                       : CrossAxisAlignment.stretch,
-                  children: [
-                    Text(item.label),
-                    const SizedBox(height: 8),
-                  ],
+                  children: [Text(item.label), const SizedBox(height: 8)],
                 ),
               Wrap(
-                alignment:
-                    item.alignment,
+                alignment: item.alignment,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   ...() sync* {
-                    var tagEntries =
-                        values[fieldKey] as Map<String, MapEntry<int, bool>>?;
-                    if (tagEntries != null) {
-                      var sorted = tagEntries.entries.toList()
-                        ..sort((a, b) => a.key
-                            .toLowerCase()
-                            .compareTo(b.key.toLowerCase()));
-                      yield* sorted;
-                    }
-                  }().map((e2) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: ChoiceChip(
-                                label: Text(e2.key),
-                                backgroundColor: Color(
-                                  e2.value.key,
-                                ).withValues(alpha: 50 / 255),
-                                selectedColor: Color(e2.value.key),
-                                visualDensity: VisualDensity.compact,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    Provider.of<PlusSettingsProvider>(
-                                      context,
-                                      listen: false,
-                                    ).plusGlobalCornerRadius.clamp(0.0, 16.0),
-                                  ),
-                                ),
-                                selected: e2.value.value,
-                                onSelected: (value) {
-                                  setState(() {
-                                    (values[fieldKey]
-                                        as Map<String, MapEntry<int, bool>>)[e2
-                                        .key] = MapEntry(
-                                      (values[fieldKey]
-                                              as Map<
-                                                String,
-                                                MapEntry<int, bool>
-                                              >)[e2.key]!
-                                          .key,
-                                      value,
-                                    );
-                                    if (item.singleSelect &&
-                                        value == true) {
-                                      for (var key
-                                          in (values[fieldKey]
-                                                  as Map<
-                                                    String,
-                                                    MapEntry<int, bool>
-                                                  >)
-                                              .keys) {
-                                        if (key != e2.key) {
-                                          (values[fieldKey]
-                                              as Map<
-                                                String,
-                                                MapEntry<int, bool>
-                                              >)[key] = MapEntry(
-                                            (values[fieldKey]
-                                                    as Map<
-                                                      String,
-                                                      MapEntry<int, bool>
-                                                    >)[key]!
-                                                .key,
-                                            false,
-                                          );
-                                        }
-                                      }
-                                    }
-                                    someValueChanged();
-                                  });
-                                },
+                        var tagEntries =
+                            values[fieldKey]
+                                as Map<String, MapEntry<int, bool>>?;
+                        if (tagEntries != null) {
+                          var sorted = tagEntries.entries.toList()
+                            ..sort(
+                              (a, b) => a.key.toLowerCase().compareTo(
+                                b.key.toLowerCase(),
                               ),
                             );
-                          }) ??
+                          yield* sorted;
+                        }
+                      }().map((e2) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: ChoiceChip(
+                            label: Text(e2.key),
+                            backgroundColor: Color(
+                              e2.value.key,
+                            ).withValues(alpha: 50 / 255),
+                            selectedColor: Color(e2.value.key),
+                            visualDensity: VisualDensity.compact,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                Provider.of<PlusSettingsProvider>(
+                                  context,
+                                  listen: false,
+                                ).plusGlobalCornerRadius.clamp(0.0, 16.0),
+                              ),
+                            ),
+                            selected: e2.value.value,
+                            onSelected: (value) {
+                              setState(() {
+                                (values[fieldKey]
+                                    as Map<String, MapEntry<int, bool>>)[e2
+                                    .key] = MapEntry(
+                                  (values[fieldKey]
+                                          as Map<
+                                            String,
+                                            MapEntry<int, bool>
+                                          >)[e2.key]!
+                                      .key,
+                                  value,
+                                );
+                                if (item.singleSelect && value == true) {
+                                  for (var key
+                                      in (values[fieldKey]
+                                              as Map<
+                                                String,
+                                                MapEntry<int, bool>
+                                              >)
+                                          .keys) {
+                                    if (key != e2.key) {
+                                      (values[fieldKey]
+                                          as Map<
+                                            String,
+                                            MapEntry<int, bool>
+                                          >)[key] = MapEntry(
+                                        (values[fieldKey]
+                                                as Map<
+                                                  String,
+                                                  MapEntry<int, bool>
+                                                >)[key]!
+                                            .key,
+                                        false,
+                                      );
+                                    }
+                                  }
+                                }
+                                someValueChanged();
+                              });
+                            },
+                          ),
+                        );
+                      }) ??
                       [const SizedBox.shrink()],
                   (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
                               ?.values
@@ -744,11 +735,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                 });
                               }
 
-                              if (item
-                                      .deleteConfirmationMessage !=
-                                  null) {
-                                var message =
-                                    item.deleteConfirmationMessage!;
+                              if (item.deleteConfirmationMessage != null) {
+                                var message = item.deleteConfirmationMessage!;
                                 showDialog<Map<String, dynamic>?>(
                                   context: context,
                                   builder: (BuildContext ctx) {
@@ -781,10 +769,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                           child: TextButton.icon(
                             onPressed: onAddPressed,
                             icon: const Icon(Icons.add),
-                            label: Text(
-                              item
-                                  .label,
-                            ),
+                            label: Text(item.label),
                           ),
                         )
                       : Padding(
@@ -802,9 +787,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
           );
         } else if (item is GeneratedFormSubForm) {
           List<Widget> subformColumn = [];
-          var compact =
-              item.items.length == 1 &&
-              item.items[0].length == 1;
+          var compact = item.items.length == 1 && item.items[0].length == 1;
           for (int i = 0; i < values[fieldKey].length; i++) {
             var internalFormKey = ValueKey(
               generateRandomNumber(
@@ -825,18 +808,15 @@ class _GeneratedFormState extends State<GeneratedForm> {
                     ),
                   GeneratedForm(
                     key: internalFormKey,
-                    items:
-                        cloneFormItems(
-                              item.items,
-                            )
-                            .map(
-                              (x) => x.map((y) {
-                                y.defaultValue = values[fieldKey]?[i]?[y.key];
-                                y.key = '${y.key.toString()},$internalFormKey';
-                                return y;
-                              }).toList(),
-                            )
-                            .toList(),
+                    items: cloneFormItems(item.items)
+                        .map(
+                          (x) => x.map((y) {
+                            y.defaultValue = values[fieldKey]?[i]?[y.key];
+                            y.key = '${y.key.toString()},$internalFormKey';
+                            return y;
+                          }).toList(),
+                        )
+                        .toList(),
                     onValueChanges: (values, valid, isBuilding) {
                       values = values.map(
                         (key, value) => MapEntry(key.split(',')[0], value),
@@ -866,9 +846,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                 someValueChanged();
                               }
                             : null,
-                        label: Text(
-                          '${item.label} (${i + 1})',
-                        ),
+                        label: Text('${item.label} (${i + 1})'),
                         icon: const Icon(Icons.delete_outline_rounded),
                       ),
                     ],
@@ -886,17 +864,13 @@ class _GeneratedFormState extends State<GeneratedForm> {
                     child: ElevatedButton.icon(
                       onPressed: () {
                         values[fieldKey].add(
-                          getDefaultValuesFromFormItems(
-                            item.items,
-                          ),
+                          getDefaultValuesFromFormItems(item.items),
                         );
                         forceUpdateKeyCount++;
                         someValueChanged();
                       },
                       icon: const Icon(Icons.add),
-                      label: Text(
-                        item.label,
-                      ),
+                      label: Text(item.label),
                     ),
                   ),
                 ],

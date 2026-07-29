@@ -89,4 +89,3 @@ double fuzzyMatchMulti(String query, List<String?> targets) {
 
   return totalScore / tokens.length;
 }
-

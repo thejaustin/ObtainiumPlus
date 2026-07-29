@@ -334,7 +334,10 @@ class _ObtainiumState extends State<Obtainium> {
   var _launchByNotifChecked = false;
   var _fontLoaded = false;
 
-  void _manageServices(UpdateSettingsProvider updateSettings, LogsProvider logs) {
+  void _manageServices(
+    UpdateSettingsProvider updateSettings,
+    LogsProvider logs,
+  ) {
     var interval = updateSettings.updateInterval;
     var useFG = updateSettings.useFGService;
     if (interval == _lastUpdateInterval && useFG == _lastUseFGService) return;
@@ -574,7 +577,12 @@ class _ObtainiumState extends State<Obtainium> {
     }
 
     _manageServices(updateSettings, logs);
-    _handleFirstRun(settingsProvider, appsProvider, AppLogger(logs: logs), context);
+    _handleFirstRun(
+      settingsProvider,
+      appsProvider,
+      AppLogger(logs: logs),
+      context,
+    );
 
     return WithForegroundTask(
       child: DynamicColorBuilder(
