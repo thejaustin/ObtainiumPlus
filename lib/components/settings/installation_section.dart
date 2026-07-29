@@ -88,7 +88,8 @@ class InstallationSection extends StatelessWidget {
             ),
 
           // Smart Retries & Caching
-          if (_matches(tr('plusSmartRetries')))
+          if (plusSettings.enableAllPlusFeatures &&
+              _matches(tr('plusSmartRetries')))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.bolt_outlined),
               title: Text(
@@ -100,8 +101,37 @@ class InstallationSection extends StatelessWidget {
               onChanged: (v) => plusSettings.plusEnableSmartRetries = v,
             ),
 
+          // MicroG Compat Hub
+          if (plusSettings.enableAllPlusFeatures &&
+              _matches(tr('plusEnableMicroGHub')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.hub_outlined),
+              title: Text(
+                tr('plusEnableMicroGHub'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusEnableMicroGHubDescription')),
+              value: plusSettings.plusEnableMicroGHub,
+              onChanged: (v) => plusSettings.plusEnableMicroGHub = v,
+            ),
+
+          // Standalone Installer
+          if (plusSettings.enableAllPlusFeatures &&
+              _matches(tr('plusEnableStandaloneInstaller')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.install_mobile_outlined),
+              title: Text(
+                tr('plusEnableStandaloneInstaller'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('plusEnableStandaloneInstallerDescription')),
+              value: plusSettings.plusEnableStandaloneInstaller,
+              onChanged: (v) => plusSettings.plusEnableStandaloneInstaller = v,
+            ),
+
           // Update Ownership (Android 14+)
-          if (_matches(tr('plusUpdateOwnership')))
+          if (plusSettings.enableAllPlusFeatures &&
+              _matches(tr('plusUpdateOwnership')))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.security_update_good_rounded),
               title: Text(
@@ -114,7 +144,8 @@ class InstallationSection extends StatelessWidget {
             ),
 
           // User Pre-approval (Android 14+)
-          if (_matches(tr('plusUserPreapproval')))
+          if (plusSettings.enableAllPlusFeatures &&
+              _matches(tr('plusUserPreapproval')))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.touch_app_outlined),
               title: Text(

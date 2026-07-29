@@ -32,6 +32,7 @@ class AppsViewSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category'))
@@ -161,7 +162,91 @@ class AppsViewSettingsSection extends StatelessWidget {
         visible: (s) => _matches(tr('plusCategoryReorder')),
         isAdvanced: true,
       ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.info_outline_rounded,
+        title: tr('plusShowStatusHub'),
+        subtitle: tr('plusShowStatusHubDescription'),
+        value: (s) => s.plusShowStatusHub,
+        onChanged: (s, v) => onSetState(() => s.plusShowStatusHub = v),
+        visible: (s) => _matches(tr('plusShowStatusHub')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.navigation_rounded,
+        title: tr('plusEnableBottomNavBar'),
+        subtitle: tr('plusEnableBottomNavBarDescription'),
+        value: (s) => s.plusEnableBottomNavBar,
+        onChanged: (s, v) => onSetState(() => s.plusEnableBottomNavBar = v),
+        visible: (s) => _matches(tr('plusEnableBottomNavBar')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.add_circle_outline_rounded,
+        title: tr('plusEnableFAB'),
+        subtitle: tr('plusEnableFABDescription'),
+        value: (s) => s.plusEnableFAB,
+        onChanged: (s, v) => onSetState(() => s.plusEnableFAB = v),
+        visible: (s) => _matches(tr('plusEnableFAB')),
+      ),
       _buildGridSettings(context),
+    ];
+
+    final bool showFabMenuGrid =
+        plusSettings.enableAllPlusFeatures &&
+        (_matches(tr('fabShowSearch')) ||
+            _matches(tr('fabShowAddByUrl')) ||
+            _matches(tr('fabShowGithubStarred')) ||
+            _matches(tr('fabShowGithubPersonalRepos')) ||
+            _matches(tr('fabShowImportInstalled')));
+
+    List<Widget> sortingWidgets = [
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.cached_rounded,
+        title: tr('plusIconCaching'),
+        subtitle: tr('plusIconCachingDescription'),
+        value: (s) => s.plusEnableIconCaching,
+        onChanged: (s, v) => onSetState(() => s.plusEnableIconCaching = v),
+        visible: (s) => _matches(tr('plusIconCaching')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.back_hand_outlined,
+        title: tr('plusQuickFilters'),
+        subtitle: tr('plusQuickFiltersDescription'),
+        value: (s) => s.plusEnableQuickFilters,
+        onChanged: (s, v) => onSetState(() => s.plusEnableQuickFilters = v),
+        visible: (s) => _matches(tr('plusQuickFilters')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.label_outline,
+        title: tr('plusShowTagsInList'),
+        subtitle: tr('plusShowTagsInListDescription'),
+        value: (s) => s.plusShowTagsInList,
+        onChanged: (s, v) => onSetState(() => s.plusShowTagsInList = v),
+        visible: (s) => _matches(tr('plusShowTagsInList')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.label_important_outline,
+        title: tr('plusEnableTags'),
+        subtitle: tr('plusEnableTagsDescription'),
+        value: (s) => s.plusEnableTags,
+        onChanged: (s, v) => onSetState(() => s.plusEnableTags = v),
+        visible: (s) => _matches(tr('plusEnableTags')),
+      ),
+      _buildFeatureToggle<PlusSettingsProvider>(
+        context,
+        icon: Icons.sort_rounded,
+        title: tr('plusAdvancedSorting'),
+        subtitle: tr('plusAdvancedSortingDescription'),
+        value: (s) => s.plusEnableAdvancedSorting,
+        onChanged: (s, v) => onSetState(() => s.plusEnableAdvancedSorting = v),
+        visible: (s) => _matches(tr('plusAdvancedSorting')),
+        isAdvanced: true,
+      ),
     ];
 
     List<Widget> displayWidgets = [
@@ -291,6 +376,63 @@ class AppsViewSettingsSection extends StatelessWidget {
             initiallyExpanded: false,
             children: viewWidgets,
           ),
+        if (showFabMenuGrid)
+          GenericBooleanControlGrid<PlusSettingsProvider>(
+            title: tr('fabMenuItems'),
+            settings: [
+              if (_matches(tr('fabShowSearch')))
+                (
+                  icon: Icons.search_rounded,
+                  label: tr('fabShowSearch'),
+                  description: tr('fabShowSearchDescription'),
+                  getValue: (s) => s.plusFabShowSearch,
+                  setValue: (s, v) => onSetState(() => s.plusFabShowSearch = v),
+                ),
+              if (_matches(tr('fabShowAddByUrl')))
+                (
+                  icon: Icons.link_outlined,
+                  label: tr('fabShowAddByUrl'),
+                  description: tr('fabShowAddByUrlDescription'),
+                  getValue: (s) => s.plusFabShowAddByUrl,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusFabShowAddByUrl = v),
+                ),
+              if (_matches(tr('fabShowGithubStarred')))
+                (
+                  icon: Icons.star_border_rounded,
+                  label: tr('fabShowGithubStarred'),
+                  description: tr('fabShowGithubStarredDescription'),
+                  getValue: (s) => s.plusFabShowGithubStarred,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusFabShowGithubStarred = v),
+                ),
+              if (_matches(tr('fabShowGithubPersonalRepos')))
+                (
+                  icon: Icons.person_outline_rounded,
+                  label: tr('fabShowGithubPersonalRepos'),
+                  description: tr('fabShowGithubPersonalReposDescription'),
+                  getValue: (s) => s.plusFabShowGithubPersonalRepos,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusFabShowGithubPersonalRepos = v),
+                ),
+              if (_matches(tr('fabShowImportInstalled')))
+                (
+                  icon: Icons.install_mobile_outlined,
+                  label: tr('fabShowImportInstalled'),
+                  description: tr('fabShowImportInstalledDescription'),
+                  getValue: (s) => s.plusFabShowImportInstalled,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusFabShowImportInstalled = v),
+                ),
+            ],
+          ),
+        if (sortingWidgets.any((w) => w is! SizedBox))
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('plusSectionOrganizationSorting'),
+            isExpandable: true,
+            initiallyExpanded: false,
+            children: sortingWidgets,
+          ),
         if (displayWidgets.any((w) => w is! SizedBox))
           GenericBooleanControlGrid<ViewSettingsProvider>(
             title: tr('appTileDisplay'),
@@ -322,7 +464,8 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (searchWidgets.any((w) => w is! SizedBox))
+        if (plusSettings.enableAllPlusFeatures &&
+            searchWidgets.any((w) => w is! SizedBox))
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('searchSettings'),
             settings: [
@@ -654,7 +797,10 @@ class AppsViewSettingsSection extends StatelessWidget {
   }) {
     return Consumer<T>(
       builder: (context, settings, child) {
+        final plusGatedOff =
+            settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
         if (!visible(settings) ||
+            plusGatedOff ||
             (isAdvanced && !(showAdvancedSettings ?? false)))
           return const SizedBox.shrink();
         return SwitchListTile.adaptive(

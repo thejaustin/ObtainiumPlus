@@ -233,6 +233,27 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         subtitle: tr('clearIconCacheDescription'),
         onTap: () => _clearIconCache(context),
       ),
+      if (plusSettings.enableAllPlusFeatures &&
+          plusSettings.plusDeveloperMode &&
+          _matches('third party loading indicator'))
+        SwitchListTile.adaptive(
+          secondary: Icon(
+            Icons.refresh_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(
+            'Use 3rd Party Loading Indicator',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+            'Swaps custom M3E wavy indicator for the loading_indicator_m3e package for comparison.',
+          ),
+          value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
+          onChanged: (val) {
+            AppHaptics.selectionClick();
+            plusSettings.plusDevUseThirdPartyLoadingIndicator = val;
+          },
+        ),
       if (plusSettings.plusDeveloperMode)
         _buildCleanupTile(
           context,

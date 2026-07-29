@@ -414,7 +414,60 @@ class UpdateSettingsSection extends StatelessWidget {
                 onChanged: (value) =>
                     updateSettings.checkUpdateOnDetailPage = value,
               ),
-            if (_matches(tr('updateSchedule')) &&
+            if (plusSettings.enableAllPlusFeatures &&
+                _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.system_update_alt_rounded),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        tr('plusSystemUpdateScanner'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        tr('beta'),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onTertiaryContainer,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: Text(tr('plusSystemUpdateScannerDescription')),
+                value: plusSettings.plusEnableSystemUpdateScanner,
+                onChanged: (v) =>
+                    plusSettings.plusEnableSystemUpdateScanner = v,
+              ),
+            if (plusSettings.enableAllPlusFeatures &&
+                _matches(tr('plusEnableUpdateSchedule')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.schedule_outlined),
+                title: Text(
+                  tr('plusEnableUpdateSchedule'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                subtitle: Text(tr('plusEnableUpdateScheduleDescription')),
+                value: plusSettings.plusEnableUpdateSchedule,
+                onChanged: (v) => plusSettings.plusEnableUpdateSchedule = v,
+              ),
+            if (plusSettings.enableAllPlusFeatures &&
+                _matches(tr('updateSchedule')) &&
                 plusSettings.plusEnableUpdateSchedule)
               ListTile(
                 leading: const Icon(Icons.schedule_outlined),
@@ -554,7 +607,23 @@ class UpdateSettingsSection extends StatelessWidget {
                       onChanged: (value) =>
                           behaviorSettings.allowThirdPartySources = value,
                     ),
-                  if (plusSettings.plusEnableAutoUpdateRules &&
+                  if (plusSettings.enableAllPlusFeatures &&
+                      _matches(tr('plusEnableAutoUpdateRules')))
+                    SwitchListTile.adaptive(
+                      secondary: const Icon(Icons.rule_outlined),
+                      title: Text(
+                        tr('plusEnableAutoUpdateRules'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(
+                        tr('plusEnableAutoUpdateRulesDescription'),
+                      ),
+                      value: plusSettings.plusEnableAutoUpdateRules,
+                      onChanged: (v) =>
+                          plusSettings.plusEnableAutoUpdateRules = v,
+                    ),
+                  if (plusSettings.enableAllPlusFeatures &&
+                      plusSettings.plusEnableAutoUpdateRules &&
                       _matches(tr('autoUpdateRules')))
                     ListTile(
                       leading: const Icon(Icons.rule_outlined),
@@ -862,20 +931,20 @@ class _RunBgUpdateCheckNowButtonState
     final LogsProvider logs = context.read<LogsProvider>();
     await logs.add(
       'Manual background update check triggered from settings',
-      level: LogLevels.info,
+      level: LogLevel.info,
     );
     try {
       final String taskId = 'manual_${DateTime.now().millisecondsSinceEpoch}';
       await BackgroundUpdateService.bgUpdateCheck(taskId, null);
       await logs.add(
         'Manual background update check completed',
-        level: LogLevels.info,
+        level: LogLevel.info,
       );
     } catch (e) {
       unawaited(
         logs.add(
           'Manual background update check failed: $e',
-          level: LogLevels.error,
+          level: LogLevel.error,
         ),
       );
     } finally {

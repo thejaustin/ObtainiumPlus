@@ -26,7 +26,23 @@ class NotificationSettingsSection extends StatelessWidget {
 
     return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
+        if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
+
         final List<Widget> children = [
+          if (_matches(tr('plusEnableNotificationEnhancements')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.notifications_active_outlined),
+              title: Text(
+                tr('plusEnableNotificationEnhancements'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                tr('plusEnableNotificationEnhancementsDescription'),
+              ),
+              value: settings.plusEnableNotificationEnhancements,
+              onChanged: (val) =>
+                  settings.plusEnableNotificationEnhancements = val,
+            ),
           if (!settings.plusEnableNotificationEnhancements)
             Padding(
               padding: const EdgeInsets.all(16.0),
