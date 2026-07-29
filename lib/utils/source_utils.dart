@@ -49,7 +49,7 @@ HttpClient createHttpClient({bool allowInsecure = false}) {
 
       talker.warning(warning);
 
-      LogsProvider().add(warning, level: LogLevels.warning);
+      LogsProvider().add(warning, level: LogLevel.warning);
       return true;
     }
     return false;
