@@ -89,7 +89,7 @@ class InstallationSection extends StatelessWidget {
 
           // Smart Retries & Caching
           if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusSmartRetries')))
+              _matches(tr('plusSmartRetries'), isAdvanced: true))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.bolt_outlined),
               title: Text(
@@ -103,7 +103,7 @@ class InstallationSection extends StatelessWidget {
 
           // MicroG Compat Hub
           if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusEnableMicroGHub')))
+              _matches(tr('plusEnableMicroGHub'), isAdvanced: true))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.hub_outlined),
               title: Text(
@@ -131,7 +131,7 @@ class InstallationSection extends StatelessWidget {
 
           // Update Ownership (Android 14+)
           if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusUpdateOwnership')))
+              _matches(tr('plusUpdateOwnership'), isAdvanced: true))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.security_update_good_rounded),
               title: Text(
@@ -145,7 +145,7 @@ class InstallationSection extends StatelessWidget {
 
           // User Pre-approval (Android 14+)
           if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusUserPreapproval')))
+              _matches(tr('plusUserPreapproval'), isAdvanced: true))
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.touch_app_outlined),
               title: Text(
