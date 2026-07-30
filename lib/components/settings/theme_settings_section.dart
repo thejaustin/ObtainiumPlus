@@ -211,7 +211,7 @@ class ThemeSettingsSection extends StatelessWidget {
           onChanged: (s, v) => s.disablePageTransitions = v,
         ),
       if (_matches(tr('reversePageTransitions')) &&
-          !themeSettings.disablePageTransitions)
+          !behaviorSettings.disablePageTransitions)
         buildFeatureToggle<BehaviorSettingsProvider>(
           context,
           icon: Icons.swap_horizontal_circle_outlined,

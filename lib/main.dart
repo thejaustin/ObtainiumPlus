@@ -35,6 +35,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_system_colors/dynamic_system_colors.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
+// ignore: implementation_imports
+import 'package:easy_localization/src/easy_localization_controller.dart';
+// ignore: implementation_imports
+import 'package:easy_localization/src/localization.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
