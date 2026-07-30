@@ -116,6 +116,7 @@ abstract class GeneratedFormItem {
   late List<dynamic> belowWidgets;
   late dynamic value;
   List<dynamic> additionalValidators;
+  String? tooltip;
   dynamic ensureType(dynamic val);
   GeneratedFormItem clone();
 
@@ -125,6 +126,7 @@ abstract class GeneratedFormItem {
     this.belowWidgets = const [],
     this.value,
     this.additionalValidators = const [],
+    this.tooltip,
   });
 
   FormFieldDefinition toDefinition() {
@@ -294,6 +296,7 @@ class GeneratedFormSwitch extends GeneratedFormItem {
     bool super.value = false,
     this.disabled = false,
     List<String? Function(bool value)> super.additionalValidators = const [],
+    super.tooltip,
   });
 
   @override
@@ -312,6 +315,7 @@ class GeneratedFormSwitch extends GeneratedFormItem {
       value: value,
       disabled: disabled,
       additionalValidators: List.from(additionalValidators),
+      tooltip: tooltip,
     );
   }
 }

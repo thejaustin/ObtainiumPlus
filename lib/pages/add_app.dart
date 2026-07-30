@@ -7,8 +7,7 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
-import 'package:obtainium/components/generated_form.dart';
-import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -406,7 +405,7 @@ class AddAppPageState extends State<AddAppPage> {
                 GeneratedFormTextField(
                   'appSourceURL',
                   label: tr('appSourceURL'),
-                  defaultValue: userInput,
+                  value: userInput,
                   additionalValidators: [
                     (value) {
                       try {
@@ -530,9 +529,7 @@ class AddAppPageState extends State<AddAppPage> {
                                           return '${uri.origin}${uri.path}';
                                         }),
                                   ],
-                                  defaultValue: e.hosts.isNotEmpty
-                                      ? e.hosts[0]
-                                      : '',
+                                  value: e.hosts.isNotEmpty ? e.hosts[0] : '',
                                   required: true,
                                 ),
                               ],
@@ -626,7 +623,7 @@ class AddAppPageState extends State<AddAppPage> {
                   [
                     GeneratedFormDropdown(
                       'overrideSource',
-                      defaultValue: pickedSourceOverride ?? '',
+                      value: pickedSourceOverride ?? '',
                       [
                         MapEntry('', tr('none')),
                         ...sourceProvider.sources
@@ -755,11 +752,11 @@ class AddAppPageState extends State<AddAppPage> {
                           for (var item in row) {
                             if (item.key == 'includePrereleases' &&
                                 settingsProvider.includePrereleasesByDefault) {
-                              item.defaultValue = true;
+                              item.value = true;
                             }
                             if (item.key == 'shizukuPretendToBeGooglePlay' &&
                                 settingsProvider.shizukuPretendToBeGooglePlay) {
-                              item.defaultValue = true;
+                              item.value = true;
                             }
                           }
                         }
@@ -795,7 +792,7 @@ class AddAppPageState extends State<AddAppPage> {
                             GeneratedFormSwitch(
                               'inferAppIdIfOptional',
                               label: tr('tryInferAppIdFromCode'),
-                              defaultValue: inferAppIdIfOptional,
+                              value: inferAppIdIfOptional,
                             ),
                           ],
                         ],

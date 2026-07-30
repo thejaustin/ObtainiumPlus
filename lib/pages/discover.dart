@@ -17,7 +17,7 @@ import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/discover_app_icon.dart';
 import 'package:obtainium/components/discover_section_header.dart';
 import 'package:obtainium/components/empty_state.dart';
-import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
@@ -271,7 +271,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                                     e.key,
                                   ) ??
                                   false) {
-                                e.defaultValue =
+                                e.value =
                                     sourceQuerySettings[source.name]![e.key];
                               }
                               return [e];
