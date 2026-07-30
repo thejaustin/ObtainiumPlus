@@ -44,68 +44,60 @@ class ThemeSettingsSection extends StatelessWidget {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     List<Widget> advancedWidgets = [
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.blur_on_rounded,
-        title: tr('glassmorphismUI'),
-        subtitle: tr('glassmorphismUIDescription'),
-        value: (s) => s.plusEnableGlassmorphism,
-        onChanged: (s, v) => s.plusEnableGlassmorphism = v,
-        visible: (s) => _matches(tr('glassmorphismUI')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.unfold_more_rounded,
-        title: tr('plusPopupSlider'),
-        subtitle: tr('plusPopupSliderDescription'),
-        value: (s) => s.plusEnablePopupSlider,
-        onChanged: (s, v) => s.plusEnablePopupSlider = v,
-        visible: (s) => _matches(tr('plusPopupSlider')),
-        isAdvanced: true,
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.brush_outlined,
-        title: tr('plusMaterialExpressive'),
-        subtitle: tr('plusMaterialExpressiveDescription'),
-        value: (s) => s.plusEnableMaterialExpressive,
-        onChanged: (s, v) => s.plusEnableMaterialExpressive = v,
-        visible: (s) => _matches(tr('plusMaterialExpressive')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.auto_mode_rounded,
-        title: tr('plusExpressiveProgress'),
-        subtitle: tr('plusExpressiveProgressDescription'),
-        value: (s) => s.plusEnableExpressiveProgress,
-        onChanged: (s, v) => s.plusEnableExpressiveProgress = v,
-        visible: (s) => _matches(tr('plusExpressiveProgress')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.unfold_more_rounded,
-        title: tr('plusBouncyPhysics'),
-        subtitle: tr('plusBouncyPhysicsDescription'),
-        value: (s) => s.plusEnableBouncyPhysics,
-        onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
-        visible: (s) => _matches(tr('plusBouncyPhysics')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.vertical_align_top_rounded,
-        title: tr('plusTopUILayout'),
-        subtitle: tr('plusTopUILayoutDescription'),
-        value: (s) => s.plusTopUILayout,
-        onChanged: (s, v) => s.plusTopUILayout = v,
-        visible: (s) => _matches(tr('plusTopUILayout')),
-        isAdvanced: true,
-      ),
+      if (_matches(tr('glassmorphismUI')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.blur_on_rounded,
+          title: tr('glassmorphismUI'),
+          subtitle: tr('glassmorphismUIDescription'),
+          value: (s) => s.plusEnableGlassmorphism,
+          onChanged: (s, v) => s.plusEnableGlassmorphism = v,
+        ),
+      if (_matches(tr('plusPopupSlider'), isAdvanced: true))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.unfold_more_rounded,
+          title: tr('plusPopupSlider'),
+          subtitle: tr('plusPopupSliderDescription'),
+          value: (s) => s.plusEnablePopupSlider,
+          onChanged: (s, v) => s.plusEnablePopupSlider = v,
+        ),
+      if (_matches(tr('plusMaterialExpressive')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.brush_outlined,
+          title: tr('plusMaterialExpressive'),
+          subtitle: tr('plusMaterialExpressiveDescription'),
+          value: (s) => s.plusEnableMaterialExpressive,
+          onChanged: (s, v) => s.plusEnableMaterialExpressive = v,
+        ),
+      if (_matches(tr('plusExpressiveProgress')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.auto_mode_rounded,
+          title: tr('plusExpressiveProgress'),
+          subtitle: tr('plusExpressiveProgressDescription'),
+          value: (s) => s.plusEnableExpressiveProgress,
+          onChanged: (s, v) => s.plusEnableExpressiveProgress = v,
+        ),
+      if (_matches(tr('plusBouncyPhysics')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.unfold_more_rounded,
+          title: tr('plusBouncyPhysics'),
+          subtitle: tr('plusBouncyPhysicsDescription'),
+          value: (s) => s.plusEnableBouncyPhysics,
+          onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
+        ),
+      if (_matches(tr('plusTopUILayout'), isAdvanced: true))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.vertical_align_top_rounded,
+          title: tr('plusTopUILayout'),
+          subtitle: tr('plusTopUILayoutDescription'),
+          value: (s) => s.plusTopUILayout,
+          onChanged: (s, v) => s.plusTopUILayout = v,
+        ),
     ];
 
     List<Widget> themeWidgets = [
@@ -113,17 +105,15 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
       if (_matches(tr('themePresets'))) _buildThemePresets(context),
-      buildFeatureToggle<ThemeSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.dark_mode_outlined,
-        title: tr('useBlackTheme'),
-        subtitle: tr('useBlackThemeDescription'),
-        value: (s) => s.useBlackTheme,
-        onChanged: (s, v) => s.useBlackTheme = v,
-        visible: (s) =>
-            _matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light,
-      ),
+      if (_matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light)
+        buildFeatureToggle<ThemeSettingsProvider>(
+          context,
+          icon: Icons.dark_mode_outlined,
+          title: tr('useBlackTheme'),
+          subtitle: tr('useBlackThemeDescription'),
+          value: (s) => s.useBlackTheme,
+          onChanged: (s, v) => s.useBlackTheme = v,
+        ),
       _buildMaterialYouToggle(context),
       _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
@@ -131,20 +121,18 @@ class ThemeSettingsSection extends StatelessWidget {
         _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.density_small_rounded,
-        title: tr('plusUseCompactSettings'),
-        subtitle: tr('plusUseCompactSettingsDescription'),
-        value: (s) => s.plusUseCompactSettings,
-        onChanged: (s, v) => s.plusUseCompactSettings = v,
-        visible: (s) => _matches(tr('plusUseCompactSettings')),
-      ),
+      if (_matches(tr('plusUseCompactSettings')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.density_small_rounded,
+          title: tr('plusUseCompactSettings'),
+          subtitle: tr('plusUseCompactSettingsDescription'),
+          value: (s) => s.plusUseCompactSettings,
+          onChanged: (s, v) => s.plusUseCompactSettings = v,
+        ),
 
       // Advanced/Experimental Section
-      if (plusSettings.enableAllPlusFeatures &&
-          advancedWidgets.any((w) => w is! SizedBox))
+      if (plusSettings.enableAllPlusFeatures && advancedWidgets.isNotEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
@@ -203,48 +191,42 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> animationWidgets = [
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.auto_awesome_motion_rounded,
-        title: tr('plusEnhancedAnimations'),
-        subtitle: tr('plusEnhancedAnimationsDescription'),
-        value: (s) => s.plusEnableEnhancedAnimations,
-        onChanged: (s, v) => s.plusEnableEnhancedAnimations = v,
-        visible: (s) => _matches(tr('plusEnhancedAnimations')),
-      ),
-      buildFeatureToggle<BehaviorSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.animation_outlined,
-        title: tr('disablePageTransitions'),
-        subtitle: tr('disablePageTransitionsDescription'),
-        value: (s) => s.disablePageTransitions,
-        onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) => _matches(tr('disablePageTransitions')),
-        isAdvanced: true,
-      ),
-      buildFeatureToggle<BehaviorSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.swap_horizontal_circle_outlined,
-        title: tr('reversePageTransitions'),
-        subtitle: tr('reversePageTransitionsDescription'),
-        value: (s) => s.reversePageTransitions,
-        onChanged: (s, v) => s.reversePageTransitions = v,
-        visible: (s) =>
-            _matches(tr('reversePageTransitions')) && !s.disablePageTransitions,
-      ),
-      buildFeatureToggle<BehaviorSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.touch_app_outlined,
-        title: tr('highlightTouchTargets'),
-        subtitle: tr('highlightTouchTargetsDescription'),
-        value: (s) => s.highlightTouchTargets,
-        onChanged: (s, v) => s.highlightTouchTargets = v,
-        visible: (s) => _matches(tr('highlightTouchTargets')),
-      ),
+      if (_matches(tr('plusEnhancedAnimations')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.auto_awesome_motion_rounded,
+          title: tr('plusEnhancedAnimations'),
+          subtitle: tr('plusEnhancedAnimationsDescription'),
+          value: (s) => s.plusEnableEnhancedAnimations,
+          onChanged: (s, v) => s.plusEnableEnhancedAnimations = v,
+        ),
+      if (_matches(tr('disablePageTransitions'), isAdvanced: true))
+        buildFeatureToggle<BehaviorSettingsProvider>(
+          context,
+          icon: Icons.animation_outlined,
+          title: tr('disablePageTransitions'),
+          subtitle: tr('disablePageTransitionsDescription'),
+          value: (s) => s.disablePageTransitions,
+          onChanged: (s, v) => s.disablePageTransitions = v,
+        ),
+      if (_matches(tr('reversePageTransitions')) && !s.disablePageTransitions)
+        buildFeatureToggle<BehaviorSettingsProvider>(
+          context,
+          icon: Icons.swap_horizontal_circle_outlined,
+          title: tr('reversePageTransitions'),
+          subtitle: tr('reversePageTransitionsDescription'),
+          value: (s) => s.reversePageTransitions,
+          onChanged: (s, v) => s.reversePageTransitions = v,
+        ),
+      if (_matches(tr('highlightTouchTargets')))
+        buildFeatureToggle<BehaviorSettingsProvider>(
+          context,
+          icon: Icons.touch_app_outlined,
+          title: tr('highlightTouchTargets'),
+          subtitle: tr('highlightTouchTargetsDescription'),
+          value: (s) => s.highlightTouchTargets,
+          onChanged: (s, v) => s.highlightTouchTargets = v,
+        ),
     ];
 
     List<Widget> shapeWidgets = [
@@ -269,16 +251,15 @@ class ThemeSettingsSection extends StatelessWidget {
           ),
         ),
       ],
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.tune_rounded,
-        title: tr('plusOverrideIndividualCornerRadius'),
-        subtitle: tr('plusOverrideIndividualCornerRadiusDescription'),
-        value: (s) => s.plusOverrideIndividualCornerRadius,
-        onChanged: (s, v) => s.plusOverrideIndividualCornerRadius = v,
-        visible: (s) => _matches(tr('plusOverrideIndividualCornerRadius')),
-      ),
+      if (_matches(tr('plusOverrideIndividualCornerRadius')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.tune_rounded,
+          title: tr('plusOverrideIndividualCornerRadius'),
+          subtitle: tr('plusOverrideIndividualCornerRadiusDescription'),
+          value: (s) => s.plusOverrideIndividualCornerRadius,
+          onChanged: (s, v) => s.plusOverrideIndividualCornerRadius = v,
+        ),
       if (plusSettings.plusOverrideIndividualCornerRadius) ...[
         if (_matches(tr('plusHomeCornerRadius'))) ...[
           ListTile(
@@ -327,7 +308,7 @@ class ThemeSettingsSection extends StatelessWidget {
 
     return Column(
       children: [
-        if (themeWidgets.any((w) => w is! SizedBox))
+        if (themeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appearance'),
             icon: Icons.palette_rounded,
@@ -336,7 +317,7 @@ class ThemeSettingsSection extends StatelessWidget {
             initiallyExpanded: false,
             children: themeWidgets,
           ),
-        if (shapeWidgets.any((w) => w is! SizedBox))
+        if (shapeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusShapesAndCorners'),
             icon: Icons.rounded_corner_rounded,
@@ -352,7 +333,7 @@ class ThemeSettingsSection extends StatelessWidget {
             },
             children: shapeWidgets,
           ),
-        if (typographyWidgets.any((w) => w is! SizedBox))
+        if (typographyWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('typography'),
             icon: Icons.font_download_rounded,
@@ -360,7 +341,7 @@ class ThemeSettingsSection extends StatelessWidget {
             initiallyExpanded: false,
             children: typographyWidgets,
           ),
-        if (animationWidgets.any((w) => w is! SizedBox))
+        if (animationWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('animations'),
             icon: Icons.animation_rounded,

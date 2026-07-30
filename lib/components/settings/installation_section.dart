@@ -89,67 +89,59 @@ class InstallationSection extends StatelessWidget {
             ),
 
           // Smart Retries & Caching
-          buildFeatureToggle<PlusSettingsProvider>(
-            context,
-            showAdvancedSettings: showAdvancedSettings,
-            icon: Icons.bolt_outlined,
-            title: tr('plusSmartRetries'),
-            subtitle: tr('plusSmartRetriesDescription'),
-            value: (s) => s.plusEnableSmartRetries,
-            onChanged: (s, v) => s.plusEnableSmartRetries = v,
-            visible: (s) => _matches(tr('plusSmartRetries'), isAdvanced: true),
-          ),
+          if (_matches(tr('plusSmartRetries'), isAdvanced: true))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.bolt_outlined,
+              title: tr('plusSmartRetries'),
+              subtitle: tr('plusSmartRetriesDescription'),
+              value: (s) => s.plusEnableSmartRetries,
+              onChanged: (s, v) => s.plusEnableSmartRetries = v,
+            ),
 
           // MicroG Compat Hub
-          buildFeatureToggle<PlusSettingsProvider>(
-            context,
-            showAdvancedSettings: showAdvancedSettings,
-            icon: Icons.hub_outlined,
-            title: tr('plusEnableMicroGHub'),
-            subtitle: tr('plusEnableMicroGHubDescription'),
-            value: (s) => s.plusEnableMicroGHub,
-            onChanged: (s, v) => s.plusEnableMicroGHub = v,
-            visible: (s) =>
-                _matches(tr('plusEnableMicroGHub'), isAdvanced: true),
-          ),
+          if (_matches(tr('plusEnableMicroGHub'), isAdvanced: true))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.hub_outlined,
+              title: tr('plusEnableMicroGHub'),
+              subtitle: tr('plusEnableMicroGHubDescription'),
+              value: (s) => s.plusEnableMicroGHub,
+              onChanged: (s, v) => s.plusEnableMicroGHub = v,
+            ),
 
           // Standalone Installer
-          buildFeatureToggle<PlusSettingsProvider>(
-            context,
-            showAdvancedSettings: showAdvancedSettings,
-            icon: Icons.install_mobile_outlined,
-            title: tr('plusEnableStandaloneInstaller'),
-            subtitle: tr('plusEnableStandaloneInstallerDescription'),
-            value: (s) => s.plusEnableStandaloneInstaller,
-            onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
-            visible: (s) => _matches(tr('plusEnableStandaloneInstaller')),
-          ),
+          if (_matches(tr('plusEnableStandaloneInstaller')))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.install_mobile_outlined,
+              title: tr('plusEnableStandaloneInstaller'),
+              subtitle: tr('plusEnableStandaloneInstallerDescription'),
+              value: (s) => s.plusEnableStandaloneInstaller,
+              onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
+            ),
 
           // Update Ownership (Android 14+)
-          buildFeatureToggle<PlusSettingsProvider>(
-            context,
-            showAdvancedSettings: showAdvancedSettings,
-            icon: Icons.security_update_good_rounded,
-            title: tr('plusUpdateOwnership'),
-            subtitle: tr('plusUpdateOwnershipDescription'),
-            value: (s) => s.plusEnableUpdateOwnership,
-            onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
-            visible: (s) =>
-                _matches(tr('plusUpdateOwnership'), isAdvanced: true),
-          ),
+          if (_matches(tr('plusUpdateOwnership'), isAdvanced: true))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.security_update_good_rounded,
+              title: tr('plusUpdateOwnership'),
+              subtitle: tr('plusUpdateOwnershipDescription'),
+              value: (s) => s.plusEnableUpdateOwnership,
+              onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
+            ),
 
           // User Pre-approval (Android 14+)
-          buildFeatureToggle<PlusSettingsProvider>(
-            context,
-            showAdvancedSettings: showAdvancedSettings,
-            icon: Icons.touch_app_outlined,
-            title: tr('plusUserPreapproval'),
-            subtitle: tr('plusUserPreapprovalDescription'),
-            value: (s) => s.plusEnableUserPreapproval,
-            onChanged: (s, v) => s.plusEnableUserPreapproval = v,
-            visible: (s) =>
-                _matches(tr('plusUserPreapproval'), isAdvanced: true),
-          ),
+          if (_matches(tr('plusUserPreapproval'), isAdvanced: true))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.touch_app_outlined,
+              title: tr('plusUserPreapproval'),
+              subtitle: tr('plusUserPreapprovalDescription'),
+              value: (s) => s.plusEnableUserPreapproval,
+              onChanged: (s, v) => s.plusEnableUserPreapproval = v,
+            ),
 
           // Remove on External Uninstall
           if (_matches(tr('removeOnExternalUninstall')))
