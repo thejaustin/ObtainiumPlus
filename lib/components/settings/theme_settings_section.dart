@@ -5,6 +5,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -43,8 +44,9 @@ class ThemeSettingsSection extends StatelessWidget {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     List<Widget> advancedWidgets = [
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.blur_on_rounded,
         title: tr('glassmorphismUI'),
         subtitle: tr('glassmorphismUIDescription'),
@@ -52,8 +54,9 @@ class ThemeSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.plusEnableGlassmorphism = v,
         visible: (s) => _matches(tr('glassmorphismUI')),
       ),
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.unfold_more_rounded,
         title: tr('plusPopupSlider'),
         subtitle: tr('plusPopupSliderDescription'),
@@ -62,8 +65,9 @@ class ThemeSettingsSection extends StatelessWidget {
         visible: (s) => _matches(tr('plusPopupSlider')),
         isAdvanced: true,
       ),
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.brush_outlined,
         title: tr('plusMaterialExpressive'),
         subtitle: tr('plusMaterialExpressiveDescription'),
@@ -71,8 +75,9 @@ class ThemeSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.plusEnableMaterialExpressive = v,
         visible: (s) => _matches(tr('plusMaterialExpressive')),
       ),
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.auto_mode_rounded,
         title: tr('plusExpressiveProgress'),
         subtitle: tr('plusExpressiveProgressDescription'),
@@ -80,8 +85,9 @@ class ThemeSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.plusEnableExpressiveProgress = v,
         visible: (s) => _matches(tr('plusExpressiveProgress')),
       ),
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.unfold_more_rounded,
         title: tr('plusBouncyPhysics'),
         subtitle: tr('plusBouncyPhysicsDescription'),
@@ -89,8 +95,9 @@ class ThemeSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
         visible: (s) => _matches(tr('plusBouncyPhysics')),
       ),
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.vertical_align_top_rounded,
         title: tr('plusTopUILayout'),
         subtitle: tr('plusTopUILayoutDescription'),
@@ -106,8 +113,9 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
       if (_matches(tr('themePresets'))) _buildThemePresets(context),
-      _buildFeatureToggle<ThemeSettingsProvider>(
+      buildFeatureToggle<ThemeSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.dark_mode_outlined,
         title: tr('useBlackTheme'),
         subtitle: tr('useBlackThemeDescription'),
@@ -123,8 +131,9 @@ class ThemeSettingsSection extends StatelessWidget {
         _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.density_small_rounded,
         title: tr('plusUseCompactSettings'),
         subtitle: tr('plusUseCompactSettingsDescription'),
@@ -194,8 +203,9 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> animationWidgets = [
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.auto_awesome_motion_rounded,
         title: tr('plusEnhancedAnimations'),
         subtitle: tr('plusEnhancedAnimationsDescription'),
@@ -203,8 +213,9 @@ class ThemeSettingsSection extends StatelessWidget {
         onChanged: (s, v) => s.plusEnableEnhancedAnimations = v,
         visible: (s) => _matches(tr('plusEnhancedAnimations')),
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      buildFeatureToggle<BehaviorSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.animation_outlined,
         title: tr('disablePageTransitions'),
         subtitle: tr('disablePageTransitionsDescription'),
@@ -213,8 +224,9 @@ class ThemeSettingsSection extends StatelessWidget {
         visible: (s) => _matches(tr('disablePageTransitions')),
         isAdvanced: true,
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      buildFeatureToggle<BehaviorSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.swap_horizontal_circle_outlined,
         title: tr('reversePageTransitions'),
         subtitle: tr('reversePageTransitionsDescription'),
@@ -223,8 +235,9 @@ class ThemeSettingsSection extends StatelessWidget {
         visible: (s) =>
             _matches(tr('reversePageTransitions')) && !s.disablePageTransitions,
       ),
-      _buildFeatureToggle<BehaviorSettingsProvider>(
+      buildFeatureToggle<BehaviorSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.touch_app_outlined,
         title: tr('highlightTouchTargets'),
         subtitle: tr('highlightTouchTargetsDescription'),
@@ -256,8 +269,9 @@ class ThemeSettingsSection extends StatelessWidget {
           ),
         ),
       ],
-      _buildFeatureToggle<PlusSettingsProvider>(
+      buildFeatureToggle<PlusSettingsProvider>(
         context,
+        showAdvancedSettings: showAdvancedSettings,
         icon: Icons.tune_rounded,
         title: tr('plusOverrideIndividualCornerRadius'),
         subtitle: tr('plusOverrideIndividualCornerRadiusDescription'),
@@ -870,35 +884,6 @@ class ThemeSettingsSection extends StatelessWidget {
               },
             );
           },
-        );
-      },
-    );
-  }
-
-  Widget _buildFeatureToggle<T extends ChangeNotifier>(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool Function(T) value,
-    required void Function(T, bool) onChanged,
-    required bool Function(T) visible,
-    bool isAdvanced = false,
-  }) {
-    return Consumer<T>(
-      builder: (context, settings, child) {
-        final plusGatedOff =
-            settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
-        if (!visible(settings) ||
-            plusGatedOff ||
-            (isAdvanced && !(showAdvancedSettings ?? false)))
-          return const SizedBox.shrink();
-        return SwitchListTile.adaptive(
-          secondary: Icon(icon),
-          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(subtitle),
-          value: value(settings),
-          onChanged: (v) => onChanged(settings, v),
         );
       },
     );

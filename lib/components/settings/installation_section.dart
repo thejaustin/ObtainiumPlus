@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -29,8 +30,8 @@ class InstallationSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
-    return Consumer2<BehaviorSettingsProvider, PlusSettingsProvider>(
-      builder: (context, behaviorSettings, plusSettings, child) {
+    return Consumer<BehaviorSettingsProvider>(
+      builder: (context, behaviorSettings, child) {
         List<Widget> children = [
           // Parallel Downloads
           if (_matches(tr('parallelDownloads'), isAdvanced: true))
@@ -88,74 +89,67 @@ class InstallationSection extends StatelessWidget {
             ),
 
           // Smart Retries & Caching
-          if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusSmartRetries'), isAdvanced: true))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.bolt_outlined),
-              title: Text(
-                tr('plusSmartRetries'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusSmartRetriesDescription')),
-              value: plusSettings.plusEnableSmartRetries,
-              onChanged: (v) => plusSettings.plusEnableSmartRetries = v,
-            ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            showAdvancedSettings: showAdvancedSettings,
+            icon: Icons.bolt_outlined,
+            title: tr('plusSmartRetries'),
+            subtitle: tr('plusSmartRetriesDescription'),
+            value: (s) => s.plusEnableSmartRetries,
+            onChanged: (s, v) => s.plusEnableSmartRetries = v,
+            visible: (s) => _matches(tr('plusSmartRetries'), isAdvanced: true),
+          ),
 
           // MicroG Compat Hub
-          if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusEnableMicroGHub'), isAdvanced: true))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.hub_outlined),
-              title: Text(
-                tr('plusEnableMicroGHub'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusEnableMicroGHubDescription')),
-              value: plusSettings.plusEnableMicroGHub,
-              onChanged: (v) => plusSettings.plusEnableMicroGHub = v,
-            ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            showAdvancedSettings: showAdvancedSettings,
+            icon: Icons.hub_outlined,
+            title: tr('plusEnableMicroGHub'),
+            subtitle: tr('plusEnableMicroGHubDescription'),
+            value: (s) => s.plusEnableMicroGHub,
+            onChanged: (s, v) => s.plusEnableMicroGHub = v,
+            visible: (s) =>
+                _matches(tr('plusEnableMicroGHub'), isAdvanced: true),
+          ),
 
           // Standalone Installer
-          if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusEnableStandaloneInstaller')))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.install_mobile_outlined),
-              title: Text(
-                tr('plusEnableStandaloneInstaller'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusEnableStandaloneInstallerDescription')),
-              value: plusSettings.plusEnableStandaloneInstaller,
-              onChanged: (v) => plusSettings.plusEnableStandaloneInstaller = v,
-            ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            showAdvancedSettings: showAdvancedSettings,
+            icon: Icons.install_mobile_outlined,
+            title: tr('plusEnableStandaloneInstaller'),
+            subtitle: tr('plusEnableStandaloneInstallerDescription'),
+            value: (s) => s.plusEnableStandaloneInstaller,
+            onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
+            visible: (s) => _matches(tr('plusEnableStandaloneInstaller')),
+          ),
 
           // Update Ownership (Android 14+)
-          if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusUpdateOwnership'), isAdvanced: true))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.security_update_good_rounded),
-              title: Text(
-                tr('plusUpdateOwnership'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusUpdateOwnershipDescription')),
-              value: plusSettings.plusEnableUpdateOwnership,
-              onChanged: (v) => plusSettings.plusEnableUpdateOwnership = v,
-            ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            showAdvancedSettings: showAdvancedSettings,
+            icon: Icons.security_update_good_rounded,
+            title: tr('plusUpdateOwnership'),
+            subtitle: tr('plusUpdateOwnershipDescription'),
+            value: (s) => s.plusEnableUpdateOwnership,
+            onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
+            visible: (s) =>
+                _matches(tr('plusUpdateOwnership'), isAdvanced: true),
+          ),
 
           // User Pre-approval (Android 14+)
-          if (plusSettings.enableAllPlusFeatures &&
-              _matches(tr('plusUserPreapproval'), isAdvanced: true))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.touch_app_outlined),
-              title: Text(
-                tr('plusUserPreapproval'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusUserPreapprovalDescription')),
-              value: plusSettings.plusEnableUserPreapproval,
-              onChanged: (v) => plusSettings.plusEnableUserPreapproval = v,
-            ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            showAdvancedSettings: showAdvancedSettings,
+            icon: Icons.touch_app_outlined,
+            title: tr('plusUserPreapproval'),
+            subtitle: tr('plusUserPreapprovalDescription'),
+            value: (s) => s.plusEnableUserPreapproval,
+            onChanged: (s, v) => s.plusEnableUserPreapproval = v,
+            visible: (s) =>
+                _matches(tr('plusUserPreapproval'), isAdvanced: true),
+          ),
 
           // Remove on External Uninstall
           if (_matches(tr('removeOnExternalUninstall')))
