@@ -27,6 +27,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_search_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 class AddAppPage extends StatefulWidget {
   final int? initialTab;

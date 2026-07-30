@@ -28,6 +28,7 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

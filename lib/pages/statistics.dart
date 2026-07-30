@@ -22,6 +22,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 class StatisticsPage extends StatefulWidget {
   final ScrollController? scrollController;

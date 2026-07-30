@@ -42,6 +42,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/models/app_in_memory.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 class AppsPage extends StatefulWidget {
   final AppsFilter? initialFilter;
