@@ -15,6 +15,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// App persistence (load/save/remove), icons, and version-detection helpers.
@@ -534,8 +535,8 @@ extension AppsProviderLifecycle on AppsProvider {
     await intent.launch();
   }
 
-  void addMissingCategories(SettingsProvider settingsProvider) {
-    final cats = Map<String, int>.from(settingsProvider.categories);
+  void addMissingCategories(ViewSettingsProvider viewSettings) {
+    final cats = Map<String, int>.from(viewSettings.categories);
     apps.forEach((key, value) {
       for (var c in value.app.categories) {
         if (!cats.containsKey(c)) {
@@ -543,6 +544,6 @@ extension AppsProviderLifecycle on AppsProvider {
         }
       }
     });
-    settingsProvider.setCategories(cats, appsProvider: this);
+    viewSettings.setCategories(cats, appsProvider: this);
   }
 }

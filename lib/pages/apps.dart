@@ -16,6 +16,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -27,6 +28,8 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/generated_form_renderer.dart'
+    show TvTextFieldFocus;
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
@@ -168,10 +171,16 @@ class AppsPageState extends State<AppsPage> {
   String? activeTag;
   DateTime? refreshingSince;
 
-  void clearSelected() {
+  /// Clears the current selection, if any. Returns whether there was a
+  /// selection to clear, so callers (e.g. the system-back handler) can decide
+  /// whether to treat the back gesture as "clear selection" or fall through
+  /// to normal back-navigation behavior.
+  bool clearSelected() {
+    final hadSelection = selectedAppIds.isNotEmpty;
     setState(() {
       selectedAppIds.clear();
     });
+    return hadSelection;
   }
 
   void selectThese(List<App> apps) {
@@ -1767,18 +1776,6 @@ class _AppIconWidgetState extends State<AppIconWidget> {
       },
     );
   }
-
-  void showSelectedAppActions() {
-    if (!mounted) return;
-    final listedApps = context.read<AppsProvider>().getAppValues().toList();
-    final selectedApps = listedApps
-        .map((e) => e.app)
-        .where((a) => selectedAppIds.contains(a.id))
-        .toSet();
-    if (selectedApps.isNotEmpty) {
-      showMoreOptionsBottomSheet(context, selectedApps);
-    }
-  }
 }
 
 class _RefreshProgressBar extends StatelessWidget {
@@ -1990,7 +1987,7 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
           onPressed: selectedIds.isEmpty
               ? null
               : () {
-                  context.read<SettingsProvider>().selectionClick();
+                  AppHaptics.selectionClick();
                   Navigator.of(context).pop(selectedIds);
                 },
           child: Text(tr('continue')),

@@ -105,7 +105,8 @@ class ThemeSettingsSection extends StatelessWidget {
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
       if (_matches(tr('themePresets'))) _buildThemePresets(context),
-      if (_matches(tr('useBlackTheme')) && s.theme != ThemeSettings.light)
+      if (_matches(tr('useBlackTheme')) &&
+          themeSettings.theme != ThemeSettings.light)
         buildFeatureToggle<ThemeSettingsProvider>(
           context,
           icon: Icons.dark_mode_outlined,
@@ -209,7 +210,8 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.disablePageTransitions,
           onChanged: (s, v) => s.disablePageTransitions = v,
         ),
-      if (_matches(tr('reversePageTransitions')) && !s.disablePageTransitions)
+      if (_matches(tr('reversePageTransitions')) &&
+          !themeSettings.disablePageTransitions)
         buildFeatureToggle<BehaviorSettingsProvider>(
           context,
           icon: Icons.swap_horizontal_circle_outlined,

@@ -59,7 +59,7 @@ extension AppsProviderUpdates on AppsProvider {
     bool forceAll = false,
   }) {
     final minAge = DateTime.now().subtract(
-      Duration(minutes: settingsProvider.updateInterval),
+      Duration(minutes: updateSettings.updateInterval),
     );
     final List<String> appIds = apps.values
         .where(

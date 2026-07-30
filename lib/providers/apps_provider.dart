@@ -12,14 +12,21 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:android_system_font/android_system_font.dart';
+import 'package:android_package_installer/android_package_installer.dart';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/io_client.dart';
+import 'package:obtainium/app_sources/direct_apk_link.dart';
+import 'package:obtainium/app_sources/html.dart';
+import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/models/app_in_memory.dart';
@@ -38,6 +45,7 @@ import 'package:flutter_fgbg/flutter_fgbg.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:http/http.dart';
 import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:archive/archive.dart' as archive;
 import 'package:share_plus/share_plus.dart';
@@ -814,6 +822,7 @@ class AppsProvider with ChangeNotifier {
   // Tracks whether a background save occurred since the last load.
   bool _needsBgReload = false;
   StreamSubscription<void>? _eventSubscription;
+  bool gettingUpdates = false;
 
   // Variables to keep track of the app foreground status (installs can't run in the background)
   bool isForeground = true;
@@ -954,7 +963,7 @@ class AppsProvider with ChangeNotifier {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
 
       final initFutures = Future.wait([
-        settingsProvider.initializeSettings(),
+        this.settingsProvider.initializeSettings(),
         themeSettings.initializeSettings(prefs),
         updateSettings.initializeSettings(prefs),
         behaviorSettings.initializeSettings(prefs),
@@ -1104,7 +1113,7 @@ class AppsProvider with ChangeNotifier {
           }
           prevProg = prog;
         },
-        APKDir.path,
+        apkDir.path,
         useExisting: useExisting,
         allowInsecure: app.additionalSettings['allowInsecure'] == true,
         logs: logs,
@@ -1128,7 +1137,7 @@ class AppsProvider with ChangeNotifier {
           originalAssetName.endsWith('.tar.xz');
       Directory? apkDir;
       if (isAPK) {
-        newInfo = await pm.getPackageArchiveInfo(
+        newInfo = await packageManager.getPackageArchiveInfo(
           archiveFilePath: downloadedFile.path,
         );
       } else {
@@ -1185,7 +1194,7 @@ class AppsProvider with ChangeNotifier {
 
         for (var i = 0; i < apks.length; i++) {
           try {
-            newInfo = await pm.getPackageArchiveInfo(
+            newInfo = await packageManager.getPackageArchiveInfo(
               archiveFilePath: apks[i].path,
             );
             if (newInfo != null) {
@@ -1260,10 +1269,10 @@ class AppsProvider with ChangeNotifier {
     String? installerPackageName;
     try {
       installerPackageName = osInfo.version.sdkInt >= 30
-          ? (await pm.getInstallSourceInfo(
+          ? (await packageManager.getInstallSourceInfo(
               packageName: app.id,
             ))?.installingPackageName
-          : (await pm.getInstallerPackageName(packageName: app.id));
+          : (await packageManager.getInstallerPackageName(packageName: app.id));
     } catch (e) {
       logs.add(
         'Failed to get installed package details: ${app.id} (${e.toString()})',
@@ -1456,7 +1465,7 @@ class AppsProvider with ChangeNotifier {
       );
       await Share.shareXFiles([f]);
     }
-    var newInfo = await pm.getPackageArchiveInfo(
+    var newInfo = await packageManager.getPackageArchiveInfo(
       archiveFilePath: file.file.path,
     );
     if (newInfo == null) {
@@ -1536,7 +1545,7 @@ class AppsProvider with ChangeNotifier {
     DownloadedApk file,
     BuildContext context,
   ) async {
-    if (!settingsProvider.beforeNewInstallsShareToAppVerifier) return;
+    if (!behaviorSettings.beforeNewInstallsShareToAppVerifier) return;
     if (await getInstalledInfo('dev.soupslurpr.appverifier') == null) return;
     XFile f = XFile.fromData(
       file.file.readAsBytesSync(),
@@ -1569,7 +1578,7 @@ class AppsProvider with ChangeNotifier {
     await file.copy("$obbDirPath/$obbFileName");
   }
 
-  void uninstallApp(String appId) async {
+  Future<void> uninstallApp(String appId) async {
     var intent = AndroidIntent(
       action: 'android.intent.action.DELETE',
       data: 'package:$appId',
@@ -1681,7 +1690,7 @@ class AppsProvider with ChangeNotifier {
             plusSettings: plusSettings,
             updateSettings: updateSettings,
             logs: logs,
-            APKDir: APKDir,
+            APKDir: apkDir,
             notifyListeners: forceNotifyListeners,
             saveApps: saveApps,
             removeApps: removeApps,
@@ -2184,13 +2193,22 @@ class AppsProvider with ChangeNotifier {
     List<App> apps, {
     bool attemptToCorrectInstallStatus = true,
     bool onlyIfExists = true,
+    bool reuseInstalledInfo = false,
   }) async {
     await Future.wait(
       apps.map((a) async {
         var app = a.deepCopy();
-        PackageInfo? info = await getInstalledInfo(app.id);
-        var icon = await info?.applicationInfo?.getAppIcon();
-        app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
+        final bool canReuse =
+            reuseInstalledInfo && this.apps.containsKey(app.id);
+        PackageInfo? info = canReuse
+            ? this.apps[app.id]!.installedInfo
+            : await getInstalledInfo(app.id);
+        var icon = canReuse
+            ? this.apps[app.id]!.icon
+            : await info?.applicationInfo?.getAppIcon();
+        if (!canReuse) {
+          app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
+        }
         if (attemptToCorrectInstallStatus) {
           app = getCorrectedInstallStatusAppIfPossible(app, info) ?? app;
         }
@@ -2221,7 +2239,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> removeApps(List<String> appIds) async {
-    var apkFiles = APKDir.listSync();
+    var apkFiles = apkDir.listSync();
     await Future.wait(
       appIds.map((appId) async {
         File file = File('${(await getAppsDir()).path}/$appId.json');
@@ -2589,7 +2607,7 @@ class AppsProvider with ChangeNotifier {
       await Future.delayed(const Duration(microseconds: 1));
     }
     for (App a in importedApps) {
-      var installedInfo = await getInstalledInfo(a.id, printErr: false);
+      var installedInfo = await getInstalledInfo(a.id);
       a.installedVersion =
           a.additionalSettings['useVersionCodeAsOSVersion'] == true
           ? installedInfo?.versionCode.toString()

@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:flutter_fgbg/flutter_fgbg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:obtainium/components/app_detail_widgets.dart';
+import 'package:obtainium/components/app_detail_widgets.dart'
+    hide AppFilePicker, APKOriginWarningDialog;
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
@@ -669,7 +670,7 @@ extension AppsProviderInstall on AppsProvider {
     DownloadedApk file,
     BuildContext context,
   ) async {
-    if (!settingsProvider.beforeNewInstallsShareToAppVerifier) return;
+    if (!behaviorSettings.beforeNewInstallsShareToAppVerifier) return;
     var anyInstalled = false;
     for (final id in _verifiedAppsPackageIds) {
       if (await getInstalledInfo(id) != null) {
