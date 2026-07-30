@@ -1135,7 +1135,7 @@ class AppsProvider with ChangeNotifier {
           originalAssetName.endsWith('.tgz') ||
           originalAssetName.endsWith('.tar.bz2') ||
           originalAssetName.endsWith('.tar.xz');
-      Directory? apkDir;
+      Directory? extractedApkDir;
       if (isAPK) {
         newInfo = await packageManager.getPackageArchiveInfo(
           archiveFilePath: downloadedFile.path,
@@ -1148,8 +1148,8 @@ class AppsProvider with ChangeNotifier {
         } else {
           await unzipFile(downloadedFile.path, apkDirPath);
         }
-        apkDir = Directory(apkDirPath);
-        var apks = apkDir
+        extractedApkDir = Directory(apkDirPath);
+        var apks = extractedApkDir
             .listSync(recursive: true)
             .where((e) => e.path.toLowerCase().endsWith('.apk'))
             .toList();
@@ -1179,7 +1179,9 @@ class AppsProvider with ChangeNotifier {
         if (filterRegEx != null) {
           var reg = RegExp(filterRegEx);
           apks.removeWhere((apk) {
-            var relativePath = apk.path.substring(apkDir!.path.length + 1);
+            var relativePath = apk.path.substring(
+              extractedApkDir!.path.length + 1,
+            );
             var shouldDelete = !reg.hasMatch(relativePath);
             if (shouldDelete) {
               apk.delete();
@@ -1237,7 +1239,7 @@ class AppsProvider with ChangeNotifier {
         } else {
           dirType = DownloadedDirType.ZIP;
         }
-        return DownloadedDir(app.id, downloadedFile, apkDir!, dirType);
+        return DownloadedDir(app.id, downloadedFile, extractedApkDir!, dirType);
       }
     } finally {
       notificationsProvider?.cancel(notifId);
