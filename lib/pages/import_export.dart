@@ -7,8 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
-import 'package:obtainium/components/generated_form.dart';
-import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -62,7 +61,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               [
                 GeneratedFormTextField(
                   'appURLList',
-                  defaultValue: initValue ?? '',
+                  value: initValue ?? '',
                   label: tr('appURLList'),
                   max: 7,
                   additionalValidators: [
@@ -260,9 +259,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         label: source.hosts.isNotEmpty
                             ? tr('overrideSource')
                             : plural('url', 1).substring(2),
-                        defaultValue: source.hosts.isNotEmpty
-                            ? source.hosts[0]
-                            : '',
+                        value: source.hosts.isNotEmpty ? source.hosts[0] : '',
                         required: true,
                       ),
                     ],
@@ -531,8 +528,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                               GeneratedFormSwitch(
                                 'autoExportOnChanges',
                                 label: tr('autoExportOnChanges'),
-                                defaultValue:
-                                    behaviorSettings.autoExportOnChanges,
+                                value: behaviorSettings.autoExportOnChanges,
                               ),
                             ],
                             [
@@ -544,7 +540,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                   MapEntry('2', tr('all')),
                                 ],
                                 label: tr('includeSettings'),
-                                defaultValue: behaviorSettings.exportSettings
+                                value: behaviorSettings.exportSettings
                                     .toString(),
                               ),
                             ],

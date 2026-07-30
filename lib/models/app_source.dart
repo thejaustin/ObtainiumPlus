@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
-import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -42,7 +42,7 @@ abstract class AppSource {
               if (e2.key == key) {
                 var item = e2 as GeneratedFormSwitch;
                 item.disabled = disabled;
-                item.defaultValue = defaultValue;
+                item.value = defaultValue;
               }
               return e2;
             }).toList();
@@ -158,14 +158,14 @@ abstract class AppSource {
       GeneratedFormSwitch(
         'versionDetection',
         label: tr('versionDetectionExplanation'),
-        defaultValue: true,
+        value: true,
       ),
     ],
     [
       GeneratedFormSwitch(
         'useVersionCodeAsOSVersion',
         label: tr('useVersionCodeAsOSVersion'),
-        defaultValue: false,
+        value: false,
       ),
     ],
     [
@@ -184,14 +184,14 @@ abstract class AppSource {
       GeneratedFormSwitch(
         'invertAPKFilter',
         label: '${tr('invertRegEx')} (${tr('filterAPKsByRegEx')})',
-        defaultValue: false,
+        value: false,
       ),
     ],
     [
       GeneratedFormSwitch(
         'autoApkFilterByArch',
         label: tr('autoApkFilterByArch'),
-        defaultValue: true,
+        value: true,
       ),
     ],
     [GeneratedFormTextField('appName', label: tr('appName'), required: false)],
@@ -200,14 +200,14 @@ abstract class AppSource {
       GeneratedFormSwitch(
         'shizukuPretendToBeGooglePlay',
         label: tr('shizukuPretendToBeGooglePlay'),
-        defaultValue: false,
+        value: false,
       ),
     ],
     [
       GeneratedFormSwitch(
         'allowInsecure',
         label: '${tr('allowInsecure')} ${tr('allowInsecureWarning')}',
-        defaultValue: false,
+        value: false,
       ),
     ],
     [
@@ -274,7 +274,7 @@ abstract class AppSource {
                   'releaseDateAsVersion',
                   label:
                       '${tr('releaseDateAsVersion')} (${tr('pseudoVersion')})',
-                  defaultValue: false,
+                  value: false,
                 ),
               ],
             );
@@ -297,7 +297,7 @@ abstract class AppSource {
           GeneratedFormSwitch(
             'includeZips',
             label: tr('includeZips'),
-            defaultValue: false,
+            value: false,
           ),
         ],
         [
@@ -321,7 +321,7 @@ abstract class AppSource {
           GeneratedFormSwitch(
             'includeTarballs',
             label: tr('includeTarballs'),
-            defaultValue: false,
+            value: false,
           ),
         ],
         [
@@ -343,12 +343,12 @@ abstract class AppSource {
       overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
         'versionDetection',
         disabled: true,
-        defaultValue: false,
+        value: false,
       );
       overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
         'useVersionCodeAsOSVersion',
         disabled: true,
-        defaultValue: false,
+        value: false,
       );
     }
     return [
