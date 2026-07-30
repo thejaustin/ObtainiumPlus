@@ -35,98 +35,99 @@ class AdvancedSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
+    final plusFeaturesEnabled = context.select<PlusSettingsProvider, bool>(
+      (s) => s.enableAllPlusFeatures,
+    );
+
     List<Widget> children = [
-      Consumer<PlusSettingsProvider>(
-        builder: (context, plusSettings, child) {
-          if (!_matches(tr('showAdvancedSettings')))
-            return const SizedBox.shrink();
-          return SwitchListTile.adaptive(
-            secondary: const Icon(Icons.settings_suggest_outlined),
-            title: Text(
-              tr('showAdvancedSettings'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text(tr('showAdvancedSettingsDescription')),
-            value: plusSettings.plusShowAdvancedSettings,
-            onChanged: (v) {
-              AppHaptics.selectionClick();
-              plusSettings.plusShowAdvancedSettings = v;
-            },
-          );
-        },
-      ),
-      _buildSettingsToggle(
-        context,
-        icon: Icons.report_off_outlined,
-        title: tr('dontShowTrackOnlyWarnings'),
-        subtitle: tr('dontShowTrackOnlyWarningsDescription'),
-        value: (s) => s.hideTrackOnlyWarning,
-        onChanged: (s, v) => s.hideTrackOnlyWarning = v,
-        visible: (s) => _matches(tr('dontShowTrackOnlyWarnings')),
-      ),
-      _buildSettingsToggle(
-        context,
-        icon: Icons.security_outlined,
-        title: tr('dontShowAPKOriginWarnings'),
-        subtitle: tr('dontShowAPKOriginWarningsDescription'),
-        value: (s) => s.hideAPKOriginWarning,
-        onChanged: (s, v) => s.hideAPKOriginWarning = v,
-        visible: (s) => _matches(tr('dontShowAPKOriginWarnings')),
-      ),
-      _buildSettingsToggle(
-        context,
-        icon: Icons.bug_report_outlined,
-        title: tr('enableDeepLogging'),
-        subtitle: tr('enableDeepLoggingDescription'),
-        value: (s) => s.enableDeepLogging,
-        onChanged: (s, v) => s.enableDeepLogging = v,
-        visible: (s) => _matches(tr('enableDeepLogging')),
-      ),
-      _buildSettingsToggle(
-        context,
-        icon: Icons.lightbulb_outline,
-        title: tr('enableContextualTips'),
-        subtitle: tr('enableContextualTipsDescription'),
-        value: (s) => s.enableContextualTips,
-        onChanged: (s, v) => s.enableContextualTips = v,
-        visible: (s) => _matches(tr('enableContextualTips')),
-      ),
-      _buildSettingsToggle(
-        context,
-        icon: Icons.touch_app_outlined,
-        title: tr('highlightTouchTargets'),
-        subtitle: tr('highlightTouchTargetsDescription'),
-        value: (s) => s.highlightTouchTargets,
-        onChanged: (s, v) => s.highlightTouchTargets = v,
-        visible: (s) => _matches(tr('highlightTouchTargets'), isAdvanced: true),
-      ),
-      _buildSettingsToggle(
-        context,
-        icon: Icons.backup_outlined,
-        title: tr('autoExportOnChanges'),
-        subtitle: tr('autoExportOnChangesDescription'),
-        value: (s) => s.autoExportOnChanges,
-        onChanged: (s, v) => s.autoExportOnChanges = v,
-        visible: (s) => _matches(tr('autoExportOnChanges'), isAdvanced: true),
-      ),
-      Consumer<PlusSettingsProvider>(
-        builder: (context, plusSettings, child) {
-          if (!plusSettings.enableAllPlusFeatures ||
-              !_matches(tr('backupEncryption'), isAdvanced: true)) {
-            return const SizedBox.shrink();
-          }
-          return SwitchListTile.adaptive(
-            secondary: const Icon(Icons.enhanced_encryption_outlined),
-            title: Text(
-              tr('backupEncryption'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text(tr('backupEncryptionDescription')),
-            value: plusSettings.backupEncryptionEnabled,
-            onChanged: (v) => plusSettings.backupEncryptionEnabled = v,
-          );
-        },
-      ),
+      if (_matches(tr('showAdvancedSettings')))
+        Consumer<PlusSettingsProvider>(
+          builder: (context, plusSettings, child) {
+            return SwitchListTile.adaptive(
+              secondary: const Icon(Icons.settings_suggest_outlined),
+              title: Text(
+                tr('showAdvancedSettings'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('showAdvancedSettingsDescription')),
+              value: plusSettings.plusShowAdvancedSettings,
+              onChanged: (v) {
+                AppHaptics.selectionClick();
+                plusSettings.plusShowAdvancedSettings = v;
+              },
+            );
+          },
+        ),
+      if (_matches(tr('dontShowTrackOnlyWarnings')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.report_off_outlined,
+          title: tr('dontShowTrackOnlyWarnings'),
+          subtitle: tr('dontShowTrackOnlyWarningsDescription'),
+          value: (s) => s.hideTrackOnlyWarning,
+          onChanged: (s, v) => s.hideTrackOnlyWarning = v,
+        ),
+      if (_matches(tr('dontShowAPKOriginWarnings')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.security_outlined,
+          title: tr('dontShowAPKOriginWarnings'),
+          subtitle: tr('dontShowAPKOriginWarningsDescription'),
+          value: (s) => s.hideAPKOriginWarning,
+          onChanged: (s, v) => s.hideAPKOriginWarning = v,
+        ),
+      if (_matches(tr('enableDeepLogging')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.bug_report_outlined,
+          title: tr('enableDeepLogging'),
+          subtitle: tr('enableDeepLoggingDescription'),
+          value: (s) => s.enableDeepLogging,
+          onChanged: (s, v) => s.enableDeepLogging = v,
+        ),
+      if (_matches(tr('enableContextualTips')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.lightbulb_outline,
+          title: tr('enableContextualTips'),
+          subtitle: tr('enableContextualTipsDescription'),
+          value: (s) => s.enableContextualTips,
+          onChanged: (s, v) => s.enableContextualTips = v,
+        ),
+      if (_matches(tr('highlightTouchTargets'), isAdvanced: true))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.touch_app_outlined,
+          title: tr('highlightTouchTargets'),
+          subtitle: tr('highlightTouchTargetsDescription'),
+          value: (s) => s.highlightTouchTargets,
+          onChanged: (s, v) => s.highlightTouchTargets = v,
+        ),
+      if (_matches(tr('autoExportOnChanges'), isAdvanced: true))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.backup_outlined,
+          title: tr('autoExportOnChanges'),
+          subtitle: tr('autoExportOnChangesDescription'),
+          value: (s) => s.autoExportOnChanges,
+          onChanged: (s, v) => s.autoExportOnChanges = v,
+        ),
+      if (plusFeaturesEnabled &&
+          _matches(tr('backupEncryption'), isAdvanced: true))
+        Consumer<PlusSettingsProvider>(
+          builder: (context, plusSettings, child) {
+            return SwitchListTile.adaptive(
+              secondary: const Icon(Icons.enhanced_encryption_outlined),
+              title: Text(
+                tr('backupEncryption'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('backupEncryptionDescription')),
+              value: plusSettings.backupEncryptionEnabled,
+              onChanged: (v) => plusSettings.backupEncryptionEnabled = v,
+            );
+          },
+        ),
       _buildTokenConfigTile(
         context,
         icon: Icons.login_outlined,
@@ -163,8 +164,8 @@ class AdvancedSettingsSection extends StatelessWidget {
             pushRoute(context, const ImportExportPage());
           },
         ),
-      const Divider(),
-      if (_matches(tr('factoryReset')))
+      if (_matches(tr('factoryReset'))) ...[
+        const Divider(),
         ListTile(
           leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
           title: Text(
@@ -176,10 +177,10 @@ class AdvancedSettingsSection extends StatelessWidget {
           subtitle: Text(tr('factoryResetDescription')),
           onTap: () => _showResetConfirmation(context),
         ),
+      ],
     ];
 
-    if (children.every((w) => w is SizedBox && w.child == null))
-      return const SizedBox.shrink();
+    if (children.isEmpty) return const SizedBox.shrink();
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('advanced'),
@@ -228,11 +229,9 @@ class AdvancedSettingsSection extends StatelessWidget {
     required String subtitle,
     required bool Function(SettingsProvider) value,
     required void Function(SettingsProvider, bool) onChanged,
-    required bool Function(SettingsProvider) visible,
   }) {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
-        if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(
           secondary: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),

@@ -34,48 +34,47 @@ class AppBehaviorSection extends StatelessWidget {
 
     List<Widget> children = [
       // Page Transitions
-      _buildFeatureToggle(
-        context,
-        icon: Icons.animation_outlined,
-        title: tr('disablePageTransitions'),
-        subtitle: tr('disablePageTransitionsDescription'),
-        value: (s) => s.disablePageTransitions,
-        onChanged: (s, v) => s.disablePageTransitions = v,
-        visible: (s) =>
-            _matches(tr('disablePageTransitions'), isAdvanced: true),
-      ),
+      if (_matches(tr('disablePageTransitions'), isAdvanced: true))
+        _buildFeatureToggle(
+          context,
+          icon: Icons.animation_outlined,
+          title: tr('disablePageTransitions'),
+          subtitle: tr('disablePageTransitionsDescription'),
+          value: (s) => s.disablePageTransitions,
+          onChanged: (s, v) => s.disablePageTransitions = v,
+        ),
       // Haptic Feedback
-      _buildFeatureToggle(
-        context,
-        icon: Icons.vibration_outlined,
-        title: tr('enableHapticFeedback'),
-        subtitle: tr('enableHapticFeedbackDescription'),
-        value: (s) => s.enableHapticFeedback,
-        onChanged: (s, v) => s.enableHapticFeedback = v,
-        visible: (s) => _matches(tr('enableHapticFeedback')),
-      ),
+      if (_matches(tr('enableHapticFeedback')))
+        _buildFeatureToggle(
+          context,
+          icon: Icons.vibration_outlined,
+          title: tr('enableHapticFeedback'),
+          subtitle: tr('enableHapticFeedbackDescription'),
+          value: (s) => s.enableHapticFeedback,
+          onChanged: (s, v) => s.enableHapticFeedback = v,
+        ),
 
       // Swipe Gestures
-      _buildFeatureToggle(
-        context,
-        icon: Icons.gesture_outlined,
-        title: tr('enableSwipeGestures'),
-        subtitle: tr('enableSwipeGesturesDescription'),
-        value: (s) => s.enableSwipeGestures,
-        onChanged: (s, v) => s.enableSwipeGestures = v,
-        visible: (s) => _matches(tr('enableSwipeGestures')),
-      ),
+      if (_matches(tr('enableSwipeGestures')))
+        _buildFeatureToggle(
+          context,
+          icon: Icons.gesture_outlined,
+          title: tr('enableSwipeGestures'),
+          subtitle: tr('enableSwipeGesturesDescription'),
+          value: (s) => s.enableSwipeGestures,
+          onChanged: (s, v) => s.enableSwipeGestures = v,
+        ),
 
       // Undo App Removal
-      _buildFeatureToggle(
-        context,
-        icon: Icons.undo_outlined,
-        title: tr('enableUndoForAppRemoval'),
-        subtitle: tr('enableUndoForAppRemovalDescription'),
-        value: (s) => s.enableUndoForAppRemoval,
-        onChanged: (s, v) => s.enableUndoForAppRemoval = v,
-        visible: (s) => _matches(tr('enableUndoForAppRemoval')),
-      ),
+      if (_matches(tr('enableUndoForAppRemoval')))
+        _buildFeatureToggle(
+          context,
+          icon: Icons.undo_outlined,
+          title: tr('enableUndoForAppRemoval'),
+          subtitle: tr('enableUndoForAppRemovalDescription'),
+          value: (s) => s.enableUndoForAppRemoval,
+          onChanged: (s, v) => s.enableUndoForAppRemoval = v,
+        ),
 
       // Animation Speed
       if (_matches(tr('animationSpeed')))
@@ -133,7 +132,7 @@ class AppBehaviorSection extends StatelessWidget {
 
     return Column(
       children: [
-        if (children.any((w) => w is! SizedBox))
+        if (children.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appBehavior'),
             icon: Icons.settings_suggest_rounded,
@@ -393,11 +392,9 @@ class AppBehaviorSection extends StatelessWidget {
     required String subtitle,
     required bool Function(BehaviorSettingsProvider) value,
     required void Function(BehaviorSettingsProvider, bool) onChanged,
-    required bool Function(BehaviorSettingsProvider) visible,
   }) {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
-        if (!visible(settings)) return const SizedBox.shrink();
         return SwitchListTile.adaptive(
           secondary: Icon(icon),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
