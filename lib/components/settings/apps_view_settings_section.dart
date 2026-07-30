@@ -40,27 +40,25 @@ class AppsViewSettingsSection extends StatelessWidget {
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category'))
         CategoryEditorSelector(showLabelWhenNotEmpty: false),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.category_outlined,
-        title: tr('groupByCategory'),
-        subtitle: tr('groupByCategoryDescription'),
-        value: (s) => s.groupByCategory,
-        onChanged: (s, v) => onSetState(() => s.groupByCategory = v),
-        visible: (s) => _matches(tr('groupByCategory')),
-      ),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.unfold_less_outlined,
-        title: tr('collapseCategoriesByDefault'),
-        subtitle: tr('collapseCategoriesByDefaultDescription'),
-        value: (s) => s.categoriesCollapsedByDefault,
-        onChanged: (s, v) =>
-            onSetState(() => s.categoriesCollapsedByDefault = v),
-        visible: (s) => _matches(tr('collapseCategoriesByDefault')),
-      ),
+      if (_matches(tr('groupByCategory')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.category_outlined,
+          title: tr('groupByCategory'),
+          subtitle: tr('groupByCategoryDescription'),
+          value: (s) => s.groupByCategory,
+          onChanged: (s, v) => onSetState(() => s.groupByCategory = v),
+        ),
+      if (_matches(tr('collapseCategoriesByDefault')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.unfold_less_outlined,
+          title: tr('collapseCategoriesByDefault'),
+          subtitle: tr('collapseCategoriesByDefaultDescription'),
+          value: (s) => s.categoriesCollapsedByDefault,
+          onChanged: (s, v) =>
+              onSetState(() => s.categoriesCollapsedByDefault = v),
+        ),
     ];
 
     List<Widget> iconWidgets = [
@@ -70,143 +68,130 @@ class AppsViewSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> viewWidgets = [
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.web_outlined,
-        title: tr('showWebInAppView'),
-        subtitle: tr('showWebInAppViewDescription'),
-        value: (s) => s.showAppWebpage,
-        onChanged: (s, v) => onSetState(() => s.showAppWebpage = v),
-        visible: (s) => _matches(tr('showWebInAppView')),
-      ),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.push_pin_outlined,
-        title: tr('pinUpdates'),
-        subtitle: tr('pinUpdatesDescription'),
-        value: (s) => s.pinUpdates,
-        onChanged: (s, v) => onSetState(() => s.pinUpdates = v),
-        visible: (s) => _matches(tr('pinUpdates')),
-      ),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.archive_outlined,
-        title: tr('buryNonInstalled'),
-        subtitle: tr('buryNonInstalledDescription'),
-        value: (s) => s.buryNonInstalled,
-        onChanged: (s, v) => onSetState(() => s.buryNonInstalled = v),
-        visible: (s) => _matches(tr('buryNonInstalled')),
-      ),
+      if (_matches(tr('showWebInAppView')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.web_outlined,
+          title: tr('showWebInAppView'),
+          subtitle: tr('showWebInAppViewDescription'),
+          value: (s) => s.showAppWebpage,
+          onChanged: (s, v) => onSetState(() => s.showAppWebpage = v),
+        ),
+      if (_matches(tr('pinUpdates')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.push_pin_outlined,
+          title: tr('pinUpdates'),
+          subtitle: tr('pinUpdatesDescription'),
+          value: (s) => s.pinUpdates,
+          onChanged: (s, v) => onSetState(() => s.pinUpdates = v),
+        ),
+      if (_matches(tr('buryNonInstalled')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.archive_outlined,
+          title: tr('buryNonInstalled'),
+          subtitle: tr('buryNonInstalledDescription'),
+          value: (s) => s.buryNonInstalled,
+          onChanged: (s, v) => onSetState(() => s.buryNonInstalled = v),
+        ),
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.pages_outlined,
-        title: tr('plusModernAppPage'),
-        subtitle: tr('plusModernAppPageDescription'),
-        value: (s) => s.plusEnableModernAppPage,
-        onChanged: (s, v) => onSetState(() => s.plusEnableModernAppPage = v),
-        visible: (s) => _matches(tr('plusModernAppPage')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.add_box_outlined,
-        title: tr('plusModernAddAppPage'),
-        subtitle: tr('plusModernAddAppPageDescription'),
-        value: (s) => s.plusEnableModernAddAppPage,
-        onChanged: (s, v) => onSetState(() => s.plusEnableModernAddAppPage = v),
-        visible: (s) => _matches(tr('plusModernAddAppPage')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.dashboard_customize_outlined,
-        title: tr('plusHomeDashboard'),
-        subtitle: tr('plusHomeDashboardDescription'),
-        value: (s) => s.plusEnableHomeDashboard,
-        onChanged: (s, v) => onSetState(() => s.plusEnableHomeDashboard = v),
-        visible: (s) => _matches(tr('plusHomeDashboard')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.auto_awesome_mosaic_outlined,
-        title: tr('plusDeduplicateRecents'),
-        subtitle: tr('plusDeduplicateRecentsDescription'),
-        value: (s) => s.plusDeduplicateRecents,
-        onChanged: (s, v) => onSetState(() => s.plusDeduplicateRecents = v),
-        visible: (s) => _matches(tr('plusDeduplicateRecents')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.gesture_rounded,
-        title: tr('plusExpressiveProgress'),
-        subtitle: tr('plusExpressiveProgressDescription'),
-        value: (s) => s.plusEnableExpressiveProgress,
-        onChanged: (s, v) =>
-            onSetState(() => s.plusEnableExpressiveProgress = v),
-        visible: (s) => _matches(tr('plusExpressiveProgress')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.tablet_android_rounded,
-        title: tr('plusResponsiveLayout'),
-        subtitle: tr('plusResponsiveLayoutDescription'),
-        value: (s) => s.plusEnableResponsiveAppLayout,
-        onChanged: (s, v) =>
-            onSetState(() => s.plusEnableResponsiveAppLayout = v),
-        visible: (s) => _matches(tr('plusResponsiveLayout')),
-        isAdvanced: true,
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.drag_indicator_rounded,
-        title: tr('plusCategoryReorder'),
-        subtitle: tr('plusCategoryReorderDescription'),
-        value: (s) => s.plusEnableCategoryReorder,
-        onChanged: (s, v) => onSetState(() => s.plusEnableCategoryReorder = v),
-        visible: (s) => _matches(tr('plusCategoryReorder')),
-        isAdvanced: true,
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.info_outline_rounded,
-        title: tr('plusShowStatusHub'),
-        subtitle: tr('plusShowStatusHubDescription'),
-        value: (s) => s.plusShowStatusHub,
-        onChanged: (s, v) => onSetState(() => s.plusShowStatusHub = v),
-        visible: (s) => _matches(tr('plusShowStatusHub')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.navigation_rounded,
-        title: tr('plusEnableBottomNavBar'),
-        subtitle: tr('plusEnableBottomNavBarDescription'),
-        value: (s) => s.plusEnableBottomNavBar,
-        onChanged: (s, v) => onSetState(() => s.plusEnableBottomNavBar = v),
-        visible: (s) => _matches(tr('plusEnableBottomNavBar')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.add_circle_outline_rounded,
-        title: tr('plusEnableFAB'),
-        subtitle: tr('plusEnableFABDescription'),
-        value: (s) => s.plusEnableFAB,
-        onChanged: (s, v) => onSetState(() => s.plusEnableFAB = v),
-        visible: (s) => _matches(tr('plusEnableFAB')),
-      ),
+      if (_matches(tr('plusModernAppPage')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.pages_outlined,
+          title: tr('plusModernAppPage'),
+          subtitle: tr('plusModernAppPageDescription'),
+          value: (s) => s.plusEnableModernAppPage,
+          onChanged: (s, v) => onSetState(() => s.plusEnableModernAppPage = v),
+        ),
+      if (_matches(tr('plusModernAddAppPage')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.add_box_outlined,
+          title: tr('plusModernAddAppPage'),
+          subtitle: tr('plusModernAddAppPageDescription'),
+          value: (s) => s.plusEnableModernAddAppPage,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusEnableModernAddAppPage = v),
+        ),
+      if (_matches(tr('plusHomeDashboard')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.dashboard_customize_outlined,
+          title: tr('plusHomeDashboard'),
+          subtitle: tr('plusHomeDashboardDescription'),
+          value: (s) => s.plusEnableHomeDashboard,
+          onChanged: (s, v) => onSetState(() => s.plusEnableHomeDashboard = v),
+        ),
+      if (_matches(tr('plusDeduplicateRecents')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.auto_awesome_mosaic_outlined,
+          title: tr('plusDeduplicateRecents'),
+          subtitle: tr('plusDeduplicateRecentsDescription'),
+          value: (s) => s.plusDeduplicateRecents,
+          onChanged: (s, v) => onSetState(() => s.plusDeduplicateRecents = v),
+        ),
+      if (_matches(tr('plusExpressiveProgress')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.gesture_rounded,
+          title: tr('plusExpressiveProgress'),
+          subtitle: tr('plusExpressiveProgressDescription'),
+          value: (s) => s.plusEnableExpressiveProgress,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusEnableExpressiveProgress = v),
+        ),
+      if (_matches(tr('plusResponsiveLayout'), isAdvanced: true))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.tablet_android_rounded,
+          title: tr('plusResponsiveLayout'),
+          subtitle: tr('plusResponsiveLayoutDescription'),
+          value: (s) => s.plusEnableResponsiveAppLayout,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusEnableResponsiveAppLayout = v),
+        ),
+      if (_matches(tr('plusCategoryReorder'), isAdvanced: true))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.drag_indicator_rounded,
+          title: tr('plusCategoryReorder'),
+          subtitle: tr('plusCategoryReorderDescription'),
+          value: (s) => s.plusEnableCategoryReorder,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusEnableCategoryReorder = v),
+        ),
+      if (_matches(tr('plusShowStatusHub')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.info_outline_rounded,
+          title: tr('plusShowStatusHub'),
+          subtitle: tr('plusShowStatusHubDescription'),
+          value: (s) => s.plusShowStatusHub,
+          onChanged: (s, v) => onSetState(() => s.plusShowStatusHub = v),
+        ),
+      if (_matches(tr('plusEnableBottomNavBar')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.navigation_rounded,
+          title: tr('plusEnableBottomNavBar'),
+          subtitle: tr('plusEnableBottomNavBarDescription'),
+          value: (s) => s.plusEnableBottomNavBar,
+          onChanged: (s, v) => onSetState(() => s.plusEnableBottomNavBar = v),
+        ),
+      if (_matches(tr('plusEnableFAB')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.add_circle_outline_rounded,
+          title: tr('plusEnableFAB'),
+          subtitle: tr('plusEnableFABDescription'),
+          value: (s) => s.plusEnableFAB,
+          onChanged: (s, v) => onSetState(() => s.plusEnableFAB = v),
+        ),
       _buildGridSettings(context),
     ];
 
@@ -219,167 +204,152 @@ class AppsViewSettingsSection extends StatelessWidget {
             _matches(tr('fabShowImportInstalled')));
 
     List<Widget> sortingWidgets = [
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.cached_rounded,
-        title: tr('plusIconCaching'),
-        subtitle: tr('plusIconCachingDescription'),
-        value: (s) => s.plusEnableIconCaching,
-        onChanged: (s, v) => onSetState(() => s.plusEnableIconCaching = v),
-        visible: (s) => _matches(tr('plusIconCaching')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.back_hand_outlined,
-        title: tr('plusQuickFilters'),
-        subtitle: tr('plusQuickFiltersDescription'),
-        value: (s) => s.plusEnableQuickFilters,
-        onChanged: (s, v) => onSetState(() => s.plusEnableQuickFilters = v),
-        visible: (s) => _matches(tr('plusQuickFilters')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.label_outline,
-        title: tr('plusShowTagsInList'),
-        subtitle: tr('plusShowTagsInListDescription'),
-        value: (s) => s.plusShowTagsInList,
-        onChanged: (s, v) => onSetState(() => s.plusShowTagsInList = v),
-        visible: (s) => _matches(tr('plusShowTagsInList')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.label_important_outline,
-        title: tr('plusEnableTags'),
-        subtitle: tr('plusEnableTagsDescription'),
-        value: (s) => s.plusEnableTags,
-        onChanged: (s, v) => onSetState(() => s.plusEnableTags = v),
-        visible: (s) => _matches(tr('plusEnableTags')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.sort_rounded,
-        title: tr('plusAdvancedSorting'),
-        subtitle: tr('plusAdvancedSortingDescription'),
-        value: (s) => s.plusEnableAdvancedSorting,
-        onChanged: (s, v) => onSetState(() => s.plusEnableAdvancedSorting = v),
-        visible: (s) => _matches(tr('plusAdvancedSorting')),
-        isAdvanced: true,
-      ),
+      if (_matches(tr('plusIconCaching')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.cached_rounded,
+          title: tr('plusIconCaching'),
+          subtitle: tr('plusIconCachingDescription'),
+          value: (s) => s.plusEnableIconCaching,
+          onChanged: (s, v) => onSetState(() => s.plusEnableIconCaching = v),
+        ),
+      if (_matches(tr('plusQuickFilters')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.back_hand_outlined,
+          title: tr('plusQuickFilters'),
+          subtitle: tr('plusQuickFiltersDescription'),
+          value: (s) => s.plusEnableQuickFilters,
+          onChanged: (s, v) => onSetState(() => s.plusEnableQuickFilters = v),
+        ),
+      if (_matches(tr('plusShowTagsInList')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.label_outline,
+          title: tr('plusShowTagsInList'),
+          subtitle: tr('plusShowTagsInListDescription'),
+          value: (s) => s.plusShowTagsInList,
+          onChanged: (s, v) => onSetState(() => s.plusShowTagsInList = v),
+        ),
+      if (_matches(tr('plusEnableTags')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.label_important_outline,
+          title: tr('plusEnableTags'),
+          subtitle: tr('plusEnableTagsDescription'),
+          value: (s) => s.plusEnableTags,
+          onChanged: (s, v) => onSetState(() => s.plusEnableTags = v),
+        ),
+      if (_matches(tr('plusAdvancedSorting'), isAdvanced: true))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.sort_rounded,
+          title: tr('plusAdvancedSorting'),
+          subtitle: tr('plusAdvancedSortingDescription'),
+          value: (s) => s.plusEnableAdvancedSorting,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusEnableAdvancedSorting = v),
+        ),
     ];
 
     List<Widget> displayWidgets = [
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.person_outline,
-        title: tr('showAuthor'),
-        subtitle: tr('showAuthorDescription'),
-        value: (s) => s.displayShowAuthor,
-        onChanged: (s, v) => onSetState(() => s.displayShowAuthor = v),
-        visible: (s) => _matches(tr('showAuthor')),
-      ),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.code,
-        title: tr('showVersion'),
-        subtitle: tr('showVersionDescription'),
-        value: (s) => s.displayShowVersion,
-        onChanged: (s, v) => onSetState(() => s.displayShowVersion = v),
-        visible: (s) => _matches(tr('showVersion')),
-      ),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.calendar_today_outlined,
-        title: tr('showDate'),
-        subtitle: tr('showDateDescription'),
-        value: (s) => s.displayShowDate,
-        onChanged: (s, v) => onSetState(() => s.displayShowDate = v),
-        visible: (s) => _matches(tr('showDate')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.view_list_rounded,
-        title: tr('plusModernAppListTile'),
-        subtitle: tr('plusModernAppListTileDescription'),
-        value: (s) => s.plusEnableModernAppListTile,
-        onChanged: (s, v) =>
-            onSetState(() => s.plusEnableModernAppListTile = v),
-        visible: (s) => _matches(tr('plusModernAppListTile')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.swipe_rounded,
-        title: tr('plusEnableSwipeActions'),
-        subtitle: tr('plusEnableSwipeActionsDescription'),
-        value: (s) => s.plusEnableSwipeActions,
-        onChanged: (s, v) => onSetState(() => s.plusEnableSwipeActions = v),
-        visible: (s) => _matches(tr('plusEnableSwipeActions')),
-      ),
+      if (_matches(tr('showAuthor')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.person_outline,
+          title: tr('showAuthor'),
+          subtitle: tr('showAuthorDescription'),
+          value: (s) => s.displayShowAuthor,
+          onChanged: (s, v) => onSetState(() => s.displayShowAuthor = v),
+        ),
+      if (_matches(tr('showVersion')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.code,
+          title: tr('showVersion'),
+          subtitle: tr('showVersionDescription'),
+          value: (s) => s.displayShowVersion,
+          onChanged: (s, v) => onSetState(() => s.displayShowVersion = v),
+        ),
+      if (_matches(tr('showDate')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.calendar_today_outlined,
+          title: tr('showDate'),
+          subtitle: tr('showDateDescription'),
+          value: (s) => s.displayShowDate,
+          onChanged: (s, v) => onSetState(() => s.displayShowDate = v),
+        ),
+      if (_matches(tr('plusModernAppListTile')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.view_list_rounded,
+          title: tr('plusModernAppListTile'),
+          subtitle: tr('plusModernAppListTileDescription'),
+          value: (s) => s.plusEnableModernAppListTile,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusEnableModernAppListTile = v),
+        ),
+      if (_matches(tr('plusEnableSwipeActions')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.swipe_rounded,
+          title: tr('plusEnableSwipeActions'),
+          subtitle: tr('plusEnableSwipeActionsDescription'),
+          value: (s) => s.plusEnableSwipeActions,
+          onChanged: (s, v) => onSetState(() => s.plusEnableSwipeActions = v),
+        ),
     ];
 
     List<Widget> headerWidgets = [
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.filter_list_outlined,
-        title: tr('showFilterChips'),
-        subtitle: tr('showFilterChipsDescription'),
-        value: (s) => s.displayShowFilterChips,
-        onChanged: (s, v) => onSetState(() => s.displayShowFilterChips = v),
-        visible: (s) => _matches(tr('showFilterChips')),
-      ),
-      buildFeatureToggle<ViewSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.summarize_outlined,
-        title: tr('showAppCount'),
-        subtitle: tr('showAppCountDescription'),
-        value: (s) => s.displayShowAppCount,
-        onChanged: (s, v) => onSetState(() => s.displayShowAppCount = v),
-        visible: (s) => _matches(tr('showAppCount')),
-      ),
+      if (_matches(tr('showFilterChips')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.filter_list_outlined,
+          title: tr('showFilterChips'),
+          subtitle: tr('showFilterChipsDescription'),
+          value: (s) => s.displayShowFilterChips,
+          onChanged: (s, v) => onSetState(() => s.displayShowFilterChips = v),
+        ),
+      if (_matches(tr('showAppCount')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.summarize_outlined,
+          title: tr('showAppCount'),
+          subtitle: tr('showAppCountDescription'),
+          value: (s) => s.displayShowAppCount,
+          onChanged: (s, v) => onSetState(() => s.displayShowAppCount = v),
+        ),
     ];
 
     List<Widget> searchWidgets = [
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.vertical_align_top_rounded,
-        title: tr('showAppBarSearch'),
-        subtitle: tr('showAppBarSearchDescription'),
-        value: (s) => s.plusShowAppBarSearch,
-        onChanged: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
-        visible: (s) => _matches(tr('showAppBarSearch')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.dashboard_outlined,
-        title: tr('showDashboardSearch'),
-        subtitle: tr('showDashboardSearchDescription'),
-        value: (s) => s.plusShowDashboardSearch,
-        onChanged: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
-        visible: (s) => _matches(tr('showDashboardSearch')),
-      ),
-      buildFeatureToggle<PlusSettingsProvider>(
-        context,
-        showAdvancedSettings: showAdvancedSettings,
-        icon: Icons.ads_click_rounded,
-        title: tr('showFloatingSearch'),
-        subtitle: tr('showFloatingSearchDescription'),
-        value: (s) => s.plusShowFloatingSearch,
-        onChanged: (s, v) => onSetState(() => s.plusShowFloatingSearch = v),
-        visible: (s) => _matches(tr('showFloatingSearch')),
-      ),
+      if (_matches(tr('showAppBarSearch')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.vertical_align_top_rounded,
+          title: tr('showAppBarSearch'),
+          subtitle: tr('showAppBarSearchDescription'),
+          value: (s) => s.plusShowAppBarSearch,
+          onChanged: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
+        ),
+      if (_matches(tr('showDashboardSearch')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.dashboard_outlined,
+          title: tr('showDashboardSearch'),
+          subtitle: tr('showDashboardSearchDescription'),
+          value: (s) => s.plusShowDashboardSearch,
+          onChanged: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
+        ),
+      if (_matches(tr('showFloatingSearch')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.ads_click_rounded,
+          title: tr('showFloatingSearch'),
+          subtitle: tr('showFloatingSearchDescription'),
+          value: (s) => s.plusShowFloatingSearch,
+          onChanged: (s, v) => onSetState(() => s.plusShowFloatingSearch = v),
+        ),
     ];
 
     return ExpressiveSettingsGroup(
@@ -388,21 +358,21 @@ class AppsViewSettingsSection extends StatelessWidget {
       isExpandable: !isSearching,
       initiallyExpanded: false,
       children: [
-        if (categoryWidgets.any((w) => w is! SizedBox))
+        if (categoryWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('categorySettings'),
             isExpandable: true,
             initiallyExpanded: false,
             children: categoryWidgets,
           ),
-        if (iconWidgets.any((w) => w is! SizedBox))
+        if (iconWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('categoryIconPreview'),
             isExpandable: true,
             initiallyExpanded: false,
             children: iconWidgets,
           ),
-        if (viewWidgets.any((w) => w is! SizedBox))
+        if (viewWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('viewMode'),
             isExpandable: true,
@@ -459,14 +429,14 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusFeaturesEnabled && sortingWidgets.any((w) => w is! SizedBox))
+        if (plusFeaturesEnabled && sortingWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusSectionOrganizationSorting'),
             isExpandable: true,
             initiallyExpanded: false,
             children: sortingWidgets,
           ),
-        if (displayWidgets.any((w) => w is! SizedBox))
+        if (displayWidgets.isNotEmpty)
           GenericBooleanControlGrid<ViewSettingsProvider>(
             title: tr('appTileDisplay'),
             settings: [
@@ -497,7 +467,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusFeaturesEnabled && searchWidgets.any((w) => w is! SizedBox))
+        if (plusFeaturesEnabled && searchWidgets.isNotEmpty)
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('searchSettings'),
             settings: [
@@ -530,7 +500,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (headerWidgets.any((w) => w is! SizedBox))
+        if (headerWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appListHeader'),
             isExpandable: true,

@@ -3,11 +3,17 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Shared toggle-row builder for settings sections: wraps a single boolean
-/// preference in a Consumer<T>, applies visibility/advanced-settings/
-/// Plus-master-switch gating, and renders a SwitchListTile.adaptive.
+/// preference in a Consumer<T> and renders a SwitchListTile.adaptive.
 ///
-/// Any T that is a PlusSettingsProvider is automatically hidden when
-/// `enableAllPlusFeatures` is off, regardless of `visible`/`isAdvanced`.
+/// Search/advanced-settings matching is the caller's responsibility (wrap
+/// the call in `if (_matches(...))` so hidden toggles are actually absent
+/// from the children list, not just internally hidden — group widgets like
+/// ExpressiveSettingsGroup can't detect an empty group through a Consumer
+/// that renders SizedBox.shrink() internally).
+///
+/// Any T that is a PlusSettingsProvider is still automatically hidden when
+/// `enableAllPlusFeatures` is off, since that's runtime provider state the
+/// caller can't cheaply check without watching the provider itself.
 Widget buildFeatureToggle<T extends ChangeNotifier>(
   BuildContext context, {
   required IconData icon,
@@ -15,17 +21,12 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
   required String subtitle,
   required dynamic Function(T) value,
   required void Function(T, bool) onChanged,
-  required bool Function(T) visible,
-  bool isAdvanced = false,
-  bool? showAdvancedSettings,
 }) {
   return Consumer<T>(
     builder: (context, settings, child) {
       final plusGatedOff =
           settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
-      if (!visible(settings) ||
-          plusGatedOff ||
-          (isAdvanced && !(showAdvancedSettings ?? false))) {
+      if (plusGatedOff) {
         return const SizedBox.shrink();
       }
       return SwitchListTile.adaptive(
