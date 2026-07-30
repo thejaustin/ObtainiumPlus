@@ -72,8 +72,11 @@ dependencies:
   protobuf: ^3.1.0
   flutter_markdown_plus: ^1.0.12
   workmanager: ^0.9.0+3
+  background_fetch: ^1.7.0
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   flutter_foreground_task: ^9.2.2
   go_router: ^17.2.3
@@ -106,7 +109,3 @@ flutter:
       - family: Montserrat
         fonts:
           - asset: assets/fonts/Montserrat-Regular.ttf
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
