@@ -13,6 +13,7 @@ List<String> generateStandardVersionRegExStrings() {
     'ose',
     '[0-9]+',
     '[pP][0-9]+',
+    '[rR][cC][0-9]+',
     '[rR][0-9]+',
     '[vV][0-9]+',
     'shizukuplus',
