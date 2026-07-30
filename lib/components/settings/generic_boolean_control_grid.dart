@@ -28,6 +28,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
 
   @override
   Widget build(BuildContext context) {
+    if (settings.isEmpty) return const SizedBox.shrink();
     return Consumer2<T, PlusSettingsProvider>(
       builder: (context, provider, plusSettings, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
