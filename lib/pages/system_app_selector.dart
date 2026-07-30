@@ -17,6 +17,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 enum SystemAppSortMethod {
   nameAZ,

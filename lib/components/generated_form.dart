@@ -188,6 +188,24 @@ class GeneratedFormTagInput extends GeneratedFormItem {
 typedef OnValueChanges =
     void Function(Map<String, dynamic> values, bool valid, bool isBuilding);
 
+Map<String, dynamic> getDefaultValuesFromFormItems(
+  List<List<GeneratedFormItem>> items,
+) {
+  final entries = <MapEntry<String, dynamic>>[];
+  for (final row in items) {
+    for (final el in row) {
+      if (el is GeneratedFormSwitch) {
+        entries.add(MapEntry(el.key, el.defaultValue ?? false));
+      } else if (el is GeneratedFormSubForm) {
+        entries.add(MapEntry(el.key, el.defaultValue ?? []));
+      } else {
+        entries.add(MapEntry(el.key, el.defaultValue ?? ''));
+      }
+    }
+  }
+  return Map.fromEntries(entries);
+}
+
 class GeneratedForm extends StatefulWidget {
   const GeneratedForm({
     super.key,

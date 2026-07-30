@@ -28,6 +28,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/fuzzy_search.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 class CommandCenter extends StatefulWidget {
   final String? initialQuery;

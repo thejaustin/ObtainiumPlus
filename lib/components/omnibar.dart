@@ -28,6 +28,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 /// Directly runs the GitHub mass-source import flow from any context,
 /// without needing to navigate to ImportExportPage first.

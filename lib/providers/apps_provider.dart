@@ -57,6 +57,7 @@ import 'package:obtainium/providers/apps_provider_import_export.dart';
 import 'package:obtainium/providers/apps_provider_install.dart';
 import 'package:obtainium/providers/apps_provider_lifecycle.dart';
 import 'package:obtainium/providers/apps_provider_updates.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 export 'apps_provider_import_export.dart';
 export 'apps_provider_install.dart';
@@ -107,6 +108,19 @@ List<MapEntry<String, int>> moveStrToEndMapEntryWithCount(
   MapEntry<String, int> str, {
   MapEntry<String, int>? strB,
 }) => _moveToEnd(arr, (e) => e.key == str.key || e.key == strB?.key);
+
+class CancellationException implements Exception {}
+
+class CancellationToken {
+  bool _cancelled = false;
+  bool get isCancelled => _cancelled;
+
+  void cancel() => _cancelled = true;
+
+  void throwIfCancelled() {
+    if (_cancelled) throw CancellationException();
+  }
+}
 
 Future<File> downloadFileWithRetry(
   String url,

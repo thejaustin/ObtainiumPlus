@@ -28,6 +28,7 @@ import 'package:obtainium/providers/tag_provider.dart';
 import 'package:obtainium/providers/source_config_provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
+import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';

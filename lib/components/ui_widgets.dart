@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';

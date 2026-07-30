@@ -32,6 +32,7 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_package_manager/android_package_manager.dart'
     hide LaunchMode;
+import 'package:obtainium/components/ui_widgets.dart';
 
 class AppPage extends StatefulWidget {
   const AppPage({

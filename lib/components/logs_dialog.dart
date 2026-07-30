@@ -13,6 +13,7 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 
 AndroidDeviceInfo? _cachedDeviceInfo;
 
