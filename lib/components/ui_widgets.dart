@@ -361,23 +361,6 @@ class ActionListTile extends StatelessWidget {
   }
 }
 
-class CustomAppBar extends StatelessWidget {
-  const CustomAppBar({super.key, required this.title, this.actions});
-
-  final String title;
-  final List<Widget>? actions;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverAppBar(
-      pinned: true,
-      automaticallyImplyLeading: false,
-      title: Text(title),
-      actions: actions,
-    );
-  }
-}
-
 class _TileClipper extends CustomClipper<Path> {
   final ShapeBorder shape;
   const _TileClipper(this.shape);
@@ -418,7 +401,7 @@ ValueChanged<bool> hapticSwitchOnChanged(
   BuildContext context,
   ValueChanged<bool> onChanged,
 ) => (v) {
-  context.read<SettingsProvider>().selectionClick();
+  AppHaptics.selectionClick();
   onChanged(v);
 };
 

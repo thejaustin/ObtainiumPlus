@@ -12,7 +12,7 @@ class ObtainiumError {
   final String _message;
   final StackTrace? stack;
   final Map<String, dynamic> data;
-  final bool unexpected;
+  bool unexpected;
 
   /// The app/source URL this error relates to, if known. Attached as context so
   /// that logs and error messages can identify which app/URL an error came from
@@ -113,6 +113,7 @@ class RateLimitError extends ObtainiumError {
 }
 
 class InvalidURLError extends ObtainiumError {
+  String? appId;
   InvalidURLError(String sourceName)
     : super.withCode('INVALID_URL', data: {'sourceName': sourceName});
 }
@@ -123,15 +124,18 @@ class CredsNeededError extends ObtainiumError {
 }
 
 class NoReleasesError extends ObtainiumError {
+  String? appId;
   NoReleasesError({String? note})
     : super.withCode('NO_RELEASES', data: {'note': note ?? ''});
 }
 
 class NoAPKError extends ObtainiumError {
+  String? appId;
   NoAPKError() : super.withCode('NO_APK');
 }
 
 class NoVersionError extends ObtainiumError {
+  String? appId;
   NoVersionError() : super.withCode('NO_VERSION');
 }
 
@@ -140,7 +144,7 @@ class UnsupportedURLError extends ObtainiumError {
 }
 
 class DowngradeError extends ObtainiumError {
-  final String? appId;
+  String? appId;
   DowngradeError(int currentVersionCode, int newVersionCode, {this.appId})
     : super.withCode(
         'DOWNGRADE',
@@ -164,6 +168,7 @@ class InstallError extends ObtainiumError {
 }
 
 class IDChangedError extends ObtainiumError {
+  String? appId;
   IDChangedError(String newId)
     : super.withCode('ID_CHANGED', data: {'newId': newId});
 }

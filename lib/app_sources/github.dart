@@ -11,6 +11,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/version_utils.dart';
 
 class GitHub extends AppSource {
   GitHub({bool hostChanged = false}) {
@@ -801,6 +802,27 @@ class GitHub extends AppSource {
         (Response res) {
           rateLimitErrorCheck(res);
         },
+      );
+    } catch (e) {
+      rethrowOrWrapError(e);
+    }
+  }
+
+  /// Public entry point for GitHub-API-compatible sources (e.g. Gitea) that
+  /// need the tag-fallback release-fetching logic but build their own request
+  /// URL instead of GitHub.com's.
+  Future<APKDetails> getLatestAPKDetailsCommon2(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings,
+    Future<String> Function(bool) reqUrlGenerator,
+    dynamic Function(Response)? onHttpErrorCode,
+  ) async {
+    try {
+      return await fetchReleaseDetailsWithTagFallback(
+        standardUrl,
+        additionalSettings,
+        reqUrlGenerator,
+        onHttpErrorCode,
       );
     } catch (e) {
       rethrowOrWrapError(e);

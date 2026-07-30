@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/app_file_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -103,7 +104,7 @@ class SettingsProvider with ChangeNotifier {
     // Neither platform lookup is worth failing all of settings init over —
     // both have sane fallbacks (defaultAppDir stays null, isTV stays false)
     try {
-      defaultAppDir = (await getAppStorageDir()).path;
+      defaultAppDir = (await AppFileService.getAppStorageDir()).path;
     } catch (e) {
       talker.warning('Could not determine app storage dir: $e');
     }

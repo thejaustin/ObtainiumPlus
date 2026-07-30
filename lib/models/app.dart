@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/providers/source_provider.dart' show TypedSettings;
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 
@@ -72,6 +73,75 @@ class App {
 
   String get finalAuthor {
     return overrideAuthor ?? author;
+  }
+
+  /// Type-safe accessor for [additionalSettings].
+  TypedSettings get settings => TypedSettings(additionalSettings);
+
+  static const Object _sentinel = Object();
+
+  /// Returns a copy of this [App] with the given fields replaced. Pass an
+  /// explicit `null` for a nullable field (e.g. `installedVersion: null`) to
+  /// clear it; omit the argument to keep the current value.
+  App copyWith({
+    String? id,
+    String? url,
+    String? author,
+    String? name,
+    Object? installedVersion = _sentinel,
+    String? latestVersion,
+    List<MapEntry<String, String>>? apkUrls,
+    List<MapEntry<String, String>>? otherAssetUrls,
+    int? preferredApkIndex,
+    Map<String, dynamic>? additionalSettings,
+    Object? lastUpdateCheck = _sentinel,
+    bool? pinned,
+    List<String>? categories,
+    List<String>? tags,
+    Object? releaseDate = _sentinel,
+    Object? changeLog = _sentinel,
+    Object? overrideSource = _sentinel,
+    bool? allowIdChange,
+    List<VersionHistoryEntry>? versionHistory,
+    Object? pendingRepoRenameUrl = _sentinel,
+  }) {
+    return App(
+        id ?? this.id,
+        url ?? this.url,
+        author ?? this.author,
+        name ?? this.name,
+        installedVersion == _sentinel
+            ? this.installedVersion
+            : installedVersion as String?,
+        latestVersion ?? this.latestVersion,
+        apkUrls ?? List<MapEntry<String, String>>.from(this.apkUrls),
+        preferredApkIndex ?? this.preferredApkIndex,
+        additionalSettings ??
+            Map<String, dynamic>.from(this.additionalSettings),
+        lastUpdateCheck == _sentinel
+            ? this.lastUpdateCheck
+            : lastUpdateCheck as DateTime?,
+        pinned ?? this.pinned,
+        categories: categories ?? List<String>.from(this.categories),
+        tags: tags ?? List<String>.from(this.tags),
+        releaseDate: releaseDate == _sentinel
+            ? this.releaseDate
+            : releaseDate as DateTime?,
+        changeLog: changeLog == _sentinel
+            ? this.changeLog
+            : changeLog as String?,
+        overrideSource: overrideSource == _sentinel
+            ? this.overrideSource
+            : overrideSource as String?,
+        allowIdChange: allowIdChange ?? this.allowIdChange,
+        otherAssetUrls:
+            otherAssetUrls ??
+            List<MapEntry<String, String>>.from(this.otherAssetUrls),
+        versionHistory: versionHistory ?? List.from(this.versionHistory),
+      )
+      ..pendingRepoRenameUrl = (pendingRepoRenameUrl == _sentinel
+          ? this.pendingRepoRenameUrl
+          : pendingRepoRenameUrl as String?);
   }
 
   App deepCopy() => App(

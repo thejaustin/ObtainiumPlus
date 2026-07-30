@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart' show formatDownloadSize;
+import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 import 'package:obtainium/providers/source_provider.dart';
 
 /// Prefix for the download-notification Cancel action id; the app ID is appended

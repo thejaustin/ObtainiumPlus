@@ -420,7 +420,7 @@ class SourceProvider {
     var name = currentApp != null ? currentApp.name.trim() : '';
     name = name.isNotEmpty ? name : apk.names.name;
     final App finalApp = App(
-      id: await _resolveAppId(
+      await _resolveAppId(
         source,
         currentApp,
         additionalSettings,
@@ -428,18 +428,17 @@ class SourceProvider {
         standardUrl,
         inferAppIdIfOptional,
       ),
-      url: standardUrl,
-      author: apk.names.author,
-      name: name,
-      installedVersion: currentApp?.installedVersion,
-      latestVersion: apk.version,
-      apkUrls: apk.apkUrls,
-      preferredApkIndex:
-          currentApp?.preferredApkIndex ??
+      standardUrl,
+      apk.names.author,
+      name,
+      currentApp?.installedVersion,
+      apk.version,
+      apk.apkUrls,
+      currentApp?.preferredApkIndex ??
           (apk.apkUrls.isNotEmpty ? apk.apkUrls.length - 1 : 0),
-      additionalSettings: additionalSettings,
-      lastUpdateCheck: DateTime.now(),
-      pinned: currentApp?.pinned ?? false,
+      additionalSettings,
+      DateTime.now(),
+      currentApp?.pinned ?? false,
       categories: currentApp?.categories ?? const [],
       releaseDate: apk.releaseDate,
       changeLog: apk.changeLog,

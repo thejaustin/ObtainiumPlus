@@ -25,6 +25,10 @@ abstract class AppSource {
   bool urlsAlwaysHaveExtension = false;
   bool allowIncludeZips = false;
   bool allowIncludeTarballs = false;
+  bool changeLogPageIsStandardUrl = false;
+  bool inferAppIdFromUrlPath = false;
+  bool suppressStandardVersionExtraction = false;
+  String get sourceIdentifier => runtimeType.toString();
 
   AppSource() {
     name = runtimeType.toString();
@@ -68,6 +72,70 @@ abstract class AppSource {
 
   App endOfGetAppChanges(App app) {
     return app;
+  }
+
+  App postProcessApp(App app) {
+    return app;
+  }
+
+  Future<Map<String, dynamic>> buildMergedSettings(
+    Map<String, dynamic> additionalSettings,
+    SettingsProvider settingsProvider,
+  ) async {
+    return {
+      ...additionalSettings,
+      ...(await getSourceConfigValues(additionalSettings, settingsProvider)),
+    };
+  }
+
+  /// File extensions Obtainium recognizes as installable Android package
+  /// containers.
+  static const List<String> apkContainerExtensions = [
+    '.apk',
+    '.xapk',
+    '.apkm',
+    '.apks',
+  ];
+
+  static const List<String> archiveExtensions = ['.zip'];
+
+  static const List<String> tarballExtensions = [
+    '.tar.gz',
+    '.tgz',
+    '.tar.bz2',
+    '.tar.xz',
+  ];
+
+  /// Whether [name] (a filename or URL) refers to an APK-type container that
+  /// Obtainium can install. Optionally also accept generic zip archives and
+  /// tarballs (some sources bundle split APKs that way).
+  static bool isApkOrContainerFile(
+    String name, {
+    bool includeArchives = false,
+    bool includeTarballs = false,
+  }) {
+    final lower = name.toLowerCase();
+    bool endsWithAny(List<String> exts) => exts.any(lower.endsWith);
+    return endsWithAny(apkContainerExtensions) ||
+        (includeArchives && endsWithAny(archiveExtensions)) ||
+        (includeTarballs && endsWithAny(tarballExtensions));
+  }
+
+  /// A convenience for the common standardize-by-regex pattern: build a regex
+  /// from the source's [hosts] plus the given subdomain prefix and path, match
+  /// against [url], and return the match or throw [InvalidURLError].
+  String standardizeUrlWithRegex(
+    String url, {
+    required String subdomainPrefix,
+    required String pathPattern,
+  }) {
+    final re = RegExp(
+      '^https?://$subdomainPrefix${getSourceRegex(hosts)}$pathPattern',
+      caseSensitive: false,
+    );
+    final match = re.firstMatch(url);
+    if (match == null) throw InvalidURLError(name);
+    return match.group(0)!;
   }
 
   Future<Response> sourceRequest(
@@ -119,10 +187,34 @@ abstract class AppSource {
     return url;
   }
 
+  static String stripLastPathSegment(String url) {
+    final uri = Uri.parse(url);
+    return uri
+        .replace(
+          pathSegments: uri.pathSegments.sublist(
+            0,
+            uri.pathSegments.length - 1,
+          ),
+        )
+        .toString();
+  }
+
+  static Future<String?> tryInferAppIdFromLastPathSegment(
+    String standardUrl, {
+    Map<String, dynamic> additionalSettings = const {},
+  }) async {
+    return Uri.parse(
+      standardUrl,
+    ).pathSegments.where((s) => s.isNotEmpty).lastOrNull;
+  }
+
   Future<String?> tryInferringAppId(
     String standardUrl, {
     Map<String, dynamic> additionalSettings = const {},
   }) async {
+    if (inferAppIdFromUrlPath) {
+      return tryInferAppIdFromLastPathSegment(standardUrl);
+    }
     return null;
   }
 
@@ -133,6 +225,14 @@ abstract class AppSource {
 
   List<List<GeneratedFormItem>> additionalSourceAppSpecificSettingFormItems =
       [];
+
+  static List<GeneratedFormItem> get fallbackToOlderReleasesFormItem => [
+    GeneratedFormSwitch(
+      'fallbackToOlderReleases',
+      label: tr('fallbackToOlderReleases'),
+      value: true,
+    ),
+  ];
 
   // Some additional data may be needed for Apps regardless of Source
   List<List<GeneratedFormItem>>
@@ -343,12 +443,12 @@ abstract class AppSource {
       overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
         'versionDetection',
         disabled: true,
-        value: false,
+        defaultValue: false,
       );
       overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
         'useVersionCodeAsOSVersion',
         disabled: true,
-        value: false,
+        defaultValue: false,
       );
     }
     return [
@@ -357,6 +457,16 @@ abstract class AppSource {
       ...moreConditionalItems,
     ];
   }
+
+  /// Cached emptiness check for [combinedAppSpecificSettingFormItems], used to
+  /// avoid rebuilding the form-item tree just to test isNotEmpty.
+  bool? _hasAppSpecificSettingsCache;
+  bool get hasAppSpecificSettings => _hasAppSpecificSettingsCache ??=
+      combinedAppSpecificSettingFormItems.isNotEmpty;
+
+  /// Flattened, read-only view of [combinedAppSpecificSettingFormItems].
+  List<GeneratedFormItem> get flatCombinedFormItemsReadOnly =>
+      combinedAppSpecificSettingFormItems.expand((row) => row).toList();
 
   // Some Sources may have additional settings at the Source level (not specific to Apps) - these use SettingsProvider
   // If the source has been overridden, we expect the user to define one-time values as additional settings - don't use the stored values
@@ -381,7 +491,7 @@ abstract class AppSource {
   }
 
   String? changeLogPageFromStandardUrl(String standardUrl) {
-    return null;
+    return changeLogPageIsStandardUrl ? standardUrl : null;
   }
 
   Future<String?> getSourceNote() async {

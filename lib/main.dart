@@ -76,6 +76,35 @@ bool isFdroidBuild = false;
 /// (e.g. tapping a notification).
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Loads translations outside of the widget tree (e.g. in a background
+/// isolate that never builds the EasyLocalization widget).
+/// See easy_localization/issues/210
+Future<void> loadTranslations() async {
+  await EasyLocalizationController.initEasyLocation();
+  var s = SettingsProvider();
+  await s.initializeSettings();
+  var forceLocale = s.forcedLocale;
+  final controller = EasyLocalizationController(
+    saveLocale: true,
+    forceLocale: forceLocale,
+    fallbackLocale: fallbackLocale,
+    supportedLocales: supportedLocales.map((e) => e.key).toList(),
+    assetLoader: const RootBundleAssetLoader(),
+    useOnlyLangCode: false,
+    useFallbackTranslations: true,
+    path: localeDir,
+    onLoadError: (FlutterError e) {
+      throw e;
+    },
+  );
+  await controller.loadTranslations();
+  Localization.load(
+    controller.locale,
+    translations: controller.translations,
+    fallbackTranslations: controller.fallbackTranslations,
+  );
+}
+
 @pragma('vm:entry-point')
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
   String taskId = task.taskId;
@@ -336,6 +365,9 @@ class _ObtainiumState extends State<Obtainium> {
   var _firstRunHandled = false;
   var _launchByNotifChecked = false;
   var _fontLoaded = false;
+  var _lastUpdateInterval = -1;
+  var _lastUseFGService = false;
+  var existingUpdateInterval = -1;
 
   void _manageServices(
     UpdateSettingsProvider updateSettings,
@@ -393,21 +425,21 @@ class _ObtainiumState extends State<Obtainium> {
                 unawaited(
                   apps.saveApps([
                     App(
-                      id: obtainiumId,
-                      url: obtainiumUrl,
-                      author: 'ImranR98',
-                      name: 'Obtainium',
-                      installedVersion: value!.versionName,
-                      latestVersion: value.versionName!,
-                      apkUrls: [],
-                      preferredApkIndex: 0,
-                      additionalSettings: {
+                      obtainiumId,
+                      obtainiumUrl,
+                      'ImranR98',
+                      'Obtainium',
+                      value!.versionName,
+                      value.versionName!,
+                      [],
+                      0,
+                      {
                         'versionDetection': true,
                         'apkFilterRegEx': 'fdroid',
                         'invertAPKFilter': true,
                       },
-                      lastUpdateCheck: null,
-                      pinned: false,
+                      null,
+                      false,
                     ),
                   ], onlyIfExists: false),
                 );
