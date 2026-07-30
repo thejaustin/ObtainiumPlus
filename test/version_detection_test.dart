@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/utils/version_utils.dart';
 
 void main() {
   group('Standard version format detection (issue #218)', () {
