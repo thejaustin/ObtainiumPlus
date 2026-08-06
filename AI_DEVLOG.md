@@ -21,7 +21,7 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ### Infrastructure
 - [ ] **Auto-bump workflow** — version bumps auto-committed; ensure PRs don't conflict with bump commits
 - [ ] **Flutter test compilation** — fixed in a7a0ef14; run `flutter test` to confirm green
-- [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — fully merged locally, not yet pushed/merged to `main`; see 2026-07-29 entry below
+- [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — merged to `main`, pushed, and released as `v1.6.10-p2` (2026-08-06); see entry below
 
 ### UI
 - [x] **App-detail-page swipe-down** — fixed: `RefreshIndicator` was wrapping the modal sheet's content too, swallowing the downward drag as pull-to-refresh before it could bubble up to the sheet's own `swipeDismissible` drag. Now skipped entirely when `widget.isModal` (`lib/pages/app.dart`).
@@ -30,6 +30,19 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ---
 
 ## Session History (newest first)
+
+### 2026-08-06 — Claude Code (Sonnet 5)
+
+**Pushed the long-uncommitted upstream merge (v1.4.3→v1.6.10, staged 07-29) plus ~15 local restore/fix commits to `main` for the first time, and got it to a green release (`v1.6.10-p2`).** Local `main` had sat 490 commits ahead of `origin/main` since 07-29 — everything below was invisible to CI until this session pushed it.
+
+- **Found a concurrent Antigravity CLI session** had pushed directly to `origin/main` mid-session (`0ff53d61`, a Sentry null-check fix) after this session's first push — merged it in (not rebased: a plain `git rebase` on this branch replays all 408 individual commits inside the 5 upstream merge commits instead of moving the merges, immediately hit an upstream conflict; `git merge` is correct here). Also found Antigravity had left uncommitted working-tree deletions of `known_issues.json` (restored — it's fetched live from `raw.githubusercontent.com/.../main/known_issues.json` by `known_issues_service.dart` to power the force-update/critical-issue dialogs; deleting it would have 404'd that feature for every user on the next push) and `scratch_refactor.py` (left deleted — genuinely unreferenced scratch script).
+- **Root-caused both of the first two `Build APK` failures to the same bug**, not the `HomeWidgetProvider.kt` self-referential-class issue an earlier commit (`97b43229`) had already fixed: the upstream merge left `home_widget` plus 8 other real runtime plugins (`sentry_flutter`, `flutter_secure_storage`, `flutter_foreground_task`, `encrypt`, `flutter_js`, `go_router`, `shimmer`, `introduction_screen`) misfiled under `dev_dependencies` in `pubspec.yaml`. Flutter's Gradle plugin loader excludes dev-dependency plugins' native Android code from release builds, so `home_widget`'s Kotlin classes were never on the release classpath — Dart-level analysis and `pub get` never caught it since dev vs. main dependencies only affects native Android plugin registration, not Dart resolution. Moved all 9 back to `dependencies`; dropped the also-misfiled `flutter_markdown` entirely (confirmed zero references, superseded by `flutter_markdown_plus`).
+- **Third failure, different bug**: R8 "`DynamicColorPlugin` is defined multiple times" — our direct `dynamic_system_colors` (a fork of `dynamic_color` that reuses its exact Android package/class name) collided with a transitive `dynamic_color` pulled in via `loading_indicator_m3e` → `m3e_design`. Traced `m3e_design`'s only reference to `dynamic_color` to an entirely commented-out class in its published source (`color_tokens.dart:598-664`) — never actually invoked by anyone, so excluding the module in `android/app/build.gradle.kts` (`configurations.all { exclude(module = "dynamic_color") }`) has no runtime effect beyond removing the duplicate class.
+- Fourth push (`8c726c22`) went fully green: Lint and Test, Build APK, Sentry symbol upload, changelog, version bump, GitHub release all succeeded. **`Obtainium+ 1.6.10-p2` is now live** — the app's first shipped release on the new upstream base since the 07-29 merge.
+- Commits this session: `0aeedaf5` (merge), `d92e7632` (dev_dependencies fix), `8c726c22` (R8 exclude fix), plus CI's own `e895e44b` auto-bump.
+- Not yet done: no fresh Sentry/crash audit against `1.6.10-p2` yet (too soon — no user traffic). Worth a pass once it's had a day or two of real usage, especially watching for anything related to the 9 dependencies that were silently missing native code in every release build shipped between the merge and this session (there were none shipped in that window, so no regression risk from that specifically — but worth confirming `home_widget`/Sentry/secure-storage-dependent features actually work now that their native code is present again).
+
+---
 
 ### 2026-07-29 — Claude Code (Sonnet 5, session continued from Fable 5 after spend-limit switch)
 
