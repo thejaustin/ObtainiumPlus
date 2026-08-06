@@ -369,6 +369,9 @@ extension AppsProviderLifecycle on AppsProvider {
           ? (await cachedIcon.readAsBytes())
           : (await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon());
       if (icon != null && !alreadyCached) {
+        if (!cachedIcon.parent.existsSync()) {
+          cachedIcon.parent.createSync(recursive: true);
+        }
         unawaited(cachedIcon.writeAsBytes(icon));
       }
       if (icon != null) {

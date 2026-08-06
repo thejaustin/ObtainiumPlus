@@ -229,9 +229,11 @@ class AppsPageState extends State<AppsPage> {
 
     refresh() {
       AppHaptics.lightImpact();
-      setState(() {
-        refreshingSince = DateTime.now();
-      });
+      if (mounted) {
+        setState(() {
+          refreshingSince = DateTime.now();
+        });
+      }
       var refreshFailed = false;
       return appsProvider
           .checkUpdates()
@@ -246,9 +248,11 @@ class AppsPageState extends State<AppsPage> {
             } else {
               AppHaptics.lightImpact();
             }
-            setState(() {
-              refreshingSince = null;
-            });
+            if (mounted) {
+              setState(() {
+                refreshingSince = null;
+              });
+            }
           });
     }
 
