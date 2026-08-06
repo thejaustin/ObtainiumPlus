@@ -349,10 +349,10 @@ class AddAppPageState extends State<AddAppPage> {
             DownloadedDir? downloadedDir;
             if (downloadedArtifact is DownloadedApk) {
               downloadedFile = downloadedArtifact;
-            } else {
-              downloadedDir = downloadedArtifact as DownloadedDir;
+            } else if (downloadedArtifact is DownloadedDir) {
+              downloadedDir = downloadedArtifact;
             }
-            app.id = downloadedFile?.appId ?? downloadedDir!.appId;
+            app.id = downloadedFile?.appId ?? downloadedDir?.appId ?? app.id;
           }
           if (appsProvider.apps.containsKey(app.id)) {
             throw ObtainiumError(tr('appAlreadyAdded'));
@@ -386,12 +386,14 @@ class AddAppPageState extends State<AddAppPage> {
       } catch (e) {
         if (context.mounted) showError(e, context);
       } finally {
-        setState(() {
-          gettingAppInfo = false;
-          if (resetUserInputAfter) {
-            changeUserInput('', false, true);
-          }
-        });
+        if (mounted) {
+          setState(() {
+            gettingAppInfo = false;
+            if (resetUserInputAfter) {
+              changeUserInput('', false, true);
+            }
+          });
+        }
       }
     }
 

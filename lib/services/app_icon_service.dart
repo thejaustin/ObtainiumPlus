@@ -162,6 +162,9 @@ class AppIconService {
           // Save to cache if successfully fetched
           if (icon != null) {
             try {
+              if (!cachedIcon.parent.existsSync()) {
+                await cachedIcon.parent.create(recursive: true);
+              }
               await cachedIcon.writeAsBytes(icon.toList());
             } catch (e) {
               // Cache write failed, but we can still use the icon

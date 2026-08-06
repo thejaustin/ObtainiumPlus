@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
-import 'package:smooth_sheets/smooth_sheets.dart';
+
 
 /// Shows a modal bottom sheet that is draggable from its scrollable content.
 Future<T?> showDraggableModalBottomSheet<T>({
@@ -16,19 +16,20 @@ Future<T?> showDraggableModalBottomSheet<T>({
 }) {
   final plusSettings = context.read<PlusSettingsProvider>();
   final enableGlass = plusSettings.plusEnableGlassmorphism;
-  final scrollController = ScrollController();
-
-  return Navigator.of(context).push<T>(
-    ModalSheetRoute<T>(
-      swipeDismissible: true,
-      barrierColor: Theme.of(
-        context,
-      ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
-      builder: (context) {
-        return Sheet(
-          physics: const BouncingSheetPhysics(),
-          scrollConfiguration: const SheetScrollConfiguration(),
-          child: ClipRRect(
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    useSafeArea: false, // Handled internally
+    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
+    builder: (context) {
+      return DraggableScrollableSheet(
+        initialChildSize: initialChildSize,
+        minChildSize: minChildSize,
+        maxChildSize: maxChildSize,
+        expand: false,
+        builder: (context, scrollController) {
+          return ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             child: ConditionalBlur(
               enabled: enableGlass,
@@ -45,9 +46,7 @@ Future<T?> showDraggableModalBottomSheet<T>({
                   ),
                   border: Border(
                     top: BorderSide(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outline.withValues(alpha: 0.15),
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
                       width: 1,
                     ),
                   ),
@@ -59,9 +58,9 @@ Future<T?> showDraggableModalBottomSheet<T>({
                 ),
               ),
             ),
-          ),
-        );
-      },
-    ),
+          );
+        },
+      );
+    },
   );
 }
