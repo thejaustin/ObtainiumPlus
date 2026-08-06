@@ -97,6 +97,30 @@ class AppInstallService {
     await intent.launch();
   }
 
+  // Shows the native Allow/Deny "ignore battery optimizations" popup
+  // directly, instead of sending the user to the full OS settings list —
+  // quicker, and works reliably on Samsung (One UI honors the standard
+  // dialog). Xiaomi/MIUI is known to suppress or ignore this dialog, so it
+  // falls back to the settings page there. The settings page remains
+  // available separately as a manual fallback for any other OEM quirks.
+  static Future<bool> requestBatteryOptimizationExemption() async {
+    final manufacturer = (await DeviceInfoPlugin().androidInfo).manufacturer
+        .toLowerCase();
+    final isMiui = ['xiaomi', 'redmi', 'poco'].any(manufacturer.contains);
+    if (isMiui) {
+      await openBatteryOptimizationSettings();
+      return false;
+    }
+    final status = await Permission.ignoreBatteryOptimizations.status;
+    if (status.isDenied) {
+      await Permission.ignoreBatteryOptimizations.request();
+    } else if (!status.isGranted) {
+      await openBatteryOptimizationSettings();
+      return false;
+    }
+    return true;
+  }
+
   static Future<void> openInstallUnknownAppsSettings(String appId) async {
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',

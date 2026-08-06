@@ -2042,6 +2042,15 @@ class AppsProvider with ChangeNotifier {
     }
     loadingApps = true;
     notifyListeners();
+    try {
+      await _loadAppsBody(singleId);
+    } finally {
+      loadingApps = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _loadAppsBody(String? singleId) async {
     var sp = SourceProvider();
     List<List<String>> errors = [];
     var installedAppsData = await getAllInstalledInfo();
@@ -2112,6 +2121,14 @@ class AppsProvider with ChangeNotifier {
                   if (moddedApp.installedVersion == null) {
                     removedAppIds.add(moddedApp.id);
                   }
+                  // Persist the correction so it doesn't get recomputed (and
+                  // re-logged) on every subsequent load/background check —
+                  // loadApps() itself never writes to disk otherwise.
+                  await saveApps(
+                    [moddedApp],
+                    attemptToCorrectInstallStatus: false,
+                    reuseInstalledInfo: true,
+                  );
                 }
                 // Update the app in memory with install info and corrections
                 apps.update(
@@ -2142,8 +2159,6 @@ class AppsProvider with ChangeNotifier {
         behaviorSettings.removeOnExternalUninstall) {
       await removeApps(removedAppIds);
     }
-    loadingApps = false;
-    notifyListeners();
   }
 
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
