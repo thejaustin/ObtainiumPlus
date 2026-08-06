@@ -131,6 +131,16 @@ dependencies {
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 }
 
+// loading_indicator_m3e -> m3e_design pulls in `dynamic_color` transitively, but only
+// via an unused import inside a commented-out class (M3EColors.dynamicOrSeed's docblock
+// in m3e_design's color_tokens.dart) - nothing in this app or m3e_design ever calls its
+// platform channel. Its DynamicColorPlugin has the same fully-qualified class name as
+// dynamic_system_colors' (the package it was forked from), which we use directly, so R8
+// fails with "defined multiple times" unless one copy is excluded here.
+configurations.all {
+    exclude(module = "dynamic_color")
+}
+
 flutter {
     source = "../.."
 }
