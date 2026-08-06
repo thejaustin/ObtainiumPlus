@@ -65,11 +65,27 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           ),
         ),
       if (_matches(tr('batteryOptimizationSettings')))
-        _buildSystemShortcutTile(
-          context,
-          icon: Icons.battery_saver_outlined,
-          title: tr('batteryOptimizationSettings'),
-          onTap: () => AppInstallService.openBatteryOptimizationSettings(),
+        ListTile(
+          leading: Icon(
+            Icons.battery_saver_outlined,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          title: Text(
+            tr('batteryOptimizationSettings'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.open_in_new, size: 18),
+            tooltip: tr('batteryOptimizationSettingsPage'),
+            onPressed: () {
+              AppHaptics.lightImpact();
+              AppInstallService.openBatteryOptimizationSettings();
+            },
+          ),
+          onTap: () {
+            AppHaptics.lightImpact();
+            AppInstallService.requestBatteryOptimizationExemption();
+          },
         ),
       if (_matches(tr('installUnknownApps')))
         _buildSystemShortcutTile(
