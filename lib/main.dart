@@ -231,43 +231,51 @@ Future<void> _runObtainium() async {
   // Replace the release-mode ErrorWidget (a bare grey rectangle — see issue
   // #217) with a card that names the failure, so a broken widget is
   // reportable instead of an anonymous blank page.
-  ErrorWidget.builder = (FlutterErrorDetails details) => Directionality(
-    textDirection: ui.TextDirection.ltr,
-    child: Center(
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF442726),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Color(0xFFFFB4AB),
-              size: 32,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Something went wrong rendering this part of the app.\nPlease screenshot this and report it on GitHub.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFFFFB4AB), fontSize: 13),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              details.exception.toString(),
-              textAlign: TextAlign.center,
-              maxLines: 6,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Color(0xFFFFDAD6), fontSize: 11),
-            ),
-          ],
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    unawaited(
+      LogsProvider().add(
+        'Widget build error: ${details.exception}\n${details.stack}',
+        level: LogLevel.error,
+      ),
+    );
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF442726),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Color(0xFFFFB4AB),
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Something went wrong rendering this part of the app.\nPlease screenshot this and report it on GitHub.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFFFFB4AB), fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                details.exception.toString(),
+                textAlign: TextAlign.center,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFFFFDAD6), fontSize: 11),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  };
   ui.PlatformDispatcher.instance.onError = (error, stack) {
     unawaited(
       LogsProvider().add(
