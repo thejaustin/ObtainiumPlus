@@ -221,6 +221,13 @@ class AppsPageState extends State<AppsPage> {
     }
 
     final settingsProvider = context.watch<SettingsProvider>();
+    // Top nav (TabBar) and bottom nav both already provide their own
+    // settings entry point (an AppBar gear icon or a Settings tab,
+    // respectively) — showing this page's own gear too would give the
+    // user two ways to reach Settings on screen at once.
+    final hasExternalSettingsEntry =
+        (plusSettings.plusTopUILayout && !settingsProvider.isTV) ||
+        plusSettings.plusEnableBottomNavBar;
     final viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
@@ -1584,14 +1591,15 @@ class AppsPageState extends State<AppsPage> {
                                 AppActionsFAB.showAddAppMenu(context);
                               },
                             ),
-                          IconButton(
-                            icon: const Icon(Icons.settings_rounded),
-                            tooltip: tr('settings'),
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              pushRoute(context, const SettingsPage());
-                            },
-                          ),
+                          if (!hasExternalSettingsEntry)
+                            IconButton(
+                              icon: const Icon(Icons.settings_rounded),
+                              tooltip: tr('settings'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                pushRoute(context, const SettingsPage());
+                              },
+                            ),
                         ],
                         title: Text(
                           tr('appsString'),
@@ -1613,14 +1621,15 @@ class AppsPageState extends State<AppsPage> {
                                 AppActionsFAB.showAddAppMenu(context);
                               },
                             ),
-                          IconButton(
-                            icon: const Icon(Icons.settings_rounded),
-                            tooltip: tr('settings'),
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              pushRoute(context, const SettingsPage());
-                            },
-                          ),
+                          if (!hasExternalSettingsEntry)
+                            IconButton(
+                              icon: const Icon(Icons.settings_rounded),
+                              tooltip: tr('settings'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                pushRoute(context, const SettingsPage());
+                              },
+                            ),
                         ],
                       ),
                 if (plusSettings.plusEnableHomeDashboard)

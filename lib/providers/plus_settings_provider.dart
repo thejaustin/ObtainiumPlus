@@ -509,7 +509,7 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   bool get plusEnableBottomNavBar =>
-      _prefs?.safeBool('plusEnableBottomNavBar') ?? false;
+      _prefs?.safeBool('plusEnableBottomNavBar') ?? true;
   set plusEnableBottomNavBar(bool val) {
     _prefs?.setBool('plusEnableBottomNavBar', val);
     notifyListeners();

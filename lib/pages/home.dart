@@ -54,6 +54,26 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   late List<NavigationPageItem> pages;
 
+  // Measured height of the floating bottom nav bar (divider + NavigationBar
+  // + its own safe-area inset). extendBody:true lets page content draw
+  // behind the translucent bar for the frosted-glass look, so each page
+  // needs this as bottom padding or its last items/buttons render hidden
+  // underneath the bar instead of above it.
+  final GlobalKey _bottomNavBarKey = GlobalKey();
+  double _bottomNavBarHeight = 0;
+
+  void _measureBottomNavBar() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final height = _bottomNavBarKey.currentContext?.size?.height;
+      if (height != null && height != _bottomNavBarHeight) {
+        setState(() {
+          _bottomNavBarHeight = height;
+        });
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -361,6 +381,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     final isTopNav = plusSettings.plusTopUILayout && !settingsProvider.isTV;
     final showNavBar = plusSettings.plusEnableBottomNavBar && !isTopNav;
+    if (showNavBar && !settingsProvider.isTV) {
+      _measureBottomNavBar();
+    }
     final currentIndex = (showNavBar || isTopNav)
         ? (selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last)
         : 0;
@@ -514,10 +537,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Expanded(child: pageBody),
                 ],
               )
+            : showNavBar
+            ? Padding(
+                padding: EdgeInsets.only(bottom: _bottomNavBarHeight),
+                child: pageBody,
+              )
             : pageBody,
         bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
             : ClipRRect(
+                key: _bottomNavBarKey,
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
