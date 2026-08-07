@@ -19,7 +19,7 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
   required IconData icon,
   required String title,
   required String subtitle,
-  required dynamic Function(T) value,
+  required bool Function(T) value,
   required void Function(T, bool) onChanged,
 }) {
   return Consumer<T>(
