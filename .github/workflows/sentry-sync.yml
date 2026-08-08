@@ -175,11 +175,47 @@ jobs:
                   { headers: SENTRY_HEADERS },
                 );
                 
+                if (issueRes.status === 404) {
+                  // A 404 here isn't proof-positive the Sentry issue is gone — the same
+                  // response also occurs for an expired/rescoped SENTRY_AUTH_TOKEN or a
+                  // misconfigured SENTRY_ORG/SENTRY_PROJECT, which would 404 on EVERY
+                  // issue in the same run. Require two 404s on separate runs (marked via
+                  // a hidden comment) before closing, so a single bad run just warns
+                  // instead of mass-closing the whole crash-tracking backlog.
+                  const comments = await github.paginate(github.rest.issues.listComments, {
+                    owner, repo, issue_number: ghIssue.number,
+                  });
+                  const alreadyFlagged = comments.some(c => c.body?.includes('<!-- sentry-404-strike -->'));
+
+                  if (alreadyFlagged) {
+                    await github.rest.issues.createComment({
+                      owner, repo,
+                      issue_number: ghIssue.number,
+                      body: `✅ The corresponding Sentry issue (#${sentryIssueId}) still doesn't exist on a second check. Closing since it can't reappear.`,
+                    });
+                    await github.rest.issues.update({
+                      owner, repo,
+                      issue_number: ghIssue.number,
+                      state: 'closed',
+                      state_reason: 'not_planned',
+                    });
+                    core.info(`Closed GitHub #${ghIssue.number} (Sentry #${sentryIssueId} 404'd twice)`);
+                  } else {
+                    await github.rest.issues.createComment({
+                      owner, repo,
+                      issue_number: ghIssue.number,
+                      body: `⚠️ The corresponding Sentry issue (#${sentryIssueId}) returned 404 (deleted, merged, or an auth/config issue). Will close automatically if this repeats on the next sync run.\n<!-- sentry-404-strike -->`,
+                    });
+                    core.warning(`Sentry #${sentryIssueId} 404'd (first strike) — not closing GitHub #${ghIssue.number} yet`);
+                  }
+                  continue;
+                }
+
                 if (!issueRes.ok) {
                   core.warning(`Could not fetch Sentry issue ${sentryIssueId}: ${issueRes.status}`);
                   continue;
                 }
-                
+
                 const sentryIssue = await issueRes.json();
                 if (sentryIssue.status === 'resolved') {
                   await github.rest.issues.createComment({

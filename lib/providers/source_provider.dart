@@ -18,6 +18,7 @@ import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/version_history_entry.dart';
+import 'package:obtainium/utils/url_validator.dart';
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
@@ -346,19 +347,24 @@ class SourceProvider {
     String standardUrl,
     bool inferAppIdIfOptional,
   ) async {
-    if (currentApp?.id != null) return currentApp!.id;
-    final explicitId = additionalSettings['appId'] as String?;
-    if (explicitId != null) return explicitId;
-    if (!trackOnly &&
+    // generateTempID's sha256-hex output never needs sanitizing, but every other
+    // path below returns a value derived from external/attacker-influenced input
+    // (a source's inferred id, a user/import-supplied override, or a reused id
+    // that predates this fix) — resolve to one raw value, then sanitize the single
+    // return, so a future branch added here can't forget the file-safety guarantee.
+    String? rawId = currentApp?.id;
+    rawId ??= additionalSettings['appId'] as String?;
+    if (rawId == null &&
+        !trackOnly &&
         (!source.appIdInferIsOptional ||
             (source.appIdInferIsOptional && inferAppIdIfOptional))) {
-      final inferred = await source.tryInferringAppId(
+      rawId = await source.tryInferringAppId(
         standardUrl,
         additionalSettings: additionalSettings,
       );
-      if (inferred != null) return inferred;
     }
-    return generateTempID(standardUrl, additionalSettings);
+    if (rawId == null) return generateTempID(standardUrl, additionalSettings);
+    return URLValidator.sanitizeAppId(rawId);
   }
 
   Future<App> getApp(
