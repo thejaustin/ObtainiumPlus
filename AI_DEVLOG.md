@@ -19,8 +19,8 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 - [ ] **Glassmorphism blurs** — clipped to widget bounds (3aedd98c); verify no regression on list text
 
 ### Infrastructure
-- [ ] **Auto-bump workflow** — version bumps auto-committed; ensure PRs don't conflict with bump commits
-- [ ] **Flutter test compilation** — fixed in a7a0ef14; run `flutter test` to confirm green
+- [x] **Auto-bump workflow** — reviewed `build-apk.yml`: bump commit happens after build, then `git pull --rebase --autostash origin main` before push, so it self-heals if another commit lands on `main` mid-build. Only friction is procedural (a human/agent pushing to `main` needs to fetch+rebase past bot commits), not a workflow bug.
+- [x] **Flutter test compilation** — fixed in a7a0ef14; CI's "Lint and Test" job runs `flutter test` on every push and has been green on all recent runs (verified via `gh run view --json jobs`)
 - [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — merged to `main`, pushed, and released as `v1.6.10-p2` (2026-08-06); see entry below
 
 ### UI
