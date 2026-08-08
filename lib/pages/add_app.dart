@@ -4,6 +4,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/url_validator.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
@@ -352,7 +353,9 @@ class AddAppPageState extends State<AddAppPage> {
             } else if (downloadedArtifact is DownloadedDir) {
               downloadedDir = downloadedArtifact;
             }
-            app.id = downloadedFile?.appId ?? downloadedDir?.appId ?? app.id;
+            app.id = URLValidator.sanitizeAppId(
+              downloadedFile?.appId ?? downloadedDir?.appId ?? app.id,
+            );
           }
           if (appsProvider.apps.containsKey(app.id)) {
             throw ObtainiumError(tr('appAlreadyAdded'));

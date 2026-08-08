@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/providers/source_provider.dart' show TypedSettings;
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 
 class App {
@@ -174,7 +175,7 @@ class App {
       json = migrator(json);
     }
     return App(
-      json['id'] as String,
+      URLValidator.sanitizeAppId(json['id'] as String),
       json['url'] as String,
       json['author'] as String,
       json['name'] as String,

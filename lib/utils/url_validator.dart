@@ -99,6 +99,26 @@ class URLValidator {
     return sanitized.trim();
   }
 
+  /// Sanitizes an App id for safe use as a filesystem path segment
+  /// (app JSON files, downloaded APKs, cached icons are all named by id).
+  /// Ids can originate from attacker-influenced sources (a GitHub source's
+  /// build.gradle applicationId, an imported app list, a user-supplied
+  /// appId override, a downloaded-but-not-yet-installed APK's manifest) so
+  /// path separators and traversal sequences must never reach a
+  /// `File(...)`/`Directory(...)` call unsanitized. Kept separate from
+  /// [sanitizeInput] rather than reusing it: that method deliberately keeps
+  /// newlines/tabs for free-text input, which are still unwanted in a filename.
+  static String sanitizeAppId(String id) {
+    var sanitized = id
+        .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
+        .replaceAll(RegExp(r'[/\\]'), '_')
+        .trim();
+    if (sanitized.isEmpty || sanitized == '.' || sanitized == '..') {
+      sanitized = 'app';
+    }
+    return sanitized;
+  }
+
   /// Validates JSON input for app import
   /// Returns true if the JSON appears safe
   static bool isValidJSONInput(String jsonString) {
