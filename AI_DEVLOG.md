@@ -22,6 +22,14 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 - [x] **Auto-bump workflow** — reviewed `build-apk.yml`: bump commit happens after build, then `git pull --rebase --autostash origin main` before push, so it self-heals if another commit lands on `main` mid-build. Only friction is procedural (a human/agent pushing to `main` needs to fetch+rebase past bot commits), not a workflow bug.
 - [x] **Flutter test compilation** — fixed in a7a0ef14; CI's "Lint and Test" job runs `flutter test` on every push and has been green on all recent runs (verified via `gh run view --json jobs`)
 - [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — merged to `main`, pushed, and released as `v1.6.10-p2` (2026-08-06); see entry below
+- [x] **debroid CLI install** — fixed a broken local install (`~/.local/bin/debroid` was a bare 117-byte stub instead of the stub+fatjar concatenation `install.sh` produces); confirmed it has no offline mode (needs a live ADB/JDWP connection, same wifi requirement as everything else). See "Next Session" below for how to use it on the open crash bug.
+
+### Next Session (needs wifi/ADB — device was unreachable all of 2026-08-08)
+- [ ] **#10 — capture the real stack trace for the "type 'bool' is not a subtype of type 'double?' in type cast" crash** (Theme Style under "Match System Style" off; FAB Menu/Quick Add, App Tile Display, Search Settings under Apps → Appearance). Two full rounds of static analysis (this session and a prior one) found nothing. Once ADB is back, prefer **debroid** over guesswork: `debroid launch`/`attach` to the running app, `debroid catch-exception` for the TypeError, trigger the crash by toggling "Match System Style" off, then read the caught frame directly instead of reading source and hypothesizing. Fallback: the app's own `ErrorWidget.builder` instrumentation (commit `675985a5`) logs the exception+stack via `LogsProvider` — Settings → Troubleshooting & System → App Logs, now shareable via the fixed Share button (see below).
+- [ ] **Verify the App Logs "Share" button fix** (commit `f29947ff`, migrated off deprecated `Share.share()` to `SharePlus.instance.share(ShareParams(...))`) actually opens a share sheet on-device — not yet tested live.
+- [ ] **Grid/list toggle** — test persistence across restarts.
+- [ ] **Glassmorphism blurs** — verify no regression on list text after the widget-bounds clip.
+- Fresh device IP:port needed each time — get it from Settings → Developer options → Wireless debugging (it changes on reconnect, not just on wifi drop).
 
 ### UI
 - [x] **App-detail-page swipe-down** — fixed: `RefreshIndicator` was wrapping the modal sheet's content too, swallowing the downward drag as pull-to-refresh before it could bubble up to the sheet's own `swipeDismissible` drag. Now skipped entirely when `widget.isModal` (`lib/pages/app.dart`).
@@ -30,6 +38,16 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ---
 
 ## Session History (newest first)
+
+### 2026-08-08 — Claude Code (Sonnet 5)
+
+**No device/wifi access all session (last known state carried over: "no wifi now"). Did the non-device work: rebased past two more CI auto-bumps (`d22229ad`/1.6.10-p8, `4ca82652`/1.6.10-p9, both no-op pulls), and fixed a broken local install of a new tool the user is bringing in via Antigravity CLI: [debroid](https://github.com/PatilShreyas/debroid).**
+
+- **What debroid is**: a headless CLI (`PatilShreyas/debroid`, cloned to `/data/data/com.termux/files/home/debroid`, Termux-only — not in PRoot) that speaks JDWP directly to a live Android app over ADB, giving an AI agent Android-Studio-style debugging (breakpoints, exception traps, watchpoints, live variable inspection/mutation, stepping) from the terminal as strict JSON. Directly relevant to the still-unsolved crash bug below — `catch-exception` + `break` could capture the actual throwing frame instead of guessing from source reads.
+- **Install was broken**: `install.sh`'s local-build path is supposed to produce one self-executing file at `~/.local/bin/debroid` (a bash stub concatenated onto the compiled fat jar — `cat stub.sh debroid-$VERSION.jar > debroid`, since `java -jar` can read a zip archive with arbitrary data prepended). What was actually on disk was a bare 117-byte stub script at that path (not concatenated with anything) plus the real 13MB fat jar sitting untouched at `~/.local/bin/debroid.jar` — so `debroid --help` failed with "Invalid or corrupt jarfile". Fixed by re-concatenating the stub (from `install.sh` lines 115-118) onto the existing `debroid.jar`; verified `debroid --help` now prints the full command list. Old broken stub kept as `debroid.broken-stub.bak`. Full writeup in memory (`debroid-tool.md`).
+- **Checked whether it helps without wifi, per the user's ask: it does not.** Debroid has no offline mode — every command needs a live ADB/JDWP connection to a running app process, exactly the same requirement blocking manual device testing. Confirmed via its own `README.md`/architecture diagram (daemon holds a JDWP socket open over ADB port-forwarding) and by the tool itself: no local-only inspection path exists. Verdict: skip it whenever `adb devices` is empty, same rule as every other device-testing tool in this project; it becomes valuable again the moment ADB reconnects, especially for task #10.
+- Reviewed debroid's own `BLOCKERS.md` (a self-audit the project ships listing 20+ known bugs, H1-H24/M1-M8) — not our project's concern, just useful to know the tool is young/pre-1.0 and has documented rough edges (e.g. H24: `adb` calls can hang the CLI indefinitely if a subprocess doesn't close stdout — worth keeping in mind if a `debroid` command ever seems to hang rather than error).
+- No ObtainiumPlus app code changed this session — everything above was tooling/infra. See "Next Session" in Open Backlog for the concrete wifi-dependent TODO list.
 
 ### 2026-08-07 — Claude Code (Sonnet 5)
 
