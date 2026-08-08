@@ -2,7 +2,7 @@ name: obtainium
 description: Get Android app updates straight from the source.
 publish_to: 'none'
 
-version: 1.6.10-p9+2408
+version: 1.6.10-p10+2409
 
 environment:
   sdk: ^3.12.0
