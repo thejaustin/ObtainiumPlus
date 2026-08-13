@@ -1,6 +1,7 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
+import 'package:obtainium/utils/url_validator.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -1018,7 +1019,10 @@ class AppsProvider with ChangeNotifier {
       var idChangeWasAllowed = app.allowIdChange;
       app.allowIdChange = false;
       var originalAppId = app.id;
-      app.id = newInfo.packageName!;
+      // newInfo.packageName comes from parsing the downloaded (not-yet-installed)
+      // APK's manifest via getPackageArchiveInfo, not a verified installed package —
+      // sanitize before it's used to build a file path below.
+      app.id = URLValidator.sanitizeAppId(newInfo.packageName!);
       downloadedFile = downloadedFile.renameSync(
         '${downloadedFile.parent.path}/${app.id}-${downloadUrl.hashCode}.${downloadedFile.path.split('.').last}',
       );
