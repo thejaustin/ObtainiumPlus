@@ -203,6 +203,33 @@ class AppInstallService {
     }
   }
 
+  /// Android 15+ (API 34) app archiving: uninstalls [packageName] but keeps
+  /// its user data, freeing APK/cache space; the OS shows it as "archived"
+  /// in the launcher. Returns false (no-op) on older Android or on failure.
+  static Future<bool> requestArchive(String packageName) async {
+    try {
+      final bool? result = await _nativeChannel.invokeMethod<bool>(
+        'requestArchive',
+        {'packageName': packageName},
+      );
+      return result ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> isAppArchived(String packageName) async {
+    try {
+      final bool? result = await _nativeChannel.invokeMethod<bool>(
+        'isAppArchived',
+        {'packageName': packageName},
+      );
+      return result ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   static Future<void> openXiaomiAutostartSettings() async {
     final AndroidIntent intent = AndroidIntent(
       action: 'miui.intent.action.OP_AUTO_START',
