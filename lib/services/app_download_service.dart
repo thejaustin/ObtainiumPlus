@@ -12,6 +12,7 @@ import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/url_validator.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
@@ -68,7 +69,10 @@ class AppDownloadService {
       var idChangeWasAllowed = app.allowIdChange;
       app.allowIdChange = false;
       var originalAppId = app.id;
-      app.id = newInfo.packageName!;
+      // newInfo.packageName comes from parsing the downloaded (not-yet-installed)
+      // APK's manifest via getPackageArchiveInfo, not a verified installed package —
+      // sanitize before it's used to build a file path below.
+      app.id = URLValidator.sanitizeAppId(newInfo.packageName!);
       downloadedFile = downloadedFile.renameSync(
         '${downloadedFile.parent.path}/${app.id}-${downloadUrl.hashCode}.${downloadedFile.path.split('.').last}',
       );

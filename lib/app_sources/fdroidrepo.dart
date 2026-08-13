@@ -7,6 +7,7 @@ import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/url_validator.dart';
 
 class FDroidRepo extends AppSource {
   bool _appIdFoundInUrl = false;
@@ -141,7 +142,7 @@ class FDroidRepo extends AppSource {
         additionalSettings: Map<String, dynamic>.from(app.additionalSettings)
           ..['appIdOrName'] = appId,
       );
-      app = app.copyWith(id: appId);
+      app = app.copyWith(id: URLValidator.sanitizeAppId(appId));
     }
     return app;
   }

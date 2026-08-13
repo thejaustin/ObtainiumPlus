@@ -12,6 +12,7 @@ import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
