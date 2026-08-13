@@ -25,7 +25,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "app.obtainiumplus/native"
+    private val CHANNEL = "dev.thejaustin.obtainiumplus/native"
     private val REQUEST_ACCOUNT_PICKER = 1001
 
     private companion object {
@@ -268,6 +268,59 @@ class MainActivity : FlutterActivity() {
                             }
                         } else {
                             result.error("INVALID_ARGUMENT", "Package name is required", null)
+                        }
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "requestArchive" -> {
+                    if (Build.VERSION.SDK_INT >= 34) {
+                        val packageName = call.argument<String>("packageName")
+                        if (packageName != null) {
+                            try {
+                                val installer = packageManager.packageInstaller
+                                val intent = Intent("app.obtainiumplus.ARCHIVE_CONFIRMATION")
+                                val pendingIntent = PendingIntent.getBroadcast(
+                                    this, 0, intent,
+                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                                )
+                                // Reflection: requestArchive() is API 34+ and this module
+                                // may still compile against an older SDK.
+                                try {
+                                    val method = installer.javaClass.getMethod(
+                                        "requestArchive",
+                                        String::class.java,
+                                        android.content.IntentSender::class.java
+                                    )
+                                    method.invoke(installer, packageName, pendingIntent.intentSender)
+                                    result.success(true)
+                                } catch (e: Exception) {
+                                    result.error("ERROR", "Failed to request archive: ${e.message}", null)
+                                }
+                            } catch (e: Exception) {
+                                result.error("ERROR", e.message, null)
+                            }
+                        } else {
+                            result.error("INVALID_ARGUMENT", "Package name is required", null)
+                        }
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "isAppArchived" -> {
+                    val packageName = call.argument<String>("packageName")
+                    if (packageName == null) {
+                        result.error("INVALID_ARGUMENT", "Package name is required", null)
+                    } else if (Build.VERSION.SDK_INT >= 34) {
+                        try {
+                            val info = packageManager.getApplicationInfo(packageName, 0)
+                            val method = info.javaClass.getMethod("isArchived")
+                            result.success(method.invoke(info) as? Boolean ?: false)
+                        } catch (e: Exception) {
+                            // Not installed at all reads the same as "not archived" here —
+                            // callers only use this to decide whether to show an unarchive
+                            // vs. archive action.
+                            result.success(false)
                         }
                     } else {
                         result.success(false)

@@ -1,4 +1,5 @@
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/sideloading_notice.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
@@ -1632,6 +1633,7 @@ class AppsPageState extends State<AppsPage> {
                             ),
                         ],
                       ),
+                const SliverToBoxAdapter(child: SideloadingNotice()),
                 if (plusSettings.plusEnableHomeDashboard)
                   SliverToBoxAdapter(
                     child: AppDashboard(

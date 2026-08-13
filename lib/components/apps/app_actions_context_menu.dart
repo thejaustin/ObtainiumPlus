@@ -1,9 +1,11 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -150,6 +152,34 @@ class AppActionsContextMenu {
                     );
                   },
                 ),
+                if (appInMemory.installedInfo != null)
+                  FutureBuilder<int>(
+                    future: DeviceInfoPlugin().androidInfo.then(
+                      (info) => info.version.sdkInt,
+                    ),
+                    builder: (context, snapshot) {
+                      if ((snapshot.data ?? 0) < 34) {
+                        return const SizedBox.shrink();
+                      }
+                      return ListTile(
+                        leading: const Icon(Icons.archive_outlined),
+                        title: Text(tr('archiveApp')),
+                        subtitle: Text(tr('archiveAppSubtitle')),
+                        onTap: () async {
+                          AppHaptics.selectionClick();
+                          Navigator.pop(context);
+                          final ok = await AppInstallService.requestArchive(
+                            appInMemory.app.id,
+                          );
+                          if (context.mounted && !ok) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(tr('archiveAppFailed'))),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  ),
                 if (onEnterMultiSelect != null)
                   ListTile(
                     leading: const Icon(Icons.checklist_rounded),
