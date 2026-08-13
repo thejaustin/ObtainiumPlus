@@ -47,7 +47,7 @@ dependencies:
   archive: ^4.0.9
   hsluv: ^1.1.3
   connectivity_plus: ^7.2.0
-  shared_storage: # TODO: Upstream maintenance uncertain; consider alternatives or fork to org
+  shared_storage: # Actively maintained fork (more current than upstream); no action needed
     git:
       url: https://github.com/AlexBacich/shared-storage
       ref: 6dbcdf2c2045e326f59c062f542724aedf73cb6e
@@ -56,13 +56,13 @@ dependencies:
   app_links: ^7.2.1
   equations: ^6.0.0
   flex_color_picker: ^3.8.0
-  android_system_font: # TODO: Forked dependency; watch upstream for releases
+  android_system_font: # Upstream (re7gog) archived 2026-01-19; using self-maintained fork
     git:
-      url: https://github.com/re7gog/android_system_font
+      url: https://github.com/thejaustin/android_system_font
       ref: 077e15d7d0acb82283b89dfd82f4984b27b28f95
-  shizuku_apk_installer: # TODO: Forked dependency; watch upstream for releases
+  shizuku_apk_installer: # Upstream (re7gog) archived 2026-07-10; using self-maintained fork
     git:
-      url: https://github.com/re7gog/shizuku_apk_installer
+      url: https://github.com/thejaustin/shizuku_apk_installer
       ref: 3ef7f8fbf904848d144304556b0f80c91fee82a5
   markdown: ^7.3.1
   flutter_typeahead: ^6.0.0
