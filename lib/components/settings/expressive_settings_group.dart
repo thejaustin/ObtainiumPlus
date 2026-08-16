@@ -14,6 +14,7 @@ class ExpressiveSettingsGroup extends StatefulWidget {
   final bool initiallyExpanded;
   final IconData? icon;
   final VoidCallback? onReset;
+  final String? persistKey;
 
   const ExpressiveSettingsGroup({
     super.key,
@@ -25,6 +26,7 @@ class ExpressiveSettingsGroup extends StatefulWidget {
     this.initiallyExpanded = true,
     this.icon,
     this.onReset,
+    this.persistKey,
   });
 
   @override
@@ -280,7 +282,9 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       // Remove the default ExpansionTile dividers
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        key: PageStorageKey(widget.title ?? widget.hashCode.toString()),
+        key: PageStorageKey(
+          'expressive_settings_group:${widget.persistKey ?? widget.title ?? widget.hashCode.toString()}',
+        ),
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
         initiallyExpanded: widget.initiallyExpanded,
