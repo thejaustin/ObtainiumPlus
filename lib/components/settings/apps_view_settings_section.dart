@@ -354,6 +354,7 @@ class AppsViewSettingsSection extends StatelessWidget {
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('appsString'),
+      persistKey: 'appsString',
       icon: Icons.grid_view_rounded,
       isExpandable: !isSearching,
       initiallyExpanded: false,
@@ -361,6 +362,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         if (categoryWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('categorySettings'),
+            persistKey: 'categorySettings',
             isExpandable: true,
             initiallyExpanded: false,
             children: categoryWidgets,
@@ -368,6 +370,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         if (iconWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('categoryIconPreview'),
+            persistKey: 'categoryIconPreview',
             isExpandable: true,
             initiallyExpanded: false,
             children: iconWidgets,
@@ -375,6 +378,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         if (viewWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('viewMode'),
+            persistKey: 'viewMode',
             isExpandable: true,
             initiallyExpanded: false,
             children: viewWidgets,
@@ -432,6 +436,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         if (plusFeaturesEnabled && sortingWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusSectionOrganizationSorting'),
+            persistKey: 'plusSectionOrganizationSorting',
             isExpandable: true,
             initiallyExpanded: false,
             children: sortingWidgets,
@@ -503,6 +508,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         if (headerWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appListHeader'),
+            persistKey: 'appListHeader',
             isExpandable: true,
             initiallyExpanded: false,
             children: headerWidgets,
