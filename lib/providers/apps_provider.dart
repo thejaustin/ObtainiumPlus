@@ -681,10 +681,9 @@ Future<List<PackageInfo>> getAllInstalledInfo() async {
 Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   if (packageName != null) {
     try {
-      return await packageManager.getPackageInfo(
-        packageName: packageName,
-        flags: packageInfoFlags,
-      );
+      return await packageManager
+          .getPackageInfo(packageName: packageName, flags: packageInfoFlags)
+          .timeout(const Duration(seconds: 15));
     } catch (_) {}
   }
   return null;

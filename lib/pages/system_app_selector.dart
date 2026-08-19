@@ -103,8 +103,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       await Future.wait(
         batch.map((pkg) async {
           try {
-            final iconBytes = await pkg.applicationInfo?.getAppIcon();
-            final appName = await pkg.applicationInfo?.getAppLabel();
+            final iconBytes = await pkg.applicationInfo
+                ?.getAppIcon()
+                .timeout(const Duration(seconds: 10));
+            final appName = await pkg.applicationInfo
+                ?.getAppLabel()
+                .timeout(const Duration(seconds: 10));
             if (!mounted) return;
             final idx = _apps.indexWhere(
               (a) => a.packageName == pkg.packageName,

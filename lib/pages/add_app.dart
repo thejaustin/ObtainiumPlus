@@ -548,10 +548,16 @@ class AddAppPageState extends State<AddAppPage> {
                     }
                     return MapEntry(
                       e.runtimeType.toString(),
-                      await e.search(searchQuery, querySettings: querySettings),
+                      await e
+                          .search(searchQuery, querySettings: querySettings)
+                          .timeout(const Duration(seconds: 20)),
                     );
                   } catch (err) {
-                    if (err is! CredsNeededError) {
+                    if (err is TimeoutException) {
+                      // Drop just this slow source instead of failing the
+                      // whole multi-source search.
+                      return null;
+                    } else if (err is! CredsNeededError) {
                       rethrow;
                     } else {
                       err.unexpected = true;
