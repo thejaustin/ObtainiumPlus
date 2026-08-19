@@ -595,6 +595,11 @@ class HttpService {
 
   HttpClient createHttpClient(bool insecure) {
     final client = HttpClient();
+    // dart:io's HttpClient has no connection timeout by default, so a
+    // stalled TCP handshake (dead host, silent firewall drop, bad DNS)
+    // hangs the request forever with no way to recover — this was the
+    // root cause of search/update-check results silently never appearing.
+    client.connectionTimeout = const Duration(seconds: 15);
     if (insecure) {
       client.badCertificateCallback =
           (X509Certificate cert, String host, int port) => true;
@@ -644,7 +649,13 @@ class HttpService {
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(postBody));
       }
-      final response = await request.close();
+      // connectionTimeout only bounds the TCP handshake — a server that
+      // accepts the connection but never sends a response header would
+      // still hang here forever without this.
+      final response = await request.close().timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw ObtainiumError(tr('requestTimedOut')),
+      );
 
       if (followRedirects &&
           (response.statusCode >= 300 && response.statusCode <= 399)) {

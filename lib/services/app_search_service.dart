@@ -22,12 +22,14 @@ class AppSearchService {
       sources.map((source) async {
         if (deselectedSources.contains(source.name)) return null;
         try {
-          final res = await source.search(
-            query,
-            querySettings: querySettings[source.name] ?? {},
-          );
+          final res = await source
+              .search(query, querySettings: querySettings[source.name] ?? {})
+              .timeout(const Duration(seconds: 20));
           return MapEntry(source.name, res);
         } catch (e) {
+          // A hung/slow source (network stall, dead host) must not block
+          // every other source's results from ever showing up — drop it
+          // and let the rest of the search complete.
           talker.warning('Search failed for ${source.name}: $e');
           return null;
         }
