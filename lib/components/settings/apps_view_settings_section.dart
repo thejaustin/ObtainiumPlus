@@ -59,9 +59,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           onChanged: (s, v) =>
               onSetState(() => s.categoriesCollapsedByDefault = v),
         ),
-    ];
-
-    List<Widget> iconWidgets = [
       if (_matches(tr('iconPosition')))
         _buildCategoryIconPositionDropdown(context),
       if (_matches(tr('iconCount'))) _buildCategoryIconCountSlider(context),
@@ -135,16 +132,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.plusDeduplicateRecents,
           onChanged: (s, v) => onSetState(() => s.plusDeduplicateRecents = v),
         ),
-      if (_matches(tr('plusExpressiveProgress')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.gesture_rounded,
-          title: tr('plusExpressiveProgress'),
-          subtitle: tr('plusExpressiveProgressDescription'),
-          value: (s) => s.plusEnableExpressiveProgress,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusEnableExpressiveProgress = v),
-        ),
       if (_matches(tr('plusResponsiveLayout'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
@@ -191,6 +178,24 @@ class AppsViewSettingsSection extends StatelessWidget {
           subtitle: tr('plusEnableFABDescription'),
           value: (s) => s.plusEnableFAB,
           onChanged: (s, v) => onSetState(() => s.plusEnableFAB = v),
+        ),
+      if (_matches(tr('showFilterChips')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.filter_list_outlined,
+          title: tr('showFilterChips'),
+          subtitle: tr('showFilterChipsDescription'),
+          value: (s) => s.displayShowFilterChips,
+          onChanged: (s, v) => onSetState(() => s.displayShowFilterChips = v),
+        ),
+      if (_matches(tr('showAppCount')))
+        buildFeatureToggle<ViewSettingsProvider>(
+          context,
+          icon: Icons.summarize_outlined,
+          title: tr('showAppCount'),
+          subtitle: tr('showAppCountDescription'),
+          value: (s) => s.displayShowAppCount,
+          onChanged: (s, v) => onSetState(() => s.displayShowAppCount = v),
         ),
       _buildGridSettings(context),
     ];
@@ -252,105 +257,16 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
     ];
 
-    List<Widget> displayWidgets = [
-      if (_matches(tr('showAuthor')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.person_outline,
-          title: tr('showAuthor'),
-          subtitle: tr('showAuthorDescription'),
-          value: (s) => s.displayShowAuthor,
-          onChanged: (s, v) => onSetState(() => s.displayShowAuthor = v),
-        ),
-      if (_matches(tr('showVersion')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.code,
-          title: tr('showVersion'),
-          subtitle: tr('showVersionDescription'),
-          value: (s) => s.displayShowVersion,
-          onChanged: (s, v) => onSetState(() => s.displayShowVersion = v),
-        ),
-      if (_matches(tr('showDate')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.calendar_today_outlined,
-          title: tr('showDate'),
-          subtitle: tr('showDateDescription'),
-          value: (s) => s.displayShowDate,
-          onChanged: (s, v) => onSetState(() => s.displayShowDate = v),
-        ),
-      if (_matches(tr('plusModernAppListTile')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.view_list_rounded,
-          title: tr('plusModernAppListTile'),
-          subtitle: tr('plusModernAppListTileDescription'),
-          value: (s) => s.plusEnableModernAppListTile,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusEnableModernAppListTile = v),
-        ),
-      if (_matches(tr('plusEnableSwipeActions')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.swipe_rounded,
-          title: tr('plusEnableSwipeActions'),
-          subtitle: tr('plusEnableSwipeActionsDescription'),
-          value: (s) => s.plusEnableSwipeActions,
-          onChanged: (s, v) => onSetState(() => s.plusEnableSwipeActions = v),
-        ),
-    ];
+    final bool showDisplayGrid =
+        _matches(tr('showAuthor')) ||
+        _matches(tr('showVersion')) ||
+        _matches(tr('showDate')) ||
+        _matches(tr('plusEnableSwipeActions'));
 
-    List<Widget> headerWidgets = [
-      if (_matches(tr('showFilterChips')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.filter_list_outlined,
-          title: tr('showFilterChips'),
-          subtitle: tr('showFilterChipsDescription'),
-          value: (s) => s.displayShowFilterChips,
-          onChanged: (s, v) => onSetState(() => s.displayShowFilterChips = v),
-        ),
-      if (_matches(tr('showAppCount')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.summarize_outlined,
-          title: tr('showAppCount'),
-          subtitle: tr('showAppCountDescription'),
-          value: (s) => s.displayShowAppCount,
-          onChanged: (s, v) => onSetState(() => s.displayShowAppCount = v),
-        ),
-    ];
-
-    List<Widget> searchWidgets = [
-      if (_matches(tr('showAppBarSearch')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.vertical_align_top_rounded,
-          title: tr('showAppBarSearch'),
-          subtitle: tr('showAppBarSearchDescription'),
-          value: (s) => s.plusShowAppBarSearch,
-          onChanged: (s, v) => onSetState(() => s.plusShowAppBarSearch = v),
-        ),
-      if (_matches(tr('showDashboardSearch')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.dashboard_outlined,
-          title: tr('showDashboardSearch'),
-          subtitle: tr('showDashboardSearchDescription'),
-          value: (s) => s.plusShowDashboardSearch,
-          onChanged: (s, v) => onSetState(() => s.plusShowDashboardSearch = v),
-        ),
-      if (_matches(tr('showFloatingSearch')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.ads_click_rounded,
-          title: tr('showFloatingSearch'),
-          subtitle: tr('showFloatingSearchDescription'),
-          value: (s) => s.plusShowFloatingSearch,
-          onChanged: (s, v) => onSetState(() => s.plusShowFloatingSearch = v),
-        ),
-    ];
+    final bool showSearchGrid =
+        _matches(tr('showAppBarSearch')) ||
+        _matches(tr('showDashboardSearch')) ||
+        _matches(tr('showFloatingSearch'));
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('appsString'),
@@ -366,14 +282,6 @@ class AppsViewSettingsSection extends StatelessWidget {
             isExpandable: true,
             initiallyExpanded: false,
             children: categoryWidgets,
-          ),
-        if (iconWidgets.isNotEmpty)
-          ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('categoryIconPreview'),
-            persistKey: 'categoryIconPreview',
-            isExpandable: true,
-            initiallyExpanded: false,
-            children: iconWidgets,
           ),
         if (viewWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
@@ -441,7 +349,7 @@ class AppsViewSettingsSection extends StatelessWidget {
             initiallyExpanded: false,
             children: sortingWidgets,
           ),
-        if (displayWidgets.isNotEmpty)
+        if (showDisplayGrid)
           GenericBooleanControlGrid<ViewSettingsProvider>(
             title: tr('appTileDisplay'),
             settings: [
@@ -472,7 +380,21 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusFeaturesEnabled && searchWidgets.isNotEmpty)
+        if (plusFeaturesEnabled && _matches(tr('plusEnableSwipeActions')))
+          GenericBooleanControlGrid<PlusSettingsProvider>(
+            title: tr('plusEnableSwipeActions'),
+            settings: [
+              (
+                icon: Icons.swipe_rounded,
+                label: tr('plusEnableSwipeActions'),
+                description: tr('plusEnableSwipeActionsDescription'),
+                getValue: (s) => s.plusEnableSwipeActions,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableSwipeActions = v),
+              ),
+            ],
+          ),
+        if (plusFeaturesEnabled && showSearchGrid)
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('searchSettings'),
             settings: [
@@ -504,14 +426,6 @@ class AppsViewSettingsSection extends StatelessWidget {
                       onSetState(() => s.plusShowFloatingSearch = v),
                 ),
             ],
-          ),
-        if (headerWidgets.isNotEmpty)
-          ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('appListHeader'),
-            persistKey: 'appListHeader',
-            isExpandable: true,
-            initiallyExpanded: false,
-            children: headerWidgets,
           ),
       ],
     );
