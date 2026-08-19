@@ -38,7 +38,9 @@ class ExternalInstallerBridge {
     if (!Platform.isAndroid) return const [];
     List<dynamic>? raw;
     try {
-      raw = await _channel.invokeMethod<List<dynamic>>('listInstallTargets');
+      raw = await _channel
+          .invokeMethod<List<dynamic>>('listInstallTargets')
+          .timeout(const Duration(seconds: 15));
     } catch (e) {
       unawaited(
         LogsProvider().add(

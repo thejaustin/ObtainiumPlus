@@ -55,9 +55,11 @@ class AuthService {
   /// Returns null if the user cancelled. Throws [ObtainiumError] on unexpected failure.
   static Future<String?> pickGoogleAccount() async {
     try {
-      final String? email = await _platform.invokeMethod<String>(
-        'pickGoogleAccount',
-      );
+      // Generous timeout — this waits on the user picking an account in a
+      // native dialog, not a quick property check.
+      final String? email = await _platform
+          .invokeMethod<String>('pickGoogleAccount')
+          .timeout(const Duration(minutes: 5));
       return email;
     } on PlatformException catch (e) {
       if (e.code == 'CANCELLED') return null;
@@ -73,7 +75,10 @@ class AuthService {
   /// VPN requirement should treat an unknown state as blocked (fail-closed).
   static Future<bool> isVPNActive() async {
     try {
-      return await _platform.invokeMethod<bool>('isVPNActive') ?? false;
+      return await _platform
+              .invokeMethod<bool>('isVPNActive')
+              .timeout(const Duration(seconds: 15)) ??
+          false;
     } catch (e) {
       throw ObtainiumError('Unable to determine VPN status: $e');
     }
@@ -84,7 +89,9 @@ class AuthService {
   /// Call this after receiving a 401 from the Play Store API.
   static Future<void> invalidateMicroGToken(String token) async {
     try {
-      await _platform.invokeMethod('invalidateMicroGToken', {'token': token});
+      await _platform
+          .invokeMethod('invalidateMicroGToken', {'token': token})
+          .timeout(const Duration(seconds: 15));
     } catch (e) {
       talker.warning('invalidateMicroGToken failed (non-fatal): $e');
     }
@@ -93,7 +100,10 @@ class AuthService {
   /// Returns true if microG (or Google Play Services) is installed and accessible.
   static Future<bool> isMicroGAvailable() async {
     try {
-      return await _platform.invokeMethod<bool>('isMicroGAvailable') ?? false;
+      return await _platform
+              .invokeMethod<bool>('isMicroGAvailable')
+              .timeout(const Duration(seconds: 15)) ??
+          false;
     } catch (_) {
       return false;
     }
@@ -106,10 +116,11 @@ class AuthService {
   /// not found, network error).
   static Future<String> getMicroGToken(String email) async {
     try {
-      final String? token = await _platform.invokeMethod<String>(
-        'getMicroGToken',
-        {'email': email},
-      );
+      // Generous timeout — microG may show its own consent UI first if the
+      // account hasn't granted Play Store scope yet.
+      final String? token = await _platform
+          .invokeMethod<String>('getMicroGToken', {'email': email})
+          .timeout(const Duration(minutes: 5));
       if (token == null || token.isEmpty) {
         throw ObtainiumError(
           'microG returned an empty token for $email. '
