@@ -36,18 +36,18 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     int initTab = widget.initialTab ?? 0;
-    if (initTab == 2) {
-      initTab = 1;
+    if (initTab <= 2) {
+      initTab = 0;
     } else if (initTab == 3 || initTab == 4) {
-      initTab = 2;
+      initTab = 1;
     } else if (initTab == 5) {
-      initTab = 3;
+      initTab = 2;
     } else if (initTab == 6) {
-      initTab = 4;
+      initTab = 3;
     } else if (initTab == 7 || initTab == 8) {
-      initTab = 5;
+      initTab = 4;
     }
-    _selectedSectionIndex = initTab.clamp(0, 5);
+    _selectedSectionIndex = initTab.clamp(0, 4);
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       setState(() {
@@ -62,19 +62,19 @@ class _SettingsPageState extends State<SettingsPage> {
     if (widget.initialTab != oldWidget.initialTab &&
         widget.initialTab != null) {
       int initTab = widget.initialTab!;
-      if (initTab == 2) {
-        initTab = 1;
+      if (initTab <= 2) {
+        initTab = 0;
       } else if (initTab == 3 || initTab == 4) {
-        initTab = 2;
+        initTab = 1;
       } else if (initTab == 5) {
-        initTab = 3;
+        initTab = 2;
       } else if (initTab == 6) {
-        initTab = 4;
+        initTab = 3;
       } else if (initTab == 7 || initTab == 8) {
-        initTab = 5;
+        initTab = 4;
       }
       setState(() {
-        _selectedSectionIndex = initTab.clamp(0, 5);
+        _selectedSectionIndex = initTab.clamp(0, 4);
       });
     }
   }
@@ -121,6 +121,15 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            sliver: SliverToBoxAdapter(
+              child: PlusFeaturesSection(
+                searchQuery: _searchQuery,
+                showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+              ),
+            ),
+          ),
           if (_searchQuery.isEmpty)
             SliverToBoxAdapter(
               child: SizedBox(
@@ -130,7 +139,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children:
                       [
-                        (label: 'Obtainium+', icon: Icons.auto_awesome_rounded),
                         (label: 'Appearance', icon: Icons.palette_outlined),
                         (
                           label: 'Updates & Install',
@@ -211,14 +219,8 @@ class _SettingsPageState extends State<SettingsPage> {
             sliver: SliverList(
               delegate: SliverChildListDelegate(
                 [
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 0)
-                        PlusFeaturesSection(
-                          searchQuery: _searchQuery,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
                       if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 1) ...[
+                          _selectedSectionIndex == 0) ...[
                         ThemeSettingsSection(
                           searchQuery: _searchQuery,
                           androidInfoFuture: _androidInfoFuture,
@@ -234,7 +236,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ],
                       if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 2) ...[
+                          _selectedSectionIndex == 1) ...[
                         UpdateSettingsSection(
                           searchQuery: _searchQuery,
                           showIntervalLabel: _showIntervalLabel,
@@ -250,20 +252,20 @@ class _SettingsPageState extends State<SettingsPage> {
                               plusSettings.plusShowAdvancedSettings,
                         ),
                       ],
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
+                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 2)
                         NotificationSettingsSection(
                           searchQuery: _searchQuery,
                           showAdvancedSettings:
                               plusSettings.plusShowAdvancedSettings,
                         ),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 4)
+                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
                         AppBehaviorSection(
                           searchQuery: _searchQuery,
                           showAdvancedSettings:
                               plusSettings.plusShowAdvancedSettings,
                         ),
                       if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 5) ...[
+                          _selectedSectionIndex == 4) ...[
                         AdvancedSettingsSection(
                           searchQuery: _searchQuery,
                           showAdvancedSettings:

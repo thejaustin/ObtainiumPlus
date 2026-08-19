@@ -2047,7 +2047,17 @@ class AppsProvider with ChangeNotifier {
     loadingApps = true;
     notifyListeners();
     try {
-      await _loadAppsBody(singleId);
+      await _loadAppsBody(singleId).timeout(
+        const Duration(seconds: 45),
+        onTimeout: () {
+          logs.add(
+            'loadApps() timed out after 45s (singleId: $singleId) — '
+            'a native call (e.g. getAllInstalledInfo) likely hung. '
+            'Aborting so the UI does not freeze on "Please wait" forever.',
+            level: LogLevel.error,
+          );
+        },
+      );
     } finally {
       loadingApps = false;
       notifyListeners();
