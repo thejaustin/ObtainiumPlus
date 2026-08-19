@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
 class NotificationSettingsSection extends StatelessWidget {
@@ -26,32 +28,48 @@ class NotificationSettingsSection extends StatelessWidget {
 
     return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
-        if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
-
         final List<Widget> children = [
-          if (_matches(tr('plusEnableNotificationEnhancements')))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.notifications_active_outlined),
+          if (_matches(tr('notificationSettings')))
+            ListTile(
+              leading: Icon(
+                Icons.notifications_active_outlined,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               title: Text(
-                tr('plusEnableNotificationEnhancements'),
+                tr('notificationSettings'),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
-              subtitle: Text(
-                tr('plusEnableNotificationEnhancementsDescription'),
-              ),
-              value: settings.plusEnableNotificationEnhancements,
-              onChanged: (val) =>
-                  settings.plusEnableNotificationEnhancements = val,
-            ),
-          if (!settings.plusEnableNotificationEnhancements)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                tr('noAdvancedNotifications'),
-                style: const TextStyle(fontStyle: FontStyle.italic),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => AppInstallService.openNotificationSettings(
+                AppConstants.obtainiumPlusId,
               ),
             ),
-          if (settings.plusEnableNotificationEnhancements) ...[
+          if (settings.enableAllPlusFeatures) ...[
+            if (_matches(tr('plusEnableNotificationEnhancements')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.notifications_active_outlined),
+                title: Text(
+                  tr('plusEnableNotificationEnhancements'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                subtitle: Text(
+                  tr('plusEnableNotificationEnhancementsDescription'),
+                ),
+                value: settings.plusEnableNotificationEnhancements,
+                onChanged: (val) =>
+                    settings.plusEnableNotificationEnhancements = val,
+              ),
+            if (!settings.plusEnableNotificationEnhancements)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  tr('noAdvancedNotifications'),
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
+              ),
+          ],
+          if (settings.enableAllPlusFeatures &&
+              settings.plusEnableNotificationEnhancements) ...[
             if (_matches(tr('enableNotificationDigest')))
               SwitchListTile.adaptive(
                 secondary: const Icon(Icons.mark_email_unread_outlined),

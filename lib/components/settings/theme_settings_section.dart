@@ -259,6 +259,24 @@ class ThemeSettingsSection extends StatelessWidget {
             );
           },
         ),
+      if (plusSettings.enableAllPlusFeatures &&
+          plusSettings.plusDeveloperMode &&
+          _matches('third party loading indicator'))
+        SwitchListTile.adaptive(
+          secondary: const Icon(Icons.refresh_rounded),
+          title: Text(
+            'Use 3rd Party Loading Indicator',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+            'Swaps custom M3E wavy indicator for the loading_indicator_m3e package for comparison.',
+          ),
+          value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
+          onChanged: (val) {
+            AppHaptics.selectionClick();
+            plusSettings.plusDevUseThirdPartyLoadingIndicator = val;
+          },
+        ),
     ];
 
     List<Widget> shapeWidgets = [

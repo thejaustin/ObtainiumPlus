@@ -2,9 +2,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
+import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -86,6 +90,64 @@ class InstallationSection extends StatelessWidget {
               subtitle: Text(tr('allowThirdPartySourcesDescription')),
               value: behaviorSettings.allowThirdPartySources,
               onChanged: (v) => behaviorSettings.allowThirdPartySources = v,
+            ),
+
+          // Install Unknown Apps (system settings shortcut)
+          if (_matches(tr('installUnknownApps')))
+            ListTile(
+              leading: Icon(
+                Icons.install_mobile_outlined,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              title: Text(
+                tr('installUnknownApps'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => AppInstallService.openInstallUnknownAppsSettings(
+                AppConstants.obtainiumPlusId,
+              ),
+            ),
+
+          // Battery Optimization (background reliability, system shortcut)
+          if (_matches(tr('batteryOptimizationSettings')))
+            ListTile(
+              leading: Icon(
+                Icons.battery_saver_outlined,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              title: Text(
+                tr('batteryOptimizationSettings'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.open_in_new, size: 18),
+                tooltip: tr('batteryOptimizationSettingsPage'),
+                onPressed: () {
+                  AppHaptics.lightImpact();
+                  AppInstallService.openBatteryOptimizationSettings();
+                },
+              ),
+              onTap: () {
+                AppHaptics.lightImpact();
+                AppInstallService.requestBatteryOptimizationExemption();
+              },
+            ),
+
+          // Import Installed Apps
+          if (_matches(tr('importInstalledApps')))
+            ListTile(
+              leading: const Icon(Icons.install_mobile_rounded),
+              title: Text(
+                tr('importInstalledApps'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('importInstalledAppsDescription')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                AppHaptics.selectionClick();
+                showSystemAppSelectorSheet(context: context);
+              },
             ),
 
           // Smart Retries & Caching
