@@ -1677,7 +1677,16 @@ class AppsPageState extends State<AppsPage> {
                         });
                       },
                       onUrlInput: (url) {
-                        // Handled by command center
+                        context.read<AppsProvider>().addAppsByURL([
+                          url,
+                        ]).then((errors) {
+                          if (!context.mounted) return;
+                          if (errors.isNotEmpty) {
+                            showError(errors[0][1], context);
+                          } else {
+                            showMessage(tr('appAdded'), context);
+                          }
+                        });
                       },
                       onCheckUpdates: refresh,
                     ),
