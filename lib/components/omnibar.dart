@@ -318,7 +318,11 @@ class _OmnibarState extends State<Omnibar> {
                         if (_isUrl && _isValidUrl) {
                           widget.onUrlInput?.call(value);
                         } else if (!_isUrl && value.isNotEmpty) {
-                          widget.onSearchQuery?.call(value);
+                          // Local filtering alone is a dead end if the app
+                          // isn't tracked yet — escalate to the full
+                          // local+discover search so there's always a path
+                          // to find and add it.
+                          CommandCenter.show(context, initialQuery: value);
                         }
                       },
                       keyboardType: _isUrl

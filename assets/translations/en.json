@@ -56,6 +56,7 @@
     "archiveApp": "Archive",
     "archiveAppSubtitle": "Frees storage, keeps your data. Reinstall from Obtainium Plus later.",
     "archiveAppFailed": "Couldn't archive this app",
+    "appAdded": "App added",
     "appsUpdated": "Apps updated",
     "appsUpdatedNotifChannel": "Apps updated",
     "appsUpdatedNotifDescription": "Notifies the user that updates to one or more apps were applied in the background",
