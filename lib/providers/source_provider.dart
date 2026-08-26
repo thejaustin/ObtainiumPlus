@@ -18,6 +18,7 @@ import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/version_history_entry.dart';
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'package:obtainium/utils/url_validator.dart';
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/app_source.dart';
@@ -1263,7 +1264,7 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
     );
   }
 
-  json['additionalSettings'] = jsonEncode(additionalSettings);
+  json['additionalSettings'] = safeJsonEncode(additionalSettings);
   _migrateFdroidOverrides(json);
   return json;
 }
