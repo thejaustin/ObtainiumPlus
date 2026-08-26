@@ -143,6 +143,24 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       ),
     );
 
+    // For expandable groups, onReset has no header of its own to live in
+    // (that header is only built for non-expandable groups below), so give
+    // it a spot next to the expand arrow instead of dropping it silently.
+    Widget trailing = widget.isExpandable && widget.onReset != null
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.restore_rounded, size: 20),
+                onPressed: widget.onReset,
+                tooltip: 'Reset to default',
+                visualDensity: VisualDensity.compact,
+              ),
+              trailingArrow,
+            ],
+          )
+        : trailingArrow;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -244,21 +262,21 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                       child: _buildCardContent(
                         context,
                         content,
-                        leadingWidget,
-                        trailingArrow,
+                        trailing,
                         radius,
                         isCompact,
                         colorScheme,
+                        leadingWidget: leadingWidget,
                       ),
                     )
                   : _buildCardContent(
                       context,
                       content,
-                      leadingWidget,
-                      trailingArrow,
+                      trailing,
                       radius,
                       isCompact,
                       colorScheme,
+                      leadingWidget: leadingWidget,
                     ),
             ),
           ),
@@ -270,12 +288,12 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
   Widget _buildCardContent(
     BuildContext context,
     Widget content,
-    Widget? leadingWidget,
-    Widget trailingArrow,
+    Widget trailing,
     double radius,
     bool isCompact,
-    ColorScheme colorScheme,
-  ) {
+    ColorScheme colorScheme, {
+    Widget? leadingWidget,
+  }) {
     if (!widget.isExpandable) return content;
 
     return Theme(
@@ -295,7 +313,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         ),
         childrenPadding: EdgeInsets.zero,
         leading: leadingWidget,
-        trailing: trailingArrow,
+        trailing: trailing,
         title: Text(
           widget.title ?? 'Settings',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
