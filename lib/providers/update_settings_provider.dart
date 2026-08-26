@@ -150,26 +150,12 @@ class UpdateSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get bgUpdatesOnWiFiOnly {
-    return prefs?.safeBool('bgUpdatesOnWiFiOnly') ?? false;
-  }
-
-  set bgUpdatesOnWiFiOnly(bool val) {
-    prefs?.setBool('bgUpdatesOnWiFiOnly', val);
-    notifyListeners();
-  }
-
-  bool get bgUpdatesWhileChargingOnly {
-    return prefs?.safeBool('bgUpdatesWhileChargingOnly') ?? false;
-  }
-
-  set bgUpdatesWhileChargingOnly(bool val) {
-    prefs?.setBool('bgUpdatesWhileChargingOnly', val);
-    notifyListeners();
-  }
-
   bool get bgUpdateRequiresWifi {
-    return prefs?.safeBool('bgUpdateRequiresWifi') ?? false;
+    // Also honor the legacy 'bgUpdatesOnWiFiOnly' key (pre-dedup duplicate
+    // toggle) so users who had only that one enabled don't silently lose
+    // the restriction.
+    return (prefs?.safeBool('bgUpdateRequiresWifi') ?? false) ||
+        (prefs?.safeBool('bgUpdatesOnWiFiOnly') ?? false);
   }
 
   set bgUpdateRequiresWifi(bool val) {
@@ -178,7 +164,11 @@ class UpdateSettingsProvider with ChangeNotifier {
   }
 
   bool get bgUpdateRequiresCharging {
-    return prefs?.safeBool('bgUpdateRequiresCharging') ?? false;
+    // Also honor the legacy 'bgUpdatesWhileChargingOnly' key (pre-dedup
+    // duplicate toggle) so users who had only that one enabled don't
+    // silently lose the restriction.
+    return (prefs?.safeBool('bgUpdateRequiresCharging') ?? false) ||
+        (prefs?.safeBool('bgUpdatesWhileChargingOnly') ?? false);
   }
 
   set bgUpdateRequiresCharging(bool val) {

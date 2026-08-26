@@ -55,47 +55,6 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           onTap: () =>
               AppInstallService.openAppSettings(AppConstants.obtainiumPlusId),
         ),
-      if (_matches(tr('notificationSettings')))
-        _buildSystemShortcutTile(
-          context,
-          icon: Icons.notifications_active_outlined,
-          title: tr('notificationSettings'),
-          onTap: () => AppInstallService.openNotificationSettings(
-            AppConstants.obtainiumPlusId,
-          ),
-        ),
-      if (_matches(tr('batteryOptimizationSettings')))
-        ListTile(
-          leading: Icon(
-            Icons.battery_saver_outlined,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          title: Text(
-            tr('batteryOptimizationSettings'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          trailing: IconButton(
-            icon: const Icon(Icons.open_in_new, size: 18),
-            tooltip: tr('batteryOptimizationSettingsPage'),
-            onPressed: () {
-              AppHaptics.lightImpact();
-              AppInstallService.openBatteryOptimizationSettings();
-            },
-          ),
-          onTap: () {
-            AppHaptics.lightImpact();
-            AppInstallService.requestBatteryOptimizationExemption();
-          },
-        ),
-      if (_matches(tr('installUnknownApps')))
-        _buildSystemShortcutTile(
-          context,
-          icon: Icons.install_mobile_outlined,
-          title: tr('installUnknownApps'),
-          onTap: () => AppInstallService.openInstallUnknownAppsSettings(
-            AppConstants.obtainiumPlusId,
-          ),
-        ),
       if (_matches(tr('overlaySettings')))
         _buildSystemShortcutTile(
           context,
@@ -249,27 +208,6 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         subtitle: tr('clearIconCacheDescription'),
         onTap: () => _clearIconCache(context),
       ),
-      if (plusSettings.enableAllPlusFeatures &&
-          plusSettings.plusDeveloperMode &&
-          _matches('third party loading indicator'))
-        SwitchListTile.adaptive(
-          secondary: Icon(
-            Icons.refresh_rounded,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          title: Text(
-            'Use 3rd Party Loading Indicator',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: const Text(
-            'Swaps custom M3E wavy indicator for the loading_indicator_m3e package for comparison.',
-          ),
-          value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
-          onChanged: (val) {
-            AppHaptics.selectionClick();
-            plusSettings.plusDevUseThirdPartyLoadingIndicator = val;
-          },
-        ),
       if (plusSettings.plusDeveloperMode)
         _buildCleanupTile(
           context,
@@ -303,6 +241,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('troubleshootingAndSystem'),
+      persistKey: 'troubleshootingAndSystem',
       icon: Icons.bug_report_rounded,
       isExpandable: !isSearching,
       initiallyExpanded: false,

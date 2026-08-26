@@ -112,51 +112,8 @@ class UpdateSettingsSection extends StatelessWidget {
           ),
         ),
 
-      // Background updates on Wi-Fi only
-      if (_matches(tr('bgUpdatesOnWiFiOnly')))
-        Consumer<UpdateSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.wifi_outlined),
-            title: Text(
-              tr('bgUpdatesOnWiFiOnly'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            value: settings.bgUpdatesOnWiFiOnly,
-            onChanged: (v) => settings.bgUpdatesOnWiFiOnly = v,
-          ),
-        ),
-
-      // Background updates while charging only
-      if (_matches(tr('bgUpdatesWhileChargingOnly')))
-        Consumer<UpdateSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.battery_charging_full_outlined),
-            title: Text(
-              tr('bgUpdatesWhileChargingOnly'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            value: settings.bgUpdatesWhileChargingOnly,
-            onChanged: (v) => settings.bgUpdatesWhileChargingOnly = v,
-          ),
-        ),
-
-      // Parallel downloads
-      if (_matches(tr('parallelDownloads'), isAdvanced: true))
-        Consumer<BehaviorSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.file_download_outlined),
-            title: Text(
-              tr('parallelDownloads'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text(tr('parallelDownloadsDescription')),
-            value: settings.parallelDownloads,
-            onChanged: (v) => settings.parallelDownloads = v,
-          ),
-        ),
-
       // Concurrency Limit settings
-      if (_matches(tr('parallelDownloads'), isAdvanced: true))
+      if (_matches(tr('plusUpdateCheckConcurrency'), isAdvanced: true))
         Consumer<SettingsProvider>(
           builder: (context, settings, _) => ListTile(
             leading: const Icon(Icons.speed_outlined),
@@ -181,7 +138,7 @@ class UpdateSettingsSection extends StatelessWidget {
           ),
         ),
 
-      if (_matches(tr('parallelDownloads'), isAdvanced: true))
+      if (_matches(tr('plusDownloadConcurrency'), isAdvanced: true))
         Consumer<SettingsProvider>(
           builder: (context, settings, _) => ListTile(
             leading: const Icon(Icons.download_for_offline_outlined),
@@ -214,6 +171,7 @@ class UpdateSettingsSection extends StatelessWidget {
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('updates'),
+      persistKey: 'updates',
       icon: Icons.update_rounded,
       isExpandable: !isSearching,
       initiallyExpanded: false,
@@ -557,18 +515,6 @@ class UpdateSettingsSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                  if (_matches(tr('allowThirdPartySources'), isAdvanced: true))
-                    SwitchListTile.adaptive(
-                      secondary: const Icon(Icons.cloud_download_outlined),
-                      title: Text(
-                        tr('allowThirdPartySources'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      subtitle: Text(tr('allowThirdPartySourcesDescription')),
-                      value: behaviorSettings.allowThirdPartySources,
-                      onChanged: (value) =>
-                          behaviorSettings.allowThirdPartySources = value,
-                    ),
                   if (plusSettings.enableAllPlusFeatures &&
                       _matches(tr('plusEnableAutoUpdateRules')))
                     SwitchListTile.adaptive(
@@ -599,18 +545,6 @@ class UpdateSettingsSection extends StatelessWidget {
                         updateSettings,
                         viewSettings,
                       ),
-                    ),
-                  if (_matches(tr('usePlayStoreAppLinks')))
-                    SwitchListTile.adaptive(
-                      secondary: const Icon(Icons.android_outlined),
-                      title: Text(
-                        tr('usePlayStoreAppLinks'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      subtitle: Text(tr('usePlayStoreAppLinksDescription')),
-                      value: behaviorSettings.usePlayStoreAppLinks,
-                      onChanged: (value) =>
-                          behaviorSettings.usePlayStoreAppLinks = value,
                     ),
                 ],
               ),

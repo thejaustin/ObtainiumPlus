@@ -99,8 +99,15 @@ class GooglePlayNative extends AppSource {
     var deviceId = authProvider.effectiveDeviceId;
     if (deviceId == 'native') {
       const platform = MethodChannel('dev.thejaustin.obtainiumplus/native');
-      deviceId =
-          await platform.invokeMethod<String>('getGsfId') ?? '0000000000000000';
+      try {
+        deviceId =
+            await platform
+                .invokeMethod<String>('getGsfId')
+                .timeout(const Duration(seconds: 15)) ??
+            '0000000000000000';
+      } catch (_) {
+        deviceId = '0000000000000000';
+      }
     }
 
     final authHeader = bundle.aasToken.isNotEmpty

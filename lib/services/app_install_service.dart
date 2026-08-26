@@ -35,7 +35,10 @@ class AppInstallService {
 
   static Future<List<PackageInfo>> getAllInstalledInfo() async {
     try {
-      return await pm.getInstalledPackages(flags: _listPackageFlags) ?? [];
+      return await pm
+              .getInstalledPackages(flags: _listPackageFlags)
+              .timeout(const Duration(seconds: 15)) ??
+          [];
     } catch (e) {
       talker.error('Error fetching installed packages: ${e.toString()}');
       return [];
@@ -48,10 +51,9 @@ class AppInstallService {
   }) async {
     if (packageName != null) {
       try {
-        return await pm.getPackageInfo(
-          packageName: packageName,
-          flags: packageInfoFlags,
-        );
+        return await pm
+            .getPackageInfo(packageName: packageName, flags: packageInfoFlags)
+            .timeout(const Duration(seconds: 15));
       } catch (e) {
         if (printErr) {
           talker.warning('getPackageInfo: $e');
@@ -181,10 +183,15 @@ class AppInstallService {
 
   static Future<bool> checkInstallConstraints(String packageName) async {
     try {
-      final bool? result = await _nativeChannel.invokeMethod<bool>(
-        'checkInstallConstraints',
-        {'packageName': packageName},
-      );
+      // The native side only resolves once the OS's own constraint-check
+      // callback fires (app not in foreground/not interacting/not in call);
+      // if that condition never becomes true this would otherwise hang the
+      // whole per-app background update loop forever.
+      final bool? result = await _nativeChannel
+          .invokeMethod<bool>('checkInstallConstraints', {
+            'packageName': packageName,
+          })
+          .timeout(const Duration(seconds: 15));
       return result ?? true;
     } catch (e) {
       return true;
@@ -286,14 +293,19 @@ class AppInstallService {
       return false;
     }
 
-    var osInfo = await DeviceInfoPlugin().androidInfo;
+    var osInfo = await DeviceInfoPlugin().androidInfo.timeout(
+      const Duration(seconds: 15),
+    );
     String? installerPackageName;
     try {
       installerPackageName = osInfo.version.sdkInt >= 30
-          ? (await pm.getInstallSourceInfo(
-              packageName: app.id,
-            ))?.installingPackageName
-          : (await pm.getInstallerPackageName(packageName: app.id));
+          ? (await pm
+                    .getInstallSourceInfo(packageName: app.id)
+                    .timeout(const Duration(seconds: 15)))
+                ?.installingPackageName
+          : (await pm
+                .getInstallerPackageName(packageName: app.id)
+                .timeout(const Duration(seconds: 15)));
     } catch (e) {
       logs.add(
         'Failed to get installed package details: ${app.id} (${e.toString()})',

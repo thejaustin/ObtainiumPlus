@@ -1,7 +1,5 @@
-import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -9,8 +7,9 @@ import 'package:provider/provider.dart';
 ///
 /// Individual Plus toggles live in their thematically-relevant settings
 /// section (Appearance, Updates & Install, Notifications, Behavior,
-/// Advanced & Debug) rather than here, so this only hosts the switch that
-/// gates all of them at once.
+/// Advanced & Debug) rather than here, so this is a single compact row
+/// pinned above the section tabs — not a full collapsible group, since it
+/// only ever holds one control.
 class PlusFeaturesSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
@@ -21,41 +20,53 @@ class PlusFeaturesSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
-    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
-    if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    if (isSearching &&
+        !tr(
+          'enableAllPlusFeatures',
+        ).toLowerCase().contains(searchQuery!.toLowerCase())) {
+      return const SizedBox.shrink();
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
-        return ExpressiveSettingsGroup(
-          title: isSearching ? null : tr('plusFeatures'),
-          icon: Icons.auto_awesome_rounded,
-          isExpandable: !isSearching,
-          initiallyExpanded: true,
-          helpText: tr('plusFeaturesHelp'),
-          onReset: () {
-            AppHaptics.heavyImpact();
-            settings.enableAllPlusFeatures = true;
-          },
-          children: [
-            if (_matches(tr('enableAllPlusFeatures')))
-              SwitchListTile.adaptive(
-                secondary: const Icon(Icons.auto_awesome),
-                title: Text(
-                  tr('enableAllPlusFeatures'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                subtitle: Text(tr('enableAllPlusFeaturesDescription')),
-                value: settings.enableAllPlusFeatures,
-                onChanged: (value) => settings.enableAllPlusFeatures = value,
-              ),
-          ],
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          color: colorScheme.primary.withValues(alpha: 0.08),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.18),
+            ),
+          ),
+          child: SwitchListTile.adaptive(
+            dense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            secondary: Icon(
+              Icons.auto_awesome_rounded,
+              color: colorScheme.primary,
+              size: 20,
+            ),
+            title: Text(
+              tr('enableAllPlusFeatures'),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              tr('enableAllPlusFeaturesDescription'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            value: settings.enableAllPlusFeatures,
+            onChanged: (value) => settings.enableAllPlusFeatures = value,
+          ),
         );
       },
     );

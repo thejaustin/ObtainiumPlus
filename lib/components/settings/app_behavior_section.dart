@@ -1,13 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
-import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
-import 'package:obtainium/utils/locale_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -33,16 +30,6 @@ class AppBehaviorSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> children = [
-      // Page Transitions
-      if (_matches(tr('disablePageTransitions'), isAdvanced: true))
-        _buildFeatureToggle(
-          context,
-          icon: Icons.animation_outlined,
-          title: tr('disablePageTransitions'),
-          subtitle: tr('disablePageTransitionsDescription'),
-          value: (s) => s.disablePageTransitions,
-          onChanged: (s, v) => s.disablePageTransitions = v,
-        ),
       // Haptic Feedback
       if (_matches(tr('enableHapticFeedback')))
         _buildFeatureToggle(
@@ -64,6 +51,25 @@ class AppBehaviorSection extends StatelessWidget {
           value: (s) => s.enableSwipeGestures,
           onChanged: (s, v) => s.enableSwipeGestures = v,
         ),
+      if (_matches(tr('swipeRightAction')) || _matches(tr('swipeLeftAction')))
+        Consumer<BehaviorSettingsProvider>(
+          builder: (context, settings, child) {
+            return Opacity(
+              opacity: settings.enableSwipeGestures ? 1.0 : 0.4,
+              child: IgnorePointer(
+                ignoring: !settings.enableSwipeGestures,
+                child: Column(
+                  children: [
+                    if (_matches(tr('swipeRightAction')))
+                      _buildSwipeActionDropdown(context, isRight: true),
+                    if (_matches(tr('swipeLeftAction')))
+                      _buildSwipeActionDropdown(context, isRight: false),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
 
       // Undo App Removal
       if (_matches(tr('enableUndoForAppRemoval')))
@@ -76,58 +82,6 @@ class AppBehaviorSection extends StatelessWidget {
           onChanged: (s, v) => s.enableUndoForAppRemoval = v,
         ),
 
-      // Animation Speed
-      if (_matches(tr('animationSpeed')))
-        Consumer<BehaviorSettingsProvider>(
-          builder: (context, settings, child) {
-            return ListTile(
-              leading: const Icon(Icons.speed_outlined),
-              title: Text(
-                tr('animationSpeed'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(
-                '${(settings.animationSpeedMultiplier * 100).round()}%',
-              ),
-              trailing: DropdownButton<double>(
-                value: settings.animationSpeedMultiplier,
-                underline: const SizedBox(),
-                items: [
-                  DropdownMenuItem(value: 0.5, child: Text('50%')),
-                  DropdownMenuItem(value: 0.75, child: Text('75%')),
-                  DropdownMenuItem(value: 1.0, child: Text('100%')),
-                  DropdownMenuItem(value: 1.5, child: Text('150%')),
-                  DropdownMenuItem(value: 2.0, child: Text('200%')),
-                ],
-                onChanged: (value) {
-                  if (value != null) settings.animationSpeedMultiplier = value;
-                },
-              ),
-            );
-          },
-        ),
-      if (_matches(tr('language')))
-        Consumer<SettingsProvider>(
-          builder: (context, settings, child) {
-            final currentLocale = context.locale;
-            final matchedLocaleEntry = supportedLocales.firstWhere(
-              (entry) => entry.key.languageCode == currentLocale.languageCode,
-              orElse: () => supportedLocales.first,
-            );
-            return ListTile(
-              leading: const Icon(Icons.language_outlined),
-              title: Text(
-                tr('language'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(matchedLocaleEntry.value),
-              onTap: () {
-                AppHaptics.selectionClick();
-                _showLanguagePicker(context, settings);
-              },
-            );
-          },
-        ),
     ];
 
     return Column(
@@ -135,38 +89,13 @@ class AppBehaviorSection extends StatelessWidget {
         if (children.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appBehavior'),
+            persistKey: 'appBehavior',
             icon: Icons.settings_suggest_rounded,
             isExpandable: !isSearching,
             initiallyExpanded: false,
             children: children,
           ),
         _buildDiscoverySafetyGroup(context, isSearching),
-        Consumer<BehaviorSettingsProvider>(
-          builder: (context, settings, _) {
-            if (!settings.enableSwipeGestures &&
-                !_matches(tr('swipeRightAction')) &&
-                !_matches(tr('swipeLeftAction'))) {
-              return const SizedBox.shrink();
-            }
-            final swipeChildren = [
-              if (_matches(tr('swipeRightAction')))
-                _buildSwipeActionDropdown(context, isRight: true),
-              if (_matches(tr('swipeLeftAction')))
-                _buildSwipeActionDropdown(context, isRight: false),
-            ];
-            if (swipeChildren.isEmpty) return const SizedBox.shrink();
-            return Opacity(
-              opacity: settings.enableSwipeGestures ? 1.0 : 0.4,
-              child: IgnorePointer(
-                ignoring: !settings.enableSwipeGestures,
-                child: ExpressiveSettingsGroup(
-                  title: isSearching ? null : tr('swipeActions'),
-                  children: swipeChildren,
-                ),
-              ),
-            );
-          },
-        ),
       ],
     );
   }
@@ -267,20 +196,6 @@ class AppBehaviorSection extends StatelessWidget {
                 settings.plusDiscoverSuggestions = val;
               },
             ),
-          if (_matches(tr('importInstalledApps')))
-            ListTile(
-              leading: const Icon(Icons.install_mobile_rounded),
-              title: Text(
-                tr('importInstalledApps'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('importInstalledAppsDescription')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                AppHaptics.selectionClick();
-                showSystemAppSelectorSheet(context: context);
-              },
-            ),
           if (_matches(tr('plusEnableBanWarnings'), isAdvanced: true)) ...[
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.warning_amber_rounded),
@@ -376,6 +291,7 @@ class AppBehaviorSection extends StatelessWidget {
 
         return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('appDiscoveryAndSafety'),
+          persistKey: 'appDiscoveryAndSafety',
           icon: Icons.explore_outlined,
           isExpandable: !isSearching,
           initiallyExpanded: false,
@@ -406,51 +322,4 @@ class AppBehaviorSection extends StatelessWidget {
     );
   }
 
-  void _showLanguagePicker(BuildContext context, SettingsProvider settings) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return GlassDialog(
-          title: tr('language'),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: supportedLocales.length,
-              itemBuilder: (context, index) {
-                final entry = supportedLocales[index];
-                final isSelected =
-                    context.locale.languageCode == entry.key.languageCode;
-                return ListTile(
-                  title: Text(entry.value),
-                  trailing: isSelected
-                      ? Icon(
-                          Icons.check_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      : null,
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    settings.forcedLocale = entry.key;
-                    context.setLocale(entry.key);
-                    Navigator.pop(context);
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('close')),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }

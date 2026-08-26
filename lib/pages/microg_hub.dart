@@ -39,7 +39,9 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
 
   Future<void> _checkRootStatus() async {
     try {
-      final bool rooted = await _platform.invokeMethod('isRooted');
+      final bool rooted = await _platform
+          .invokeMethod('isRooted')
+          .timeout(const Duration(seconds: 15));
       if (mounted) {
         setState(() {
           _isRooted = rooted;

@@ -681,10 +681,9 @@ Future<List<PackageInfo>> getAllInstalledInfo() async {
 Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   if (packageName != null) {
     try {
-      return await packageManager.getPackageInfo(
-        packageName: packageName,
-        flags: packageInfoFlags,
-      );
+      return await packageManager
+          .getPackageInfo(packageName: packageName, flags: packageInfoFlags)
+          .timeout(const Duration(seconds: 15));
     } catch (_) {}
   }
   return null;
@@ -2047,7 +2046,17 @@ class AppsProvider with ChangeNotifier {
     loadingApps = true;
     notifyListeners();
     try {
-      await _loadAppsBody(singleId);
+      await _loadAppsBody(singleId).timeout(
+        const Duration(seconds: 45),
+        onTimeout: () {
+          logs.add(
+            'loadApps() timed out after 45s (singleId: $singleId) — '
+            'a native call (e.g. getAllInstalledInfo) likely hung. '
+            'Aborting so the UI does not freeze on "Please wait" forever.',
+            level: LogLevel.error,
+          );
+        },
+      );
     } finally {
       loadingApps = false;
       notifyListeners();

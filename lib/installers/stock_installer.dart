@@ -33,14 +33,20 @@ class StockInstaller extends Installer {
       );
       return false;
     }
-    final osInfo = await DeviceInfoPlugin().androidInfo;
     String? installerPackageName;
+    late final AndroidDeviceInfo osInfo;
     try {
+      osInfo = await DeviceInfoPlugin().androidInfo.timeout(
+        const Duration(seconds: 15),
+      );
       installerPackageName = osInfo.version.sdkInt >= 30
-          ? (await packageManager.getInstallSourceInfo(
-              packageName: app.id,
-            ))?.installingPackageName
-          : (await packageManager.getInstallerPackageName(packageName: app.id));
+          ? (await packageManager
+                    .getInstallSourceInfo(packageName: app.id)
+                    .timeout(const Duration(seconds: 15)))
+                ?.installingPackageName
+          : (await packageManager
+                .getInstallerPackageName(packageName: app.id)
+                .timeout(const Duration(seconds: 15)));
     } catch (e) {
       unawaited(
         LogsProvider().add(
