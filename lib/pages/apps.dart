@@ -1217,7 +1217,7 @@ class AppsPageState extends State<AppsPage> {
                           String urls = '';
                           for (var a in selectedApps) {
                             urls +=
-                                'https://apps.obtainium.page/redirect?r=obtainium://app/${Uri.encodeComponent(jsonEncode({'id': a.id, 'url': a.url, 'author': a.author, 'name': a.name, 'preferredApkIndex': a.preferredApkIndex, 'additionalSettings': jsonEncode(a.additionalSettings), 'overrideSource': a.overrideSource}))}\n\n';
+                                'https://apps.obtainium.page/redirect?r=obtainium://app/${Uri.encodeComponent(jsonEncode({'id': a.id, 'url': a.url, 'author': a.author, 'name': a.name, 'preferredApkIndex': a.preferredApkIndex, 'additionalSettings': safeJsonEncode(a.additionalSettings), 'overrideSource': a.overrideSource}))}\n\n';
                           }
                           Share.share(
                             urls,

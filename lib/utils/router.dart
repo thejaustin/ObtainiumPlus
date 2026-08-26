@@ -12,6 +12,11 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final router = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/',
+  // Without this, an unmatched route (e.g. a malformed or truncated
+  // deep link like "obtainium://app/" with no id) falls through past
+  // GoRouter into Flutter's default unknown-route handler, which throws
+  // a null-check TypeError there instead of showing anything useful.
+  errorBuilder: (context, state) => const HomePage(),
   routes: [
     GoRoute(
       path: '/',
