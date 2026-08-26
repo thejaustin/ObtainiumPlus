@@ -35,9 +35,10 @@ class PlusFeaturesSection extends StatelessWidget {
       builder: (context, settings, child) {
         return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('plusFeatures'),
+          persistKey: 'plusFeatures',
           icon: Icons.auto_awesome_rounded,
           isExpandable: !isSearching,
-          initiallyExpanded: true,
+          initiallyExpanded: isSearching || !settings.enableAllPlusFeatures,
           helpText: tr('plusFeaturesHelp'),
           onReset: () {
             AppHaptics.heavyImpact();

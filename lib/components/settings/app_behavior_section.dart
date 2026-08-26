@@ -89,6 +89,7 @@ class AppBehaviorSection extends StatelessWidget {
         if (children.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appBehavior'),
+            persistKey: 'appBehavior',
             icon: Icons.settings_suggest_rounded,
             isExpandable: !isSearching,
             initiallyExpanded: false,
@@ -290,6 +291,7 @@ class AppBehaviorSection extends StatelessWidget {
 
         return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('appDiscoveryAndSafety'),
+          persistKey: 'appDiscoveryAndSafety',
           icon: Icons.explore_outlined,
           isExpandable: !isSearching,
           initiallyExpanded: false,
