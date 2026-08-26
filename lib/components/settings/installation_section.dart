@@ -290,6 +290,7 @@ class InstallationSection extends StatelessWidget {
 
         return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('installation'),
+          persistKey: 'installation',
           icon: Icons.install_mobile_rounded,
           isExpandable: !isSearching,
           initiallyExpanded: false,

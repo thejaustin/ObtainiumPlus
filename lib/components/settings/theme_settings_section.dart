@@ -361,6 +361,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if (themeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appearance'),
+            persistKey: 'appearance',
             icon: Icons.palette_rounded,
             helpText: tr('appearanceHelp'),
             isExpandable: !isSearching,
@@ -370,6 +371,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if (shapeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusShapesAndCorners'),
+            persistKey: 'plusShapesAndCorners',
             icon: Icons.rounded_corner_rounded,
             helpText: tr('shapesHelp'),
             isExpandable: !isSearching,
@@ -386,6 +388,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if (animationWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('animations'),
+            persistKey: 'animations',
             icon: Icons.animation_rounded,
             isExpandable: !isSearching,
             initiallyExpanded: false,
