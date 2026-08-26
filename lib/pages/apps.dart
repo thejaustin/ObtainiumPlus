@@ -9,6 +9,7 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/components/omnibar.dart';
+import 'package:obtainium/components/search/command_center.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -1583,6 +1584,18 @@ class AppsPageState extends State<AppsPage> {
                     ? SliverAppBar.large(
                         automaticallyImplyLeading: false,
                         actions: [
+                          // The dashboard layout has its own always-visible
+                          // Omnibar; without it, this is the only reachable
+                          // search entry point on the Apps screen.
+                          if (!plusSettings.plusEnableHomeDashboard)
+                            IconButton(
+                              icon: const Icon(Icons.search_rounded),
+                              tooltip: tr('search'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                CommandCenter.show(context);
+                              },
+                            ),
                           if (!plusSettings.plusEnableFAB)
                             IconButton(
                               icon: const Icon(Icons.add_rounded),
@@ -1613,6 +1626,15 @@ class AppsPageState extends State<AppsPage> {
                     : CustomAppBar(
                         title: tr('appsString'),
                         actions: [
+                          if (!plusSettings.plusEnableHomeDashboard)
+                            IconButton(
+                              icon: const Icon(Icons.search_rounded),
+                              tooltip: tr('search'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                CommandCenter.show(context);
+                              },
+                            ),
                           if (!plusSettings.plusEnableFAB)
                             IconButton(
                               icon: const Icon(Icons.add_rounded),
