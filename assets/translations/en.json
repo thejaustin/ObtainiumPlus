@@ -319,6 +319,7 @@
     "repoRenamedExplanation": "This repository was moved. Updating the URL keeps future updates working.",
     "reposHaveMultipleApps": "Repos may contain multiple apps",
     "requestHeader": "Request header",
+    "requestTimedOut": "Request timed out",
     "requiredInBrackets": "(required)",
     "requiresCredentialsInSettings": "{} needs additional credentials (in Settings)",
     "resetInstallStatus": "Reset install status",

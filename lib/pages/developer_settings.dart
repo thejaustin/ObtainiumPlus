@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -901,12 +902,17 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
 
   Future<void> _getGsfId() async {
     try {
-      final String result = await _platform.invokeMethod('getGsfId');
+      final String result = await _platform
+          .invokeMethod('getGsfId')
+          .timeout(const Duration(seconds: 15));
       if (!mounted) return;
       setState(() => _gsfId = result);
     } on PlatformException catch (e) {
       if (!mounted) return;
       setState(() => _gsfId = tr('failedToGetGsfId', args: [e.message ?? '']));
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() => _gsfId = tr('failedToGetGsfId', args: ['']));
     }
   }
 

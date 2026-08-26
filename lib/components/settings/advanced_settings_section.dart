@@ -184,6 +184,7 @@ class AdvancedSettingsSection extends StatelessWidget {
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('advanced'),
+      persistKey: 'advanced',
       icon: Icons.settings_applications_rounded,
       isExpandable: !isSearching,
       initiallyExpanded: false,

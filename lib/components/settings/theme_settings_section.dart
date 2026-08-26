@@ -11,6 +11,9 @@ import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/utils/locale_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -131,6 +134,8 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusUseCompactSettings,
           onChanged: (s, v) => s.plusUseCompactSettings = v,
         ),
+      if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
+      if (_matches(tr('language'))) _buildLanguagePicker(context),
 
       // Advanced/Experimental Section
       if (plusSettings.enableAllPlusFeatures && advancedWidgets.isNotEmpty)
@@ -187,10 +192,6 @@ class ThemeSettingsSection extends StatelessWidget {
         ),
     ];
 
-    List<Widget> typographyWidgets = [
-      if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
-    ];
-
     List<Widget> animationWidgets = [
       if (_matches(tr('plusEnhancedAnimations')))
         buildFeatureToggle<PlusSettingsProvider>(
@@ -228,6 +229,53 @@ class ThemeSettingsSection extends StatelessWidget {
           subtitle: tr('highlightTouchTargetsDescription'),
           value: (s) => s.highlightTouchTargets,
           onChanged: (s, v) => s.highlightTouchTargets = v,
+        ),
+      if (_matches(tr('animationSpeed')))
+        Consumer<BehaviorSettingsProvider>(
+          builder: (context, settings, child) {
+            return ListTile(
+              leading: const Icon(Icons.speed_outlined),
+              title: Text(
+                tr('animationSpeed'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                '${(settings.animationSpeedMultiplier * 100).round()}%',
+              ),
+              trailing: DropdownButton<double>(
+                value: settings.animationSpeedMultiplier,
+                underline: const SizedBox(),
+                items: [
+                  DropdownMenuItem(value: 0.5, child: Text('50%')),
+                  DropdownMenuItem(value: 0.75, child: Text('75%')),
+                  DropdownMenuItem(value: 1.0, child: Text('100%')),
+                  DropdownMenuItem(value: 1.5, child: Text('150%')),
+                  DropdownMenuItem(value: 2.0, child: Text('200%')),
+                ],
+                onChanged: (value) {
+                  if (value != null) settings.animationSpeedMultiplier = value;
+                },
+              ),
+            );
+          },
+        ),
+      if (plusSettings.enableAllPlusFeatures &&
+          plusSettings.plusDeveloperMode &&
+          _matches('third party loading indicator'))
+        SwitchListTile.adaptive(
+          secondary: const Icon(Icons.refresh_rounded),
+          title: Text(
+            'Use 3rd Party Loading Indicator',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+            'Swaps custom M3E wavy indicator for the loading_indicator_m3e package for comparison.',
+          ),
+          value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
+          onChanged: (val) {
+            AppHaptics.selectionClick();
+            plusSettings.plusDevUseThirdPartyLoadingIndicator = val;
+          },
         ),
     ];
 
@@ -313,6 +361,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if (themeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('appearance'),
+            persistKey: 'appearance',
             icon: Icons.palette_rounded,
             helpText: tr('appearanceHelp'),
             isExpandable: !isSearching,
@@ -322,6 +371,7 @@ class ThemeSettingsSection extends StatelessWidget {
         if (shapeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('plusShapesAndCorners'),
+            persistKey: 'plusShapesAndCorners',
             icon: Icons.rounded_corner_rounded,
             helpText: tr('shapesHelp'),
             isExpandable: !isSearching,
@@ -335,17 +385,10 @@ class ThemeSettingsSection extends StatelessWidget {
             },
             children: shapeWidgets,
           ),
-        if (typographyWidgets.isNotEmpty)
-          ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('typography'),
-            icon: Icons.font_download_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: false,
-            children: typographyWidgets,
-          ),
         if (animationWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('animations'),
+            persistKey: 'animations',
             icon: Icons.animation_rounded,
             isExpandable: !isSearching,
             initiallyExpanded: false,
@@ -867,6 +910,78 @@ class ThemeSettingsSection extends StatelessWidget {
               },
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguagePicker(BuildContext context) {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        final currentLocale = context.locale;
+        final matchedLocaleEntry = supportedLocales.firstWhere(
+          (entry) => entry.key.languageCode == currentLocale.languageCode,
+          orElse: () => supportedLocales.first,
+        );
+        return ListTile(
+          leading: const Icon(Icons.language_outlined),
+          title: Text(
+            tr('language'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: Text(matchedLocaleEntry.value),
+          onTap: () {
+            AppHaptics.selectionClick();
+            _showLanguagePicker(context, settings);
+          },
+        );
+      },
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context, SettingsProvider settings) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return GlassDialog(
+          title: tr('language'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.5,
+            ),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: supportedLocales.length,
+              itemBuilder: (context, index) {
+                final entry = supportedLocales[index];
+                final isSelected =
+                    context.locale.languageCode == entry.key.languageCode;
+                return ListTile(
+                  title: Text(entry.value),
+                  trailing: isSelected
+                      ? Icon(
+                          Icons.check_rounded,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    settings.forcedLocale = entry.key;
+                    context.setLocale(entry.key);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(tr('close')),
+            ),
+          ],
         );
       },
     );

@@ -135,12 +135,12 @@ class BackgroundUpdateService {
       ];
 
       var networkRestricted =
-          appsProvider.updateSettings.bgUpdatesOnWiFiOnly &&
+          appsProvider.updateSettings.bgUpdateRequiresWifi &&
           !netResult.contains(ConnectivityResult.wifi) &&
           !netResult.contains(ConnectivityResult.ethernet);
 
       var chargingRestricted =
-          appsProvider.updateSettings.bgUpdatesWhileChargingOnly &&
+          appsProvider.updateSettings.bgUpdateRequiresCharging &&
           (await Battery().batteryState) != BatteryState.charging;
 
       var scheduleRestricted =
