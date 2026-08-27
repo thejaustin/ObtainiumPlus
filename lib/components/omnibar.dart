@@ -464,9 +464,12 @@ class AppActionsFAB extends StatelessWidget {
               ),
             ),
           ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -474,133 +477,120 @@ class AppActionsFAB extends StatelessWidget {
                   const DragHandle(width: 40),
                   const SizedBox(height: 20),
 
-                  // Title
+                  // Title — a plain tap on the FAB already opens the
+                  // unified search+add (CommandCenter); this long-press
+                  // menu is only for the less-common actions.
                   Text(
-                    tr('addApp'),
+                    tr('moreAddOptions'),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Add by URL
+                          if (settings.plusFabShowAddByUrl)
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.link_outlined,
+                              title: tr('addAppByUrl'),
+                              subtitle: tr('addAppByUrlDescription'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                showAddAppSheet(context: context);
+                              },
+                            ),
 
-                  // Search shortcut — always reachable from thumb zone
-                  if (settings.plusFabShowSearch)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.search_rounded,
-                      title: tr('search'),
-                      subtitle: tr('searchOrEnterUrl'),
-                      iconColor: colorScheme.tertiary,
-                      containerColor: colorScheme.tertiaryContainer.withValues(
-                        alpha: AppOpacity.half,
+                          if (settings.plusFabShowGithubStarred)
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.star_border_rounded,
+                              title: tr('importGithubStarredRepos'),
+                              subtitle: tr(
+                                'importGithubStarredReposDescription',
+                              ),
+                              onTap: () {
+                                Navigator.pop(context);
+                                _runMassImport(
+                                  context,
+                                  SourceProvider().massUrlSources.firstWhere(
+                                    (s) => s is GitHubStars,
+                                    orElse: () => GitHubStars(),
+                                  ),
+                                );
+                              },
+                            ),
+
+                          if (settings.plusFabShowGithubPersonalRepos)
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.person_outline_rounded,
+                              title: tr('githubPersonalRepos'),
+                              subtitle: tr('githubPersonalReposDescription'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                _runMassImport(
+                                  context,
+                                  SourceProvider().massUrlSources.firstWhere(
+                                    (s) => s is GitHubPersonalRepos,
+                                    orElse: () => GitHubPersonalRepos(),
+                                  ),
+                                );
+                              },
+                            ),
+
+                          if (settings.plusFabShowImportInstalled)
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.install_mobile_outlined,
+                              title: tr('importInstalledApps'),
+                              subtitle: tr('importInstalledAppsDescription'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                showSystemAppSelectorSheet(context: context);
+                              },
+                            ),
+
+                          if (settings.plusDeveloperMode)
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.qr_code_scanner_outlined,
+                              title: tr('scanQRCode'),
+                              subtitle: tr('scanQRCodeDescription'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(tr('comingSoon'))),
+                                );
+                              },
+                            ),
+
+                          // Fallback when every item is disabled
+                          if (!settings.plusFabShowAddByUrl &&
+                              !settings.plusFabShowGithubStarred &&
+                              !settings.plusFabShowGithubPersonalRepos &&
+                              !settings.plusFabShowImportInstalled &&
+                              !settings.plusDeveloperMode)
+                            _buildMenuItem(
+                              context,
+                              icon: Icons.link_outlined,
+                              title: tr('addAppByUrl'),
+                              subtitle: tr('addAppByUrlDescription'),
+                              onTap: () {
+                                Navigator.pop(context);
+                                showAddAppSheet(context: context);
+                              },
+                            ),
+
+                          const SizedBox(height: 8),
+                        ],
                       ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        CommandCenter.show(context);
-                      },
                     ),
-
-                  if (settings.plusFabShowSearch &&
-                      (settings.plusFabShowAddByUrl ||
-                          settings.plusFabShowGithubStarred ||
-                          settings.plusFabShowGithubPersonalRepos ||
-                          settings.plusFabShowImportInstalled))
-                    const Divider(height: 20),
-
-                  // Add by URL
-                  if (settings.plusFabShowAddByUrl)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.link_outlined,
-                      title: tr('addAppByUrl'),
-                      subtitle: tr('addAppByUrlDescription'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        showAddAppSheet(context: context);
-                      },
-                    ),
-
-                  if (settings.plusFabShowGithubStarred)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.star_border_rounded,
-                      title: tr('importGithubStarredRepos'),
-                      subtitle: tr('importGithubStarredReposDescription'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _runMassImport(
-                          context,
-                          SourceProvider().massUrlSources.firstWhere(
-                            (s) => s is GitHubStars,
-                            orElse: () => GitHubStars(),
-                          ),
-                        );
-                      },
-                    ),
-
-                  if (settings.plusFabShowGithubPersonalRepos)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.person_outline_rounded,
-                      title: tr('githubPersonalRepos'),
-                      subtitle: tr('githubPersonalReposDescription'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _runMassImport(
-                          context,
-                          SourceProvider().massUrlSources.firstWhere(
-                            (s) => s is GitHubPersonalRepos,
-                            orElse: () => GitHubPersonalRepos(),
-                          ),
-                        );
-                      },
-                    ),
-
-                  if (settings.plusFabShowImportInstalled)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.install_mobile_outlined,
-                      title: tr('importInstalledApps'),
-                      subtitle: tr('importInstalledAppsDescription'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        showSystemAppSelectorSheet(context: context);
-                      },
-                    ),
-
-                  if (settings.plusDeveloperMode)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.qr_code_scanner_outlined,
-                      title: tr('scanQRCode'),
-                      subtitle: tr('scanQRCodeDescription'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(tr('comingSoon'))),
-                        );
-                      },
-                    ),
-
-                  // Fallback when every item is disabled
-                  if (!settings.plusFabShowSearch &&
-                      !settings.plusFabShowAddByUrl &&
-                      !settings.plusFabShowGithubStarred &&
-                      !settings.plusFabShowGithubPersonalRepos &&
-                      !settings.plusFabShowImportInstalled &&
-                      !settings.plusDeveloperMode)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.link_outlined,
-                      title: tr('addAppByUrl'),
-                      subtitle: tr('addAppByUrlDescription'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        showAddAppSheet(context: context);
-                      },
-                    ),
-
-                  const SizedBox(height: 8),
+                  ),
                 ],
               ),
             ),
@@ -666,116 +656,61 @@ class AppActionsFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final showSearch =
-        !settings.plusTopUILayout && settings.plusShowFloatingSearch;
     final fabRadius = (settings.plusGlobalCornerRadius * 0.66).clamp(
       12.0,
       28.0,
     );
 
-    if (showSearch) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.small(
-            heroTag: 'fab_search',
+    // One FAB instead of two: a tap opens the unified search+add
+    // (CommandCenter) directly — the action people need almost every
+    // time — and a long-press reveals the less-common extras (add by
+    // URL form, GitHub bulk imports, etc.) instead of always showing
+    // them up front.
+    return Semantics(
+      label: tr('addApp'),
+      hint: tr('moreAddOptionsHint'),
+      button: true,
+      child: GestureDetector(
+        onLongPress: () {
+          AppHaptics.heavyImpact();
+          showAddAppMenu(context);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.tertiary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(fabRadius),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton.extended(
             onPressed: () {
               AppHaptics.selectionClick();
               CommandCenter.show(context);
             },
-            child: const Icon(Icons.search_rounded),
-          ),
-          const SizedBox(width: 12),
-          Semantics(
-            label: tr('addApp'),
-            button: true,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.tertiary,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(fabRadius),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: FloatingActionButton.extended(
-                heroTag: 'fab_add',
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  showAddAppMenu(context);
-                },
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                hoverElevation: 0,
-                focusElevation: 0,
-                highlightElevation: 0,
-                icon: Icon(
-                  Icons.add,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                label: Text(
-                  tr('addApp'),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                ),
-              ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            hoverElevation: 0,
+            focusElevation: 0,
+            highlightElevation: 0,
+            icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+            label: Text(
+              tr('addApp'),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
-          ),
-        ],
-      );
-    }
-
-    return Semantics(
-      label: tr('addApp'),
-      button: true,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.tertiary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(fabRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            AppHaptics.selectionClick();
-            showAddAppMenu(context);
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          hoverElevation: 0,
-          focusElevation: 0,
-          highlightElevation: 0,
-          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-          label: Text(
-            tr('addApp'),
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
       ),
