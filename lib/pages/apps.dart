@@ -1598,18 +1598,28 @@ class AppsPageState extends State<AppsPage> {
                               },
                             ),
                           if (!plusSettings.plusEnableFAB)
-                            GestureDetector(
-                              onLongPress: () {
-                                AppHaptics.heavyImpact();
-                                AppActionsFAB.showAddAppMenu(context);
-                              },
-                              child: IconButton(
-                                icon: const Icon(Icons.add_rounded),
-                                tooltip: tr('moreAddOptionsHint'),
-                                onPressed: () {
+                            // A single InkWell handles tap+long-press on
+                            // one recognizer — nesting IconButton's own
+                            // tap recognizer inside an outer
+                            // GestureDetector(onLongPress:) put two
+                            // recognizers in the same arena and could
+                            // delay/suppress the plain tap.
+                            Tooltip(
+                              message: tr('moreAddOptionsHint'),
+                              child: InkResponse(
+                                radius: 24,
+                                onTap: () {
                                   AppHaptics.selectionClick();
                                   CommandCenter.show(context);
                                 },
+                                onLongPress: () {
+                                  AppHaptics.heavyImpact();
+                                  AppActionsFAB.showAddAppMenu(context);
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.add_rounded),
+                                ),
                               ),
                             ),
                           if (!hasExternalSettingsEntry)
@@ -1644,18 +1654,28 @@ class AppsPageState extends State<AppsPage> {
                               },
                             ),
                           if (!plusSettings.plusEnableFAB)
-                            GestureDetector(
-                              onLongPress: () {
-                                AppHaptics.heavyImpact();
-                                AppActionsFAB.showAddAppMenu(context);
-                              },
-                              child: IconButton(
-                                icon: const Icon(Icons.add_rounded),
-                                tooltip: tr('moreAddOptionsHint'),
-                                onPressed: () {
+                            // A single InkWell handles tap+long-press on
+                            // one recognizer — nesting IconButton's own
+                            // tap recognizer inside an outer
+                            // GestureDetector(onLongPress:) put two
+                            // recognizers in the same arena and could
+                            // delay/suppress the plain tap.
+                            Tooltip(
+                              message: tr('moreAddOptionsHint'),
+                              child: InkResponse(
+                                radius: 24,
+                                onTap: () {
                                   AppHaptics.selectionClick();
                                   CommandCenter.show(context);
                                 },
+                                onLongPress: () {
+                                  AppHaptics.heavyImpact();
+                                  AppActionsFAB.showAddAppMenu(context);
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.add_rounded),
+                                ),
                               ),
                             ),
                           if (!hasExternalSettingsEntry)
