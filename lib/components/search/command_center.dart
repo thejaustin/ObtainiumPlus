@@ -270,8 +270,20 @@ class _CommandCenterState extends State<CommandCenter> {
                       ),
                     ),
 
-                    const SizedBox(height: 8),
-                    _buildSourceFilters(context),
+                    // Source filter chips only matter once there's an
+                    // actual discover search running — showing all 8
+                    // sources before the user has typed anything just
+                    // clutters the initial quick-actions/recently-added
+                    // view for a feature most people never touch.
+                    if (_query.isNotEmpty &&
+                        (!isUrl ||
+                            RegExp(
+                              r'^https?://(?:www\.)?github\.com/[^/]+/?$',
+                              caseSensitive: false,
+                            ).hasMatch(_query))) ...[
+                      const SizedBox(height: 8),
+                      _buildSourceFilters(context),
+                    ],
                     const SizedBox(height: 8),
 
                     // Content
