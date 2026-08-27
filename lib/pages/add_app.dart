@@ -150,7 +150,7 @@ class AddAppPageState extends State<AddAppPage> {
     try {
       final settingsProvider = context.read<SettingsProvider>();
 
-      final aggregatedResults = await AppSearchService.searchAllSources(
+      final searchResult = await AppSearchService.searchAllSources(
         query,
         sourceProvider: sourceProvider,
         deselectedSources: settingsProvider.searchDeselected,
@@ -158,7 +158,7 @@ class AddAppPageState extends State<AddAppPage> {
 
       if (!mounted) return;
       setState(() {
-        liveResults = aggregatedResults;
+        liveResults = searchResult.results;
       });
     } catch (e) {
       // Ignore background search errors

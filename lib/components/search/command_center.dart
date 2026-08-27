@@ -55,6 +55,7 @@ class _CommandCenterState extends State<CommandCenter> {
   bool _isSearching = false;
   String _query = '';
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
+  bool _discoverSearchFailed = false;
   final SourceProvider _sourceProvider = SourceProvider();
   Timer? _debounce;
 
@@ -144,7 +145,7 @@ class _CommandCenterState extends State<CommandCenter> {
     try {
       final settings = context.read<SettingsProvider>();
 
-      final aggregated = await AppSearchService.searchAllSources(
+      final searchResult = await AppSearchService.searchAllSources(
         query,
         sourceProvider: _sourceProvider,
         deselectedSources: settings.searchDeselected,
@@ -152,7 +153,8 @@ class _CommandCenterState extends State<CommandCenter> {
 
       if (mounted && _query == query) {
         setState(() {
-          _discoverResults = aggregated;
+          _discoverResults = searchResult.results;
+          _discoverSearchFailed = searchResult.allSourcesFailed;
         });
       }
     } finally {
@@ -505,7 +507,27 @@ class _CommandCenterState extends State<CommandCenter> {
     if (!_isSearching && _discoverResults.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32.0),
-        child: Center(child: Text(tr('noResultsFound'))),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _discoverSearchFailed
+                    ? Icons.wifi_off_rounded
+                    : Icons.search_off_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _discoverSearchFailed
+                    ? tr('searchAllSourcesFailed')
+                    : tr('noResultsFound'),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       );
     }
 
