@@ -152,7 +152,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     try {
       final settingsProvider = context.read<SettingsProvider>();
 
-      final aggregatedResults = await AppSearchService.searchAllSources(
+      final searchResult = await AppSearchService.searchAllSources(
         searchQuery,
         sourceProvider: sourceProvider,
         querySettings: sourceQuerySettings,
@@ -161,7 +161,7 @@ class DiscoverPageState extends State<DiscoverPage> {
 
       if (!mounted) return;
       setState(() {
-        results = aggregatedResults;
+        results = searchResult.results;
       });
     } catch (e) {
       talker.warning('Discover search error: $e');
