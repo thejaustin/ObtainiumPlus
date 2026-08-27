@@ -435,6 +435,12 @@ class AppActionsFAB extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       showDragHandle: false,
+      // Without this, the sheet is hard-capped at 9/16 of screen height
+      // by Flutter's default modal route regardless of our own
+      // constraints below, and — combined with mainAxisSize.min further
+      // down not actually bounding the Flexible/scroll area — content
+      // could run past the visible sheet instead of scrolling within it.
+      isScrollControlled: true,
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
@@ -666,50 +672,65 @@ class AppActionsFAB extends StatelessWidget {
     // time — and a long-press reveals the less-common extras (add by
     // URL form, GitHub bulk imports, etc.) instead of always showing
     // them up front.
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+
     return Semantics(
       label: tr('addApp'),
       hint: tr('moreAddOptionsHint'),
       button: true,
-      child: GestureDetector(
-        onLongPress: () {
-          AppHaptics.heavyImpact();
-          showAddAppMenu(context);
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.tertiary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(fabRadius),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.tertiary,
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: FloatingActionButton.extended(
-            onPressed: () {
+          borderRadius: BorderRadius.circular(fabRadius),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        // A plain FloatingActionButton has its own internal tap
+        // recognizer; wrapping it in an outer GestureDetector for
+        // long-press put two recognizers in the same gesture arena,
+        // which delayed/could suppress the tap. A single Material+InkWell
+        // handles both gestures on one recognizer instead, so this
+        // manually replicates FAB.extended's look (56dp min height,
+        // icon+label row) rather than using the FAB widget itself.
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(fabRadius),
+            onTap: () {
               AppHaptics.selectionClick();
               CommandCenter.show(context);
             },
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            hoverElevation: 0,
-            focusElevation: 0,
-            highlightElevation: 0,
-            icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-            label: Text(
-              tr('addApp'),
-              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            onLongPress: () {
+              AppHaptics.heavyImpact();
+              showAddAppMenu(context);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, color: onPrimary),
+                  const SizedBox(width: 8),
+                  Text(tr('addApp'), style: TextStyle(color: onPrimary)),
+                ],
+              ),
             ),
           ),
         ),
