@@ -1027,6 +1027,7 @@
     "persistentVersionTrackingTooltip": "Keep track of versions even after uninstalling",
     "noMatchingApps": "No matching apps found",
     "noResultsFound": "No results found",
+    "searchAllSourcesFailed": "Couldn't reach any app sources. Check your connection and try again.",
     "lookingForDevOptions": "Looking for developer options?",
     "moreOptions": "More Options",
     "quickActions": "Quick Actions",
