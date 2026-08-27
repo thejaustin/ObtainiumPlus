@@ -1587,7 +1587,8 @@ class AppsPageState extends State<AppsPage> {
                           // The dashboard layout has its own always-visible
                           // Omnibar; without it, this is the only reachable
                           // search entry point on the Apps screen.
-                          if (!plusSettings.plusEnableHomeDashboard)
+                          if (plusSettings.plusShowAppBarSearch &&
+                              !plusSettings.plusEnableHomeDashboard)
                             IconButton(
                               icon: const Icon(Icons.search_rounded),
                               tooltip: tr('search'),
@@ -1597,13 +1598,19 @@ class AppsPageState extends State<AppsPage> {
                               },
                             ),
                           if (!plusSettings.plusEnableFAB)
-                            IconButton(
-                              icon: const Icon(Icons.add_rounded),
-                              tooltip: tr('addApp'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
+                            GestureDetector(
+                              onLongPress: () {
+                                AppHaptics.heavyImpact();
                                 AppActionsFAB.showAddAppMenu(context);
                               },
+                              child: IconButton(
+                                icon: const Icon(Icons.add_rounded),
+                                tooltip: tr('moreAddOptionsHint'),
+                                onPressed: () {
+                                  AppHaptics.selectionClick();
+                                  CommandCenter.show(context);
+                                },
+                              ),
                             ),
                           if (!hasExternalSettingsEntry)
                             IconButton(
@@ -1626,7 +1633,8 @@ class AppsPageState extends State<AppsPage> {
                     : CustomAppBar(
                         title: tr('appsString'),
                         actions: [
-                          if (!plusSettings.plusEnableHomeDashboard)
+                          if (plusSettings.plusShowAppBarSearch &&
+                              !plusSettings.plusEnableHomeDashboard)
                             IconButton(
                               icon: const Icon(Icons.search_rounded),
                               tooltip: tr('search'),
@@ -1636,13 +1644,19 @@ class AppsPageState extends State<AppsPage> {
                               },
                             ),
                           if (!plusSettings.plusEnableFAB)
-                            IconButton(
-                              icon: const Icon(Icons.add_rounded),
-                              tooltip: tr('addApp'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
+                            GestureDetector(
+                              onLongPress: () {
+                                AppHaptics.heavyImpact();
                                 AppActionsFAB.showAddAppMenu(context);
                               },
+                              child: IconButton(
+                                icon: const Icon(Icons.add_rounded),
+                                tooltip: tr('moreAddOptionsHint'),
+                                onPressed: () {
+                                  AppHaptics.selectionClick();
+                                  CommandCenter.show(context);
+                                },
+                              ),
                             ),
                           if (!hasExternalSettingsEntry)
                             IconButton(
