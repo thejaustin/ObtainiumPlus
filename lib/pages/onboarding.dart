@@ -831,14 +831,6 @@ class _OnboardingPageState extends State<OnboardingPage>
                       children: [
                         _buildFabToggle(
                           context: context,
-                          icon: Icons.search_rounded,
-                          title: tr('search'),
-                          subtitle: tr('quickLaunchSearch'),
-                          value: settings.plusFabShowSearch,
-                          onChanged: (val) => settings.plusFabShowSearch = val,
-                        ),
-                        _buildFabToggle(
-                          context: context,
                           icon: Icons.link_outlined,
                           title: tr('addByUrl'),
                           subtitle: tr('pasteReleaseUrl'),
