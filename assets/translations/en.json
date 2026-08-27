@@ -5,6 +5,8 @@
     "actionBanner": "Action banner",
     "add": "Add",
     "addApp": "Add app",
+    "moreAddOptions": "More ways to add",
+    "moreAddOptionsHint": "Long-press for more ways to add apps",
     "addCategory": "Add category",
     "addInfoBelow": "Add this info below.",
     "addInfoInSettings": "Add this info in the Settings.",

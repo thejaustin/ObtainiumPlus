@@ -202,8 +202,7 @@ class AppsViewSettingsSection extends StatelessWidget {
 
     final bool showFabMenuGrid =
         plusFeaturesEnabled &&
-        (_matches(tr('fabShowSearch')) ||
-            _matches(tr('fabShowAddByUrl')) ||
+        (_matches(tr('fabShowAddByUrl')) ||
             _matches(tr('fabShowGithubStarred')) ||
             _matches(tr('fabShowGithubPersonalRepos')) ||
             _matches(tr('fabShowImportInstalled')));
@@ -295,14 +294,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('fabMenuItems'),
             settings: [
-              if (_matches(tr('fabShowSearch')))
-                (
-                  icon: Icons.search_rounded,
-                  label: tr('fabShowSearch'),
-                  description: tr('fabShowSearchDescription'),
-                  getValue: (s) => s.plusFabShowSearch,
-                  setValue: (s, v) => onSetState(() => s.plusFabShowSearch = v),
-                ),
               if (_matches(tr('fabShowAddByUrl')))
                 (
                   icon: Icons.link_outlined,
@@ -415,15 +406,6 @@ class AppsViewSettingsSection extends StatelessWidget {
                   getValue: (s) => s.plusShowDashboardSearch,
                   setValue: (s, v) =>
                       onSetState(() => s.plusShowDashboardSearch = v),
-                ),
-              if (_matches(tr('showFloatingSearch')))
-                (
-                  icon: Icons.ads_click_rounded,
-                  label: tr('showFloatingSearch'),
-                  description: tr('showFloatingSearchDescription'),
-                  getValue: (s) => s.plusShowFloatingSearch,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusShowFloatingSearch = v),
                 ),
             ],
           ),
