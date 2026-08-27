@@ -369,15 +369,18 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Niche bulk-import power-tools — off by default so the everyday Add
+  // menu stays to Search/Add-by-URL/Import-installed; still toggleable
+  // back on in Settings for anyone who uses them.
   bool get plusFabShowGithubStarred =>
-      _prefs?.safeBool('plusFabShowGithubStarred') ?? true;
+      _prefs?.safeBool('plusFabShowGithubStarred') ?? false;
   set plusFabShowGithubStarred(bool val) {
     _prefs?.setBool('plusFabShowGithubStarred', val);
     notifyListeners();
   }
 
   bool get plusFabShowGithubPersonalRepos =>
-      _prefs?.safeBool('plusFabShowGithubPersonalRepos') ?? true;
+      _prefs?.safeBool('plusFabShowGithubPersonalRepos') ?? false;
   set plusFabShowGithubPersonalRepos(bool val) {
     _prefs?.setBool('plusFabShowGithubPersonalRepos', val);
     notifyListeners();
