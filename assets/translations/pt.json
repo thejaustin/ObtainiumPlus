@@ -131,6 +131,7 @@
     "debugMenu": "Menu debug",
     "defaultPseudoVersioningMethod": "Método de pseudo-versionamento padrão",
     "deleteCategoriesQuestion": "Deletar  categorias?",
+    "deleteCategoryQuestion": "Gostaria de eliminar esta categoria?",
     "descending": "Descendente",
     "deselectX": "Deselecionar {}",
     "deviceModel": "Device model",

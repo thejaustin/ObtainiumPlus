@@ -131,6 +131,7 @@
     "debugMenu": "Fejlfindingsmenu",
     "defaultPseudoVersioningMethod": "Standard pseudo-versioneringsmetode",
     "deleteCategoriesQuestion": "Slet kategorier?",
+    "deleteCategoryQuestion": "Vil du slette denne kategori?",
     "descending": "Faldende",
     "deselectX": "Fravælg {}",
     "deviceModel": "Device model",

@@ -131,6 +131,7 @@
     "debugMenu": "Debug-menu",
     "defaultPseudoVersioningMethod": "Standaard pseudo-versiebeheermethode",
     "deleteCategoriesQuestion": "Categorieën verwijderen?",
+    "deleteCategoryQuestion": "Wilt u deze categorie verwijderen?",
     "descending": "Aflopend",
     "deselectX": "Selectie opheffen {}",
     "deviceModel": "Apparaatmodel",

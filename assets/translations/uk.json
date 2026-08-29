@@ -131,6 +131,7 @@
     "debugMenu": "Меню налагодження",
     "defaultPseudoVersioningMethod": "Метод за замовчуванням псевдо-версіонування",
     "deleteCategoriesQuestion": "Видалити категорії?",
+    "deleteCategoryQuestion": "Чи слід видалити цю категорію?",
     "descending": "За спаданням",
     "deselectX": "Скасувати вибір {}",
     "deviceModel": "Device model",

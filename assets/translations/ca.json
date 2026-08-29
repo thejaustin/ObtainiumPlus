@@ -131,6 +131,7 @@
     "debugMenu": "Menú de depuració",
     "defaultPseudoVersioningMethod": "Mètode de pseudo-versionat predeterminat",
     "deleteCategoriesQuestion": "Suprimeixo les categories?",
+    "deleteCategoryQuestion": "Vols eliminar aquesta categoria?",
     "descending": "Descendent",
     "deselectX": "Desselecciona {}",
     "deviceModel": "Device model",

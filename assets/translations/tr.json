@@ -131,6 +131,7 @@
     "debugMenu": "Hata ayıklama menüsü",
     "defaultPseudoVersioningMethod": "Varsayılan sözde sürüm yöntemi",
     "deleteCategoriesQuestion": "Kategoriler silinsin mi?",
+    "deleteCategoryQuestion": "Bu kategori silinmeli mi?",
     "descending": "Azalan",
     "deselectX": "{} seçimini kaldır",
     "deviceModel": "Device model",
