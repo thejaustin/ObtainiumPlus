@@ -358,7 +358,7 @@
     "shizukuBinderNotFound": "Shizuku is niet actief",
     "shizukuOld": "Verouderde Shizuku-versie (<11) - bijwerken",
     "shizukuOldAndroidWithADB": "Shizuku draait op Android < 8.1 met ADB - update Android of gebruik in plaats daarvan Sui",
-    "shizukuPretendToBeGooglePlay": "Google Play instellen als installatiebron (bij Shizuku)",
+    "shizukuPretendToBeGooglePlay": "Google Play instellen als installatiebron (bij Shizuku of Root)",
     "installMethod": "Installatiemethode",
     "installMethodSystem": "Systeem",
     "installMethodShizuku": "Shizuku",

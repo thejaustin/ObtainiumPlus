@@ -358,7 +358,7 @@
     "shizukuBinderNotFound": "خدمة Shizuku غير قيد التشغيل",
     "shizukuOld": "إصدار قديم من Shizuku (<11) - حدّثه",
     "shizukuOldAndroidWithADB": "Shizuku يعمل على إصدار أندرويد < 8.1 مع ADB - حدّث أندرويد أو استخدم Sui بدلاً من ذلك",
-    "shizukuPretendToBeGooglePlay": "عيّن Google Play كمصدر التثبيت (إذا تم استخدام Shizuku)",
+    "shizukuPretendToBeGooglePlay": "عيّن Google Play كمصدر التثبيت (إذا تم استخدام Shizuku أو Root)",
     "installMethod": "طريقة التثبيت",
     "installMethodSystem": "النظام",
     "installMethodShizuku": "Shizuku",

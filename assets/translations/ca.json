@@ -358,7 +358,7 @@
     "shizukuBinderNotFound": "Shizuku no s'està executant",
     "shizukuOld": "Versió antiga de Shizuku (<11) - Actualitza-la",
     "shizukuOldAndroidWithADB": "Shizuku s'executa en Android < 8.1 amb ADB - Actualitza Android o usa Sui com a alternativa",
-    "shizukuPretendToBeGooglePlay": "Defineix Google Play com a font d'instal·lació (si uses Shizuku)",
+    "shizukuPretendToBeGooglePlay": "Defineix Google Play com a font d'instal·lació (si uses Shizuku o Root)",
     "installMethod": "Installation method",
     "installMethodSystem": "System",
     "installMethodShizuku": "Shizuku",

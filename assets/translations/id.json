@@ -357,7 +357,7 @@
     "shizukuBinderNotFound": "Layanan Shizuku tidak berjalan",
     "shizukuOld": "Versi Shizuku lama (<11) - harap perbarui",
     "shizukuOldAndroidWithADB": "Shizuku berjalan di Android < 8.1 dengan ADB - perbarui Android atau gunakan Sui sebagai gantinya",
-    "shizukuPretendToBeGooglePlay": "Atur Google Play sebagai sumber pemasangan (jika Shizuku digunakan)",
+    "shizukuPretendToBeGooglePlay": "Atur Google Play sebagai sumber pemasangan (jika Shizuku atau Root digunakan)",
     "installMethod": "Installation method",
     "installMethodSystem": "System",
     "installMethodShizuku": "Shizuku",
