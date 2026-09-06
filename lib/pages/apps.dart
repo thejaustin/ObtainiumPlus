@@ -541,6 +541,21 @@ class AppsPageState extends State<AppsPage> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                    ] else if (filter.nameFilter.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          CommandCenter.show(
+                            context,
+                            initialQuery: filter.nameFilter,
+                          );
+                        },
+                        icon: const Icon(Icons.travel_explore_rounded),
+                        label: Text(
+                          '${tr('search')} "${filter.nameFilter}"',
+                        ),
+                      ),
                     ],
                   ],
                 ),
