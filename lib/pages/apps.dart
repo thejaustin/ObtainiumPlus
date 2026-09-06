@@ -1256,7 +1256,8 @@ class AppsPageState extends State<AppsPage> {
                   ),
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: MediaQuery.of(context).padding.bottom + 96,
+                      height: MediaQuery.of(context).padding.bottom +
+                          (settingsProvider.isTV ? 160 : 96),
                     ),
                   ),
                   if (settingsProvider.isTV)
@@ -1265,14 +1266,10 @@ class AppsPageState extends State<AppsPage> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: SizedBox(
                           width: double.infinity,
-                          child: Focus(
-                            autofocus: true,
-                            child: FilledButton.tonalIcon(
-                              onPressed: () =>
-                                  NavHelper.pushAddAppPage(context),
-                              icon: const Icon(Icons.add),
-                              label: Text(tr('addApp')),
-                            ),
+                          child: FilledButton.tonalIcon(
+                            onPressed: () => NavHelper.pushAddAppPage(context),
+                            icon: const Icon(Icons.add),
+                            label: Text(tr('addApp')),
                           ),
                         ),
                       ),

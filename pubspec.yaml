@@ -2,7 +2,7 @@ name: obtainium
 description: Get Android app updates straight from the source.
 publish_to: 'none'
 
-version: 1.6.14+2353
+version: 1.6.15+2354
 
 environment:
   sdk: ^3.12.0
@@ -23,10 +23,10 @@ dependencies:
   html: ^0.15.7
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
-  permission_handler: ^13.0.1
+  permission_handler: ^13.0.2
   fluttertoast: ^10.0.0
   device_info_plus: ^13.2.0
-  file_picker: ^12.1.2
+  file_picker: ^12.2.0
   animations: ^3.0.0
   android_package_installer: # TODO: Upstream PR pending; if not accepted, keep fork maintained
     git:
@@ -53,7 +53,7 @@ dependencies:
   bcrypt: ^1.2.0
   app_links: ^7.2.1
   equations: ^6.0.0
-  flex_color_picker: ^3.8.0
+  flex_color_picker: ^4.0.0
   android_system_font: # TODO: Forked dependency; watch upstream for releases
     git:
       url: https://github.com/re7gog/android_system_font
@@ -68,7 +68,7 @@ dependencies:
   flutter_charset_detector: ^6.0.0
   flutter_markdown_plus: ^1.0.12
   workmanager: ^0.10.9
-  logger: ^2.7.0
+  logger: ^2.8.0
 
 dev_dependencies:
   flutter_lints: ^6.0.0

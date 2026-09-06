@@ -80,12 +80,23 @@ class _LogsPageState extends State<LogsPage> {
     await _loadLogs(_days);
   }
 
+  void _copyLogs() {
+    unawaited(copyToClipboard(context, _joinLogs()));
+  }
+
   void _shareLogs() {
-    unawaited(
-      SharePlus.instance.share(
-        ShareParams(text: _joinLogs(), subject: tr('appLogs')),
-      ),
-    );
+    unawaited(() async {
+      try {
+        await SharePlus.instance.share(
+          ShareParams(text: _joinLogs(), subject: tr('appLogs')),
+        );
+      } catch (e, s) {
+        AppLogger.error(e, stackTrace: s, message: 'Failed to share logs');
+        if (mounted) {
+          await copyToClipboard(context, _joinLogs());
+        }
+      }
+    }());
   }
 
   Color _levelColor(BuildContext context, AppLogLevel level) {
@@ -132,11 +143,14 @@ class _LogsPageState extends State<LogsPage> {
   );
 
   /// A single M3 Expressive floating toolbar that consolidates navigation
-  /// (jump to top/bottom) and actions (filter, share, clear) into one pill,
-  /// rather than scattering them across the app bar and multiple FABs.
+  /// (jump to top/bottom) and actions (filter, share/copy, clear) into one
+  /// pill, rather than scattering them across the app bar and multiple FABs.
+  /// Android TV has no share sheet, so the share action is replaced with a
+  /// copy-to-clipboard action there.
   Widget _buildFloatingToolbar(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasLogs = _logs.isNotEmpty;
+    final isTV = context.read<SettingsProvider>().isTV;
     return Material(
       elevation: 3,
       color: cs.surfaceContainer,
@@ -171,16 +185,28 @@ class _LogsPageState extends State<LogsPage> {
                   )
                   .toList(),
             ),
-            IconButton(
-              onPressed: hasLogs
-                  ? () {
-                      context.read<SettingsProvider>().selectionClick();
-                      _shareLogs();
-                    }
-                  : null,
-              icon: const Icon(Icons.share_rounded),
-              tooltip: tr('share'),
-            ),
+            if (isTV)
+              IconButton(
+                onPressed: hasLogs
+                    ? () {
+                        context.read<SettingsProvider>().selectionClick();
+                        _copyLogs();
+                      }
+                    : null,
+                icon: const Icon(Icons.copy_rounded),
+                tooltip: tr('copyToClipboard'),
+              )
+            else
+              IconButton(
+                onPressed: hasLogs
+                    ? () {
+                        context.read<SettingsProvider>().selectionClick();
+                        _shareLogs();
+                      }
+                    : null,
+                icon: const Icon(Icons.share_rounded),
+                tooltip: tr('share'),
+              ),
             IconButton(
               onPressed: hasLogs
                   ? () {
