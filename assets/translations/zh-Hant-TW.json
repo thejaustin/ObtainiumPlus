@@ -131,6 +131,7 @@
     "debugMenu": "偵錯選單",
     "defaultPseudoVersioningMethod": "預設偽版本設定方法",
     "deleteCategoriesQuestion": "要刪除類別嗎？",
+    "deleteCategoryQuestion": "要刪除類別嗎？",
     "descending": "遞減",
     "deselectX": "取消選取 {}",
     "deviceModel": "Device model",
