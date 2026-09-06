@@ -965,7 +965,17 @@ class GitHub extends AppSource {
   }
 
   void rateLimitErrorCheck(Response res) {
-    if (res.headers['x-ratelimit-remaining'] == '0') {
+    bool isRateLimited = res.headers['x-ratelimit-remaining'] == '0';
+    if (!isRateLimited && res.statusCode == 403) {
+      try {
+        final message =
+            (jsonDecode(res.body)['message'] as String? ?? '').toLowerCase();
+        if (message.contains('rate limit')) {
+          isRateLimited = true;
+        }
+      } catch (_) {}
+    }
+    if (isRateLimited) {
       final now = DateTime.now();
       final resetEpochSeconds =
           int.tryParse(res.headers['x-ratelimit-reset'] ?? '') ??
@@ -973,7 +983,7 @@ class GitHub extends AppSource {
       final nowSeconds = now.millisecondsSinceEpoch ~/ 1000;
       final remainingMinutes = ((resetEpochSeconds - nowSeconds) / 60)
           .ceil()
-          .clamp(0, 9999);
+          .clamp(1, 9999);
       throw RateLimitError(remainingMinutes);
     }
   }

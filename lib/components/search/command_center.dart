@@ -143,13 +143,14 @@ class _CommandCenterState extends State<CommandCenter> {
     setState(() {
       _query = value;
     });
+    _updateLocalResults(value);
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 750), () {
-      _handleSearch(value);
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      _handleDiscoverSearch(value);
     });
   }
 
-  Future<void> _handleSearch(String value) async {
+  void _updateLocalResults(String value) {
     if (value.isEmpty) {
       setState(() {
         _localResults = [];
@@ -158,28 +159,32 @@ class _CommandCenterState extends State<CommandCenter> {
       return;
     }
 
-    // Search local apps
+    // Search local apps immediately on every keystroke
     final appsProvider = context.read<AppsProvider>();
+    final results = appsProvider
+        .getAppValues()
+        .map((app) {
+          final score = fuzzyMatchMulti(value, [
+            app.name,
+            app.app.id,
+            app.author,
+            app.app.url,
+            ...?app.app.categories,
+          ]);
+          return MapEntry(app, score);
+        })
+        .where((entry) => entry.value >= 0.3)
+        .toList();
+
+    results.sort((a, b) => b.value.compareTo(a.value));
+
     setState(() {
-      final results = appsProvider
-          .getAppValues()
-          .map((app) {
-            final score = fuzzyMatchMulti(value, [
-              app.name,
-              app.app.id,
-              app.author,
-              app.app.url,
-              ...?app.app.categories,
-            ]);
-            return MapEntry(app, score);
-          })
-          .where((entry) => entry.value >= 0.3)
-          .toList();
-
-      results.sort((a, b) => b.value.compareTo(a.value));
-
       _localResults = results.map((entry) => entry.key).take(5).toList();
     });
+  }
+
+  Future<void> _handleDiscoverSearch(String value) async {
+    if (value.isEmpty) return;
 
     // Check if it's a URL
     if (_isDirectUrl(value)) {
@@ -196,6 +201,11 @@ class _CommandCenterState extends State<CommandCenter> {
 
     // Handle as Discovery Search
     await _runDiscoverSearch(value);
+  }
+
+  Future<void> _handleSearch(String value) async {
+    _updateLocalResults(value);
+    await _handleDiscoverSearch(value);
   }
 
   Future<void> _runDiscoverSearch(String query) async {
