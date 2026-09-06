@@ -207,7 +207,8 @@ class AddAppPageState extends State<AddAppPage> {
               ? (appsProvider.apps[widget.appId]?.app.additionalSettings ?? {})
               : <String, dynamic>{};
           pickedSource = source;
-          pickedSource?.runOnAddAppInputChange(userInput);
+          final inputSettings =
+              pickedSource?.runOnAddAppInputChange(userInput) ?? {};
           final defaultSettings = source != null
               ? getDefaultValuesFromFormItems(
                   source.combinedAppSpecificSettingFormItems,
@@ -215,11 +216,11 @@ class AddAppPageState extends State<AddAppPage> {
               : <String, dynamic>{};
           additionalSettings = {
             ...defaultSettings,
+            ...inputSettings,
             if (isEditingApp) ...existingSettings,
           };
-          additionalSettingsValid = source != null
-              ? !sourceProvider.ifRequiredAppSpecificSettingsExist(source)
-              : true;
+          additionalSettingsValid = source == null ||
+              _requiredFormFieldsFilled(source, additionalSettings);
           inferAppIdIfOptional = !isEditingApp;
         }
 
@@ -238,6 +239,23 @@ class AddAppPageState extends State<AddAppPage> {
         }
       });
     }
+  }
+
+  bool _requiredFormFieldsFilled(
+    AppSource source,
+    Map<String, dynamic> additionalSettings,
+  ) {
+    for (var row in source.combinedAppSpecificSettingFormItems) {
+      for (var item in row) {
+        if (item is GeneratedFormTextField && item.required) {
+          final value = additionalSettings[item.key];
+          if (value == null || value.toString().trim().isEmpty) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
   }
 
   @override

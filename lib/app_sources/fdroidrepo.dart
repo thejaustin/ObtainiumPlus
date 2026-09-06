@@ -109,13 +109,17 @@ class FDroidRepo extends AppSource {
   }
 
   @override
-  void runOnAddAppInputChange(String inputUrl) {
+  Map<String, dynamic> runOnAddAppInputChange(String inputUrl) {
     try {
       final appId = Uri.parse(inputUrl).queryParameters['appId'];
       _appIdFoundInUrl = appId != null;
+      if (appId != null) {
+        return {'appIdOrName': appId};
+      }
     } catch (e) {
       unawaited(LogsProvider().add('Failed to parse appId from URL: $e'));
     }
+    return {};
   }
 
   @override
