@@ -70,18 +70,7 @@ class _InstallResult {
 /// App download, install, and on-device package operations for [AppsProvider].
 extension AppsProviderInstall on AppsProvider {
   /// Returns the [Installer] strategy for the current installer mode setting.
-  Installer getInstaller() {
-    switch (settingsProvider.installerMode) {
-      case 'shizuku':
-        return ShizukuInstaller(settingsProvider);
-      case 'external':
-        return ExternalInstaller(settingsProvider);
-      case 'root':
-        return RootInstaller(settingsProvider);
-      default:
-        return StockInstaller(settingsProvider);
-    }
-  }
+  Installer getInstaller() => Installer.create(settingsProvider);
 
   /// Returns the renamed file and the resolved app; callers must use the
   /// returned app's ID since [App] is immutable.
