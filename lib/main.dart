@@ -195,20 +195,40 @@ class _ObtainiumState extends State<Obtainium> {
   var _firstRunHandled = false;
   var _launchByNotifChecked = false;
   Locale? _lastLocale;
+  SettingsProvider? _settingsProvider;
+  int? _lastSyncedUpdateInterval;
 
-  Future<void> _scheduleWorkManager() async {
-    await Workmanager().registerPeriodicTask(
-      _workManagerTaskName,
-      _workManagerTaskName,
-      frequency: const Duration(minutes: 15),
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-        requiresBatteryNotLow: false,
-        requiresDeviceIdle: false,
-        requiresStorageNotLow: false,
-      ),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
-    );
+  Future<void> _syncWorkManager() async {
+    final settingsProvider = _settingsProvider;
+    if (settingsProvider == null) return;
+    final updateInterval = settingsProvider.updateInterval;
+    _lastSyncedUpdateInterval = updateInterval;
+    if (updateInterval <= 0) {
+      // The user disabled background update checks: drop the periodic task so
+      // the OS doesn't keep waking Obtainium for a check that would be skipped.
+      await Workmanager().cancelByUniqueName(_workManagerTaskName);
+    } else {
+      await Workmanager().registerPeriodicTask(
+        _workManagerTaskName,
+        _workManagerTaskName,
+        frequency: const Duration(minutes: 15),
+        constraints: Constraints(
+          networkType: NetworkType.connected,
+          requiresBatteryNotLow: false,
+          requiresDeviceIdle: false,
+          requiresStorageNotLow: false,
+        ),
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
+      );
+    }
+  }
+
+  void _onSettingsChanged() {
+    final settingsProvider = _settingsProvider;
+    if (settingsProvider != null &&
+        settingsProvider.updateInterval != _lastSyncedUpdateInterval) {
+      unawaited(_syncWorkManager());
+    }
   }
 
   void _handleFirstRun(
@@ -277,10 +297,12 @@ class _ObtainiumState extends State<Obtainium> {
       final settingsProvider = context.read<SettingsProvider>();
       await settingsProvider.initializeSettings();
       if (!mounted) return;
+      _settingsProvider = settingsProvider;
+      settingsProvider.addListener(_onSettingsChanged);
       final appsProvider = context.read<AppsProvider>();
       final notifs = context.read<NotificationsProvider>();
 
-      unawaited(_scheduleWorkManager());
+      unawaited(_syncWorkManager());
       _handleFirstRun(settingsProvider, appsProvider, context);
 
       if (!_launchByNotifChecked) {
@@ -288,6 +310,12 @@ class _ObtainiumState extends State<Obtainium> {
         unawaited(notifs.checkLaunchByNotif());
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _settingsProvider?.removeListener(_onSettingsChanged);
+    super.dispose();
   }
 
   @override
