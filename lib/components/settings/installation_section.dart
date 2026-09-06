@@ -11,6 +11,8 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/installers/root_installer.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 
 /// App installation and update settings
@@ -285,6 +287,35 @@ class InstallationSection extends StatelessWidget {
               value: behaviorSettings.shizukuPretendToBeGooglePlay,
               onChanged: (v) =>
                   behaviorSettings.shizukuPretendToBeGooglePlay = v,
+            ),
+
+          // Root Installation
+          if (_matches(tr('rootInstaller')))
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.security_rounded),
+              title: Text(
+                tr('rootInstaller'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('rootInstallerDescription')),
+              value: behaviorSettings.installerMode == 'root',
+              onChanged: (enable) async {
+                if (!enable) {
+                  behaviorSettings.installerMode = behaviorSettings.useShizuku
+                      ? 'shizuku'
+                      : 'system';
+                  return;
+                }
+                final hasRoot = await RootInstaller(
+                  SettingsProvider(behaviorSettings.prefs),
+                ).checkPermission();
+                if (!context.mounted) return;
+                if (hasRoot) {
+                  behaviorSettings.installerMode = 'root';
+                } else {
+                  _showError(context, ObtainiumError(tr('rootNotDetected')));
+                }
+              },
             ),
         ];
 

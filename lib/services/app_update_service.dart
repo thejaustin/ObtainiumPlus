@@ -365,6 +365,7 @@ class AppUpdateService {
     Map<String, AppInMemory> apps, {
     bool installedOnly = false,
     bool nonInstalledOnly = false,
+    bool includeAmbiguous = true,
   }) {
     List<String> updateAppIds = [];
     List<String> appIds = apps.keys.toList();
@@ -380,7 +381,10 @@ class AppUpdateService {
         }
       } else if (!nonInstalledOnly) {
         if (areVersionsDifferent(app, app.installedVersion, app.latestVersion)) {
-          isCandidate = true;
+          if (includeAmbiguous ||
+              app.additionalSettings['isAmbiguousUpdate'] != true) {
+            isCandidate = true;
+          }
         }
       }
       if (isCandidate) {

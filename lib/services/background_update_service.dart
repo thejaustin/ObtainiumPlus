@@ -364,7 +364,10 @@ class BackgroundUpdateService {
         // Installation Phase
         logs.add('BG install task: Started (${toInstall.length}).');
         if (toInstall.isEmpty && !networkRestricted && !chargingRestricted) {
-          var temp = appsProvider.findExistingUpdates(installedOnly: true);
+          var temp = appsProvider.findExistingUpdates(
+            installedOnly: true,
+            includeAmbiguous: false,
+          );
           final canInstallFlags = await Future.wait(
             temp.map(
               (id) =>

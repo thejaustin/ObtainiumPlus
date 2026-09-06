@@ -22,6 +22,7 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
+import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -729,6 +730,22 @@ class AppDownloadService {
     if (behaviorSettings.installerMode == 'external') {
       if (behaviorSettings.externalInstallerPackage == null) {
         throw ObtainiumError(tr('externalInstallerRequired'));
+      }
+      return;
+    }
+    if (behaviorSettings.installerMode == 'root') {
+      final hasRoot = await RootInstaller(
+        SettingsProvider(behaviorSettings.prefs),
+      ).checkPermission();
+      if (!hasRoot) {
+        if (!willBeSilent &&
+            (await behaviorSettings.getInstallPermission(enforce: false))) {
+          talker.warning(
+            'Root unavailable, falling back to AndroidPackageInstaller',
+          );
+          return;
+        }
+        throw ObtainiumError(tr('rootNotDetected'));
       }
       return;
     }

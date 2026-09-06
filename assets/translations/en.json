@@ -1148,5 +1148,7 @@
     "installFailedInvalid": "Installation failed: Package file is invalid or corrupted",
     "downloadCancelled": "Download cancelled",
     "partialBatchSuccess": "{} updated, {} failed",
-    "loadMore": "Load More"
+    "loadMore": "Load More",
+    "rootInstaller": "Root Installation",
+    "rootInstallerDescription": "Use elevated root access (su) to install and update apps silently"
 }

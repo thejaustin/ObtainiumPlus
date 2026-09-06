@@ -1063,7 +1063,13 @@ class AppsPageState extends State<AppsPage> {
                               .fold<int>(0, (acc, list) => acc + list.length);
                           if (shouldInstallUpdates && context.mounted) {
                             showMessage(
-                              '$count apps updated ($failedCount failed)',
+                              tr(
+                                'partialBatchSuccess',
+                                args: [
+                                  plural('apps', count),
+                                  plural('apps', failedCount),
+                                ],
+                              ),
                               context,
                             );
                           }
