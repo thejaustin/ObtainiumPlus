@@ -18,14 +18,22 @@ class ShizukuInstaller extends Installer {
   Future<bool> canInstallSilently(App app) async => true;
 
   @override
-  Future<bool> checkPermission() async =>
-      (await ShizukuApkInstaller().checkPermission())?.startsWith('granted') ??
-      false;
+  Future<bool> checkPermission() async {
+    final status = await ShizukuApkInstaller().checkPermission();
+    return status?.startsWith('granted') == true ||
+        status?.startsWith('authorized') == true;
+  }
 
   @override
   Future<void> ensurePermission() async {
-    switch ((await ShizukuApkInstaller().checkPermission())) {
+    final status = await ShizukuApkInstaller().checkPermission();
+    if (status?.startsWith('granted') == true ||
+        status?.startsWith('authorized') == true) {
+      return;
+    }
+    switch (status) {
       case 'services_not_found':
+      case 'binder_not_found':
         throw ObtainiumError(tr('shizukuBinderNotFound'));
       case 'old_shizuku':
         throw ObtainiumError(tr('shizukuOld'));
@@ -33,6 +41,8 @@ class ShizukuInstaller extends Installer {
         throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
       case 'denied':
         throw ObtainiumError(tr('cancelled'));
+      default:
+        throw ObtainiumError(tr('shizukuBinderNotFound'));
     }
   }
 

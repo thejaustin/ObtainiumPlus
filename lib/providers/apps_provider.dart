@@ -34,6 +34,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
+import 'package:obtainium/services/app_install_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -1290,65 +1291,14 @@ class AppsProvider with ChangeNotifier {
       .where((element) => element.downloadProgress != null)
       .isNotEmpty;
 
-  Future<bool> canInstallSilently(App app) async {
-    if (!updateSettings.enableBackgroundUpdates) {
-      return false;
-    }
-    if (app.additionalSettings['exemptFromBackgroundUpdates'] == true) {
-      logs.add('Exempted from BG updates: ${app.id}');
-      return false;
-    }
-    if (app.apkUrls.length > 1) {
-      logs.add('Multiple APK URLs: ${app.id}');
-      return false; // Manual API selection means silent install is not possible
-    }
-
-    var osInfo = await DeviceInfoPlugin().androidInfo;
-    String? installerPackageName;
-    try {
-      installerPackageName = osInfo.version.sdkInt >= 30
-          ? (await packageManager.getInstallSourceInfo(
-              packageName: app.id,
-            ))?.installingPackageName
-          : (await packageManager.getInstallerPackageName(packageName: app.id));
-    } catch (e) {
-      logs.add(
-        'Failed to get installed package details: ${app.id} (${e.toString()})',
+  Future<bool> canInstallSilently(App app) =>
+      AppInstallService.canInstallSilently(
+        app,
+        behaviorSettings,
+        plusSettings,
+        updateSettings,
+        logs,
       );
-      return false; // App probably not installed
-    }
-
-    int? targetSDK = (await getInstalledInfo(
-      app.id,
-    ))?.applicationInfo?.targetSdkVersion;
-    int requiredSDK = osInfo.version.sdkInt - 3;
-    // The APK should target a new enough API
-    // https://developer.android.com/reference/android/content/pm/PackageInstaller.SessionParams#setRequireUserAction(int)
-    if (!(targetSDK != null && targetSDK >= requiredSDK)) {
-      logs.add(
-        'App currently targets API ${targetSDK} which is too low for background updates (requires API ${requiredSDK}): ${app.id}',
-      );
-      return false;
-    }
-
-    if (behaviorSettings.useShizuku) {
-      return true;
-    }
-
-    if (app.id == obtainiumId) {
-      return false;
-    }
-    if (installerPackageName != obtainiumId) {
-      // If we did not install the app, silent install is not possible
-      return false;
-    }
-    if (osInfo.version.sdkInt < 31) {
-      // The OS must also be new enough
-      logs.add('Android SDK too old: ${osInfo.version.sdkInt}');
-      return false;
-    }
-    return true;
-  }
 
   Future<void> waitForUserToReturnToForeground(BuildContext context) async {
     NotificationsProvider notificationsProvider = context
@@ -2571,11 +2521,13 @@ class AppsProvider with ChangeNotifier {
   List<String> findExistingUpdates({
     bool installedOnly = false,
     bool nonInstalledOnly = false,
+    bool includeAmbiguous = true,
   }) {
     return AppUpdateService.findExistingUpdates(
       apps,
       installedOnly: installedOnly,
       nonInstalledOnly: nonInstalledOnly,
+      includeAmbiguous: includeAmbiguous,
     );
   }
 

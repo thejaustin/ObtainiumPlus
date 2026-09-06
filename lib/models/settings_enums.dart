@@ -32,4 +32,4 @@ enum AppListDensity { comfortable, compact }
 
 enum AppBarStyle { compact, large }
 
-enum InstallerMode { system, shizuku, external }
+enum InstallerMode { system, shizuku, external, root }

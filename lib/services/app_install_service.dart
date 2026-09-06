@@ -21,6 +21,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
+import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -315,7 +316,8 @@ class AppInstallService {
       return false;
     }
 
-    if (behaviorSettings.useShizuku) {
+    if (behaviorSettings.useShizuku ||
+        behaviorSettings.installerMode == 'root') {
       return true;
     }
 
@@ -600,7 +602,33 @@ class AppInstallService {
       }
     }
 
-    if (behaviorSettings.installerMode == 'external') {
+    if (behaviorSettings.installerMode == 'root') {
+      try {
+        final rootResult = await RootInstaller(
+          SettingsProvider(behaviorSettings.prefs),
+        ).installApk(allAPKs, appId: apps[file.appId]!.app.id);
+        if (rootResult.isSuccess) {
+          code = 0;
+        } else if (rootResult.isCancelled) {
+          code = 3;
+        } else {
+          code = rootResult.errorCode ?? 1;
+        }
+      } catch (e) {
+        logs.add(
+          'Root install failed: $e, falling back to AndroidPackageInstaller',
+        );
+        await executeBgWorkaroundIfNeeded();
+        code = await installStockWithPolling(
+          apkFilePath: allAPKs.join(','),
+          packageName: newInfo.packageName,
+          targetVersionCode: newInfo.versionCode,
+          targetVersionName: newInfo.versionName,
+          existingVersionCode: appInfo?.versionCode,
+          existingVersionName: appInfo?.versionName,
+        );
+      }
+    } else if (behaviorSettings.installerMode == 'external') {
       try {
         final extResult = await ExternalInstaller(
           SettingsProvider(behaviorSettings.prefs),

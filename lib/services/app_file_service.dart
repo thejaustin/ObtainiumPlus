@@ -337,6 +337,15 @@ class AppFileService {
             ? (5 * (1 << (attempt - 1))) // 5, 10, 20
             : 5;
 
+        if (e is HttpException && e.message.contains('429')) {
+          final match = RegExp(r'Retry-After:\s*(\d+)').firstMatch(e.message);
+          if (match != null) {
+            delaySeconds = int.tryParse(match.group(1)!) ?? delaySeconds;
+          } else {
+            delaySeconds = delaySeconds < 30 ? 30 : delaySeconds;
+          }
+        }
+
         logs?.add(
           'Download failed ($e). Retrying in $delaySeconds seconds... (Attempt $attempt)',
         );
@@ -497,12 +506,13 @@ class AppFileService {
     HttpClientResponse response = responseWithClient.value.value;
 
     if (response.statusCode < 200 || response.statusCode > 299) {
+      final retryAfter = response.headers.value('retry-after');
       responseClient.close();
       if (tempDownloadedFile.existsSync()) {
         deleteFile(tempDownloadedFile);
       }
       throw HttpException(
-        'Server returned status code ${response.statusCode}: ${response.reasonPhrase}',
+        'Server returned status code ${response.statusCode}: ${response.reasonPhrase}${retryAfter != null ? ' (Retry-After: $retryAfter)' : ''}',
       );
     }
 
