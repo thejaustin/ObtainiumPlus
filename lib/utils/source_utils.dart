@@ -95,9 +95,18 @@ sourceRequestStreamResponse(
         } else {
           nextUrl = location;
         }
-        if (Uri.parse(nextUrl).host != Uri.parse(currentUrl).host) {
+        final currentUri = Uri.parse(currentUrl);
+        final nextUri = Uri.parse(nextUrl);
+        if (currentUri.scheme == 'https' &&
+            nextUri.scheme == 'http' &&
+            !allowInsecure) {
+          httpClient.close();
+          throw ObtainiumError(tr('insecureRedirect'));
+        }
+        if (nextUri.host != currentUri.host) {
           headers.remove(HttpHeaders.authorizationHeader);
           headers.remove('authorization');
+          headers.remove(HttpHeaders.proxyAuthorizationHeader);
         }
         currentUrl = nextUrl;
         continue;
@@ -158,12 +167,27 @@ class SourceUtils {
                   response.statusCode == 308)) {
             var location = response.headers.value('location');
             if (location != null) {
+              String nextUrl;
               if (location.startsWith('/')) {
                 var uri = Uri.parse(currentUrl);
-                currentUrl = '${uri.scheme}://${uri.host}$location';
+                nextUrl = '${uri.scheme}://${uri.host}$location';
               } else {
-                currentUrl = location;
+                nextUrl = location;
               }
+              final currentUri = Uri.parse(currentUrl);
+              final nextUri = Uri.parse(nextUrl);
+              if (currentUri.scheme == 'https' &&
+                  nextUri.scheme == 'http' &&
+                  !allowInsecure) {
+                httpClient.close();
+                throw ObtainiumError(tr('insecureRedirect'));
+              }
+              if (nextUri.host != currentUri.host && headers != null) {
+                headers.remove(HttpHeaders.authorizationHeader);
+                headers.remove('authorization');
+                headers.remove(HttpHeaders.proxyAuthorizationHeader);
+              }
+              currentUrl = nextUrl;
               continue;
             }
           }

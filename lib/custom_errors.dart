@@ -210,6 +210,7 @@ class MultiAppMultiError extends ObtainiumError {
   Map<String, dynamic> rawErrors = {};
   Map<String, List<String>> idsByErrorString = {};
   Map<String, String> appIdNames = {};
+  List<String> successfulAppIds = [];
 
   MultiAppMultiError() : super.withCode('MULTI_ERROR', unexpected: true);
 

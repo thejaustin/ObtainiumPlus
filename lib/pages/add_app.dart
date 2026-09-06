@@ -122,12 +122,18 @@ class AddAppPageState extends State<AddAppPage> {
     super.dispose();
   }
 
+  String _activeLiveSearchQuery = '';
+
   void linkFn(String input) {
     try {
       if (input.isEmpty) {
         throw UnsupportedURLError();
       }
       sourceProvider.getSource(input);
+      setState(() {
+        liveResults = {};
+        liveSearching = false;
+      });
       changeUserInput(input, true, false, updateUrlInput: true);
     } catch (e) {
       showError(e, context);
@@ -135,6 +141,7 @@ class AddAppPageState extends State<AddAppPage> {
   }
 
   Future<void> runLiveSearch(String query) async {
+    _activeLiveSearchQuery = query;
     if (query.length < 3) {
       setState(() {
         liveResults = {};
@@ -157,13 +164,14 @@ class AddAppPageState extends State<AddAppPage> {
       );
 
       if (!mounted) return;
+      if (_activeLiveSearchQuery != query) return;
       setState(() {
         liveResults = searchResult.results;
       });
     } catch (e) {
       // Ignore background search errors
     } finally {
-      if (mounted) {
+      if (mounted && _activeLiveSearchQuery == query) {
         setState(() {
           liveSearching = false;
         });
@@ -262,6 +270,7 @@ class AddAppPageState extends State<AddAppPage> {
   Widget build(BuildContext context) {
     AppsProvider appsProvider = context.read<AppsProvider>();
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    PlusSettingsProvider plusSettings = context.watch<PlusSettingsProvider>();
     NotificationsProvider notificationsProvider = context
         .read<NotificationsProvider>();
 
@@ -482,22 +491,26 @@ class AddAppPageState extends State<AddAppPage> {
             ? const Center(
                 child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
               )
-            : ScaleTouchWrapper(
-                child: ElevatedButton(
-                  onPressed:
-                      doingSomething ||
-                          pickedSource == null ||
-                          (pickedSource!
-                                  .combinedAppSpecificSettingFormItems
-                                  .isNotEmpty &&
-                              !additionalSettingsValid)
-                      ? null
-                      : () {
-                          AppHaptics.selectionClick();
-                          addApp();
-                        },
-                  child: Text(widget.appId != null ? tr('save') : tr('add')),
+            : FilledButton.icon(
+                onPressed:
+                    doingSomething ||
+                        pickedSource == null ||
+                        (pickedSource!
+                                .combinedAppSpecificSettingFormItems
+                                .isNotEmpty &&
+                            !additionalSettingsValid)
+                    ? null
+                    : () {
+                        AppHaptics.selectionClick();
+                        addApp();
+                      },
+                icon: Icon(
+                  widget.appId != null
+                      ? Icons.save_rounded
+                      : Icons.add_rounded,
+                  size: 18,
                 ),
+                label: Text(widget.appId != null ? tr('save') : tr('add')),
               ),
       ],
     );
@@ -719,6 +732,7 @@ class AddAppPageState extends State<AddAppPage> {
     );
 
     bool shouldShowSearchBar() =>
+        !plusSettings.plusEnableModernAddAppPage &&
         sourceProvider.sources.where((e) => e.canSearch).isNotEmpty &&
         pickedSource == null &&
         userInput.isEmpty;
@@ -900,86 +914,88 @@ class AddAppPageState extends State<AddAppPage> {
       ],
     );
 
-    Widget getSourcesListWidget() => Padding(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        direction: Axis.horizontal,
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 12,
-        children: [
-          InkWell(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return GeneratedFormModal(
-                    singleNullReturnButton: tr('ok'),
-                    title: tr('supportedSources'),
-                    items: const [],
-                    additionalWidgets: [
-                      ...sourceProvider.sources.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: InkWell(
-                            onTap: e.hosts.isNotEmpty
-                                ? () {
-                                    launchUrlString(
-                                      'https://${e.hosts[0]}',
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  }
-                                : null,
-                            child: Text(
-                              '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
-                              style: TextStyle(
-                                decoration: e.hosts.isNotEmpty
-                                    ? TextDecoration.underline
-                                    : TextDecoration.none,
+    Widget getSourcesListWidget() {
+      final colorScheme = Theme.of(context).colorScheme;
+      return Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 8),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            ActionChip(
+              avatar: Icon(
+                Icons.hub_outlined,
+                size: 16,
+                color: colorScheme.primary,
+              ),
+              label: Text(tr('supportedSources')),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return GeneratedFormModal(
+                      singleNullReturnButton: tr('ok'),
+                      title: tr('supportedSources'),
+                      items: const [],
+                      additionalWidgets: [
+                        ...sourceProvider.sources.map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: InkWell(
+                              onTap: e.hosts.isNotEmpty
+                                  ? () {
+                                      launchUrlString(
+                                        'https://${e.hosts[0]}',
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    }
+                                  : null,
+                              child: Text(
+                                '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
+                                style: TextStyle(
+                                  decoration: e.hosts.isNotEmpty
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
+                                  color: e.hosts.isNotEmpty
+                                      ? colorScheme.primary
+                                      : null,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${tr('note')}:',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(tr('selfHostedNote', args: [tr('overrideSource')])),
-                    ],
-                  );
-                },
-              );
-            },
-            child: Text(
-              tr('supportedSources'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
-              ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${tr('note')}:',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(tr('selfHostedNote', args: [tr('overrideSource')])),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
-          ),
-          InkWell(
-            onTap: () {
-              launchUrlString(
-                'https://apps.obtainium.page/',
-                mode: LaunchMode.externalApplication,
-              );
-            },
-            child: Text(
-              tr('crowdsourcedConfigsShort'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
+            ActionChip(
+              avatar: Icon(
+                Icons.language_rounded,
+                size: 16,
+                color: colorScheme.secondary,
               ),
+              label: Text(tr('crowdsourcedConfigsShort')),
+              onPressed: () {
+                launchUrlString(
+                  'https://apps.obtainium.page/',
+                  mode: LaunchMode.externalApplication,
+                );
+              },
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
 
     Widget _buildAppPreview() {
       if (pickedSource == null || userInput.isEmpty)
@@ -1199,6 +1215,12 @@ class AddAppPageState extends State<AddAppPage> {
       );
     }
 
+    final showDiscover =
+        !widget.isModal &&
+        plusSettings.plusEnableDiscover &&
+        pickedSource == null &&
+        userInput.isEmpty;
+
     final formScrollView = CustomScrollView(
       controller: widget.scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -1247,6 +1269,8 @@ class AddAppPageState extends State<AddAppPage> {
                     future: pickedSource?.getSourceNote(),
                   ),
                 if (pickedSource != null) getAdditionalOptsCol(),
+                if (pickedSource == null && !showDiscover)
+                  getSourcesListWidget(),
               ],
             ),
           ),
@@ -1254,23 +1278,10 @@ class AddAppPageState extends State<AddAppPage> {
       ],
     );
 
-    final plusSettings = context.watch<PlusSettingsProvider>();
-
-    // Discover is merged into the Add App experience: when the page is
-    // idle (no URL typed, no source picked) the browse/discover content
-    // fills the space below the add-by-URL form. Tapping a result feeds
-    // its URL back into the form via linkFn.
-    final showDiscover =
-        !widget.isModal &&
-        plusSettings.plusEnableDiscover &&
-        pickedSource == null &&
-        userInput.isEmpty;
-
     final scaffold = Scaffold(
       backgroundColor: widget.isModal
           ? Colors.transparent
           : Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
       body: showDiscover
           ? Column(
               children: [

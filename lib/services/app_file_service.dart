@@ -374,9 +374,16 @@ class AppFileService {
     if (ext.endsWith('"') || ext.endsWith("other")) {
       ext = ext.substring(0, ext.length - 1);
     }
-    if (((Uri.tryParse(url)?.path ?? url).toLowerCase().endsWith('.apk') ||
-            ext == 'attachment') &&
-        ext != 'apk') {
+    final urlPath = Uri.tryParse(url)?.path ?? url;
+    if (AppSource.isApkOrContainerFile(
+      urlPath,
+      includeArchives: true,
+      includeTarballs: true,
+    )) {
+      ext = urlPath.split('.').last.toLowerCase();
+    } else if (ext == 'attachment' ||
+        ((Uri.tryParse(url)?.path ?? url).toLowerCase().endsWith('.apk') &&
+            ext != 'apk')) {
       ext = 'apk';
     }
     fileName = fileNameHasExt ? fileName : fileName.split('/').last;
@@ -469,6 +476,7 @@ class AppFileService {
       url,
       reqHeaders,
       {},
+      allowInsecure: allowInsecure,
     );
     HttpClient responseClient = responseWithClient.value.key;
     HttpClientResponse response = responseWithClient.value.value;

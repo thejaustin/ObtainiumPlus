@@ -1027,10 +1027,6 @@ class AppsPageState extends State<AppsPage> {
                         toInstall,
                         globalNavigatorKey.currentContext,
                       )
-                      .catchError((e) {
-                        if (context.mounted) showError(e, context);
-                        return <String>[];
-                      })
                       .then((value) {
                         if (value.isNotEmpty) {
                           if (shouldInstallUpdates && context.mounted) {
@@ -1039,6 +1035,24 @@ class AppsPageState extends State<AppsPage> {
                           var np = context.read<NotificationsProvider>();
                           np.cancel(UpdateNotification([]).id);
                         }
+                      })
+                      .catchError((e) {
+                        if (e is MultiAppMultiError &&
+                            e.successfulAppIds.isNotEmpty) {
+                          final count = e.successfulAppIds.length;
+                          final failedCount = e.idsByErrorString.values
+                              .fold<int>(0, (acc, list) => acc + list.length);
+                          if (shouldInstallUpdates && context.mounted) {
+                            showMessage(
+                              '$count apps updated ($failedCount failed)',
+                              context,
+                            );
+                          }
+                          var np = context.read<NotificationsProvider>();
+                          np.cancel(UpdateNotification([]).id);
+                        }
+                        if (context.mounted) showError(e, context);
+                        return <String>[];
                       });
                 }
               });

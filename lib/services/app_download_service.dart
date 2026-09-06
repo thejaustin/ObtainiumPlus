@@ -250,6 +250,7 @@ class AppDownloadService {
       }
     }
 
+    errors.successfulAppIds = installedIds;
     if (errors.idsByErrorString.isNotEmpty) {
       throw errors;
     }
@@ -351,7 +352,8 @@ class AppDownloadService {
         APKDir.path,
         useExisting: useExisting,
         headers: headers,
-        allowInsecure: app.additionalSettings['allowInsecure'] == true,
+        allowInsecure: app.additionalSettings['allowInsecure'] == true ||
+            source.allowInsecureRedirects,
         logs: logs,
         isCancelled: isCancelled != null ? () => isCancelled!(app.id) : null,
         useSmartRetries: settingsProvider.plusEnableSmartRetries,
@@ -731,8 +733,16 @@ class AppDownloadService {
           }
         case 'denied':
         case null:
+          if (!willBeSilent &&
+              (await behaviorSettings.getInstallPermission(enforce: false))) {
+            break;
+          }
           throw ObtainiumError(tr('cancelled'));
         default:
+          if (!willBeSilent &&
+              (await behaviorSettings.getInstallPermission(enforce: false))) {
+            break;
+          }
           // In case of unknown response, treat as cancelled/denied
           throw ObtainiumError(tr('cancelled'));
       }

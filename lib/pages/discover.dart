@@ -555,9 +555,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     final suggestionIcons = showSuggestions
         ? {for (final s in _suggestions) s.url: s.iconUrl}
         : <String, String?>{};
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: CustomScrollView(
+    final scrollContent = CustomScrollView(
         slivers: [
           if (widget.showAppBar) CustomAppBar(title: tr('discover')),
           if (widget.showSearchBar)
@@ -844,12 +842,20 @@ class DiscoverPageState extends State<DiscoverPage> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text('Load more'),
+                      : Text(tr('loadMore')),
                 ),
               ),
             ),
         ],
-      ),
+      );
+
+    if (!widget.showAppBar) {
+      return scrollContent;
+    }
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: scrollContent,
     );
   }
 }
