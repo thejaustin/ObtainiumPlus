@@ -649,13 +649,16 @@ class HttpService {
     var redirectCount = 0;
     List<Cookie> cookies = [];
     HttpClient? httpClient;
+    final headers = requestHeaders != null
+        ? Map<String, String>.from(requestHeaders)
+        : null;
     while (redirectCount < maxRedirects) {
       httpClient = createHttpClient(
         additionalSettings['allowInsecure'] == true,
       );
       final request = await httpClient.openUrl(method, currentUrl);
-      if (requestHeaders != null) {
-        requestHeaders.forEach((key, value) {
+      if (headers != null) {
+        headers.forEach((key, value) {
           request.headers.set(key, value);
         });
       }
@@ -686,9 +689,10 @@ class HttpService {
             throw ObtainiumError(tr('insecureRedirect'));
           }
           if (nextUrl.host != currentUrl.host && headers != null) {
-            headers.remove(HttpHeaders.authorizationHeader);
-            headers.remove('authorization');
-            headers.remove(HttpHeaders.proxyAuthorizationHeader);
+            headers.removeWhere((k, v) {
+              final lower = k.toLowerCase();
+              return lower == 'authorization' || lower == 'proxy-authorization';
+            });
           }
           currentUrl = nextUrl;
           redirectCount++;
