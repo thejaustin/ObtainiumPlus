@@ -202,17 +202,25 @@ class AddAppPageState extends State<AddAppPage> {
         if (pickedSource?.sourceIdentifier != source?.sourceIdentifier ||
             overrideChanged ||
             (prevHost != null && prevHost != source?.hosts.firstOrNull)) {
+          final isEditingApp = widget.appId != null;
+          final existingSettings = isEditingApp
+              ? (appsProvider.apps[widget.appId]?.app.additionalSettings ?? {})
+              : <String, dynamic>{};
           pickedSource = source;
           pickedSource?.runOnAddAppInputChange(userInput);
-          additionalSettings = source != null
+          final defaultSettings = source != null
               ? getDefaultValuesFromFormItems(
                   source.combinedAppSpecificSettingFormItems,
                 )
-              : {};
+              : <String, dynamic>{};
+          additionalSettings = {
+            ...defaultSettings,
+            if (isEditingApp) ...existingSettings,
+          };
           additionalSettingsValid = source != null
               ? !sourceProvider.ifRequiredAppSpecificSettingsExist(source)
               : true;
-          inferAppIdIfOptional = true;
+          inferAppIdIfOptional = !isEditingApp;
         }
 
         // Trigger live search if not a valid direct URL
@@ -322,6 +330,9 @@ class AddAppPageState extends State<AddAppPage> {
             source,
             userInput.trim(),
             additionalSettings,
+            currentApp: widget.appId != null
+                ? appsProvider.apps[widget.appId]?.app
+                : null,
             trackOnlyOverride: trackOnly,
             sourceIsOverriden: pickedSourceOverride != null,
             inferAppIdIfOptional: inferAppIdIfOptional,
@@ -357,12 +368,21 @@ class AddAppPageState extends State<AddAppPage> {
               downloadedFile?.appId ?? downloadedDir?.appId ?? app.id,
             );
           }
-          if (appsProvider.apps.containsKey(app.id)) {
+          if ((widget.appId == null || widget.appId != app.id) &&
+              appsProvider.apps.containsKey(app.id)) {
             throw ObtainiumError(tr('appAlreadyAdded'));
+          }
+          if (widget.appId != null && widget.appId != app.id) {
+            await appsProvider.removeApps([widget.appId!]);
           }
           if (app.additionalSettings['trackOnly'] == true ||
               app.additionalSettings['versionDetection'] != true) {
             app.installedVersion = app.latestVersion;
+          } else if (widget.appId != null) {
+            final oldApp = appsProvider.apps[widget.appId]?.app;
+            if (oldApp?.installedVersion != null) {
+              app.installedVersion = oldApp!.installedVersion;
+            }
           }
           app.categories = pickedCategories;
           await appsProvider.saveApps([app], onlyIfExists: false);
@@ -372,19 +392,20 @@ class AddAppPageState extends State<AddAppPage> {
           final homeState = globalNavigatorKey.currentContext
               ?.findAncestorStateOfType<HomePageState>();
           homeState?.switchToPage(0);
-          // Add App is a pushed route now (not a tab); close it so the
-          // user lands back on the Apps tab behind the app sheet.
-          if (!widget.isModal && mounted && Navigator.of(context).canPop()) {
+          // Close Add/Edit App route or sheet so the user lands back on home/app page
+          if (mounted && Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
-          showDraggableModalBottomSheet(
-            context: globalNavigatorKey.currentContext ?? context,
-            builder: (context, controller) => AppPage(
-              appId: app!.id,
-              isModal: true,
-              scrollController: controller,
-            ),
-          );
+          if (widget.appId == null) {
+            showDraggableModalBottomSheet(
+              context: globalNavigatorKey.currentContext ?? context,
+              builder: (context, controller) => AppPage(
+                appId: app!.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          }
         }
       } catch (e) {
         if (context.mounted) showError(e, context);
@@ -479,7 +500,7 @@ class AddAppPageState extends State<AddAppPage> {
                 return SelectionModal(
                   title: tr(
                     'selectX',
-                    args: [plural('source', 2).toLowerCase()],
+                    args: [tr('sources').toLowerCase()],
                   ),
                   entries: sourceStrings,
                   selectedByDefault: true,
@@ -514,7 +535,7 @@ class AddAppPageState extends State<AddAppPage> {
                                   'url',
                                   label: e.hosts.isNotEmpty
                                       ? tr('overrideSource')
-                                      : plural('url', 1).substring(2),
+                                      : tr('urlLabel'),
                                   autoCompleteOptions: [
                                     ...(e.hosts.isNotEmpty ? [e.hosts[0]] : []),
                                     ...appsProvider.apps.values
@@ -1164,7 +1185,7 @@ class AddAppPageState extends State<AddAppPage> {
       controller: widget.scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       physics: widget.isModal
-          ? const BouncingScrollPhysics()
+          ? const ClampingScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
       shrinkWrap: true,
       slivers: <Widget>[

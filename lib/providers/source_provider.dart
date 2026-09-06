@@ -58,6 +58,8 @@ import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/app_sources/githubstars.dart';
+import 'package:obtainium/app_sources/githubpersonalrepos.dart';
+import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
@@ -220,6 +222,7 @@ class SourceProvider {
   // available via the service. Kept private so callers go through [sources]
   // (cached) or, when per-call mutation is needed, [_buildSources] directly.
   static List<AppSource> _buildSources() => [
+    GooglePlay(),
     GitHub(),
     GitLab(),
     Codeberg(),
@@ -260,7 +263,10 @@ class SourceProvider {
   List<AppSource> get sources => _cachedSources ??= _buildSources();
 
   /// Add mass URL source classes here so they are available via the service.
-  List<MassAppUrlSource> massUrlSources = [GitHubStars()];
+  List<MassAppUrlSource> massUrlSources = [
+    GitHubStars(),
+    GitHubPersonalRepos(),
+  ];
 
   AppSource getSource(String url, {String? overrideSource}) {
     url = preStandardizeUrl(url);

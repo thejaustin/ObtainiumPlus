@@ -76,8 +76,8 @@ class AppListTile extends StatelessWidget {
                   tr(
                     'ambiguousUpdateMessage',
                     args: [
-                      appInMemory.app.installedVersion ?? '',
                       appInMemory.app.latestVersion,
+                      appInMemory.app.installedVersion ?? '',
                     ],
                   ),
                 ),
@@ -581,33 +581,65 @@ class AppListTile extends StatelessWidget {
                                 child: downloadProgress != null
                                     ? SizedBox(
                                         key: const ValueKey('download'),
-                                        width: 65,
-                                        child: Column(
+                                        width: downloadProgress >= 0 ? 88 : 65,
+                                        child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                downloadProgress >= 0
-                                                    ? '${downloadProgress.toInt()}%'
-                                                    : tr('installing'),
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .labelSmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                            Expanded(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  FittedBox(
+                                                    fit: BoxFit.scaleDown,
+                                                    child: Text(
+                                                      downloadProgress >= 0
+                                                          ? '${downloadProgress.toInt()}%'
+                                                          : tr('installing'),
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelSmall
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                     ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  ExpressiveProgressIndicator(
+                                                    value: downloadProgress >= 0
+                                                        ? downloadProgress / 100
+                                                        : null,
+                                                    height: 5,
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            const SizedBox(height: 6),
-                                            ExpressiveProgressIndicator(
-                                              value: downloadProgress >= 0
-                                                  ? downloadProgress / 100
-                                                  : null,
-                                              height: 5,
-                                            ),
+                                            if (downloadProgress >= 0) ...[
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  minWidth: 24,
+                                                  minHeight: 24,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.close_rounded,
+                                                  size: 16,
+                                                ),
+                                                tooltip: tr('cancel'),
+                                                onPressed: () {
+                                                  context
+                                                      .read<AppsProvider>()
+                                                      .cancelDownload(
+                                                        appInMemory.app.id,
+                                                      );
+                                                },
+                                              ),
+                                            ],
                                           ],
                                         ),
                                       )

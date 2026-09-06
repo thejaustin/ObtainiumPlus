@@ -1132,5 +1132,17 @@
     "plusEnableFAB": "Enable Quick Action FAB",
     "plusEnableFABDescription": "Show the floating '+' action button in the bottom right corner (otherwise shown in top app bar)",
     "plusEnableSwipeActions": "Enable Swipe Actions",
-    "plusEnableSwipeActionsDescription": "Swipe left/right on app tiles to reveal quick actions like update, delete, or pin"
+    "plusEnableSwipeActionsDescription": "Swipe left/right on app tiles to reveal quick actions like update, delete, or pin",
+    "importXApps": "Import {} Apps",
+    "urlLabel": "URL",
+    "sources": "Sources",
+    "insufficientStorage": "Insufficient storage space to download",
+    "installFailed": "Installation failed",
+    "installFailedConflict": "Installation failed: Signature mismatch or package conflict with an existing app",
+    "installFailedStorage": "Installation failed: Insufficient storage space on device",
+    "installFailedIncompatible": "Installation failed: Incompatible with device architecture or Android version",
+    "installFailedBlocked": "Installation failed: Blocked by device administrator or policy",
+    "installFailedInvalid": "Installation failed: Package file is invalid or corrupted",
+    "downloadCancelled": "Download cancelled",
+    "partialBatchSuccess": "{} updated, {} failed"
 }

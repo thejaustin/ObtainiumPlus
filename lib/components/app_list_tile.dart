@@ -574,6 +574,9 @@ class AppListTile extends StatelessWidget {
                       progress: downloadProgress,
                       receivedBytes: appInMemory.downloadReceivedBytes,
                       totalBytes: appInMemory.downloadTotalBytes,
+                      onCancel: () => context
+                          .read<AppsProvider>()
+                          .cancelDownload(_app.id),
                     )
                   : trailingRow,
               onTap: onTap,

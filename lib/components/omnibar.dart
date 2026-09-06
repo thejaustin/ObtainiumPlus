@@ -182,10 +182,7 @@ class _OmnibarState extends State<Omnibar> {
         return;
       }
 
-      if (_isUrl && _isValidUrl) {
-        // Valid URL - trigger add app
-        widget.onUrlInput?.call(value);
-      } else if (!_isUrl) {
+      if (!_isUrl) {
         // Search query
         widget.onSearchQuery?.call(value);
       }

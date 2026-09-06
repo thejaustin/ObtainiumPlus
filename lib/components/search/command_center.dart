@@ -53,11 +53,28 @@ class _CommandCenterState extends State<CommandCenter> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isSearching = false;
+  bool _isAddingUrl = false;
   String _query = '';
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
   bool _discoverSearchFailed = false;
   final SourceProvider _sourceProvider = SourceProvider();
   Timer? _debounce;
+
+  bool _isDirectUrl(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return false;
+    if (trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('market://')) {
+      return true;
+    }
+    try {
+      _sourceProvider.getSource(trimmed);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   void initState() {
@@ -123,7 +140,7 @@ class _CommandCenterState extends State<CommandCenter> {
     });
 
     // Check if it's a URL
-    if (URLValidator.isValidSourceURL(value)) {
+    if (_isDirectUrl(value)) {
       // Allow GitHub User Profiles to bypass this so they can be searched
       RegExp userProfileRegEx = RegExp(
         r'^https?://(?:www\.)?github\.com/[^/]+/?$',
@@ -165,7 +182,7 @@ class _CommandCenterState extends State<CommandCenter> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isUrl = URLValidator.isValidSourceURL(_query) && _query.contains('.');
+    final isUrl = _isDirectUrl(_query);
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isDark = theme.brightness == Brightness.dark;
 
@@ -677,31 +694,65 @@ class _CommandCenterState extends State<CommandCenter> {
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.download_rounded),
+            leading: _isAddingUrl
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_rounded),
             title: Text(tr('addApp')),
             subtitle: Text(
               _query,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: const Icon(Icons.arrow_forward),
-            onTap: () {
-              // Quick Add inline
-              context.read<AppsProvider>().addAppsByURL([_query]).then((
-                errors,
-              ) {
-                if (mounted) {
-                  if (errors.isNotEmpty) {
-                    showError(errors[0][1], context);
-                  } else {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
-                    Navigator.pop(context);
-                  }
-                }
-              });
-            },
+            trailing: _isAddingUrl
+                ? null
+                : const Icon(Icons.arrow_forward),
+            onTap: _isAddingUrl
+                ? null
+                : () async {
+                    setState(() => _isAddingUrl = true);
+                    final queryToAdd = _query;
+                    try {
+                      final errors = await context
+                          .read<AppsProvider>()
+                          .addAppsByURL([queryToAdd]);
+                      if (mounted) {
+                        setState(() => _isAddingUrl = false);
+                        if (errors.isNotEmpty) {
+                          showError(errors[0][1], context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(tr('appAdded'))),
+                          );
+                          Navigator.pop(context);
+                        }
+                      } else {
+                        final globalCtx = globalNavigatorKey.currentContext;
+                        if (globalCtx != null && globalCtx.mounted) {
+                          if (errors.isNotEmpty) {
+                            showError(errors[0][1], globalCtx);
+                          } else {
+                            ScaffoldMessenger.of(globalCtx).showSnackBar(
+                              SnackBar(content: Text(tr('appAdded'))),
+                            );
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() => _isAddingUrl = false);
+                        showError(e, context);
+                      } else {
+                        final globalCtx = globalNavigatorKey.currentContext;
+                        if (globalCtx != null && globalCtx.mounted) {
+                          showError(e, globalCtx);
+                        }
+                      }
+                    }
+                  },
           ),
           Divider(
             height: 1,
@@ -713,7 +764,7 @@ class _CommandCenterState extends State<CommandCenter> {
             leading: const Icon(Icons.tune_rounded),
             title: Text(tr('advancedOptions')),
             trailing: const Icon(Icons.open_in_new),
-            onTap: () => _openAddApp(_query),
+            onTap: _isAddingUrl ? null : () => _openAddApp(_query),
           ),
         ],
       ),

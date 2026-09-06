@@ -186,10 +186,12 @@ class AppFileService {
   }
 
   static String hashListOfLists(List<List<int>> data) {
-    var bytes = utf8.encode(jsonEncode(data));
-    var digest = sha256.convert(bytes);
-    var hash = digest.toString();
-    return hash.hashCode.toString();
+    final builder = BytesBuilder(copy: false);
+    for (var chunk in data) {
+      builder.add(chunk);
+    }
+    var digest = sha256.convert(builder.takeBytes());
+    return digest.toString().hashCode.toString();
   }
 
   static Future<String> checkPartialDownloadHashDynamic(
@@ -238,8 +240,19 @@ class AppFileService {
       if (response.statusCode < 200 || response.statusCode > 299) {
         throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'));
       }
-      List<List<int>> bytes = await response.stream.take(bytesToGrab).toList();
-      return hashListOfLists(bytes);
+      final builder = BytesBuilder(copy: false);
+      await for (var chunk in response.stream) {
+        final remaining = bytesToGrab - builder.length;
+        if (remaining <= 0) break;
+        if (chunk.length <= remaining) {
+          builder.add(chunk);
+        } else {
+          builder.add(chunk.sublist(0, remaining));
+          break;
+        }
+      }
+      var digest = sha256.convert(builder.takeBytes());
+      return digest.toString().hashCode.toString();
     } finally {
       client.close();
     }
@@ -297,9 +310,12 @@ class AppFileService {
       if (e is DownloadCancelledError) rethrow;
       if (retries > 0 &&
           (e is ClientException ||
-              e is HttpException ||
               e is SocketException ||
-              e is HandshakeException)) {
+              e is HandshakeException ||
+              (e is HttpException &&
+                  !e.message.contains('404') &&
+                  !e.message.contains('403') &&
+                  !e.message.contains('401')))) {
         // Exponential backoff: 2^retry_count * 5 seconds
         // retry_count starts at 3, so we use (4 - retries)
         int attempt = 4 - retries;
@@ -418,6 +434,7 @@ class AppFileService {
           }
         } else {
           shouldReturn = downloadedFile.existsSync();
+          break;
         }
       }
       if (shouldReturn) {
@@ -466,6 +483,16 @@ class AppFileService {
       );
     }
 
+    if (rangeStart > 0 && response.statusCode == HttpStatus.ok) {
+      // Server returned 200 OK (ignored Range header) — discard append sink & truncate partial file
+      await sink?.close();
+      sink = null;
+      rangeStart = 0;
+      if (tempDownloadedFile.existsSync()) {
+        deleteFile(tempDownloadedFile);
+      }
+    }
+
     sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
 
     var received = 0;
@@ -478,46 +505,68 @@ class AppFileService {
     const downloadBufferSize =
         128 * 1024; // 128KB buffer for faster I/O throughput
     final downloadBuffer = BytesBuilder();
-    await response
-        .map((chunk) {
-          if (isCancelled?.call() == true) {
-            throw DownloadCancelledError();
-          }
-          received += chunk.length;
-          final now = DateTime.now();
-          if (onProgress != null &&
-              (lastProgressUpdate == null ||
-                  now.difference(lastProgressUpdate!) >=
-                      downloadUIUpdateInterval)) {
-            progress = fullContentLength != null
-                ? clampDouble((received / fullContentLength) * 100, 0, 100)
-                : 30;
-            onProgress(progress);
-            lastProgressUpdate = now;
-          }
-          return chunk;
-        })
-        .transform(
-          StreamTransformer<List<int>, List<int>>.fromHandlers(
-            handleData: (List<int> data, EventSink<List<int>> s) {
-              downloadBuffer.add(data);
-              if (downloadBuffer.length >= downloadBufferSize) {
-                s.add(downloadBuffer.takeBytes());
-              }
+    try {
+      await response
+          .timeout(
+            const Duration(seconds: 45),
+            onTimeout: (s) {
+              s.addError(
+                TimeoutException('Download stalled: no data received for 45s'),
+              );
             },
-            handleDone: (EventSink<List<int>> s) {
-              if (downloadBuffer.isNotEmpty) {
-                s.add(downloadBuffer.takeBytes());
+          )
+          .map((chunk) {
+            if (isCancelled?.call() == true) {
+              throw DownloadCancelledError();
+            }
+            received += chunk.length;
+            final now = DateTime.now();
+            if (onProgress != null &&
+                (lastProgressUpdate == null ||
+                    now.difference(lastProgressUpdate!) >=
+                        downloadUIUpdateInterval)) {
+              progress = fullContentLength != null
+                  ? clampDouble((received / fullContentLength) * 100, 0, 100)
+                  : 30;
+              try {
+                onProgress(progress, received, fullContentLength);
+              } catch (_) {
+                onProgress(progress);
               }
-              s.close();
-            },
-          ),
-        )
-        .pipe(sink);
-    await sink.close();
+              lastProgressUpdate = now;
+            }
+            return chunk;
+          })
+          .transform(
+            StreamTransformer<List<int>, List<int>>.fromHandlers(
+              handleData: (List<int> data, EventSink<List<int>> s) {
+                downloadBuffer.add(data);
+                if (downloadBuffer.length >= downloadBufferSize) {
+                  s.add(downloadBuffer.takeBytes());
+                }
+              },
+              handleDone: (EventSink<List<int>> s) {
+                if (downloadBuffer.isNotEmpty) {
+                  s.add(downloadBuffer.takeBytes());
+                }
+                s.close();
+              },
+            ),
+          )
+          .pipe(sink);
+      await sink.close();
+      sink = null;
+    } finally {
+      await sink?.close();
+      responseClient.close();
+    }
     progress = null;
     if (onProgress != null) {
-      onProgress(progress);
+      try {
+        onProgress(progress, received, fullContentLength);
+      } catch (_) {
+        onProgress(progress);
+      }
     }
 
     if (tempDownloadedFile.existsSync()) {

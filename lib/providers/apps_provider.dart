@@ -1685,6 +1685,9 @@ class AppsProvider with ChangeNotifier {
     bool forceParallelDownloads = false,
     bool useExisting = true,
   }) async {
+    for (var id in appIds) {
+      registerDownloadCancellation(id);
+    }
     try {
       final installedIds =
           await AppDownloadService.downloadAndInstallLatestApps(
@@ -1707,6 +1710,8 @@ class AppsProvider with ChangeNotifier {
             notificationsProvider: notificationsProvider,
             forceParallelDownloads: forceParallelDownloads,
             useExisting: useExisting,
+            isCancelled:
+                (appId) => _downloadCancellations[appId]?.isCancelled ?? false,
           );
       if (context != null && installedIds.isNotEmpty) {
         AppHaptics.success();
@@ -1719,6 +1724,10 @@ class AppsProvider with ChangeNotifier {
         return [];
       } else {
         rethrow;
+      }
+    } finally {
+      for (var id in appIds) {
+        clearDownloadCancellation(id);
       }
     }
   }
@@ -1817,6 +1826,7 @@ class AppsProvider with ChangeNotifier {
         notificationsProvider.notify(
           DownloadedNotification(fileUrl.key, fileUrl.value),
         );
+        downloadedIds.add(fileUrl.key);
       } catch (e) {
         errors.add(fileUrl.key, e);
       } finally {
@@ -1824,7 +1834,7 @@ class AppsProvider with ChangeNotifier {
       }
     }
 
-    if (forceParallelDownloads || !behaviorSettings.parallelDownloads) {
+    if (!forceParallelDownloads && !behaviorSettings.parallelDownloads) {
       for (var urlWithApp in filesToDownload) {
         await downloadFn(urlWithApp.key, urlWithApp.value);
       }
@@ -2505,39 +2515,11 @@ class AppsProvider with ChangeNotifier {
     bool installedOnly = false,
     bool nonInstalledOnly = false,
   }) {
-    List<String> updateAppIds = [];
-    List<String> appIds = apps.keys.toList();
-    for (int i = 0; i < appIds.length; i++) {
-      App? app = apps[appIds[i]]!.app;
-      // For installed apps: check if a newer version is available via areVersionsDifferent.
-      // For uninstalled apps (nonInstalledOnly): areVersionsDifferent always returns false
-      // when installedVersion is null, so we use a direct check instead —
-      // any uninstalled, non-track-only app with a known latestVersion is a candidate.
-      bool isCandidate;
-      if (app.installedVersion == null) {
-        isCandidate = !nonInstalledOnly
-            ? false
-            : app.additionalSettings['trackOnly'] != true &&
-                  app.latestVersion.isNotEmpty;
-      } else {
-        isCandidate =
-            AppUpdateService.areVersionsDifferent(
-              app,
-              app.installedVersion,
-              app.latestVersion,
-            ) &&
-            (!installedOnly || !nonInstalledOnly);
-      }
-      if (isCandidate) {
-        if ((app.installedVersion == null &&
-                (nonInstalledOnly || !installedOnly) ||
-            (app.installedVersion != null &&
-                (installedOnly || !nonInstalledOnly)))) {
-          updateAppIds.add(app.id);
-        }
-      }
-    }
-    return updateAppIds;
+    return AppUpdateService.findExistingUpdates(
+      apps,
+      installedOnly: installedOnly,
+      nonInstalledOnly: nonInstalledOnly,
+    );
   }
 
   Map<String, dynamic> generateExportJSON({
