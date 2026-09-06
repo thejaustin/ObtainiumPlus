@@ -20,8 +20,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
+import 'package:obtainium/installers/shizuku_installer.dart';
+import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -472,7 +475,30 @@ class AppInstallService {
     );
 
     int? code;
-    if (!behaviorSettings.useShizuku) {
+    final settingsProvider = SettingsProvider(behaviorSettings.prefs);
+    final installer = Installer.create(settingsProvider);
+    if (installer is RootInstaller) {
+      final res = await installer.installApk(
+        [file.path],
+        appId: newInfo.packageName,
+      );
+      code = res.errorCode ?? (res.isSuccess ? 0 : 3);
+    } else if (installer is ShizukuInstaller) {
+      final res = await installer.installApk(
+        [file.path],
+        appId: newInfo.packageName,
+        installOptions: {
+          'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+        },
+      );
+      code = res.errorCode ?? (res.isSuccess ? 0 : 3);
+    } else if (installer is ExternalInstaller) {
+      final res = await installer.installApk(
+        [file.path],
+        appId: newInfo.packageName,
+      );
+      code = res.errorCode ?? (res.isSuccess ? 0 : 3);
+    } else {
       code = await installStockWithPolling(
         apkFilePath: file.path,
         packageName: newInfo.packageName,
@@ -480,11 +506,6 @@ class AppInstallService {
         targetVersionName: newInfo.versionName,
         existingVersionCode: appInfo?.versionCode,
         existingVersionName: appInfo?.versionName,
-      );
-    } else {
-      code = await ShizukuApkInstaller().installAPK(
-        file.uri.toString(),
-        shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
       );
     }
 
@@ -602,17 +623,24 @@ class AppInstallService {
       }
     }
 
-    if (behaviorSettings.installerMode == 'root') {
+    final settingsProvider = SettingsProvider(behaviorSettings.prefs);
+    final installer = Installer.create(settingsProvider);
+
+    if (installer is RootInstaller) {
       try {
-        final rootResult = await RootInstaller(
-          SettingsProvider(behaviorSettings.prefs),
-        ).installApk(allAPKs, appId: apps[file.appId]!.app.id);
+        final rootResult = await installer.installApk(
+          allAPKs,
+          appId: apps[file.appId]!.app.id,
+        );
         if (rootResult.isSuccess) {
           code = 0;
-        } else if (rootResult.isCancelled) {
+        } else if (rootResult.isCancelled || rootResult.isAlreadyInstalled) {
           code = 3;
         } else {
           code = rootResult.errorCode ?? 1;
+        }
+        if (code != 0 && code != 3) {
+          throw Exception("Root installer failed with code $code");
         }
       } catch (e) {
         logs.add(
@@ -628,19 +656,21 @@ class AppInstallService {
           existingVersionName: appInfo?.versionName,
         );
       }
-    } else if (behaviorSettings.installerMode == 'external') {
+    } else if (installer is ExternalInstaller) {
       try {
-        final extResult = await ExternalInstaller(
-          SettingsProvider(behaviorSettings.prefs),
-        ).installApk(allAPKs, appId: apps[file.appId]!.app.id);
+        final extResult = await installer.installApk(
+          allAPKs,
+          appId: apps[file.appId]!.app.id,
+        );
         if (extResult.isSuccess) {
           code = 0;
-        } else if (extResult.isAlreadyInstalled) {
-          code = 3;
-        } else if (extResult.isCancelled) {
+        } else if (extResult.isAlreadyInstalled || extResult.isCancelled) {
           code = 3;
         } else {
           code = extResult.errorCode ?? 1;
+        }
+        if (code != 0 && code != 3) {
+          throw Exception("External installer failed with code $code");
         }
       } catch (e) {
         logs.add(
@@ -656,34 +686,22 @@ class AppInstallService {
           existingVersionName: appInfo?.versionName,
         );
       }
-    } else if (behaviorSettings.installerMode != 'shizuku' &&
-        !behaviorSettings.useShizuku) {
-      await executeBgWorkaroundIfNeeded();
-      code = await installStockWithPolling(
-        apkFilePath: allAPKs.join(','),
-        packageName: newInfo.packageName,
-        targetVersionCode: newInfo.versionCode,
-        targetVersionName: newInfo.versionName,
-        existingVersionCode: appInfo?.versionCode,
-        existingVersionName: appInfo?.versionName,
-      );
-    } else {
+    } else if (installer is ShizukuInstaller) {
       try {
-        var fakeSource = shizukuPretendToBeGooglePlay
-            ? "com.android.vending"
-            : "";
-        if (additionalAPKs.isNotEmpty) {
-          var allUris = [file.file.uri.toString()];
-          allUris.addAll(additionalAPKs.map((a) => a.file.uri.toString()));
-          code = await ShizukuApkInstaller().installAABSplits(
-            allUris,
-            fakeSource,
-          );
+        final shizukuResult = await installer.installApk(
+          allAPKs,
+          appId: apps[file.appId]!.app.id,
+          installOptions: {
+            'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+          },
+        );
+        if (shizukuResult.isSuccess) {
+          code = 0;
+        } else if (shizukuResult.isAlreadyInstalled ||
+            shizukuResult.isCancelled) {
+          code = 3;
         } else {
-          code = await ShizukuApkInstaller().installAPK(
-            file.file.uri.toString(),
-            fakeSource,
-          );
+          code = shizukuResult.errorCode ?? 1;
         }
         if (code != 0 && code != 3) {
           throw Exception("Shizuku failed with code $code");
@@ -702,6 +720,16 @@ class AppInstallService {
           existingVersionName: appInfo?.versionName,
         );
       }
+    } else {
+      await executeBgWorkaroundIfNeeded();
+      code = await installStockWithPolling(
+        apkFilePath: allAPKs.join(','),
+        packageName: newInfo.packageName,
+        targetVersionCode: newInfo.versionCode,
+        targetVersionName: newInfo.versionName,
+        existingVersionCode: appInfo?.versionCode,
+        existingVersionName: appInfo?.versionName,
+      );
     }
     bool installed = false;
     if (code == null) {
@@ -757,8 +785,43 @@ class AppInstallService {
     Future<void> Function(List<App>)? saveApps,
   }) async {
     var somethingInstalled = false;
+    final settingsProvider = SettingsProvider(behaviorSettings.prefs);
+    final installer = Installer.create(settingsProvider);
     try {
       MultiAppMultiError errors = MultiAppMultiError();
+      if (installer.wantsContainerHandoff) {
+        try {
+          final result = await installer.installApk(
+            [dir.file.path],
+            appId: dir.appId,
+            installOptions: {
+              'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+            },
+          );
+          if (result.isError) {
+            throw InstallError(result.errorCode!, appId: dir.appId);
+          }
+          if (result.isSuccess) {
+            somethingInstalled = true;
+            if (apps[dir.appId] != null) {
+              apps[dir.appId]!.app.installedVersion =
+                  apps[dir.appId]!.app.latestVersion;
+              if (saveApps != null) {
+                await saveApps([apps[dir.appId]!.app]);
+              }
+            }
+          }
+          dir.file.delete(recursive: true);
+          return somethingInstalled;
+        } catch (e) {
+          logs.add(
+            'Could not install container from ${dir.type}: ${e.toString()}',
+          );
+          errors.add(dir.appId, e, appName: apps[dir.appId]?.name);
+          throw errors;
+        }
+      }
+
       List<File> APKFiles = [];
       for (var file
           in dir.extracted

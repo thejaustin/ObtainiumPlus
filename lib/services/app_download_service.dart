@@ -22,7 +22,10 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
+import 'package:obtainium/installers/installer.dart';
+import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
+import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -727,16 +730,15 @@ class AppDownloadService {
     BehaviorSettingsProvider behaviorSettings,
     bool willBeSilent,
   ) async {
-    if (behaviorSettings.installerMode == 'external') {
+    final installer = Installer.create(settingsProvider);
+    if (installer is ExternalInstaller) {
       if (behaviorSettings.externalInstallerPackage == null) {
         throw ObtainiumError(tr('externalInstallerRequired'));
       }
       return;
     }
-    if (behaviorSettings.installerMode == 'root') {
-      final hasRoot = await RootInstaller(
-        SettingsProvider(behaviorSettings.prefs),
-      ).checkPermission();
+    if (installer is RootInstaller) {
+      final hasRoot = await installer.checkPermission();
       if (!hasRoot) {
         if (!willBeSilent &&
             (await behaviorSettings.getInstallPermission(enforce: false))) {
@@ -749,49 +751,24 @@ class AppDownloadService {
       }
       return;
     }
-    if (behaviorSettings.installerMode != 'shizuku' &&
-        !behaviorSettings.useShizuku) {
-      if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
-        throw ObtainiumError(tr('cancelled'));
+    if (installer is ShizukuInstaller) {
+      final resCode = await installer.checkPermissionWithRetry();
+      final isGranted = resCode?.startsWith('authorized') == true ||
+          resCode?.startsWith('granted') == true;
+      if (isGranted) return;
+
+      if (!willBeSilent &&
+          (await behaviorSettings.getInstallPermission(enforce: false))) {
+        talker.warning(
+          'Shizuku unavailable ($resCode), falling back to AndroidPackageInstaller',
+        );
+        return;
       }
-    } else {
-      var shizukuPermission = await ShizukuApkInstaller().checkPermission();
-      switch (shizukuPermission) {
-        case 'authorized':
-        case 'granted':
-          break;
-        case 'binder_not_found':
-        case 'old_shizuku':
-        case 'old_android_with_adb':
-          if (!willBeSilent &&
-              (await behaviorSettings.getInstallPermission(enforce: false))) {
-            talker.warning(
-              'Shizuku unavailable ($shizukuPermission), falling back to AndroidPackageInstaller',
-            );
-            break;
-          }
-          if (shizukuPermission == 'binder_not_found') {
-            throw ObtainiumError(tr('shizukuBinderNotFound'));
-          } else if (shizukuPermission == 'old_shizuku') {
-            throw ObtainiumError(tr('shizukuOld'));
-          } else {
-            throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
-          }
-        case 'denied':
-        case null:
-          if (!willBeSilent &&
-              (await behaviorSettings.getInstallPermission(enforce: false))) {
-            break;
-          }
-          throw ObtainiumError(tr('cancelled'));
-        default:
-          if (!willBeSilent &&
-              (await behaviorSettings.getInstallPermission(enforce: false))) {
-            break;
-          }
-          // In case of unknown response, treat as cancelled/denied
-          throw ObtainiumError(tr('cancelled'));
-      }
+      await installer.ensurePermission();
+      return;
+    }
+    if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
+      throw ObtainiumError(tr('cancelled'));
     }
   }
 

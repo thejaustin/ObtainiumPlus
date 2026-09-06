@@ -11,6 +11,7 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -230,47 +231,70 @@ class InstallationSection extends StatelessWidget {
               ),
               subtitle: Text(tr('useShizukuDescription')),
               value: behaviorSettings.useShizuku,
-              onChanged: (enable) {
+              onChanged: (enable) async {
                 if (!enable) {
                   behaviorSettings.useShizuku = false;
+                  if (behaviorSettings.installerMode == 'shizuku') {
+                    behaviorSettings.installerMode = 'system';
+                  }
                   return;
                 }
-                ShizukuApkInstaller().checkPermission().then(
-                  (resCode) {
-                    if (resCode == null) {
-                      if (context.mounted) {
-                        _showError(
-                          context,
-                          ObtainiumError(tr('shizukuBinderNotFound')),
-                        );
-                      }
-                      return;
-                    }
-                    behaviorSettings.useShizuku =
-                        resCode.startsWith('authorized') ||
-                        resCode.startsWith('granted');
-                    if (!context.mounted) return;
-                    switch (resCode) {
-                      case 'binder_not_found':
-                        _showError(
-                          context,
-                          ObtainiumError(tr('shizukuBinderNotFound')),
-                        );
-                      case 'old_shizuku':
-                        _showError(context, ObtainiumError(tr('shizukuOld')));
-                      case 'old_android_with_adb':
-                        _showError(
-                          context,
-                          ObtainiumError(tr('shizukuOldAndroidWithADB')),
-                        );
-                      case 'denied':
-                        _showError(context, ObtainiumError(tr('cancelled')));
-                    }
-                  },
-                  onError: (e) {
-                    talker.warning('Shizuku checkPermission error: $e');
-                  },
+                final shizukuInstaller = ShizukuInstaller(
+                  SettingsProvider(behaviorSettings.prefs),
                 );
+                final resCode =
+                    await shizukuInstaller.checkPermissionWithRetry();
+                final isGranted =
+                    resCode?.startsWith('authorized') == true ||
+                    resCode?.startsWith('granted') == true;
+                if (isGranted) {
+                  behaviorSettings.useShizuku = true;
+                  behaviorSettings.installerMode = 'shizuku';
+                  return;
+                }
+                behaviorSettings.useShizuku = false;
+                if (!context.mounted) return;
+
+                final pkg =
+                    await ShizukuInstaller.getInstalledShizukuPackageId();
+                if (pkg == null) {
+                  _showError(
+                    context,
+                    ObtainiumError(tr('shizukuNotInstalled')),
+                  );
+                  return;
+                }
+                final isPlus = pkg == AppConstants.shizukuPlusId;
+                switch (resCode) {
+                  case 'binder_not_found':
+                  case 'services_not_found':
+                  case null:
+                    _showError(
+                      context,
+                      ObtainiumError(
+                        isPlus
+                            ? tr('shizukuPlusServiceStopped')
+                            : tr('shizukuBinderNotFound'),
+                      ),
+                    );
+                  case 'old_shizuku':
+                    _showError(context, ObtainiumError(tr('shizukuOld')));
+                  case 'old_android_with_adb':
+                    _showError(
+                      context,
+                      ObtainiumError(tr('shizukuOldAndroidWithADB')),
+                    );
+                  case 'denied':
+                    _showError(
+                      context,
+                      ObtainiumError(tr('shizukuPermissionDenied')),
+                    );
+                  default:
+                    _showError(
+                      context,
+                      ObtainiumError(tr('shizukuBinderNotFound')),
+                    );
+                }
               },
             ),
 

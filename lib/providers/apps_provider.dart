@@ -1376,62 +1376,19 @@ class AppsProvider with ChangeNotifier {
     BuildContext? firstTimeWithContext, {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
-  }) async {
-    // We don't know which APKs in an XAPK or ZIP are supported by the user's device
-    // So we try installing all of them and assume success if at least one installed
-    // If 0 APKs installed, throw the first install error encountered
-    // Obviously this approach is naive and is undesirable in many cases, needs to be improved
-    var somethingInstalled = false;
-    try {
-      MultiAppMultiError errors = MultiAppMultiError();
-      List<File> APKFiles = [];
-      for (var file
-          in dir.extracted
-              .listSync(recursive: true, followLinks: false)
-              .whereType<File>()) {
-        if (file.path.toLowerCase().endsWith('.apk')) {
-          APKFiles.add(file);
-        } else if (file.path.toLowerCase().endsWith('.obb')) {
-          await moveObbFile(file, dir.appId);
-        }
-      }
-
-      File? temp;
-      APKFiles.removeWhere((element) {
-        bool res = element.uri.pathSegments.last.startsWith(dir.appId);
-        if (res) {
-          temp = element;
-        }
-        return res;
-      });
-      if (temp != null) {
-        APKFiles = [temp!, ...APKFiles];
-      }
-
-      try {
-        var wasInstalled = await installApk(
-          DownloadedApk(dir.appId, APKFiles[0]),
-          firstTimeWithContext?.mounted == true ? firstTimeWithContext : null,
-          needsBGWorkaround: needsBGWorkaround,
-          shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-          additionalAPKs: APKFiles.sublist(
-            1,
-          ).map((a) => DownloadedApk(dir.appId, a)).toList(),
-        );
-        somethingInstalled = somethingInstalled || wasInstalled;
-        dir.file.delete(recursive: true);
-      } catch (e) {
-        logs.add('Could not install APKs from ${dir.type}: ${e.toString()}');
-        errors.add(dir.appId, e, appName: apps[dir.appId]?.name);
-      }
-      if (errors.idsByErrorString.isNotEmpty) {
-        throw errors;
-      }
-    } finally {
-      dir.extracted.delete(recursive: true);
-    }
-    return somethingInstalled;
-  }
+  }) =>
+      AppInstallService.installApkDir(
+        dir,
+        firstTimeWithContext,
+        behaviorSettings,
+        plusSettings,
+        updateSettings,
+        logs,
+        apps,
+        needsBGWorkaround: needsBGWorkaround,
+        shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+        saveApps: saveApps,
+      );
 
   Future<bool> installApk(
     DownloadedApk file,
@@ -1439,112 +1396,20 @@ class AppsProvider with ChangeNotifier {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
     List<DownloadedApk> additionalAPKs = const [],
-  }) async {
-    if (firstTimeWithContext != null &&
-        behaviorSettings.beforeNewInstallsShareToAppVerifier &&
-        (await getInstalledInfo('dev.soupslurpr.appverifier')) != null) {
-      XFile f = XFile.fromData(
-        file.file.readAsBytesSync(),
-        mimeType: 'application/vnd.android.package-archive',
+  }) =>
+      AppInstallService.installApk(
+        file,
+        firstTimeWithContext,
+        behaviorSettings,
+        plusSettings,
+        updateSettings,
+        logs,
+        apps,
+        needsBGWorkaround: needsBGWorkaround,
+        shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+        additionalAPKs: additionalAPKs,
+        saveApps: saveApps,
       );
-      Fluttertoast.showToast(
-        msg: tr('appVerifierInstructionToast'),
-        toastLength: Toast.LENGTH_LONG,
-      );
-      await Share.shareXFiles([f]);
-    }
-    var newInfo = await packageManager.getPackageArchiveInfo(
-      archiveFilePath: file.file.path,
-    );
-    if (newInfo == null) {
-      try {
-        deleteFile(file.file);
-        for (var a in additionalAPKs) {
-          deleteFile(a.file);
-        }
-      } catch (e) {
-        //
-      } finally {
-        throw ObtainiumError(tr('badDownload'));
-      }
-    }
-    PackageInfo? appInfo = await getInstalledInfo(apps[file.appId]!.app.id);
-    logs.add(
-      'Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
-    );
-    // versionCode is int? in the plugin — null on Android 15 for apps using
-    // longVersionCode > Integer.MAX_VALUE. Fall back to 0 to skip downgrade check.
-    final newVersionCode = newInfo.versionCode ?? 0;
-    final existingVersionCode = appInfo?.versionCode ?? 0;
-    if (appInfo != null &&
-        newVersionCode > 0 &&
-        existingVersionCode > 0 &&
-        newVersionCode < existingVersionCode &&
-        !(await canDowngradeApps())) {
-      if (settingsProvider.showAppDowngradeError) {
-        throw DowngradeError(existingVersionCode, newVersionCode);
-      }
-    }
-    if (needsBGWorkaround) {
-      // The below 'await' will never return if we are in a background process
-      // To work around this, we should assume the install will be successful
-      // So we update the app's installed version first as we will never get to the later code
-      // We can't conditionally get rid of the 'await' as this causes install fails (BG process times out) - see #896
-      // TODO: When fixed, update this function and the calls to it accordingly
-      apps[file.appId]!.app.installedVersion =
-          apps[file.appId]!.app.latestVersion;
-      await saveApps([
-        apps[file.appId]!.app,
-      ], attemptToCorrectInstallStatus: false);
-    }
-    int? code;
-    if (!behaviorSettings.useShizuku) {
-      var allAPKs = [file.file.path];
-      allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
-      code = await AndroidPackageInstaller.installApk(
-        apkFilePath: allAPKs.join(','),
-      );
-    } else {
-      code = await ShizukuApkInstaller().installAPK(
-        file.file.uri.toString(),
-        shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
-      );
-    }
-    bool installed = false;
-    if (code != null && code != 0 && code != 3) {
-      try {
-        deleteFile(file.file);
-      } catch (e) {
-        //
-      } finally {
-        throw InstallError(code);
-      }
-    } else if (code == 0) {
-      installed = true;
-      apps[file.appId]!.app.installedVersion =
-          apps[file.appId]!.app.latestVersion;
-      file.file.delete(recursive: true);
-    }
-    await saveApps([apps[file.appId]!.app]);
-    return installed;
-  }
-
-  Future<void> _shareToAppVerifier(
-    DownloadedApk file,
-    BuildContext context,
-  ) async {
-    if (!behaviorSettings.beforeNewInstallsShareToAppVerifier) return;
-    if (await getInstalledInfo('dev.soupslurpr.appverifier') == null) return;
-    XFile f = XFile.fromData(
-      file.file.readAsBytesSync(),
-      mimeType: 'application/vnd.android.package-archive',
-    );
-    Fluttertoast.showToast(
-      msg: tr('appVerifierInstructionToast'),
-      toastLength: Toast.LENGTH_LONG,
-    );
-    await Share.shareXFiles([f]);
-  }
 
   Future<String> getStorageRootPath() async {
     return '/${(await getAppStorageDir()).uri.pathSegments.sublist(0, 3).join('/')}';
