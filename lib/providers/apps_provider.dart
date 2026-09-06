@@ -2418,21 +2418,28 @@ class AppsProvider with ChangeNotifier {
     if (currentApp.hasPendingRepoRename) {
       return null;
     }
-    SourceProvider sourceProvider = SourceProvider();
-    App newApp = await sourceProvider.getApp(
-      sourceProvider.getSource(
+    checkingUpdateIds.add(appId);
+    notify();
+    try {
+      SourceProvider sourceProvider = SourceProvider();
+      App newApp = await sourceProvider.getApp(
+        sourceProvider.getSource(
+          currentApp.url,
+          overrideSource: currentApp.overrideSource,
+        ),
         currentApp.url,
-        overrideSource: currentApp.overrideSource,
-      ),
-      currentApp.url,
-      currentApp.additionalSettings,
-      currentApp: currentApp,
-    );
-    if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
-      newApp.preferredApkIndex = currentApp.preferredApkIndex;
+        currentApp.additionalSettings,
+        currentApp: currentApp,
+      );
+      if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
+        newApp.preferredApkIndex = currentApp.preferredApkIndex;
+      }
+      await saveApps([newApp]);
+      return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
+    } finally {
+      checkingUpdateIds.remove(appId);
+      notify();
     }
-    await saveApps([newApp]);
-    return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
   }
 
   List<String> getAppsSortedByUpdateCheckTime({
@@ -2479,6 +2486,7 @@ class AppsProvider with ChangeNotifier {
     MultiAppMultiError errors = MultiAppMultiError();
     if (!gettingUpdates) {
       gettingUpdates = true;
+      notify();
       try {
         List<String> appIds = getAppsSortedByUpdateCheckTime(
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
@@ -2488,6 +2496,10 @@ class AppsProvider with ChangeNotifier {
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
         }
+
+        final int totalToProcess = appIds.length;
+        int completedCount = 0;
+        refreshProgress.value = totalToProcess > 0 ? 0.0 : null;
 
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
         try {
@@ -2519,6 +2531,11 @@ class AppsProvider with ChangeNotifier {
               } else {
                 errors.add(appId, e, appName: apps[appId]?.name);
               }
+            } finally {
+              completedCount++;
+              if (totalToProcess > 0) {
+                refreshProgress.value = completedCount / totalToProcess;
+              }
             }
             if (newApp != null) {
               updates.add(newApp);
@@ -2527,6 +2544,9 @@ class AppsProvider with ChangeNotifier {
         );
       } finally {
         gettingUpdates = false;
+        refreshProgress.value = null;
+        checkingUpdateIds.clear();
+        notify();
       }
     }
     if (errors.idsByErrorString.isNotEmpty) {

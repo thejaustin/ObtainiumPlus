@@ -637,7 +637,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                               ? SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(
+                                  child: ExpressiveCircularProgressIndicator(
                                     strokeWidth: 2,
                                     color:
                                         Theme.of(context).colorScheme.onPrimary,
@@ -927,7 +927,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       ? SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(
+                          child: ExpressiveCircularProgressIndicator(
                             strokeWidth: 2,
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
