@@ -188,29 +188,45 @@ class _SquigglyPainter extends CustomPainter {
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawLine(Offset(0, centerY), Offset(size.width, centerY), bgPaint);
-
     final activePaint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    final path = Path();
-
     if (progress != null) {
-      // Determinate: wavelength=40dp, ramp amplitude in/out at 0-10% and 90-100%
-      if (progress! <= 0.0) return;
-      final double activeWidth = progress! * size.width;
-      const double frequency = (2 * math.pi) / 40.0;
+      final double p = progress!.clamp(0.0, 1.0);
+      if (p <= 0.0) {
+        canvas.drawLine(
+          Offset(0, centerY),
+          Offset(size.width, centerY),
+          bgPaint,
+        );
+        return;
+      }
 
+      final double activeWidth = p * size.width;
+      const double frequency = (2 * math.pi) / 40.0;
+      const double gap = 4.0;
+      final double trackStart = activeWidth + gap;
+
+      // Inactive track with M3E 4dp gap
+      if (trackStart < size.width) {
+        canvas.drawLine(
+          Offset(trackStart, centerY),
+          Offset(size.width, centerY),
+          bgPaint,
+        );
+      }
+
+      final path = Path();
       path.moveTo(0, centerY);
       for (double x = 0; x <= activeWidth; x += 1.0) {
-        final double progressAtX = x / size.width;
+        final double progressAtX = activeWidth > 0 ? x / activeWidth : 0.0;
         final double ramp = progressAtX < 0.1
             ? progressAtX / 0.1
-            : progressAtX > 0.95
-            ? (1.0 - progressAtX) / 0.05
+            : progressAtX > 0.85
+            ? (1.0 - progressAtX) / 0.15
             : 1.0;
 
         final double currentAmplitude = amplitude * ramp;
@@ -232,6 +248,13 @@ class _SquigglyPainter extends CustomPainter {
         stopPaint,
       );
     } else {
+      // Indeterminate mode: draw full background track
+      canvas.drawLine(
+        Offset(0, centerY),
+        Offset(size.width, centerY),
+        bgPaint,
+      );
+
       // M3 Expressive Indeterminate: smooth morphing wave with M3 curve expansion/contraction
       const double wavelength = 28.0;
       const double frequency = (2 * math.pi) / wavelength;
@@ -364,14 +387,13 @@ class _WavyCircularPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (math.min(size.width, size.height) - strokeWidth * 2) / 2;
+    if (radius <= 0) return;
 
     final bgPaint = Paint()
       ..color = backgroundColor
       ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    // Draw background circle
-    canvas.drawCircle(center, radius, bgPaint);
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
     final activePaint = Paint()
       ..color = color
@@ -379,21 +401,52 @@ class _WavyCircularPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    const double amplitude = 2.5;
-    const int waveCount = 12; // Number of waves around the circle
+    // Adaptive wave count and amplitude based on radius to avoid dense squishing on compact sizes
+    final int waveCount;
+    final double amplitude;
+    if (radius < 12.0) {
+      waveCount = 6;
+      amplitude = math.min(1.2, radius * 0.15);
+    } else if (radius < 22.0) {
+      waveCount = 8;
+      amplitude = math.min(1.8, radius * 0.14);
+    } else {
+      waveCount = 12;
+      amplitude = math.min(2.5, radius * 0.12);
+    }
 
     final path = Path();
 
     if (progress != null) {
-      // Determinate circular wavy
-      final double sweepAngle = progress! * 2 * math.pi;
-      if (sweepAngle <= 0) return;
+      final double clampedProgress = progress!.clamp(0.0, 1.0);
+      final double sweepAngle = clampedProgress * 2 * math.pi;
+
+      if (sweepAngle <= 0) {
+        canvas.drawCircle(center, radius, bgPaint);
+        return;
+      }
+
+      // M3E gap between active arc and inactive background track
+      final double gapAngle = (4.0 / radius).clamp(0.05, 0.4);
+      final double bgSweepAngle = 2 * math.pi - sweepAngle - gapAngle;
+      if (bgSweepAngle > 0.05) {
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: radius),
+          sweepAngle + gapAngle - math.pi / 2,
+          bgSweepAngle,
+          false,
+          bgPaint,
+        );
+      }
 
       for (double a = 0; a <= sweepAngle; a += 0.02) {
+        final double progressAtA = sweepAngle > 0 ? a / sweepAngle : 0.0;
+        final double ramp = progressAtA > 0.85 ? (1.0 - progressAtA) / 0.15 : 1.0;
+        final double currentAmplitude = amplitude * ramp;
         final double currentRadius =
             radius +
             math.sin(a * waveCount - (animationValue * 2 * math.pi)) *
-                amplitude;
+                currentAmplitude;
         final x = center.dx + currentRadius * math.cos(a - math.pi / 2);
         final y = center.dy + currentRadius * math.sin(a - math.pi / 2);
         if (a == 0) {
@@ -406,10 +459,7 @@ class _WavyCircularPainter extends CustomPainter {
 
       // End stop dot
       final endAngle = sweepAngle - math.pi / 2;
-      final endRadius =
-          radius +
-          math.sin(sweepAngle * waveCount - (animationValue * 2 * math.pi)) *
-              amplitude;
+      final endRadius = radius;
       canvas.drawCircle(
         Offset(
           center.dx + endRadius * math.cos(endAngle),
@@ -421,19 +471,19 @@ class _WavyCircularPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
     } else {
-      // Indeterminate circular wavy (expanding/contracting like Google Play)
-      final double cycle = animationValue * 2 * math.pi; // 0 to 2pi
-      final double rotation = animationValue * 8 * math.pi; // base spin
+      // Draw background circle
+      canvas.drawCircle(center, radius, bgPaint);
 
-      // Sweep oscillates smoothly between min length (0.1 pi) and max length (1.5 pi)
+      // Indeterminate circular wavy (expanding/contracting like Google Play)
+      final double cycle = animationValue * 2 * math.pi;
+      final double rotation = animationValue * 8 * math.pi;
+
       final double sweepOscillation =
-          (math.sin(cycle - math.pi / 2) + 1.0) / 2.0; // 0.0 to 1.0
+          (math.sin(cycle - math.pi / 2) + 1.0) / 2.0;
       final double segmentAngle =
           0.1 * math.pi + sweepOscillation * 1.4 * math.pi;
 
-      // Tail offset pushes the start forward when contracting
       final double tailOffset = cycle - (math.sin(cycle) + 1.0) * math.pi / 2.0;
-
       final double startAngle = rotation + tailOffset;
 
       for (double a = 0; a <= segmentAngle; a += 0.02) {

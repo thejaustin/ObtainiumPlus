@@ -35,8 +35,8 @@ import 'package:obtainium/components/generated_form_renderer.dart'
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/components/apps/active_operations_banner.dart';
 import 'package:obtainium/pages/app.dart';
-import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -1796,6 +1796,7 @@ class AppsPageState extends State<AppsPage> {
                       onCheckUpdates: refresh,
                     ),
                   ),
+                const SliverToBoxAdapter(child: ActiveOperationsBanner()),
                 if (plusSettings.plusEnableTags)
                   TagFilterBar(
                     activeTag: activeTag,
@@ -1945,7 +1946,7 @@ class _RefreshProgressBar extends StatelessWidget {
         return SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(32, 0, 32, 8),
-            child: LinearProgressIndicator(value: refreshProgress),
+            child: ExpressiveProgressIndicator(value: refreshProgress),
           ),
         );
       },

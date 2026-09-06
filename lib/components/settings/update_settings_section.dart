@@ -15,6 +15,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 
 /// Update settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -861,7 +862,7 @@ class _RunBgUpdateCheckNowButtonState
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
               )
             : Text('runBgCheckNow'.tr()),
       ),
