@@ -313,6 +313,7 @@ class AppDownloadService {
       var notif = DownloadNotification(app.finalName, 100);
       notificationsProvider?.cancel(notif.id);
       int? prevProg;
+      DateTime? lastNotificationTime;
       var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
       if (source.urlsAlwaysHaveExtension) {
         fileNameNoExt =
@@ -342,11 +343,18 @@ class AppDownloadService {
             receivedBytes: received,
             totalBytes: total,
           );
-          if (prog != null &&
+          final now = DateTime.now();
+          final shouldNotify = prog != null &&
               prevProg != prog &&
-              (prevProg == null || (prog - prevProg!).abs() >= 2 || prog == 100)) {
+              (prevProg == null ||
+                  prog == 100 ||
+                  ((prog - prevProg!).abs() >= 2 &&
+                      (lastNotificationTime == null ||
+                          now.difference(lastNotificationTime!).inMilliseconds >= 300)));
+          if (shouldNotify) {
             notificationsProvider?.notify(notif);
             prevProg = prog;
+            lastNotificationTime = now;
           }
         },
         APKDir.path,
@@ -718,7 +726,14 @@ class AppDownloadService {
     BehaviorSettingsProvider behaviorSettings,
     bool willBeSilent,
   ) async {
-    if (!behaviorSettings.useShizuku) {
+    if (behaviorSettings.installerMode == 'external') {
+      if (behaviorSettings.externalInstallerPackage == null) {
+        throw ObtainiumError(tr('externalInstallerRequired'));
+      }
+      return;
+    }
+    if (behaviorSettings.installerMode != 'shizuku' &&
+        !behaviorSettings.useShizuku) {
       if (!(await behaviorSettings.getInstallPermission(enforce: false))) {
         throw ObtainiumError(tr('cancelled'));
       }
@@ -733,6 +748,9 @@ class AppDownloadService {
         case 'old_android_with_adb':
           if (!willBeSilent &&
               (await behaviorSettings.getInstallPermission(enforce: false))) {
+            talker.warning(
+              'Shizuku unavailable ($shizukuPermission), falling back to AndroidPackageInstaller',
+            );
             break;
           }
           if (shizukuPermission == 'binder_not_found') {

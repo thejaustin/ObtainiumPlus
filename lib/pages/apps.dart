@@ -19,6 +19,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -683,8 +684,11 @@ class AppsPageState extends State<AppsPage> {
           listedApps[index].app.additionalSettings['trackOnly'] == true;
       var hasUpdate =
           listedApps[index].app.installedVersion != null &&
-          listedApps[index].app.installedVersion !=
-              listedApps[index].app.latestVersion;
+          AppUpdateService.areVersionsDifferent(
+            listedApps[index].app,
+            listedApps[index].app.installedVersion,
+            listedApps[index].app.latestVersion,
+          );
       // Also show the install button for uninstalled, non-track-only apps
       var needsInstall =
           !trackOnly && listedApps[index].app.installedVersion == null;
@@ -2031,7 +2035,11 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
     final isNewInstall = aim.app.installedVersion == null;
     final isUpdate =
         aim.app.installedVersion != null &&
-        aim.app.installedVersion != aim.app.latestVersion;
+        AppUpdateService.areVersionsDifferent(
+          aim.app,
+          aim.app.installedVersion,
+          aim.app.latestVersion,
+        );
     final versionLabel = isUpdate
         ? '${aim.app.installedVersion} → ${aim.app.latestVersion}'
         : aim.app.latestVersion;

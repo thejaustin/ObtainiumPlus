@@ -3,6 +3,8 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/main.dart';
+import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
@@ -320,7 +322,15 @@ Widget _buildActions(BuildContext context) {
         FilledButton(
           onPressed: () {
             Navigator.pop(context);
-            // Could navigate to discover page or show source info
+            final nav = globalNavigatorKey.currentState;
+            if (nav != null) {
+              Navigator.push(
+                nav.context,
+                MaterialPageRoute(
+                  builder: (context) => const DiscoverPage(),
+                ),
+              );
+            }
           },
           child: Text(tr('browseSupportedSources')),
         ),

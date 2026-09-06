@@ -1094,6 +1094,7 @@ class AppsProvider with ChangeNotifier {
       var notif = DownloadNotification(app.finalName, 100, appId: app.id);
       notificationsProvider?.cancel(notif.id);
       int? prevProg;
+      DateTime? lastNotificationTime;
       var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
       if (source.urlsAlwaysHaveExtension) {
         fileNameNoExt =
@@ -1120,10 +1121,19 @@ class AppsProvider with ChangeNotifier {
             prog ?? 100,
             appId: app.id,
           );
-          if (prog != null && prevProg != prog) {
+          final now = DateTime.now();
+          final shouldNotify = prog != null &&
+              prevProg != prog &&
+              (prevProg == null ||
+                  prog == 100 ||
+                  ((prog - prevProg!).abs() >= 2 &&
+                      (lastNotificationTime == null ||
+                          now.difference(lastNotificationTime!).inMilliseconds >= 300)));
+          if (shouldNotify) {
             notificationsProvider?.notify(notif);
+            prevProg = prog;
+            lastNotificationTime = now;
           }
-          prevProg = prog;
         },
         apkDir.path,
         useExisting: useExisting,

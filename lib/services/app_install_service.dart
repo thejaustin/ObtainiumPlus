@@ -20,9 +20,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
+import 'package:obtainium/providers/settings_provider.dart';
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -599,7 +600,36 @@ class AppInstallService {
       }
     }
 
-    if (!behaviorSettings.useShizuku) {
+    if (behaviorSettings.installerMode == 'external') {
+      try {
+        final extResult = await ExternalInstaller(
+          SettingsProvider(behaviorSettings.prefs),
+        ).installApk(allAPKs, appId: apps[file.appId]!.app.id);
+        if (extResult.isSuccess) {
+          code = 0;
+        } else if (extResult.isAlreadyInstalled) {
+          code = 3;
+        } else if (extResult.isCancelled) {
+          code = 3;
+        } else {
+          code = extResult.errorCode ?? 1;
+        }
+      } catch (e) {
+        logs.add(
+          'External install failed: $e, falling back to AndroidPackageInstaller',
+        );
+        await executeBgWorkaroundIfNeeded();
+        code = await installStockWithPolling(
+          apkFilePath: allAPKs.join(','),
+          packageName: newInfo.packageName,
+          targetVersionCode: newInfo.versionCode,
+          targetVersionName: newInfo.versionName,
+          existingVersionCode: appInfo?.versionCode,
+          existingVersionName: appInfo?.versionName,
+        );
+      }
+    } else if (behaviorSettings.installerMode != 'shizuku' &&
+        !behaviorSettings.useShizuku) {
       await executeBgWorkaroundIfNeeded();
       code = await installStockWithPolling(
         apkFilePath: allAPKs.join(','),

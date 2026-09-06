@@ -51,6 +51,7 @@ enum ActionBannerMode { all, updatesOnly, none }
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
+  SettingsProvider([this.prefs]);
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   final Map<String, String> _secureCache = {};
   static const List<String> _secureKeys = ['github-creds', 'gitlab-creds'];

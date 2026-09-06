@@ -629,8 +629,13 @@ class _AppPageState extends State<AppPage> {
                                 ],
                               ),
                             )
-                          else if (app?.app.installedVersion != null &&
-                              app?.app.installedVersion != app?.app.latestVersion)
+                          else if (app != null &&
+                              app.app.installedVersion != null &&
+                              AppUpdateService.areVersionsDifferent(
+                                app.app,
+                                app.app.installedVersion,
+                                app.app.latestVersion,
+                              ))
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
@@ -1530,8 +1535,13 @@ class _AppPageState extends State<AppPage> {
                             dense: true,
                           ),
                         ),
-                      if (app?.app.installedVersion != null &&
-                          app?.app.installedVersion != app?.app.latestVersion &&
+                      if (app != null &&
+                          app.app.installedVersion != null &&
+                          AppUpdateService.areVersionsDifferent(
+                            app.app,
+                            app.app.installedVersion,
+                            app.app.latestVersion,
+                          ) &&
                           !isVersionDetectionStandard &&
                           !trackOnly)
                         PopupMenuItem(
@@ -1544,8 +1554,13 @@ class _AppPageState extends State<AppPage> {
                           ),
                         ),
                       if ((!isVersionDetectionStandard || trackOnly) &&
-                          app?.app.installedVersion != null &&
-                          app?.app.installedVersion == app?.app.latestVersion)
+                          app != null &&
+                          app.app.installedVersion != null &&
+                          !AppUpdateService.areVersionsDifferent(
+                            app.app,
+                            app.app.installedVersion,
+                            app.app.latestVersion,
+                          ))
                         PopupMenuItem(
                           value: 'resetStatus',
                           enabled: !isUpdating,

@@ -198,6 +198,7 @@ int? compareVersionStrings(String version1, String version2) {
       } else {
         _padTrailingZeroSegments(tokens2, tokens1.length);
       }
+    }
     if (tokens1.length != tokens2.length) {
       final minLen = min(tokens1.length, tokens2.length);
       bool prefixMatches = true;

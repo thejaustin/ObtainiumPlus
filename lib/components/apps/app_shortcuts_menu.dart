@@ -11,6 +11,7 @@ import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -97,8 +98,12 @@ void showAppShortcutsMenu(
                 leading: const Icon(Icons.system_update_outlined),
                 title: Text(tr('update')),
                 enabled:
-                    appInMemory.app.installedVersion !=
-                    appInMemory.app.latestVersion,
+                    appInMemory.app.installedVersion != null &&
+                    AppUpdateService.areVersionsDifferent(
+                      appInMemory.app,
+                      appInMemory.app.installedVersion,
+                      appInMemory.app.latestVersion,
+                    ),
                 onTap: () {
                   Navigator.pop(ctx);
                   appsProvider.downloadAndInstallLatestApps([appId], context);

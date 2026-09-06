@@ -60,10 +60,24 @@ class AppFileService {
   }
 
   static Future<void> unzipFile(String filePath, String destinationPath) async {
-    await ZipFile.extractToDirectory(
-      zipFile: File(filePath),
-      destinationDir: Directory(destinationPath),
-    );
+    try {
+      await ZipFile.extractToDirectory(
+        zipFile: File(filePath),
+        destinationDir: Directory(destinationPath),
+      );
+    } on FileSystemException catch (e) {
+      if (e.osError?.errorCode == 28 ||
+          e.message.toLowerCase().contains('no space')) {
+        throw ObtainiumError(tr('installFailedStorage'));
+      }
+      rethrow;
+    } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('no space') || errStr.contains('enospc')) {
+        throw ObtainiumError(tr('installFailedStorage'));
+      }
+      rethrow;
+    }
   }
 
   static Future<Map<String, Directory>> initAppDirectories() async {
@@ -565,6 +579,17 @@ class AppFileService {
           .pipe(sink);
       await sink.close();
       sink = null;
+    } on FileSystemException catch (e) {
+      if (tempDownloadedFile.existsSync()) {
+        try {
+          tempDownloadedFile.deleteSync();
+        } catch (_) {}
+      }
+      if (e.osError?.errorCode == 28 ||
+          e.message.toLowerCase().contains('no space')) {
+        throw ObtainiumError(tr('insufficientStorage'));
+      }
+      rethrow;
     } finally {
       await sink?.close();
       responseClient.close();
