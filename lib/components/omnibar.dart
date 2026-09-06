@@ -169,9 +169,14 @@ class _OmnibarState extends State<Omnibar> {
       if (_isUrl) {
         final urlToTest = hasScheme ? trimmed : 'https://$trimmed';
         try {
-          _sourceProvider.getSource(urlToTest);
-          _isValidUrl = true;
-          _urlError = null;
+          final src = _sourceProvider.getSource(urlToTest);
+          if (src.runtimeType.toString() == 'HTML') {
+            _isValidUrl = false;
+            _urlError = tr('unsupportedUrl');
+          } else {
+            _isValidUrl = true;
+            _urlError = null;
+          }
         } catch (e) {
           _isValidUrl = false;
           _urlError = e is UnsupportedURLError
@@ -432,7 +437,7 @@ class _OmnibarState extends State<Omnibar> {
                                   ),
                                 ),
                                 child: Text(
-                                  _isValidUrl ? tr('add') : tr('error'),
+                                  _isValidUrl ? tr('add') : tr('sources'),
                                 ),
                               ),
                             ),

@@ -16,19 +16,26 @@ class GitHubPersonalRepos implements MassAppUrlSource {
 
   /// Fetches one page of repos for [username].
   ///
-  /// If the saved GitHub token authenticates as [username], the GitHub API
-  /// automatically includes private repos in the response — no special handling
-  /// required.  Public-only repos are returned when no token is configured.
+  /// If the saved GitHub token authenticates as [username] (or if username is 'me'),
+  /// the GitHub API /user/repos endpoint is used to include private and organization
+  /// repos. Public-only repos are returned when unauthenticated or querying other users.
   Future<Map<String, List<String>>> _getOnePage(
     String username,
-    int page,
-  ) async {
+    int page, {
+    bool isAuthenticatedUser = false,
+  }) async {
     // Sort by updated so the most recently active repos appear first in the
-    // selection list.  type=all includes repos the user owns, forked, and is
-    // a collaborator on.
-    var resUrl =
-        'https://api.github.com/users/$username/repos'
-        '?per_page=100&page=$page&sort=updated&type=all';
+    // selection list.
+    final String resUrl;
+    if (isAuthenticatedUser) {
+      resUrl =
+          'https://api.github.com/user/repos'
+          '?per_page=100&page=$page&sort=updated&affiliation=owner,collaborator,organization_member';
+    } else {
+      resUrl =
+          'https://api.github.com/users/$username/repos'
+          '?per_page=100&page=$page&sort=updated&type=all';
+    }
     Response res = await get(
       Uri.parse(resUrl),
       headers: await GitHub().getRequestHeaders({}, resUrl),
@@ -89,13 +96,46 @@ class GitHubPersonalRepos implements MassAppUrlSource {
         username = uri.pathSegments.first;
       }
     }
+
+    final gh = GitHub();
+    final token = await gh.getTokenIfAny({});
+    bool isAuthenticatedUser = false;
+    if (token != null) {
+      try {
+        final userRes = await get(
+          Uri.parse('https://api.github.com/user'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'User-Agent': 'Obtainium',
+          },
+        );
+        if (userRes.statusCode == 200) {
+          final authUser = jsonDecode(userRes.body)['login'] as String?;
+          if (authUser != null) {
+            final lowerUser = username.toLowerCase();
+            if (username.isEmpty ||
+                lowerUser == authUser.toLowerCase() ||
+                lowerUser == 'me' ||
+                lowerUser == 'self') {
+              isAuthenticatedUser = true;
+              username = authUser;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
     if (username.isEmpty) {
       throw ObtainiumError(tr('invalidInput'));
     }
     final Map<String, List<String>> urlsWithDescriptions = {};
     var page = 1;
     while (true) {
-      final pageUrls = await _getOnePage(username, page++);
+      final pageUrls = await _getOnePage(
+        username,
+        page++,
+        isAuthenticatedUser: isAuthenticatedUser,
+      );
       urlsWithDescriptions.addAll(pageUrls);
       if (pageUrls.length < 100) {
         break;

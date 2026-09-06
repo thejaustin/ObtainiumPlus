@@ -13,6 +13,7 @@ import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
@@ -1229,7 +1230,38 @@ class AddAppPageState extends State<AddAppPage> {
           : const AlwaysScrollableScrollPhysics(),
       shrinkWrap: true,
       slivers: <Widget>[
-        if (!widget.isModal)
+        if (widget.isModal)
+          SliverToBoxAdapter(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Center(child: DragHandle()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        widget.appId != null ? tr('editApp') : tr('addApp'),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(context).pop(),
+                        visualDensity: VisualDensity.compact,
+                        tooltip: tr('close'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
           CustomAppBar(
             title: tr('addApp'),
             actions: [

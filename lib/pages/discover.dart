@@ -579,7 +579,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                             if (searchQuery.isNotEmpty)
                               IconButton(
                                 icon: const Icon(Icons.clear),
-                                tooltip: 'Clear',
+                                tooltip: tr('clear'),
                                 onPressed: () {
                                   _searchDebounce?.cancel();
                                   _searchController.clear();
