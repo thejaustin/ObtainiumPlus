@@ -462,7 +462,7 @@ class _AppDashboardState extends State<AppDashboard>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    tr('plural_apps', args: [count.toString()]),
+                    plural('apps', count),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,

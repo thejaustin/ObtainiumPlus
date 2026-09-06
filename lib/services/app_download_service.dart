@@ -217,13 +217,21 @@ class AppDownloadService {
       downloadResults = results;
     }
     for (var res in downloadResults) {
-      if (!errors.appIdNames.containsKey(res['id'])) {
+      final id = res['id'] as String?;
+      if (id == null) continue;
+      final file = res['downloadedFile'] as DownloadedApk?;
+      final dir = res['downloadedDir'] as DownloadedDir?;
+      if (file == null && dir == null) {
+        // Cancelled or failed to download; do not attempt install
+        continue;
+      }
+      if (!errors.appIdNames.containsKey(id)) {
         try {
           var installed = await _installApp(
-            id: res['id'] as String,
-            willBeSilent: res['willBeSilent'] as bool,
-            downloadedFile: res['downloadedFile'] as DownloadedApk?,
-            downloadedDir: res['downloadedDir'] as DownloadedDir?,
+            id: id,
+            willBeSilent: (res['willBeSilent'] as bool?) ?? false,
+            downloadedFile: file,
+            downloadedDir: dir,
             apps: apps,
             settingsProvider: settingsProvider,
             behaviorSettings: behaviorSettings,
@@ -235,9 +243,8 @@ class AppDownloadService {
             notificationsProvider: notificationsProvider,
             context: context?.mounted == true ? context : null,
           );
-          if (installed) installedIds.add(res['id'] as String);
+          if (installed) installedIds.add(id);
         } catch (e) {
-          var id = res['id'] as String;
           errors.add(id, e, appName: apps[id]?.name);
         }
       }
@@ -319,17 +326,27 @@ class AppDownloadService {
         downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
-        (double? progress) {
+        (double? progress, [int? received, int? total]) {
           int? prog = progress?.ceil();
           if (apps[app.id] != null) {
             apps[app.id]!.downloadProgress = progress;
+            if (received != null) apps[app.id]!.downloadReceivedBytes = received;
+            if (total != null) apps[app.id]!.downloadTotalBytes = total;
             // notifyListeners() removed here to prevent massive UI rebuilds
           }
-          notif = DownloadNotification(app.finalName, prog ?? 100);
-          if (prog != null && prevProg != prog) {
+          notif = DownloadNotification(
+            app.finalName,
+            prog ?? 100,
+            appId: app.id,
+            receivedBytes: received,
+            totalBytes: total,
+          );
+          if (prog != null &&
+              prevProg != prog &&
+              (prevProg == null || (prog - prevProg!).abs() >= 2 || prog == 100)) {
             notificationsProvider?.notify(notif);
+            prevProg = prog;
           }
-          prevProg = prog;
         },
         APKDir.path,
         useExisting: useExisting,
@@ -347,9 +364,9 @@ class AppDownloadService {
       });
 
       if (apps[app.id] != null) {
-        apps[app.id]!.downloadProgress = -1;
+        apps[app.id]!.downloadProgress = clearProgressOnComplete ? null : 100;
         notifyListeners();
-        notif = DownloadNotification(app.finalName, -1);
+        notif = DownloadNotification(app.finalName, -1, appId: app.id);
         notificationsProvider?.notify(notif);
       }
       PackageInfo? newInfo;
@@ -696,13 +713,22 @@ class AppDownloadService {
       var shizukuPermission = await ShizukuApkInstaller().checkPermission();
       switch (shizukuPermission) {
         case 'authorized':
+        case 'granted':
           break;
         case 'binder_not_found':
-          throw ObtainiumError(tr('shizukuBinderNotFound'));
         case 'old_shizuku':
-          throw ObtainiumError(tr('shizukuOld'));
         case 'old_android_with_adb':
-          throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
+          if (!willBeSilent &&
+              (await behaviorSettings.getInstallPermission(enforce: false))) {
+            break;
+          }
+          if (shizukuPermission == 'binder_not_found') {
+            throw ObtainiumError(tr('shizukuBinderNotFound'));
+          } else if (shizukuPermission == 'old_shizuku') {
+            throw ObtainiumError(tr('shizukuOld'));
+          } else {
+            throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
+          }
         case 'denied':
         case null:
           throw ObtainiumError(tr('cancelled'));
@@ -733,7 +759,10 @@ class AppDownloadService {
     notifyListeners();
     try {
       if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
-      bool sayInstalled = true;
+      if (downloadedFile == null && downloadedDir == null) {
+        return false;
+      }
+      bool sayInstalled = false;
       var contextIfNewInstall = apps[id]?.installedInfo == null
           ? context
           : null;
@@ -778,6 +807,8 @@ class AppDownloadService {
           shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
           saveApps: saveApps,
         );
+      } else {
+        return false;
       }
       if (sayInstalled) {
         AppUpdateService.invalidateCache(id);

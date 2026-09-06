@@ -22,6 +22,7 @@ import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -313,6 +314,10 @@ class AppInstallService {
       return false;
     }
 
+    if (behaviorSettings.useShizuku) {
+      return true;
+    }
+
     int? targetSDK = (await getInstalledInfo(
       app.id,
     ))?.applicationInfo?.targetSdkVersion;
@@ -322,10 +327,6 @@ class AppInstallService {
         'App currently targets API $targetSDK which is too low for background updates (requires API $requiredSDK): ${app.id}',
       );
       return false;
-    }
-
-    if (behaviorSettings.useShizuku) {
-      return true;
     }
 
     // Android 14+ Install Constraints check
@@ -339,11 +340,14 @@ class AppInstallService {
       }
     }
 
-    if (app.id == 'dev.thejaustin.obtainiumplus') {
-      // obtainiumId
+    if (app.id == obtainiumId ||
+        app.id == '$obtainiumId.fdroid' ||
+        app.id == '$obtainiumId.debug') {
       return false;
     }
-    if (installerPackageName != 'dev.thejaustin.obtainiumplus') {
+    if (installerPackageName != obtainiumId &&
+        installerPackageName != '$obtainiumId.fdroid' &&
+        installerPackageName != '$obtainiumId.debug') {
       return false;
     }
     if (osInfo.version.sdkInt < 31) {
@@ -473,11 +477,13 @@ class AppInstallService {
         existingVersionCode > 0 &&
         newVersionCode < existingVersionCode &&
         !(await canDowngradeApps())) {
-      throw DowngradeError(
-        existingVersionCode,
-        newVersionCode,
-        appId: apps[file.appId]!.app.id,
-      );
+      if (updateSettings.showAppDowngradeError) {
+        throw DowngradeError(
+          existingVersionCode,
+          newVersionCode,
+          appId: apps[file.appId]!.app.id,
+        );
+      }
     }
     int? code;
     var allAPKs = [file.file.path];
@@ -592,17 +598,17 @@ class AppInstallService {
         }
       }
 
-      File? temp;
-      APKFiles.removeWhere((element) {
-        bool res = element.uri.pathSegments.last.startsWith(dir.appId);
-        if (res) {
-          temp = element;
-        }
-        return res;
+      APKFiles.sort((a, b) {
+        final aName = a.uri.pathSegments.last.toLowerCase();
+        final bName = b.uri.pathSegments.last.toLowerCase();
+        final aIsBase =
+            aName == 'base.apk' || aName.startsWith(dir.appId.toLowerCase());
+        final bIsBase =
+            bName == 'base.apk' || bName.startsWith(dir.appId.toLowerCase());
+        if (aIsBase && !bIsBase) return -1;
+        if (!aIsBase && bIsBase) return 1;
+        return aName.compareTo(bName);
       });
-      if (temp != null) {
-        APKFiles = [temp!, ...APKFiles];
-      }
 
       if (APKFiles.isEmpty) {
         throw ObtainiumError(tr('noAPKFound'));

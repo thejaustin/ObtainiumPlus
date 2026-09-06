@@ -258,7 +258,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         'url',
                         label: source.hosts.isNotEmpty
                             ? tr('overrideSource')
-                            : plural('url', 1).substring(2),
+                            : tr('urlLabel'),
                         value: source.hosts.isNotEmpty ? source.hosts[0] : '',
                         required: true,
                       ),
