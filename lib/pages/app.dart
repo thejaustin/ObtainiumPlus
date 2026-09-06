@@ -137,56 +137,50 @@ class _AppPageState extends State<AppPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ...installed.map(
-                (store) => ScaleTouchWrapper(
-                  onTap: () {},
-                  child: ListTile(
-                    leading: const Icon(Icons.open_in_new),
-                    title: Text(
-                      store['name']!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      store['package']!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing:
-                        plusSettings.plusDefaultStorePackage == store['package']
-                        ? const Chip(label: Text('Default'))
-                        : TextButton(
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              plusSettings.plusDefaultStorePackage =
-                                  store['package'];
-                              plusSettings.plusDefaultStoreName = store['name'];
-                              Navigator.pop(ctx);
-                              _showStoreChooser(context, appId);
-                            },
-                            child: const Text('Set Default'),
-                          ),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      Navigator.pop(ctx);
-                      _openInStore(store['package']!, store['scheme']!, appId);
-                    },
+                (store) => ListTile(
+                  leading: const Icon(Icons.open_in_new),
+                  title: Text(
+                    store['name']!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  subtitle: Text(
+                    store['package']!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing:
+                      plusSettings.plusDefaultStorePackage == store['package']
+                      ? const Chip(label: Text('Default'))
+                      : TextButton(
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            plusSettings.plusDefaultStorePackage =
+                                store['package'];
+                            plusSettings.plusDefaultStoreName = store['name'];
+                            Navigator.pop(ctx);
+                            _showStoreChooser(context, appId);
+                          },
+                          child: const Text('Set Default'),
+                        ),
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    Navigator.pop(ctx);
+                    _openInStore(store['package']!, store['scheme']!, appId);
+                  },
                 ),
               ),
               if (plusSettings.plusDefaultStorePackage != null)
-                ScaleTouchWrapper(
-                  onTap: () {},
-                  child: ListTile(
-                    leading: const Icon(Icons.clear),
-                    title: const Text('Clear Default Store'),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      plusSettings.plusDefaultStorePackage = null;
-                      plusSettings.plusDefaultStoreName = null;
-                      Navigator.pop(ctx);
-                      _showStoreChooser(context, appId);
-                    },
-                  ),
+                ListTile(
+                  leading: const Icon(Icons.clear),
+                  title: const Text('Clear Default Store'),
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    plusSettings.plusDefaultStorePackage = null;
+                    plusSettings.plusDefaultStoreName = null;
+                    Navigator.pop(ctx);
+                    _showStoreChooser(context, appId);
+                  },
                 ),
             ],
           ),
@@ -542,115 +536,187 @@ class _AppPageState extends State<AppPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 8,
-                  ),
-                  child: buildRepoRenameWarning(
-                    app: app,
-                    appsProvider: appsProvider,
-                    onUpdate: (id) => getUpdate(id),
-                  ),
+                buildRepoRenameWarning(
+                  app: app,
+                  appsProvider: appsProvider,
+                  onUpdate: (id) => getUpdate(id),
                 ),
-                const SizedBox(height: 32),
-                Text(
-                  versionLines,
-                  textAlign: TextAlign.start,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
-                ),
-                changeLogFn != null || app?.app.releaseDate != null
-                    ? InkWell(
-                        onTap: changeLogFn,
-                        child: Text(
-                          app?.app.releaseDate?.toLocal().toString() ??
-                              tr('changes'),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall!
-                              .copyWith(
-                                decoration: changeLogFn != null
-                                    ? TextDecoration.underline
-                                    : null,
-                                fontStyle: changeLogFn != null
-                                    ? FontStyle.italic
-                                    : null,
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  versionLines,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (changeLogFn != null || app?.app.releaseDate != null) ...[
+                                  const SizedBox(height: 6),
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(6),
+                                    onTap: changeLogFn,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.history_rounded,
+                                            size: 14,
+                                            color: Theme.of(context).colorScheme.primary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            app?.app.releaseDate?.toLocal().toString().split('.').first ??
+                                                tr('changes'),
+                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                              color: Theme.of(context).colorScheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (app?.app.installedVersion != null &&
+                              app?.app.installedVersion == app?.app.latestVersion)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(12),
                               ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 14,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    tr('upToDate'),
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else if (app?.app.installedVersion != null &&
+                              app?.app.installedVersion != app?.app.latestVersion)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.arrow_upward_rounded,
+                                    size: 14,
+                                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    tr('updateAvailable'),
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (infoLines.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        const Divider(height: 1),
+                        const SizedBox(height: 10),
+                        Text(
+                          infoLines,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
                         ),
-                      )
-                    : const SizedBox.shrink(),
-                const SizedBox(height: 40),
+                      ],
+                      if (app?.app.apkUrls.isNotEmpty == true ||
+                          app?.app.otherAssetUrls.isNotEmpty == true) ...[
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            ),
+                            onPressed: app?.app == null || updating
+                                ? null
+                                : () async {
+                                    try {
+                                      await appsProvider.downloadAppAssets([
+                                        app!.app.id,
+                                      ], context);
+                                    } catch (e) {
+                                      if (context.mounted) showError(e, context);
+                                    }
+                                  },
+                            icon: const Icon(Icons.attachment_rounded, size: 16),
+                            label: Text(
+                              tr(
+                                'downloadX',
+                                args: [lowerCaseIfEnglish(tr('releaseAsset'))],
+                              ),
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          Text(
-            infoLines,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
-          ),
-          if (app?.app.apkUrls.isNotEmpty == true ||
-              app?.app.otherAssetUrls.isNotEmpty == true)
-            InkWell(
-              onTap: app?.app == null || updating
-                  ? null
-                  : () async {
-                      try {
-                        await appsProvider.downloadAppAssets([
-                          app!.app.id,
-                        ], context);
-                      } catch (e) {
-                        if (context.mounted) showError(e, context);
-                      }
-                    },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: behaviorSettings.highlightTouchTargets
-                          ? (Theme.of(context).brightness == Brightness.light
-                                    ? Theme.of(context).primaryColor
-                                    : Theme.of(context).primaryColorLight)
-                                .withValues(
-                                  alpha:
-                                      Theme.of(context).brightness ==
-                                          Brightness.light
-                                      ? 20 / 255
-                                      : 40 / 255,
-                                )
-                          : null,
-                    ),
-                    padding: behaviorSettings.highlightTouchTargets
-                        ? const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 6)
-                        : const EdgeInsetsDirectional.fromSTEB(0, 2, 0, 2),
-                    margin: const EdgeInsetsDirectional.fromSTEB(0, 2, 0, 0),
-                    child: Text(
-                      tr(
-                        'downloadX',
-                        args: [lowerCaseIfEnglish(tr('releaseAsset'))],
-                      ),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                        decoration: TextDecoration.underline,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
           /* Certificate Hashes */
           if (app != null && app.certificateHashes.isNotEmpty)
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 16),
                 Text(
                   "${plural('certificateHash', app.certificateHashes.length)}"
                   "${app.hasMultipleSigners ? " (${tr('multipleSigners')})" : ""}",
@@ -684,7 +750,7 @@ class _AppPageState extends State<AppPage> {
               ],
             ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 16),
           CategoryEditorSelector(
             alignment: WrapAlignment.center,
             preselected: app?.app.categories != null
@@ -734,7 +800,7 @@ class _AppPageState extends State<AppPage> {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -1243,71 +1309,106 @@ class _AppPageState extends State<AppPage> {
       final defaultStorePackage = plusSettings.plusDefaultStorePackage;
       final defaultStoreName = plusSettings.plusDefaultStoreName;
 
-      return ScaleTouchWrapper(
-        child: TextButton(
-          onPressed:
-              !updating &&
-                  (app?.app.installedVersion == null ||
-                      AppUpdateService.areVersionsDifferent(
-                        app!.app,
-                        app!.app.installedVersion,
-                        app!.app.latestVersion,
-                      )) &&
-                  !areDownloadsRunning
-              ? () async {
-                  if (defaultStorePackage != null && app?.app.id != null) {
-                    AppHaptics.heavyImpact();
-                    final scheme = defaultStorePackage == 'org.fdroid.fdroid'
-                        ? 'fdroid.app://details?id='
-                        : 'market://details?id=';
-                    await _openInStore(
-                      defaultStorePackage,
-                      scheme,
-                      app!.app.id,
-                    );
-                    return;
-                  }
-                  try {
-                    var successMessage = app?.app.installedVersion == null
-                        ? tr('installed')
-                        : tr('appsUpdated');
-                    AppHaptics.heavyImpact();
-                    var res = await appsProvider.downloadAndInstallLatestApps(
-                      app?.app.id != null ? [app!.app.id] : [],
-                      globalNavigatorKey.currentContext,
-                    );
-                    if (res.isNotEmpty && !trackOnly && context.mounted) {
-                      showMessage(successMessage, context);
-                    }
-                    if (res.isNotEmpty && context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                    if (res.isNotEmpty) {
-                      var np = context.read<NotificationsProvider>();
-                      np.cancel(UpdateNotification([]).id);
-                      np.cancel(
-                        SilentUpdateAttemptNotification(
-                          [],
-                          id: res[0].hashCode,
-                        ).id,
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) showError(e, context);
-                  }
-                }
-              : null,
-          child: Text(
-            defaultStoreName != null
-                ? (app?.app.installedVersion == null
-                      ? 'Install in $defaultStoreName'
-                      : 'Update in $defaultStoreName')
-                : (app?.app.installedVersion == null
-                      ? (!trackOnly ? tr('install') : tr('markInstalled'))
-                      : (!trackOnly ? tr('update') : tr('markUpdated'))),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+      final isInstalled = app?.app.installedVersion != null;
+      final hasUpdate = isInstalled &&
+          AppUpdateService.areVersionsDifferent(
+            app!.app,
+            app!.app.installedVersion,
+            app!.app.latestVersion,
+          );
+      final isDownloading = app?.downloadProgress != null || areDownloadsRunning;
+      final canAct = !updating && (!isInstalled || hasUpdate) && !isDownloading;
+
+      final buttonText = defaultStoreName != null
+          ? (isInstalled ? 'Update in $defaultStoreName' : 'Install in $defaultStoreName')
+          : (isInstalled
+              ? (!trackOnly ? tr('update') : tr('markUpdated'))
+              : (!trackOnly ? tr('install') : tr('markInstalled')));
+
+      if (isDownloading) {
+        final progress = app?.downloadProgress;
+        return FilledButton.icon(
+          onPressed: null,
+          icon: const SizedBox(
+            width: 18,
+            height: 18,
+            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
           ),
+          label: Text(
+            progress != null && progress >= 0
+                ? '${progress.toInt()}%'
+                : tr('installing'),
+          ),
+        );
+      }
+
+      if (isInstalled && !hasUpdate) {
+        return FilledButton.tonalIcon(
+          onPressed: () async {
+            if (app?.app.id != null) {
+              await appsProvider.openApp(app!.app.id);
+            }
+          },
+          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+          label: Text(tr('open')),
+        );
+      }
+
+      return FilledButton.icon(
+        onPressed: canAct
+            ? () async {
+                if (defaultStorePackage != null && app?.app.id != null) {
+                  AppHaptics.heavyImpact();
+                  final scheme = defaultStorePackage == 'org.fdroid.fdroid'
+                      ? 'fdroid.app://details?id='
+                      : 'market://details?id=';
+                  await _openInStore(
+                    defaultStorePackage,
+                    scheme,
+                    app!.app.id,
+                  );
+                  return;
+                }
+                try {
+                  var successMessage = !isInstalled
+                      ? tr('installed')
+                      : tr('appsUpdated');
+                  AppHaptics.heavyImpact();
+                  var res = await appsProvider.downloadAndInstallLatestApps(
+                    app?.app.id != null ? [app!.app.id] : [],
+                    globalNavigatorKey.currentContext,
+                  );
+                  if (res.isNotEmpty && !trackOnly && context.mounted) {
+                    showMessage(successMessage, context);
+                  }
+                  if (res.isNotEmpty && context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+                  if (res.isNotEmpty) {
+                    var np = context.read<NotificationsProvider>();
+                    np.cancel(UpdateNotification([]).id);
+                    np.cancel(
+                      SilentUpdateAttemptNotification(
+                        [],
+                        id: res[0].hashCode,
+                      ).id,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) showError(e, context);
+                }
+              }
+            : null,
+        icon: Icon(
+          isInstalled
+              ? Icons.system_update_alt_rounded
+              : Icons.download_rounded,
+          size: 18,
+        ),
+        label: Text(
+          buttonText,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       );
     }
@@ -1325,30 +1426,20 @@ class _AppPageState extends State<AppPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const SizedBox(width: 16.0),
                 Expanded(child: getInstallOrUpdateButton()),
                 const SizedBox(width: 8.0),
-                ScaleTouchWrapper(
-                  onTap: () {},
-                  child: IconButton(
-                    icon: const Icon(Icons.storefront_outlined),
-                    onPressed: app?.app.id != null
-                        ? () {
-                            AppHaptics.selectionClick();
-                            _showStoreChooser(context, app!.app.id);
-                          }
-                        : null,
-                    style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
-                      shape: const CircleBorder(),
-                    ),
-                  ),
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.storefront_outlined),
+                  tooltip: tr('openInStore'),
+                  onPressed: app?.app.id != null
+                      ? () {
+                          AppHaptics.selectionClick();
+                          _showStoreChooser(context, app!.app.id);
+                        }
+                      : null,
                 ),
-                const SizedBox(width: 8.0),
+                const SizedBox(width: 4.0),
                 PopupMenuButton<String>(
                   icon: Icon(
                     Icons.more_vert,

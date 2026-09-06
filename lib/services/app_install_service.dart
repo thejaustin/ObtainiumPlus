@@ -357,6 +357,90 @@ class AppInstallService {
     return true;
   }
 
+  /// Runs [AndroidPackageInstaller.installApk] while concurrently polling
+  /// package manager info. On certain OEM launchers / Android versions,
+  /// the system package installer intent result is never delivered back over
+  /// the method channel if Obtainium was backgrounded or recreated.
+  /// Polling detects successful installation without hanging the batch queue (#3255).
+  static Future<int?> installStockWithPolling({
+    required String apkFilePath,
+    required String packageName,
+    int? targetVersionCode,
+    String? targetVersionName,
+    int? existingVersionCode,
+    String? existingVersionName,
+    Duration pollInterval = const Duration(seconds: 1),
+    Duration timeout = const Duration(minutes: 5),
+  }) async {
+    final completer = Completer<int?>();
+    Timer? timer;
+    int elapsedSeconds = 0;
+    final maxSeconds = timeout.inSeconds;
+
+    timer = Timer.periodic(pollInterval, (t) async {
+      if (completer.isCompleted) {
+        t.cancel();
+        return;
+      }
+      elapsedSeconds += pollInterval.inSeconds;
+      if (elapsedSeconds >= maxSeconds) {
+        t.cancel();
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
+        return;
+      }
+
+      try {
+        final info = await getInstalledInfo(packageName, printErr: false);
+        if (info != null) {
+          bool isSuccess = false;
+          final currentCode = info.versionCode ?? 0;
+          if (existingVersionCode == null || existingVersionCode == 0) {
+            // New installation
+            if (targetVersionCode != null && targetVersionCode > 0) {
+              if (currentCode >= targetVersionCode) isSuccess = true;
+            } else {
+              isSuccess = true;
+            }
+          } else {
+            // Update
+            if (targetVersionCode != null &&
+                targetVersionCode > 0 &&
+                targetVersionCode > existingVersionCode) {
+              if (currentCode >= targetVersionCode) isSuccess = true;
+            } else if (targetVersionName != null &&
+                targetVersionName.isNotEmpty &&
+                targetVersionName != existingVersionName) {
+              if (info.versionName == targetVersionName) isSuccess = true;
+            } else if (currentCode > existingVersionCode) {
+              isSuccess = true;
+            }
+          }
+
+          if (isSuccess && !completer.isCompleted) {
+            t.cancel();
+            completer.complete(0); // Success detected via package manager!
+          }
+        }
+      } catch (_) {}
+    });
+
+    AndroidPackageInstaller.installApk(apkFilePath: apkFilePath).then((code) {
+      if (!completer.isCompleted) {
+        completer.complete(code);
+      }
+    }).catchError((err) {
+      if (!completer.isCompleted) {
+        completer.completeError(err);
+      }
+    });
+
+    final result = await completer.future;
+    timer.cancel();
+    return result;
+  }
+
   static Future<bool> installApkStandalone(
     File file,
     BuildContext context,
@@ -386,7 +470,14 @@ class AppInstallService {
 
     int? code;
     if (!behaviorSettings.useShizuku) {
-      code = await AndroidPackageInstaller.installApk(apkFilePath: file.path);
+      code = await installStockWithPolling(
+        apkFilePath: file.path,
+        packageName: newInfo.packageName,
+        targetVersionCode: newInfo.versionCode,
+        targetVersionName: newInfo.versionName,
+        existingVersionCode: appInfo?.versionCode,
+        existingVersionName: appInfo?.versionName,
+      );
     } else {
       code = await ShizukuApkInstaller().installAPK(
         file.uri.toString(),
@@ -394,7 +485,14 @@ class AppInstallService {
       );
     }
 
-    if (code == 0) {
+    if (code == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text(tr('installConfirmationError'))),
+        );
+      }
+      return false;
+    } else if (code == 0) {
       return true;
     } else if (code == 3) {
       if (context.mounted) {
@@ -402,7 +500,7 @@ class AppInstallService {
           context,
         )?.showSnackBar(SnackBar(content: Text(tr('installationCancelled'))));
       }
-    } else if (code != null) {
+    } else {
       if (context.mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(content: Text('Installation failed with code: $code')),
@@ -503,8 +601,13 @@ class AppInstallService {
 
     if (!behaviorSettings.useShizuku) {
       await executeBgWorkaroundIfNeeded();
-      code = await AndroidPackageInstaller.installApk(
+      code = await installStockWithPolling(
         apkFilePath: allAPKs.join(','),
+        packageName: newInfo.packageName,
+        targetVersionCode: newInfo.versionCode,
+        targetVersionName: newInfo.versionName,
+        existingVersionCode: appInfo?.versionCode,
+        existingVersionName: appInfo?.versionName,
       );
     } else {
       try {
@@ -532,13 +635,25 @@ class AppInstallService {
           'Shizuku install failed: $e, falling back to AndroidPackageInstaller',
         );
         await executeBgWorkaroundIfNeeded();
-        code = await AndroidPackageInstaller.installApk(
+        code = await installStockWithPolling(
           apkFilePath: allAPKs.join(','),
+          packageName: newInfo.packageName,
+          targetVersionCode: newInfo.versionCode,
+          targetVersionName: newInfo.versionName,
+          existingVersionCode: appInfo?.versionCode,
+          existingVersionName: appInfo?.versionName,
         );
       }
     }
     bool installed = false;
-    if (code != null && code != 0 && code != 3) {
+    if (code == null) {
+      try {
+        AppFileService.deleteFile(file.file);
+      } catch (e) {
+        //
+      }
+      throw ObtainiumError(tr('installConfirmationError'));
+    } else if (code != 0 && code != 3) {
       try {
         AppFileService.deleteFile(file.file);
       } catch (e) {

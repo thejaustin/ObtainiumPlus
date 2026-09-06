@@ -219,7 +219,9 @@
     "installX": "Install {}",
     "installed": "Installed",
     "installedVersionX": "Installed: {}",
+    "insecureRedirect": "Refused to follow a redirect from HTTPS to insecure HTTP. This can be allowed with the per-app 'Allow insecure connections' setting.",
     "installing": "Installing",
+    "installConfirmationError": "Install confirmation was not received in time — the app may not have been installed",
     "intermediateLink": "Intermediate link",
     "intermediateLinkNotFound": "Intermediate link not found",
     "intermediateLinkRegex": "Filter for an 'intermediate' link to visit",
@@ -1144,5 +1146,6 @@
     "installFailedBlocked": "Installation failed: Blocked by device administrator or policy",
     "installFailedInvalid": "Installation failed: Package file is invalid or corrupted",
     "downloadCancelled": "Download cancelled",
-    "partialBatchSuccess": "{} updated, {} failed"
+    "partialBatchSuccess": "{} updated, {} failed",
+    "loadMore": "Load More"
 }

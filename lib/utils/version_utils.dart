@@ -1,3 +1,5 @@
+import 'dart:math';
+
 List<String> generateStandardVersionRegExStrings() {
   var basics = [
     '[0-9]+',
@@ -196,8 +198,29 @@ int? compareVersionStrings(String version1, String version2) {
       } else {
         _padTrailingZeroSegments(tokens2, tokens1.length);
       }
-    }
     if (tokens1.length != tokens2.length) {
+      final minLen = min(tokens1.length, tokens2.length);
+      bool prefixMatches = true;
+      for (int i = 0; i < minLen; i++) {
+        if (tokens1[i] != tokens2[i]) {
+          prefixMatches = false;
+          break;
+        }
+      }
+      if (prefixMatches) {
+        // SemVer 2.0.0: stable release has higher precedence than a pre-release
+        // sharing the same major.minor.patch (e.g. 1.0.0 > 1.0.0-rc1)
+        final longer = tokens1.length > tokens2.length ? tokens1 : tokens2;
+        final extraFirst = longer[minLen].toString().toLowerCase();
+        if (extraFirst.startsWith('-') ||
+            extraFirst.startsWith('rc') ||
+            extraFirst.startsWith('beta') ||
+            extraFirst.startsWith('alpha') ||
+            extraFirst.startsWith('preview') ||
+            extraFirst.startsWith('pre')) {
+          return tokens1.length > tokens2.length ? -1 : 1;
+        }
+      }
       return null;
     }
   }

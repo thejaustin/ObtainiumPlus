@@ -668,7 +668,20 @@ class HttpService {
           (response.statusCode >= 300 && response.statusCode <= 399)) {
         final location = response.headers.value(HttpHeaders.locationHeader);
         if (location != null) {
-          currentUrl = Uri.parse(ensureAbsoluteUrl(location, currentUrl));
+          final nextUrl = Uri.parse(ensureAbsoluteUrl(location, currentUrl));
+          if (currentUrl.scheme == 'https' &&
+              nextUrl.scheme == 'http' &&
+              additionalSettings['allowInsecure'] != true &&
+              additionalSettings['allowInsecureRedirects'] != true) {
+            httpClient.close();
+            throw ObtainiumError(tr('insecureRedirect'));
+          }
+          if (nextUrl.host != currentUrl.host && headers != null) {
+            headers.remove(HttpHeaders.authorizationHeader);
+            headers.remove('authorization');
+            headers.remove(HttpHeaders.proxyAuthorizationHeader);
+          }
+          currentUrl = nextUrl;
           redirectCount++;
           cookies = response.cookies;
           httpClient.close();

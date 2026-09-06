@@ -57,8 +57,49 @@ class _CommandCenterState extends State<CommandCenter> {
   String _query = '';
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
   bool _discoverSearchFailed = false;
+  final Set<String> _pendingAddUrls = {};
   final SourceProvider _sourceProvider = SourceProvider();
   Timer? _debounce;
+
+  Future<void> _submitAddAppUrl(String url) async {
+    if (_pendingAddUrls.contains(url)) return;
+    setState(() => _pendingAddUrls.add(url));
+    try {
+      final errors = await context.read<AppsProvider>().addAppsByURL([url]);
+      if (mounted) {
+        setState(() => _pendingAddUrls.remove(url));
+        if (errors.isNotEmpty) {
+          showError(errors[0][1], context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(tr('appAdded'))),
+          );
+          if (Navigator.canPop(context)) Navigator.pop(context);
+        }
+      } else {
+        final globalCtx = globalNavigatorKey.currentContext;
+        if (globalCtx != null && globalCtx.mounted) {
+          if (errors.isNotEmpty) {
+            showError(errors[0][1], globalCtx);
+          } else {
+            ScaffoldMessenger.of(globalCtx).showSnackBar(
+              SnackBar(content: Text(tr('appAdded'))),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _pendingAddUrls.remove(url));
+        showError(e, context);
+      } else {
+        final globalCtx = globalNavigatorKey.currentContext;
+        if (globalCtx != null && globalCtx.mounted) {
+          showError(e, globalCtx);
+        }
+      }
+    }
+  }
 
   bool _isDirectUrl(String input) {
     final trimmed = input.trim();
@@ -69,11 +110,12 @@ class _CommandCenterState extends State<CommandCenter> {
       return true;
     }
     try {
-      _sourceProvider.getSource(trimmed);
-      return true;
-    } catch (_) {
-      return false;
-    }
+      final src = _sourceProvider.getSource(trimmed);
+      if (src.hosts.isNotEmpty && src.runtimeType.toString() != 'HTML') {
+        return true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   @override
@@ -634,47 +676,30 @@ class _CommandCenterState extends State<CommandCenter> {
                         tooltip: tr('advancedOptions'),
                         onPressed: () => _openAddApp(url),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.add_circle_outline_rounded,
-                          color: theme.colorScheme.primary,
-                        ),
-                        tooltip: tr('addApp'),
-                        onPressed: () {
-                          context.read<AppsProvider>().addAppsByURL([url]).then(
-                            (errors) {
-                              if (mounted) {
-                                if (errors.isNotEmpty) {
-                                  showError(errors[0][1], context);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(tr('appAdded'))),
-                                  );
-                                  Navigator.pop(context);
-                                }
-                              }
-                            },
-                          );
-                        },
-                      ),
+                      _pendingAddUrls.contains(url)
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: ExpressiveCircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              icon: Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: theme.colorScheme.primary,
+                              ),
+                              tooltip: tr('addApp'),
+                              onPressed: () => _submitAddAppUrl(url),
+                            ),
                     ],
                   ),
-                  onTap: () {
-                    context.read<AppsProvider>().addAppsByURL([url]).then((
-                      errors,
-                    ) {
-                      if (mounted) {
-                        if (errors.isNotEmpty) {
-                          showError(errors[0][1], context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('appAdded'))),
-                          );
-                          Navigator.pop(context);
-                        }
-                      }
-                    });
-                  },
+                  onTap: _pendingAddUrls.contains(url)
+                      ? null
+                      : () => _submitAddAppUrl(url),
                 ),
               ),
             ),
