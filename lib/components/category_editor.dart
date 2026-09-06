@@ -289,35 +289,39 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              if (_isEditing)
-                TextButton.icon(
-                  onPressed: _delete,
-                  icon: const Icon(Icons.delete_outline),
-                  label: Text(tr('remove')),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom + 8,
+            ),
+            child: Row(
+              children: [
+                if (_isEditing)
+                  TextButton.icon(
+                    onPressed: _delete,
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text(tr('remove')),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
                   ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(tr('cancel')),
                 ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(tr('cancel')),
-              ),
-              const SizedBox(width: 8),
-              ValueListenableBuilder<String>(
-                valueListenable: _nameNotifier,
-                builder: (context, value, _) {
-                  final canSave = value.trim().isNotEmpty;
-                  return FilledButton(
-                    onPressed: canSave ? _save : null,
-                    child: Text(tr('continue')),
-                  );
-                },
-              ),
-            ],
+                const SizedBox(width: 8),
+                ValueListenableBuilder<String>(
+                  valueListenable: _nameNotifier,
+                  builder: (context, value, _) {
+                    final canSave = value.trim().isNotEmpty;
+                    return FilledButton(
+                      onPressed: canSave ? _save : null,
+                      child: Text(tr('continue')),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),

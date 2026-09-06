@@ -523,7 +523,7 @@ abstract class AppSource {
     throw NotImplementedError();
   }
 
-  void runOnAddAppInputChange(String input) {}
+  Map<String, dynamic> runOnAddAppInputChange(String input) => {};
 }
 
 abstract class MassAppUrlSource {

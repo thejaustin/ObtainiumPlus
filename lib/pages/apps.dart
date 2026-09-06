@@ -1678,6 +1678,48 @@ class AppsPageState extends State<AppsPage> {
                                 ),
                               ),
                             ),
+                          IconButton(
+                            icon: Icon(
+                              viewSettings.globalViewMode == ViewMode.grid
+                                  ? Icons.view_list_rounded
+                                  : Icons.grid_view_rounded,
+                            ),
+                            tooltip: viewSettings.globalViewMode == ViewMode.grid
+                                ? tr('listView')
+                                : tr('gridView'),
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              setState(() {
+                                viewSettings.globalViewMode =
+                                    viewSettings.globalViewMode == ViewMode.grid
+                                        ? ViewMode.list
+                                        : ViewMode.grid;
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                  ? Icons.filter_list_rounded
+                                  : Icons.filter_list_off_rounded,
+                              color: filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                  ? null
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                            tooltip: filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                ? tr('filterApps')
+                                : '${tr('filter')} - ${tr('remove')}',
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              if (filter.isIdenticalTo(neutralFilter, settingsProvider)) {
+                                showFilterDialog();
+                              } else {
+                                setState(() {
+                                  filter = AppsFilter();
+                                });
+                              }
+                            },
+                          ),
                           if (!hasExternalSettingsEntry)
                             IconButton(
                               icon: const Icon(Icons.settings_rounded),
@@ -1741,7 +1783,8 @@ class AppsPageState extends State<AppsPage> {
             ),
           ),
         ),
-        persistentFooterButtons: appsProvider.apps.isEmpty
+        persistentFooterButtons: appsProvider.apps.isEmpty ||
+                (plusSettings.plusEnableBottomNavBar && selectedAppIds.isEmpty)
             ? null
             : [getFilterButtonsRow()],
       ),

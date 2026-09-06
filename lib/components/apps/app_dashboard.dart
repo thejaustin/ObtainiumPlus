@@ -117,7 +117,7 @@ class _AppDashboardState extends State<AppDashboard>
         : settings.plusGlobalCornerRadius;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
       color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +135,8 @@ class _AppDashboardState extends State<AppDashboard>
               onUrlInput: widget.onUrlInput,
             ),
 
-          const SizedBox(height: 24),
+          if (pinnedApps.isNotEmpty || !appsProvider.isSelectionMode)
+            const SizedBox(height: 14),
 
           // Pinned Apps Quick Access (Horizontal Scroll)
           if (pinnedApps.isNotEmpty)
@@ -151,18 +152,18 @@ class _AppDashboardState extends State<AppDashboard>
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   SizedBox(
                     height: 56,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: pinnedApps.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
                       itemBuilder: (context, index) =>
                           _buildPinnedIcon(context, pinnedApps[index], radius),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                 ],
               ),
             ),
@@ -239,10 +240,7 @@ class _AppDashboardState extends State<AppDashboard>
                             const Spacer(),
                             if (updatesAvailable > 5)
                               Text(
-                                tr(
-                                  'plural_apps',
-                                  args: [updatesAvailable.toString()],
-                                ),
+                                plural('apps', updatesAvailable),
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(color: colorScheme.primary),
                               ),
@@ -283,45 +281,41 @@ class _AppDashboardState extends State<AppDashboard>
     return Tooltip(
       message: app.name,
       child: ScaleTouchWrapper(
-        onTap: () {},
-        child: InkWell(
-          onTap: () {
-            AppHaptics.selectionClick();
-            showDraggableModalBottomSheet(
-              context: context,
-              builder: (context, controller) => AppPage(
-                appId: app.app.id,
-                isModal: true,
-                scrollController: controller,
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(itemRadius),
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(itemRadius),
+        onTap: () {
+          AppHaptics.selectionClick();
+          showDraggableModalBottomSheet(
+            context: context,
+            builder: (context, controller) => AppPage(
+              appId: app.app.id,
+              isModal: true,
+              scrollController: controller,
+            ),
+          );
+        },
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(itemRadius),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            border: Border.all(
               color: Theme.of(
                 context,
-              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.2),
-                width: 1.5,
-              ),
+              ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+              width: 1.0,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: app.icon != null
-                  ? Image.memory(
-                      app.icon!,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
-                    )
-                  : const Icon(Icons.apps_rounded, size: 24),
-            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: app.icon != null
+                ? Image.memory(
+                    app.icon!,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                  )
+                : const Icon(Icons.apps_rounded, size: 24),
           ),
         ),
       ),
@@ -334,44 +328,40 @@ class _AppDashboardState extends State<AppDashboard>
     double radius,
   ) {
     final itemRadius = CardMetrics.inner(radius);
+    final colorScheme = Theme.of(context).colorScheme;
     return Tooltip(
       message: app.name,
       child: ScaleTouchWrapper(
-        onTap: () {},
-        child: GestureDetector(
-          onTap: () {
-            AppHaptics.selectionClick();
-            showDraggableModalBottomSheet(
-              context: context,
-              builder: (context, controller) => AppPage(
-                appId: app.app.id,
-                isModal: true,
-                scrollController: controller,
-              ),
-            );
-          },
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(itemRadius),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.error.withValues(alpha: AppOpacity.medium),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.error.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  spreadRadius: -2,
-                ),
-              ],
+        onTap: () {
+          AppHaptics.selectionClick();
+          showDraggableModalBottomSheet(
+            context: context,
+            builder: (context, controller) => AppPage(
+              appId: app.app.id,
+              isModal: true,
+              scrollController: controller,
             ),
-            child: Stack(
+          );
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(itemRadius),
+            color: colorScheme.surfaceContainerLow,
+            border: Border.all(
+              color: colorScheme.secondary.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.secondary.withValues(alpha: 0.08),
+                blurRadius: 6,
+                spreadRadius: -1,
+              ),
+            ],
+          ),
+          child: Stack(
               children: [
                 if (app.icon != null)
                   ClipRRect(
@@ -469,13 +459,10 @@ class _AppDashboardState extends State<AppDashboard>
                     ),
                   ),
                   const Spacer(),
-                  ScaleTouchWrapper(
-                    onTap: () {},
-                    child: TextButton.icon(
-                      onPressed: () => appsProvider.clearSelection(),
-                      icon: const Icon(Icons.close_rounded, size: 18),
-                      label: Text(tr('cancel')),
-                    ),
+                  TextButton.icon(
+                    onPressed: () => appsProvider.clearSelection(),
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    label: Text(tr('cancel')),
                   ),
                 ],
               ),
@@ -483,63 +470,54 @@ class _AppDashboardState extends State<AppDashboard>
               Row(
                 children: [
                   Expanded(
-                    child: ScaleTouchWrapper(
-                      onTap: () {},
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          AppHaptics.heavyImpact();
-                          appsProvider.downloadAndInstallLatestApps(
-                            appsProvider.selectedAppIds.toList(),
-                            context,
-                          );
-                          appsProvider.clearSelection();
-                        },
-                        icon: const Icon(Icons.download_rounded, size: 18),
-                        label: Text(tr('update')),
-                      ),
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        AppHaptics.heavyImpact();
+                        appsProvider.downloadAndInstallLatestApps(
+                          appsProvider.selectedAppIds.toList(),
+                          context,
+                        );
+                        appsProvider.clearSelection();
+                      },
+                      icon: const Icon(Icons.download_rounded, size: 18),
+                      label: Text(tr('update')),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: ScaleTouchWrapper(
-                      onTap: () {},
-                      child: FilledButton.tonalIcon(
-                        onPressed: () {
-                          AppHaptics.selectionClick();
-                          final urls = appsProvider.selectedAppIds
-                              .map((id) => appsProvider.apps[id]?.app.url)
-                              .whereType<String>()
-                              .join('\n');
-                          if (urls.isNotEmpty) {
-                            Share.share(
-                              urls,
-                              subject: 'Obtainium - ${tr('appsString')}',
-                            );
-                          }
-                          appsProvider.clearSelection();
-                        },
-                        icon: const Icon(Icons.ios_share_rounded, size: 18),
-                        label: Text(tr('share')),
-                      ),
+                    child: FilledButton.tonalIcon(
+                      onPressed: () {
+                        AppHaptics.selectionClick();
+                        final urls = appsProvider.selectedAppIds
+                            .map((id) => appsProvider.apps[id]?.app.url)
+                            .whereType<String>()
+                            .join('\n');
+                        if (urls.isNotEmpty) {
+                          Share.share(
+                            urls,
+                            subject: 'Obtainium - ${tr('appsString')}',
+                          );
+                        }
+                        appsProvider.clearSelection();
+                      },
+                      icon: const Icon(Icons.ios_share_rounded, size: 18),
+                      label: Text(tr('share')),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  ScaleTouchWrapper(
-                    onTap: () {},
-                    child: IconButton.filledTonal(
-                      onPressed: () {
-                        AppHaptics.heavyImpact();
-                        appsProvider.removeApps(
-                          appsProvider.selectedAppIds.toList(),
-                        );
-                        appsProvider.clearSelection();
-                      },
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      style: IconButton.styleFrom(
-                        foregroundColor: colorScheme.error,
-                        backgroundColor: colorScheme.errorContainer.withValues(
-                          alpha: 0.3,
-                        ),
+                  IconButton.filledTonal(
+                    onPressed: () {
+                      AppHaptics.heavyImpact();
+                      appsProvider.removeApps(
+                        appsProvider.selectedAppIds.toList(),
+                      );
+                      appsProvider.clearSelection();
+                    },
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    style: IconButton.styleFrom(
+                      foregroundColor: colorScheme.error,
+                      backgroundColor: colorScheme.errorContainer.withValues(
+                        alpha: 0.3,
                       ),
                     ),
                   ),
