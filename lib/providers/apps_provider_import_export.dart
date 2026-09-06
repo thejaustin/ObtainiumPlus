@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -66,6 +67,11 @@ extension AppsProviderImportExport on AppsProvider {
         return null;
       }
       if (exportDir == null) {
+        if (settingsProvider.prefs?.getString('exportDir') != null) {
+          AppLogger.info(
+            'Auto-export skipped: export directory permission unavailable',
+          );
+        }
         return null;
       }
       final files = await saf

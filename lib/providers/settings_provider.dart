@@ -657,6 +657,12 @@ class SettingsProvider with ChangeNotifier {
     final currentOneWayDataSyncDir = await getExportDir();
     Uri? newOneWayDataSyncDir;
     if (!remove) {
+      // Some devices (e.g. certain Android TV boxes) have no activity that
+      // handles ACTION_OPEN_DOCUMENT_TREE; check first so the user gets a
+      // clear message instead of a raw platform exception.
+      if ((await saf.canOpenDocumentTree()) != true) {
+        throw ObtainiumError(tr('noFilePickerAvailable'));
+      }
       try {
         newOneWayDataSyncDir = (await saf.openDocumentTree());
       } catch (e) {
@@ -676,7 +682,16 @@ class SettingsProvider with ChangeNotifier {
     }
     for (var e in existingSAFPerms) {
       if (e.uri != newOneWayDataSyncDir) {
-        await saf.releasePersistableUriPermission(e.uri);
+        try {
+          await saf.releasePersistableUriPermission(e.uri);
+        } catch (err) {
+          // The grant may have already been revoked (e.g. by the OS after an
+          // app update); releasing it is best-effort cleanup only.
+          AppLogger.error(
+            err,
+            message: 'Failed to release stale URI permission',
+          );
+        }
       }
     }
   }
