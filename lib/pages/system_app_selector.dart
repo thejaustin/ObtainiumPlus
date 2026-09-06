@@ -16,6 +16,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/main.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 
@@ -51,6 +52,7 @@ class SystemAppSelector extends StatefulWidget {
 
 class _SystemAppSelectorState extends State<SystemAppSelector> {
   bool _isLoading = true;
+  bool _isImporting = false;
   bool _showSystemApps = false;
   String _searchQuery = '';
   List<_EnhancedPackageInfo> _apps = [];
@@ -620,7 +622,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           ],
                         ),
                         child: FloatingActionButton.extended(
-                          onPressed: _selectedCount == 0
+                          onPressed: (_selectedCount == 0 || _isImporting)
                               ? null
                               : () {
                                   AppHaptics.selectionClick();
@@ -631,15 +633,28 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           hoverElevation: 0,
                           focusElevation: 0,
                           highlightElevation: 0,
-                          icon: Icon(
-                            Icons.download_outlined,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
+                          icon: _isImporting
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.download_outlined,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
                           label: Text(
-                            tr(
-                              'importXApps',
-                              args: [_selectedCount.toString()],
-                            ),
+                            _isImporting
+                                ? tr('importing')
+                                : tr(
+                                    'importXApps',
+                                    args: [_selectedCount.toString()],
+                                  ),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onPrimary,
                             ),
@@ -897,7 +912,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   ],
                 ),
                 child: FloatingActionButton.extended(
-                  onPressed: _selectedCount == 0
+                  onPressed: (_selectedCount == 0 || _isImporting)
                       ? null
                       : () {
                           AppHaptics.selectionClick();
@@ -908,12 +923,23 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   hoverElevation: 0,
                   focusElevation: 0,
                   highlightElevation: 0,
-                  icon: Icon(
-                    Icons.download_outlined,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
+                  icon: _isImporting
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        )
+                      : Icon(
+                          Icons.download_outlined,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                   label: Text(
-                    tr('importXApps', args: [_selectedCount.toString()]),
+                    _isImporting
+                        ? tr('importing')
+                        : tr('importXApps', args: [_selectedCount.toString()]),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
@@ -1155,6 +1181,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   }
 
   Future<void> _importSelectedApps(AppsProvider appsProvider) async {
+    if (_isImporting) return;
     final selectedApps = _apps.where((a) => a.isSelected).toList();
     if (selectedApps.isEmpty) return;
 
@@ -1165,18 +1192,26 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         )
         .toList();
 
+    setState(() => _isImporting = true);
     try {
       final errors = await appsProvider.addAppsByURL(urls);
       if (!mounted) return;
       if (errors.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              tr('importedX', args: [selectedApps.length.toString()]),
+        final count = selectedApps.length;
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        }
+        final scaffoldCtx = globalNavigatorKey.currentContext;
+        if (scaffoldCtx != null && scaffoldCtx.mounted) {
+          ScaffoldMessenger.of(scaffoldCtx).showSnackBar(
+            SnackBar(
+              content: Text(
+                tr('importedX', args: [plural('apps', count).toLowerCase()]),
+              ),
+              behavior: SnackBarBehavior.floating,
             ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+          );
+        }
       } else {
         showDialog(
           context: context,
@@ -1186,6 +1221,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       }
     } catch (e) {
       if (mounted) showError(e, context);
+    } finally {
+      if (mounted) {
+        setState(() => _isImporting = false);
+      }
     }
   }
 }

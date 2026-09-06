@@ -12,6 +12,7 @@ class APKDetails {
   late DateTime? releaseDate;
   late String? changeLog;
   late List<MapEntry<String, String>> allAssetUrls;
+  final Map<String, String>? assetSha256s;
 
   APKDetails(
     this.version,
@@ -20,5 +21,6 @@ class APKDetails {
     this.releaseDate,
     this.changeLog,
     this.allAssetUrls = const [],
+    this.assetSha256s,
   });
 }

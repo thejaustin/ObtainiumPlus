@@ -77,7 +77,21 @@ class GitHubPersonalRepos implements MassAppUrlSource {
     if (args.length != requiredArgs.length) {
       throw ObtainiumError(tr('wrongArgNum'));
     }
-    final username = args[0].trim();
+    var username = args[0].trim();
+    if (username.startsWith('@')) {
+      username = username.substring(1).trim();
+    }
+    if (username.contains('github.com/')) {
+      final uri = Uri.tryParse(
+        username.startsWith('http') ? username : 'https://$username',
+      );
+      if (uri != null && uri.pathSegments.isNotEmpty) {
+        username = uri.pathSegments.first;
+      }
+    }
+    if (username.isEmpty) {
+      throw ObtainiumError(tr('invalidInput'));
+    }
     final Map<String, List<String>> urlsWithDescriptions = {};
     var page = 1;
     while (true) {

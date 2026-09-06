@@ -62,12 +62,18 @@ class _CommandCenterState extends State<CommandCenter> {
   Timer? _debounce;
 
   Future<void> _submitAddAppUrl(String url) async {
-    if (_pendingAddUrls.contains(url)) return;
-    setState(() => _pendingAddUrls.add(url));
+    if (_pendingAddUrls.contains(url) || _isAddingUrl) return;
+    setState(() {
+      _pendingAddUrls.add(url);
+      _isAddingUrl = true;
+    });
     try {
       final errors = await context.read<AppsProvider>().addAppsByURL([url]);
       if (mounted) {
-        setState(() => _pendingAddUrls.remove(url));
+        setState(() {
+          _pendingAddUrls.remove(url);
+          _isAddingUrl = false;
+        });
         if (errors.isNotEmpty) {
           showError(errors[0][1], context);
         } else {
@@ -90,7 +96,10 @@ class _CommandCenterState extends State<CommandCenter> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _pendingAddUrls.remove(url));
+        setState(() {
+          _pendingAddUrls.remove(url);
+          _isAddingUrl = false;
+        });
         showError(e, context);
       } else {
         final globalCtx = globalNavigatorKey.currentContext;
@@ -745,49 +754,7 @@ class _CommandCenterState extends State<CommandCenter> {
             trailing: _isAddingUrl
                 ? null
                 : const Icon(Icons.arrow_forward),
-            onTap: _isAddingUrl
-                ? null
-                : () async {
-                    setState(() => _isAddingUrl = true);
-                    final queryToAdd = _query;
-                    try {
-                      final errors = await context
-                          .read<AppsProvider>()
-                          .addAppsByURL([queryToAdd]);
-                      if (mounted) {
-                        setState(() => _isAddingUrl = false);
-                        if (errors.isNotEmpty) {
-                          showError(errors[0][1], context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('appAdded'))),
-                          );
-                          Navigator.pop(context);
-                        }
-                      } else {
-                        final globalCtx = globalNavigatorKey.currentContext;
-                        if (globalCtx != null && globalCtx.mounted) {
-                          if (errors.isNotEmpty) {
-                            showError(errors[0][1], globalCtx);
-                          } else {
-                            ScaffoldMessenger.of(globalCtx).showSnackBar(
-                              SnackBar(content: Text(tr('appAdded'))),
-                            );
-                          }
-                        }
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        setState(() => _isAddingUrl = false);
-                        showError(e, context);
-                      } else {
-                        final globalCtx = globalNavigatorKey.currentContext;
-                        if (globalCtx != null && globalCtx.mounted) {
-                          showError(e, globalCtx);
-                        }
-                      }
-                    }
-                  },
+            onTap: _isAddingUrl ? null : () => _submitAddAppUrl(_query),
           ),
           Divider(
             height: 1,

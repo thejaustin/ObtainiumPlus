@@ -401,6 +401,15 @@ class SourceProvider {
       throw e..withUrlContext(standardUrl);
     }
 
+    if (apk.assetSha256s != null && apk.assetSha256s!.isNotEmpty) {
+      final existingSha =
+          (additionalSettings['assetSha256s'] as Map<dynamic, dynamic>?) ?? {};
+      additionalSettings['assetSha256s'] = {
+        ...existingSha,
+        ...apk.assetSha256s!,
+      };
+    }
+
     if (!source.suppressStandardVersionExtraction) {
       final String? extractedVersion = extractVersion(
         additionalSettings['versionExtractionRegEx'] as String?,
