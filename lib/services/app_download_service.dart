@@ -365,6 +365,17 @@ class AppDownloadService {
         'size': await downloadedFile.length(),
       });
 
+      // Verify SHA-256 digest if available
+      final dynamic rawShaMap = app.additionalSettings['assetSha256s'];
+      final Map<dynamic, dynamic>? shaMap =
+          rawShaMap is Map ? rawShaMap : null;
+      final expectedSha = shaMap?[downloadUrl]?.toString() ??
+          shaMap?[app.apkUrls[apkIndex].key]?.toString() ??
+          app.additionalSettings['expectedSha256']?.toString();
+      if (expectedSha != null && expectedSha.trim().isNotEmpty) {
+        await AppFileService.verifyFileSha256(downloadedFile, expectedSha);
+      }
+
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = clearProgressOnComplete ? null : 100;
         notifyListeners();

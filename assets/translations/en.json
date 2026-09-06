@@ -195,6 +195,7 @@
     "highlightTouchTargets": "Highlight less obvious touch targets",
     "huaweiAppGallery": "Huawei AppGallery",
     "import": "Import",
+    "importing": "Importing...",
     "hour": {
         "one": "{} hour",
         "other": "{} hours"

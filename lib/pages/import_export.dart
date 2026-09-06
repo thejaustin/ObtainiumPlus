@@ -354,7 +354,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 importInProgress = true;
               });
               var urlsWithDescriptions = await source.getUrlsWithDescriptions(
-                values.values.map((e) => e.toString()).toList(),
+                source.requiredArgs
+                    .map((arg) => values[arg]?.toString() ?? '')
+                    .toList(),
               );
               if (!context.mounted) return;
               var selectedUrls = await showDialog<List<String>?>(

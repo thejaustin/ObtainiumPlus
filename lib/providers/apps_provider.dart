@@ -1060,7 +1060,8 @@ class AppsProvider with ChangeNotifier {
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
   }) async {
-    var notifId = DownloadNotification(app.finalName, 0).id;
+    var notifId = DownloadNotification(app.finalName, 0, appId: app.id).id;
+    registerDownloadCancellation(app.id);
     if (apps[app.id] != null) {
       apps[app.id]!.downloadProgress = 0;
       notifyListeners();
@@ -1090,7 +1091,7 @@ class AppsProvider with ChangeNotifier {
         app.url,
         additionalSettingsPlusSourceConfig,
       );
-      var notif = DownloadNotification(app.finalName, 100);
+      var notif = DownloadNotification(app.finalName, 100, appId: app.id);
       notificationsProvider?.cancel(notif.id);
       int? prevProg;
       var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
@@ -1114,7 +1115,11 @@ class AppsProvider with ChangeNotifier {
             apps[app.id]!.downloadProgress = progress;
             // notifyListeners() removed here to prevent massive UI rebuilds
           }
-          notif = DownloadNotification(app.finalName, prog ?? 100);
+          notif = DownloadNotification(
+            app.finalName,
+            prog ?? 100,
+            appId: app.id,
+          );
           if (prog != null && prevProg != prog) {
             notificationsProvider?.notify(notif);
           }
@@ -1124,12 +1129,25 @@ class AppsProvider with ChangeNotifier {
         useExisting: useExisting,
         allowInsecure: app.additionalSettings['allowInsecure'] == true,
         logs: logs,
+        isCancelled: () => _downloadCancellations[app.id]?.isCancelled ?? false,
       );
+
+      // Verify SHA-256 digest if available
+      final dynamic rawShaMap = app.additionalSettings['assetSha256s'];
+      final Map<dynamic, dynamic>? shaMap =
+          rawShaMap is Map ? rawShaMap : null;
+      final expectedSha = shaMap?[downloadUrl]?.toString() ??
+          shaMap?[app.apkUrls[app.preferredApkIndex].key]?.toString() ??
+          app.additionalSettings['expectedSha256']?.toString();
+      if (expectedSha != null && expectedSha.trim().isNotEmpty) {
+        await AppFileService.verifyFileSha256(downloadedFile, expectedSha);
+      }
+
       // Set to 90 for remaining steps, will make null in 'finally'
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = -1;
         notifyListeners();
-        notif = DownloadNotification(app.finalName, -1);
+        notif = DownloadNotification(app.finalName, -1, appId: app.id);
         notificationsProvider?.notify(notif);
       }
       PackageInfo? newInfo;
@@ -1249,6 +1267,7 @@ class AppsProvider with ChangeNotifier {
         return DownloadedDir(app.id, downloadedFile, extractedApkDir!, dirType);
       }
     } finally {
+      clearDownloadCancellation(app.id);
       notificationsProvider?.cancel(notifId);
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = null;
@@ -1725,6 +1744,10 @@ class AppsProvider with ChangeNotifier {
       if (context != null && context.mounted) {
         AppHaptics.failure();
         showError(errors, context);
+        if (errors is MultiAppMultiError &&
+            errors.successfulAppIds.isNotEmpty) {
+          return errors.successfulAppIds;
+        }
         return [];
       } else {
         rethrow;

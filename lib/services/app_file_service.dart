@@ -424,7 +424,8 @@ class AppFileService {
       bool isDownloading = true;
       int currentTempFileSize = await tempDownloadedFile.length();
       bool shouldReturn = false;
-      while (isDownloading) {
+      int pollCycles = 0;
+      while (isDownloading && pollCycles++ < 30) {
         await Future.delayed(const Duration(seconds: 7));
         if (tempDownloadedFile.existsSync()) {
           int newTempFileSize = await tempDownloadedFile.length();
@@ -603,5 +604,30 @@ class AppFileService {
       talker.error('Failed to clear APKs: $e');
     }
     return clearedCount;
+  }
+
+  /// Computes the SHA-256 hash of a file as a lowercase hexadecimal string.
+  static Future<String> computeFileSha256(File file) async {
+    final stream = file.openRead();
+    final digest = await sha256.bind(stream).first;
+    return digest.toString().toLowerCase();
+  }
+
+  /// Verifies that [file] matches the [expectedSha256] digest.
+  /// Throws [ObtainiumError] if the hash does not match.
+  static Future<void> verifyFileSha256(File file, String expectedSha256) async {
+    final cleanExpected =
+        expectedSha256.toLowerCase().replaceAll('sha256:', '').trim();
+    if (cleanExpected.isEmpty) return;
+    final actual = await computeFileSha256(file);
+    if (actual != cleanExpected) {
+      talker.error(
+        'SHA-256 mismatch for ${file.path}: expected $cleanExpected, got $actual',
+      );
+      throw ObtainiumError(
+        'Integrity check failed: SHA-256 digest mismatch. The downloaded file may be incomplete or corrupted.',
+      );
+    }
+    talker.info('SHA-256 verified successfully for ${file.path}: $actual');
   }
 }
