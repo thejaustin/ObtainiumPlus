@@ -1351,7 +1351,7 @@ class _AppPageState extends State<AppPage> {
         return FilledButton.tonalIcon(
           onPressed: () async {
             if (app?.app.id != null) {
-              await appsProvider.openApp(app!.app.id);
+              await AppInstallService.openApp(app!.app.id);
             }
           },
           icon: const Icon(Icons.open_in_new_rounded, size: 18),

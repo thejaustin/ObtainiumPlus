@@ -213,7 +213,7 @@ class AddAppPageState extends State<AddAppPage> {
             (prevHost != null && prevHost != source?.hosts.firstOrNull)) {
           final isEditingApp = widget.appId != null;
           final existingSettings = isEditingApp
-              ? (appsProvider.apps[widget.appId]?.app.additionalSettings ?? {})
+              ? (context.read<AppsProvider>().apps[widget.appId]?.app.additionalSettings ?? {})
               : <String, dynamic>{};
           pickedSource = source;
           final inputSettings =

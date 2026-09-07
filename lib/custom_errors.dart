@@ -103,6 +103,16 @@ Never rethrowOrWrapError(
   );
 }
 
+class ObtainiumHttpError extends ObtainiumError {
+  final int statusCode;
+  ObtainiumHttpError(this.statusCode, [String message = ''])
+      : super(
+          message.isNotEmpty ? message : 'HTTP $statusCode',
+          code: 'HTTP_ERROR',
+          data: {'statusCode': statusCode},
+        );
+}
+
 class RateLimitError extends ObtainiumError {
   final int remainingMinutes;
   RateLimitError(this.remainingMinutes)
