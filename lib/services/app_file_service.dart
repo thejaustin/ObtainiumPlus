@@ -499,8 +499,7 @@ class AppFileService {
       'GET',
       url,
       reqHeaders,
-      {},
-      allowInsecure: allowInsecure,
+      {'allowInsecure': allowInsecure},
     );
     HttpClient responseClient = responseWithClient.value.key;
     HttpClientResponse response = responseWithClient.value.value;

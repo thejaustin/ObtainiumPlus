@@ -774,11 +774,11 @@ class HttpService {
       return RateLimitError(30); // Default to conservative 30 minutes
     }
 
-    return ObtainiumError(
+    return ObtainiumHttpError(
+      res.statusCode,
       (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
           ? res.reasonPhrase!
           : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]),
-      code: 'HTTP_ERROR',
     );
   }
 }

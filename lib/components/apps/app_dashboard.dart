@@ -403,8 +403,7 @@ class _AppDashboardState extends State<AppDashboard>
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildBatchActionsHub(

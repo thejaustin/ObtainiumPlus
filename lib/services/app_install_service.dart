@@ -465,13 +465,14 @@ class AppInstallService {
       );
     }
 
-    if (newInfo == null) {
+    if (newInfo == null || newInfo.packageName == null) {
       throw Exception('Invalid APK file');
     }
+    final targetPackageName = newInfo.packageName!;
 
-    PackageInfo? appInfo = await getInstalledInfo(newInfo.packageName);
+    PackageInfo? appInfo = await getInstalledInfo(targetPackageName);
     logs.add(
-      'Standalone Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
+      'Standalone Installing "$targetPackageName" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
     );
 
     int? code;
@@ -480,13 +481,13 @@ class AppInstallService {
     if (installer is RootInstaller) {
       final res = await installer.installApk(
         [file.path],
-        appId: newInfo.packageName,
+        appId: targetPackageName,
       );
       code = res.errorCode ?? (res.isSuccess ? 0 : 3);
     } else if (installer is ShizukuInstaller) {
       final res = await installer.installApk(
         [file.path],
-        appId: newInfo.packageName,
+        appId: targetPackageName,
         installOptions: {
           'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
         },
@@ -495,13 +496,13 @@ class AppInstallService {
     } else if (installer is ExternalInstaller) {
       final res = await installer.installApk(
         [file.path],
-        appId: newInfo.packageName,
+        appId: targetPackageName,
       );
       code = res.errorCode ?? (res.isSuccess ? 0 : 3);
     } else {
       code = await installStockWithPolling(
         apkFilePath: file.path,
-        packageName: newInfo.packageName,
+        packageName: targetPackageName,
         targetVersionCode: newInfo.versionCode,
         targetVersionName: newInfo.versionName,
         existingVersionCode: appInfo?.versionCode,
@@ -586,20 +587,22 @@ class AppInstallService {
     if (apps[file.appId] == null) {
       throw ObtainiumError(tr('appNotFound'));
     }
+    final targetPackageName = newInfo.packageName ?? apps[file.appId]!.app.id;
     PackageInfo? appInfo = await getInstalledInfo(apps[file.appId]!.app.id);
     logs.add(
-      'Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
+      'Installing "$targetPackageName" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
     );
     // versionCode is int? in the plugin — null on Android 15 for apps using
     // longVersionCode > Integer.MAX_VALUE. Fall back to 0 to skip downgrade check.
     final newVersionCode = newInfo.versionCode ?? 0;
     final existingVersionCode = appInfo?.versionCode ?? 0;
+    final settingsProvider = SettingsProvider(behaviorSettings.prefs);
     if (appInfo != null &&
         newVersionCode > 0 &&
         existingVersionCode > 0 &&
         newVersionCode < existingVersionCode &&
         !(await canDowngradeApps())) {
-      if (updateSettings.showAppDowngradeError) {
+      if (settingsProvider.showAppDowngradeError) {
         throw DowngradeError(
           existingVersionCode,
           newVersionCode,
@@ -623,7 +626,6 @@ class AppInstallService {
       }
     }
 
-    final settingsProvider = SettingsProvider(behaviorSettings.prefs);
     final installer = Installer.create(settingsProvider);
 
     if (installer is RootInstaller) {
@@ -649,7 +651,7 @@ class AppInstallService {
         await executeBgWorkaroundIfNeeded();
         code = await installStockWithPolling(
           apkFilePath: allAPKs.join(','),
-          packageName: newInfo.packageName,
+          packageName: targetPackageName,
           targetVersionCode: newInfo.versionCode,
           targetVersionName: newInfo.versionName,
           existingVersionCode: appInfo?.versionCode,
@@ -679,7 +681,7 @@ class AppInstallService {
         await executeBgWorkaroundIfNeeded();
         code = await installStockWithPolling(
           apkFilePath: allAPKs.join(','),
-          packageName: newInfo.packageName,
+          packageName: targetPackageName,
           targetVersionCode: newInfo.versionCode,
           targetVersionName: newInfo.versionName,
           existingVersionCode: appInfo?.versionCode,
@@ -713,7 +715,7 @@ class AppInstallService {
         await executeBgWorkaroundIfNeeded();
         code = await installStockWithPolling(
           apkFilePath: allAPKs.join(','),
-          packageName: newInfo.packageName,
+          packageName: targetPackageName,
           targetVersionCode: newInfo.versionCode,
           targetVersionName: newInfo.versionName,
           existingVersionCode: appInfo?.versionCode,
@@ -724,7 +726,7 @@ class AppInstallService {
       await executeBgWorkaroundIfNeeded();
       code = await installStockWithPolling(
         apkFilePath: allAPKs.join(','),
-        packageName: newInfo.packageName,
+        packageName: targetPackageName,
         targetVersionCode: newInfo.versionCode,
         targetVersionName: newInfo.versionName,
         existingVersionCode: appInfo?.versionCode,

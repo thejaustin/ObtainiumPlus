@@ -144,6 +144,7 @@ Future<File> downloadFileWithRetry(
   bool allowInsecure = false,
   LogsProvider? logs,
   CancellationToken? cancellationToken,
+  bool Function()? isCancelled,
 }) async {
   try {
     return await downloadFile(
@@ -157,6 +158,7 @@ Future<File> downloadFileWithRetry(
       allowInsecure: allowInsecure,
       logs: logs,
       cancellationToken: cancellationToken,
+      isCancelled: isCancelled,
     );
   } catch (e) {
     // A cancellation is not one of the retryable error types, so it naturally
@@ -178,6 +180,7 @@ Future<File> downloadFileWithRetry(
         allowInsecure: allowInsecure,
         logs: logs,
         cancellationToken: cancellationToken,
+        isCancelled: isCancelled,
       );
     } else {
       rethrow;
@@ -353,6 +356,7 @@ Future<File> downloadFile(
   bool allowInsecure = false,
   LogsProvider? logs,
   CancellationToken? cancellationToken,
+  bool Function()? isCancelled,
 }) async {
   final reqHeaders = headers ?? {};
   final headersClient = IOClient(createHttpClient(allowInsecure));
@@ -517,6 +521,9 @@ Future<File> downloadFile(
       await response
           .map((chunk) {
             cancellationToken?.throwIfCancelled();
+            if (isCancelled?.call() == true) {
+              throw DownloadCancelledError();
+            }
             received += chunk.length;
             final now = DateTime.now();
             if (onProgress != null &&
