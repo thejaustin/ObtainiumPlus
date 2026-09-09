@@ -11,6 +11,8 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
 
 class GitHub extends AppSource {
@@ -247,7 +249,9 @@ class GitHub extends AppSource {
     String url, {
     bool forAPKDownload = false,
   }) async {
-    final token = await getTokenIfAny(additionalSettings);
+    final token = additionalSettings['skipAuth'] == true
+        ? null
+        : await getTokenIfAny(additionalSettings);
     final headers = <String, String>{};
     if (token != null && token.isNotEmpty) {
       headers[HttpHeaders.authorizationHeader] = 'Token $token';
@@ -308,6 +312,42 @@ class GitHub extends AppSource {
 
   Future<String> getAPIHost(Map<String, dynamic> additionalSettings) async =>
       'https://api.${hosts[0]}';
+
+  /// Whether [res] is a 401/403 whose JSON body says the configured token is
+  /// the problem (e.g. "Resource not accessible by personal access token").
+  static bool _isAuthRejection(Response res) {
+    if (res.statusCode != 401 && res.statusCode != 403) return false;
+    try {
+      final message =
+          (jsonDecode(res.body)['message'] as String? ?? '').toLowerCase();
+      return message.contains('access token') ||
+          message.contains('bad credentials');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Runs [url] through [sourceRequest], retrying without the configured
+  /// token when GitHub rejects the authenticated request (a token that is not
+  /// authorized for this repository must not block updates of public repos).
+  Future<Response> _sourceRequestWithAuthFallback(
+    String url,
+    Map<String, dynamic> additionalSettings,
+  ) async {
+    var res = await sourceRequest(url, additionalSettings);
+    if (_isAuthRejection(res)) {
+      unawaited(
+        LogsProvider().add(
+          'GitHub request for $url rejected due to token access, retrying without token.',
+        ),
+      );
+      res = await sourceRequest(
+        url,
+        Map<String, dynamic>.from(additionalSettings)..['skipAuth'] = true,
+      );
+    }
+    return res;
+  }
 
   Future<String> convertStandardUrlToAPIUrl(
     String standardUrl,
@@ -678,19 +718,25 @@ class GitHub extends AppSource {
     if (verifyLatestTag) {
       final uri = Uri.parse(requestUrl);
       final latestUrl = uri.replace(query: null, path: '${uri.path}/latest');
-      final Response res = await sourceRequest(
+      final Response res = await _sourceRequestWithAuthFallback(
         latestUrl.toString(),
         additionalSettings,
       );
-      if (res.statusCode != 200) {
+      if (res.statusCode == 200) {
+        latestRelease = jsonDecode(res.body);
+      } else if (res.statusCode == 403 || res.statusCode == 429) {
+        // Rate limited on /latest; fall through so releases or atom fallback handles it
+      } else {
         if (onHttpErrorCode != null) {
           onHttpErrorCode(res);
         }
         throw getObtainiumHttpError(res);
       }
-      latestRelease = jsonDecode(res.body);
     }
-    final Response res = await sourceRequest(requestUrl, additionalSettings);
+    final Response res = await _sourceRequestWithAuthFallback(
+      requestUrl,
+      additionalSettings,
+    );
     if (res.statusCode == 200) {
       final decoded = jsonDecode(res.body);
       if (decoded is! List) {
@@ -753,11 +799,205 @@ class GitHub extends AppSource {
             targetRelease['allAssetUrls'] as List<MapEntry<String, String>>,
       );
     } else {
+      if (res.statusCode == 403 || res.statusCode == 429) {
+        try {
+          return await _fallbackScrapeReleases(standardUrl, additionalSettings);
+        } catch (scrapeErr) {
+          talker.warning('GitHub Atom fallback scrape failed: $scrapeErr');
+        }
+      }
       if (onHttpErrorCode != null) {
         onHttpErrorCode(res);
       }
       throw getObtainiumHttpError(res);
     }
+  }
+
+  /// Web scraper fallback inspired by Komi Store when GitHub REST API rate limits (HTTP 403 / 429).
+  /// Parses public Atom feed (/releases.atom) and expanded assets HTML (/releases/expanded_assets/{tag}).
+  Future<APKDetails> _fallbackScrapeReleases(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings,
+  ) async {
+    final uri = Uri.tryParse(standardUrl);
+    if (uri == null || uri.pathSegments.length < 2) {
+      throw NoReleasesError();
+    }
+    final owner = uri.pathSegments[0];
+    final repo = uri.pathSegments[1];
+    final atomUrl = 'https://github.com/$owner/$repo/releases.atom';
+
+    talker.info(
+      'GitHub API rate limited; attempting Atom feed scraper for $owner/$repo',
+    );
+
+    Response atomRes;
+    try {
+      atomRes = await _sourceRequestWithAuthFallback(
+        atomUrl,
+        additionalSettings,
+      ).timeout(const Duration(seconds: 15));
+    } catch (e) {
+      talker.warning('Atom feed request failed: $e');
+      throw NoReleasesError();
+    }
+
+    if (atomRes.statusCode != 200) {
+      talker.warning('Atom feed returned status ${atomRes.statusCode}');
+      throw NoReleasesError();
+    }
+
+    final entryRegex = RegExp(r'<entry>([\s\S]*?)<\/entry>', multiLine: true);
+    final titleRegex = RegExp(r'<title[^>]*>([\s\S]*?)<\/title>');
+    final updatedRegex = RegExp(r'<updated[^>]*>([\s\S]*?)<\/updated>');
+    final tagRegex = RegExp(r'/releases/tag/([^"/?#\s]+)');
+    final contentRegex = RegExp(r'<content[^>]*>([\s\S]*?)<\/content>');
+
+    final entries = entryRegex.allMatches(atomRes.body);
+    if (entries.isEmpty) {
+      throw NoReleasesError();
+    }
+
+    final String? regexFilter =
+        (additionalSettings['filterReleaseTitlesByRegEx'] as String?)
+                    ?.isNotEmpty ==
+                true
+            ? additionalSettings['filterReleaseTitlesByRegEx']
+            : null;
+    final String? regexNotesFilter =
+        (additionalSettings['filterReleaseNotesByRegEx'] as String?)
+                    ?.isNotEmpty ==
+                true
+            ? additionalSettings['filterReleaseNotesByRegEx']
+            : null;
+    final bool includeZips = additionalSettings['includeZips'] == true;
+    final bool includeTarballs = additionalSettings['includeTarballs'] == true;
+
+    for (final match in entries) {
+      final entryBlock = match.group(1) ?? '';
+      final titleMatch = titleRegex.firstMatch(entryBlock);
+      final rawTitle = titleMatch?.group(1)?.trim() ?? '';
+
+      final tagMatch = tagRegex.firstMatch(entryBlock);
+      final tag = tagMatch?.group(1)?.trim() ?? rawTitle;
+      if (tag.isEmpty) continue;
+
+      final updatedMatch = updatedRegex.firstMatch(entryBlock);
+      DateTime? releaseDate;
+      if (updatedMatch != null) {
+        releaseDate = DateTime.tryParse(updatedMatch.group(1)?.trim() ?? '');
+      }
+
+      final contentMatch = contentRegex.firstMatch(entryBlock);
+      final rawBody = contentMatch?.group(1)?.trim() ?? '';
+      final body = rawBody
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>')
+          .replaceAll('&amp;', '&')
+          .replaceAll('&quot;', '"')
+          .replaceAll('&#39;', "'");
+
+      if (regexFilter != null) {
+        try {
+          if (!RegExp(regexFilter).hasMatch(rawTitle) &&
+              !RegExp(regexFilter).hasMatch(tag)) {
+            continue;
+          }
+        } catch (_) {}
+      }
+
+      if (regexNotesFilter != null) {
+        try {
+          if (!RegExp(regexNotesFilter).hasMatch(body)) {
+            continue;
+          }
+        } catch (_) {}
+      }
+
+      // Fetch expanded assets HTML for this tag
+      final assetsUrl =
+          'https://github.com/$owner/$repo/releases/expanded_assets/$tag';
+      Response assetsRes;
+      try {
+        assetsRes = await _sourceRequestWithAuthFallback(
+          assetsUrl,
+          additionalSettings,
+        ).timeout(const Duration(seconds: 15));
+      } catch (e) {
+        talker.warning('Expanded assets request failed: $e');
+        continue;
+      }
+
+      if (assetsRes.statusCode != 200) {
+        continue;
+      }
+
+      final List<MapEntry<String, String>> apkUrls = [];
+      final List<MapEntry<String, String>> allAssetUrls = [];
+      final Map<String, String> assetSha256s = {};
+
+      // Split by item blocks to associate download link with SHA-256
+      final itemBlocks = assetsRes.body.split(
+        RegExp(
+          r'<(?:li|div)[^>]*class=["\x27][^"\x27]*(?:Box-row|d-flex flex-justify-between)[^"\x27]*["\x27]',
+        ),
+      );
+
+      for (final block in itemBlocks) {
+        final linkMatch = RegExp(
+          r'href=["\x27](/[^"\x27]+/releases/download/[^"\x27]+)["\x27]',
+          caseSensitive: false,
+        ).firstMatch(block);
+        if (linkMatch == null) continue;
+
+        var path = linkMatch.group(1) ?? '';
+        if (path.isEmpty) continue;
+        final downloadUrl =
+            path.startsWith('http') ? path : 'https://github.com$path';
+        final fileName = Uri.decodeComponent(path.split('/').last);
+        final entry = MapEntry(fileName, downloadUrl);
+
+        if (!allAssetUrls.any((e) => e.value == downloadUrl)) {
+          allAssetUrls.add(entry);
+        }
+
+        final shaMatch =
+            RegExp(r'sha256:([a-fA-F0-9]{64})', caseSensitive: false)
+                .firstMatch(block);
+        if (shaMatch != null) {
+          final hash = shaMatch.group(1)!.toLowerCase();
+          assetSha256s[downloadUrl] = hash;
+          assetSha256s[fileName] = hash;
+        }
+
+        final lower = fileName.toLowerCase();
+        if (lower.endsWith('.apk') ||
+            (includeZips && lower.endsWith('.zip')) ||
+            (includeTarballs &&
+                (lower.endsWith('.tar.gz') || lower.endsWith('.tgz')))) {
+          if (!apkUrls.any((e) => e.value == downloadUrl)) {
+            apkUrls.add(entry);
+          }
+        }
+      }
+
+      if (apkUrls.isNotEmpty || additionalSettings['trackOnly'] == true) {
+        talker.info(
+          'GitHub Atom fallback scraper succeeded for $owner/$repo (tag: $tag, ${apkUrls.length} APKs)',
+        );
+        return APKDetails(
+          tag,
+          apkUrls,
+          getAppNames(standardUrl),
+          releaseDate: releaseDate,
+          changeLog: body.isEmpty ? null : body,
+          allAssetUrls: allAssetUrls,
+          assetSha256s: assetSha256s,
+        );
+      }
+    }
+
+    throw NoReleasesError();
   }
 
   Future<APKDetails> fetchReleaseDetailsWithTagFallback(
@@ -774,13 +1014,42 @@ class GitHub extends AppSource {
         onHttpErrorCode: onHttpErrorCode,
       );
     } catch (err) {
+      if (err is RateLimitError ||
+          (err is ObtainiumHttpError &&
+              (err.statusCode == 403 || err.statusCode == 429))) {
+        try {
+          return await _fallbackScrapeReleases(standardUrl, additionalSettings);
+        } catch (fallbackErr) {
+          talker.warning('GitHub Atom fallback scraper failed: $fallbackErr');
+          rethrowOrWrapError(err);
+        }
+      }
       if (err is NoReleasesError && additionalSettings['trackOnly'] == true) {
-        return await _fetchReleaseDetails(
-          await reqUrlGenerator(true),
-          standardUrl,
-          additionalSettings,
-          onHttpErrorCode: onHttpErrorCode,
-        );
+        try {
+          return await _fetchReleaseDetails(
+            await reqUrlGenerator(true),
+            standardUrl,
+            additionalSettings,
+            onHttpErrorCode: onHttpErrorCode,
+          );
+        } catch (err2) {
+          if (err2 is RateLimitError ||
+              (err2 is ObtainiumHttpError &&
+                  (err2.statusCode == 403 || err2.statusCode == 429))) {
+            try {
+              return await _fallbackScrapeReleases(
+                standardUrl,
+                additionalSettings,
+              );
+            } catch (fallbackErr) {
+              talker.warning(
+                'GitHub Atom fallback scraper failed: $fallbackErr',
+              );
+              rethrowOrWrapError(err2);
+            }
+          }
+          rethrowOrWrapError(err2);
+        }
       } else {
         rethrowOrWrapError(err);
       }
@@ -800,7 +1069,7 @@ class GitHub extends AppSource {
           return '${await convertStandardUrlToAPIUrl(standardUrl, additionalSettings)}/${useTagUrl ? 'tags' : 'releases'}?per_page=100';
         },
         (Response res) {
-          rateLimitErrorCheck(res);
+          githubErrorCheck(res);
         },
       );
     } catch (e) {
@@ -908,7 +1177,7 @@ class GitHub extends AppSource {
       '${await getAPIHost({})}/search/repositories?q=${Uri.encodeQueryComponent(apiQuery)}&per_page=100',
       'items',
       onHttpErrorCode: (Response res) {
-        rateLimitErrorCheck(res);
+        githubErrorCheck(res);
       },
       querySettings: querySettings,
     );
@@ -924,7 +1193,17 @@ class GitHub extends AppSource {
   }
 
   void rateLimitErrorCheck(Response res) {
-    if (res.headers['x-ratelimit-remaining'] == '0') {
+    bool isRateLimited = res.headers['x-ratelimit-remaining'] == '0';
+    if (!isRateLimited && res.statusCode == 403) {
+      try {
+        final message =
+            (jsonDecode(res.body)['message'] as String? ?? '').toLowerCase();
+        if (message.contains('rate limit')) {
+          isRateLimited = true;
+        }
+      } catch (_) {}
+    }
+    if (isRateLimited) {
       final now = DateTime.now();
       final resetEpochSeconds =
           int.tryParse(res.headers['x-ratelimit-reset'] ?? '') ??
@@ -932,8 +1211,28 @@ class GitHub extends AppSource {
       final nowSeconds = now.millisecondsSinceEpoch ~/ 1000;
       final remainingMinutes = ((resetEpochSeconds - nowSeconds) / 60)
           .ceil()
-          .clamp(0, 9999);
+          .clamp(1, 9999);
       throw RateLimitError(remainingMinutes);
+    }
+  }
+
+  /// Throws the actual GitHub error for failed API responses: rate limits
+  /// (when the headers say so) and auth problems (e.g. a token that is not
+  /// authorized for this repository), which the generic handler would
+  /// otherwise mislabel as a rate limit (see #3211).
+  void githubErrorCheck(Response res) {
+    rateLimitErrorCheck(res);
+    if (res.statusCode == 401 || res.statusCode == 403) {
+      try {
+        final message = (jsonDecode(res.body)['message'] as String?)?.trim();
+        if (message != null &&
+            message.isNotEmpty &&
+            !message.toLowerCase().contains('rate limit')) {
+          throw ObtainiumError(message);
+        }
+      } catch (_) {
+        // Not a JSON error body; fall through to the generic handler.
+      }
     }
   }
 }

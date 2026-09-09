@@ -60,10 +60,24 @@ class AppFileService {
   }
 
   static Future<void> unzipFile(String filePath, String destinationPath) async {
-    await ZipFile.extractToDirectory(
-      zipFile: File(filePath),
-      destinationDir: Directory(destinationPath),
-    );
+    try {
+      await ZipFile.extractToDirectory(
+        zipFile: File(filePath),
+        destinationDir: Directory(destinationPath),
+      );
+    } on FileSystemException catch (e) {
+      if (e.osError?.errorCode == 28 ||
+          e.message.toLowerCase().contains('no space')) {
+        throw ObtainiumError(tr('installFailedStorage'));
+      }
+      rethrow;
+    } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('no space') || errStr.contains('enospc')) {
+        throw ObtainiumError(tr('installFailedStorage'));
+      }
+      rethrow;
+    }
   }
 
   static Future<Map<String, Directory>> initAppDirectories() async {
@@ -186,10 +200,12 @@ class AppFileService {
   }
 
   static String hashListOfLists(List<List<int>> data) {
-    var bytes = utf8.encode(jsonEncode(data));
-    var digest = sha256.convert(bytes);
-    var hash = digest.toString();
-    return hash.hashCode.toString();
+    final builder = BytesBuilder(copy: false);
+    for (var chunk in data) {
+      builder.add(chunk);
+    }
+    var digest = sha256.convert(builder.takeBytes());
+    return digest.toString().hashCode.toString();
   }
 
   static Future<String> checkPartialDownloadHashDynamic(
@@ -238,8 +254,19 @@ class AppFileService {
       if (response.statusCode < 200 || response.statusCode > 299) {
         throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'));
       }
-      List<List<int>> bytes = await response.stream.take(bytesToGrab).toList();
-      return hashListOfLists(bytes);
+      final builder = BytesBuilder(copy: false);
+      await for (var chunk in response.stream) {
+        final remaining = bytesToGrab - builder.length;
+        if (remaining <= 0) break;
+        if (chunk.length <= remaining) {
+          builder.add(chunk);
+        } else {
+          builder.add(chunk.sublist(0, remaining));
+          break;
+        }
+      }
+      var digest = sha256.convert(builder.takeBytes());
+      return digest.toString().hashCode.toString();
     } finally {
       client.close();
     }
@@ -297,15 +324,27 @@ class AppFileService {
       if (e is DownloadCancelledError) rethrow;
       if (retries > 0 &&
           (e is ClientException ||
-              e is HttpException ||
               e is SocketException ||
-              e is HandshakeException)) {
+              e is HandshakeException ||
+              (e is HttpException &&
+                  !e.message.contains('404') &&
+                  !e.message.contains('403') &&
+                  !e.message.contains('401')))) {
         // Exponential backoff: 2^retry_count * 5 seconds
         // retry_count starts at 3, so we use (4 - retries)
         int attempt = 4 - retries;
         int delaySeconds = useSmartRetries
             ? (5 * (1 << (attempt - 1))) // 5, 10, 20
             : 5;
+
+        if (e is HttpException && e.message.contains('429')) {
+          final match = RegExp(r'Retry-After:\s*(\d+)').firstMatch(e.message);
+          if (match != null) {
+            delaySeconds = int.tryParse(match.group(1)!) ?? delaySeconds;
+          } else {
+            delaySeconds = delaySeconds < 30 ? 30 : delaySeconds;
+          }
+        }
 
         logs?.add(
           'Download failed ($e). Retrying in $delaySeconds seconds... (Attempt $attempt)',
@@ -358,9 +397,16 @@ class AppFileService {
     if (ext.endsWith('"') || ext.endsWith("other")) {
       ext = ext.substring(0, ext.length - 1);
     }
-    if (((Uri.tryParse(url)?.path ?? url).toLowerCase().endsWith('.apk') ||
-            ext == 'attachment') &&
-        ext != 'apk') {
+    final urlPath = Uri.tryParse(url)?.path ?? url;
+    if (AppSource.isApkOrContainerFile(
+      urlPath,
+      includeArchives: true,
+      includeTarballs: true,
+    )) {
+      ext = urlPath.split('.').last.toLowerCase();
+    } else if (ext == 'attachment' ||
+        ((Uri.tryParse(url)?.path ?? url).toLowerCase().endsWith('.apk') &&
+            ext != 'apk')) {
       ext = 'apk';
     }
     fileName = fileNameHasExt ? fileName : fileName.split('/').last;
@@ -401,7 +447,8 @@ class AppFileService {
       bool isDownloading = true;
       int currentTempFileSize = await tempDownloadedFile.length();
       bool shouldReturn = false;
-      while (isDownloading) {
+      int pollCycles = 0;
+      while (isDownloading && pollCycles++ < 30) {
         await Future.delayed(const Duration(seconds: 7));
         if (tempDownloadedFile.existsSync()) {
           int newTempFileSize = await tempDownloadedFile.length();
@@ -418,6 +465,7 @@ class AppFileService {
           }
         } else {
           shouldReturn = downloadedFile.existsSync();
+          break;
         }
       }
       if (shouldReturn) {
@@ -451,19 +499,30 @@ class AppFileService {
       'GET',
       url,
       reqHeaders,
-      {},
+      {'allowInsecure': allowInsecure},
     );
     HttpClient responseClient = responseWithClient.value.key;
     HttpClientResponse response = responseWithClient.value.value;
 
     if (response.statusCode < 200 || response.statusCode > 299) {
+      final retryAfter = response.headers.value('retry-after');
       responseClient.close();
       if (tempDownloadedFile.existsSync()) {
         deleteFile(tempDownloadedFile);
       }
       throw HttpException(
-        'Server returned status code ${response.statusCode}: ${response.reasonPhrase}',
+        'Server returned status code ${response.statusCode}: ${response.reasonPhrase}${retryAfter != null ? ' (Retry-After: $retryAfter)' : ''}',
       );
+    }
+
+    if (rangeStart > 0 && response.statusCode == HttpStatus.ok) {
+      // Server returned 200 OK (ignored Range header) — discard append sink & truncate partial file
+      await sink?.close();
+      sink = null;
+      rangeStart = 0;
+      if (tempDownloadedFile.existsSync()) {
+        deleteFile(tempDownloadedFile);
+      }
     }
 
     sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
@@ -478,46 +537,79 @@ class AppFileService {
     const downloadBufferSize =
         128 * 1024; // 128KB buffer for faster I/O throughput
     final downloadBuffer = BytesBuilder();
-    await response
-        .map((chunk) {
-          if (isCancelled?.call() == true) {
-            throw DownloadCancelledError();
-          }
-          received += chunk.length;
-          final now = DateTime.now();
-          if (onProgress != null &&
-              (lastProgressUpdate == null ||
-                  now.difference(lastProgressUpdate!) >=
-                      downloadUIUpdateInterval)) {
-            progress = fullContentLength != null
-                ? clampDouble((received / fullContentLength) * 100, 0, 100)
-                : 30;
-            onProgress(progress);
-            lastProgressUpdate = now;
-          }
-          return chunk;
-        })
-        .transform(
-          StreamTransformer<List<int>, List<int>>.fromHandlers(
-            handleData: (List<int> data, EventSink<List<int>> s) {
-              downloadBuffer.add(data);
-              if (downloadBuffer.length >= downloadBufferSize) {
-                s.add(downloadBuffer.takeBytes());
-              }
+    try {
+      await response
+          .timeout(
+            const Duration(seconds: 45),
+            onTimeout: (s) {
+              s.addError(
+                TimeoutException('Download stalled: no data received for 45s'),
+              );
             },
-            handleDone: (EventSink<List<int>> s) {
-              if (downloadBuffer.isNotEmpty) {
-                s.add(downloadBuffer.takeBytes());
+          )
+          .map((chunk) {
+            if (isCancelled?.call() == true) {
+              throw DownloadCancelledError();
+            }
+            received += chunk.length;
+            final now = DateTime.now();
+            if (onProgress != null &&
+                (lastProgressUpdate == null ||
+                    now.difference(lastProgressUpdate!) >=
+                        downloadUIUpdateInterval)) {
+              progress = fullContentLength != null
+                  ? clampDouble((received / fullContentLength) * 100, 0, 100)
+                  : 30;
+              try {
+                onProgress(progress, received, fullContentLength);
+              } catch (_) {
+                onProgress(progress);
               }
-              s.close();
-            },
-          ),
-        )
-        .pipe(sink);
-    await sink.close();
+              lastProgressUpdate = now;
+            }
+            return chunk;
+          })
+          .transform(
+            StreamTransformer<List<int>, List<int>>.fromHandlers(
+              handleData: (List<int> data, EventSink<List<int>> s) {
+                downloadBuffer.add(data);
+                if (downloadBuffer.length >= downloadBufferSize) {
+                  s.add(downloadBuffer.takeBytes());
+                }
+              },
+              handleDone: (EventSink<List<int>> s) {
+                if (downloadBuffer.isNotEmpty) {
+                  s.add(downloadBuffer.takeBytes());
+                }
+                s.close();
+              },
+            ),
+          )
+          .pipe(sink);
+      await sink.close();
+      sink = null;
+    } on FileSystemException catch (e) {
+      if (tempDownloadedFile.existsSync()) {
+        try {
+          tempDownloadedFile.deleteSync();
+        } catch (_) {}
+      }
+      if (e.osError?.errorCode == 28 ||
+          e.message.toLowerCase().contains('no space')) {
+        throw ObtainiumError(tr('insufficientStorage'));
+      }
+      rethrow;
+    } finally {
+      await sink?.close();
+      responseClient.close();
+    }
     progress = null;
     if (onProgress != null) {
-      onProgress(progress);
+      try {
+        onProgress(progress, received, fullContentLength);
+      } catch (_) {
+        onProgress(progress);
+      }
     }
 
     if (tempDownloadedFile.existsSync()) {
@@ -546,5 +638,30 @@ class AppFileService {
       talker.error('Failed to clear APKs: $e');
     }
     return clearedCount;
+  }
+
+  /// Computes the SHA-256 hash of a file as a lowercase hexadecimal string.
+  static Future<String> computeFileSha256(File file) async {
+    final stream = file.openRead();
+    final digest = await sha256.bind(stream).first;
+    return digest.toString().toLowerCase();
+  }
+
+  /// Verifies that [file] matches the [expectedSha256] digest.
+  /// Throws [ObtainiumError] if the hash does not match.
+  static Future<void> verifyFileSha256(File file, String expectedSha256) async {
+    final cleanExpected =
+        expectedSha256.toLowerCase().replaceAll('sha256:', '').trim();
+    if (cleanExpected.isEmpty) return;
+    final actual = await computeFileSha256(file);
+    if (actual != cleanExpected) {
+      talker.error(
+        'SHA-256 mismatch for ${file.path}: expected $cleanExpected, got $actual',
+      );
+      throw ObtainiumError(
+        'Integrity check failed: SHA-256 digest mismatch. The downloaded file may be incomplete or corrupted.',
+      );
+    }
+    talker.info('SHA-256 verified successfully for ${file.path}: $actual');
   }
 }

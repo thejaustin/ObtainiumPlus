@@ -1,3 +1,7 @@
+import 'package:obtainium/installers/external_installer.dart';
+import 'package:obtainium/installers/root_installer.dart';
+import 'package:obtainium/installers/shizuku_installer.dart';
+import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
@@ -61,6 +65,20 @@ abstract class Installer {
   final SettingsProvider settingsProvider;
 
   Installer(this.settingsProvider);
+
+  /// Creates the appropriate [Installer] strategy based on [settingsProvider.installerMode].
+  factory Installer.create(SettingsProvider settingsProvider) {
+    switch (settingsProvider.installerMode) {
+      case 'shizuku':
+        return ShizukuInstaller(settingsProvider);
+      case 'external':
+        return ExternalInstaller(settingsProvider);
+      case 'root':
+        return RootInstaller(settingsProvider);
+      default:
+        return StockInstaller(settingsProvider);
+    }
+  }
 
   /// Unique key identifying this installer mode (e.g. 'stock', 'shizuku',
   /// 'external').

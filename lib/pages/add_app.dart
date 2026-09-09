@@ -13,6 +13,7 @@ import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
@@ -122,12 +123,18 @@ class AddAppPageState extends State<AddAppPage> {
     super.dispose();
   }
 
+  String _activeLiveSearchQuery = '';
+
   void linkFn(String input) {
     try {
       if (input.isEmpty) {
         throw UnsupportedURLError();
       }
       sourceProvider.getSource(input);
+      setState(() {
+        liveResults = {};
+        liveSearching = false;
+      });
       changeUserInput(input, true, false, updateUrlInput: true);
     } catch (e) {
       showError(e, context);
@@ -135,6 +142,7 @@ class AddAppPageState extends State<AddAppPage> {
   }
 
   Future<void> runLiveSearch(String query) async {
+    _activeLiveSearchQuery = query;
     if (query.length < 3) {
       setState(() {
         liveResults = {};
@@ -157,13 +165,14 @@ class AddAppPageState extends State<AddAppPage> {
       );
 
       if (!mounted) return;
+      if (_activeLiveSearchQuery != query) return;
       setState(() {
         liveResults = searchResult.results;
       });
     } catch (e) {
       // Ignore background search errors
     } finally {
-      if (mounted) {
+      if (mounted && _activeLiveSearchQuery == query) {
         setState(() {
           liveSearching = false;
         });
@@ -202,17 +211,26 @@ class AddAppPageState extends State<AddAppPage> {
         if (pickedSource?.sourceIdentifier != source?.sourceIdentifier ||
             overrideChanged ||
             (prevHost != null && prevHost != source?.hosts.firstOrNull)) {
+          final isEditingApp = widget.appId != null;
+          final existingSettings = isEditingApp
+              ? (context.read<AppsProvider>().apps[widget.appId]?.app.additionalSettings ?? {})
+              : <String, dynamic>{};
           pickedSource = source;
-          pickedSource?.runOnAddAppInputChange(userInput);
-          additionalSettings = source != null
+          final inputSettings =
+              pickedSource?.runOnAddAppInputChange(userInput) ?? {};
+          final defaultSettings = source != null
               ? getDefaultValuesFromFormItems(
                   source.combinedAppSpecificSettingFormItems,
                 )
-              : {};
-          additionalSettingsValid = source != null
-              ? !sourceProvider.ifRequiredAppSpecificSettingsExist(source)
-              : true;
-          inferAppIdIfOptional = true;
+              : <String, dynamic>{};
+          additionalSettings = {
+            ...defaultSettings,
+            ...inputSettings,
+            if (isEditingApp) ...existingSettings,
+          };
+          additionalSettingsValid = source == null ||
+              _requiredFormFieldsFilled(source, additionalSettings);
+          inferAppIdIfOptional = !isEditingApp;
         }
 
         // Trigger live search if not a valid direct URL
@@ -232,10 +250,28 @@ class AddAppPageState extends State<AddAppPage> {
     }
   }
 
+  bool _requiredFormFieldsFilled(
+    AppSource source,
+    Map<String, dynamic> additionalSettings,
+  ) {
+    for (var row in source.combinedAppSpecificSettingFormItems) {
+      for (var item in row) {
+        if (item is GeneratedFormTextField && item.required) {
+          final value = additionalSettings[item.key];
+          if (value == null || value.toString().trim().isEmpty) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     AppsProvider appsProvider = context.read<AppsProvider>();
     SettingsProvider settingsProvider = context.watch<SettingsProvider>();
+    PlusSettingsProvider plusSettings = context.watch<PlusSettingsProvider>();
     NotificationsProvider notificationsProvider = context
         .read<NotificationsProvider>();
 
@@ -322,6 +358,9 @@ class AddAppPageState extends State<AddAppPage> {
             source,
             userInput.trim(),
             additionalSettings,
+            currentApp: widget.appId != null
+                ? appsProvider.apps[widget.appId]?.app
+                : null,
             trackOnlyOverride: trackOnly,
             sourceIsOverriden: pickedSourceOverride != null,
             inferAppIdIfOptional: inferAppIdIfOptional,
@@ -357,12 +396,21 @@ class AddAppPageState extends State<AddAppPage> {
               downloadedFile?.appId ?? downloadedDir?.appId ?? app.id,
             );
           }
-          if (appsProvider.apps.containsKey(app.id)) {
+          if ((widget.appId == null || widget.appId != app.id) &&
+              appsProvider.apps.containsKey(app.id)) {
             throw ObtainiumError(tr('appAlreadyAdded'));
+          }
+          if (widget.appId != null && widget.appId != app.id) {
+            await appsProvider.removeApps([widget.appId!]);
           }
           if (app.additionalSettings['trackOnly'] == true ||
               app.additionalSettings['versionDetection'] != true) {
             app.installedVersion = app.latestVersion;
+          } else if (widget.appId != null) {
+            final oldApp = appsProvider.apps[widget.appId]?.app;
+            if (oldApp?.installedVersion != null) {
+              app.installedVersion = oldApp!.installedVersion;
+            }
           }
           app.categories = pickedCategories;
           await appsProvider.saveApps([app], onlyIfExists: false);
@@ -372,19 +420,20 @@ class AddAppPageState extends State<AddAppPage> {
           final homeState = globalNavigatorKey.currentContext
               ?.findAncestorStateOfType<HomePageState>();
           homeState?.switchToPage(0);
-          // Add App is a pushed route now (not a tab); close it so the
-          // user lands back on the Apps tab behind the app sheet.
-          if (!widget.isModal && mounted && Navigator.of(context).canPop()) {
+          // Close Add/Edit App route or sheet so the user lands back on home/app page
+          if (mounted && Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
-          showDraggableModalBottomSheet(
-            context: globalNavigatorKey.currentContext ?? context,
-            builder: (context, controller) => AppPage(
-              appId: app!.id,
-              isModal: true,
-              scrollController: controller,
-            ),
-          );
+          if (widget.appId == null) {
+            showDraggableModalBottomSheet(
+              context: globalNavigatorKey.currentContext ?? context,
+              builder: (context, controller) => AppPage(
+                appId: app!.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          }
         }
       } catch (e) {
         if (context.mounted) showError(e, context);
@@ -443,22 +492,26 @@ class AddAppPageState extends State<AddAppPage> {
             ? const Center(
                 child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
               )
-            : ScaleTouchWrapper(
-                child: ElevatedButton(
-                  onPressed:
-                      doingSomething ||
-                          pickedSource == null ||
-                          (pickedSource!
-                                  .combinedAppSpecificSettingFormItems
-                                  .isNotEmpty &&
-                              !additionalSettingsValid)
-                      ? null
-                      : () {
-                          AppHaptics.selectionClick();
-                          addApp();
-                        },
-                  child: Text(widget.appId != null ? tr('save') : tr('add')),
+            : FilledButton.icon(
+                onPressed:
+                    doingSomething ||
+                        pickedSource == null ||
+                        (pickedSource!
+                                .combinedAppSpecificSettingFormItems
+                                .isNotEmpty &&
+                            !additionalSettingsValid)
+                    ? null
+                    : () {
+                        AppHaptics.selectionClick();
+                        addApp();
+                      },
+                icon: Icon(
+                  widget.appId != null
+                      ? Icons.save_rounded
+                      : Icons.add_rounded,
+                  size: 18,
                 ),
+                label: Text(widget.appId != null ? tr('save') : tr('add')),
               ),
       ],
     );
@@ -479,7 +532,7 @@ class AddAppPageState extends State<AddAppPage> {
                 return SelectionModal(
                   title: tr(
                     'selectX',
-                    args: [plural('source', 2).toLowerCase()],
+                    args: [tr('sources').toLowerCase()],
                   ),
                   entries: sourceStrings,
                   selectedByDefault: true,
@@ -514,7 +567,7 @@ class AddAppPageState extends State<AddAppPage> {
                                   'url',
                                   label: e.hosts.isNotEmpty
                                       ? tr('overrideSource')
-                                      : plural('url', 1).substring(2),
+                                      : tr('urlLabel'),
                                   autoCompleteOptions: [
                                     ...(e.hosts.isNotEmpty ? [e.hosts[0]] : []),
                                     ...appsProvider.apps.values
@@ -680,6 +733,7 @@ class AddAppPageState extends State<AddAppPage> {
     );
 
     bool shouldShowSearchBar() =>
+        !plusSettings.plusEnableModernAddAppPage &&
         sourceProvider.sources.where((e) => e.canSearch).isNotEmpty &&
         pickedSource == null &&
         userInput.isEmpty;
@@ -861,86 +915,88 @@ class AddAppPageState extends State<AddAppPage> {
       ],
     );
 
-    Widget getSourcesListWidget() => Padding(
-      padding: const EdgeInsets.all(16),
-      child: Wrap(
-        direction: Axis.horizontal,
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 12,
-        children: [
-          InkWell(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return GeneratedFormModal(
-                    singleNullReturnButton: tr('ok'),
-                    title: tr('supportedSources'),
-                    items: const [],
-                    additionalWidgets: [
-                      ...sourceProvider.sources.map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: InkWell(
-                            onTap: e.hosts.isNotEmpty
-                                ? () {
-                                    launchUrlString(
-                                      'https://${e.hosts[0]}',
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  }
-                                : null,
-                            child: Text(
-                              '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
-                              style: TextStyle(
-                                decoration: e.hosts.isNotEmpty
-                                    ? TextDecoration.underline
-                                    : TextDecoration.none,
+    Widget getSourcesListWidget() {
+      final colorScheme = Theme.of(context).colorScheme;
+      return Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 8),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            ActionChip(
+              avatar: Icon(
+                Icons.hub_outlined,
+                size: 16,
+                color: colorScheme.primary,
+              ),
+              label: Text(tr('supportedSources')),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return GeneratedFormModal(
+                      singleNullReturnButton: tr('ok'),
+                      title: tr('supportedSources'),
+                      items: const [],
+                      additionalWidgets: [
+                        ...sourceProvider.sources.map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: InkWell(
+                              onTap: e.hosts.isNotEmpty
+                                  ? () {
+                                      launchUrlString(
+                                        'https://${e.hosts[0]}',
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    }
+                                  : null,
+                              child: Text(
+                                '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
+                                style: TextStyle(
+                                  decoration: e.hosts.isNotEmpty
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
+                                  color: e.hosts.isNotEmpty
+                                      ? colorScheme.primary
+                                      : null,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${tr('note')}:',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(tr('selfHostedNote', args: [tr('overrideSource')])),
-                    ],
-                  );
-                },
-              );
-            },
-            child: Text(
-              tr('supportedSources'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
-              ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${tr('note')}:',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(tr('selfHostedNote', args: [tr('overrideSource')])),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
-          ),
-          InkWell(
-            onTap: () {
-              launchUrlString(
-                'https://apps.obtainium.page/',
-                mode: LaunchMode.externalApplication,
-              );
-            },
-            child: Text(
-              tr('crowdsourcedConfigsShort'),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-                fontStyle: FontStyle.italic,
+            ActionChip(
+              avatar: Icon(
+                Icons.language_rounded,
+                size: 16,
+                color: colorScheme.secondary,
               ),
+              label: Text(tr('crowdsourcedConfigsShort')),
+              onPressed: () {
+                launchUrlString(
+                  'https://apps.obtainium.page/',
+                  mode: LaunchMode.externalApplication,
+                );
+              },
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
 
     Widget _buildAppPreview() {
       if (pickedSource == null || userInput.isEmpty)
@@ -1160,15 +1216,52 @@ class AddAppPageState extends State<AddAppPage> {
       );
     }
 
+    final showDiscover =
+        !widget.isModal &&
+        plusSettings.plusEnableDiscover &&
+        pickedSource == null &&
+        userInput.isEmpty;
+
     final formScrollView = CustomScrollView(
       controller: widget.scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       physics: widget.isModal
-          ? const BouncingScrollPhysics()
+          ? const ClampingScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
       shrinkWrap: true,
       slivers: <Widget>[
-        if (!widget.isModal)
+        if (widget.isModal)
+          SliverToBoxAdapter(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Center(child: DragHandle()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        widget.appId != null ? tr('editApp') : tr('addApp'),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(context).pop(),
+                        visualDensity: VisualDensity.compact,
+                        tooltip: tr('close'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
           CustomAppBar(
             title: tr('addApp'),
             actions: [
@@ -1208,6 +1301,8 @@ class AddAppPageState extends State<AddAppPage> {
                     future: pickedSource?.getSourceNote(),
                   ),
                 if (pickedSource != null) getAdditionalOptsCol(),
+                if (pickedSource == null && !showDiscover)
+                  getSourcesListWidget(),
               ],
             ),
           ),
@@ -1215,23 +1310,10 @@ class AddAppPageState extends State<AddAppPage> {
       ],
     );
 
-    final plusSettings = context.watch<PlusSettingsProvider>();
-
-    // Discover is merged into the Add App experience: when the page is
-    // idle (no URL typed, no source picked) the browse/discover content
-    // fills the space below the add-by-URL form. Tapping a result feeds
-    // its URL back into the form via linkFn.
-    final showDiscover =
-        !widget.isModal &&
-        plusSettings.plusEnableDiscover &&
-        pickedSource == null &&
-        userInput.isEmpty;
-
     final scaffold = Scaffold(
       backgroundColor: widget.isModal
           ? Colors.transparent
           : Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: pickedSource == null ? getSourcesListWidget() : null,
       body: showDiscover
           ? Column(
               children: [

@@ -103,6 +103,16 @@ Never rethrowOrWrapError(
   );
 }
 
+class ObtainiumHttpError extends ObtainiumError {
+  final int statusCode;
+  ObtainiumHttpError(this.statusCode, [String message = ''])
+      : super(
+          message.isNotEmpty ? message : 'HTTP $statusCode',
+          code: 'HTTP_ERROR',
+          data: {'statusCode': statusCode},
+        );
+}
+
 class RateLimitError extends ObtainiumError {
   final int remainingMinutes;
   RateLimitError(this.remainingMinutes)
@@ -210,6 +220,7 @@ class MultiAppMultiError extends ObtainiumError {
   Map<String, dynamic> rawErrors = {};
   Map<String, List<String>> idsByErrorString = {};
   Map<String, String> appIdNames = {};
+  List<String> successfulAppIds = [];
 
   MultiAppMultiError() : super.withCode('MULTI_ERROR', unexpected: true);
 
@@ -275,12 +286,37 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
     'UNSUPPORTED_URL' => tr('urlMatchesNoSource'),
     'DOWNGRADE' =>
       '${tr('cantInstallOlderVersion')} (versionCode ${data?['currentVersionCode'] ?? '?'} → ${data?['newVersionCode'] ?? '?'})',
-    'INSTALL_FAILED' => data?['message']?.toString() ?? tr('installFailed'),
+    'INSTALL_FAILED' => _formatInstallError(data),
+    'DOWNLOAD_CANCELLED' => tr('downloadCancelled'),
     'ID_CHANGED' => '${tr('appIdMismatch')} - ${data?['newId'] ?? ''}',
     'REPO_RENAMED' => tr('repoRenamed'),
     'NOT_IMPLEMENTED' => tr('functionNotImplemented'),
     _ => data?['message']?.toString() ?? tr('unexpectedError'),
   };
+}
+
+String _formatInstallError(Map<String, dynamic>? data) {
+  final msg = data?['message']?.toString();
+  final code = data?['errorCode'];
+  if (msg == 'STATUS_FAILURE_CONFLICT' || code == 5) {
+    return tr('installFailedConflict');
+  }
+  if (msg == 'STATUS_FAILURE_STORAGE' || code == 6) {
+    return tr('installFailedStorage');
+  }
+  if (msg == 'STATUS_FAILURE_INCOMPATIBLE' || code == 7) {
+    return tr('installFailedIncompatible');
+  }
+  if (msg == 'STATUS_FAILURE_BLOCKED' || code == 2) {
+    return tr('installFailedBlocked');
+  }
+  if (msg == 'STATUS_FAILURE_INVALID' || code == 4) {
+    return tr('installFailedInvalid');
+  }
+  if (msg != null && msg.isNotEmpty && !msg.startsWith('STATUS_FAILURE')) {
+    return '${tr('installFailed')}: $msg';
+  }
+  return tr('installFailed');
 }
 
 Locale? _appCurrentLocale;

@@ -34,6 +34,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
+import 'package:obtainium/services/app_install_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -143,6 +144,7 @@ Future<File> downloadFileWithRetry(
   bool allowInsecure = false,
   LogsProvider? logs,
   CancellationToken? cancellationToken,
+  bool Function()? isCancelled,
 }) async {
   try {
     return await downloadFile(
@@ -156,6 +158,7 @@ Future<File> downloadFileWithRetry(
       allowInsecure: allowInsecure,
       logs: logs,
       cancellationToken: cancellationToken,
+      isCancelled: isCancelled,
     );
   } catch (e) {
     // A cancellation is not one of the retryable error types, so it naturally
@@ -177,6 +180,7 @@ Future<File> downloadFileWithRetry(
         allowInsecure: allowInsecure,
         logs: logs,
         cancellationToken: cancellationToken,
+        isCancelled: isCancelled,
       );
     } else {
       rethrow;
@@ -352,6 +356,7 @@ Future<File> downloadFile(
   bool allowInsecure = false,
   LogsProvider? logs,
   CancellationToken? cancellationToken,
+  bool Function()? isCancelled,
 }) async {
   final reqHeaders = headers ?? {};
   final headersClient = IOClient(createHttpClient(allowInsecure));
@@ -370,7 +375,11 @@ Future<File> downloadFile(
     ext = ext.substring(0, ext.length - 1);
   }
   final urlPath = Uri.tryParse(url)?.path ?? url;
-  if (AppSource.isApkOrContainerFile(urlPath)) {
+  if (AppSource.isApkOrContainerFile(
+    urlPath,
+    includeArchives: true,
+    includeTarballs: true,
+  )) {
     // Preserve the real extension (.apk/.xapk/.apkm/.apks) so XAPK/APKS
     // bundles are still detected and extracted downstream rather than forced
     // to .apk and handed to the APK parser.
@@ -512,6 +521,9 @@ Future<File> downloadFile(
       await response
           .map((chunk) {
             cancellationToken?.throwIfCancelled();
+            if (isCancelled?.call() == true) {
+              throw DownloadCancelledError();
+            }
             received += chunk.length;
             final now = DateTime.now();
             if (onProgress != null &&
@@ -1056,7 +1068,8 @@ class AppsProvider with ChangeNotifier {
     NotificationsProvider? notificationsProvider,
     bool useExisting = true,
   }) async {
-    var notifId = DownloadNotification(app.finalName, 0).id;
+    var notifId = DownloadNotification(app.finalName, 0, appId: app.id).id;
+    registerDownloadCancellation(app.id);
     if (apps[app.id] != null) {
       apps[app.id]!.downloadProgress = 0;
       notifyListeners();
@@ -1086,9 +1099,10 @@ class AppsProvider with ChangeNotifier {
         app.url,
         additionalSettingsPlusSourceConfig,
       );
-      var notif = DownloadNotification(app.finalName, 100);
+      var notif = DownloadNotification(app.finalName, 100, appId: app.id);
       notificationsProvider?.cancel(notif.id);
       int? prevProg;
+      DateTime? lastNotificationTime;
       var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
       if (source.urlsAlwaysHaveExtension) {
         fileNameNoExt =
@@ -1110,22 +1124,48 @@ class AppsProvider with ChangeNotifier {
             apps[app.id]!.downloadProgress = progress;
             // notifyListeners() removed here to prevent massive UI rebuilds
           }
-          notif = DownloadNotification(app.finalName, prog ?? 100);
-          if (prog != null && prevProg != prog) {
+          notif = DownloadNotification(
+            app.finalName,
+            prog ?? 100,
+            appId: app.id,
+          );
+          final now = DateTime.now();
+          final shouldNotify = prog != null &&
+              prevProg != prog &&
+              (prevProg == null ||
+                  prog == 100 ||
+                  ((prog - prevProg!).abs() >= 2 &&
+                      (lastNotificationTime == null ||
+                          now.difference(lastNotificationTime!).inMilliseconds >= 300)));
+          if (shouldNotify) {
             notificationsProvider?.notify(notif);
+            prevProg = prog;
+            lastNotificationTime = now;
           }
-          prevProg = prog;
         },
         apkDir.path,
         useExisting: useExisting,
         allowInsecure: app.additionalSettings['allowInsecure'] == true,
         logs: logs,
+        isCancelled: () => _downloadCancellations[app.id]?.isCancelled ?? false,
       );
+
+      // Verify SHA-256 digest if available
+      final dynamic rawShaMap = app.additionalSettings['assetSha256s'];
+      final Map<dynamic, dynamic>? shaMap =
+          rawShaMap is Map ? rawShaMap : null;
+      final expectedSha = shaMap?[downloadUrl]?.toString() ??
+          shaMap?[app.apkUrls[app.preferredApkIndex].key]?.toString() ??
+          app.additionalSettings['expectedSha256']?.toString();
+      if (expectedSha != null && expectedSha.trim().isNotEmpty) {
+        await AppFileService.verifyFileSha256(downloadedFile, expectedSha);
+      }
+
       // Set to 90 for remaining steps, will make null in 'finally'
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = -1;
         notifyListeners();
-        notif = DownloadNotification(app.finalName, -1);
+        notif = DownloadNotification(app.finalName, -1, appId: app.id);
         notificationsProvider?.notify(notif);
       }
       PackageInfo? newInfo;
@@ -1245,6 +1285,7 @@ class AppsProvider with ChangeNotifier {
         return DownloadedDir(app.id, downloadedFile, extractedApkDir!, dirType);
       }
     } finally {
+      clearDownloadCancellation(app.id);
       notificationsProvider?.cancel(notifId);
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = null;
@@ -1257,65 +1298,14 @@ class AppsProvider with ChangeNotifier {
       .where((element) => element.downloadProgress != null)
       .isNotEmpty;
 
-  Future<bool> canInstallSilently(App app) async {
-    if (!updateSettings.enableBackgroundUpdates) {
-      return false;
-    }
-    if (app.additionalSettings['exemptFromBackgroundUpdates'] == true) {
-      logs.add('Exempted from BG updates: ${app.id}');
-      return false;
-    }
-    if (app.apkUrls.length > 1) {
-      logs.add('Multiple APK URLs: ${app.id}');
-      return false; // Manual API selection means silent install is not possible
-    }
-
-    var osInfo = await DeviceInfoPlugin().androidInfo;
-    String? installerPackageName;
-    try {
-      installerPackageName = osInfo.version.sdkInt >= 30
-          ? (await packageManager.getInstallSourceInfo(
-              packageName: app.id,
-            ))?.installingPackageName
-          : (await packageManager.getInstallerPackageName(packageName: app.id));
-    } catch (e) {
-      logs.add(
-        'Failed to get installed package details: ${app.id} (${e.toString()})',
+  Future<bool> canInstallSilently(App app) =>
+      AppInstallService.canInstallSilently(
+        app,
+        behaviorSettings,
+        plusSettings,
+        updateSettings,
+        logs,
       );
-      return false; // App probably not installed
-    }
-
-    int? targetSDK = (await getInstalledInfo(
-      app.id,
-    ))?.applicationInfo?.targetSdkVersion;
-    int requiredSDK = osInfo.version.sdkInt - 3;
-    // The APK should target a new enough API
-    // https://developer.android.com/reference/android/content/pm/PackageInstaller.SessionParams#setRequireUserAction(int)
-    if (!(targetSDK != null && targetSDK >= requiredSDK)) {
-      logs.add(
-        'App currently targets API ${targetSDK} which is too low for background updates (requires API ${requiredSDK}): ${app.id}',
-      );
-      return false;
-    }
-
-    if (behaviorSettings.useShizuku) {
-      return true;
-    }
-
-    if (app.id == obtainiumId) {
-      return false;
-    }
-    if (installerPackageName != obtainiumId) {
-      // If we did not install the app, silent install is not possible
-      return false;
-    }
-    if (osInfo.version.sdkInt < 31) {
-      // The OS must also be new enough
-      logs.add('Android SDK too old: ${osInfo.version.sdkInt}');
-      return false;
-    }
-    return true;
-  }
 
   Future<void> waitForUserToReturnToForeground(BuildContext context) async {
     NotificationsProvider notificationsProvider = context
@@ -1393,62 +1383,19 @@ class AppsProvider with ChangeNotifier {
     BuildContext? firstTimeWithContext, {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
-  }) async {
-    // We don't know which APKs in an XAPK or ZIP are supported by the user's device
-    // So we try installing all of them and assume success if at least one installed
-    // If 0 APKs installed, throw the first install error encountered
-    // Obviously this approach is naive and is undesirable in many cases, needs to be improved
-    var somethingInstalled = false;
-    try {
-      MultiAppMultiError errors = MultiAppMultiError();
-      List<File> APKFiles = [];
-      for (var file
-          in dir.extracted
-              .listSync(recursive: true, followLinks: false)
-              .whereType<File>()) {
-        if (file.path.toLowerCase().endsWith('.apk')) {
-          APKFiles.add(file);
-        } else if (file.path.toLowerCase().endsWith('.obb')) {
-          await moveObbFile(file, dir.appId);
-        }
-      }
-
-      File? temp;
-      APKFiles.removeWhere((element) {
-        bool res = element.uri.pathSegments.last.startsWith(dir.appId);
-        if (res) {
-          temp = element;
-        }
-        return res;
-      });
-      if (temp != null) {
-        APKFiles = [temp!, ...APKFiles];
-      }
-
-      try {
-        var wasInstalled = await installApk(
-          DownloadedApk(dir.appId, APKFiles[0]),
-          firstTimeWithContext?.mounted == true ? firstTimeWithContext : null,
-          needsBGWorkaround: needsBGWorkaround,
-          shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-          additionalAPKs: APKFiles.sublist(
-            1,
-          ).map((a) => DownloadedApk(dir.appId, a)).toList(),
-        );
-        somethingInstalled = somethingInstalled || wasInstalled;
-        dir.file.delete(recursive: true);
-      } catch (e) {
-        logs.add('Could not install APKs from ${dir.type}: ${e.toString()}');
-        errors.add(dir.appId, e, appName: apps[dir.appId]?.name);
-      }
-      if (errors.idsByErrorString.isNotEmpty) {
-        throw errors;
-      }
-    } finally {
-      dir.extracted.delete(recursive: true);
-    }
-    return somethingInstalled;
-  }
+  }) =>
+      AppInstallService.installApkDir(
+        dir,
+        firstTimeWithContext,
+        behaviorSettings,
+        plusSettings,
+        updateSettings,
+        logs,
+        apps,
+        needsBGWorkaround: needsBGWorkaround,
+        shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+        saveApps: saveApps,
+      );
 
   Future<bool> installApk(
     DownloadedApk file,
@@ -1456,112 +1403,20 @@ class AppsProvider with ChangeNotifier {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
     List<DownloadedApk> additionalAPKs = const [],
-  }) async {
-    if (firstTimeWithContext != null &&
-        behaviorSettings.beforeNewInstallsShareToAppVerifier &&
-        (await getInstalledInfo('dev.soupslurpr.appverifier')) != null) {
-      XFile f = XFile.fromData(
-        file.file.readAsBytesSync(),
-        mimeType: 'application/vnd.android.package-archive',
+  }) =>
+      AppInstallService.installApk(
+        file,
+        firstTimeWithContext,
+        behaviorSettings,
+        plusSettings,
+        updateSettings,
+        logs,
+        apps,
+        needsBGWorkaround: needsBGWorkaround,
+        shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+        additionalAPKs: additionalAPKs,
+        saveApps: saveApps,
       );
-      Fluttertoast.showToast(
-        msg: tr('appVerifierInstructionToast'),
-        toastLength: Toast.LENGTH_LONG,
-      );
-      await Share.shareXFiles([f]);
-    }
-    var newInfo = await packageManager.getPackageArchiveInfo(
-      archiveFilePath: file.file.path,
-    );
-    if (newInfo == null) {
-      try {
-        deleteFile(file.file);
-        for (var a in additionalAPKs) {
-          deleteFile(a.file);
-        }
-      } catch (e) {
-        //
-      } finally {
-        throw ObtainiumError(tr('badDownload'));
-      }
-    }
-    PackageInfo? appInfo = await getInstalledInfo(apps[file.appId]!.app.id);
-    logs.add(
-      'Installing "${newInfo.packageName}" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
-    );
-    // versionCode is int? in the plugin — null on Android 15 for apps using
-    // longVersionCode > Integer.MAX_VALUE. Fall back to 0 to skip downgrade check.
-    final newVersionCode = newInfo.versionCode ?? 0;
-    final existingVersionCode = appInfo?.versionCode ?? 0;
-    if (appInfo != null &&
-        newVersionCode > 0 &&
-        existingVersionCode > 0 &&
-        newVersionCode < existingVersionCode &&
-        !(await canDowngradeApps())) {
-      if (settingsProvider.showAppDowngradeError) {
-        throw DowngradeError(existingVersionCode, newVersionCode);
-      }
-    }
-    if (needsBGWorkaround) {
-      // The below 'await' will never return if we are in a background process
-      // To work around this, we should assume the install will be successful
-      // So we update the app's installed version first as we will never get to the later code
-      // We can't conditionally get rid of the 'await' as this causes install fails (BG process times out) - see #896
-      // TODO: When fixed, update this function and the calls to it accordingly
-      apps[file.appId]!.app.installedVersion =
-          apps[file.appId]!.app.latestVersion;
-      await saveApps([
-        apps[file.appId]!.app,
-      ], attemptToCorrectInstallStatus: false);
-    }
-    int? code;
-    if (!behaviorSettings.useShizuku) {
-      var allAPKs = [file.file.path];
-      allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
-      code = await AndroidPackageInstaller.installApk(
-        apkFilePath: allAPKs.join(','),
-      );
-    } else {
-      code = await ShizukuApkInstaller().installAPK(
-        file.file.uri.toString(),
-        shizukuPretendToBeGooglePlay ? "com.android.vending" : "",
-      );
-    }
-    bool installed = false;
-    if (code != null && code != 0 && code != 3) {
-      try {
-        deleteFile(file.file);
-      } catch (e) {
-        //
-      } finally {
-        throw InstallError(code);
-      }
-    } else if (code == 0) {
-      installed = true;
-      apps[file.appId]!.app.installedVersion =
-          apps[file.appId]!.app.latestVersion;
-      file.file.delete(recursive: true);
-    }
-    await saveApps([apps[file.appId]!.app]);
-    return installed;
-  }
-
-  Future<void> _shareToAppVerifier(
-    DownloadedApk file,
-    BuildContext context,
-  ) async {
-    if (!behaviorSettings.beforeNewInstallsShareToAppVerifier) return;
-    if (await getInstalledInfo('dev.soupslurpr.appverifier') == null) return;
-    XFile f = XFile.fromData(
-      file.file.readAsBytesSync(),
-      mimeType: 'application/vnd.android.package-archive',
-    );
-    Fluttertoast.showToast(
-      msg: tr('appVerifierInstructionToast'),
-      toastLength: Toast.LENGTH_LONG,
-    );
-    await Share.shareXFiles([f]);
-  }
 
   Future<String> getStorageRootPath() async {
     return '/${(await getAppStorageDir()).uri.pathSegments.sublist(0, 3).join('/')}';
@@ -1685,6 +1540,9 @@ class AppsProvider with ChangeNotifier {
     bool forceParallelDownloads = false,
     bool useExisting = true,
   }) async {
+    for (var id in appIds) {
+      registerDownloadCancellation(id);
+    }
     try {
       final installedIds =
           await AppDownloadService.downloadAndInstallLatestApps(
@@ -1707,6 +1565,8 @@ class AppsProvider with ChangeNotifier {
             notificationsProvider: notificationsProvider,
             forceParallelDownloads: forceParallelDownloads,
             useExisting: useExisting,
+            isCancelled:
+                (appId) => _downloadCancellations[appId]?.isCancelled ?? false,
           );
       if (context != null && installedIds.isNotEmpty) {
         AppHaptics.success();
@@ -1716,9 +1576,17 @@ class AppsProvider with ChangeNotifier {
       if (context != null && context.mounted) {
         AppHaptics.failure();
         showError(errors, context);
+        if (errors is MultiAppMultiError &&
+            errors.successfulAppIds.isNotEmpty) {
+          return errors.successfulAppIds;
+        }
         return [];
       } else {
         rethrow;
+      }
+    } finally {
+      for (var id in appIds) {
+        clearDownloadCancellation(id);
       }
     }
   }
@@ -1817,6 +1685,7 @@ class AppsProvider with ChangeNotifier {
         notificationsProvider.notify(
           DownloadedNotification(fileUrl.key, fileUrl.value),
         );
+        downloadedIds.add(fileUrl.key);
       } catch (e) {
         errors.add(fileUrl.key, e);
       } finally {
@@ -1824,7 +1693,7 @@ class AppsProvider with ChangeNotifier {
       }
     }
 
-    if (forceParallelDownloads || !behaviorSettings.parallelDownloads) {
+    if (!forceParallelDownloads && !behaviorSettings.parallelDownloads) {
       for (var urlWithApp in filesToDownload) {
         await downloadFn(urlWithApp.key, urlWithApp.value);
       }
@@ -2381,21 +2250,28 @@ class AppsProvider with ChangeNotifier {
     if (currentApp.hasPendingRepoRename) {
       return null;
     }
-    SourceProvider sourceProvider = SourceProvider();
-    App newApp = await sourceProvider.getApp(
-      sourceProvider.getSource(
+    checkingUpdateIds.add(appId);
+    notify();
+    try {
+      SourceProvider sourceProvider = SourceProvider();
+      App newApp = await sourceProvider.getApp(
+        sourceProvider.getSource(
+          currentApp.url,
+          overrideSource: currentApp.overrideSource,
+        ),
         currentApp.url,
-        overrideSource: currentApp.overrideSource,
-      ),
-      currentApp.url,
-      currentApp.additionalSettings,
-      currentApp: currentApp,
-    );
-    if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
-      newApp.preferredApkIndex = currentApp.preferredApkIndex;
+        currentApp.additionalSettings,
+        currentApp: currentApp,
+      );
+      if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
+        newApp.preferredApkIndex = currentApp.preferredApkIndex;
+      }
+      await saveApps([newApp]);
+      return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
+    } finally {
+      checkingUpdateIds.remove(appId);
+      notify();
     }
-    await saveApps([newApp]);
-    return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
   }
 
   List<String> getAppsSortedByUpdateCheckTime({
@@ -2442,6 +2318,7 @@ class AppsProvider with ChangeNotifier {
     MultiAppMultiError errors = MultiAppMultiError();
     if (!gettingUpdates) {
       gettingUpdates = true;
+      notify();
       try {
         List<String> appIds = getAppsSortedByUpdateCheckTime(
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
@@ -2451,6 +2328,10 @@ class AppsProvider with ChangeNotifier {
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
         }
+
+        final int totalToProcess = appIds.length;
+        int completedCount = 0;
+        refreshProgress.value = totalToProcess > 0 ? 0.0 : null;
 
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
         try {
@@ -2482,6 +2363,11 @@ class AppsProvider with ChangeNotifier {
               } else {
                 errors.add(appId, e, appName: apps[appId]?.name);
               }
+            } finally {
+              completedCount++;
+              if (totalToProcess > 0) {
+                refreshProgress.value = completedCount / totalToProcess;
+              }
             }
             if (newApp != null) {
               updates.add(newApp);
@@ -2490,6 +2376,9 @@ class AppsProvider with ChangeNotifier {
         );
       } finally {
         gettingUpdates = false;
+        refreshProgress.value = null;
+        checkingUpdateIds.clear();
+        notify();
       }
     }
     if (errors.idsByErrorString.isNotEmpty) {
@@ -2504,40 +2393,14 @@ class AppsProvider with ChangeNotifier {
   List<String> findExistingUpdates({
     bool installedOnly = false,
     bool nonInstalledOnly = false,
+    bool includeAmbiguous = true,
   }) {
-    List<String> updateAppIds = [];
-    List<String> appIds = apps.keys.toList();
-    for (int i = 0; i < appIds.length; i++) {
-      App? app = apps[appIds[i]]!.app;
-      // For installed apps: check if a newer version is available via areVersionsDifferent.
-      // For uninstalled apps (nonInstalledOnly): areVersionsDifferent always returns false
-      // when installedVersion is null, so we use a direct check instead —
-      // any uninstalled, non-track-only app with a known latestVersion is a candidate.
-      bool isCandidate;
-      if (app.installedVersion == null) {
-        isCandidate = !nonInstalledOnly
-            ? false
-            : app.additionalSettings['trackOnly'] != true &&
-                  app.latestVersion.isNotEmpty;
-      } else {
-        isCandidate =
-            AppUpdateService.areVersionsDifferent(
-              app,
-              app.installedVersion,
-              app.latestVersion,
-            ) &&
-            (!installedOnly || !nonInstalledOnly);
-      }
-      if (isCandidate) {
-        if ((app.installedVersion == null &&
-                (nonInstalledOnly || !installedOnly) ||
-            (app.installedVersion != null &&
-                (installedOnly || !nonInstalledOnly)))) {
-          updateAppIds.add(app.id);
-        }
-      }
-    }
-    return updateAppIds;
+    return AppUpdateService.findExistingUpdates(
+      apps,
+      installedOnly: installedOnly,
+      nonInstalledOnly: nonInstalledOnly,
+      includeAmbiguous: includeAmbiguous,
+    );
   }
 
   Map<String, dynamic> generateExportJSON({

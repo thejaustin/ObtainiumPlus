@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/pages/import_export.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 
 /// Advanced / warnings settings section
 class AdvancedSettingsSection extends StatelessWidget {
@@ -500,7 +501,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                 child: SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
             ),

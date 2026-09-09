@@ -19,6 +19,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -35,8 +36,8 @@ import 'package:obtainium/components/generated_form_renderer.dart'
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/components/apps/active_operations_banner.dart';
 import 'package:obtainium/pages/app.dart';
-import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -541,6 +542,21 @@ class AppsPageState extends State<AppsPage> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+                    ] else if (filter.nameFilter.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          CommandCenter.show(
+                            context,
+                            initialQuery: filter.nameFilter,
+                          );
+                        },
+                        icon: const Icon(Icons.travel_explore_rounded),
+                        label: Text(
+                          '${tr('search')} "${filter.nameFilter}"',
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -668,8 +684,11 @@ class AppsPageState extends State<AppsPage> {
           listedApps[index].app.additionalSettings['trackOnly'] == true;
       var hasUpdate =
           listedApps[index].app.installedVersion != null &&
-          listedApps[index].app.installedVersion !=
-              listedApps[index].app.latestVersion;
+          AppUpdateService.areVersionsDifferent(
+            listedApps[index].app,
+            listedApps[index].app.installedVersion,
+            listedApps[index].app.latestVersion,
+          );
       // Also show the install button for uninstalled, non-track-only apps
       var needsInstall =
           !trackOnly && listedApps[index].app.installedVersion == null;
@@ -1027,10 +1046,6 @@ class AppsPageState extends State<AppsPage> {
                         toInstall,
                         globalNavigatorKey.currentContext,
                       )
-                      .catchError((e) {
-                        if (context.mounted) showError(e, context);
-                        return <String>[];
-                      })
                       .then((value) {
                         if (value.isNotEmpty) {
                           if (shouldInstallUpdates && context.mounted) {
@@ -1039,6 +1054,30 @@ class AppsPageState extends State<AppsPage> {
                           var np = context.read<NotificationsProvider>();
                           np.cancel(UpdateNotification([]).id);
                         }
+                      })
+                      .catchError((e) {
+                        if (e is MultiAppMultiError &&
+                            e.successfulAppIds.isNotEmpty) {
+                          final count = e.successfulAppIds.length;
+                          final failedCount = e.idsByErrorString.values
+                              .fold<int>(0, (acc, list) => acc + list.length);
+                          if (shouldInstallUpdates && context.mounted) {
+                            showMessage(
+                              tr(
+                                'partialBatchSuccess',
+                                args: [
+                                  plural('apps', count),
+                                  plural('apps', failedCount),
+                                ],
+                              ),
+                              context,
+                            );
+                          }
+                          var np = context.read<NotificationsProvider>();
+                          np.cancel(UpdateNotification([]).id);
+                        }
+                        if (context.mounted) showError(e, context);
+                        return <String>[];
                       });
                 }
               });
@@ -1678,6 +1717,48 @@ class AppsPageState extends State<AppsPage> {
                                 ),
                               ),
                             ),
+                          IconButton(
+                            icon: Icon(
+                              viewSettings.globalViewMode == ViewMode.grid
+                                  ? Icons.view_list_rounded
+                                  : Icons.grid_view_rounded,
+                            ),
+                            tooltip: viewSettings.globalViewMode == ViewMode.grid
+                                ? tr('listView')
+                                : tr('gridView'),
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              setState(() {
+                                viewSettings.globalViewMode =
+                                    viewSettings.globalViewMode == ViewMode.grid
+                                        ? ViewMode.list
+                                        : ViewMode.grid;
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                  ? Icons.filter_list_rounded
+                                  : Icons.filter_list_off_rounded,
+                              color: filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                  ? null
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                            tooltip: filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                ? tr('filterApps')
+                                : '${tr('filter')} - ${tr('remove')}',
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              if (filter.isIdenticalTo(neutralFilter, settingsProvider)) {
+                                showFilterDialog();
+                              } else {
+                                setState(() {
+                                  filter = AppsFilter();
+                                });
+                              }
+                            },
+                          ),
                           if (!hasExternalSettingsEntry)
                             IconButton(
                               icon: const Icon(Icons.settings_rounded),
@@ -1725,6 +1806,7 @@ class AppsPageState extends State<AppsPage> {
                       onCheckUpdates: refresh,
                     ),
                   ),
+                const SliverToBoxAdapter(child: ActiveOperationsBanner()),
                 if (plusSettings.plusEnableTags)
                   TagFilterBar(
                     activeTag: activeTag,
@@ -1741,7 +1823,8 @@ class AppsPageState extends State<AppsPage> {
             ),
           ),
         ),
-        persistentFooterButtons: appsProvider.apps.isEmpty
+        persistentFooterButtons: appsProvider.apps.isEmpty ||
+                (plusSettings.plusEnableBottomNavBar && selectedAppIds.isEmpty)
             ? null
             : [getFilterButtonsRow()],
       ),
@@ -1873,7 +1956,7 @@ class _RefreshProgressBar extends StatelessWidget {
         return SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(32, 0, 32, 8),
-            child: LinearProgressIndicator(value: refreshProgress),
+            child: ExpressiveProgressIndicator(value: refreshProgress),
           ),
         );
       },
@@ -1958,7 +2041,11 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
     final isNewInstall = aim.app.installedVersion == null;
     final isUpdate =
         aim.app.installedVersion != null &&
-        aim.app.installedVersion != aim.app.latestVersion;
+        AppUpdateService.areVersionsDifferent(
+          aim.app,
+          aim.app.installedVersion,
+          aim.app.latestVersion,
+        );
     final versionLabel = isUpdate
         ? '${aim.app.installedVersion} → ${aim.app.latestVersion}'
         : aim.app.latestVersion;

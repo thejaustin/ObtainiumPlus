@@ -76,8 +76,8 @@ class AppListTile extends StatelessWidget {
                   tr(
                     'ambiguousUpdateMessage',
                     args: [
-                      appInMemory.app.installedVersion ?? '',
                       appInMemory.app.latestVersion,
+                      appInMemory.app.installedVersion ?? '',
                     ],
                   ),
                 ),
@@ -364,35 +364,29 @@ class AppListTile extends StatelessWidget {
                           ).colorScheme.primaryContainer.withValues(alpha: 0.7)
                         : hasUpdate
                         ? Theme.of(context).colorScheme.secondaryContainer
-                              .withValues(alpha: isCompact ? 0.1 : 0.2)
+                              .withValues(alpha: isCompact ? 0.15 : 0.25)
                         : appInMemory.app.pinned
                         ? Theme.of(context).colorScheme.surfaceContainerHighest
                               .withValues(alpha: AppOpacity.moderate)
-                        : Theme.of(context).colorScheme.surface.withValues(
-                            alpha: plusSettings.plusEnableGlassmorphism
-                                ? 0.45
-                                : 1.0,
-                          ),
+                        : Theme.of(context).colorScheme.surfaceContainerLow,
                     border: Border.all(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
                           : hasUpdate
                           ? Theme.of(context).colorScheme.secondary.withValues(
-                              alpha: AppOpacity.hint,
+                              alpha: 0.45,
                             )
                           : appInMemory.app.pinned
                           ? Theme.of(context).colorScheme.outlineVariant
-                          : Theme.of(context).colorScheme.outline.withValues(
-                              alpha: plusSettings.plusEnableGlassmorphism
-                                  ? 0.1
-                                  : 0,
+                          : Theme.of(context).colorScheme.outlineVariant.withValues(
+                              alpha: 0.35,
                             ),
                       width:
                           isSelected ||
                               appInMemory.app.pinned ||
                               (hasUpdate && !isCompact)
                           ? 1.5
-                          : 0.8,
+                          : 1.0,
                     ),
                     boxShadow: isSelected
                         ? AppShadows.glow(
@@ -402,7 +396,7 @@ class AppListTile extends StatelessWidget {
                         : hasUpdate && !isCompact
                         ? AppShadows.smooth(
                             color: Theme.of(context).colorScheme.secondary,
-                            opacity: 0.1,
+                            opacity: 0.08,
                           )
                         : null,
                   ),
@@ -410,31 +404,6 @@ class AppListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius),
                     child: Stack(
                       children: [
-                        if (plusSettings.plusEnableGlassmorphism)
-                          Positioned.fill(
-                            child: ConditionalBlur(
-                              enabled: true,
-                              sigma: 12,
-                              child: Container(color: Colors.transparent),
-                            ),
-                          ),
-                        if (plusSettings.plusEnableGlassmorphism)
-                          Positioned.fill(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.08),
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.02),
-                                  ],
-                                  stops: const [0.0, 0.4, 1.0],
-                                ),
-                              ),
-                            ),
-                          ),
 
                         if (displayCategoryColor != null)
                           Positioned(
@@ -581,33 +550,65 @@ class AppListTile extends StatelessWidget {
                                 child: downloadProgress != null
                                     ? SizedBox(
                                         key: const ValueKey('download'),
-                                        width: 65,
-                                        child: Column(
+                                        width: downloadProgress >= 0 ? 88 : 65,
+                                        child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                downloadProgress >= 0
-                                                    ? '${downloadProgress.toInt()}%'
-                                                    : tr('installing'),
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .labelSmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                            Expanded(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  FittedBox(
+                                                    fit: BoxFit.scaleDown,
+                                                    child: Text(
+                                                      downloadProgress >= 0
+                                                          ? '${downloadProgress.toInt()}%'
+                                                          : tr('installing'),
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelSmall
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                     ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  ExpressiveProgressIndicator(
+                                                    value: downloadProgress >= 0
+                                                        ? downloadProgress / 100
+                                                        : null,
+                                                    height: 5,
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            const SizedBox(height: 6),
-                                            ExpressiveProgressIndicator(
-                                              value: downloadProgress >= 0
-                                                  ? downloadProgress / 100
-                                                  : null,
-                                              height: 5,
-                                            ),
+                                            if (downloadProgress >= 0) ...[
+                                              const SizedBox(width: 4),
+                                              IconButton(
+                                                padding: EdgeInsets.zero,
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  minWidth: 24,
+                                                  minHeight: 24,
+                                                ),
+                                                icon: const Icon(
+                                                  Icons.close_rounded,
+                                                  size: 16,
+                                                ),
+                                                tooltip: tr('cancel'),
+                                                onPressed: () {
+                                                  context
+                                                      .read<AppsProvider>()
+                                                      .cancelDownload(
+                                                        appInMemory.app.id,
+                                                      );
+                                                },
+                                              ),
+                                            ],
                                           ],
                                         ),
                                       )

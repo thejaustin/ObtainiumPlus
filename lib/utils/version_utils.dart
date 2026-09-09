@@ -153,6 +153,22 @@ void _stripTrailingZeroSegments(List<Object> tokens, int targetLength) {
   }
 }
 
+bool _isPureDotSeparatedNumeric(List<Object> tokens) {
+  for (int i = 0; i < tokens.length; i++) {
+    if (i.isEven && tokens[i] is! int) return false;
+    if (i.isOdd && tokens[i] != '.') return false;
+  }
+  return true;
+}
+
+void _padTrailingZeroSegments(List<Object> tokens, int targetLength) {
+  if (!_isPureDotSeparatedNumeric(tokens)) return;
+  while (tokens.length < targetLength) {
+    tokens.add('.');
+    tokens.add(0);
+  }
+}
+
 // Best-effort semantic ordering of two version strings.
 // Returns a negative number if version1 is older than version2, zero if they
 // are semantically equal, a positive number if version1 is newer, or null
@@ -172,6 +188,15 @@ int? compareVersionStrings(String version1, String version2) {
   if (tokens1.length != tokens2.length) {
     _stripTrailingZeroSegments(tokens1, tokens2.length);
     _stripTrailingZeroSegments(tokens2, tokens1.length);
+    if (tokens1.length != tokens2.length &&
+        _isPureDotSeparatedNumeric(tokens1) &&
+        _isPureDotSeparatedNumeric(tokens2)) {
+      if (tokens1.length < tokens2.length) {
+        _padTrailingZeroSegments(tokens1, tokens2.length);
+      } else {
+        _padTrailingZeroSegments(tokens2, tokens1.length);
+      }
+    }
     if (tokens1.length != tokens2.length) {
       return null;
     }
