@@ -1909,126 +1909,92 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> loadApps({String? singleId}) async {
-    while (loadingApps) {
-      await Future.delayed(const Duration(microseconds: 1));
+    // Serialize concurrent loadApps() calls without busy-waiting.
+    final completer = appsLoadingCompleter;
+    if (completer != null) {
+      await completer.future;
+      // Re-enter: the previous load may have satisfied our needs already.
+      return loadApps(singleId: singleId);
     }
+    appsLoadingCompleter = Completer<void>();
     loadingApps = true;
     notifyListeners();
     try {
-      await _loadAppsBody(singleId).timeout(
-        const Duration(seconds: 45),
-        onTimeout: () {
-          logs.add(
-            'loadApps() timed out after 45s (singleId: $singleId) — '
-            'a native call (e.g. getAllInstalledInfo) likely hung. '
-            'Aborting so the UI does not freeze on "Please wait" forever.',
-            level: LogLevel.error,
-          );
-        },
-      );
+      await _loadAppsPhase1(singleId);
     } finally {
+      // Phase 1 complete — release the lock so the UI can render the list
+      // immediately, then run the slow PackageManager reconciliation phase
+      // in the background without blocking the frame.
       loadingApps = false;
+      appsLoadingCompleter?.complete();
+      appsLoadingCompleter = null;
       notifyListeners();
     }
+    // Phase 2 runs detached so the app list is immediately interactive.
+    unawaited(_loadAppsPhase2(singleId));
   }
 
-  Future<void> _loadAppsBody(String? singleId) async {
-    var sp = SourceProvider();
-    List<List<String>> errors = [];
-    var installedAppsData = await getAllInstalledInfo();
-    List<String> removedAppIds = [];
+  /// Phase 1: read app JSON files from disk and populate the in-memory map.
+  ///
+  /// This is intentionally fast (~10–50 ms) — no PackageManager IPC here.
+  /// It preserves any already-loaded [installedInfo] and [icon] so that a
+  /// foreground-triggered reload (e.g. returning from background) doesn't
+  /// temporarily wipe installed status from the list while phase 2 runs.
+  Future<void> _loadAppsPhase1(String? singleId) async {
+    final sp = SourceProvider();
+    final appsDir = await getAppsDir();
+    final List<List<String>> errors = [];
     await Future.wait(
-      (await getAppsDir()) // Parse Apps from JSON
-          .listSync()
-          .map((item) async {
-            App? app;
-            if (item.path.toLowerCase().endsWith('.json') &&
-                (singleId == null ||
-                    item.path.split('/').last.toLowerCase() ==
-                        '${singleId.toLowerCase()}.json')) {
-              try {
-                app = App.fromJson(
-                  jsonDecode(File(item.path).readAsStringSync()),
-                );
-              } catch (err) {
-                if (err is FormatException) {
-                  logs.add(
-                    'Corrupt JSON when loading App (will be ignored): $err',
-                  );
-                  item.renameSync('${item.path}.corrupt');
-                } else if (err is FileSystemException) {
-                  // The file can vanish between listSync() and this read (concurrent
-                  // removal/storage clear) — skip it instead of aborting the whole load.
-                  logs.add(
-                    'Skipped missing/unreadable app file ${item.path}: $err',
-                  );
-                } else {
-                  rethrow;
-                }
-              }
-            }
-            if (app != null) {
-              // Save the app to the in-memory list without grabbing any OS info first
-              apps.update(
-                app.id,
-                (value) => AppInMemory(
-                  app!,
-                  value.downloadProgress,
-                  value.installedInfo,
-                  value.icon,
-                ),
-                ifAbsent: () => AppInMemory(app!, null, null, null),
-              );
-              notifyListeners();
-              try {
-                // Try getting the app's source to ensure no invalid apps get loaded
-                sp.getSource(app.url, overrideSource: app.overrideSource);
-                // If the app is installed, grab its OS data and reconcile install statuses
-                PackageInfo? installedInfo;
-                try {
-                  installedInfo = installedAppsData.firstWhere(
-                    (i) => i.packageName == app!.id,
-                  );
-                } catch (e) {
-                  // If the app isn't installed the above throws an error
-                }
-                // Reconcile differences between the installed and recorded install info
-                var moddedApp = getCorrectedInstallStatusAppIfPossible(
-                  app,
-                  installedInfo,
-                );
-                if (moddedApp != null) {
-                  app = moddedApp;
-                  // Note the app ID if it was uninstalled externally
-                  if (moddedApp.installedVersion == null) {
-                    removedAppIds.add(moddedApp.id);
-                  }
-                  // Persist the correction so it doesn't get recomputed (and
-                  // re-logged) on every subsequent load/background check —
-                  // loadApps() itself never writes to disk otherwise.
-                  await saveApps(
-                    [moddedApp],
-                    attemptToCorrectInstallStatus: false,
-                    reuseInstalledInfo: true,
-                  );
-                }
-                // Update the app in memory with install info and corrections
-                apps.update(
-                  app.id,
-                  (value) => AppInMemory(
-                    app!,
-                    value.downloadProgress,
-                    installedInfo,
-                    value.icon,
-                  ),
-                  ifAbsent: () => AppInMemory(app!, null, installedInfo, null),
-                );
-                notifyListeners();
-              } catch (e) {
-                errors.add([app!.id, app.finalName, e.toString()]);
-              }
-            }
-          }),
+      appsDir.listSync().map((item) async {
+        if (!item.path.toLowerCase().endsWith('.json') ||
+            (singleId != null &&
+                item.path.split('/').last.toLowerCase() !=
+                    '${singleId.toLowerCase()}.json')) {
+          return;
+        }
+        App? app;
+        try {
+          app = App.fromJson(
+            jsonDecode(File(item.path).readAsStringSync()),
+          );
+        } catch (err) {
+          if (err is FormatException) {
+            logs.add(
+              'Corrupt JSON when loading App (will be ignored): $err',
+            );
+            item.renameSync('${item.path}.corrupt');
+          } else if (err is FileSystemException) {
+            // The file can vanish between listSync() and this read (concurrent
+            // removal/storage clear) — skip it instead of aborting the whole load.
+            logs.add(
+              'Skipped missing/unreadable app file ${item.path}: $err',
+            );
+          } else {
+            rethrow;
+          }
+        }
+        if (app != null) {
+          try {
+            // Validate that a known source handles this URL before adding it.
+            sp.getSource(app.url, overrideSource: app.overrideSource);
+          } catch (e) {
+            errors.add([app.id, app.finalName, e.toString()]);
+            return;
+          }
+          // Preserve already-loaded installed info and icon across reloads so
+          // the list doesn't flash "not installed" while phase 2 is running.
+          apps.update(
+            app.id,
+            (value) => AppInMemory(
+              app!,
+              value.downloadProgress,
+              value.installedInfo,
+              value.icon,
+            ),
+            ifAbsent: () => AppInMemory(app!, null, null, null),
+          );
+        }
+      }),
     );
     if (errors.isNotEmpty) {
       removeApps(errors.map((e) => e[0]).toList());
@@ -2036,11 +2002,98 @@ class AppsProvider with ChangeNotifier {
         AppsRemovedNotification(errors.map((e) => [e[1], e[2]]).toList()),
       );
     }
-    // Delete externally uninstalled Apps if needed
+  }
+
+  /// Phase 2: query PackageManager for all installed packages, then reconcile
+  /// each tracked app's install status and update the in-memory list.
+  ///
+  /// Runs detached from [loadApps] so the UI is already showing the app list
+  /// before this potentially slow (~1–5 s) IPC call completes.
+  Future<void> _loadAppsPhase2(String? singleId) async {
+    List<List<String>> errors = [];
+    List<String> removedAppIds = [];
+    List<App> corrections = [];
+    try {
+      final installedAppsData = await getAllInstalledInfo().timeout(
+        const Duration(seconds: 45),
+        onTimeout: () {
+          logs.add(
+            'getAllInstalledInfo() timed out after 45 s — '
+            'PackageManager IPC may be unresponsive. '
+            'Installed status will be stale until the next reload.',
+            level: LogLevel.error,
+          );
+          return <PackageInfo>[];
+        },
+      );
+      final Map<String, PackageInfo> installedAppsMap = {
+        for (var i in installedAppsData)
+          if (i.packageName != null) i.packageName!: i,
+      };
+
+      // Work over a snapshot of current IDs so concurrent edits don't race.
+      final appIds = apps.keys.toList();
+      for (final appId in appIds) {
+        // Skip apps that were added/removed while phase 2 was running.
+        if (singleId != null && appId != singleId) continue;
+        final aim = apps[appId];
+        if (aim == null) continue;
+        var app = aim.app;
+        final PackageInfo? installedInfo = installedAppsMap[appId];
+        final moddedApp = getCorrectedInstallStatusAppIfPossible(
+          app,
+          installedInfo,
+        );
+        if (moddedApp != null) {
+          app = moddedApp;
+          if (moddedApp.installedVersion == null) {
+            removedAppIds.add(moddedApp.id);
+          }
+          corrections.add(moddedApp);
+        }
+        apps.update(
+          appId,
+          (value) => AppInMemory(
+            app,
+            value.downloadProgress,
+            installedInfo,
+            value.icon,
+          ),
+          ifAbsent: () => AppInMemory(app, null, installedInfo, null),
+        );
+      }
+    } catch (e) {
+      logs.add(
+        'Phase-2 reconciliation error: $e',
+        level: LogLevel.error,
+      );
+    }
+
+    // Persist any corrections so they aren't recomputed on the next load.
+    if (corrections.isNotEmpty) {
+      try {
+        await saveApps(
+          corrections,
+          attemptToCorrectInstallStatus: false,
+          reuseInstalledInfo: true,
+        );
+      } catch (e) {
+        logs.add('Failed to persist phase-2 corrections: $e', level: LogLevel.warning);
+      }
+    }
+
+    if (errors.isNotEmpty) {
+      removeApps(errors.map((e) => e[0]).toList());
+      NotificationsProvider().notify(
+        AppsRemovedNotification(errors.map((e) => [e[1], e[2]]).toList()),
+      );
+    }
+    // Delete externally uninstalled apps if configured.
     if (removedAppIds.isNotEmpty &&
         behaviorSettings.removeOnExternalUninstall) {
       await removeApps(removedAppIds);
     }
+    notifyListeners();
   }
 
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
