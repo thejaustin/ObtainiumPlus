@@ -19,6 +19,7 @@ import 'package:obtainium/utils/app_constants.dart';
 
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
+  client.connectionTimeout = const Duration(seconds: 15);
 
   // Pinning for Google Play Store domains (android.clients.google.com)
   // Hardcoded fingerprint for GTS CA 1C3 (valid until 2027)
@@ -87,12 +88,27 @@ sourceRequestStreamResponse(
             response.statusCode == 308)) {
       var location = response.headers.value('location');
       if (location != null) {
+        String nextUrl;
         if (location.startsWith('/')) {
           var uri = Uri.parse(currentUrl);
-          currentUrl = '${uri.scheme}://${uri.host}$location';
+          nextUrl = '${uri.scheme}://${uri.host}$location';
         } else {
-          currentUrl = location;
+          nextUrl = location;
         }
+        final currentUri = Uri.parse(currentUrl);
+        final nextUri = Uri.parse(nextUrl);
+        if (currentUri.scheme == 'https' &&
+            nextUri.scheme == 'http' &&
+            !allowInsecure) {
+          httpClient.close();
+          throw ObtainiumError(tr('insecureRedirect'));
+        }
+        if (nextUri.host != currentUri.host) {
+          headers.remove(HttpHeaders.authorizationHeader);
+          headers.remove('authorization');
+          headers.remove(HttpHeaders.proxyAuthorizationHeader);
+        }
+        currentUrl = nextUrl;
         continue;
       }
     }
@@ -151,12 +167,27 @@ class SourceUtils {
                   response.statusCode == 308)) {
             var location = response.headers.value('location');
             if (location != null) {
+              String nextUrl;
               if (location.startsWith('/')) {
                 var uri = Uri.parse(currentUrl);
-                currentUrl = '${uri.scheme}://${uri.host}$location';
+                nextUrl = '${uri.scheme}://${uri.host}$location';
               } else {
-                currentUrl = location;
+                nextUrl = location;
               }
+              final currentUri = Uri.parse(currentUrl);
+              final nextUri = Uri.parse(nextUrl);
+              if (currentUri.scheme == 'https' &&
+                  nextUri.scheme == 'http' &&
+                  !allowInsecure) {
+                httpClient.close();
+                throw ObtainiumError(tr('insecureRedirect'));
+              }
+              if (nextUri.host != currentUri.host && headers != null) {
+                headers.remove(HttpHeaders.authorizationHeader);
+                headers.remove('authorization');
+                headers.remove(HttpHeaders.proxyAuthorizationHeader);
+              }
+              currentUrl = nextUrl;
               continue;
             }
           }

@@ -25,6 +25,7 @@ abstract class AppSource {
   bool urlsAlwaysHaveExtension = false;
   bool allowIncludeZips = false;
   bool allowIncludeTarballs = false;
+  bool allowInsecureRedirects = false;
   bool changeLogPageIsStandardUrl = false;
   bool inferAppIdFromUrlPath = false;
   bool suppressStandardVersionExtraction = false;
@@ -161,7 +162,9 @@ abstract class AppSource {
       body: postBody,
       sourceConfigSettingValues: sourceConfigSettingValues,
       followRedirects: followRedirects,
-      allowInsecure: additionalSettings['allowInsecure'] == true,
+      allowInsecure: additionalSettings['allowInsecure'] == true ||
+          additionalSettings['allowInsecureRedirects'] == true ||
+          allowInsecureRedirects,
     );
   }
 
@@ -523,7 +526,7 @@ abstract class AppSource {
     throw NotImplementedError();
   }
 
-  void runOnAddAppInputChange(String input) {}
+  Map<String, dynamic> runOnAddAppInputChange(String input) => {};
 }
 
 abstract class MassAppUrlSource {

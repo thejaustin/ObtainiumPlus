@@ -365,19 +365,30 @@ class AppUpdateService {
     Map<String, AppInMemory> apps, {
     bool installedOnly = false,
     bool nonInstalledOnly = false,
+    bool includeAmbiguous = true,
   }) {
     List<String> updateAppIds = [];
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
-      App? app = apps[appIds[i]]!.app;
-      if (areVersionsDifferent(app, app.installedVersion, app.latestVersion) &&
-          (!installedOnly || !nonInstalledOnly)) {
-        if ((app.installedVersion == null &&
-                (nonInstalledOnly || !installedOnly) ||
-            (app.installedVersion != null &&
-                (installedOnly || !nonInstalledOnly)))) {
-          updateAppIds.add(app.id);
+      App? app = apps[appIds[i]]?.app;
+      if (app == null) continue;
+      bool isCandidate = false;
+      if (app.installedVersion == null) {
+        if (!installedOnly &&
+            app.additionalSettings['trackOnly'] != true &&
+            app.latestVersion.isNotEmpty) {
+          isCandidate = true;
         }
+      } else if (!nonInstalledOnly) {
+        if (areVersionsDifferent(app, app.installedVersion, app.latestVersion)) {
+          if (includeAmbiguous ||
+              app.additionalSettings['isAmbiguousUpdate'] != true) {
+            isCandidate = true;
+          }
+        }
+      }
+      if (isCandidate) {
+        updateAppIds.add(app.id);
       }
     }
     return updateAppIds;

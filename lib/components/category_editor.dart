@@ -289,35 +289,39 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              if (_isEditing)
-                TextButton.icon(
-                  onPressed: _delete,
-                  icon: const Icon(Icons.delete_outline),
-                  label: Text(tr('remove')),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom + 8,
+            ),
+            child: Row(
+              children: [
+                if (_isEditing)
+                  TextButton.icon(
+                    onPressed: _delete,
+                    icon: const Icon(Icons.delete_outline),
+                    label: Text(tr('remove')),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
                   ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(tr('cancel')),
                 ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(tr('cancel')),
-              ),
-              const SizedBox(width: 8),
-              ValueListenableBuilder<String>(
-                valueListenable: _nameNotifier,
-                builder: (context, value, _) {
-                  final canSave = value.trim().isNotEmpty;
-                  return FilledButton(
-                    onPressed: canSave ? _save : null,
-                    child: Text(tr('continue')),
-                  );
-                },
-              ),
-            ],
+                const SizedBox(width: 8),
+                ValueListenableBuilder<String>(
+                  valueListenable: _nameNotifier,
+                  builder: (context, value, _) {
+                    final canSave = value.trim().isNotEmpty;
+                    return FilledButton(
+                      onPressed: canSave ? _save : null,
+                      child: Text(tr('continue')),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -448,51 +452,47 @@ class _CategorySelectorState extends State<CategorySelector> {
       );
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Wrap(
-            alignment: widget.alignment,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final name in names)
-                Tooltip(
-                  message: tr('editCategory'),
-                  child: Semantics(
-                    onLongPress: () => _edit(name),
-                    child: GestureDetector(
-                      onLongPress: () => _edit(name),
-                      child: FilterChip(
-                        avatar: CircleAvatar(
-                          backgroundColor: Color(
-                            categories[name] ?? 0xFFCCCCCC,
-                          ),
-                          radius: 7,
-                        ),
-                        label: Text(name),
-                        selected: _selected.contains(name),
-                        onSelected: (v) => _toggle(name, v),
-                        selectedColor: Color(
-                          categories[name] ?? 0xFFCCCCCC,
-                        ).withValues(alpha: 0.22),
-                        showCheckmark: true,
+    return SizedBox(
+      width: double.infinity,
+      child: Wrap(
+        alignment: widget.alignment,
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final name in names)
+            Tooltip(
+              message: tr('editCategory'),
+              child: Semantics(
+                onLongPress: () => _edit(name),
+                child: GestureDetector(
+                  onLongPress: () => _edit(name),
+                  child: FilterChip(
+                    avatar: CircleAvatar(
+                      backgroundColor: Color(
+                        categories[name] ?? 0xFFCCCCCC,
                       ),
+                      radius: 7,
                     ),
+                    label: Text(name),
+                    selected: _selected.contains(name),
+                    onSelected: (v) => _toggle(name, v),
+                    selectedColor: Color(
+                      categories[name] ?? 0xFFCCCCCC,
+                    ).withValues(alpha: 0.22),
+                    showCheckmark: true,
                   ),
                 ),
-            ],
-          ),
-        ),
-        if (widget.allowCreate) const SizedBox(width: 8),
-        if (widget.allowCreate)
-          ActionChip(
-            avatar: const Icon(Icons.add, size: 18),
-            label: Text(tr('newCategory')),
-            onPressed: _create,
-          ),
-      ],
+              ),
+            ),
+          if (widget.allowCreate)
+            ActionChip(
+              avatar: const Icon(Icons.add, size: 18),
+              label: Text(tr('newCategory')),
+              onPressed: _create,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -527,35 +527,29 @@ class CategoryManager extends StatelessWidget {
         ],
       );
     }
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              for (final name in names)
-                ActionChip(
-                  avatar: CircleAvatar(
-                    backgroundColor: Color(categories[name]!),
-                    radius: 7,
-                  ),
-                  label: Text(name),
-                  onPressed: () =>
-                      showCategoryEditor(context, existingName: name),
-                ),
-            ],
+    return SizedBox(
+      width: double.infinity,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final name in names)
+            ActionChip(
+              avatar: CircleAvatar(
+                backgroundColor: Color(categories[name]!),
+                radius: 7,
+              ),
+              label: Text(name),
+              onPressed: () => showCategoryEditor(context, existingName: name),
+            ),
+          ActionChip(
+            avatar: const Icon(Icons.add, size: 18),
+            label: Text(tr('newCategory')),
+            onPressed: () => showCategoryEditor(context),
           ),
-        ),
-        const SizedBox(width: 8),
-        ActionChip(
-          avatar: const Icon(Icons.add, size: 18),
-          label: Text(tr('newCategory')),
-          onPressed: () => showCategoryEditor(context),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

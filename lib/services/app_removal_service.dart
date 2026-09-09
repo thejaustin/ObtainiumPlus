@@ -72,7 +72,7 @@ class AppRemovalService {
         if (context.mounted && enableUndo) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(plural('appsRemoved', apps.length)),
+              content: Text(tr('appsRemoved')),
               action: SnackBarAction(
                 label: tr('undo'),
                 onPressed: () async {

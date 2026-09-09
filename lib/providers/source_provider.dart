@@ -58,6 +58,8 @@ import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/app_sources/githubstars.dart';
+import 'package:obtainium/app_sources/githubpersonalrepos.dart';
+import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
@@ -220,6 +222,7 @@ class SourceProvider {
   // available via the service. Kept private so callers go through [sources]
   // (cached) or, when per-call mutation is needed, [_buildSources] directly.
   static List<AppSource> _buildSources() => [
+    GooglePlay(),
     GitHub(),
     GitLab(),
     Codeberg(),
@@ -260,7 +263,10 @@ class SourceProvider {
   List<AppSource> get sources => _cachedSources ??= _buildSources();
 
   /// Add mass URL source classes here so they are available via the service.
-  List<MassAppUrlSource> massUrlSources = [GitHubStars()];
+  List<MassAppUrlSource> massUrlSources = [
+    GitHubStars(),
+    GitHubPersonalRepos(),
+  ];
 
   AppSource getSource(String url, {String? overrideSource}) {
     url = preStandardizeUrl(url);
@@ -393,6 +399,15 @@ class SourceProvider {
       apk = await source.getLatestAPKDetails(standardUrl, additionalSettings);
     } on ObtainiumError catch (e) {
       throw e..withUrlContext(standardUrl);
+    }
+
+    if (apk.assetSha256s != null && apk.assetSha256s!.isNotEmpty) {
+      final existingSha =
+          (additionalSettings['assetSha256s'] as Map<dynamic, dynamic>?) ?? {};
+      additionalSettings['assetSha256s'] = {
+        ...existingSha,
+        ...apk.assetSha256s!,
+      };
     }
 
     if (!source.suppressStandardVersionExtraction) {
@@ -634,13 +649,16 @@ class HttpService {
     var redirectCount = 0;
     List<Cookie> cookies = [];
     HttpClient? httpClient;
+    final headers = requestHeaders != null
+        ? Map<String, String>.from(requestHeaders)
+        : null;
     while (redirectCount < maxRedirects) {
       httpClient = createHttpClient(
         additionalSettings['allowInsecure'] == true,
       );
       final request = await httpClient.openUrl(method, currentUrl);
-      if (requestHeaders != null) {
-        requestHeaders.forEach((key, value) {
+      if (headers != null) {
+        headers.forEach((key, value) {
           request.headers.set(key, value);
         });
       }
@@ -662,7 +680,21 @@ class HttpService {
           (response.statusCode >= 300 && response.statusCode <= 399)) {
         final location = response.headers.value(HttpHeaders.locationHeader);
         if (location != null) {
-          currentUrl = Uri.parse(ensureAbsoluteUrl(location, currentUrl));
+          final nextUrl = Uri.parse(ensureAbsoluteUrl(location, currentUrl));
+          if (currentUrl.scheme == 'https' &&
+              nextUrl.scheme == 'http' &&
+              additionalSettings['allowInsecure'] != true &&
+              additionalSettings['allowInsecureRedirects'] != true) {
+            httpClient.close();
+            throw ObtainiumError(tr('insecureRedirect'));
+          }
+          if (nextUrl.host != currentUrl.host && headers != null) {
+            headers.removeWhere((k, v) {
+              final lower = k.toLowerCase();
+              return lower == 'authorization' || lower == 'proxy-authorization';
+            });
+          }
+          currentUrl = nextUrl;
           redirectCount++;
           cookies = response.cookies;
           httpClient.close();
@@ -742,11 +774,11 @@ class HttpService {
       return RateLimitError(30); // Default to conservative 30 minutes
     }
 
-    return ObtainiumError(
+    return ObtainiumHttpError(
+      res.statusCode,
       (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
           ? res.reasonPhrase!
           : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]),
-      code: 'HTTP_ERROR',
     );
   }
 }

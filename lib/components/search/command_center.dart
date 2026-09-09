@@ -53,11 +53,79 @@ class _CommandCenterState extends State<CommandCenter> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isSearching = false;
+  bool _isAddingUrl = false;
   String _query = '';
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
   bool _discoverSearchFailed = false;
+  final Set<String> _pendingAddUrls = {};
   final SourceProvider _sourceProvider = SourceProvider();
   Timer? _debounce;
+
+  Future<void> _submitAddAppUrl(String url) async {
+    if (_pendingAddUrls.contains(url) || _isAddingUrl) return;
+    setState(() {
+      _pendingAddUrls.add(url);
+      _isAddingUrl = true;
+    });
+    try {
+      final errors = await context.read<AppsProvider>().addAppsByURL([url]);
+      if (mounted) {
+        setState(() {
+          _pendingAddUrls.remove(url);
+          _isAddingUrl = false;
+        });
+        if (errors.isNotEmpty) {
+          showError(errors[0][1], context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(tr('appAdded'))),
+          );
+          if (Navigator.canPop(context)) Navigator.pop(context);
+        }
+      } else {
+        final globalCtx = globalNavigatorKey.currentContext;
+        if (globalCtx != null && globalCtx.mounted) {
+          if (errors.isNotEmpty) {
+            showError(errors[0][1], globalCtx);
+          } else {
+            ScaffoldMessenger.of(globalCtx).showSnackBar(
+              SnackBar(content: Text(tr('appAdded'))),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _pendingAddUrls.remove(url);
+          _isAddingUrl = false;
+        });
+        showError(e, context);
+      } else {
+        final globalCtx = globalNavigatorKey.currentContext;
+        if (globalCtx != null && globalCtx.mounted) {
+          showError(e, globalCtx);
+        }
+      }
+    }
+  }
+
+  bool _isDirectUrl(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return false;
+    if (trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('market://')) {
+      return true;
+    }
+    try {
+      final src = _sourceProvider.getSource(trimmed);
+      if (src.hosts.isNotEmpty && src.runtimeType.toString() != 'HTML') {
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   @override
   void initState() {
@@ -84,13 +152,14 @@ class _CommandCenterState extends State<CommandCenter> {
     setState(() {
       _query = value;
     });
+    _updateLocalResults(value);
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 750), () {
-      _handleSearch(value);
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      _handleDiscoverSearch(value);
     });
   }
 
-  Future<void> _handleSearch(String value) async {
+  void _updateLocalResults(String value) {
     if (value.isEmpty) {
       setState(() {
         _localResults = [];
@@ -99,31 +168,35 @@ class _CommandCenterState extends State<CommandCenter> {
       return;
     }
 
-    // Search local apps
+    // Search local apps immediately on every keystroke
     final appsProvider = context.read<AppsProvider>();
+    final results = appsProvider
+        .getAppValues()
+        .map((app) {
+          final score = fuzzyMatchMulti(value, [
+            app.name,
+            app.app.id,
+            app.author,
+            app.app.url,
+            ...?app.app.categories,
+          ]);
+          return MapEntry(app, score);
+        })
+        .where((entry) => entry.value >= 0.3)
+        .toList();
+
+    results.sort((a, b) => b.value.compareTo(a.value));
+
     setState(() {
-      final results = appsProvider
-          .getAppValues()
-          .map((app) {
-            final score = fuzzyMatchMulti(value, [
-              app.name,
-              app.app.id,
-              app.author,
-              app.app.url,
-              ...?app.app.categories,
-            ]);
-            return MapEntry(app, score);
-          })
-          .where((entry) => entry.value >= 0.3)
-          .toList();
-
-      results.sort((a, b) => b.value.compareTo(a.value));
-
       _localResults = results.map((entry) => entry.key).take(5).toList();
     });
+  }
+
+  Future<void> _handleDiscoverSearch(String value) async {
+    if (value.isEmpty) return;
 
     // Check if it's a URL
-    if (URLValidator.isValidSourceURL(value)) {
+    if (_isDirectUrl(value)) {
       // Allow GitHub User Profiles to bypass this so they can be searched
       RegExp userProfileRegEx = RegExp(
         r'^https?://(?:www\.)?github\.com/[^/]+/?$',
@@ -137,6 +210,11 @@ class _CommandCenterState extends State<CommandCenter> {
 
     // Handle as Discovery Search
     await _runDiscoverSearch(value);
+  }
+
+  Future<void> _handleSearch(String value) async {
+    _updateLocalResults(value);
+    await _handleDiscoverSearch(value);
   }
 
   Future<void> _runDiscoverSearch(String query) async {
@@ -165,7 +243,7 @@ class _CommandCenterState extends State<CommandCenter> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isUrl = URLValidator.isValidSourceURL(_query) && _query.contains('.');
+    final isUrl = _isDirectUrl(_query);
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isDark = theme.brightness == Brightness.dark;
 
@@ -617,47 +695,30 @@ class _CommandCenterState extends State<CommandCenter> {
                         tooltip: tr('advancedOptions'),
                         onPressed: () => _openAddApp(url),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.add_circle_outline_rounded,
-                          color: theme.colorScheme.primary,
-                        ),
-                        tooltip: tr('addApp'),
-                        onPressed: () {
-                          context.read<AppsProvider>().addAppsByURL([url]).then(
-                            (errors) {
-                              if (mounted) {
-                                if (errors.isNotEmpty) {
-                                  showError(errors[0][1], context);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(tr('appAdded'))),
-                                  );
-                                  Navigator.pop(context);
-                                }
-                              }
-                            },
-                          );
-                        },
-                      ),
+                      _pendingAddUrls.contains(url)
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: ExpressiveCircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              icon: Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: theme.colorScheme.primary,
+                              ),
+                              tooltip: tr('addApp'),
+                              onPressed: () => _submitAddAppUrl(url),
+                            ),
                     ],
                   ),
-                  onTap: () {
-                    context.read<AppsProvider>().addAppsByURL([url]).then((
-                      errors,
-                    ) {
-                      if (mounted) {
-                        if (errors.isNotEmpty) {
-                          showError(errors[0][1], context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('appAdded'))),
-                          );
-                          Navigator.pop(context);
-                        }
-                      }
-                    });
-                  },
+                  onTap: _pendingAddUrls.contains(url)
+                      ? null
+                      : () => _submitAddAppUrl(url),
                 ),
               ),
             ),
@@ -677,31 +738,23 @@ class _CommandCenterState extends State<CommandCenter> {
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.download_rounded),
+            leading: _isAddingUrl
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_rounded),
             title: Text(tr('addApp')),
             subtitle: Text(
               _query,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: const Icon(Icons.arrow_forward),
-            onTap: () {
-              // Quick Add inline
-              context.read<AppsProvider>().addAppsByURL([_query]).then((
-                errors,
-              ) {
-                if (mounted) {
-                  if (errors.isNotEmpty) {
-                    showError(errors[0][1], context);
-                  } else {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
-                    Navigator.pop(context);
-                  }
-                }
-              });
-            },
+            trailing: _isAddingUrl
+                ? null
+                : const Icon(Icons.arrow_forward),
+            onTap: _isAddingUrl ? null : () => _submitAddAppUrl(_query),
           ),
           Divider(
             height: 1,
@@ -713,7 +766,7 @@ class _CommandCenterState extends State<CommandCenter> {
             leading: const Icon(Icons.tune_rounded),
             title: Text(tr('advancedOptions')),
             trailing: const Icon(Icons.open_in_new),
-            onTap: () => _openAddApp(_query),
+            onTap: _isAddingUrl ? null : () => _openAddApp(_query),
           ),
         ],
       ),

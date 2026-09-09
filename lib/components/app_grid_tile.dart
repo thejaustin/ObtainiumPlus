@@ -673,10 +673,42 @@ class _AppGridTileState extends State<AppGridTile>
           builder: (context, downloadProgress, child) {
             if (downloadProgress != null) {
               return Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: ExpressiveProgressIndicator(
-                  value: downloadProgress >= 0 ? downloadProgress / 100 : null,
-                  height: 4,
+                padding: const EdgeInsets.only(top: 6),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          downloadProgress >= 0
+                              ? '${downloadProgress.toInt()}%'
+                              : tr('installing'),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (downloadProgress >= 0)
+                          GestureDetector(
+                            onTap: () {
+                              context.read<AppsProvider>().cancelDownload(
+                                widget.appInMemory.app.id,
+                              );
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 2),
+                              child: Icon(Icons.close_rounded, size: 14),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ExpressiveProgressIndicator(
+                      value: downloadProgress >= 0 ? downloadProgress / 100 : null,
+                      height: 4,
+                    ),
+                  ],
                 ),
               );
             }

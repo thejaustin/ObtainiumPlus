@@ -258,7 +258,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         'url',
                         label: source.hosts.isNotEmpty
                             ? tr('overrideSource')
-                            : plural('url', 1).substring(2),
+                            : tr('urlLabel'),
                         value: source.hosts.isNotEmpty ? source.hosts[0] : '',
                         required: true,
                       ),
@@ -354,7 +354,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 importInProgress = true;
               });
               var urlsWithDescriptions = await source.getUrlsWithDescriptions(
-                values.values.map((e) => e.toString()).toList(),
+                source.requiredArgs
+                    .map((arg) => values[arg]?.toString() ?? '')
+                    .toList(),
               );
               if (!context.mounted) return;
               var selectedUrls = await showDialog<List<String>?>(

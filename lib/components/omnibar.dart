@@ -149,16 +149,34 @@ class _OmnibarState extends State<Omnibar> {
 
   void _checkInputType(String input) {
     setState(() {
-      _isUrl =
-          input.trim().startsWith('http://') ||
-          input.trim().startsWith('https://') ||
-          input.trim().startsWith('market://');
+      String trimmed = input.trim();
+      bool hasScheme =
+          trimmed.startsWith('http://') ||
+          trimmed.startsWith('https://') ||
+          trimmed.startsWith('market://');
+
+      bool isKnownRepoUrl =
+          trimmed.contains('/') &&
+          (trimmed.startsWith('github.com') ||
+              trimmed.startsWith('gitlab.com') ||
+              trimmed.startsWith('codeberg.org') ||
+              trimmed.startsWith('f-droid.org') ||
+              trimmed.startsWith('apkpure.com') ||
+              trimmed.startsWith('aptoide.com'));
+
+      _isUrl = hasScheme || isKnownRepoUrl;
 
       if (_isUrl) {
+        final urlToTest = hasScheme ? trimmed : 'https://$trimmed';
         try {
-          _sourceProvider.getSource(input);
-          _isValidUrl = true;
-          _urlError = null;
+          final src = _sourceProvider.getSource(urlToTest);
+          if (src.runtimeType.toString() == 'HTML') {
+            _isValidUrl = false;
+            _urlError = tr('unsupportedUrl');
+          } else {
+            _isValidUrl = true;
+            _urlError = null;
+          }
         } catch (e) {
           _isValidUrl = false;
           _urlError = e is UnsupportedURLError
@@ -176,16 +194,13 @@ class _OmnibarState extends State<Omnibar> {
     _checkInputType(value);
 
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    _debounce = Timer(const Duration(milliseconds: 150), () {
       if (value.trim().isEmpty) {
         widget.onSearchQuery?.call('');
         return;
       }
 
-      if (_isUrl && _isValidUrl) {
-        // Valid URL - trigger add app
-        widget.onUrlInput?.call(value);
-      } else if (!_isUrl) {
+      if (!_isUrl) {
         // Search query
         widget.onSearchQuery?.call(value);
       }
@@ -267,27 +282,41 @@ class _OmnibarState extends State<Omnibar> {
               Row(
                 children: [
                   // Icon indicating input type — AnimatedSwitcher for smooth transitions
-                  Padding(
-                    padding: const EdgeInsets.only(left: 12),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, anim) => FadeTransition(
-                        opacity: anim,
-                        child: ScaleTransition(scale: anim, child: child),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(itemRadius),
+                    onTap: () {
+                      if (!_isUrl) {
+                        CommandCenter.show(
+                          context,
+                          initialQuery: _controller.text.trim(),
+                        );
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
                       ),
-                      child: Icon(
-                        _isUrl
-                            ? (_isValidUrl ? Icons.link : Icons.link_off)
-                            : Icons.search,
-                        key: ValueKey(
-                          'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}',
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (child, anim) => FadeTransition(
+                          opacity: anim,
+                          child: ScaleTransition(scale: anim, child: child),
                         ),
-                        color: _isValidUrl
-                            ? colorScheme.primary
-                            : _urlError != null
-                            ? colorScheme.error
-                            : colorScheme.onSurfaceVariant,
-                        size: 22,
+                        child: Icon(
+                          _isUrl
+                              ? (_isValidUrl ? Icons.link : Icons.link_off)
+                              : Icons.search,
+                          key: ValueKey(
+                            'icon_${_isUrl ? (_isValidUrl ? 'valid' : 'invalid') : 'search'}',
+                          ),
+                          color: _isValidUrl
+                              ? colorScheme.primary
+                              : _urlError != null
+                              ? colorScheme.error
+                              : colorScheme.onSurfaceVariant,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -352,7 +381,7 @@ class _OmnibarState extends State<Omnibar> {
                         : const SizedBox.shrink(),
                   ),
 
-                  // Add button (for URLs)
+                  // Action button: Add for URLs, or Search Online for text queries
                   AnimatedSize(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic,
@@ -368,9 +397,16 @@ class _OmnibarState extends State<Omnibar> {
                               button: true,
                               child: FilledButton.tonal(
                                 onPressed: _isValidUrl
-                                    ? () => widget.onUrlInput?.call(
-                                        _controller.text,
-                                      )
+                                    ? () {
+                                        final text = _controller.text.trim();
+                                        final urlToAdd =
+                                            text.startsWith('http://') ||
+                                                    text.startsWith('https://') ||
+                                                    text.startsWith('market://')
+                                                ? text
+                                                : 'https://$text';
+                                        widget.onUrlInput?.call(urlToAdd);
+                                      }
                                     : () {
                                         // Show unsupported source dialog
                                         final supportedSources = _sourceProvider
@@ -401,12 +437,47 @@ class _OmnibarState extends State<Omnibar> {
                                   ),
                                 ),
                                 child: Text(
-                                  _isValidUrl ? tr('add') : tr('error'),
+                                  _isValidUrl ? tr('add') : tr('sources'),
                                 ),
                               ),
                             ),
                           )
-                        : const SizedBox.shrink(),
+                        : (_controller.text.trim().isNotEmpty
+                            ? Container(
+                                margin: const EdgeInsets.only(
+                                  right: 6,
+                                  top: 6,
+                                  bottom: 6,
+                                ),
+                                child: Semantics(
+                                  label: tr('search'),
+                                  button: true,
+                                  child: FilledButton.tonalIcon(
+                                    onPressed: () {
+                                      CommandCenter.show(
+                                        context,
+                                        initialQuery: _controller.text.trim(),
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.travel_explore_rounded,
+                                      size: 16,
+                                    ),
+                                    label: Text(tr('search')),
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          itemRadius * 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink()),
                   ),
                 ],
               ),
