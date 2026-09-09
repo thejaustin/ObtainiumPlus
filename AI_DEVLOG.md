@@ -39,6 +39,16 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-09-09 — Claude Code (Sonnet 4.6)
+
+**CI triage + feature/add-download-update-fixes PR creation.**
+
+Branch `feature/add-download-update-fixes` had 12 commits ahead of `main` (installer unification, ShizukuPlus connectivity, RootInstaller, GitHub fallback/SHA-256, version fix, etc.). Earlier CI runs failed on commits `b7bc9659` (feat) and `e80bb7c2` (fix-compile), but HEAD `1f1c60ad` passed both "Lint Commit Messages" and "Build APK" jobs. No intervention needed.
+
+**ShizukuPlus `restoreTarDirectory` assessment.** The new `IStorageProxy.restoreTarDirectory()` method (added to ShizukuPlus today, commit `f891692b`) enables rootless restore of `/data/data/<pkg>/` using `run-as <packageContext>` as the ADB shell UID. Reviewed ObtainiumPlus's entire install/export/import pipeline — the app has **no app-data backup/restore feature**. `AppExportService` exports ObtainiumPlus's own app-list JSON, not per-app user data. The shizuku installer path (`shizuku_installer.dart`) uses the `shizuku_apk_installer` Flutter plugin (which calls `ShizukuApkInstaller().installAPK/installAABSplits` via Binder) — not ShizukuPlusAPI directly. Conclusion: `restoreTarDirectory` is not applicable to ObtainiumPlus at this time; would only be relevant if a future app-data-restore feature were added. No code change needed.
+
+**Created PR** for `feature/add-download-update-fixes` → `main`.
+
 ### 2026-08-08 — Claude Code (Sonnet 5), continued (still no wifi)
 
 **Fixed the path-traversal gap flagged as "noted, not fixed" in the 07-21 security review** (`saveApps()`/`apps_provider.dart` builds file paths via unvalidated `app.id`). Added `URLValidator.sanitizeAppId()` (`lib/utils/url_validator.dart`) — neutralizes `/`, `\`, null bytes, and control chars, falls back to `'app'` if the result would be empty/`.`/`..`.
