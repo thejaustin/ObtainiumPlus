@@ -33,5 +33,5 @@ jobs:
           flutter pub global activate danger_dart
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           
-          # Run danger-dart ci
-          danger_dart ci
+          # Run danger-dart ci (explicit --dangerfile for case-sensitive Linux fs)
+          danger_dart ci --dangerfile Dangerfile.dart
