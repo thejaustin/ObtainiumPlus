@@ -33,12 +33,12 @@ jobs:
         run: flutter pub get
 
       - name: Install danger
-        run: npm install -g danger
+        run: npm ci
 
       - name: Run Danger
         env:
           DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
         run: |
           flutter pub global activate danger_dart
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          export PATH="$PATH:$HOME/.pub-cache/bin:$GITHUB_WORKSPACE/node_modules/.bin"
           danger_dart ci
