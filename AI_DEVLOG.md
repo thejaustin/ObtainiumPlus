@@ -87,8 +87,9 @@ Implemented 7 more optimizations across 2 PRs targeting "loading times between c
 - [ ] Glassmorphism blur regression — not yet tested on device
 - [ ] App Logs Share button (`f29947ff`) — not yet tested on device
 - [ ] Duplicate `installApk`/`installApkDir` in class body vs extension — class methods take precedence, extension unreachable; cleanup deferred (noted 2026-08-08)
-- [ ] PR #293: ready to merge (danger timed out and was cancelled; all other checks pass; branch not protected)
-- [ ] PR #294: CI pending
+- [x] PR #293: merged as `c99eed8a`, auto-bumped to p18
+- [x] PR #294: merged as `c7ecb098`, auto-bump to p19 building
+- [ ] Danger CI: `continue-on-error: true` + 5-min step timeout works; hangs because `DANGER_GITHUB_API_TOKEN` secret not configured in repo — when token is added, danger will actually post PR comments
 
 ### 2026-09-09 — Claude Code (Sonnet 4.6)
 
