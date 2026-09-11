@@ -1778,11 +1778,12 @@ class AppsProvider with ChangeNotifier {
     var trackOnly = app.additionalSettings['trackOnly'] == true;
     var versionDetectionIsStandard =
         app.additionalSettings['versionDetection'] == true;
-    var naiveStandardVersionDetection =
-        app.additionalSettings['naiveStandardVersionDetection'] == true ||
-        SourceProvider()
-            .getSource(app.url, overrideSource: app.overrideSource)
-            .naiveStandardVersionDetection;
+    // Evaluated eagerly if the additionalSettings flag is set; otherwise
+    // lazily inside the one branch that needs it, avoiding a SourceProvider
+    // getSource() call (which calls _buildSources() for overrideSource apps)
+    // on every save/load for apps that never hit that code path.
+    final naiveExplicit =
+        app.additionalSettings['naiveStandardVersionDetection'] == true;
     String? realInstalledVersion =
         app.additionalSettings['useVersionCodeAsOSVersion'] == true
         ? installedInfo?.versionCode.toString()
@@ -1810,7 +1811,10 @@ class AppsProvider with ChangeNotifier {
       if (correctedInstalledVersion?.key == false) {
         app.installedVersion = correctedInstalledVersion!.value;
         modded = true;
-      } else if (naiveStandardVersionDetection) {
+      } else if (naiveExplicit ||
+          SourceProvider()
+              .getSource(app.url, overrideSource: app.overrideSource)
+              .naiveStandardVersionDetection) {
         app.installedVersion = realInstalledVersion;
         modded = true;
       }
@@ -2198,9 +2202,10 @@ class AppsProvider with ChangeNotifier {
 
   Future<void> removeApps(List<String> appIds) async {
     var apkFiles = apkDir.listSync();
+    final appsDirPath = (await getAppsDir()).path;
     await Future.wait(
       appIds.map((appId) async {
-        File file = File('${(await getAppsDir()).path}/$appId.json');
+        File file = File('$appsDirPath/$appId.json');
         if (file.existsSync()) {
           deleteFile(file);
         }
@@ -2464,6 +2469,11 @@ class AppsProvider with ChangeNotifier {
       includeAmbiguous: includeAmbiguous,
     );
   }
+
+  /// Single-pass: returns pending installed-app updates as a [Set] (O(1) lookup)
+  /// and not-yet-installed apps as a [List]. Avoids two separate O(n) passes.
+  ({Set<String> updates, List<String> newInstalls}) findAllPendingUpdates() =>
+      AppUpdateService.findAllPendingUpdates(apps);
 
   Map<String, dynamic> generateExportJSON({
     List<String>? appIds,

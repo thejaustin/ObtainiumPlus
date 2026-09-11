@@ -398,7 +398,11 @@ class AppsPageState extends State<AppsPage> {
       listedApps = listedApps.reversed.toList();
     }
 
-    var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
+    // Single pass over all apps to build both update lists; existingUpdates is
+    // a Set so the pinUpdates .contains() check below is O(1) not O(n).
+    final pending = appsProvider.findAllPendingUpdates();
+    final existingUpdates = pending.updates; // Set<String>
+    final newInstalls = pending.newInstalls; // List<String>
 
     var existingUpdateIdsAllOrSelected = existingUpdates
         .where(
@@ -407,8 +411,7 @@ class AppsPageState extends State<AppsPage> {
               : selectedAppIds.contains(element),
         )
         .toList();
-    var newInstallIdsAllOrSelected = appsProvider
-        .findExistingUpdates(nonInstalledOnly: true)
+    var newInstallIdsAllOrSelected = newInstalls
         .where(
           (element) => selectedAppIds.isEmpty
               ? listedAppIdSet.contains(element)
