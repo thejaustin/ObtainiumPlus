@@ -2149,6 +2149,8 @@ class AppsProvider with ChangeNotifier {
     bool onlyIfExists = true,
     bool reuseInstalledInfo = false,
   }) async {
+    // Resolve the apps directory once instead of once per app in Future.wait.
+    final appsDirPath = (await getAppsDir()).path;
     await Future.wait(
       apps.map((a) async {
         var app = a.deepCopy();
@@ -2167,7 +2169,7 @@ class AppsProvider with ChangeNotifier {
           app = getCorrectedInstallStatusAppIfPossible(app, info) ?? app;
         }
         if (!onlyIfExists || this.apps.containsKey(app.id)) {
-          String filePath = '${(await getAppsDir()).path}/${app.id}.json';
+          String filePath = '$appsDirPath/${app.id}.json';
           final tmpFile = File('$filePath.tmp');
           await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
           await tmpFile.rename(filePath);
@@ -2175,7 +2177,10 @@ class AppsProvider with ChangeNotifier {
         try {
           this.apps.update(
             app.id,
-            (value) => AppInMemory(app, value.downloadProgress, info, icon),
+            // Pass download: value.download to reuse the existing DownloadState
+            // so ValueListenableBuilder widgets keep their subscription alive.
+            (value) =>
+                AppInMemory(app, null, info, icon, download: value.download),
             ifAbsent: onlyIfExists
                 ? null
                 : () => AppInMemory(app, null, info, icon),
@@ -2320,7 +2325,10 @@ class AppsProvider with ChangeNotifier {
       if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
         newApp.preferredApkIndex = currentApp.preferredApkIndex;
       }
-      await saveApps([newApp]);
+      // Reuse cached PackageInfo/icon: installed version doesn't change during
+      // a sync, and re-querying it per app is an expensive platform-channel
+      // call. loadApps() and the FGBG refresh keep the cached info fresh.
+      await saveApps([newApp], reuseInstalledInfo: true);
       return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
     } finally {
       checkingUpdateIds.remove(appId);
