@@ -39,6 +39,31 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ## Session History (newest first)
 
+### 2026-09-11 — Claude Code (Sonnet 4.6)
+
+**Root-cause investigation of "installing updates not working smoothly" complaint.**
+
+**Finding 1 — 40-second "Please wait" on startup (root cause: wrong PackageManager flags).**
+`getAllInstalledInfo()` in `apps_provider.dart` called `getInstalledPackages(flags: packageInfoFlags)` where `packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates})`. Fetching signing certs for every installed package on a device with 100+ apps bloats the Binder parcel to hundreds of MB → `TransactionTooLargeException` → returns `[]` (explains "all apps show Not Installed") AND blocks for 40+ seconds. The Phase 1/Phase 2 startup split (cherry-picked from `feature/add-download-update-fixes` as `47d3025a`) hides the spinner earlier but the bulk query was still broken underneath. **Fixed** by delegating to `AppInstallService.getAllInstalledInfo()` which uses `PackageInfoFlags(const {})` (empty flags, no certs) with its own 15 s timeout.
+
+**Finding 2 — Update check failures are not code bugs.**
+Logs from Settings → Developer & Diagnostics → View System & Network Logs show: HTTP 429 rate limiting on virtually all GitHub API calls (no token configured → 60 req/hr anonymous limit exhausted); Atom fallback failing for tag-only repos without Releases; intermittent DNS failures at ~14:51. These are operational/config issues. User needs to add a GitHub Personal Access Token in Settings → Tokens for reliable update checks.
+
+**Finding 3 — Danger CI was hanging for 6 hours on every PR.**
+`danger_dart ci` looks for `dangerfile.dart` (lowercase) on the Linux CI runner. Repo had `Dangerfile.dart` (capitalized). The `--dangerfile Dangerfile.dart` workaround generates a Dart import `.//absolute/path/Dangerfile.dart` (double-slash relative prefix) which Dart's path resolver can't resolve — `danger_dart` hangs indefinitely until the 6-hour GitHub Actions job timeout. **Fixed** by two-step rename via temp file on the case-insensitive Android filesystem: `Dangerfile.dart → dangerfile.dart.tmp → dangerfile.dart`.
+
+**PR #292 merged → p16 built and released.** Fixes shipped:
+- Phase 1/Phase 2 startup split — list appears in ~50 ms instead of 40+ s
+- Lightweight PackageManager flags for bulk query — install status now populates correctly
+- `dangerfile.dart` rename — Danger CI check no longer times out
+
+**Still open:**
+- [ ] User needs GitHub API token for reliable update checks (Settings → Tokens)
+- [ ] Grid/list toggle persistence — not yet tested on device
+- [ ] Glassmorphism blur regression — not yet tested on device
+- [ ] App Logs Share button (`f29947ff`) — not yet tested on device
+- [ ] Duplicate `installApk`/`installApkDir` in class body vs extension — class methods take precedence, extension unreachable; cleanup deferred (noted 2026-08-08)
+
 ### 2026-09-09 — Claude Code (Sonnet 4.6)
 
 **CI triage + feature/add-download-update-fixes PR creation.**
