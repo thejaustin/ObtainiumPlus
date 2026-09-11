@@ -9,7 +9,8 @@ jobs:
   danger:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+    timeout-minutes: 15
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
