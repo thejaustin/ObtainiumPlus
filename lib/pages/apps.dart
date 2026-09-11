@@ -236,8 +236,9 @@ class AppsPageState extends State<AppsPage> {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
     // deepCopy: false — build() is read-only; deep-cloning every app on every
     // frame (download progress ticks, etc.) was the dominant rebuild cost.
-    final listedAppsAll = appsProvider.getAppValues(deepCopy: false).toList();
-    var listedApps = List<AppInMemory>.from(listedAppsAll);
+    // getAppValues().toList() already snapshots the map values into a new List,
+    // so no secondary List.from() copy is needed.
+    var listedApps = appsProvider.getAppValues(deepCopy: false).toList();
 
     refresh() {
       AppHaptics.lightImpact();
@@ -337,9 +338,7 @@ class AppsPageState extends State<AppsPage> {
         return false;
       }
       if (filter.categoryFilter.isNotEmpty &&
-          filter.categoryFilter
-              .intersection(app.app.categories.toSet())
-              .isEmpty) {
+          !app.app.categories.any(filter.categoryFilter.contains)) {
         return false;
       }
       if (filter.sourceFilter.isNotEmpty) {
