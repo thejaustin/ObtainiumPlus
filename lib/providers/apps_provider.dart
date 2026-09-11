@@ -2320,7 +2320,10 @@ class AppsProvider with ChangeNotifier {
       if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
         newApp.preferredApkIndex = currentApp.preferredApkIndex;
       }
-      await saveApps([newApp]);
+      // Reuse cached PackageInfo/icon: installed version doesn't change during
+      // a sync, and re-querying it per app is an expensive platform-channel
+      // call. loadApps() and the FGBG refresh keep the cached info fresh.
+      await saveApps([newApp], reuseInstalledInfo: true);
       return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
     } finally {
       checkingUpdateIds.remove(appId);
