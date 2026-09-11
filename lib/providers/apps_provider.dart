@@ -2155,6 +2155,16 @@ class AppsProvider with ChangeNotifier {
   }) async {
     // Resolve the apps directory once instead of once per app in Future.wait.
     final appsDirPath = (await getAppsDir()).path;
+    // When not reusing cached info for a batch, one bulk query is faster than
+    // N individual getInstalledInfo() Binder IPC calls inside Future.wait.
+    Map<String, PackageInfo>? bulkInstalledMap;
+    if (!reuseInstalledInfo && apps.length > 1) {
+      final all = await getAllInstalledInfo();
+      bulkInstalledMap = {
+        for (final p in all)
+          if (p.packageName != null) p.packageName!: p,
+      };
+    }
     await Future.wait(
       apps.map((a) async {
         var app = a.deepCopy();
@@ -2162,7 +2172,9 @@ class AppsProvider with ChangeNotifier {
             reuseInstalledInfo && this.apps.containsKey(app.id);
         PackageInfo? info = canReuse
             ? this.apps[app.id]!.installedInfo
-            : await getInstalledInfo(app.id);
+            : bulkInstalledMap != null
+                ? bulkInstalledMap[app.id]
+                : await getInstalledInfo(app.id);
         var icon = canReuse
             ? this.apps[app.id]!.icon
             : await info?.applicationInfo?.getAppIcon();
