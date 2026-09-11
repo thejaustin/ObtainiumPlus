@@ -2175,7 +2175,10 @@ class AppsProvider with ChangeNotifier {
         try {
           this.apps.update(
             app.id,
-            (value) => AppInMemory(app, value.downloadProgress, info, icon),
+            // Pass download: value.download to reuse the existing DownloadState
+            // so ValueListenableBuilder widgets keep their subscription alive.
+            (value) =>
+                AppInMemory(app, null, info, icon, download: value.download),
             ifAbsent: onlyIfExists
                 ? null
                 : () => AppInMemory(app, null, info, icon),
