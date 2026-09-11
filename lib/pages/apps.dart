@@ -234,7 +234,9 @@ class AppsPageState extends State<AppsPage> {
     final viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
-    final listedAppsAll = appsProvider.getAppValues().toList();
+    // deepCopy: false — build() is read-only; deep-cloning every app on every
+    // frame (download progress ticks, etc.) was the dominant rebuild cost.
+    final listedAppsAll = appsProvider.getAppValues(deepCopy: false).toList();
     var listedApps = List<AppInMemory>.from(listedAppsAll);
 
     refresh() {
