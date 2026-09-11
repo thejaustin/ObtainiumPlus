@@ -29,6 +29,12 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Cache pub-global packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-global-danger_dart-${{ runner.os }}
+
       - name: Get dependencies
         run: flutter pub get
 
