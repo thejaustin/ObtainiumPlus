@@ -31,10 +31,12 @@ extension AppsProviderUpdates on AppsProvider {
       currentApp.additionalSettings,
       currentApp: currentApp,
     );
+    // newApp is fresh from getApp() so direct mutation is safe and avoids a
+    // copyWith() call that copies all list fields just to change one integer.
     if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
-      newApp = newApp.copyWith(preferredApkIndex: currentApp.preferredApkIndex);
+      newApp.preferredApkIndex = currentApp.preferredApkIndex;
     } else if (newApp.apkUrls.isNotEmpty) {
-      newApp = newApp.copyWith(preferredApkIndex: 0);
+      newApp.preferredApkIndex = 0;
     }
     return newApp;
   }

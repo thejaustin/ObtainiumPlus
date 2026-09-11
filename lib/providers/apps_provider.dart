@@ -2217,7 +2217,7 @@ class AppsProvider with ChangeNotifier {
       }),
     );
     notifyListeners();
-    export(isAuto: true);
+    scheduleAutoExport();
   }
 
   Future<void> removeApps(List<String> appIds) async {
@@ -2243,7 +2243,7 @@ class AppsProvider with ChangeNotifier {
     );
     if (appIds.isNotEmpty) {
       notifyListeners();
-      export(isAuto: true);
+      scheduleAutoExport();
     }
   }
 
