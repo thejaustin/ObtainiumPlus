@@ -831,6 +831,11 @@ class AppsProvider with ChangeNotifier {
 
   // Tracks whether a background save occurred since the last load.
   bool _needsBgReload = false;
+  // When Phase 1 last completed — used to suppress redundant FGBG reloads.
+  DateTime? _lastLoadCompleted;
+  // Debounce timer for home-widget updates so rapid notifyListeners() bursts
+  // (e.g. download progress ticks) don't each trigger a full app-map scan.
+  Timer? _widgetUpdateDebounce;
   StreamSubscription<void>? _eventSubscription;
   bool gettingUpdates = false;
 
@@ -957,7 +962,14 @@ class AppsProvider with ChangeNotifier {
     foregroundSubscription = foregroundStream?.listen((event) async {
       isForeground = event == FGBGType.foreground;
       if (isForeground) {
-        await loadApps();
+        // Only reload when there's a reason to: first launch, a background
+        // task wrote new data, or it's been >30 s since the last load.
+        // Suppresses redundant disk+IPC work on rapid app switches.
+        final stale = _lastLoadCompleted == null ||
+            DateTime.now().difference(_lastLoadCompleted!).inSeconds > 30;
+        if (apps.isEmpty || _needsBgReload || stale) {
+          await loadApps();
+        }
       }
     });
     if (!_isBg) {
@@ -1924,6 +1936,7 @@ class AppsProvider with ChangeNotifier {
       // immediately, then run the slow PackageManager reconciliation phase
       // in the background without blocking the frame.
       loadingApps = false;
+      _lastLoadCompleted = DateTime.now();
       appsLoadingCompleter?.complete();
       appsLoadingCompleter = null;
       notifyListeners();
@@ -2155,10 +2168,9 @@ class AppsProvider with ChangeNotifier {
         }
         if (!onlyIfExists || this.apps.containsKey(app.id)) {
           String filePath = '${(await getAppsDir()).path}/${app.id}.json';
-          File(
-            '$filePath.tmp',
-          ).writeAsStringSync(safeJsonEncode(app.toJson())); // #2089
-          File('$filePath.tmp').renameSync(filePath);
+          final tmpFile = File('$filePath.tmp');
+          await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
+          await tmpFile.rename(filePath);
         }
         try {
           this.apps.update(
@@ -2580,6 +2592,7 @@ class AppsProvider with ChangeNotifier {
     _disposed = true;
     foregroundSubscription?.cancel();
     _autoExportDebounce?.cancel();
+    _widgetUpdateDebounce?.cancel();
     _eventSubscription?.cancel();
     refreshProgress.dispose();
     super.dispose();
@@ -2612,7 +2625,13 @@ class AppsProvider with ChangeNotifier {
   @override
   void notifyListeners() {
     super.notifyListeners();
-    _updateWidgetData();
+    // Debounce: coalesce rapid bursts (download progress, icon loads) into a
+    // single widget update 500 ms after the last notification settles.
+    _widgetUpdateDebounce?.cancel();
+    _widgetUpdateDebounce = Timer(
+      const Duration(milliseconds: 500),
+      _updateWidgetData,
+    );
   }
 
   Future<void> _updateWidgetData() async {
