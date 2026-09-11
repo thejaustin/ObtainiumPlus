@@ -342,16 +342,15 @@ class AppsPageState extends State<AppsPage> {
               .isEmpty) {
         return false;
       }
-      if (filter.sourceFilter.isNotEmpty &&
-          sourceProvider
-                  .getSource(
-                    app.app.url,
-                    overrideSource: app.app.overrideSource,
-                  )
-                  .runtimeType
-                  .toString() !=
-              filter.sourceFilter) {
-        return false;
+      if (filter.sourceFilter.isNotEmpty) {
+        // Use the sourceType cached during loadApps(); fall back to a live
+        // getSource() call only when the cache is absent (e.g. newly-added app).
+        final srcType = app.sourceType ??
+            sourceProvider
+                .getSource(app.app.url, overrideSource: app.app.overrideSource)
+                .runtimeType
+                .toString();
+        if (srcType != filter.sourceFilter) return false;
       }
       return true;
     }).toList();
