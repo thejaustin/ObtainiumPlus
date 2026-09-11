@@ -685,10 +685,8 @@ String? formatDownloadSize(int? receivedBytes, int? totalBytes) {
   return formatBytes(receivedBytes);
 }
 
-Future<List<PackageInfo>> getAllInstalledInfo() async {
-  return await packageManager.getInstalledPackages(flags: packageInfoFlags) ??
-      [];
-}
+Future<List<PackageInfo>> getAllInstalledInfo() =>
+    AppInstallService.getAllInstalledInfo();
 
 Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   if (packageName != null) {
@@ -2014,18 +2012,9 @@ class AppsProvider with ChangeNotifier {
     List<String> removedAppIds = [];
     List<App> corrections = [];
     try {
-      final installedAppsData = await getAllInstalledInfo().timeout(
-        const Duration(seconds: 45),
-        onTimeout: () {
-          logs.add(
-            'getAllInstalledInfo() timed out after 45 s — '
-            'PackageManager IPC may be unresponsive. '
-            'Installed status will be stale until the next reload.',
-            level: LogLevel.error,
-          );
-          return <PackageInfo>[];
-        },
-      );
+      // AppInstallService.getAllInstalledInfo() uses lightweight flags (no
+      // signing certs) and has its own 15 s timeout with error logging.
+      final installedAppsData = await getAllInstalledInfo();
       final Map<String, PackageInfo> installedAppsMap = {
         for (var i in installedAppsData)
           if (i.packageName != null) i.packageName!: i,

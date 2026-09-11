@@ -29,6 +29,9 @@ jobs:
         env:
           DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
         run: |
+          # Install danger-js (required by danger_dart)
+          npm install -g danger
+
           # Install danger_dart globally if not already available
           flutter pub global activate danger_dart
           export PATH="$PATH":"$HOME/.pub-cache/bin"
