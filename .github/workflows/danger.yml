@@ -17,6 +17,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -26,16 +32,13 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Install danger
+        run: npm install -g danger
+
       - name: Run Danger
         env:
           DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
         run: |
-          # Install danger-js (required by danger_dart)
-          npm install -g danger
-
-          # Install danger_dart globally if not already available
           flutter pub global activate danger_dart
           export PATH="$PATH":"$HOME/.pub-cache/bin"
-
-          # Run danger-dart ci
           danger_dart ci
