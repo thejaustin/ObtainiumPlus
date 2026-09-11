@@ -9,7 +9,7 @@ jobs:
   danger:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -29,14 +29,25 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Cache pub-global packages
-        uses: actions/cache@v4
+      - name: Restore pub-global cache
+        id: pub-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.pub-cache
           key: pub-global-danger_dart-${{ runner.os }}
 
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Activate danger_dart
+        run: flutter pub global activate danger_dart
+
+      - name: Save pub-global cache
+        if: steps.pub-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-global-danger_dart-${{ runner.os }}
 
       - name: Install danger
         run: npm ci
@@ -45,6 +56,5 @@ jobs:
         env:
           DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
         run: |
-          flutter pub global activate danger_dart
           export PATH="$PATH:$HOME/.pub-cache/bin:$GITHUB_WORKSPACE/node_modules/.bin"
           danger_dart ci
