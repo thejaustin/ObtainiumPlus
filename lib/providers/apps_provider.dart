@@ -1721,6 +1721,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<Directory> getAppsDir() async {
+    if (cachedAppsDir != null) return cachedAppsDir!;
     Directory appsDir = Directory(
       '${(await getAppStorageDir()).path}/app_data',
     );
@@ -1730,7 +1731,7 @@ class AppsProvider with ChangeNotifier {
       // path_provider still returns its path (#226).
       appsDir.createSync(recursive: true);
     }
-    return appsDir;
+    return cachedAppsDir = appsDir;
   }
 
   bool isVersionDetectionPossible(AppInMemory? app) {
