@@ -57,12 +57,38 @@ Logs from Settings → Developer & Diagnostics → View System & Network Logs sh
 - Lightweight PackageManager flags for bulk query — install status now populates correctly
 - `dangerfile.dart` rename — Danger CI check no longer times out
 
+**Still open after p16:**
+- [ ] User needs GitHub API token for reliable update checks (Settings → Tokens)
+- [ ] Grid/list toggle persistence — not yet tested on device
+- [ ] Glassmorphism blur regression — not yet tested on device
+- [ ] App Logs Share button (`f29947ff`) — not yet tested on device
+- [ ] Duplicate `installApk`/`installApkDir` in class body vs extension — class methods take precedence, extension unreachable; cleanup deferred (noted 2026-08-08)
+
+**Session continued — performance sweep (same date, context resumed).**
+
+Implemented 7 more optimizations across 2 PRs targeting "loading times between clicks and syncs":
+
+**PR #293** (feature/perf-improvements) — merged when green:
+1. **FGBG cooldown** — `foregroundSubscription` previously called `loadApps()` on EVERY foreground event. Now gated: only reloads if `apps.isEmpty`, `_needsBgReload`, or >30 s since last load.
+2. **`_updateWidgetData` debounce** — overrode `notifyListeners()` to cancel/restart a 500 ms Timer before calling `_updateWidgetData()`. Coalesces download progress ticks (which were updating the home widget on every byte).
+3. **`deepCopy: false`** in `apps.dart` `build()` — deep-cloning all app objects on every frame (download progress, icon loads) was the dominant rebuild cost. Read-only `build()` doesn't need copies.
+4. **Async file writes in `saveApps`** — `writeAsStringSync`/`renameSync` → `await writeAsString`/`await rename`. No more main-thread blocking on disk I/O.
+
+**PR #294** (feature/icon-sort-perf) — CI pending:
+5. **Parallel icon loading** — replaced sequential per-icon `await` loop (single `notify()` at end) with `Future.wait` batches of 10 + `notify()` after each batch. Icons appear ~10× faster and progressively instead of all-at-once after 500 ms+.
+6. **Sort key pre-computation** — `sort()` comparator previously allocated 2 strings per comparison (O(n log n) allocs). Now computes a `Map<AppInMemory, String>` once before sorting (O(n) allocs).
+7. **Filter token pre-computation** — `nameFilter`/`authorFilter` tokens were re-lowercased and re-split inside the `where` closure on every app. Now pre-computed outside the loop; per-app `lowerName`/`lowerAuthor` computed once per app (not once per token).
+8. **`reuseInstalledInfo: true` in `checkUpdate`** — each update check called `saveApps()` which triggered `getInstalledInfo()` (Binder IPC) + `getAppIcon()` (PNG decode) per app, even when the version was unchanged. Now reuses cached data from `loadApps()`. The 30s FGBG cooldown keeps the cache fresh.
+9. **Danger CI: timeout + npm cache + step split** — added `timeout-minutes: 15` to prevent 6-hour hangs; added `actions/setup-node` with `cache: 'npm'`; split monolithic "Run Danger" shell block into "Install danger" and "Run Danger" steps.
+
 **Still open:**
 - [ ] User needs GitHub API token for reliable update checks (Settings → Tokens)
 - [ ] Grid/list toggle persistence — not yet tested on device
 - [ ] Glassmorphism blur regression — not yet tested on device
 - [ ] App Logs Share button (`f29947ff`) — not yet tested on device
 - [ ] Duplicate `installApk`/`installApkDir` in class body vs extension — class methods take precedence, extension unreachable; cleanup deferred (noted 2026-08-08)
+- [ ] PR #293: ready to merge (danger timed out and was cancelled; all other checks pass; branch not protected)
+- [ ] PR #294: CI pending
 
 ### 2026-09-09 — Claude Code (Sonnet 4.6)
 

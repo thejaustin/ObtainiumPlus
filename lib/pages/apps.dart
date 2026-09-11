@@ -291,6 +291,24 @@ class AppsPageState extends State<AppsPage> {
       });
     }
 
+    // Pre-compute lowercase filter tokens once (not per-app inside the loop).
+    final lowerNameTokens =
+        filter.nameFilter.isNotEmpty
+            ? filter.nameFilter
+                .split(' ')
+                .where((t) => t.trim().isNotEmpty)
+                .map((t) => t.toLowerCase())
+                .toList()
+            : const <String>[];
+    final lowerAuthorTokens =
+        filter.authorFilter.isNotEmpty
+            ? filter.authorFilter
+                .split(' ')
+                .where((t) => t.trim().isNotEmpty)
+                .map((t) => t.toLowerCase())
+                .toList()
+            : const <String>[];
+
     listedApps = listedApps.where((app) {
       if (app.app.installedVersion == app.app.latestVersion &&
           !(filter.includeUptodate)) {
@@ -299,25 +317,15 @@ class AppsPageState extends State<AppsPage> {
       if (app.app.installedVersion == null && !(filter.includeNonInstalled)) {
         return false;
       }
-      if (filter.nameFilter.isNotEmpty || filter.authorFilter.isNotEmpty) {
-        List<String> nameTokens = filter.nameFilter
-            .split(' ')
-            .where((element) => element.trim().isNotEmpty)
-            .toList();
-        List<String> authorTokens = filter.authorFilter
-            .split(' ')
-            .where((element) => element.trim().isNotEmpty)
-            .toList();
-
-        for (var t in nameTokens) {
-          if (!app.name.toLowerCase().contains(t.toLowerCase())) {
-            return false;
-          }
+      if (lowerNameTokens.isNotEmpty || lowerAuthorTokens.isNotEmpty) {
+        // Compute per-app lowercased strings once, then check all tokens.
+        final lowerName = app.name.toLowerCase();
+        final lowerAuthor = app.author.toLowerCase();
+        for (var t in lowerNameTokens) {
+          if (!lowerName.contains(t)) return false;
         }
-        for (var t in authorTokens) {
-          if (!app.author.toLowerCase().contains(t.toLowerCase())) {
-            return false;
-          }
+        for (var t in lowerAuthorTokens) {
+          if (!lowerAuthor.contains(t)) return false;
         }
       }
       if (filter.idFilter.isNotEmpty) {
@@ -348,27 +356,31 @@ class AppsPageState extends State<AppsPage> {
       return true;
     }).toList();
 
+    // Pre-compute sort keys once per app: avoids O(n log n) string allocs
+    // during comparison (each compare would otherwise allocate 2 strings).
+    final sortCol = viewSettings.sortColumn;
+    final sortKeyMap = <AppInMemory, String>{
+      for (final a in listedApps)
+        a: (sortCol == SortColumnSettings.authorName
+                ? (a.author + a.name)
+                : (a.name + a.author))
+            .toLowerCase(),
+    };
+
     listedApps.sort((a, b) {
       int result = 0;
-      if (viewSettings.sortColumn == SortColumnSettings.authorName) {
-        result = ((a.author + a.name).toLowerCase()).compareTo(
-          (b.author + b.name).toLowerCase(),
-        );
-      } else if (viewSettings.sortColumn == SortColumnSettings.nameAuthor) {
-        result = ((a.name + a.author).toLowerCase()).compareTo(
-          (b.name + b.author).toLowerCase(),
-        );
-      } else if (viewSettings.sortColumn == SortColumnSettings.releaseDate) {
+      if (sortCol == SortColumnSettings.authorName ||
+          sortCol == SortColumnSettings.nameAuthor) {
+        result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+      } else if (sortCol == SortColumnSettings.releaseDate) {
         // Handle null dates: apps with unknown release dates are grouped at the end
         final aDate = a.app.releaseDate;
         final bDate = b.app.releaseDate;
         final isDescending =
             viewSettings.sortOrder == SortOrderSettings.descending;
         if (aDate == null && bDate == null) {
-          // Both null: sort by name for consistency
-          result = ((a.name + a.author).toLowerCase()).compareTo(
-            (b.name + b.author).toLowerCase(),
-          );
+          // Both null: sort by name for consistency (uses pre-computed key).
+          result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
         } else if (aDate == null) {
           // a has no date, always push to end regardless of sort direction
           result = isDescending ? -1 : 1;

@@ -351,11 +351,19 @@ extension AppsProviderLifecycle on AppsProvider {
     if (!isBg && apps.isNotEmpty) {
       unawaited(
         Future(() async {
-          for (final entry in apps.entries.toList()) {
-            await updateAppIcon(entry.key);
-            await Future<void>.delayed(Duration.zero);
+          // Load icons in parallel batches: 10 concurrent disk reads are
+          // faster than sequential and show icons progressively in the UI.
+          const batchSize = 10;
+          final entries = apps.entries.toList();
+          for (var i = 0; i < entries.length; i += batchSize) {
+            await Future.wait(
+              entries
+                  .skip(i)
+                  .take(batchSize)
+                  .map((e) => updateAppIcon(e.key)),
+            );
+            notify();
           }
-          notify();
         }),
       );
     }

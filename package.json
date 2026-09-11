@@ -1,0 +1,8 @@
+{
+  "name": "obtainiumplus-ci",
+  "private": true,
+  "description": "CI tooling dependencies for ObtainiumPlus",
+  "dependencies": {
+    "danger": "^12.3.3"
+  }
+}
