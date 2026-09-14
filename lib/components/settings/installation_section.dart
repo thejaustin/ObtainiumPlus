@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/system_app_selector_sheet.dart';
@@ -8,6 +9,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
@@ -40,6 +42,53 @@ class InstallationSection extends StatelessWidget {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, behaviorSettings, child) {
         List<Widget> children = [
+          // Device Compatibility & Optimization Hub
+          if (_matches('device compatibility') || _matches('samsung') || _matches('xiaomi') || _matches('oneplus') || _matches('nothing') || !isSearching)
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.devices_other_rounded,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'Device Compatibility & Speed Hub',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: FutureBuilder<String>(
+                future: DeviceUtils.getDeviceSummary(),
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.data ?? 'Optimization guide for Samsung, Xiaomi, OnePlus, Nothing, etc.',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
+              ),
+              trailing: FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  showDeviceOptimizationSheet(context: context);
+                },
+                child: const Text('Optimize'),
+              ),
+              onTap: () {
+                AppHaptics.selectionClick();
+                showDeviceOptimizationSheet(context: context);
+              },
+            ),
           // Parallel Downloads
           if (_matches(tr('parallelDownloads'), isAdvanced: true))
             SwitchListTile.adaptive(
