@@ -185,11 +185,12 @@ extension AppsProviderInstall on AppsProvider {
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
         headers: headers,
-        (double? progress, [int? received, int? total]) {
+        (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
           final int? prog = progress?.ceil();
           if (apps[app.id] != null) {
             apps[app.id]!.downloadReceivedBytes = received;
             apps[app.id]!.downloadTotalBytes = total;
+            apps[app.id]!.downloadSpeedBytesPerSec = speedBytesPerSec;
             apps[app.id]!.downloadProgress = progress;
             // Only rebuild listeners when the displayed (integer) percent
             // actually changes, to avoid redundant whole-page rebuilds on

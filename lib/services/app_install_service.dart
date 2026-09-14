@@ -39,6 +39,28 @@ final _listPackageFlags = PackageInfoFlags(const {});
 class AppInstallService {
   AppInstallService._();
 
+  static Completer<void>? _activeInstallCommitLock;
+
+  /// Serializes package installation commits to avoid concurrent Package Manager
+  /// Service (PMS) lock contention (mInstallLock) across parallel downloads.
+  static Future<T> _synchronizedCommit<T>(Future<T> Function() action) async {
+    while (_activeInstallCommitLock != null) {
+      try {
+        await _activeInstallCommitLock!.future;
+      } catch (_) {}
+    }
+    final completer = Completer<void>();
+    _activeInstallCommitLock = completer;
+    try {
+      return await action();
+    } finally {
+      _activeInstallCommitLock = null;
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+    }
+  }
+
   static Future<List<PackageInfo>> getAllInstalledInfo() async {
     try {
       return await pm
@@ -480,44 +502,46 @@ class AppInstallService {
       'Standalone Installing "$targetPackageName" version "${newInfo.versionName}" versionCode "${newInfo.versionCode}"${appInfo != null ? ' (from existing version "${appInfo.versionName}" versionCode "${appInfo.versionCode}")' : ''}',
     );
 
-    int? code;
     final settingsProvider = SettingsProvider(behaviorSettings.prefs);
     final installer = Installer.create(settingsProvider);
-    if (installer is RootInstaller) {
-      final res = await installer.installApk(
-        [file.path],
-        appId: targetPackageName,
-      );
-      code = res.errorCode ?? (res.isSuccess ? 0 : 3);
-    } else if (installer is ShizukuInstaller) {
-      final res = await installer.installApk(
-        [file.path],
-        appId: targetPackageName,
-        installOptions: {
-          'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
-          'targetVersionCode': newInfo.versionCode,
-          'targetVersionName': newInfo.versionName,
-          'existingVersionCode': appInfo?.versionCode,
-          'existingVersionName': appInfo?.versionName,
-        },
-      );
-      code = res.errorCode ?? (res.isSuccess ? 0 : 3);
-    } else if (installer is ExternalInstaller) {
-      final res = await installer.installApk(
-        [file.path],
-        appId: targetPackageName,
-      );
-      code = res.errorCode ?? (res.isSuccess ? 0 : 3);
-    } else {
-      code = await installStockWithPolling(
-        apkFilePath: file.path,
-        packageName: targetPackageName,
-        targetVersionCode: newInfo.versionCode,
-        targetVersionName: newInfo.versionName,
-        existingVersionCode: appInfo?.versionCode,
-        existingVersionName: appInfo?.versionName,
-      );
-    }
+    final nonNullNewInfo = newInfo;
+    final int? code = await _synchronizedCommit(() async {
+      if (installer is RootInstaller) {
+        final res = await installer.installApk(
+          [file.path],
+          appId: targetPackageName,
+        );
+        return res.errorCode ?? (res.isSuccess ? 0 : 3);
+      } else if (installer is ShizukuInstaller) {
+        final res = await installer.installApk(
+          [file.path],
+          appId: targetPackageName,
+          installOptions: {
+            'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+            'targetVersionCode': nonNullNewInfo.versionCode,
+            'targetVersionName': nonNullNewInfo.versionName,
+            'existingVersionCode': appInfo?.versionCode,
+            'existingVersionName': appInfo?.versionName,
+          },
+        );
+        return res.errorCode ?? (res.isSuccess ? 0 : 3);
+      } else if (installer is ExternalInstaller) {
+        final res = await installer.installApk(
+          [file.path],
+          appId: targetPackageName,
+        );
+        return res.errorCode ?? (res.isSuccess ? 0 : 3);
+      } else {
+        return await installStockWithPolling(
+          apkFilePath: file.path,
+          packageName: targetPackageName,
+          targetVersionCode: nonNullNewInfo.versionCode,
+          targetVersionName: nonNullNewInfo.versionName,
+          existingVersionCode: appInfo?.versionCode,
+          existingVersionName: appInfo?.versionName,
+        );
+      }
+    });
 
     if (code == null) {
       if (context.mounted) {
@@ -636,116 +660,121 @@ class AppInstallService {
     }
 
     final installer = Installer.create(settingsProvider);
+    final nonNullNewInfo = newInfo;
 
-    if (installer is RootInstaller) {
-      try {
-        final rootResult = await installer.installApk(
-          allAPKs,
-          appId: apps[file.appId]!.app.id,
-        );
-        if (rootResult.isSuccess) {
-          code = 0;
-        } else if (rootResult.isCancelled || rootResult.isAlreadyInstalled) {
-          code = 3;
-        } else {
-          code = rootResult.errorCode ?? 1;
+    code = await _synchronizedCommit(() async {
+      int? commitCode;
+      if (installer is RootInstaller) {
+        try {
+          final rootResult = await installer.installApk(
+            allAPKs,
+            appId: apps[file.appId]!.app.id,
+          );
+          if (rootResult.isSuccess) {
+            commitCode = 0;
+          } else if (rootResult.isCancelled || rootResult.isAlreadyInstalled) {
+            commitCode = 3;
+          } else {
+            commitCode = rootResult.errorCode ?? 1;
+          }
+          if (commitCode != 0 && commitCode != 3) {
+            throw Exception("Root installer failed with code $commitCode");
+          }
+        } catch (e) {
+          logs.add(
+            'Root install failed: $e, falling back to AndroidPackageInstaller',
+          );
+          await executeBgWorkaroundIfNeeded();
+          commitCode = await installStockWithPolling(
+            apkFilePath: allAPKs.join(','),
+            packageName: targetPackageName,
+            targetVersionCode: nonNullNewInfo.versionCode,
+            targetVersionName: nonNullNewInfo.versionName,
+            existingVersionCode: appInfo?.versionCode,
+            existingVersionName: appInfo?.versionName,
+          );
         }
-        if (code != 0 && code != 3) {
-          throw Exception("Root installer failed with code $code");
+      } else if (installer is ExternalInstaller) {
+        try {
+          final extResult = await installer.installApk(
+            allAPKs,
+            appId: apps[file.appId]!.app.id,
+          );
+          if (extResult.isSuccess) {
+            commitCode = 0;
+          } else if (extResult.isAlreadyInstalled || extResult.isCancelled) {
+            commitCode = 3;
+          } else {
+            commitCode = extResult.errorCode ?? 1;
+          }
+          if (commitCode != 0 && commitCode != 3) {
+            throw Exception("External installer failed with code $commitCode");
+          }
+        } catch (e) {
+          logs.add(
+            'External install failed: $e, falling back to AndroidPackageInstaller',
+          );
+          await executeBgWorkaroundIfNeeded();
+          commitCode = await installStockWithPolling(
+            apkFilePath: allAPKs.join(','),
+            packageName: targetPackageName,
+            targetVersionCode: nonNullNewInfo.versionCode,
+            targetVersionName: nonNullNewInfo.versionName,
+            existingVersionCode: appInfo?.versionCode,
+            existingVersionName: appInfo?.versionName,
+          );
         }
-      } catch (e) {
-        logs.add(
-          'Root install failed: $e, falling back to AndroidPackageInstaller',
-        );
+      } else if (installer is ShizukuInstaller) {
+        try {
+          final shizukuResult = await installer.installApk(
+            allAPKs,
+            appId: apps[file.appId]!.app.id,
+            installOptions: {
+              'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+              'targetVersionCode': nonNullNewInfo.versionCode,
+              'targetVersionName': nonNullNewInfo.versionName,
+              'existingVersionCode': appInfo?.versionCode,
+              'existingVersionName': appInfo?.versionName,
+            },
+          );
+          if (shizukuResult.isSuccess) {
+            commitCode = 0;
+          } else if (shizukuResult.isAlreadyInstalled ||
+              shizukuResult.isCancelled) {
+            commitCode = 3;
+          } else {
+            commitCode = shizukuResult.errorCode ?? 1;
+          }
+          if (commitCode != 0 && commitCode != 3) {
+            throw Exception("Shizuku failed with code $commitCode");
+          }
+        } catch (e) {
+          logs.add(
+            'Shizuku install failed: $e, falling back to AndroidPackageInstaller',
+          );
+          await executeBgWorkaroundIfNeeded();
+          commitCode = await installStockWithPolling(
+            apkFilePath: allAPKs.join(','),
+            packageName: targetPackageName,
+            targetVersionCode: nonNullNewInfo.versionCode,
+            targetVersionName: nonNullNewInfo.versionName,
+            existingVersionCode: appInfo?.versionCode,
+            existingVersionName: appInfo?.versionName,
+          );
+        }
+      } else {
         await executeBgWorkaroundIfNeeded();
-        code = await installStockWithPolling(
+        commitCode = await installStockWithPolling(
           apkFilePath: allAPKs.join(','),
           packageName: targetPackageName,
-          targetVersionCode: newInfo.versionCode,
-          targetVersionName: newInfo.versionName,
+          targetVersionCode: nonNullNewInfo.versionCode,
+          targetVersionName: nonNullNewInfo.versionName,
           existingVersionCode: appInfo?.versionCode,
           existingVersionName: appInfo?.versionName,
         );
       }
-    } else if (installer is ExternalInstaller) {
-      try {
-        final extResult = await installer.installApk(
-          allAPKs,
-          appId: apps[file.appId]!.app.id,
-        );
-        if (extResult.isSuccess) {
-          code = 0;
-        } else if (extResult.isAlreadyInstalled || extResult.isCancelled) {
-          code = 3;
-        } else {
-          code = extResult.errorCode ?? 1;
-        }
-        if (code != 0 && code != 3) {
-          throw Exception("External installer failed with code $code");
-        }
-      } catch (e) {
-        logs.add(
-          'External install failed: $e, falling back to AndroidPackageInstaller',
-        );
-        await executeBgWorkaroundIfNeeded();
-        code = await installStockWithPolling(
-          apkFilePath: allAPKs.join(','),
-          packageName: targetPackageName,
-          targetVersionCode: newInfo.versionCode,
-          targetVersionName: newInfo.versionName,
-          existingVersionCode: appInfo?.versionCode,
-          existingVersionName: appInfo?.versionName,
-        );
-      }
-    } else if (installer is ShizukuInstaller) {
-      try {
-        final shizukuResult = await installer.installApk(
-          allAPKs,
-          appId: apps[file.appId]!.app.id,
-          installOptions: {
-            'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
-            'targetVersionCode': newInfo.versionCode,
-            'targetVersionName': newInfo.versionName,
-            'existingVersionCode': appInfo?.versionCode,
-            'existingVersionName': appInfo?.versionName,
-          },
-        );
-        if (shizukuResult.isSuccess) {
-          code = 0;
-        } else if (shizukuResult.isAlreadyInstalled ||
-            shizukuResult.isCancelled) {
-          code = 3;
-        } else {
-          code = shizukuResult.errorCode ?? 1;
-        }
-        if (code != 0 && code != 3) {
-          throw Exception("Shizuku failed with code $code");
-        }
-      } catch (e) {
-        logs.add(
-          'Shizuku install failed: $e, falling back to AndroidPackageInstaller',
-        );
-        await executeBgWorkaroundIfNeeded();
-        code = await installStockWithPolling(
-          apkFilePath: allAPKs.join(','),
-          packageName: targetPackageName,
-          targetVersionCode: newInfo.versionCode,
-          targetVersionName: newInfo.versionName,
-          existingVersionCode: appInfo?.versionCode,
-          existingVersionName: appInfo?.versionName,
-        );
-      }
-    } else {
-      await executeBgWorkaroundIfNeeded();
-      code = await installStockWithPolling(
-        apkFilePath: allAPKs.join(','),
-        packageName: targetPackageName,
-        targetVersionCode: newInfo.versionCode,
-        targetVersionName: newInfo.versionName,
-        existingVersionCode: appInfo?.versionCode,
-        existingVersionName: appInfo?.versionName,
-      );
-    }
+      return commitCode;
+    });
     bool installed = false;
     if (code == null) {
       try {
@@ -806,13 +835,13 @@ class AppInstallService {
       MultiAppMultiError errors = MultiAppMultiError();
       if (installer.wantsContainerHandoff) {
         try {
-          final result = await installer.installApk(
+          final result = await _synchronizedCommit(() => installer.installApk(
             [dir.file.path],
             appId: dir.appId,
             installOptions: {
               'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
             },
-          );
+          ));
           if (result.isError) {
             throw InstallError(result.errorCode!, appId: dir.appId);
           }

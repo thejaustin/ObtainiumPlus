@@ -332,12 +332,13 @@ class AppDownloadService {
         downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
-        (double? progress, [int? received, int? total]) {
+        (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
           int? prog = progress?.ceil();
           if (apps[app.id] != null) {
-            apps[app.id]!.downloadProgress = progress;
             if (received != null) apps[app.id]!.downloadReceivedBytes = received;
             if (total != null) apps[app.id]!.downloadTotalBytes = total;
+            apps[app.id]!.downloadSpeedBytesPerSec = speedBytesPerSec;
+            apps[app.id]!.downloadProgress = progress;
             // notifyListeners() removed here to prevent massive UI rebuilds
           }
           notif = DownloadNotification(
