@@ -53,44 +53,48 @@ class PlusFeaturesSection extends StatelessWidget {
               width: isEnabled ? 1.2 : 1.0,
             ),
           ),
-          child: SwitchListTile.adaptive(
-            dense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            secondary: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              transitionBuilder: (child, anim) =>
-                  ScaleTransition(scale: anim, child: child),
-              child: Icon(
-                isEnabled
-                    ? Icons.auto_awesome_rounded
-                    : Icons.auto_awesome_outlined,
-                key: ValueKey<bool>(isEnabled),
-                color: isEnabled
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-                size: 20,
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: SwitchListTile.adaptive(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              secondary: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                transitionBuilder: (child, anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: Icon(
+                  isEnabled
+                      ? Icons.auto_awesome_rounded
+                      : Icons.auto_awesome_outlined,
+                  key: ValueKey<bool>(isEnabled),
+                  color: isEnabled
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
               ),
-            ),
-            title: Text(
-              tr('enableAllPlusFeatures'),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isEnabled
-                    ? colorScheme.primary
-                    : colorScheme.onSurface,
+              title: Text(
+                tr('enableAllPlusFeatures'),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isEnabled
+                      ? colorScheme.primary
+                      : colorScheme.onSurface,
+                ),
               ),
+              subtitle: Text(
+                tr('enableAllPlusFeaturesDescription'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              value: isEnabled,
+              onChanged: (value) {
+                AppHaptics.selectionClick();
+                settings.enableAllPlusFeatures = value;
+              },
             ),
-            subtitle: Text(
-              tr('enableAllPlusFeaturesDescription'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            value: isEnabled,
-            onChanged: (value) {
-              AppHaptics.selectionClick();
-              settings.enableAllPlusFeatures = value;
-            },
           ),
         );
       },

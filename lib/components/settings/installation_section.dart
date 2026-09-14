@@ -601,24 +601,28 @@ class _InstallationSectionState extends State<InstallationSection>
                             ),
                           ),
                         ),
-                        child: SwitchListTile.adaptive(
-                          dense: true,
-                          secondary: const Icon(Icons.shop_outlined, size: 20),
-                          title: Text(
-                            tr('shizukuPretendToBeGooglePlay'),
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: SwitchListTile.adaptive(
+                            dense: true,
+                            secondary: const Icon(Icons.shop_outlined, size: 20),
+                            title: Text(
+                              tr('shizukuPretendToBeGooglePlay'),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
+                            subtitle: Text(
+                              tr('shizukuPretendToBeGooglePlayDescription'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            value: behaviorSettings.shizukuPretendToBeGooglePlay,
+                            onChanged: (v) {
+                              AppHaptics.selectionClick();
+                              behaviorSettings.shizukuPretendToBeGooglePlay = v;
+                            },
                           ),
-                          subtitle: Text(
-                            tr('shizukuPretendToBeGooglePlayDescription'),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          value: behaviorSettings.shizukuPretendToBeGooglePlay,
-                          onChanged: (v) {
-                            AppHaptics.selectionClick();
-                            behaviorSettings.shizukuPretendToBeGooglePlay = v;
-                          },
                         ),
                       )
                     : const SizedBox.shrink(),
