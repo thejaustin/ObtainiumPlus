@@ -504,6 +504,7 @@ class AppInstallService {
 
     final settingsProvider = SettingsProvider(behaviorSettings.prefs);
     final installer = Installer.create(settingsProvider);
+    final nonNullNewInfo = newInfo;
     final int? code = await _synchronizedCommit(() async {
       if (installer is RootInstaller) {
         final res = await installer.installApk(
@@ -517,8 +518,8 @@ class AppInstallService {
           appId: targetPackageName,
           installOptions: {
             'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
-            'targetVersionCode': newInfo.versionCode,
-            'targetVersionName': newInfo.versionName,
+            'targetVersionCode': nonNullNewInfo.versionCode,
+            'targetVersionName': nonNullNewInfo.versionName,
             'existingVersionCode': appInfo?.versionCode,
             'existingVersionName': appInfo?.versionName,
           },
@@ -534,8 +535,8 @@ class AppInstallService {
         return await installStockWithPolling(
           apkFilePath: file.path,
           packageName: targetPackageName,
-          targetVersionCode: newInfo.versionCode,
-          targetVersionName: newInfo.versionName,
+          targetVersionCode: nonNullNewInfo.versionCode,
+          targetVersionName: nonNullNewInfo.versionName,
           existingVersionCode: appInfo?.versionCode,
           existingVersionName: appInfo?.versionName,
         );
@@ -659,6 +660,7 @@ class AppInstallService {
     }
 
     final installer = Installer.create(settingsProvider);
+    final nonNullNewInfo = newInfo;
 
     code = await _synchronizedCommit(() async {
       int? commitCode;
@@ -686,8 +688,8 @@ class AppInstallService {
           commitCode = await installStockWithPolling(
             apkFilePath: allAPKs.join(','),
             packageName: targetPackageName,
-            targetVersionCode: newInfo.versionCode,
-            targetVersionName: newInfo.versionName,
+            targetVersionCode: nonNullNewInfo.versionCode,
+            targetVersionName: nonNullNewInfo.versionName,
             existingVersionCode: appInfo?.versionCode,
             existingVersionName: appInfo?.versionName,
           );
@@ -716,8 +718,8 @@ class AppInstallService {
           commitCode = await installStockWithPolling(
             apkFilePath: allAPKs.join(','),
             packageName: targetPackageName,
-            targetVersionCode: newInfo.versionCode,
-            targetVersionName: newInfo.versionName,
+            targetVersionCode: nonNullNewInfo.versionCode,
+            targetVersionName: nonNullNewInfo.versionName,
             existingVersionCode: appInfo?.versionCode,
             existingVersionName: appInfo?.versionName,
           );
@@ -729,8 +731,8 @@ class AppInstallService {
             appId: apps[file.appId]!.app.id,
             installOptions: {
               'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
-              'targetVersionCode': newInfo.versionCode,
-              'targetVersionName': newInfo.versionName,
+              'targetVersionCode': nonNullNewInfo.versionCode,
+              'targetVersionName': nonNullNewInfo.versionName,
               'existingVersionCode': appInfo?.versionCode,
               'existingVersionName': appInfo?.versionName,
             },
@@ -754,8 +756,8 @@ class AppInstallService {
           commitCode = await installStockWithPolling(
             apkFilePath: allAPKs.join(','),
             packageName: targetPackageName,
-            targetVersionCode: newInfo.versionCode,
-            targetVersionName: newInfo.versionName,
+            targetVersionCode: nonNullNewInfo.versionCode,
+            targetVersionName: nonNullNewInfo.versionName,
             existingVersionCode: appInfo?.versionCode,
             existingVersionName: appInfo?.versionName,
           );
@@ -765,8 +767,8 @@ class AppInstallService {
         commitCode = await installStockWithPolling(
           apkFilePath: allAPKs.join(','),
           packageName: targetPackageName,
-          targetVersionCode: newInfo.versionCode,
-          targetVersionName: newInfo.versionName,
+          targetVersionCode: nonNullNewInfo.versionCode,
+          targetVersionName: nonNullNewInfo.versionName,
           existingVersionCode: appInfo?.versionCode,
           existingVersionName: appInfo?.versionName,
         );
