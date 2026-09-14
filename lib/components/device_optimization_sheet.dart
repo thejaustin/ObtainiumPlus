@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
