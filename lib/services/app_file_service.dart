@@ -20,6 +20,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 class AppFileService {
   AppFileService._();
 
+  static final Set<String> _activeDownloadPaths = <String>{};
+
   static Future<Directory> getAppStorageDir() async =>
       await getExternalStorageDirectory() ??
       await getApplicationDocumentsDirectory();
@@ -384,19 +386,9 @@ class AppFileService {
     LogsProvider? logs,
     bool Function()? isCancelled,
   }) async {
-    var reqHeaders = headers ?? {};
-    var req = Request('GET', Uri.parse(url));
-    req.headers.addAll(reqHeaders);
-    var headersClient = IOClient(
-      createHttpClient(allowInsecure: allowInsecure),
-    );
-    StreamedResponse headersResponse = await headersClient.send(req);
-    var resHeaders = headersResponse.headers;
+    var reqHeaders = Map<String, String>.from(headers ?? {});
 
-    String ext = resHeaders['content-disposition']?.split('.').last ?? 'apk';
-    if (ext.endsWith('"') || ext.endsWith("other")) {
-      ext = ext.substring(0, ext.length - 1);
-    }
+    String ext = 'apk';
     final urlPath = Uri.tryParse(url)?.path ?? url;
     if (AppSource.isApkOrContainerFile(
       urlPath,
@@ -404,10 +396,6 @@ class AppFileService {
       includeTarballs: true,
     )) {
       ext = urlPath.split('.').last.toLowerCase();
-    } else if (ext == 'attachment' ||
-        ((Uri.tryParse(url)?.path ?? url).toLowerCase().endsWith('.apk') &&
-            ext != 'apk')) {
-      ext = 'apk';
     }
     fileName = fileNameHasExt ? fileName : fileName.split('/').last;
     File downloadedFile = File('$destDir/$fileName.$ext');
@@ -415,129 +403,141 @@ class AppFileService {
       downloadedFile = File('$destDir/$fileName');
     }
 
-    bool rangeFeatureEnabled = false;
-    if (resHeaders['accept-ranges']?.isNotEmpty == true) {
-      rangeFeatureEnabled =
-          resHeaders['accept-ranges']?.trim().toLowerCase() == 'bytes';
-    }
-    headersClient.close();
-
-    var fullContentLength = headersResponse.contentLength;
+    // If existing completed file is present, check if we can reuse it
     if (useExisting && downloadedFile.existsSync()) {
-      var length = downloadedFile.lengthSync();
-      if (fullContentLength == null || !rangeFeatureEnabled) {
-        return downloadedFile;
-      } else {
-        if (length == fullContentLength) {
-          return downloadedFile;
-        }
-        if (length > fullContentLength) {
-          useExisting = false;
+      final existingSize = downloadedFile.lengthSync();
+      if (existingSize > 0) {
+        try {
+          final probeResponse = await sourceRequestStreamResponse(
+            'HEAD',
+            url,
+            reqHeaders,
+            {'allowInsecure': allowInsecure},
+          );
+          final probeClient = probeResponse.value.key;
+          final probeRes = probeResponse.value.value;
+          final remoteLength = probeRes.contentLength;
+          probeClient.close();
+          if (remoteLength == existingSize || remoteLength <= 0) {
+            logs?.add('Reusing existing valid file: ${downloadedFile.uri.pathSegments.last}');
+            return downloadedFile;
+          }
+        } catch (_) {
+          // If HEAD is not supported by host, proceed to standard download
         }
       }
     }
 
     File tempDownloadedFile = File('${downloadedFile.path}.part');
 
-    bool tempFileExists = tempDownloadedFile.existsSync();
-    if (tempFileExists && useExisting) {
+    // Wait if another in-process worker is actively writing to this exact file
+    if (_activeDownloadPaths.contains(tempDownloadedFile.path)) {
       logs?.add(
-        'Partial download exists - will wait: ${tempDownloadedFile.uri.pathSegments.last}',
+        'Download actively running in concurrent worker: ${tempDownloadedFile.uri.pathSegments.last}',
       );
-      bool isDownloading = true;
-      int currentTempFileSize = await tempDownloadedFile.length();
-      bool shouldReturn = false;
       int pollCycles = 0;
-      while (isDownloading && pollCycles++ < 30) {
-        await Future.delayed(const Duration(seconds: 7));
-        if (tempDownloadedFile.existsSync()) {
-          int newTempFileSize = await tempDownloadedFile.length();
-          if (newTempFileSize > currentTempFileSize) {
-            currentTempFileSize = newTempFileSize;
-            logs?.add(
-              'Existing partial download still in progress: ${tempDownloadedFile.uri.pathSegments.last}',
-            );
-          } else {
-            logs?.add(
-              'Ignoring existing partial download: ${tempDownloadedFile.uri.pathSegments.last}',
-            );
-            break;
-          }
-        } else {
-          shouldReturn = downloadedFile.existsSync();
-          break;
+      while (_activeDownloadPaths.contains(tempDownloadedFile.path) && pollCycles++ < 40) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (downloadedFile.existsSync()) {
+          return downloadedFile;
         }
       }
-      if (shouldReturn) {
+    }
+
+    int rangeStart = 0;
+    if (useExisting && tempDownloadedFile.existsSync()) {
+      rangeStart = tempDownloadedFile.lengthSync();
+      if (rangeStart > 0) {
+        reqHeaders['range'] = 'bytes=$rangeStart-';
         logs?.add(
-          'Existing partial download completed - not repeating: ${tempDownloadedFile.uri.pathSegments.last}',
-        );
-        return downloadedFile;
-      } else {
-        logs?.add(
-          'Existing partial download not in progress: ${tempDownloadedFile.uri.pathSegments.last}',
+          'Instant resumption: continuing from byte $rangeStart (${tempDownloadedFile.uri.pathSegments.last})',
         );
       }
     }
 
-    var targetFileLength = useExisting && tempDownloadedFile.existsSync()
-        ? tempDownloadedFile.lengthSync()
-        : null;
-    int rangeStart = targetFileLength ?? 0;
+    _activeDownloadPaths.add(tempDownloadedFile.path);
+
+    HttpClient? responseClient;
     IOSink? sink;
-    req = Request('GET', Uri.parse(url));
-    req.headers.addAll(reqHeaders);
-    if (rangeFeatureEnabled && fullContentLength != null && rangeStart > 0) {
-      reqHeaders.addAll({
-        'range': 'bytes=$rangeStart-${fullContentLength - 1}',
-      });
-      sink = tempDownloadedFile.openWrite(mode: FileMode.writeOnlyAppend);
-    } else if (tempDownloadedFile.existsSync()) {
-      deleteFile(tempDownloadedFile);
-    }
-    var responseWithClient = await sourceRequestStreamResponse(
-      'GET',
-      url,
-      reqHeaders,
-      {'allowInsecure': allowInsecure},
-    );
-    HttpClient responseClient = responseWithClient.value.key;
-    HttpClientResponse response = responseWithClient.value.value;
-
-    if (response.statusCode < 200 || response.statusCode > 299) {
-      final retryAfter = response.headers.value('retry-after');
-      responseClient.close();
-      if (tempDownloadedFile.existsSync()) {
-        deleteFile(tempDownloadedFile);
-      }
-      throw HttpException(
-        'Server returned status code ${response.statusCode}: ${response.reasonPhrase}${retryAfter != null ? ' (Retry-After: $retryAfter)' : ''}',
-      );
-    }
-
-    if (rangeStart > 0 && response.statusCode == HttpStatus.ok) {
-      // Server returned 200 OK (ignored Range header) — discard append sink & truncate partial file
-      await sink?.close();
-      sink = null;
-      rangeStart = 0;
-      if (tempDownloadedFile.existsSync()) {
-        deleteFile(tempDownloadedFile);
-      }
-    }
-
-    sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
-
-    var received = 0;
-    double? progress;
-    DateTime? lastProgressUpdate;
-    if (rangeStart > 0 && fullContentLength != null) {
-      received = rangeStart;
-    }
-    const downloadUIUpdateInterval = Duration(milliseconds: 500);
-    const downloadBufferSize =
-        128 * 1024; // 128KB buffer for faster I/O throughput
-    final downloadBuffer = BytesBuilder();
+    int received = rangeStart;
     try {
+      var responseWithClient = await sourceRequestStreamResponse(
+        'GET',
+        url,
+        reqHeaders,
+        {'allowInsecure': allowInsecure},
+      );
+      responseClient = responseWithClient.value.key;
+      HttpClientResponse response = responseWithClient.value.value;
+
+      // Handle 416 Range Not Satisfiable (e.g. remote file changed)
+      if (response.statusCode == HttpStatus.requestedRangeNotSatisfiable && rangeStart > 0) {
+        responseClient.close();
+        deleteFile(tempDownloadedFile);
+        rangeStart = 0;
+        received = 0;
+        reqHeaders.remove('range');
+        responseWithClient = await sourceRequestStreamResponse(
+          'GET',
+          url,
+          reqHeaders,
+          {'allowInsecure': allowInsecure},
+        );
+        responseClient = responseWithClient.value.key;
+        response = responseWithClient.value.value;
+      }
+
+      if (response.statusCode < 200 || response.statusCode > 299) {
+        final retryAfter = response.headers.value('retry-after');
+        responseClient.close();
+        if (tempDownloadedFile.existsSync() && rangeStart == 0) {
+          deleteFile(tempDownloadedFile);
+        }
+        throw HttpException(
+          'Server returned status code ${response.statusCode}: ${response.reasonPhrase}${retryAfter != null ? ' (Retry-After: $retryAfter)' : ''}',
+        );
+      }
+
+      // Check Content-Disposition for proper filename/extension
+      final contentDisposition = response.headers.value('content-disposition');
+      if (contentDisposition != null && !fileNameHasExt) {
+        var parsedExt = contentDisposition.split('.').last;
+        if (parsedExt.endsWith('"') || parsedExt.endsWith('other')) {
+          parsedExt = parsedExt.substring(0, parsedExt.length - 1);
+        }
+        if (parsedExt.isNotEmpty && parsedExt != 'attachment') {
+          final newTarget = File('$destDir/$fileName.$parsedExt');
+          if (newTarget.path != downloadedFile.path) {
+            downloadedFile = newTarget;
+            final newPart = File('${downloadedFile.path}.part');
+            if (tempDownloadedFile.path != newPart.path && tempDownloadedFile.existsSync()) {
+              tempDownloadedFile.renameSync(newPart.path);
+            }
+            tempDownloadedFile = newPart;
+          }
+        }
+      }
+
+      final isPartial = response.statusCode == HttpStatus.partialContent;
+      int? fullContentLength;
+      if (response.contentLength > 0) {
+        fullContentLength = isPartial ? rangeStart + response.contentLength : response.contentLength;
+      }
+
+      if (!isPartial) {
+        rangeStart = 0;
+        received = 0;
+        sink = tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
+      } else {
+        sink = tempDownloadedFile.openWrite(mode: FileMode.writeOnlyAppend);
+      }
+
+      double? progress;
+      DateTime? lastProgressUpdate;
+      const downloadUIUpdateInterval = Duration(milliseconds: 400);
+      const downloadBufferSize = 256 * 1024; // 256KB buffer for max I/O throughput
+      final downloadBuffer = BytesBuilder();
+
       await response
           .timeout(
             const Duration(seconds: 45),
@@ -557,9 +557,9 @@ class AppFileService {
                 (lastProgressUpdate == null ||
                     now.difference(lastProgressUpdate!) >=
                         downloadUIUpdateInterval)) {
-              progress = fullContentLength != null
+              progress = fullContentLength != null && fullContentLength > 0
                   ? clampDouble((received / fullContentLength) * 100, 0, 100)
-                  : 30;
+                  : null;
               try {
                 onProgress(progress, received, fullContentLength);
               } catch (_) {
@@ -586,10 +586,11 @@ class AppFileService {
             ),
           )
           .pipe(sink);
+
       await sink.close();
       sink = null;
     } on FileSystemException catch (e) {
-      if (tempDownloadedFile.existsSync()) {
+      if (tempDownloadedFile.existsSync() && rangeStart == 0) {
         try {
           tempDownloadedFile.deleteSync();
         } catch (_) {}
@@ -601,21 +602,26 @@ class AppFileService {
       rethrow;
     } finally {
       await sink?.close();
-      responseClient.close();
+      responseClient?.close();
+      _activeDownloadPaths.remove(tempDownloadedFile.path);
     }
-    progress = null;
+
     if (onProgress != null) {
       try {
-        onProgress(progress, received, fullContentLength);
+        onProgress(100.0, received, received);
       } catch (_) {
-        onProgress(progress);
+        onProgress(100.0);
       }
     }
 
     if (tempDownloadedFile.existsSync()) {
+      if (downloadedFile.existsSync()) {
+        try {
+          downloadedFile.deleteSync();
+        } catch (_) {}
+      }
       tempDownloadedFile.renameSync(downloadedFile.path);
     }
-    responseClient.close();
     return downloadedFile;
   }
 

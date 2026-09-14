@@ -375,62 +375,67 @@ class AppInstallService {
     String? targetVersionName,
     int? existingVersionCode,
     String? existingVersionName,
-    Duration pollInterval = const Duration(seconds: 1),
     Duration timeout = const Duration(minutes: 5),
   }) async {
     final completer = Completer<int?>();
     Timer? timer;
-    int elapsedSeconds = 0;
-    final maxSeconds = timeout.inSeconds;
+    int elapsedMs = 0;
+    final maxMs = timeout.inMilliseconds;
 
-    timer = Timer.periodic(pollInterval, (t) async {
-      if (completer.isCompleted) {
-        t.cancel();
-        return;
-      }
-      elapsedSeconds += pollInterval.inSeconds;
-      if (elapsedSeconds >= maxSeconds) {
-        t.cancel();
-        if (!completer.isCompleted) {
-          completer.complete(null);
+    void scheduleNextPoll() {
+      // Fast adaptive polling: 350ms for the first 8s, then 1000ms
+      final currentIntervalMs = elapsedMs < 8000 ? 350 : 1000;
+      timer = Timer(Duration(milliseconds: currentIntervalMs), () async {
+        if (completer.isCompleted) return;
+        elapsedMs += currentIntervalMs;
+        if (elapsedMs >= maxMs) {
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+          return;
         }
-        return;
-      }
 
-      try {
-        final info = await getInstalledInfo(packageName, printErr: false);
-        if (info != null) {
-          bool isSuccess = false;
-          final currentCode = info.versionCode ?? 0;
-          if (existingVersionCode == null || existingVersionCode == 0) {
-            // New installation
-            if (targetVersionCode != null && targetVersionCode > 0) {
-              if (currentCode >= targetVersionCode) isSuccess = true;
+        try {
+          final info = await getInstalledInfo(packageName, printErr: false);
+          if (info != null) {
+            bool isSuccess = false;
+            final currentCode = info.versionCode ?? 0;
+            if (existingVersionCode == null || existingVersionCode == 0) {
+              // New installation
+              if (targetVersionCode != null && targetVersionCode > 0) {
+                if (currentCode >= targetVersionCode) isSuccess = true;
+              } else {
+                isSuccess = true;
+              }
             } else {
-              isSuccess = true;
+              // Update
+              if (targetVersionCode != null &&
+                  targetVersionCode > 0 &&
+                  targetVersionCode > existingVersionCode) {
+                if (currentCode >= targetVersionCode) isSuccess = true;
+              } else if (targetVersionName != null &&
+                  targetVersionName.isNotEmpty &&
+                  targetVersionName != existingVersionName) {
+                if (info.versionName == targetVersionName) isSuccess = true;
+              } else if (currentCode > existingVersionCode) {
+                isSuccess = true;
+              }
             }
-          } else {
-            // Update
-            if (targetVersionCode != null &&
-                targetVersionCode > 0 &&
-                targetVersionCode > existingVersionCode) {
-              if (currentCode >= targetVersionCode) isSuccess = true;
-            } else if (targetVersionName != null &&
-                targetVersionName.isNotEmpty &&
-                targetVersionName != existingVersionName) {
-              if (info.versionName == targetVersionName) isSuccess = true;
-            } else if (currentCode > existingVersionCode) {
-              isSuccess = true;
-            }
-          }
 
-          if (isSuccess && !completer.isCompleted) {
-            t.cancel();
-            completer.complete(0); // Success detected via package manager!
+            if (isSuccess && !completer.isCompleted) {
+              completer.complete(0); // Success detected via package manager!
+              return;
+            }
           }
+        } catch (_) {}
+
+        if (!completer.isCompleted) {
+          scheduleNextPoll();
         }
-      } catch (_) {}
-    });
+      });
+    }
+
+    scheduleNextPoll();
 
     AndroidPackageInstaller.installApk(apkFilePath: apkFilePath).then((code) {
       if (!completer.isCompleted) {
@@ -443,7 +448,7 @@ class AppInstallService {
     });
 
     final result = await completer.future;
-    timer.cancel();
+    timer?.cancel();
     return result;
   }
 
@@ -490,6 +495,10 @@ class AppInstallService {
         appId: targetPackageName,
         installOptions: {
           'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+          'targetVersionCode': newInfo.versionCode,
+          'targetVersionName': newInfo.versionName,
+          'existingVersionCode': appInfo?.versionCode,
+          'existingVersionName': appInfo?.versionName,
         },
       );
       code = res.errorCode ?? (res.isSuccess ? 0 : 3);
@@ -695,6 +704,10 @@ class AppInstallService {
           appId: apps[file.appId]!.app.id,
           installOptions: {
             'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+            'targetVersionCode': newInfo.versionCode,
+            'targetVersionName': newInfo.versionName,
+            'existingVersionCode': appInfo?.versionCode,
+            'existingVersionName': appInfo?.versionName,
           },
         );
         if (shizukuResult.isSuccess) {
