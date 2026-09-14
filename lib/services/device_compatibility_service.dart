@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -514,6 +515,54 @@ class DeviceCompatibilityService {
     }
   }
 
+  /// Checks whether ObtainiumPlus is exempt from Android OS battery optimizations.
+  static Future<bool> isIgnoringBatteryOptimizations() async {
+    try {
+      const channel = MethodChannel('dev.thejaustin.obtainiumplus/native');
+      final bool? result = await channel.invokeMethod<bool>(
+        'isIgnoringBatteryOptimizations',
+      );
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Requests exemption from Android OS battery optimizations (displays system dialog).
+  static Future<bool> requestIgnoreBatteryOptimizations() async {
+    try {
+      const channel = MethodChannel('dev.thejaustin.obtainiumplus/native');
+      final bool? result = await channel.invokeMethod<bool>(
+        'requestIgnoreBatteryOptimizations',
+      );
+      return result ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Opens Motorola battery usage and background restriction settings.
+  static Future<bool> openMotorolaBatterySettings() async {
+    final intents = [
+      const AndroidIntent(
+        action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'action_application_details_settings',
+        data: 'package:$_appId',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+    ];
+    for (final intent in intents) {
+      try {
+        await intent.launch();
+        return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
   // --------------------------------------------------------------------------
   // Device Guides for Non-Root / Non-ADB Users
   // --------------------------------------------------------------------------
@@ -736,6 +785,34 @@ class DeviceCompatibilityService {
               label: 'Battery Optimization',
               description: 'Ignore battery optimization',
               action: openBatteryOptimizationSettings,
+            ),
+          ],
+        );
+
+      case DeviceOEM.motorola:
+        return DeviceOptimizationGuide(
+          oem: oem,
+          title: 'Motorola MyUX Optimization',
+          subtitle: 'Disable Adaptive Battery & background execution limits',
+          highlights: [
+            'Motorola MyUX aggressively sleeps background sockets when screen turns off.',
+            'Adaptive Battery can delay periodic update checks by several hours.',
+          ],
+          steps: [
+            'Set Battery to Unrestricted: Settings → Apps → ObtainiumPlus → App battery usage → Select "Unrestricted".',
+            'Disable Background Data Restrictions: Settings → Apps → ObtainiumPlus → Mobile data & Wi-Fi → Enable "Unrestricted data usage".',
+            'Allow Unknown Apps: Settings → Apps → Special app access → Install unknown apps → ObtainiumPlus → Allow.',
+          ],
+          actions: [
+            DeviceActionItem(
+              label: 'Battery Usage Settings',
+              description: 'Set battery to Unrestricted',
+              action: openMotorolaBatterySettings,
+            ),
+            DeviceActionItem(
+              label: 'Install Unknown Apps',
+              description: 'Grant native install permission',
+              action: openInstallUnknownAppsSettings,
             ),
           ],
         );

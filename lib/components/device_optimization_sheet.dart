@@ -41,6 +41,7 @@ class _DeviceOptimizationSheetContentState
   String _androidVersion = '';
   int _sdkInt = 0;
   bool _isLoading = true;
+  bool? _isBatteryUnrestricted;
 
   @override
   void initState() {
@@ -51,6 +52,10 @@ class _DeviceOptimizationSheetContentState
   Future<void> _loadDeviceInfo() async {
     final oem = await DeviceUtils.getDeviceOEM();
     final summary = await DeviceUtils.getDeviceSummary();
+    bool? isUnrestricted;
+    try {
+      isUnrestricted = await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+    } catch (_) {}
     try {
       final info = await DeviceUtils.getAndroidInfo();
       _deviceManufacturer = info.manufacturer;
@@ -64,6 +69,7 @@ class _DeviceOptimizationSheetContentState
         _detectedOEM = oem;
         _selectedOEM = oem;
         _deviceSummary = summary;
+        _isBatteryUnrestricted = isUnrestricted;
         _isLoading = false;
       });
     }
@@ -77,6 +83,7 @@ class _DeviceOptimizationSheetContentState
     DeviceOEM.pixel,
     DeviceOEM.vivo,
     DeviceOEM.transsion,
+    DeviceOEM.motorola,
     DeviceOEM.huawei,
     DeviceOEM.generic,
   ];
@@ -394,8 +401,68 @@ class _DeviceOptimizationSheetContentState
                             ),
                             const SizedBox(height: 12),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
+                                if (_isBatteryUnrestricted != null) ...[
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    onTap: _isBatteryUnrestricted == true
+                                        ? null
+                                        : () async {
+                                            AppHaptics.selectionClick();
+                                            await DeviceCompatibilityService.requestIgnoreBatteryOptimizations();
+                                            final unrestricted = await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+                                            if (mounted) {
+                                              setState(() => _isBatteryUnrestricted = unrestricted);
+                                            }
+                                          },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _isBatteryUnrestricted == true
+                                            ? Colors.green.withValues(alpha: 0.15)
+                                            : colorScheme.errorContainer.withValues(alpha: 0.6),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: _isBatteryUnrestricted == true
+                                              ? Colors.green.withValues(alpha: 0.4)
+                                              : colorScheme.error.withValues(alpha: 0.4),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _isBatteryUnrestricted == true
+                                                ? Icons.battery_charging_full_rounded
+                                                : Icons.battery_alert_rounded,
+                                            size: 13,
+                                            color: _isBatteryUnrestricted == true
+                                                ? Colors.green
+                                                : colorScheme.error,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _isBatteryUnrestricted == true
+                                                ? 'Battery: Unrestricted'
+                                                : 'Battery: Optimized (Tap to Fix)',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _isBatteryUnrestricted == true
+                                                  ? Colors.green
+                                                  : colorScheme.error,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                const Spacer(),
                                 TextButton.icon(
                                   style: TextButton.styleFrom(
                                     visualDensity: VisualDensity.compact,

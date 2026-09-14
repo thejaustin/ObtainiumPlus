@@ -80,11 +80,6 @@ const int _retryDelaySeconds = 5;
 const int _partialHashCheckStartingSize = 1024;
 const int _partialHashCheckLowerLimit = 128;
 const int _partialHashCheckDecrement = 256;
-const int _maxDownloadPolls = 43;
-const int _downloadPollIntervalSeconds = 7;
-const int _progressUpdateIntervalMs = 500;
-const int _downloadBufferSize = 32 * 1024;
-const int _downloadProgressFallback = 30;
 const int _bgUpdateMaxAttempts = 4;
 const int _bgUpdateMaxRetryWaitSeconds = 30;
 const int _bgClientExceptionRetryWaitSeconds = 15 * 60;
@@ -146,46 +141,20 @@ Future<File> downloadFileWithRetry(
   CancellationToken? cancellationToken,
   bool Function()? isCancelled,
 }) async {
-  try {
-    return await downloadFile(
-      url,
-      fileName,
-      fileNameHasExt,
-      onProgress,
-      destDir,
-      useExisting: useExisting,
-      headers: headers,
-      allowInsecure: allowInsecure,
-      logs: logs,
-      cancellationToken: cancellationToken,
-      isCancelled: isCancelled,
-    );
-  } catch (e) {
-    // A cancellation is not one of the retryable error types, so it naturally
-    // falls through to rethrow below.
-    if (retries > 0 &&
-        (e is ClientException ||
-            e is SocketException ||
-            e is TimeoutException)) {
-      await Future.delayed(const Duration(seconds: _retryDelaySeconds));
-      return await downloadFileWithRetry(
-        url,
-        fileName,
-        fileNameHasExt,
-        onProgress,
-        destDir,
-        useExisting: useExisting,
-        headers: headers,
-        retries: (retries - 1),
-        allowInsecure: allowInsecure,
-        logs: logs,
-        cancellationToken: cancellationToken,
-        isCancelled: isCancelled,
-      );
-    } else {
-      rethrow;
-    }
-  }
+  return await AppFileService.downloadFileWithRetry(
+    url,
+    fileName,
+    fileNameHasExt,
+    onProgress,
+    destDir,
+    useExisting: useExisting,
+    headers: headers,
+    retries: retries,
+    allowInsecure: allowInsecure,
+    logs: logs,
+    isCancelled: isCancelled ??
+        (cancellationToken != null ? () => cancellationToken.isCancelled : null),
+  );
 }
 
 String hashListOfLists(List<List<int>> data) {
@@ -285,66 +254,7 @@ void deleteFile(File file) {
   }
 }
 
-/// Waits for a concurrent download to finish by polling the temp file size.
-/// Returns the completed file if one is available, or null if a fresh download is needed.
-Future<File?> _waitForConcurrentDownload(
-  File tempDownloadedFile,
-  File downloadedFile,
-  LogsProvider? logs,
-) async {
-  unawaited(
-    logs?.add(
-      'Partial download exists - will wait: ${tempDownloadedFile.uri.pathSegments.last}',
-    ),
-  );
-  int currentTempFileSize = await tempDownloadedFile.length();
-  int pollCount = 0;
-  while (pollCount < _maxDownloadPolls) {
-    pollCount++;
-    await Future.delayed(const Duration(seconds: _downloadPollIntervalSeconds));
-    if (tempDownloadedFile.existsSync()) {
-      final int newTempFileSize;
-      try {
-        newTempFileSize = await tempDownloadedFile.length();
-      } on FileSystemException {
-        return downloadedFile.existsSync() ? downloadedFile : null;
-      }
-      if (newTempFileSize > currentTempFileSize) {
-        currentTempFileSize = newTempFileSize;
-        unawaited(
-          logs?.add(
-            'Existing partial download still in progress: ${tempDownloadedFile.uri.pathSegments.last}',
-          ),
-        );
-      } else {
-        unawaited(
-          logs?.add(
-            'Ignoring existing partial download: ${tempDownloadedFile.uri.pathSegments.last}',
-          ),
-        );
-        break;
-      }
-    } else {
-      return downloadedFile.existsSync() ? downloadedFile : null;
-    }
-  }
-  if (downloadedFile.existsSync()) {
-    unawaited(
-      logs?.add(
-        'Existing partial download completed - not repeating: ${tempDownloadedFile.uri.pathSegments.last}',
-      ),
-    );
-    return downloadedFile;
-  }
-  unawaited(
-    logs?.add(
-      'Existing partial download not in progress: ${tempDownloadedFile.uri.pathSegments.last}',
-    ),
-  );
-  return null;
-}
-
-/// Downloads a file to [destDir] with progress reporting, resuming partial downloads when supported.
+/// Downloads a file to [destDir] with progress reporting, delegating to [AppFileService.downloadFile].
 Future<File> downloadFile(
   String url,
   String fileName,
@@ -358,266 +268,19 @@ Future<File> downloadFile(
   CancellationToken? cancellationToken,
   bool Function()? isCancelled,
 }) async {
-  final reqHeaders = headers ?? {};
-  final headersClient = IOClient(createHttpClient(allowInsecure));
-
-  final getReq = Request('GET', Uri.parse(url));
-  getReq.headers.addAll(reqHeaders);
-  final headersResponse = await headersClient.send(getReq);
-
-  final resHeaders = headersResponse.headers;
-
-  // Use the headers to decide what the file extension is, and
-  // whether it supports partial downloads (range request), and
-  // what the total size of the file is (if provided)
-  String ext = resHeaders['content-disposition']?.split('.').last ?? 'apk';
-  if (ext.endsWith('"')) {
-    ext = ext.substring(0, ext.length - 1);
-  }
-  final urlPath = Uri.tryParse(url)?.path ?? url;
-  if (AppSource.isApkOrContainerFile(
-    urlPath,
-    includeArchives: true,
-    includeTarballs: true,
-  )) {
-    // Preserve the real extension (.apk/.xapk/.apkm/.apks) so XAPK/APKS
-    // bundles are still detected and extracted downstream rather than forced
-    // to .apk and handed to the APK parser.
-    ext = urlPath.split('.').last.toLowerCase();
-  } else if (ext == 'attachment') {
-    ext = 'apk';
-  }
-  fileName = fileNameHasExt
-      ? fileName
-      : fileName.split('/').last; // Ensure the fileName is a file name
-  File downloadedFile = File('$destDir/$fileName.$ext');
-  if (fileNameHasExt) {
-    // If the user says the filename already has an ext, ignore whatever you inferred from above
-    downloadedFile = File('$destDir/$fileName');
-  }
-
-  bool rangeFeatureEnabled = false;
-  if (resHeaders['accept-ranges']?.isNotEmpty == true) {
-    rangeFeatureEnabled =
-        resHeaders['accept-ranges']?.trim().toLowerCase() == 'bytes';
-  }
-  headersClient.close();
-
-  // If you have an existing file that is usable,
-  // decide whether you can use it (either return full or resume partial)
-  final fullContentLength = headersResponse.contentLength;
-  if (useExisting && downloadedFile.existsSync()) {
-    final length = downloadedFile.lengthSync();
-    if (fullContentLength == null || !rangeFeatureEnabled) {
-      return downloadedFile;
-    } else {
-      if (length == fullContentLength) {
-        return downloadedFile;
-      }
-      if (length > fullContentLength) {
-        useExisting = false;
-      }
-    }
-  }
-
-  final File tempDownloadedFile = File('${downloadedFile.path}.part');
-
-  // If there is already a temp file, a download may already be in progress - account for this (see #2073)
-  final bool tempFileExists = tempDownloadedFile.existsSync();
-  if (tempFileExists && useExisting) {
-    final result = await _waitForConcurrentDownload(
-      tempDownloadedFile,
-      downloadedFile,
-      logs,
-    );
-    if (result != null) return result;
-  }
-
-  // If the range feature is not available (or you need to start a ranged req from 0),
-  // complete the already-started request, else cancel it and start a ranged request,
-  // and open the file for writing in the appropriate mode
-  final targetFileLength = () {
-    if (!useExisting) return null;
-    try {
-      if (tempDownloadedFile.existsSync()) {
-        return tempDownloadedFile.lengthSync();
-      }
-    } on FileSystemException {
-      // File disappeared between existsSync and lengthSync
-    }
-    return null;
-  }();
-  int rangeStart = targetFileLength ?? 0;
-  IOSink? sink;
-  bool sentRangeRequest = false;
-  if (rangeFeatureEnabled && fullContentLength != null && rangeStart > 0) {
-    reqHeaders.addAll({'range': 'bytes=$rangeStart-${fullContentLength - 1}'});
-    sink = tempDownloadedFile.openWrite(mode: FileMode.writeOnlyAppend);
-    sentRangeRequest = true;
-  } else if (tempDownloadedFile.existsSync()) {
-    deleteFile(tempDownloadedFile);
-  }
-  final responseWithClient = await sourceRequestStreamResponse(
-    'GET',
+  return await AppFileService.downloadFile(
     url,
-    reqHeaders,
-    {'allowInsecure': allowInsecure},
+    fileName,
+    fileNameHasExt,
+    onProgress,
+    destDir,
+    useExisting: useExisting,
+    headers: headers,
+    allowInsecure: allowInsecure,
+    logs: logs,
+    isCancelled: isCancelled ??
+        (cancellationToken != null ? () => cancellationToken.isCancelled : null),
   );
-  final HttpClient responseClient = responseWithClient.value.key;
-  final HttpClientResponse response = responseWithClient.value.value;
-  try {
-    // If we requested a byte range to resume a partial download but the server
-    // ignored it and returned the full file (200 instead of 206 Partial
-    // Content), appending would corrupt the file - discard the partial data and
-    // start the download over from the beginning.
-    if (sentRangeRequest && response.statusCode == HttpStatus.ok) {
-      await sink?.close();
-      sink = null;
-      rangeStart = 0;
-      if (tempDownloadedFile.existsSync()) {
-        deleteFile(tempDownloadedFile);
-      }
-    }
-    sink ??= tempDownloadedFile.openWrite(mode: FileMode.writeOnly);
-
-    var received = 0;
-    double? progress;
-    DateTime? lastProgressUpdate; // Track last progress update time
-    if (rangeStart > 0 && fullContentLength != null) {
-      received = rangeStart;
-    }
-
-    const downloadUIUpdateInterval = Duration(
-      milliseconds: _progressUpdateIntervalMs,
-    );
-    const downloadBufferSizeLocal = _downloadBufferSize;
-
-    // Check status code BEFORE finishing the download stream so we can
-    // abort early on errors and avoid wasting bandwidth reading a body
-    // the server already rejected.
-    if (response.statusCode < 200 || response.statusCode > 299) {
-      await sink.close();
-      sink = null;
-      await response.drain<void>().catchError((_) {
-        unawaited(
-          logs?.add('Failed to drain response body', level: LogLevel.warning),
-        );
-      });
-      if (tempDownloadedFile.existsSync()) {
-        deleteFile(tempDownloadedFile);
-      }
-      throw ObtainiumError(
-        response.reasonPhrase.isNotEmpty
-            ? response.reasonPhrase
-            : tr(
-                'errorWithHttpStatusCode',
-                args: [response.statusCode.toString()],
-              ),
-      )..url = url;
-    }
-
-    final downloadBuffer = BytesBuilder();
-    try {
-      await response
-          .map((chunk) {
-            cancellationToken?.throwIfCancelled();
-            if (isCancelled?.call() == true) {
-              throw DownloadCancelledError();
-            }
-            received += chunk.length;
-            final now = DateTime.now();
-            if (onProgress != null &&
-                (lastProgressUpdate == null ||
-                    now.difference(lastProgressUpdate!) >=
-                        downloadUIUpdateInterval)) {
-              progress = fullContentLength != null
-                  ? (received / fullContentLength * 100).clamp(0, 100)
-                  : _downloadProgressFallback.toDouble();
-              onProgress(progress, received, fullContentLength);
-              lastProgressUpdate = now;
-            }
-            return chunk;
-          })
-          .transform(
-            StreamTransformer<List<int>, List<int>>.fromHandlers(
-              handleData: (List<int> data, EventSink<List<int>> s) {
-                downloadBuffer.add(data);
-                if (downloadBuffer.length >= downloadBufferSizeLocal) {
-                  s.add(downloadBuffer.takeBytes());
-                }
-              },
-              handleDone: (EventSink<List<int>> s) {
-                if (downloadBuffer.isNotEmpty) {
-                  s.add(downloadBuffer.takeBytes());
-                }
-                s.close();
-              },
-            ),
-          )
-          .pipe(sink);
-    } catch (e) {
-      // Release the file handle, ignoring "file already closed" races that can
-      // happen when the stream is torn down mid-write. The .part file is kept so
-      // the download can be resumed later.
-      try {
-        await sink.close();
-      } catch (_) {
-        sink = null;
-      }
-      // Surface a cancellation as such (even if the underlying stream error was
-      // a file/socket error caused by the abort) so callers handle it silently.
-      if (e is CancellationException ||
-          (cancellationToken?.isCancelled ?? false)) {
-        throw CancellationException();
-      }
-      rethrow;
-    }
-    await sink.close();
-    sink = null;
-    progress = null;
-    if (onProgress != null) {
-      onProgress(progress, null, null);
-    }
-    try {
-      if (tempDownloadedFile.existsSync()) {
-        if (downloadedFile.existsSync()) {
-          try {
-            tempDownloadedFile.renameSync(downloadedFile.path);
-          } catch (firstErr) {
-            try {
-              downloadedFile.deleteSync();
-              tempDownloadedFile.renameSync(downloadedFile.path);
-            } catch (secondErr) {
-              unawaited(
-                logs?.add(
-                  'Rename of temp download failed: $firstErr / $secondErr. Temp file left at ${tempDownloadedFile.path}',
-                  level: LogLevel.warning,
-                ),
-              );
-            }
-          }
-        } else {
-          tempDownloadedFile.renameSync(downloadedFile.path);
-        }
-      }
-    } on FileSystemException {
-      // File disappeared between existence check and operation.
-      // The temp file may have been cleaned up by another process.
-      // Return the downloaded file if it still exists; otherwise the
-      // caller will re-download.
-      if (!downloadedFile.existsSync() && !tempDownloadedFile.existsSync()) {
-        rethrow;
-      }
-    }
-    return downloadedFile;
-  } finally {
-    responseClient.close();
-    unawaited(
-      sink?.close().catchError((_) {
-        logs?.add('Failed to close download sink', level: LogLevel.warning);
-      }),
-    );
-  }
 }
 
 /// Best-effort probe of a download's size via its Content-Length header. Returns
@@ -683,6 +346,33 @@ String? formatDownloadSize(int? receivedBytes, int? totalBytes) {
     return '${formatBytes(receivedBytes)} / ${formatBytes(totalBytes)}';
   }
   return formatBytes(receivedBytes);
+}
+
+/// Formats download transfer rate as a human-readable string (e.g. "4.2 MB/s").
+String? formatSpeed(double? bytesPerSec) {
+  if (bytesPerSec == null || bytesPerSec <= 0) return null;
+  return '${formatBytes(bytesPerSec.round())}/s';
+}
+
+/// Formats estimated time remaining for a download (e.g. "15s", "1m 30s").
+String? formatEta(int? remainingBytes, double? bytesPerSec) {
+  if (remainingBytes == null ||
+      remainingBytes <= 0 ||
+      bytesPerSec == null ||
+      bytesPerSec <= 1024) {
+    return null;
+  }
+  final seconds = (remainingBytes / bytesPerSec).round();
+  if (seconds < 1) return null;
+  if (seconds < 60) return '${seconds}s';
+  final minutes = seconds ~/ 60;
+  final remSeconds = seconds % 60;
+  if (minutes < 60) {
+    return remSeconds > 0 ? '${minutes}m ${remSeconds}s' : '${minutes}m';
+  }
+  final hours = minutes ~/ 60;
+  final remMinutes = minutes % 60;
+  return '${hours}h ${remMinutes}m';
 }
 
 Future<List<PackageInfo>> getAllInstalledInfo() =>
@@ -1128,9 +818,12 @@ class AppsProvider with ChangeNotifier {
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
         headers: headers,
-        (double? progress) {
+        (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
           int? prog = progress?.ceil();
           if (apps[app.id] != null) {
+            if (received != null) apps[app.id]!.downloadReceivedBytes = received;
+            if (total != null) apps[app.id]!.downloadTotalBytes = total;
+            apps[app.id]!.downloadSpeedBytesPerSec = speedBytesPerSec;
             apps[app.id]!.downloadProgress = progress;
             // notifyListeners() removed here to prevent massive UI rebuilds
           }
@@ -1138,6 +831,8 @@ class AppsProvider with ChangeNotifier {
             app.finalName,
             prog ?? 100,
             appId: app.id,
+            receivedBytes: received,
+            totalBytes: total,
           );
           final now = DateTime.now();
           final shouldNotify = prog != null &&
