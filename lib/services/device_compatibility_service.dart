@@ -563,6 +563,29 @@ class DeviceCompatibilityService {
     return false;
   }
 
+  /// Opens Shizuku or ShizukuPlus manager app.
+  static Future<bool> openShizukuManager() async {
+    final intents = [
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        package: AppConstants.shizukuPlusId,
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        package: 'moe.shizuku.privileged.api',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+    ];
+    for (final intent in intents) {
+      try {
+        await intent.launch();
+        return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
   // --------------------------------------------------------------------------
   // Device Guides for Non-Root / Non-ADB Users
   // --------------------------------------------------------------------------
@@ -577,6 +600,7 @@ class DeviceCompatibilityService {
           subtitle: 'Resolve Auto Blocker, App Protection scans & background sleep',
           highlights: [
             'One UI 6.0+ Auto Blocker can silently block APK sideloading and package sessions.',
+            'Shizuku / ShizukuPlus elevated binder completely bypasses One UI Auto Blocker restrictions.',
             'Samsung App Protection (McAfee) pauses installation for 5–10s to verify APKs.',
             'Battery Background Limits puts download workers to sleep when the screen turns off.',
           ],
@@ -602,6 +626,11 @@ class DeviceCompatibilityService {
               description: 'Grant native install permission',
               action: openInstallUnknownAppsSettings,
             ),
+            DeviceActionItem(
+              label: 'Shizuku / ShizukuPlus Manager',
+              description: 'Manage elevated installer bypass',
+              action: openShizukuManager,
+            ),
           ],
         );
 
@@ -612,6 +641,7 @@ class DeviceCompatibilityService {
           subtitle: 'Bypass MIUI installer delays, configure Autostart & Battery',
           highlights: [
             'MIUI Security installer intercepts session installs with 5–10s countdowns.',
+            'Shizuku / ShizukuPlus elevated mode eliminates the MIUI Security countdown completely.',
             'Without Autostart permission, background update checks and downloads are terminated immediately.',
             'MIUI Battery Saver restricts background networking when app is closed.',
           ],
@@ -635,6 +665,11 @@ class DeviceCompatibilityService {
               label: 'Developer Options',
               description: 'Access System Optimization toggle',
               action: openXiaomiDeveloperSettings,
+            ),
+            DeviceActionItem(
+              label: 'Shizuku / ShizukuPlus Manager',
+              description: 'Eliminate MIUI installation countdowns',
+              action: openShizukuManager,
             ),
           ],
         );

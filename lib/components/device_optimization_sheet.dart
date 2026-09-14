@@ -54,6 +54,7 @@ class _DeviceOptimizationSheetContentState
   bool _isLoading = true;
   bool? _isBatteryUnrestricted;
   ShizukuLiveStatus _shizukuStatus = ShizukuLiveStatus.rootless;
+  bool _isShizukuPlus = false;
 
   @override
   void initState() {
@@ -79,8 +80,10 @@ class _DeviceOptimizationSheetContentState
     try {
       final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
       if (pkg == null) {
+        _isShizukuPlus = false;
         return ShizukuLiveStatus.rootless;
       }
+      _isShizukuPlus = pkg == AppConstants.shizukuPlusId;
       final status = await ShizukuApkInstaller().checkPermission();
       if (status?.startsWith('authorized') == true ||
           status?.startsWith('granted') == true) {
@@ -91,6 +94,7 @@ class _DeviceOptimizationSheetContentState
       }
       return ShizukuLiveStatus.notRunning;
     } catch (_) {
+      _isShizukuPlus = false;
       return ShizukuLiveStatus.rootless;
     }
   }
@@ -222,13 +226,14 @@ class _DeviceOptimizationSheetContentState
   }
 
   String _getShizukuChipLabel() {
+    final name = _isShizukuPlus ? 'ShizukuPlus' : 'Shizuku';
     switch (_shizukuStatus) {
       case ShizukuLiveStatus.active:
-        return 'Shizuku: Active (Turbo)';
+        return '$name: Active (Turbo)';
       case ShizukuLiveStatus.permissionNeeded:
-        return 'Shizuku: Tap to Authorize';
+        return '$name: Tap to Authorize';
       case ShizukuLiveStatus.notRunning:
-        return 'Shizuku: Not Running (Tap)';
+        return '$name: Not Running (Tap)';
       case ShizukuLiveStatus.rootless:
         return 'Rootless Mode (Active)';
     }
@@ -237,7 +242,9 @@ class _DeviceOptimizationSheetContentState
   IconData _getShizukuChipIcon() {
     switch (_shizukuStatus) {
       case ShizukuLiveStatus.active:
-        return Icons.bolt_rounded;
+        return _isShizukuPlus
+            ? Icons.electric_bolt_rounded
+            : Icons.bolt_rounded;
       case ShizukuLiveStatus.permissionNeeded:
         return Icons.key_rounded;
       case ShizukuLiveStatus.notRunning:
@@ -265,10 +272,14 @@ class _DeviceOptimizationSheetContentState
     switch (_shizukuStatus) {
       case ShizukuLiveStatus.active:
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Shizuku Turbo Mode is active. Elevated binder IPC enables sub-second installs.'),
+          SnackBar(
+            content: Text(
+              _isShizukuPlus
+                  ? 'ShizukuPlus Turbo Mode is active. Elevated Unified Privilege binder IPC enables sub-second installs.'
+                  : 'Shizuku Turbo Mode is active. Elevated binder IPC enables sub-second installs.',
+            ),
             behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
         break;
