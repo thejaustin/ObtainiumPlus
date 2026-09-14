@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -46,11 +47,15 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     _isExpanded = widget.initiallyExpanded;
     _expandController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 260),
       value: widget.initiallyExpanded ? 1.0 : 0.0,
     );
     _iconTurnAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
-      CurvedAnimation(parent: _expandController, curve: Curves.easeOutCubic),
+      CurvedAnimation(
+        parent: _expandController,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      ),
     );
   }
 
@@ -61,6 +66,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
   }
 
   void _handleExpansionChange(bool expanded) {
+    AppHaptics.selectionClick();
     setState(() => _isExpanded = expanded);
     if (expanded) {
       _expandController.forward();

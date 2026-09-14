@@ -1158,5 +1158,9 @@
     "rootInstallerDescription": "Use elevated root access (su) to install and update apps silently",
     "devicePerformanceAndCompatibility": "Device Compatibility & Performance",
     "devicePerformanceAndCompatibilitySubtitle": "Bypass OEM install blocks & unthrottle background transfers",
-    "tune": "Tune"
+    "tune": "Tune",
+    "shizukuPlusDetected": "ShizukuPlus detected",
+    "shizukuDetected": "Shizuku detected",
+    "shizukuStatusTurbo": "Turbo Mode active",
+    "shizukuStatusStandby": "Service running (tap to test)"
 }

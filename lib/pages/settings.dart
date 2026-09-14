@@ -12,6 +12,7 @@ import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -172,6 +173,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             selected: isSelected,
                             onSelected: (selected) {
                               if (selected) {
+                                AppHaptics.selectionClick();
                                 setState(
                                   () => _selectedSectionIndex = entry.key,
                                 );
@@ -216,9 +218,32 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
+            sliver: SliverToBoxAdapter(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, 0.03),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey<String>(
+                    _searchQuery.isNotEmpty
+                        ? 'search_$_searchQuery'
+                        : 'tab_$_selectedSectionIndex',
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 0) ...[
                         ThemeSettingsSection(
@@ -280,30 +305,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 48),
                       _buildFooter(context),
                       const SizedBox(height: 32),
-                    ]
-                    .asMap()
-                    .entries
-                    .map(
-                      (e) => TweenAnimationBuilder<double>(
-                        key: ValueKey('${e.key}_${_selectedSectionIndex}'),
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: Duration(
-                          milliseconds: 300 + (e.key * 75).clamp(0, 600),
-                        ),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, value, child) {
-                          return Opacity(
-                            opacity: value,
-                            child: Transform.translate(
-                              offset: Offset(0, 30 * (1 - value)),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: e.value,
-                      ),
-                    )
-                    .toList(),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

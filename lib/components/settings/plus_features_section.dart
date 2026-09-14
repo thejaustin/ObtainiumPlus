@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 /// Master switch for all Obtainium+ features.
@@ -34,29 +35,50 @@ class PlusFeaturesSection extends StatelessWidget {
 
     return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
-        return Card(
-          elevation: 0,
+        final bool isEnabled = settings.enableAllPlusFeatures;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
           margin: const EdgeInsets.symmetric(vertical: 4),
-          color: colorScheme.primary.withValues(alpha: 0.08),
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: isEnabled
+                ? colorScheme.primaryContainer.withValues(alpha: 0.25)
+                : colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.18),
+            border: Border.all(
+              color: isEnabled
+                  ? colorScheme.primary.withValues(alpha: 0.45)
+                  : colorScheme.outlineVariant.withValues(alpha: 0.18),
+              width: isEnabled ? 1.2 : 1.0,
             ),
           ),
           child: SwitchListTile.adaptive(
             dense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            secondary: Icon(
-              Icons.auto_awesome_rounded,
-              color: colorScheme.primary,
-              size: 20,
+            secondary: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
+              child: Icon(
+                isEnabled
+                    ? Icons.auto_awesome_rounded
+                    : Icons.auto_awesome_outlined,
+                key: ValueKey<bool>(isEnabled),
+                color: isEnabled
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
             ),
             title: Text(
               tr('enableAllPlusFeatures'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isEnabled
+                    ? colorScheme.primary
+                    : colorScheme.onSurface,
+              ),
             ),
             subtitle: Text(
               tr('enableAllPlusFeaturesDescription'),
@@ -64,8 +86,11 @@ class PlusFeaturesSection extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            value: settings.enableAllPlusFeatures,
-            onChanged: (value) => settings.enableAllPlusFeatures = value,
+            value: isEnabled,
+            onChanged: (value) {
+              AppHaptics.selectionClick();
+              settings.enableAllPlusFeatures = value;
+            },
           ),
         );
       },
