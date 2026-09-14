@@ -19,7 +19,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/logger.dart';
 
 /// App installation and update settings
-class InstallationSection extends StatelessWidget {
+class InstallationSection extends StatefulWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
@@ -29,15 +29,69 @@ class InstallationSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
+  @override
+  State<InstallationSection> createState() => _InstallationSectionState();
+}
+
+class _InstallationSectionState extends State<InstallationSection>
+    with WidgetsBindingObserver {
+  String? _installedShizukuPkg;
+  bool _isShizukuGranted = false;
+  bool _isCheckingShizuku = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkShizukuStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkShizukuStatus();
+    }
+  }
+
+  Future<void> _checkShizukuStatus() async {
+    if (_isCheckingShizuku) return;
+    _isCheckingShizuku = true;
+    try {
+      final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
+      bool granted = false;
+      if (pkg != null) {
+        final status = await ShizukuApkInstaller().checkPermission();
+        granted = status?.startsWith('authorized') == true ||
+            status?.startsWith('granted') == true;
+      }
+      if (mounted) {
+        setState(() {
+          _installedShizukuPkg = pkg;
+          _isShizukuGranted = granted;
+        });
+      }
+    } catch (_) {
+    } finally {
+      _isCheckingShizuku = false;
+    }
+  }
+
   bool _matches(String text, {bool isAdvanced = false}) {
-    if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
-    if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    if (isAdvanced && !(widget.showAdvancedSettings ?? false)) return false;
+    if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
+    return text.toLowerCase().contains(widget.searchQuery!.toLowerCase());
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final bool isSearching =
+        widget.searchQuery != null && widget.searchQuery!.isNotEmpty;
 
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, behaviorSettings, child) {
@@ -310,17 +364,145 @@ class InstallationSection extends StatelessWidget {
               onChanged: (v) => behaviorSettings.removeOnExternalUninstall = v,
             ),
 
-          // Shizuku / Sui
-          if (_matches(tr('useShizuku')))
+          // Shizuku / Sui / ShizukuPlus
+          if (_matches(tr('useShizuku'))) ...[
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.terminal_outlined),
-              title: Text(
-                tr('useShizuku'),
-                style: Theme.of(context).textTheme.bodyLarge,
+              secondary: Icon(
+                _installedShizukuPkg == AppConstants.shizukuPlusId
+                    ? Icons.electric_bolt_rounded
+                    : Icons.terminal_outlined,
+                color: behaviorSettings.useShizuku
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              subtitle: Text(tr('useShizukuDescription')),
+              title: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      tr('useShizuku'),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (_installedShizukuPkg != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _installedShizukuPkg == AppConstants.shizukuPlusId
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _installedShizukuPkg == AppConstants.shizukuPlusId
+                                ? Icons.electric_bolt_rounded
+                                : Icons.check_circle_outline_rounded,
+                            size: 11,
+                            color: _installedShizukuPkg == AppConstants.shizukuPlusId
+                                ? Theme.of(context).colorScheme.onPrimaryContainer
+                                : Theme.of(context).colorScheme.onSecondaryContainer,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            _installedShizukuPkg == AppConstants.shizukuPlusId
+                                ? 'ShizukuPlus'
+                                : 'Shizuku',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: _installedShizukuPkg == AppConstants.shizukuPlusId
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : Theme.of(context).colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(tr('useShizukuDescription')),
+                  if (_installedShizukuPkg != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          _isShizukuGranted
+                              ? Icons.verified_rounded
+                              : Icons.warning_amber_rounded,
+                          size: 13,
+                          color: _isShizukuGranted
+                              ? Colors.green
+                              : Colors.orange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _isShizukuGranted
+                              ? tr('shizukuStatusTurbo')
+                              : (_installedShizukuPkg == AppConstants.shizukuPlusId
+                                  ? tr('shizukuPlusDetected')
+                                  : tr('shizukuDetected')),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: _isShizukuGranted
+                                ? Colors.green
+                                : Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () {
+                            AppHaptics.lightImpact();
+                            ShizukuInstaller.openShizukuManager();
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _installedShizukuPkg == AppConstants.shizukuPlusId
+                                      ? tr('openShizukuPlus')
+                                      : tr('openShizuku'),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                Icon(
+                                  Icons.open_in_new_rounded,
+                                  size: 12,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
               value: behaviorSettings.useShizuku,
               onChanged: (enable) async {
+                AppHaptics.selectionClick();
                 if (!enable) {
                   behaviorSettings.useShizuku = false;
                   if (behaviorSettings.installerMode == 'shizuku') {
@@ -339,6 +521,7 @@ class InstallationSection extends StatelessWidget {
                 if (isGranted) {
                   behaviorSettings.useShizuku = true;
                   behaviorSettings.installerMode = 'shizuku';
+                  _checkShizukuStatus();
                   return;
                 }
                 behaviorSettings.useShizuku = false;
@@ -384,23 +567,67 @@ class InstallationSection extends StatelessWidget {
                       ObtainiumError(tr('shizukuBinderNotFound')),
                     );
                 }
+                _checkShizukuStatus();
               },
             ),
 
-          // Shizuku Pretend to be Google Play
-          if (_matches(tr('shizukuPretendToBeGooglePlay')) &&
-              behaviorSettings.useShizuku)
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.shop_outlined),
-              title: Text(
-                tr('shizukuPretendToBeGooglePlay'),
-                style: Theme.of(context).textTheme.bodyLarge,
+            // Animated nested child option: Shizuku Pretend to be Google Play
+            if (_matches(tr('shizukuPretendToBeGooglePlay')))
+              AnimatedSize(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: behaviorSettings.useShizuku
+                    ? Container(
+                        margin: const EdgeInsets.only(
+                          left: 20,
+                          right: 16,
+                          top: 4,
+                          bottom: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border(
+                            left: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.6),
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: SwitchListTile.adaptive(
+                            dense: true,
+                            secondary: const Icon(Icons.shop_outlined, size: 20),
+                            title: Text(
+                              tr('shizukuPretendToBeGooglePlay'),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              tr('shizukuPretendToBeGooglePlayDescription'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            value: behaviorSettings.shizukuPretendToBeGooglePlay,
+                            onChanged: (v) {
+                              AppHaptics.selectionClick();
+                              behaviorSettings.shizukuPretendToBeGooglePlay = v;
+                            },
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
-              subtitle: Text(tr('shizukuPretendToBeGooglePlayDescription')),
-              value: behaviorSettings.shizukuPretendToBeGooglePlay,
-              onChanged: (v) =>
-                  behaviorSettings.shizukuPretendToBeGooglePlay = v,
-            ),
+          ],
 
           // Root Installation
           if (_matches(tr('rootInstaller')))
@@ -413,6 +640,7 @@ class InstallationSection extends StatelessWidget {
               subtitle: Text(tr('rootInstallerDescription')),
               value: behaviorSettings.installerMode == 'root',
               onChanged: (enable) async {
+                AppHaptics.selectionClick();
                 if (!enable) {
                   behaviorSettings.installerMode = behaviorSettings.useShizuku
                       ? 'shizuku'
