@@ -393,4 +393,30 @@ class AppUpdateService {
     }
     return updateAppIds;
   }
+
+  /// Single-pass variant: returns installed-apps-with-pending-updates as a
+  /// [Set] (for O(1) lookup) and not-yet-installed apps as a [List], avoiding
+  /// two separate O(n) passes over the apps map.
+  static ({Set<String> updates, List<String> newInstalls}) findAllPendingUpdates(
+    Map<String, AppInMemory> apps,
+  ) {
+    final updates = <String>{};
+    final newInstalls = <String>[];
+    for (final entry in apps.values) {
+      final app = entry.app;
+      if (app.installedVersion == null) {
+        if (app.additionalSettings['trackOnly'] != true &&
+            app.latestVersion.isNotEmpty) {
+          newInstalls.add(app.id);
+        }
+      } else if (areVersionsDifferent(
+        app,
+        app.installedVersion,
+        app.latestVersion,
+      )) {
+        updates.add(app.id);
+      }
+    }
+    return (updates: updates, newInstalls: newInstalls);
+  }
 }

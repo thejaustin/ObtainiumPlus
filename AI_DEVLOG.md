@@ -91,6 +91,13 @@ Implemented 7 more optimizations across 2 PRs targeting "loading times between c
 - [x] PR #294: merged as `c7ecb098`, auto-bump to p19 building
 - [ ] Danger CI: `continue-on-error: true` + 5-min step timeout works; hangs because `DANGER_GITHUB_API_TOKEN` secret not configured in repo — when token is added, danger will actually post PR comments
 
+**Session continued — more performance improvements (same date, context resumed).**
+
+**PR #295** (feature/perf-find-updates-lazy) — open, CI pending:
+10. **Single-pass update discovery** — `apps.dart:build()` called `findExistingUpdates()` twice (two O(n) passes). Replaced with `findAllPendingUpdates()` returning `({Set<String> updates, List<String> newInstalls})` in one loop. `existingUpdates` is now a `Set<String>`, making the `pinUpdates` sort loop O(n) instead of O(n²) (was calling `List.contains()` inside a per-app `where()`).
+11. **Lazy `getSource()` in `getCorrectedInstallStatusAppIfPossible`** — eager call to `SourceProvider.getSource()` (which invokes `_buildSources()` = 28 new objects for `overrideSource` apps) was computed even when `versionDetectionIsStandard` is false (the common case). Now deferred to the one narrow branch that actually uses `naiveStandardVersionDetection`. Eliminates `_buildSources()` during sync saves for virtually all apps; halves it during `loadApps()` for `overrideSource` apps.
+12. **`removeApps` — `getAppsDir()` per-app → once** — moved outside `Future.wait` map, matching the fix applied to `saveApps` in PR #294.
+
 ### 2026-09-09 — Claude Code (Sonnet 4.6)
 
 **CI triage + feature/add-download-update-fixes PR creation.**
