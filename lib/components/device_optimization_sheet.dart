@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
+import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
-/// Shows the Device Tuning & Optimization Sheet.
+/// Live connectivity and permission status for Shizuku/ShizukuPlus.
+enum ShizukuLiveStatus {
+  active,
+  permissionNeeded,
+  notRunning,
+  rootless,
+}
+
+/// Shows the Device Compatibility & Performance Sheet.
 Future<void> showDeviceOptimizationSheet({required BuildContext context}) {
   return showDraggableModalBottomSheet<void>(
     context: context,
@@ -32,7 +42,8 @@ class DeviceOptimizationSheetContent extends StatefulWidget {
 }
 
 class _DeviceOptimizationSheetContentState
-    extends State<DeviceOptimizationSheetContent> {
+    extends State<DeviceOptimizationSheetContent>
+    with WidgetsBindingObserver {
   DeviceOEM? _selectedOEM;
   DeviceOEM _detectedOEM = DeviceOEM.generic;
   String _deviceSummary = '';
@@ -42,11 +53,61 @@ class _DeviceOptimizationSheetContentState
   int _sdkInt = 0;
   bool _isLoading = true;
   bool? _isBatteryUnrestricted;
+  ShizukuLiveStatus _shizukuStatus = ShizukuLiveStatus.rootless;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDeviceInfo();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshLiveStatus();
+    }
+  }
+
+  Future<ShizukuLiveStatus> _evaluateShizukuStatus() async {
+    try {
+      final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
+      if (pkg == null) {
+        return ShizukuLiveStatus.rootless;
+      }
+      final status = await ShizukuApkInstaller().checkPermission();
+      if (status?.startsWith('authorized') == true ||
+          status?.startsWith('granted') == true) {
+        return ShizukuLiveStatus.active;
+      }
+      if (status == 'denied') {
+        return ShizukuLiveStatus.permissionNeeded;
+      }
+      return ShizukuLiveStatus.notRunning;
+    } catch (_) {
+      return ShizukuLiveStatus.rootless;
+    }
+  }
+
+  Future<void> _refreshLiveStatus() async {
+    bool? isUnrestricted;
+    try {
+      isUnrestricted =
+          await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+    } catch (_) {}
+    final shizuku = await _evaluateShizukuStatus();
+    if (mounted) {
+      setState(() {
+        _isBatteryUnrestricted = isUnrestricted;
+        _shizukuStatus = shizuku;
+      });
+    }
   }
 
   Future<void> _loadDeviceInfo() async {
@@ -54,8 +115,10 @@ class _DeviceOptimizationSheetContentState
     final summary = await DeviceUtils.getDeviceSummary();
     bool? isUnrestricted;
     try {
-      isUnrestricted = await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+      isUnrestricted =
+          await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
     } catch (_) {}
+    final shizuku = await _evaluateShizukuStatus();
     try {
       final info = await DeviceUtils.getAndroidInfo();
       _deviceManufacturer = info.manufacturer;
@@ -70,6 +133,7 @@ class _DeviceOptimizationSheetContentState
         _selectedOEM = oem;
         _deviceSummary = summary;
         _isBatteryUnrestricted = isUnrestricted;
+        _shizukuStatus = shizuku;
         _isLoading = false;
       });
     }
@@ -157,6 +221,94 @@ class _DeviceOptimizationSheetContentState
     );
   }
 
+  String _getShizukuChipLabel() {
+    switch (_shizukuStatus) {
+      case ShizukuLiveStatus.active:
+        return 'Shizuku: Active (Turbo)';
+      case ShizukuLiveStatus.permissionNeeded:
+        return 'Shizuku: Tap to Authorize';
+      case ShizukuLiveStatus.notRunning:
+        return 'Shizuku: Not Running (Tap)';
+      case ShizukuLiveStatus.rootless:
+        return 'Rootless Mode (Active)';
+    }
+  }
+
+  IconData _getShizukuChipIcon() {
+    switch (_shizukuStatus) {
+      case ShizukuLiveStatus.active:
+        return Icons.bolt_rounded;
+      case ShizukuLiveStatus.permissionNeeded:
+        return Icons.key_rounded;
+      case ShizukuLiveStatus.notRunning:
+        return Icons.play_arrow_rounded;
+      case ShizukuLiveStatus.rootless:
+        return Icons.verified_user_outlined;
+    }
+  }
+
+  Color _getShizukuChipColor(ColorScheme colorScheme) {
+    switch (_shizukuStatus) {
+      case ShizukuLiveStatus.active:
+        return Colors.green;
+      case ShizukuLiveStatus.permissionNeeded:
+        return Colors.orange;
+      case ShizukuLiveStatus.notRunning:
+        return colorScheme.primary;
+      case ShizukuLiveStatus.rootless:
+        return colorScheme.tertiary;
+    }
+  }
+
+  Future<void> _handleShizukuChipTap(BuildContext context) async {
+    AppHaptics.selectionClick();
+    switch (_shizukuStatus) {
+      case ShizukuLiveStatus.active:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Shizuku Turbo Mode is active. Elevated binder IPC enables sub-second installs.'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        break;
+      case ShizukuLiveStatus.permissionNeeded:
+        try {
+          await ShizukuApkInstaller().checkPermission();
+          _refreshLiveStatus();
+        } catch (_) {}
+        break;
+      case ShizukuLiveStatus.notRunning:
+        await ShizukuInstaller.openShizukuManager();
+        break;
+      case ShizukuLiveStatus.rootless:
+        showDialog<void>(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.verified_user_outlined, size: 22),
+                SizedBox(width: 8),
+                Text('Rootless Mode Active'),
+              ],
+            ),
+            content: const Text(
+              'ObtainiumPlus operates with 100% native Android package management without requiring root or ADB access.\n\n'
+              '• Android 14+: Background updates install silently via "Update Ownership" & "User Pre-approval".\n\n'
+              '• Earlier Android versions: Installing or launching Shizuku / ShizukuPlus enables silent elevated background installations.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -203,7 +355,7 @@ class _DeviceOptimizationSheetContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Device Tuning & Optimization',
+                      'Device Compatibility & Performance',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -400,7 +552,10 @@ class _DeviceOptimizationSheetContentState
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 if (_isBatteryUnrestricted != null) ...[
                                   InkWell(
@@ -462,7 +617,43 @@ class _DeviceOptimizationSheetContentState
                                     ),
                                   ),
                                 ],
-                                const Spacer(),
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(8),
+                                  onTap: () => _handleShizukuChipTap(context),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getShizukuChipColor(colorScheme).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: _getShizukuChipColor(colorScheme).withValues(alpha: 0.4),
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _getShizukuChipIcon(),
+                                          size: 13,
+                                          color: _getShizukuChipColor(colorScheme),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _getShizukuChipLabel(),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: _getShizukuChipColor(colorScheme),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                                 TextButton.icon(
                                   style: TextButton.styleFrom(
                                     visualDensity: VisualDensity.compact,
@@ -724,49 +915,157 @@ class _DeviceOptimizationSheetContentState
 
                     const SizedBox(height: 14),
 
-                    // Shizuku Turbo Polling Card
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.primary.withValues(alpha: 0.25),
+                    // Shizuku Status Card
+                    if (_shizukuStatus == ShizukuLiveStatus.active)
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.bolt_rounded,
+                              color: colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Shizuku & ShizukuPlus Turbo Mode Active',
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Elevated installs bypass OEM verification countdowns completely. With 350ms concurrent turbo polling and progressive binder handshakes, installs complete in < 1 second.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_shizukuStatus == ShizukuLiveStatus.notRunning)
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.play_circle_outline_rounded,
+                              color: colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Shizuku Installed (Service Stopped)',
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Start Shizuku via Wireless Debugging or root to activate silent elevated installs and instant package commitments.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FilledButton.tonal(
+                                    style: FilledButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    onPressed: () => ShizukuInstaller.openShizukuManager(),
+                                    child: const Text('Launch Shizuku'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_shizukuStatus == ShizukuLiveStatus.permissionNeeded)
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.key_rounded,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Shizuku Authorization Needed',
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Grant ObtainiumPlus permission to connect to Shizuku\'s binder IPC for elevated unattended package installation.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FilledButton.tonal(
+                                    style: FilledButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    onPressed: () async {
+                                      try {
+                                        await ShizukuApkInstaller().checkPermission();
+                                        _refreshLiveStatus();
+                                      } catch (_) {}
+                                    },
+                                    child: const Text('Authorize'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.speed_rounded,
-                            color: colorScheme.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Shizuku & ShizukuPlus Turbo Mode Active',
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Elevated installs bypass OEM verification countdowns completely. With 350ms concurrent turbo polling and progressive binder handshakes, installs complete in < 1 second.',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
                     const SizedBox(height: 10),
 

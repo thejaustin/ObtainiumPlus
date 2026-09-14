@@ -1155,5 +1155,8 @@
     "partialBatchSuccess": "{} updated, {} failed",
     "loadMore": "Load More",
     "rootInstaller": "Root Installation",
-    "rootInstallerDescription": "Use elevated root access (su) to install and update apps silently"
+    "rootInstallerDescription": "Use elevated root access (su) to install and update apps silently",
+    "devicePerformanceAndCompatibility": "Device Compatibility & Performance",
+    "devicePerformanceAndCompatibilitySubtitle": "Bypass OEM install blocks & unthrottle background transfers",
+    "tune": "Tune"
 }

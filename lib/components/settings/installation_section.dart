@@ -42,8 +42,11 @@ class InstallationSection extends StatelessWidget {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, behaviorSettings, child) {
         List<Widget> children = [
-          // Device Tuning & Optimization
-          if (_matches('device tuning') ||
+          // Device Compatibility & Performance
+          if (_matches(tr('devicePerformanceAndCompatibility')) ||
+              _matches('compatibility') ||
+              _matches('performance') ||
+              _matches('device tuning') ||
               _matches('device optimization') ||
               _matches('tuning') ||
               _matches('speed') ||
@@ -57,6 +60,7 @@ class InstallationSection extends StatelessWidget {
               _matches('nothing') ||
               _matches('vivo') ||
               _matches('transsion') ||
+              _matches('motorola') ||
               _matches('autoblocker') ||
               _matches('freeze') ||
               !isSearching)
@@ -74,7 +78,7 @@ class InstallationSection extends StatelessWidget {
                 ),
               ),
               title: Text(
-                'Device Tuning & Optimization',
+                tr('devicePerformanceAndCompatibility'),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -87,8 +91,8 @@ class InstallationSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Bypass OEM install blocks & unthrottle background transfers',
+                      Text(
+                        tr('devicePerformanceAndCompatibilitySubtitle'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -114,7 +118,7 @@ class InstallationSection extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
                 icon: const Icon(Icons.tune_rounded, size: 16),
-                label: const Text('Tune'),
+                label: Text(tr('tune')),
                 onPressed: () {
                   AppHaptics.selectionClick();
                   showDeviceOptimizationSheet(context: context);
