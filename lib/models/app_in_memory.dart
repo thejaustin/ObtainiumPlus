@@ -14,6 +14,7 @@ class DownloadState {
   final ValueNotifier<double?> progress = ValueNotifier(null);
   int? receivedBytes;
   int? totalBytes;
+  double? bytesPerSecond;
 }
 
 class AppInMemory {
@@ -26,13 +27,23 @@ class AppInMemory {
   ValueNotifier<double?> get downloadProgressNotifier => download.progress;
 
   double? get downloadProgress => download.progress.value;
-  set downloadProgress(double? value) => download.progress.value = value;
+  set downloadProgress(double? value) {
+    download.progress.value = value;
+    if (value == null) {
+      download.bytesPerSecond = null;
+      download.receivedBytes = null;
+      download.totalBytes = null;
+    }
+  }
 
   int? get downloadReceivedBytes => download.receivedBytes;
   set downloadReceivedBytes(int? value) => download.receivedBytes = value;
 
   int? get downloadTotalBytes => download.totalBytes;
   set downloadTotalBytes(int? value) => download.totalBytes = value;
+
+  double? get downloadSpeedBytesPerSec => download.bytesPerSecond;
+  set downloadSpeedBytesPerSec(double? value) => download.bytesPerSecond = value;
 
   AppInMemory(
     this.app,

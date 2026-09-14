@@ -550,7 +550,7 @@ class AppListTile extends StatelessWidget {
                                 child: downloadProgress != null
                                     ? SizedBox(
                                         key: const ValueKey('download'),
-                                        width: downloadProgress >= 0 ? 88 : 65,
+                                        width: downloadProgress >= 0 ? 102 : 65,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -563,17 +563,38 @@ class AppListTile extends StatelessWidget {
                                                 children: [
                                                   FittedBox(
                                                     fit: BoxFit.scaleDown,
-                                                    child: Text(
-                                                      downloadProgress >= 0
-                                                          ? '${downloadProgress.toInt()}%'
-                                                          : tr('installing'),
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .labelSmall
-                                                          ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
+                                                    child: Builder(
+                                                      builder: (context) {
+                                                        if (downloadProgress < 0) {
+                                                          return Text(
+                                                            tr('installing'),
+                                                            style: Theme.of(context)
+                                                                .textTheme
+                                                                .labelSmall
+                                                                ?.copyWith(
+                                                                  fontWeight:
+                                                                      FontWeight.bold,
+                                                                ),
+                                                          );
+                                                        }
+                                                        final speed = formatSpeed(
+                                                          appInMemory
+                                                              .downloadSpeedBytesPerSec,
+                                                        );
+                                                        final label = speed != null
+                                                            ? '${downloadProgress.toInt()}% • $speed'
+                                                            : '${downloadProgress.toInt()}%';
+                                                        return Text(
+                                                          label,
+                                                          style: Theme.of(context)
+                                                              .textTheme
+                                                              .labelSmall
+                                                              ?.copyWith(
+                                                                fontWeight:
+                                                                    FontWeight.bold,
+                                                              ),
+                                                        );
+                                                      },
                                                     ),
                                                   ),
                                                   const SizedBox(height: 6),

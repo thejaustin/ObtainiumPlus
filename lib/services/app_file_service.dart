@@ -534,6 +534,8 @@ class AppFileService {
 
       double? progress;
       DateTime? lastProgressUpdate;
+      int lastReceived = received;
+      double? smoothedSpeed;
       const downloadUIUpdateInterval = Duration(milliseconds: 400);
       const downloadBufferSize = 256 * 1024; // 256KB buffer for max I/O throughput
       final downloadBuffer = BytesBuilder();
@@ -557,15 +559,31 @@ class AppFileService {
                 (lastProgressUpdate == null ||
                     now.difference(lastProgressUpdate!) >=
                         downloadUIUpdateInterval)) {
+              if (lastProgressUpdate != null) {
+                final deltaMs = now.difference(lastProgressUpdate!).inMilliseconds;
+                final deltaBytes = received - lastReceived;
+                if (deltaMs > 0) {
+                  final instantSpeed = (deltaBytes * 1000.0) / deltaMs;
+                  smoothedSpeed = smoothedSpeed == null
+                      ? instantSpeed
+                      : (0.7 * smoothedSpeed! + 0.3 * instantSpeed);
+                }
+              }
+              lastReceived = received;
+              lastProgressUpdate = now;
+
               progress = fullContentLength != null && fullContentLength > 0
                   ? clampDouble((received / fullContentLength) * 100, 0, 100)
                   : null;
               try {
-                onProgress(progress, received, fullContentLength);
+                onProgress(progress, received, fullContentLength, smoothedSpeed);
               } catch (_) {
-                onProgress(progress);
+                try {
+                  onProgress(progress, received, fullContentLength);
+                } catch (_) {
+                  onProgress(progress);
+                }
               }
-              lastProgressUpdate = now;
             }
             return chunk;
           })
@@ -608,9 +626,13 @@ class AppFileService {
 
     if (onProgress != null) {
       try {
-        onProgress(100.0, received, received);
+        onProgress(100.0, received, received, null);
       } catch (_) {
-        onProgress(100.0);
+        try {
+          onProgress(100.0, received, received);
+        } catch (_) {
+          onProgress(100.0);
+        }
       }
     }
 

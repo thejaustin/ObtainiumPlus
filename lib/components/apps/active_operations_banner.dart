@@ -164,6 +164,21 @@ class _ActiveDownloadTile extends StatelessWidget {
                 ? (downloadProgress / 100.0).clamp(0.0, 1.0)
                 : null;
 
+        final speedStr = formatSpeed(appInMemory.downloadSpeedBytesPerSec);
+        final sizeStr = formatDownloadSize(
+          appInMemory.downloadReceivedBytes,
+          appInMemory.downloadTotalBytes,
+        );
+        final remainingBytes = (appInMemory.downloadTotalBytes != null &&
+                appInMemory.downloadReceivedBytes != null)
+            ? appInMemory.downloadTotalBytes! -
+                appInMemory.downloadReceivedBytes!
+            : null;
+        final etaStr = formatEta(
+          remainingBytes,
+          appInMemory.downloadSpeedBytesPerSec,
+        );
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -232,12 +247,21 @@ class _ActiveDownloadTile extends StatelessWidget {
                               color: colorScheme.primary,
                             ),
                             const SizedBox(width: 3),
-                            Text(
-                              '${downloadProgress.toInt()}%',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                            Flexible(
+                              child: Text(
+                                [
+                                  '${downloadProgress.toInt()}%',
+                                  if (speedStr != null) speedStr,
+                                  if (sizeStr != null) sizeStr,
+                                  if (etaStr != null) '$etaStr left',
+                                ].join(' • '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
                           ] else ...[
                             Text(

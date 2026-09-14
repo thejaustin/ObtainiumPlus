@@ -20,6 +20,8 @@ import 'package:obtainium/utils/app_constants.dart';
 HttpClient createHttpClient({bool allowInsecure = false}) {
   var client = HttpClient();
   client.connectionTimeout = const Duration(seconds: 15);
+  client.idleTimeout = const Duration(seconds: 30);
+  client.maxConnectionsPerHost = 6;
 
   // Pinning for Google Play Store domains (android.clients.google.com)
   // Hardcoded fingerprint for GTS CA 1C3 (valid until 2027)
@@ -108,6 +110,7 @@ sourceRequestStreamResponse(
           headers.remove('authorization');
           headers.remove(HttpHeaders.proxyAuthorizationHeader);
         }
+        await response.drain<void>().catchError((_) {});
         currentUrl = nextUrl;
         continue;
       }
