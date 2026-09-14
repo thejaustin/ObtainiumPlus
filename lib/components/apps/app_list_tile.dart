@@ -550,7 +550,11 @@ class AppListTile extends StatelessWidget {
                                 child: downloadProgress != null
                                     ? SizedBox(
                                         key: const ValueKey('download'),
-                                        width: downloadProgress >= 0 ? 102 : 65,
+                                        width: downloadProgress >= 0
+                                            ? (appInMemory.downloadSpeedBytesPerSec != null
+                                                ? 114.0
+                                                : 96.0)
+                                            : 70.0,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
