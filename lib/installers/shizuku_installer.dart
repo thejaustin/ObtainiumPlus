@@ -19,13 +19,11 @@ class ShizukuInstaller extends Installer {
   @override
   Future<bool> canInstallSilently(App app) async => true;
 
-  static const int _maxRetries = 3;
-  static const Duration _retryInterval = Duration(milliseconds: 200);
+  static const int _maxRetries = 4;
 
   /// Performs a retried check for the Shizuku/ShizukuPlus binder service.
-  /// When an app starts up or runs in the background, the binder listener
-  /// may take a few hundred milliseconds to attach. Retrying prevents spurious
-  /// 'binder_not_found' / 'services_not_found' false-negatives.
+  /// Uses progressive backoff (50ms, 100ms, 150ms, 200ms) for fast (<100ms)
+  /// connection when the daemon is alive.
   Future<String?> checkPermissionWithRetry({int retries = _maxRetries}) async {
     String? status;
     for (int i = 0; i <= retries; i++) {
@@ -40,7 +38,8 @@ class ShizukuInstaller extends Installer {
         // Ignore transient error and retry
       }
       if (i < retries) {
-        await Future.delayed(_retryInterval);
+        final delayMs = 50 * (i + 1);
+        await Future.delayed(Duration(milliseconds: delayMs));
       }
     }
     return status;
@@ -122,18 +121,90 @@ class ShizukuInstaller extends Installer {
         ? 'com.android.vending'
         : '';
     final uris = apkFilePaths.map((p) => File(p).uri.toString()).toList();
-    int? code;
-    if (uris.length > 1) {
-      code = await ShizukuApkInstaller().installAABSplits(
-        uris,
-        fakeInstallSource,
-      );
-    } else {
-      code = await ShizukuApkInstaller().installAPK(
-        uris.first,
-        fakeInstallSource,
-      );
+
+    final completer = Completer<InstallResult>();
+    Timer? pollTimer;
+
+    final int? targetVersionCode = installOptions['targetVersionCode'] as int?;
+    final String? targetVersionName = installOptions['targetVersionName'] as String?;
+    final int? existingVersionCode = installOptions['existingVersionCode'] as int?;
+    final String? existingVersionName = installOptions['existingVersionName'] as String?;
+
+    // Start fast concurrent package verification polling (every 350ms)
+    // so we detect successful installation the instant the OS completes it,
+    // avoiding Shizuku binder callback delays or freezes.
+    int pollCount = 0;
+    pollTimer = Timer.periodic(const Duration(milliseconds: 350), (t) async {
+      pollCount++;
+      if (completer.isCompleted) {
+        t.cancel();
+        return;
+      }
+      if (pollCount > 200) {
+        t.cancel();
+        return;
+      }
+      try {
+        final info = await AppInstallService.getInstalledInfo(appId, printErr: false);
+        if (info != null) {
+          final currentCode = info.versionCode ?? 0;
+          bool isSuccess = false;
+          if (existingVersionCode == null || existingVersionCode == 0) {
+            if (targetVersionCode != null && targetVersionCode > 0) {
+              if (currentCode >= targetVersionCode) isSuccess = true;
+            } else {
+              isSuccess = true;
+            }
+          } else {
+            if (targetVersionCode != null &&
+                targetVersionCode > 0 &&
+                targetVersionCode > existingVersionCode) {
+              if (currentCode >= targetVersionCode) isSuccess = true;
+            } else if (targetVersionName != null &&
+                targetVersionName.isNotEmpty &&
+                targetVersionName != existingVersionName) {
+              if (info.versionName == targetVersionName) isSuccess = true;
+            } else if (currentCode > existingVersionCode) {
+              isSuccess = true;
+            }
+          }
+          if (isSuccess && !completer.isCompleted) {
+            t.cancel();
+            completer.complete(InstallResult.success());
+          }
+        }
+      } catch (_) {}
+    });
+
+    Future<int?> runShizuku() async {
+      if (uris.length > 1) {
+        return await ShizukuApkInstaller().installAABSplits(
+          uris,
+          fakeInstallSource,
+        );
+      } else {
+        return await ShizukuApkInstaller().installAPK(
+          uris.first,
+          fakeInstallSource,
+        );
+      }
     }
-    return InstallResult.fromPlatformCode(code);
+
+    runShizuku().then((code) {
+      if (!completer.isCompleted) {
+        completer.complete(InstallResult.fromPlatformCode(code));
+      }
+    }).catchError((err) {
+      if (!completer.isCompleted) {
+        completer.complete(InstallResult.error(1));
+      }
+    });
+
+    final res = await completer.future.timeout(
+      const Duration(seconds: 75),
+      onTimeout: () => InstallResult.error(1),
+    );
+    pollTimer.cancel();
+    return res;
   }
 }

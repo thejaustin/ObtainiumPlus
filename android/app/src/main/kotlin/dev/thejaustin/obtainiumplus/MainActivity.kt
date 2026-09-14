@@ -158,18 +158,28 @@ class MainActivity : FlutterActivity() {
                         val packageName = call.argument<String>("packageName")
                         if (packageName != null) {
                             try {
-                                val installer = packageManager.packageInstaller
-                                // Use reflection to bypass compilation issues with API 34+ methods
+                                // In Android 14 (API 34), setUpdateOwnerPackageName is on PackageManager
+                                val method = packageManager.javaClass.getMethod(
+                                    "setUpdateOwnerPackageName",
+                                    String::class.java,
+                                    String::class.java
+                                )
+                                method.invoke(packageManager, packageName, this.packageName)
+                                result.success(true)
+                            } catch (_: Exception) {
+                                // Some OEM builds may expose setUpdateOwner on PackageInstaller
                                 try {
-                                    val method = installer.javaClass.getMethod("setUpdateOwner", String::class.java, String::class.java)
-                                    method.invoke(installer, packageName, this.packageName)
+                                    val installer = packageManager.packageInstaller
+                                    val fallbackMethod = installer.javaClass.getMethod(
+                                        "setUpdateOwner",
+                                        String::class.java,
+                                        String::class.java
+                                    )
+                                    fallbackMethod.invoke(installer, packageName, this.packageName)
                                     result.success(true)
-                                } catch (e: Exception) {
-                                    // Fallback or error
-                                    result.error("ERROR", "Failed to set update owner: ${e.message}", null)
+                                } catch (e2: Exception) {
+                                    result.success(false)
                                 }
-                            } catch (e: Exception) {
-                                result.error("ERROR", e.message, null)
                             }
                         } else {
                             result.error("INVALID_ARGUMENT", "Package name is required", null)
@@ -184,47 +194,42 @@ class MainActivity : FlutterActivity() {
                         if (packageName != null) {
                             try {
                                 val installer = packageManager.packageInstaller
-                                // Use reflection to bypass compilation issues with API 34+ methods
-                                try {
-                                    val builderClass = Class.forName("android.content.pm.PackageInstaller\$InstallConstraints\$Builder")
-                                    val builder = builderClass.getDeclaredConstructor().newInstance()
-                                    
-                                    builderClass.getMethod("setAppNotForegroundRequired").invoke(builder)
-                                    builderClass.getMethod("setAppNotInteractingRequired").invoke(builder)
-                                    builderClass.getMethod("setNotInCallRequired").invoke(builder)
-                                    
-                                    val constraints = builderClass.getMethod("build").invoke(builder)
-                                    
-                                    val packages = listOf(packageName)
-                                    val checkMethod = installer.javaClass.getMethod(
-                                        "checkInstallConstraints",
-                                        List::class.java,
-                                        Class.forName("android.content.pm.PackageInstaller\$InstallConstraints"),
-                                        java.util.concurrent.Executor::class.java,
-                                        java.util.function.Consumer::class.java
-                                    )
-                                    
-                                    checkMethod.invoke(
-                                        installer,
-                                        packages,
-                                        constraints,
-                                        java.util.concurrent.Executor { command -> command.run() },
-                                        java.util.function.Consumer<Any> { resultStatus ->
-                                            runOnUiThread {
-                                                try {
-                                                    val satisfied = resultStatus.javaClass.getMethod("areAllConstraintsSatisfied").invoke(resultStatus) as Boolean
-                                                    result.success(satisfied)
-                                                } catch (e: Exception) {
-                                                    result.error("ERROR", "Failed to check satisfy status: ${e.message}", null)
-                                                }
+                                val builderClass = Class.forName("android.content.pm.PackageInstaller\$InstallConstraints\$Builder")
+                                val builder = builderClass.getDeclaredConstructor().newInstance()
+                                
+                                builderClass.getMethod("setAppNotForegroundRequired").invoke(builder)
+                                builderClass.getMethod("setAppNotInteractingRequired").invoke(builder)
+                                builderClass.getMethod("setNotInCallRequired").invoke(builder)
+                                
+                                val constraints = builderClass.getMethod("build").invoke(builder)
+                                
+                                val packages = listOf(packageName)
+                                val checkMethod = installer.javaClass.getMethod(
+                                    "checkInstallConstraints",
+                                    List::class.java,
+                                    Class.forName("android.content.pm.PackageInstaller\$InstallConstraints"),
+                                    java.util.concurrent.Executor::class.java,
+                                    java.util.function.Consumer::class.java
+                                )
+                                
+                                checkMethod.invoke(
+                                    installer,
+                                    packages,
+                                    constraints,
+                                    java.util.concurrent.Executor { command -> command.run() },
+                                    java.util.function.Consumer<Any> { resultStatus ->
+                                        runOnUiThread {
+                                            try {
+                                                val satisfied = resultStatus.javaClass.getMethod("areAllConstraintsSatisfied").invoke(resultStatus) as Boolean
+                                                result.success(satisfied)
+                                            } catch (e: Exception) {
+                                                result.error("ERROR", "Failed to check satisfy status: ${e.message}", null)
                                             }
                                         }
-                                    )
-                                } catch (e: Exception) {
-                                    result.error("ERROR", "Failed to check install constraints via reflection: ${e.message}", null)
-                                }
-                            } catch (e: Exception) {
-                                result.error("ERROR", e.message, null)
+                                    }
+                                )
+                            } catch (_: Exception) {
+                                result.success(true)
                             }
                         } else {
                             result.error("INVALID_ARGUMENT", "Package name is required", null)
@@ -239,32 +244,45 @@ class MainActivity : FlutterActivity() {
                         if (packageName != null) {
                             try {
                                 val installer = packageManager.packageInstaller
-                                val params = android.content.pm.PackageInstaller.SessionParams(
-                                    android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
+                                val params = PackageInstaller.SessionParams(
+                                    PackageInstaller.SessionParams.MODE_FULL_INSTALL
                                 )
                                 params.setAppPackageName(packageName)
-                                
-                                // Create a dummy pending intent for the confirmation
+
                                 val intent = Intent("app.obtainiumplus.PREAPPROVAL_CONFIRMATION")
                                 val pendingIntent = PendingIntent.getBroadcast(
-                                    this, 0, intent, 
+                                    this, 0, intent,
                                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                                 )
-                                
-                                // Use reflection to bypass compilation issues with API 34+ methods
+
+                                val sessionId = installer.createSession(params)
+                                val session = installer.openSession(sessionId)
                                 try {
-                                    val method = installer.javaClass.getMethod(
+                                    val builderClass = Class.forName("android.content.pm.PackageInstaller\$PreapprovalDetails\$Builder")
+                                    val detailsBuilder = builderClass.getDeclaredConstructor().newInstance()
+                                    builderClass.getMethod("setPackageName", String::class.java).invoke(detailsBuilder, packageName)
+                                    val label = try {
+                                        packageManager.getApplicationLabel(packageManager.getApplicationInfo(packageName, 0)).toString()
+                                    } catch (_: Exception) {
+                                        packageName
+                                    }
+                                    builderClass.getMethod("setLabel", CharSequence::class.java).invoke(detailsBuilder, label)
+                                    val details = builderClass.getMethod("build").invoke(detailsBuilder)
+
+                                    val preapprovalMethod = session.javaClass.getMethod(
                                         "requestUserPreapproval",
-                                        android.content.pm.PackageInstaller.SessionParams::class.java,
+                                        Class.forName("android.content.pm.PackageInstaller\$PreapprovalDetails"),
                                         android.content.IntentSender::class.java
                                     )
-                                    method.invoke(installer, params, pendingIntent.intentSender)
+                                    preapprovalMethod.invoke(session, details, pendingIntent.intentSender)
+                                    session.close()
                                     result.success(true)
                                 } catch (e: Exception) {
-                                    result.error("ERROR", "Failed to request user preapproval: ${e.message}", null)
+                                    session.abandon()
+                                    result.success(false)
                                 }
                             } catch (e: Exception) {
-                                result.error("ERROR", e.message, null)
+                                result.success(false)
                             }
                         } else {
                             result.error("INVALID_ARGUMENT", "Package name is required", null)
