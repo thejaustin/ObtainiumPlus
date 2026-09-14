@@ -1721,6 +1721,7 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<Directory> getAppsDir() async {
+    if (cachedAppsDir != null) return cachedAppsDir!;
     Directory appsDir = Directory(
       '${(await getAppStorageDir()).path}/app_data',
     );
@@ -1730,7 +1731,7 @@ class AppsProvider with ChangeNotifier {
       // path_provider still returns its path (#226).
       appsDir.createSync(recursive: true);
     }
-    return appsDir;
+    return cachedAppsDir = appsDir;
   }
 
   bool isVersionDetectionPossible(AppInMemory? app) {
@@ -1778,11 +1779,12 @@ class AppsProvider with ChangeNotifier {
     var trackOnly = app.additionalSettings['trackOnly'] == true;
     var versionDetectionIsStandard =
         app.additionalSettings['versionDetection'] == true;
-    var naiveStandardVersionDetection =
-        app.additionalSettings['naiveStandardVersionDetection'] == true ||
-        SourceProvider()
-            .getSource(app.url, overrideSource: app.overrideSource)
-            .naiveStandardVersionDetection;
+    // Evaluated eagerly if the additionalSettings flag is set; otherwise
+    // lazily inside the one branch that needs it, avoiding a SourceProvider
+    // getSource() call (which calls _buildSources() for overrideSource apps)
+    // on every save/load for apps that never hit that code path.
+    final naiveExplicit =
+        app.additionalSettings['naiveStandardVersionDetection'] == true;
     String? realInstalledVersion =
         app.additionalSettings['useVersionCodeAsOSVersion'] == true
         ? installedInfo?.versionCode.toString()
@@ -1810,7 +1812,10 @@ class AppsProvider with ChangeNotifier {
       if (correctedInstalledVersion?.key == false) {
         app.installedVersion = correctedInstalledVersion!.value;
         modded = true;
-      } else if (naiveStandardVersionDetection) {
+      } else if (naiveExplicit ||
+          SourceProvider()
+              .getSource(app.url, overrideSource: app.overrideSource)
+              .naiveStandardVersionDetection) {
         app.installedVersion = realInstalledVersion;
         modded = true;
       }
@@ -2151,6 +2156,16 @@ class AppsProvider with ChangeNotifier {
   }) async {
     // Resolve the apps directory once instead of once per app in Future.wait.
     final appsDirPath = (await getAppsDir()).path;
+    // When not reusing cached info for a batch, one bulk query is faster than
+    // N individual getInstalledInfo() Binder IPC calls inside Future.wait.
+    Map<String, PackageInfo>? bulkInstalledMap;
+    if (!reuseInstalledInfo && apps.length > 1) {
+      final all = await getAllInstalledInfo();
+      bulkInstalledMap = {
+        for (final p in all)
+          if (p.packageName != null) p.packageName!: p,
+      };
+    }
     await Future.wait(
       apps.map((a) async {
         var app = a.deepCopy();
@@ -2158,7 +2173,9 @@ class AppsProvider with ChangeNotifier {
             reuseInstalledInfo && this.apps.containsKey(app.id);
         PackageInfo? info = canReuse
             ? this.apps[app.id]!.installedInfo
-            : await getInstalledInfo(app.id);
+            : bulkInstalledMap != null
+                ? bulkInstalledMap[app.id]
+                : await getInstalledInfo(app.id);
         var icon = canReuse
             ? this.apps[app.id]!.icon
             : await info?.applicationInfo?.getAppIcon();
@@ -2177,10 +2194,17 @@ class AppsProvider with ChangeNotifier {
         try {
           this.apps.update(
             app.id,
-            // Pass download: value.download to reuse the existing DownloadState
-            // so ValueListenableBuilder widgets keep their subscription alive.
-            (value) =>
-                AppInMemory(app, null, info, icon, download: value.download),
+            // Preserve download (ValueListenableBuilder subscriptions) and
+            // sourceType (expensive to recompute; loadApps re-sets it if the
+            // URL actually changes).
+            (value) => AppInMemory(
+              app,
+              null,
+              info,
+              icon,
+              download: value.download,
+              sourceType: value.sourceType,
+            ),
             ifAbsent: onlyIfExists
                 ? null
                 : () => AppInMemory(app, null, info, icon),
@@ -2193,14 +2217,15 @@ class AppsProvider with ChangeNotifier {
       }),
     );
     notifyListeners();
-    export(isAuto: true);
+    scheduleAutoExport();
   }
 
   Future<void> removeApps(List<String> appIds) async {
     var apkFiles = apkDir.listSync();
+    final appsDirPath = (await getAppsDir()).path;
     await Future.wait(
       appIds.map((appId) async {
-        File file = File('${(await getAppsDir()).path}/$appId.json');
+        File file = File('$appsDirPath/$appId.json');
         if (file.existsSync()) {
           deleteFile(file);
         }
@@ -2218,7 +2243,7 @@ class AppsProvider with ChangeNotifier {
     );
     if (appIds.isNotEmpty) {
       notifyListeners();
-      export(isAuto: true);
+      scheduleAutoExport();
     }
   }
 
@@ -2464,6 +2489,11 @@ class AppsProvider with ChangeNotifier {
       includeAmbiguous: includeAmbiguous,
     );
   }
+
+  /// Single-pass: returns pending installed-app updates as a [Set] (O(1) lookup)
+  /// and not-yet-installed apps as a [List]. Avoids two separate O(n) passes.
+  ({Set<String> updates, List<String> newInstalls}) findAllPendingUpdates() =>
+      AppUpdateService.findAllPendingUpdates(apps);
 
   Map<String, dynamic> generateExportJSON({
     List<String>? appIds,

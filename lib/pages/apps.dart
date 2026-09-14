@@ -236,8 +236,9 @@ class AppsPageState extends State<AppsPage> {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
     // deepCopy: false — build() is read-only; deep-cloning every app on every
     // frame (download progress ticks, etc.) was the dominant rebuild cost.
-    final listedAppsAll = appsProvider.getAppValues(deepCopy: false).toList();
-    var listedApps = List<AppInMemory>.from(listedAppsAll);
+    // getAppValues().toList() already snapshots the map values into a new List,
+    // so no secondary List.from() copy is needed.
+    var listedApps = appsProvider.getAppValues(deepCopy: false).toList();
 
     refresh() {
       AppHaptics.lightImpact();
@@ -337,21 +338,18 @@ class AppsPageState extends State<AppsPage> {
         return false;
       }
       if (filter.categoryFilter.isNotEmpty &&
-          filter.categoryFilter
-              .intersection(app.app.categories.toSet())
-              .isEmpty) {
+          !app.app.categories.any(filter.categoryFilter.contains)) {
         return false;
       }
-      if (filter.sourceFilter.isNotEmpty &&
-          sourceProvider
-                  .getSource(
-                    app.app.url,
-                    overrideSource: app.app.overrideSource,
-                  )
-                  .runtimeType
-                  .toString() !=
-              filter.sourceFilter) {
-        return false;
+      if (filter.sourceFilter.isNotEmpty) {
+        // Use the sourceType cached during loadApps(); fall back to a live
+        // getSource() call only when the cache is absent (e.g. newly-added app).
+        final srcType = app.sourceType ??
+            sourceProvider
+                .getSource(app.app.url, overrideSource: app.app.overrideSource)
+                .runtimeType
+                .toString();
+        if (srcType != filter.sourceFilter) return false;
       }
       return true;
     }).toList();
@@ -398,7 +396,11 @@ class AppsPageState extends State<AppsPage> {
       listedApps = listedApps.reversed.toList();
     }
 
-    var existingUpdates = appsProvider.findExistingUpdates(installedOnly: true);
+    // Single pass over all apps to build both update lists; existingUpdates is
+    // a Set so the pinUpdates .contains() check below is O(1) not O(n).
+    final pending = appsProvider.findAllPendingUpdates();
+    final existingUpdates = pending.updates; // Set<String>
+    final newInstalls = pending.newInstalls; // List<String>
 
     var existingUpdateIdsAllOrSelected = existingUpdates
         .where(
@@ -407,8 +409,7 @@ class AppsPageState extends State<AppsPage> {
               : selectedAppIds.contains(element),
         )
         .toList();
-    var newInstallIdsAllOrSelected = appsProvider
-        .findExistingUpdates(nonInstalledOnly: true)
+    var newInstallIdsAllOrSelected = newInstalls
         .where(
           (element) => selectedAppIds.isEmpty
               ? listedAppIdSet.contains(element)
