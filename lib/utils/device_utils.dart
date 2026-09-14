@@ -8,6 +8,7 @@ enum DeviceOEM {
   realme,
   nothing,
   vivo,
+  transsion,
   huawei,
   pixel,
   motorola,
@@ -99,6 +100,23 @@ class DeviceUtils {
     }
   }
 
+  /// Checks if the device is from Transsion (Tecno, Infinix, or Itel).
+  static Future<bool> isTranssionDevice() async {
+    try {
+      final info = await getAndroidInfo();
+      final manufacturer = info.manufacturer.toLowerCase();
+      final brand = info.brand.toLowerCase();
+      return [
+        'transsion',
+        'tecno',
+        'infinix',
+        'itel',
+      ].any((x) => manufacturer.contains(x) || brand.contains(x));
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Checks if the device is from Huawei or Honor (EMUI / MagicOS).
   static Future<bool> isHuaweiHonorDevice() async {
     try {
@@ -152,6 +170,7 @@ class DeviceUtils {
     } catch (_) {}
     if (await isNothingDevice()) return DeviceOEM.nothing;
     if (await isVivoDevice()) return DeviceOEM.vivo;
+    if (await isTranssionDevice()) return DeviceOEM.transsion;
     if (await isHuaweiHonorDevice()) return DeviceOEM.huawei;
     if (await isPixelDevice()) return DeviceOEM.pixel;
     if (await isMotorolaDevice()) return DeviceOEM.motorola;
@@ -176,6 +195,8 @@ class DeviceUtils {
         return 'Nothing OS';
       case DeviceOEM.vivo:
         return 'Vivo Funtouch / OriginOS';
+      case DeviceOEM.transsion:
+        return 'Transsion HiOS / XOS';
       case DeviceOEM.huawei:
         return 'Huawei EMUI / MagicOS';
       case DeviceOEM.pixel:

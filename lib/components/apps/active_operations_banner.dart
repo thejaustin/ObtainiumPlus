@@ -206,25 +206,59 @@ class _ActiveDownloadTile extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                       ),
-                      Text(
-                        isFinishingOrInstalling
-                            ? tr('installing')
-                            : downloadProgress != null && downloadProgress >= 0
-                                ? '${downloadProgress.toInt()}%'
-                                : tr('pleaseWait'),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                      Row(
+                        children: [
+                          if (isFinishingOrInstalling) ...[
+                            SizedBox(
+                              width: 11,
+                              height: 11,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.8,
+                                color: colorScheme.secondary,
+                              ),
                             ),
+                            const SizedBox(width: 5),
+                            Text(
+                              tr('installing'),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.secondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ] else if (downloadProgress != null && downloadProgress >= 0) ...[
+                            Icon(
+                              Icons.arrow_downward_rounded,
+                              size: 13,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${downloadProgress.toInt()}%',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ] else ...[
+                            Text(
+                              tr('pleaseWait'),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  tooltip: tr('cancel'),
-                  visualDensity: VisualDensity.compact,
-                  onPressed: onCancel,
-                ),
+                if (!isFinishingOrInstalling)
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    tooltip: tr('cancel'),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onCancel,
+                  ),
               ],
             ),
             const SizedBox(height: 8),

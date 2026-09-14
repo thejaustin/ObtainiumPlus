@@ -68,7 +68,10 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
      - **Nothing OS**: Unrestricted battery usage, native session install optimizations.
      - **Vivo / iQOO**: Autostart manager, High background power.
      - **Huawei / Honor**: Manual app launch management.
-   - Built `DeviceOptimizationSheet` modal and wired direct "Device Compatibility & Speed Hub" tile into `InstallationSection`.
+     - **Transsion (Tecno HiOS / Infinix XOS / itelOS)**: Phone Master Autostart and Power Marathon battery unthrottling.
+   - Built `DeviceOptimizationSheet` modal and renamed setting to **Device Tuning & Optimization** (`lib/components/settings/installation_section.dart`).
+   - Redesigned sheet with Material 3 Hero Diagnostics Card (active hardware specs, live Android API badge, "Copy Specs" clipboard action).
+   - Polished `ActiveOperationsBanner`: added spinning indicator and distinctive status badges during active installations and downloads, hiding cancel button during active package manager installs.
 
 **Root-cause investigation of "installing updates not working smoothly" complaint.**
 

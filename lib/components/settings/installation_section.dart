@@ -42,8 +42,24 @@ class InstallationSection extends StatelessWidget {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, behaviorSettings, child) {
         List<Widget> children = [
-          // Device Compatibility & Optimization Hub
-          if (_matches('device compatibility') || _matches('samsung') || _matches('xiaomi') || _matches('oneplus') || _matches('nothing') || !isSearching)
+          // Device Tuning & Optimization
+          if (_matches('device tuning') ||
+              _matches('device optimization') ||
+              _matches('tuning') ||
+              _matches('speed') ||
+              _matches('oem') ||
+              _matches('samsung') ||
+              _matches('xiaomi') ||
+              _matches('hyperos') ||
+              _matches('miui') ||
+              _matches('oneplus') ||
+              _matches('oppo') ||
+              _matches('nothing') ||
+              _matches('vivo') ||
+              _matches('transsion') ||
+              _matches('autoblocker') ||
+              _matches('freeze') ||
+              !isSearching)
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -52,13 +68,13 @@ class InstallationSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  Icons.devices_other_rounded,
+                  Icons.tune_rounded,
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                   size: 20,
                 ),
               ),
               title: Text(
-                'Device Compatibility & Speed Hub',
+                'Device Tuning & Optimization',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -66,23 +82,43 @@ class InstallationSection extends StatelessWidget {
               subtitle: FutureBuilder<String>(
                 future: DeviceUtils.getDeviceSummary(),
                 builder: (context, snapshot) {
-                  return Text(
-                    snapshot.data ?? 'Optimization guide for Samsung, Xiaomi, OnePlus, Nothing, etc.',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  final detected = snapshot.data;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Bypass OEM install blocks & unthrottle background transfers',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (detected != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'Detected: $detected',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   );
                 },
               ),
-              trailing: FilledButton.tonal(
+              trailing: FilledButton.tonalIcon(
                 style: FilledButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
+                icon: const Icon(Icons.tune_rounded, size: 16),
+                label: const Text('Tune'),
                 onPressed: () {
                   AppHaptics.selectionClick();
                   showDeviceOptimizationSheet(context: context);
                 },
-                child: const Text('Optimize'),
               ),
               onTap: () {
                 AppHaptics.selectionClick();

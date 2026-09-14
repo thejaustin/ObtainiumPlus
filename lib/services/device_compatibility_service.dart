@@ -57,6 +57,18 @@ class DeviceCompatibilityService {
         flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
       ),
       const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.samsung.android.sm.policy/com.samsung.android.sm.policy.ui.AutoBlockerActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.samsung.android.sm/com.samsung.android.sm.ui.security.AutoBlockerActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
         action: 'android.settings.SECURITY_SETTINGS',
         flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
       ),
@@ -364,6 +376,68 @@ class DeviceCompatibilityService {
   }
 
   // --------------------------------------------------------------------------
+  // Transsion (Tecno HiOS / Infinix XOS / Itel itelOS) Specific Methods
+  // --------------------------------------------------------------------------
+
+  /// Opens Transsion Phone Master Autostart settings.
+  static Future<bool> openTranssionAutoStartSettings() async {
+    final intents = [
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.transsion.phonemaster/com.transsion.phonemaster.autostart.AutoStartActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.transsion.phonemaster/com.transsion.phonemaster.permission.AutoStartListActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.transsion.phonemaster/com.transsion.phonemaster.MainActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+    ];
+    for (final intent in intents) {
+      try {
+        await intent.launch();
+        return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  /// Opens Transsion Power Marathon / Power Center settings.
+  static Future<bool> openTranssionPowerCenterSettings() async {
+    final intents = [
+      const AndroidIntent(
+        action: 'com.transsion.phonemaster.action.POWER_MANAGEMENT',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.transsion.powercenter/com.transsion.powercenter.PowerCenterActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+    ];
+    for (final intent in intents) {
+      try {
+        await intent.launch();
+        return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  // --------------------------------------------------------------------------
   // Huawei / Honor (EMUI / MagicOS) Specific Methods
   // --------------------------------------------------------------------------
 
@@ -602,6 +676,40 @@ class DeviceCompatibilityService {
               label: 'High Background Power',
               description: 'Allow unlimited background consumption',
               action: openVivoHighBackgroundPowerSettings,
+            ),
+          ],
+        );
+
+      case DeviceOEM.transsion:
+        return DeviceOptimizationGuide(
+          oem: oem,
+          title: 'Transsion (Tecno HiOS / Infinix XOS / itelOS)',
+          subtitle: 'Prevent Phone Master & Power Marathon from killing downloads',
+          highlights: [
+            'Phone Master aggressively terminates background tasks within 30 seconds of screen off.',
+            'Power Marathon freezes active HTTP sockets, causing download timeouts.',
+            'HiOS/XOS package installer shows a 5-second security countdown on sideloaded APKs.',
+          ],
+          steps: [
+            'Enable Autostart: Phone Master → App management → Auto-start management → Enable ObtainiumPlus.',
+            'Bypass Power Marathon: Settings → Battery Lab / Power Marathon → Battery optimization → ObtainiumPlus → Don\'t optimize.',
+            'Allow Unknown Apps: Settings → Special app access → Install unknown apps → ObtainiumPlus → Allow.',
+          ],
+          actions: [
+            DeviceActionItem(
+              label: 'Phone Master Auto-start',
+              description: 'Whitelist ObtainiumPlus for startup',
+              action: openTranssionAutoStartSettings,
+            ),
+            DeviceActionItem(
+              label: 'Power Marathon / Center',
+              description: 'Prevent background sleep and freeze',
+              action: openTranssionPowerCenterSettings,
+            ),
+            DeviceActionItem(
+              label: 'Battery Optimization',
+              description: 'Disable aggressive battery saver',
+              action: openBatteryOptimizationSettings,
             ),
           ],
         );
