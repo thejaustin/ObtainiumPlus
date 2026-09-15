@@ -382,7 +382,7 @@ class SourceProvider {
         }
       } catch (_) {}
     }
-    return URLValidator.sanitizeAppId(rawId);
+    return URLValidator.sanitizeAppId(rawId!);
   }
 
   Future<App> getApp(
