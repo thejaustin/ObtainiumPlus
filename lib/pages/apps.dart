@@ -1,4 +1,5 @@
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/sideloading_notice.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
@@ -934,33 +935,53 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getSelectAllButton() {
-      return selectedAppIds.isEmpty
-          ? TextButton.icon(
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              onPressed: () {
-                selectThese(listedApps.map((e) => e.app).toList());
-              },
-              icon: Icon(
-                Icons.select_all_outlined,
-                color: Theme.of(context).colorScheme.primary,
+      final isSelected = selectedAppIds.isNotEmpty;
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: isSelected
+            ? TextButton.icon(
+                key: const ValueKey('deselect'),
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  clearSelected();
+                },
+                icon: Icon(
+                  Icons.deselect_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Text(
+                    selectedAppIds.length.toString(),
+                    key: ValueKey('sel_${selectedAppIds.length}'),
+                  ),
+                ),
+              )
+            : TextButton.icon(
+                key: const ValueKey('selectAll'),
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  selectThese(listedApps.map((e) => e.app).toList());
+                },
+                icon: Icon(
+                  Icons.select_all_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Text(
+                    listedApps.length.toString(),
+                    key: ValueKey('all_${listedApps.length}'),
+                  ),
+                ),
               ),
-              label: Text(listedApps.length.toString()),
-            )
-          : TextButton.icon(
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              onPressed: () {
-                selectedAppIds.isEmpty
-                    ? selectThese(listedApps.map((e) => e.app).toList())
-                    : clearSelected();
-              },
-              icon: Icon(
-                selectedAppIds.isEmpty
-                    ? Icons.select_all_outlined
-                    : Icons.deselect_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              label: Text(selectedAppIds.length.toString()),
-            );
+      );
     }
 
     getMassObtainFunction() {
@@ -1357,38 +1378,69 @@ class AppsPageState extends State<AppsPage> {
 
     getMainBottomButtons() {
       return [
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: getMassObtainFunction(),
-          tooltip: selectedAppIds.isEmpty
-              ? tr('installUpdateApps')
-              : tr('installUpdateSelectedApps'),
-          icon: const Icon(Icons.file_download_outlined),
+        ScaleTouchWrapper(
+          onTap: getMassObtainFunction(),
+          child: IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: getMassObtainFunction(),
+            tooltip: selectedAppIds.isEmpty
+                ? tr('installUpdateApps')
+                : tr('installUpdateSelectedApps'),
+            icon: const Icon(Icons.file_download_outlined),
+          ),
         ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty
+        ScaleTouchWrapper(
+          onTap: selectedAppIds.isEmpty
               ? null
               : () {
+                  AppHaptics.heavyImpact();
                   appsProvider.removeAppsWithModal(
                     context,
                     selectedApps.toList(),
                   );
                 },
-          tooltip: tr('removeSelectedApps'),
-          icon: const Icon(Icons.delete_outline_outlined),
+          child: IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: selectedAppIds.isEmpty
+                ? null
+                : () {
+                    AppHaptics.heavyImpact();
+                    appsProvider.removeAppsWithModal(
+                      context,
+                      selectedApps.toList(),
+                    );
+                  },
+            tooltip: tr('removeSelectedApps'),
+            icon: const Icon(Icons.delete_outline_outlined),
+          ),
         ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty ? null : launchCategorizeDialog(),
-          tooltip: tr('categorize'),
-          icon: const Icon(Icons.category_outlined),
+        ScaleTouchWrapper(
+          onTap: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  AppHaptics.selectionClick();
+                  launchCategorizeDialog()?.call();
+                },
+          child: IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: selectedAppIds.isEmpty ? null : launchCategorizeDialog(),
+            tooltip: tr('categorize'),
+            icon: const Icon(Icons.category_outlined),
+          ),
         ),
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          onPressed: selectedAppIds.isEmpty ? null : showMoreOptionsDialog,
-          tooltip: tr('more'),
-          icon: const Icon(Icons.more_horiz),
+        ScaleTouchWrapper(
+          onTap: selectedAppIds.isEmpty
+              ? null
+              : () {
+                  AppHaptics.selectionClick();
+                  showMoreOptionsDialog();
+                },
+          child: IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: selectedAppIds.isEmpty ? null : showMoreOptionsDialog,
+            tooltip: tr('more'),
+            icon: const Icon(Icons.more_horiz),
+          ),
         ),
       ];
     }
@@ -1474,48 +1526,94 @@ class AppsPageState extends State<AppsPage> {
     getFilterButtonsRow() {
       var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
       final isGrid = viewSettings.globalViewMode == ViewMode.grid;
-      return Row(
-        children: [
-          getSelectAllButton(),
-          IconButton(
-            color: Theme.of(context).colorScheme.primary,
-            style: const ButtonStyle(visualDensity: VisualDensity.compact),
-            tooltip: isFilterOff
-                ? tr('filterApps')
-                : '${tr('filter')} - ${tr('remove')}',
-            onPressed: isFilterOff
-                ? showFilterDialog
-                : () {
-                    setState(() {
-                      filter = AppsFilter();
-                    });
-                  },
-            icon: Icon(
-              isFilterOff ? Icons.search_rounded : Icons.search_off_rounded,
-            ),
+      final bool hasSelection = selectedAppIds.isNotEmpty;
+      final colorScheme = Theme.of(context).colorScheme;
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: hasSelection
+              ? colorScheme.primaryContainer.withValues(alpha: 0.22)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: hasSelection
+                ? colorScheme.primary.withValues(alpha: 0.35)
+                : Colors.transparent,
+            width: 1.0,
           ),
-          IconButton(
-            color: Theme.of(context).colorScheme.primary,
-            style: const ButtonStyle(visualDensity: VisualDensity.compact),
-            tooltip: isGrid ? tr('listView') : tr('gridView'),
-            onPressed: () {
-              viewSettings.globalViewMode = isGrid
-                  ? ViewMode.list
-                  : ViewMode.grid;
-            },
-            icon: Icon(
-              isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
+        ),
+        child: Row(
+          children: [
+            getSelectAllButton(),
+            ScaleTouchWrapper(
+              onTap: isFilterOff
+                  ? () {
+                      AppHaptics.selectionClick();
+                      showFilterDialog();
+                    }
+                  : () {
+                      AppHaptics.selectionClick();
+                      setState(() {
+                        filter = AppsFilter();
+                      });
+                    },
+              child: IconButton(
+                color: colorScheme.primary,
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                tooltip: isFilterOff
+                    ? tr('filterApps')
+                    : '${tr('filter')} - ${tr('remove')}',
+                onPressed: isFilterOff
+                    ? () {
+                        AppHaptics.selectionClick();
+                        showFilterDialog();
+                      }
+                    : () {
+                        AppHaptics.selectionClick();
+                        setState(() {
+                          filter = AppsFilter();
+                        });
+                      },
+                icon: Icon(
+                  isFilterOff ? Icons.search_rounded : Icons.search_off_rounded,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          const VerticalDivider(),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: getMainBottomButtons(),
+            ScaleTouchWrapper(
+              onTap: () {
+                AppHaptics.selectionClick();
+                viewSettings.globalViewMode = isGrid
+                    ? ViewMode.list
+                    : ViewMode.grid;
+              },
+              child: IconButton(
+                color: colorScheme.primary,
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                tooltip: isGrid ? tr('listView') : tr('gridView'),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  viewSettings.globalViewMode = isGrid
+                      ? ViewMode.list
+                      : ViewMode.grid;
+                },
+                icon: Icon(
+                  isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            const VerticalDivider(),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: getMainBottomButtons(),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
