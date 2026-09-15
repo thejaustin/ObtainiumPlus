@@ -2,6 +2,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -256,17 +257,19 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-      subtitle: Text(subtitle),
+    return ScaleTouchWrapper(
       onTap: () {
         AppHaptics.selectionClick();
         onTap();
       },
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        subtitle: Text(subtitle),
+      ),
     );
   }
 
@@ -294,17 +297,19 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
     required String title,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-      trailing: const Icon(Icons.open_in_new, size: 18),
+    return ScaleTouchWrapper(
       onTap: () {
         AppHaptics.lightImpact();
         onTap();
       },
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        trailing: const Icon(Icons.open_in_new, size: 18),
+      ),
     );
   }
 }
