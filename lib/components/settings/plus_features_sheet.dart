@@ -447,10 +447,10 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                     tr('plusUpdateOwnershipDescription'),
                     style: theme.textTheme.bodySmall,
                   ),
-                  value: plusSettings.plusUpdateOwnership,
+                  value: plusSettings.plusEnableUpdateOwnership,
                   onChanged: (v) {
                     AppHaptics.selectionClick();
-                    plusSettings.plusUpdateOwnership = v;
+                    plusSettings.plusEnableUpdateOwnership = v;
                   },
                 ),
               ],
