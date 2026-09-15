@@ -54,17 +54,23 @@ class AppBehaviorSection extends StatelessWidget {
       if (_matches(tr('swipeRightAction')) || _matches(tr('swipeLeftAction')))
         Consumer<BehaviorSettingsProvider>(
           builder: (context, settings, child) {
-            return Opacity(
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOutCubic,
               opacity: settings.enableSwipeGestures ? 1.0 : 0.4,
-              child: IgnorePointer(
-                ignoring: !settings.enableSwipeGestures,
-                child: Column(
-                  children: [
-                    if (_matches(tr('swipeRightAction')))
-                      _buildSwipeActionDropdown(context, isRight: true),
-                    if (_matches(tr('swipeLeftAction')))
-                      _buildSwipeActionDropdown(context, isRight: false),
-                  ],
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOutCubic,
+                child: IgnorePointer(
+                  ignoring: !settings.enableSwipeGestures,
+                  child: Column(
+                    children: [
+                      if (_matches(tr('swipeRightAction')))
+                        _buildSwipeActionDropdown(context, isRight: true),
+                      if (_matches(tr('swipeLeftAction')))
+                        _buildSwipeActionDropdown(context, isRight: false),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -146,6 +152,7 @@ class AppBehaviorSection extends StatelessWidget {
                           : settings.swipeLeftAction,
                     },
                     onSelectionChanged: (value) {
+                      AppHaptics.selectionClick();
                       if (isRight) {
                         settings.swipeRightAction = value.first;
                       } else {
@@ -206,6 +213,7 @@ class AppBehaviorSection extends StatelessWidget {
               subtitle: Text(tr('plusEnableBanWarningsDescription')),
               value: settings.plusEnableBanWarnings,
               onChanged: (val) async {
+                AppHaptics.selectionClick();
                 if (val) {
                   final confirm = await showDialog<bool>(
                     context: context,
@@ -215,11 +223,17 @@ class AppBehaviorSection extends StatelessWidget {
                       content: Text(tr('plusEnableBanWarningsDescription')),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context, false),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            Navigator.pop(context, false);
+                          },
                           child: Text(tr('cancel')),
                         ),
                         FilledButton(
-                          onPressed: () => Navigator.pop(context, true),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            Navigator.pop(context, true);
+                          },
                           child: Text(tr('enable')),
                         ),
                       ],
@@ -233,57 +247,66 @@ class AppBehaviorSection extends StatelessWidget {
                 }
               },
             ),
-            if (settings.plusEnableBanWarnings)
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 72.0,
-                  right: 24.0,
-                  bottom: 12.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr(
-                        'plusBanWarningThresholdDescription',
-                        args: [settings.plusBanWarningThreshold.toString()],
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOutCubic,
+              child: settings.plusEnableBanWarnings
+                  ? Padding(
+                      padding: const EdgeInsets.only(
+                        left: 72.0,
+                        right: 24.0,
+                        bottom: 12.0,
                       ),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Slider(
-                            value: settings.plusBanWarningThreshold.toDouble(),
-                            min: 1,
-                            max: 50,
-                            divisions: 49,
-                            label: settings.plusBanWarningThreshold.toString(),
-                            onChanged: (val) {
-                              settings.plusBanWarningThreshold = val.round();
-                            },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tr(
+                              'plusBanWarningThresholdDescription',
+                              args: [settings.plusBanWarningThreshold.toString()],
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: 40,
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            settings.plusBanWarningThreshold.toString(),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Slider(
+                                  value: settings.plusBanWarningThreshold.toDouble(),
+                                  min: 1,
+                                  max: 50,
+                                  divisions: 49,
+                                  label: settings.plusBanWarningThreshold.toString(),
+                                  onChanged: (val) {
+                                    final rounded = val.round();
+                                    if (rounded != settings.plusBanWarningThreshold) {
+                                      AppHaptics.selectionClick();
+                                      settings.plusBanWarningThreshold = rounded;
+                                    }
+                                  },
                                 ),
+                              ),
+                              Container(
+                                width: 40,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  settings.plusBanWarningThreshold.toString(),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ];
 
@@ -316,7 +339,10 @@ class AppBehaviorSection extends StatelessWidget {
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
           subtitle: Text(subtitle),
           value: value(settings),
-          onChanged: (v) => onChanged(settings, v),
+          onChanged: (v) {
+            AppHaptics.selectionClick();
+            onChanged(settings, v);
+          },
         );
       },
     );
