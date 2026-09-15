@@ -28,10 +28,12 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _tabsScrollController = ScrollController();
   String _searchQuery = '';
   bool _showIntervalLabel = true;
   late Future<AndroidDeviceInfo> _androidInfoFuture;
   int _selectedSectionIndex = 0;
+  int _previousSectionIndex = 0;
 
   @override
   void initState() {
@@ -84,6 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _tabsScrollController.dispose();
     super.dispose();
   }
 
@@ -136,6 +139,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: SizedBox(
                 height: 52,
                 child: ListView(
+                  controller: _tabsScrollController,
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children:
@@ -174,14 +178,29 @@ class _SettingsPageState extends State<SettingsPage> {
                             onSelected: (selected) {
                               if (selected) {
                                 AppHaptics.selectionClick();
-                                setState(
-                                  () => _selectedSectionIndex = entry.key,
-                                );
+                                setState(() {
+                                  _previousSectionIndex = _selectedSectionIndex;
+                                  _selectedSectionIndex = entry.key;
+                                });
                                 _scrollController.animateTo(
                                   0,
                                   duration: const Duration(milliseconds: 300),
                                   curve: Curves.easeOutCubic,
                                 );
+                                if (_tabsScrollController.hasClients) {
+                                  final targetOffset =
+                                      (entry.key * 130.0 - 48.0).clamp(
+                                    0.0,
+                                    _tabsScrollController
+                                        .position.maxScrollExtent,
+                                  );
+                                  _tabsScrollController.animateTo(
+                                    targetOffset,
+                                    duration:
+                                        const Duration(milliseconds: 250),
+                                    curve: Curves.easeOutCubic,
+                                  );
+                                }
                               }
                             },
                             shape: RoundedRectangleBorder(
@@ -224,13 +243,24 @@ class _SettingsPageState extends State<SettingsPage> {
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (Widget child, Animation<double> animation) {
+                  final bool isForward =
+                      _selectedSectionIndex >= _previousSectionIndex;
+                  final beginOffset = _searchQuery.isNotEmpty
+                      ? const Offset(0.0, 0.03)
+                      : Offset(isForward ? 0.05 : -0.05, 0.0);
                   return FadeTransition(
-                    opacity: animation,
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    ),
                     child: SlideTransition(
                       position: Tween<Offset>(
-                        begin: const Offset(0.0, 0.03),
+                        begin: beginOffset,
                         end: Offset.zero,
-                      ).animate(animation),
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      )),
                       child: child,
                     ),
                   );

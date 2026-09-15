@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:android_package_installer/android_package_installer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/installer.dart';
@@ -44,6 +45,25 @@ class ShizukuInstaller extends Installer {
       }
     }
     return status;
+  }
+
+  /// Measures Shizuku binder round-trip latency in milliseconds.
+  /// Returns null if the binder is unavailable.
+  static Future<int?> measureBinderLatencyMs() async {
+    final sw = Stopwatch()..start();
+    try {
+      final status = await ShizukuApkInstaller().checkPermission()
+          .timeout(const Duration(seconds: 3));
+      sw.stop();
+      if (status == null ||
+          status == 'binder_not_found' ||
+          status == 'services_not_found') {
+        return null;
+      }
+      return sw.elapsedMilliseconds;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Checks if either ShizukuPlus (af.shizuku.plus.api) or stock Shizuku
@@ -117,6 +137,27 @@ class ShizukuInstaller extends Installer {
     required String appId,
     Map<String, dynamic> installOptions = const {},
   }) async {
+    // --- Smart binder pre-check with system fallback ---
+    // If the binder is unavailable and shizukuFallbackToSystem is enabled,
+    // skip Shizuku entirely and use the session-based stock installer, which
+    // still works silently when Obtainium is the installer package on Android 12+.
+    final bool fallbackEnabled =
+        installOptions['shizukuFallbackToSystem'] != false &&
+        (settingsProvider.shizukuFallbackToSystem);
+    if (fallbackEnabled) {
+      final preCheckStatus = await ShizukuApkInstaller().checkPermission()
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      final binderAlive = preCheckStatus?.startsWith('authorized') == true ||
+          preCheckStatus?.startsWith('granted') == true;
+      if (!binderAlive) {
+        // Binder is down — gracefully fall back to stock session installer
+        final code = await AndroidPackageInstaller.installApk(
+          apkFilePath: apkFilePaths.join(','),
+        );
+        return InstallResult.fromPlatformCode(code);
+      }
+    }
+
     final fakeInstallSource =
         installOptions['shizukuPretendToBeGooglePlay'] == true
         ? 'com.android.vending'

@@ -38,6 +38,8 @@ class _InstallationSectionState extends State<InstallationSection>
   String? _installedShizukuPkg;
   bool _isShizukuGranted = false;
   bool _isCheckingShizuku = false;
+  int? _binderLatencyMs;
+  bool _isTestingBinder = false;
 
   @override
   void initState() {
@@ -82,11 +84,25 @@ class _InstallationSectionState extends State<InstallationSection>
     }
   }
 
+  Future<void> _testBinderLatency() async {
+    if (_isTestingBinder) return;
+    AppHaptics.selectionClick();
+    setState(() => _isTestingBinder = true);
+    final latency = await ShizukuInstaller.measureBinderLatencyMs();
+    if (mounted) {
+      setState(() {
+        _binderLatencyMs = latency;
+        _isTestingBinder = false;
+      });
+    }
+  }
+
   bool _matches(String text, {bool isAdvanced = false}) {
     if (isAdvanced && !(widget.showAdvancedSettings ?? false)) return false;
     if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(widget.searchQuery!.toLowerCase());
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -622,6 +638,156 @@ class _InstallationSectionState extends State<InstallationSection>
                               AppHaptics.selectionClick();
                               behaviorSettings.shizukuPretendToBeGooglePlay = v;
                             },
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+
+            // Animated nested child: Fallback to stock when binder unavailable
+            if (_matches(tr('shizukuFallbackToSystem'), isAdvanced: true))
+              AnimatedSize(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: behaviorSettings.useShizuku
+                    ? Container(
+                        margin: const EdgeInsets.only(
+                          left: 20,
+                          right: 16,
+                          top: 4,
+                          bottom: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border(
+                            left: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary
+                                  .withValues(alpha: 0.5),
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: SwitchListTile.adaptive(
+                            dense: true,
+                            secondary: const Icon(Icons.swap_horiz_rounded, size: 20),
+                            title: Text(
+                              tr('shizukuFallbackToSystem'),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              tr('shizukuFallbackToSystemDescription'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            value: behaviorSettings.shizukuFallbackToSystem,
+                            onChanged: (v) {
+                              AppHaptics.selectionClick();
+                              behaviorSettings.shizukuFallbackToSystem = v;
+                            },
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+
+            // Animated nested child: Binder latency diagnostics button
+            if (_isShizukuGranted && _matches('shizuku binder latency diagnostics test'))
+              AnimatedSize(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: behaviorSettings.useShizuku
+                    ? Container(
+                        margin: const EdgeInsets.only(
+                          left: 20,
+                          right: 16,
+                          top: 4,
+                          bottom: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border(
+                            left: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .tertiary
+                                  .withValues(alpha: 0.5),
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: ListTile(
+                            dense: true,
+                            leading: Icon(
+                              Icons.speed_rounded,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                            title: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: Text(
+                                _isTestingBinder
+                                    ? tr('testingBinder')
+                                    : _binderLatencyMs != null
+                                        ? tr(
+                                            'binderLatency',
+                                            args: ['$_binderLatencyMs'],
+                                          )
+                                        : tr('testBinderConnection'),
+                                key: ValueKey<String>(
+                                  _isTestingBinder
+                                      ? 'testing'
+                                      : _binderLatencyMs != null
+                                          ? 'result_$_binderLatencyMs'
+                                          : 'idle',
+                                ),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: _binderLatencyMs != null && !_isTestingBinder
+                                      ? (_binderLatencyMs! < 50
+                                          ? Colors.green
+                                          : _binderLatencyMs! < 120
+                                              ? Colors.orange
+                                              : Theme.of(context).colorScheme.error)
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            trailing: _isTestingBinder
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : FilledButton.tonal(
+                                    style: FilledButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    ),
+                                    onPressed: _testBinderLatency,
+                                    child: Text(
+                                      _binderLatencyMs != null ? 'Retest' : 'Test',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
                           ),
                         ),
                       )

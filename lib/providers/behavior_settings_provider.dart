@@ -203,6 +203,15 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get shizukuFallbackToSystem {
+    return prefs?.safeBool('shizukuFallbackToSystem') ?? true;
+  }
+
+  set shizukuFallbackToSystem(bool val) {
+    prefs?.setBool('shizukuFallbackToSystem', val);
+    notifyListeners();
+  }
+
   double get animationSpeedMultiplier {
     return prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   }

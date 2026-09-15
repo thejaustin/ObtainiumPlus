@@ -1162,5 +1162,13 @@
     "shizukuPlusDetected": "ShizukuPlus detected",
     "shizukuDetected": "Shizuku detected",
     "shizukuStatusTurbo": "Turbo Mode active",
-    "shizukuStatusStandby": "Service running (tap to test)"
+    "shizukuStatusStandby": "Service running (tap to test)",
+    "testBinderConnection": "Test Binder Latency",
+    "testingBinder": "Testing Binder IPC...",
+    "binderHealthy": "Binder IPC Healthy",
+    "binderLatency": "{}ms IPC latency",
+    "shizukuFallbackToSystem": "Automatic System Installer Fallback",
+    "shizukuFallbackToSystemDescription": "Automatically fallback to standard package installer if Shizuku daemon is suspended or unreachable",
+    "openShizukuPlusAuthorize": "Authorize in ShizukuPlus",
+    "openShizukuAuthorize": "Authorize in Shizuku"
 }

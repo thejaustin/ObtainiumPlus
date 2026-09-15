@@ -56,6 +56,8 @@ class _DeviceOptimizationSheetContentState
   bool? _isBatteryUnrestricted;
   ShizukuLiveStatus _shizukuStatus = ShizukuLiveStatus.rootless;
   bool _isShizukuPlus = false;
+  int? _binderLatencyMs;
+  bool _isTestingBinder = false;
 
   @override
   void initState() {
@@ -318,6 +320,19 @@ class _DeviceOptimizationSheetContentState
           ),
         );
         break;
+    }
+  }
+
+  Future<void> _testBinderLatency() async {
+    if (_isTestingBinder) return;
+    AppHaptics.selectionClick();
+    setState(() => _isTestingBinder = true);
+    final latency = await ShizukuInstaller.measureBinderLatencyMs();
+    if (mounted) {
+      setState(() {
+        _binderLatencyMs = latency;
+        _isTestingBinder = false;
+      });
     }
   }
 
@@ -666,6 +681,52 @@ class _DeviceOptimizationSheetContentState
                                     ),
                                   ),
                                 ),
+                                if (_shizukuStatus == ShizukuLiveStatus.active ||
+                                    _binderLatencyMs != null ||
+                                    _isTestingBinder)
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    onTap: _testBinderLatency,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.tertiaryContainer
+                                            .withValues(alpha: 0.4),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: colorScheme.tertiary
+                                              .withValues(alpha: 0.4),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.speed_rounded,
+                                            size: 13,
+                                            color: colorScheme.tertiary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _isTestingBinder
+                                                ? 'Testing...'
+                                                : _binderLatencyMs != null
+                                                    ? 'IPC: ${_binderLatencyMs}ms'
+                                                    : 'Test IPC Ping',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: colorScheme.onTertiaryContainer,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 TextButton.icon(
                                   style: TextButton.styleFrom(
                                     visualDensity: VisualDensity.compact,
@@ -734,8 +795,29 @@ class _DeviceOptimizationSheetContentState
 
                     const SizedBox(height: 16),
 
-                    // Guide Header
-                    Row(
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 260),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, anim) {
+                        return FadeTransition(
+                          opacity: anim,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, 0.03),
+                              end: Offset.zero,
+                            ).animate(anim),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<DeviceOEM>(activeOEM),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Guide Header
+                            Row(
                       children: [
                         Icon(
                           _getOEMIcon(guide.oem),
@@ -1078,7 +1160,7 @@ class _DeviceOptimizationSheetContentState
                           ],
                         ),
                       ),
-
+                    ),
                     const SizedBox(height: 10),
 
                     // Non-root / Non-ADB Pro-tip Card
