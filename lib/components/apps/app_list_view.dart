@@ -7,8 +7,10 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -50,6 +52,11 @@ class AppListView extends StatelessWidget {
       // Swipe surfaces use scheme roles instead of raw palette colors so
       // they harmonize with Material You dynamic color in both brightnesses
       final colorScheme = Theme.of(context).colorScheme;
+      final viewSettings = context.watch<ViewSettingsProvider>();
+      final isCompact = viewSettings.appListDensity == AppListDensity.compact;
+      final radius = plusSettings.plusOverrideIndividualCornerRadius
+          ? plusSettings.plusHomeCornerRadius
+          : plusSettings.plusGlobalCornerRadius;
 
       Widget getActionIcon(AppSwipeAction action) {
         switch (action) {
@@ -89,6 +96,7 @@ class AppListView extends StatelessWidget {
       }
 
       Future<bool> handleSwipe(AppSwipeAction action) async {
+        AppHaptics.mediumImpact();
         switch (action) {
           case AppSwipeAction.update:
             appsProvider.downloadAndInstallLatestApps([app.app.id], context);
@@ -134,17 +142,35 @@ class AppListView extends StatelessWidget {
                   : (behaviorSettings.swipeLeftAction == AppSwipeAction.none
                         ? DismissDirection.startToEnd
                         : DismissDirection.horizontal)),
-        background: Container(
-          color: getActionColor(behaviorSettings.swipeRightAction),
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.only(left: 20.0),
-          child: getActionIcon(behaviorSettings.swipeRightAction),
+        background: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 8,
+            vertical: isCompact ? 2 : 6,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: getActionColor(behaviorSettings.swipeRightAction),
+              borderRadius: BorderRadius.circular(radius),
+            ),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20.0),
+            child: getActionIcon(behaviorSettings.swipeRightAction),
+          ),
         ),
-        secondaryBackground: Container(
-          color: getActionColor(behaviorSettings.swipeLeftAction),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20.0),
-          child: getActionIcon(behaviorSettings.swipeLeftAction),
+        secondaryBackground: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 8,
+            vertical: isCompact ? 2 : 6,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: getActionColor(behaviorSettings.swipeLeftAction),
+              borderRadius: BorderRadius.circular(radius),
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20.0),
+            child: getActionIcon(behaviorSettings.swipeLeftAction),
+          ),
         ),
         confirmDismiss: (direction) {
           if (direction == DismissDirection.startToEnd) {
@@ -160,6 +186,7 @@ class AppListView extends StatelessWidget {
               appInMemory: app,
               hasUpdate: hasUpdate,
               onTap: () {
+                AppHaptics.selectionClick();
                 if (appsProvider.isSelectionMode) {
                   appsProvider.toggleAppSelection(app.app.id);
                 } else {
@@ -167,6 +194,7 @@ class AppListView extends StatelessWidget {
                 }
               },
               onLongPress: () {
+                AppHaptics.heavyImpact();
                 if (!appsProvider.isSelectionMode) {
                   _showAppShortcuts();
                 } else {
@@ -202,6 +230,7 @@ class AppListView extends StatelessWidget {
               itemBuilder: (context, index) =>
                   _buildAppItem(pinnedApps[index], true, index),
               onReorder: (oldIndex, newIndex) {
+                AppHaptics.selectionClick();
                 if (oldIndex < newIndex) {
                   newIndex -= 1;
                 }
