@@ -106,6 +106,64 @@ class AppConstants {
   /// ShizukuPlus Package ID
   static const String shizukuPlusId = 'af.shizuku.plus.api';
 
+  /// Stock Shizuku Package ID (ShizukuPlus drop-in flavor uses this)
+  static const String shizukuStockId = 'moe.shizuku.privileged.api';
+
+  /// Dhizuku Package ID
+  static const String dhizukuId = 'bin.xposed.Dhizuku';
+
+  /// Known package alias groups. Any two IDs belonging to the same group
+  /// are considered aliases of each other. This prevents spurious ID mismatch
+  /// errors when an app (like ShizukuPlus) is distributed under either its
+  /// standalone Plus package ID or its drop-in stock Shizuku package ID, and
+  /// allows install-status detection to transparently locate installed aliases.
+  static const List<Set<String>> packageAliasGroups = [
+    // Shizuku family
+    {
+      shizukuPlusId,
+      shizukuStockId,
+      dhizukuId,
+    },
+    // Obtainium family
+    {
+      obtainiumPlusId,
+      'dev.imranr.obtainium',
+      'dev.imranr.obtainium.fdroid',
+      'dev.imranr.obtainium.debug',
+    },
+    // AppManager family
+    {
+      appManagerId,
+      'io.github.muntashirakon.AppManager.debug',
+    },
+    // Termux family
+    {
+      termuxPlusId,
+      'com.termux',
+    },
+  ];
+
+  /// Returns true if [id1] and [id2] are identical or belong to the same alias group.
+  static bool arePackageAliases(String id1, String id2) {
+    if (id1 == id2) return true;
+    for (final group in packageAliasGroups) {
+      if (group.contains(id1) && group.contains(id2)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Returns all known alias IDs for [packageId], excluding [packageId] itself.
+  static Set<String> getAliasesFor(String packageId) {
+    for (final group in packageAliasGroups) {
+      if (group.contains(packageId)) {
+        return group.where((id) => id != packageId).toSet();
+      }
+    }
+    return const {};
+  }
+
   /// AppManager (thejaustin fork) Package ID
   static const String appManagerId = 'io.github.muntashirakon.AppManager';
 

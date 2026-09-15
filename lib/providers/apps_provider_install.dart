@@ -27,6 +27,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 
 // NOTE: This provider extension is intentionally UX-coupled — it shows dialogs,
@@ -88,10 +89,11 @@ extension AppsProviderInstall on AppsProvider {
       if (actualPackageName == null) {
         throw ObtainiumError(tr('couldNotGetIdFromApk'))..url = app.url;
       }
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
+      final areAliases = AppConstants.arePackageAliases(app.id, actualPackageName);
+      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
         throw IDChangedError(actualPackageName)..url = app.url;
       }
-      final idChangeWasAllowed = app.allowIdChange;
+      final idChangeWasAllowed = app.allowIdChange || areAliases;
       final originalAppId = app.id;
       app = app.copyWith(id: actualPackageName, allowIdChange: false);
       downloadedFile = downloadedFile.renameSync(

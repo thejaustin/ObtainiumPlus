@@ -28,6 +28,7 @@ import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -79,22 +80,35 @@ class AppInstallService {
   }) async {
     if (packageName != null) {
       try {
-        return await pm
-            .getPackageInfo(packageName: packageName, flags: packageInfoFlags)
+        final info = await pm
+            .getPackageInfo(packageName: packageName, flags: _listPackageFlags)
             .timeout(const Duration(seconds: 15));
+        if (info != null) return info;
       } catch (e) {
         if (printErr) {
           talker.warning('getPackageInfo: $e');
         }
+      }
+      // Check known aliases if direct lookup fails (e.g. ShizukuPlus drop-in vs standalone)
+      final aliases = AppConstants.getAliasesFor(packageName);
+      for (final alias in aliases) {
+        try {
+          final info = await pm
+              .getPackageInfo(packageName: alias, flags: _listPackageFlags)
+              .timeout(const Duration(seconds: 5));
+          if (info != null) return info;
+        } catch (_) {}
       }
     }
     return null;
   }
 
   static Future<void> uninstallApp(String appId) async {
+    final info = await getInstalledInfo(appId, printErr: false);
+    final targetPkg = info?.packageName ?? appId;
     var intent = AndroidIntent(
       action: 'android.intent.action.DELETE',
-      data: 'package:$appId',
+      data: 'package:$targetPkg',
       flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
       package: 'vnd.android.package-archive',
     );
@@ -105,17 +119,21 @@ class AppInstallService {
       (await getInstalledInfo('com.berdik.letmedowngrade')) != null;
 
   static Future<void> openAppSettings(String appId) async {
+    final info = await getInstalledInfo(appId, printErr: false);
+    final targetPkg = info?.packageName ?? appId;
     final AndroidIntent intent = AndroidIntent(
       action: 'action_application_details_settings',
-      data: 'package:$appId',
+      data: 'package:$targetPkg',
     );
     await intent.launch();
   }
 
   static Future<void> openNotificationSettings(String appId) async {
+    final info = await getInstalledInfo(appId, printErr: false);
+    final targetPkg = info?.packageName ?? appId;
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.APP_NOTIFICATION_SETTINGS',
-      arguments: <String, dynamic>{'android.provider.extra.APP_PACKAGE': appId},
+      arguments: <String, dynamic>{'android.provider.extra.APP_PACKAGE': targetPkg},
     );
     await intent.launch();
   }
@@ -187,7 +205,9 @@ class AppInstallService {
 
   static Future<void> openApp(String appId) async {
     try {
-      await pm.openApp(appId);
+      final info = await getInstalledInfo(appId, printErr: false);
+      final targetPkg = info?.packageName ?? appId;
+      await pm.openApp(targetPkg);
     } catch (e) {
       talker.warning('openApp failed for $appId: $e');
     }

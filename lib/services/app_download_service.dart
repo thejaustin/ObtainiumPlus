@@ -67,10 +67,11 @@ class AppDownloadService {
     // newInfo.packageName is String? — null means the APK archive couldn't report
     // its package name; treat it as "no ID change" to avoid a null crash.
     if (newInfo.packageName != null && app.id != newInfo.packageName) {
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
+      final areAliases = AppConstants.arePackageAliases(app.id, newInfo.packageName!);
+      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
         throw IDChangedError(newInfo.packageName!);
       }
-      var idChangeWasAllowed = app.allowIdChange;
+      var idChangeWasAllowed = app.allowIdChange || areAliases;
       app.allowIdChange = false;
       var originalAppId = app.id;
       // newInfo.packageName comes from parsing the downloaded (not-yet-installed)
