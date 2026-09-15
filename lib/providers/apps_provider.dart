@@ -61,6 +61,7 @@ import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/utils/version_utils.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:obtainium/providers/apps_provider_import_export.dart';
@@ -381,10 +382,21 @@ Future<List<PackageInfo>> getAllInstalledInfo() =>
 Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   if (packageName != null) {
     try {
-      return await packageManager
-          .getPackageInfo(packageName: packageName, flags: packageInfoFlags)
+      final info = await packageManager
+          .getPackageInfo(packageName: packageName, flags: PackageInfoFlags(const {}))
           .timeout(const Duration(seconds: 15));
+      if (info != null) return info;
     } catch (_) {}
+    // Check known aliases if direct lookup fails (e.g. ShizukuPlus drop-in vs standalone)
+    final aliases = AppConstants.getAliasesFor(packageName);
+    for (final alias in aliases) {
+      try {
+        final info = await packageManager
+            .getPackageInfo(packageName: alias, flags: PackageInfoFlags(const {}))
+            .timeout(const Duration(seconds: 5));
+        if (info != null) return info;
+      } catch (_) {}
+    }
   }
   return null;
 }
@@ -724,10 +736,12 @@ class AppsProvider with ChangeNotifier {
     // The former case should be handled (give the App its real ID), the latter is a security issue
     var isTempIdBool = isTempId(app);
     if (app.id != newInfo.packageName) {
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange) {
+      final areAliases = newInfo.packageName != null &&
+          AppConstants.arePackageAliases(app.id, newInfo.packageName!);
+      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
         throw IDChangedError(newInfo.packageName!);
       }
-      var idChangeWasAllowed = app.allowIdChange;
+      var idChangeWasAllowed = app.allowIdChange || areAliases;
       app.allowIdChange = false;
       var originalAppId = app.id;
       // newInfo.packageName comes from parsing the downloaded (not-yet-installed)
@@ -1483,7 +1497,9 @@ class AppsProvider with ChangeNotifier {
     String? realInstalledVersion =
         app.additionalSettings['useVersionCodeAsOSVersion'] == true
         ? installedInfo?.versionCode.toString()
-        : installedInfo?.versionName;
+        : (installedInfo?.versionName?.trim().isNotEmpty == true
+            ? installedInfo!.versionName
+            : installedInfo?.versionCode.toString());
     // FIRST, COMPARE THE APP'S REPORTED AND REAL INSTALLED VERSIONS, WHERE ONE IS NULL
     if (installedInfo == null && app.installedVersion != null && !trackOnly) {
       // App says it's installed but isn't really (and isn't track only) - set to not installed
@@ -1741,7 +1757,15 @@ class AppsProvider with ChangeNotifier {
         final aim = apps[appId];
         if (aim == null) continue;
         var app = aim.app;
-        final PackageInfo? installedInfo = installedAppsMap[appId];
+        PackageInfo? installedInfo = installedAppsMap[appId];
+        if (installedInfo == null) {
+          for (final alias in AppConstants.getAliasesFor(appId)) {
+            if (installedAppsMap.containsKey(alias)) {
+              installedInfo = installedAppsMap[alias];
+              break;
+            }
+          }
+        }
         final moddedApp = getCorrectedInstallStatusAppIfPossible(
           app,
           installedInfo,
@@ -1843,6 +1867,16 @@ class AppsProvider with ChangeNotifier {
     }
   }
 
+  PackageInfo? _findInBulkInstalledMap(
+    Map<String, PackageInfo> map,
+    String appId,
+  ) {
+    for (final alias in AppConstants.getAliasesFor(appId)) {
+      if (map.containsKey(alias)) return map[alias];
+    }
+    return null;
+  }
+
   Future<void> saveApps(
     List<App> apps, {
     bool attemptToCorrectInstallStatus = true,
@@ -1869,7 +1903,8 @@ class AppsProvider with ChangeNotifier {
         PackageInfo? info = canReuse
             ? this.apps[app.id]!.installedInfo
             : bulkInstalledMap != null
-                ? bulkInstalledMap[app.id]
+                ? (bulkInstalledMap[app.id] ??
+                    _findInBulkInstalledMap(bulkInstalledMap, app.id))
                 : await getInstalledInfo(app.id);
         var icon = canReuse
             ? this.apps[app.id]!.icon

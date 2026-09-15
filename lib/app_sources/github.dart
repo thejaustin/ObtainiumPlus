@@ -161,7 +161,11 @@ class GitHub extends AppSource {
   }) async {
     const possibleBuildGradleLocations = [
       '/app/build.gradle',
+      '/app/build.gradle.kts',
       'android/app/build.gradle',
+      'android/app/build.gradle.kts',
+      'manager/build.gradle',
+      'manager/build.gradle.kts',
       'src/app/build.gradle',
     ];
     for (var path in possibleBuildGradleLocations) {
@@ -181,25 +185,25 @@ class GitHub extends AppSource {
                 )
                 .split('\n')
                 .map((e) => e.trim());
-            var appIds = trimmedLines.where(
-              (l) =>
-                  l.startsWith('applicationId "') ||
-                  l.startsWith('applicationId \''),
+            final appIdRegex = RegExp(
+              r'applicationId\s*=?\s*["\x27]([^"\x27]+)["\x27]',
             );
-            appIds = appIds.map((appId) {
-              final parts = appId.split(
-                appId.startsWith('applicationId "') ? '"' : '\'',
-              );
-              return parts.length > 1 ? parts[1] : '';
-            });
+            var appIds = <String>[];
+            for (final line in trimmedLines) {
+              final m = appIdRegex.firstMatch(line);
+              if (m != null && m.group(1) != null) {
+                appIds.add(m.group(1)!);
+              }
+            }
             appIds = appIds
                 .map((appId) {
                   if (appId.startsWith('\${') && appId.endsWith('}')) {
+                    final varName = appId.substring(2, appId.length - 1);
                     final varLine = trimmedLines
                         .where(
-                          (l) => l.startsWith(
-                            'def ${appId.substring(2, appId.length - 1)}',
-                          ),
+                          (l) =>
+                              l.startsWith('def $varName') ||
+                              l.startsWith('val $varName'),
                         )
                         .firstOrNull;
                     if (varLine == null) return '';
@@ -210,8 +214,9 @@ class GitHub extends AppSource {
                   }
                   return appId;
                 })
-                .where((appId) => appId.isNotEmpty);
-            if (appIds.length == 1) {
+                .where((appId) => appId.isNotEmpty && appId.contains('.'))
+                .toList();
+            if (appIds.isNotEmpty) {
               return appIds.first;
             }
           } catch (err) {

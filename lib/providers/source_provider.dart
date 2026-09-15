@@ -62,6 +62,7 @@ import 'package:obtainium/app_sources/githubpersonalrepos.dart';
 import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 
 /// Converts a list of [MapEntry] pairs into a 2D list of strings for JSON encoding.
 List<List<String>> stringMapListTo2DList(
@@ -371,6 +372,16 @@ class SourceProvider {
       );
     }
     if (rawId == null) return generateTempID(standardUrl, additionalSettings);
+    // If rawId is an alias of an app that is currently installed on the device,
+    // adopt the installed package ID directly so that status detection succeeds immediately.
+    if (!trackOnly) {
+      try {
+        final info = await AppInstallService.getInstalledInfo(rawId, printErr: false);
+        if (info?.packageName != null && info!.packageName != rawId) {
+          rawId = info.packageName!;
+        }
+      } catch (_) {}
+    }
     return URLValidator.sanitizeAppId(rawId);
   }
 
