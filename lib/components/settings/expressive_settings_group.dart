@@ -124,11 +124,15 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
 
     // Build the leading icon widget (tinted container style)
     Widget? leadingWidget = widget.icon != null
-        ? Container(
+        ? AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
+              color: colorScheme.primary.withValues(
+                alpha: _isExpanded ? 0.22 : 0.12,
+              ),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -254,10 +258,12 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radius),
               side: BorderSide(
-                color: colorScheme.outlineVariant.withValues(
-                  alpha: plusSettings.plusEnableGlassmorphism ? 0.4 : 0.18,
-                ),
-                width: 1,
+                color: _isExpanded
+                    ? colorScheme.primary.withValues(alpha: 0.38)
+                    : colorScheme.outlineVariant.withValues(
+                        alpha: plusSettings.plusEnableGlassmorphism ? 0.4 : 0.18,
+                      ),
+                width: _isExpanded ? 1.2 : 1.0,
               ),
             ),
             child: ClipRRect(
@@ -311,6 +317,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         ),
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
+        expansionAnimationStyle: const AnimationStyle(
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+          duration: Duration(milliseconds: 260),
+        ),
         initiallyExpanded: widget.initiallyExpanded,
         onExpansionChanged: _handleExpansionChange,
         tilePadding: EdgeInsets.symmetric(
