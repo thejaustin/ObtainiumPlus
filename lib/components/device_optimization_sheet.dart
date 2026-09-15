@@ -1160,8 +1160,11 @@ class _DeviceOptimizationSheetContentState
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
 
                     // Non-root / Non-ADB Pro-tip Card
                     Container(
