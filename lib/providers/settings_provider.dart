@@ -366,6 +366,12 @@ class SettingsProvider with ChangeNotifier {
   bool get parallelDownloads => prefs?.safeBool('parallelDownloads') ?? true;
   bool get shizukuPretendToBeGooglePlay =>
       prefs?.safeBool('shizukuPretendToBeGooglePlay') ?? false;
+  bool get shizukuFallbackToSystem =>
+      prefs?.safeBool('shizukuFallbackToSystem') ?? true;
+  set shizukuFallbackToSystem(bool val) {
+    prefs?.setBool('shizukuFallbackToSystem', val);
+    notifyListeners();
+  }
   double get animationSpeedMultiplier =>
       prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   bool get enableContextualTips =>
