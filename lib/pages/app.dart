@@ -1330,9 +1330,11 @@ class _AppPageState extends State<AppPage> {
               ? (!trackOnly ? tr('update') : tr('markUpdated'))
               : (!trackOnly ? tr('install') : tr('markInstalled')));
 
+      Widget button;
       if (isDownloading) {
         final progress = app?.downloadProgress;
-        return FilledButton.icon(
+        button = FilledButton.icon(
+          key: const ValueKey('downloading'),
           onPressed: null,
           icon: const SizedBox(
             width: 18,
@@ -1345,10 +1347,9 @@ class _AppPageState extends State<AppPage> {
                 : tr('installing'),
           ),
         );
-      }
-
-      if (isInstalled && !hasUpdate) {
-        return FilledButton.tonalIcon(
+      } else if (isInstalled && !hasUpdate) {
+        button = FilledButton.tonalIcon(
+          key: const ValueKey('open'),
           onPressed: () async {
             if (app?.app.id != null) {
               await AppInstallService.openApp(app!.app.id);
@@ -1357,86 +1358,118 @@ class _AppPageState extends State<AppPage> {
           icon: const Icon(Icons.open_in_new_rounded, size: 18),
           label: Text(tr('open')),
         );
+      } else {
+        button = FilledButton.icon(
+          key: ValueKey(isInstalled ? 'update' : 'install'),
+          onPressed: canAct
+              ? () async {
+                  if (defaultStorePackage != null && app?.app.id != null) {
+                    AppHaptics.heavyImpact();
+                    final scheme = defaultStorePackage == 'org.fdroid.fdroid'
+                        ? 'fdroid.app://details?id='
+                        : 'market://details?id=';
+                    await _openInStore(
+                      defaultStorePackage,
+                      scheme,
+                      app!.app.id,
+                    );
+                    return;
+                  }
+                  try {
+                    var successMessage = !isInstalled
+                        ? tr('installed')
+                        : tr('appsUpdated');
+                    AppHaptics.heavyImpact();
+                    var res = await appsProvider.downloadAndInstallLatestApps(
+                      app?.app.id != null ? [app!.app.id] : [],
+                      globalNavigatorKey.currentContext,
+                    );
+                    if (res.isNotEmpty && !trackOnly && context.mounted) {
+                      showMessage(successMessage, context);
+                    }
+                    if (res.isNotEmpty && context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                    if (res.isNotEmpty) {
+                      var np = context.read<NotificationsProvider>();
+                      np.cancel(UpdateNotification([]).id);
+                      np.cancel(
+                        SilentUpdateAttemptNotification(
+                          [],
+                          id: res[0].hashCode,
+                        ).id,
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) showError(e, context);
+                  }
+                }
+              : null,
+          icon: Icon(
+            isInstalled
+                ? Icons.system_update_alt_rounded
+                : Icons.download_rounded,
+            size: 18,
+          ),
+          label: Text(
+            buttonText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
       }
 
-      return FilledButton.icon(
-        onPressed: canAct
-            ? () async {
-                if (defaultStorePackage != null && app?.app.id != null) {
-                  AppHaptics.heavyImpact();
-                  final scheme = defaultStorePackage == 'org.fdroid.fdroid'
-                      ? 'fdroid.app://details?id='
-                      : 'market://details?id=';
-                  await _openInStore(
-                    defaultStorePackage,
-                    scheme,
-                    app!.app.id,
-                  );
-                  return;
-                }
-                try {
-                  var successMessage = !isInstalled
-                      ? tr('installed')
-                      : tr('appsUpdated');
-                  AppHaptics.heavyImpact();
-                  var res = await appsProvider.downloadAndInstallLatestApps(
-                    app?.app.id != null ? [app!.app.id] : [],
-                    globalNavigatorKey.currentContext,
-                  );
-                  if (res.isNotEmpty && !trackOnly && context.mounted) {
-                    showMessage(successMessage, context);
-                  }
-                  if (res.isNotEmpty && context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                  if (res.isNotEmpty) {
-                    var np = context.read<NotificationsProvider>();
-                    np.cancel(UpdateNotification([]).id);
-                    np.cancel(
-                      SilentUpdateAttemptNotification(
-                        [],
-                        id: res[0].hashCode,
-                      ).id,
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) showError(e, context);
-                }
-              }
-            : null,
-        icon: Icon(
-          isInstalled
-              ? Icons.system_update_alt_rounded
-              : Icons.download_rounded,
-          size: 18,
-        ),
-        label: Text(
-          buttonText,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+      return ScaleTouchWrapper(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.95, end: 1.0).animate(anim),
+              child: child,
+            ),
+          ),
+          child: SizedBox(
+            key: button.key,
+            width: double.infinity,
+            child: button,
+          ),
         ),
       );
     }
 
-    getBottomSheetMenu() => Padding(
-      padding: EdgeInsets.fromLTRB(
-        0,
-        0,
-        0,
-        MediaQuery.of(context).padding.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Row(
-              children: [
-                Expanded(child: getInstallOrUpdateButton()),
-                const SizedBox(width: 8.0),
-                IconButton.filledTonal(
-                  icon: const Icon(Icons.storefront_outlined),
-                  tooltip: tr('openInStore'),
+    getBottomSheetMenu() {
+      final colorScheme = Theme.of(context).colorScheme;
+      return Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLow,
+          border: Border(
+            top: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+              width: 1,
+            ),
+          ),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          0,
+          0,
+          0,
+          MediaQuery.of(context).padding.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(child: getInstallOrUpdateButton()),
+                  const SizedBox(width: 8.0),
+                  IconButton.filledTonal(
+                    icon: const Icon(Icons.storefront_outlined),
+                    tooltip: tr('openInStore'),
                   onPressed: app?.app.id != null
                       ? () {
                           AppHaptics.selectionClick();
@@ -1612,6 +1645,7 @@ class _AppPageState extends State<AppPage> {
         ],
       ),
     );
+  }
 
     appScreenAppBar() => AppBar(
       leading: IconButton(

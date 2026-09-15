@@ -111,18 +111,20 @@ class AppListTile extends StatelessWidget {
           ),
         );
       }
-      return IconButton.filled(
-        icon: const Icon(Icons.download_rounded),
-        onPressed: () {
-          AppHaptics.selectionClick();
-          appsProvider.downloadAndInstallLatestApps([
-            appInMemory.app.id,
-          ], context);
-        },
-        tooltip: tr('installUpdate'),
-        style: IconButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+      return ScaleTouchWrapper(
+        child: IconButton.filled(
+          icon: const Icon(Icons.download_rounded),
+          onPressed: () {
+            AppHaptics.selectionClick();
+            appsProvider.downloadAndInstallLatestApps([
+              appInMemory.app.id,
+            ], context);
+          },
+          tooltip: tr('installUpdate'),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+          ),
         ),
       );
     }
