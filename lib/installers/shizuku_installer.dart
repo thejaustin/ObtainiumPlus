@@ -66,8 +66,8 @@ class ShizukuInstaller extends Installer {
     }
   }
 
-  /// Checks if either ShizukuPlus (af.shizuku.plus.api) or stock Shizuku
-  /// (moe.shizuku.privileged.api) is installed.
+  /// Checks if ShizukuPlus (af.shizuku.plus.api), Dhizuku (bin.xposed.Dhizuku),
+  /// or stock Shizuku (moe.shizuku.privileged.api) is installed.
   static Future<String?> getInstalledShizukuPackageId() async {
     try {
       final plus = await AppInstallService.getInstalledInfo(
@@ -75,6 +75,11 @@ class ShizukuInstaller extends Installer {
         printErr: false,
       );
       if (plus != null) return AppConstants.shizukuPlusId;
+      final dhizuku = await AppInstallService.getInstalledInfo(
+        'bin.xposed.Dhizuku',
+        printErr: false,
+      );
+      if (dhizuku != null) return 'bin.xposed.Dhizuku';
       final stock = await AppInstallService.getInstalledInfo(
         'moe.shizuku.privileged.api',
         printErr: false,
@@ -82,6 +87,15 @@ class ShizukuInstaller extends Installer {
       if (stock != null) return 'moe.shizuku.privileged.api';
     } catch (_) {}
     return null;
+  }
+
+  /// Returns a friendly label for the active Shizuku provider
+  /// ('ShizukuPlus', 'Dhizuku', or 'Shizuku').
+  static Future<String> getShizukuProviderLabel() async {
+    final pkg = await getInstalledShizukuPackageId();
+    if (pkg == AppConstants.shizukuPlusId) return 'ShizukuPlus';
+    if (pkg == 'bin.xposed.Dhizuku') return 'Dhizuku';
+    return 'Shizuku';
   }
 
   /// Launches whichever Shizuku manager is installed (prioritizing ShizukuPlus).
