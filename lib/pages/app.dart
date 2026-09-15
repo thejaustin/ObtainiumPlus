@@ -574,7 +574,12 @@ class _AppPageState extends State<AppPage> {
                                   const SizedBox(height: 6),
                                   InkWell(
                                     borderRadius: BorderRadius.circular(6),
-                                    onTap: changeLogFn,
+                                    onTap: changeLogFn != null
+                                        ? () {
+                                            AppHaptics.selectionClick();
+                                            changeLogFn();
+                                          }
+                                        : null,
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 2),
                                       child: Row(
@@ -1351,6 +1356,7 @@ class _AppPageState extends State<AppPage> {
         button = FilledButton.tonalIcon(
           key: const ValueKey('open'),
           onPressed: () async {
+            AppHaptics.selectionClick();
             if (app?.app.id != null) {
               await AppInstallService.openApp(app!.app.id);
             }

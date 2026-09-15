@@ -396,6 +396,14 @@ class AppDownloadService {
         notif = DownloadNotification(app.finalName, -1, appId: app.id);
         notificationsProvider?.notify(notif);
       }
+
+      if (!downloadedFile.existsSync() || downloadedFile.lengthSync() == 0) {
+        try {
+          if (downloadedFile.existsSync()) downloadedFile.deleteSync();
+        } catch (_) {}
+        throw ObtainiumError('Downloaded file is missing or empty');
+      }
+
       PackageInfo? newInfo;
       var isAPK = downloadedFile.path.toLowerCase().endsWith('.apk');
       var isXAPK = downloadedFile.path.toLowerCase().endsWith('.xapk');

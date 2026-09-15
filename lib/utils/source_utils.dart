@@ -121,6 +121,8 @@ sourceRequestStreamResponse(
 }
 
 class SourceUtils {
+  static SettingsProvider? _cachedSettingsProvider;
+
   static bool isSupportedPackageFile(String fileNameOrUrl) {
     final lower = fileNameOrUrl.toLowerCase();
     return AppConstants.supportedPackageExtensions.any(
@@ -138,11 +140,14 @@ class SourceUtils {
     int maxRedirects = 5,
     bool allowInsecure = false,
     int maxRetries = 3,
+    SettingsProvider? settingsProvider,
   }) async {
     int retryCount = 0;
     Duration retryDelay = const Duration(seconds: 2);
-    final sp = SettingsProvider();
-    await sp.initializeSettings();
+    final sp = settingsProvider ?? (_cachedSettingsProvider ??= SettingsProvider());
+    if (sp.prefs == null) {
+      await sp.initializeSettings();
+    }
 
     while (true) {
       try {
@@ -213,11 +218,37 @@ class SourceUtils {
             (finalResponse.statusCode == 429 ||
                 (finalResponse.statusCode >= 500 &&
                     finalResponse.statusCode < 600))) {
+          Duration delay = retryDelay;
+          if (finalResponse.statusCode == 429) {
+            final retryAfterHeader = finalResponse.headers['retry-after'];
+            if (retryAfterHeader != null) {
+              final secs = int.tryParse(retryAfterHeader);
+              if (secs != null && secs > 60) {
+                // If the rate limit reset is longer than 60s, don't stall the app in a retry loop
+                return finalResponse;
+              } else if (secs != null && secs > 0) {
+                delay = Duration(seconds: secs);
+              }
+            }
+            final resetHeader = finalResponse.headers['x-ratelimit-reset'];
+            if (resetHeader != null) {
+              final parsed = int.tryParse(resetHeader);
+              if (parsed != null) {
+                final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+                final waitSecs = parsed - nowSeconds;
+                if (waitSecs > 60) {
+                  return finalResponse;
+                } else if (waitSecs > 0) {
+                  delay = Duration(seconds: waitSecs);
+                }
+              }
+            }
+          }
           // Exponential backoff
           talker.warning(
-            'HTTP ${finalResponse.statusCode} for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)',
+            'HTTP ${finalResponse.statusCode} for $url. Retrying in ${delay.inSeconds}s... ($retryCount/$maxRetries)',
           );
-          await Future.delayed(retryDelay);
+          await Future.delayed(delay);
           retryCount++;
           retryDelay *= 2;
           continue;
