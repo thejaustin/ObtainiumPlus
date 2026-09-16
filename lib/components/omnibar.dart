@@ -552,18 +552,27 @@ class AppActionsFAB extends StatelessWidget {
                 children: [
                   // Handle
                   const DragHandle(width: 40),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                  // Title — a plain tap on the FAB already opens the
-                  // unified search+add (CommandCenter); this long-press
-                  // menu is only for the less-common actions.
-                  Text(
-                    tr('moreAddOptions'),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  // Title header with category icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 20,
+                        color: colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        tr('moreAddOptions'),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Flexible(
                     child: SingleChildScrollView(
                       child: Column(
@@ -573,9 +582,12 @@ class AppActionsFAB extends StatelessWidget {
                           if (settings.plusFabShowAddByUrl)
                             _buildMenuItem(
                               context,
-                              icon: Icons.link_outlined,
+                              icon: Icons.link_rounded,
                               title: tr('addAppByUrl'),
                               subtitle: tr('addAppByUrlDescription'),
+                              containerColor: colorScheme.primaryContainer
+                                  .withValues(alpha: 0.6),
+                              iconColor: colorScheme.primary,
                               onTap: () {
                                 Navigator.pop(context);
                                 showAddAppSheet(context: context);
@@ -585,11 +597,14 @@ class AppActionsFAB extends StatelessWidget {
                           if (settings.plusFabShowGithubStarred)
                             _buildMenuItem(
                               context,
-                              icon: Icons.star_border_rounded,
+                              icon: Icons.star_rounded,
                               title: tr('importGithubStarredRepos'),
                               subtitle: tr(
                                 'importGithubStarredReposDescription',
                               ),
+                              containerColor:
+                                  Colors.amber.withValues(alpha: 0.16),
+                              iconColor: Colors.amber.shade700,
                               onTap: () {
                                 Navigator.pop(context);
                                 _runMassImport(
@@ -605,9 +620,12 @@ class AppActionsFAB extends StatelessWidget {
                           if (settings.plusFabShowGithubPersonalRepos)
                             _buildMenuItem(
                               context,
-                              icon: Icons.person_outline_rounded,
+                              icon: Icons.person_rounded,
                               title: tr('githubPersonalRepos'),
                               subtitle: tr('githubPersonalReposDescription'),
+                              containerColor:
+                                  Colors.indigo.withValues(alpha: 0.16),
+                              iconColor: Colors.indigo.shade400,
                               onTap: () {
                                 Navigator.pop(context);
                                 _runMassImport(
@@ -623,9 +641,12 @@ class AppActionsFAB extends StatelessWidget {
                           if (settings.plusFabShowImportInstalled)
                             _buildMenuItem(
                               context,
-                              icon: Icons.install_mobile_outlined,
+                              icon: Icons.install_mobile_rounded,
                               title: tr('importInstalledApps'),
                               subtitle: tr('importInstalledAppsDescription'),
+                              containerColor:
+                                  Colors.teal.withValues(alpha: 0.16),
+                              iconColor: Colors.teal.shade400,
                               onTap: () {
                                 Navigator.pop(context);
                                 showSystemAppSelectorSheet(context: context);
@@ -635,9 +656,12 @@ class AppActionsFAB extends StatelessWidget {
                           if (settings.plusDeveloperMode)
                             _buildMenuItem(
                               context,
-                              icon: Icons.qr_code_scanner_outlined,
+                              icon: Icons.qr_code_scanner_rounded,
                               title: tr('scanQRCode'),
                               subtitle: tr('scanQRCodeDescription'),
+                              containerColor:
+                                  Colors.deepOrange.withValues(alpha: 0.16),
+                              iconColor: Colors.deepOrange.shade400,
                               onTap: () {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -654,9 +678,12 @@ class AppActionsFAB extends StatelessWidget {
                               !settings.plusDeveloperMode)
                             _buildMenuItem(
                               context,
-                              icon: Icons.link_outlined,
+                              icon: Icons.link_rounded,
                               title: tr('addAppByUrl'),
                               subtitle: tr('addAppByUrlDescription'),
+                              containerColor: colorScheme.primaryContainer
+                                  .withValues(alpha: 0.6),
+                              iconColor: colorScheme.primary,
                               onTap: () {
                                 Navigator.pop(context);
                                 showAddAppSheet(context: context);
@@ -727,6 +754,11 @@ class AppActionsFAB extends StatelessWidget {
         ),
         title: Text(title, style: Theme.of(context).textTheme.titleMedium),
         subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          size: 20,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+        ),
         onTap: handleTap,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(itemRadius),
@@ -742,71 +774,117 @@ class AppActionsFAB extends StatelessWidget {
       12.0,
       28.0,
     );
-
-    // One FAB instead of two: a tap opens the unified search+add
-    // (CommandCenter) directly — the action people need almost every
-    // time — and a long-press reveals the less-common extras (add by
-    // URL form, GitHub bulk imports, etc.) instead of always showing
-    // them up front.
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Semantics(
       label: tr('addApp'),
       hint: tr('moreAddOptionsHint'),
       button: true,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.tertiary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(fabRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      child: ScaleTouchWrapper(
+        onTap: () {
+          AppHaptics.selectionClick();
+          CommandCenter.show(context);
+        },
+        onLongPress: () {
+          AppHaptics.heavyImpact();
+          showAddAppMenu(context);
+        },
+        scaleDownFactor: 0.95,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                colorScheme.primary,
+                colorScheme.tertiary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-        ),
-        // A plain FloatingActionButton has its own internal tap
-        // recognizer; wrapping it in an outer GestureDetector for
-        // long-press put two recognizers in the same gesture arena,
-        // which delayed/could suppress the tap. A single Material+InkWell
-        // handles both gestures on one recognizer instead, so this
-        // manually replicates FAB.extended's look (56dp min height,
-        // icon+label row) rather than using the FAB widget itself.
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
             borderRadius: BorderRadius.circular(fabRadius),
-            onTap: () {
-              AppHaptics.selectionClick();
-              CommandCenter.show(context);
-            },
-            onLongPress: () {
-              AppHaptics.heavyImpact();
-              showAddAppMenu(context);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.25),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: 0.38),
+                blurRadius: 16,
+                spreadRadius: 1,
+                offset: const Offset(0, 6),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.add, color: onPrimary),
-                  const SizedBox(width: 8),
-                  Text(tr('addApp'), style: TextStyle(color: onPrimary)),
-                ],
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Primary action: opens CommandCenter
+                InkWell(
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(fabRadius),
+                  ),
+                  onTap: () {
+                    AppHaptics.selectionClick();
+                    CommandCenter.show(context);
+                  },
+                  onLongPress: () {
+                    AppHaptics.heavyImpact();
+                    showAddAppMenu(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_rounded, color: onPrimary, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          tr('addApp'),
+                          style: TextStyle(
+                            color: onPrimary,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Subtle vertical divider between the main button and options affordance
+                Container(
+                  width: 1,
+                  height: 20,
+                  color: onPrimary.withValues(alpha: 0.25),
+                ),
+                // Secondary action affordance: directly opens the quick options menu
+                Tooltip(
+                  message: tr('moreAddOptions'),
+                  child: InkWell(
+                    borderRadius: BorderRadius.horizontal(
+                      right: Radius.circular(fabRadius),
+                    ),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      showAddAppMenu(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 14, 14, 14),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: onPrimary.withValues(alpha: 0.9),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

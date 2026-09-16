@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/play_store_mirror_service.dart';
@@ -115,10 +117,20 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
             return _buildUpdateCard(update);
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _startScan,
-          tooltip: tr('refresh'),
-          child: const Icon(Icons.refresh),
+        floatingActionButton: ScaleTouchWrapper(
+          onTap: () {
+            AppHaptics.selectionClick();
+            _startScan();
+          },
+          scaleDownFactor: 0.95,
+          child: FloatingActionButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              _startScan();
+            },
+            tooltip: tr('refresh'),
+            child: const Icon(Icons.refresh),
+          ),
         ),
       );
     }
