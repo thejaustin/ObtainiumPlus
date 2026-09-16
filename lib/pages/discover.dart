@@ -570,7 +570,10 @@ class DiscoverPageState extends State<DiscoverPage> {
                         hintText: tr('searchSomeSourcesLabel'),
                         prefixIcon: IconButton(
                           icon: const Icon(Icons.tune),
-                          onPressed: showSearchOptions,
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            showSearchOptions();
+                          },
                           tooltip: tr('searchOptions'),
                         ),
                         suffixIcon: Row(
@@ -581,6 +584,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                                 icon: const Icon(Icons.clear),
                                 tooltip: tr('clear'),
                                 onPressed: () {
+                                  AppHaptics.selectionClick();
                                   _searchDebounce?.cancel();
                                   _searchController.clear();
                                   setState(() {
@@ -591,7 +595,10 @@ class DiscoverPageState extends State<DiscoverPage> {
                               ),
                             IconButton(
                               icon: const Icon(Icons.search),
-                              onPressed: runSearch,
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                runSearch();
+                              },
                             ),
                           ],
                         ),
@@ -622,41 +629,54 @@ class DiscoverPageState extends State<DiscoverPage> {
                         runSearch();
                       },
                     ),
-                    if (searchQuery.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Consumer<SettingsProvider>(
-                        builder: (context, settingsProvider, child) {
-                          return Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: searchableSources.map((source) {
-                              final isSelected = !settingsProvider
-                                  .searchDeselected
-                                  .contains(source.name);
-                              return FilterChip(
-                                label: Text(source.name),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  final currentDeselected = List<String>.from(
-                                    settingsProvider.searchDeselected,
-                                  );
-                                  if (selected) {
-                                    currentDeselected.remove(source.name);
-                                  } else {
-                                    currentDeselected.add(source.name);
-                                  }
-                                  settingsProvider.searchDeselected =
-                                      currentDeselected;
-                                  if (searchQuery.isNotEmpty) {
-                                    runSearch();
-                                  }
-                                },
-                              );
-                            }).toList(),
-                          );
-                        },
-                      ),
-                    ],
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOutCubic,
+                      child: searchQuery.isNotEmpty
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 12),
+                                Consumer<SettingsProvider>(
+                                  builder: (context, settingsProvider, child) {
+                                    return Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: searchableSources.map((source) {
+                                        final isSelected = !settingsProvider
+                                            .searchDeselected
+                                            .contains(source.name);
+                                        return FilterChip(
+                                          label: Text(source.name),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            AppHaptics.selectionClick();
+                                            final currentDeselected =
+                                                List<String>.from(
+                                              settingsProvider.searchDeselected,
+                                            );
+                                            if (selected) {
+                                              currentDeselected
+                                                  .remove(source.name);
+                                            } else {
+                                              currentDeselected
+                                                  .add(source.name);
+                                            }
+                                            settingsProvider.searchDeselected =
+                                                currentDeselected;
+                                            if (searchQuery.isNotEmpty) {
+                                              runSearch();
+                                            }
+                                          },
+                                        );
+                                      }).toList(),
+                                    );
+                                  },
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               ),
@@ -676,9 +696,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                         ? Icons.view_list_rounded
                         : Icons.grid_view_rounded,
                   ),
-                  onPressed: () => viewSettings.discoverViewMode = isGridView
-                      ? ViewMode.list
-                      : ViewMode.grid,
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    viewSettings.discoverViewMode =
+                        isGridView ? ViewMode.list : ViewMode.grid;
+                  },
                 ),
               ),
             ),
@@ -747,8 +769,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                             ? Icons.view_list_rounded
                             : Icons.grid_view_rounded,
                       ),
-                      onPressed: () => viewSettings.discoverViewMode =
-                          isGridView ? ViewMode.list : ViewMode.grid,
+                      onPressed: () {
+                        AppHaptics.selectionClick();
+                        viewSettings.discoverViewMode =
+                            isGridView ? ViewMode.list : ViewMode.grid;
+                      },
                     ),
                   ],
                 ),
@@ -915,7 +940,10 @@ class DiscoverCategoryRow extends StatelessWidget {
                 ),
           label: Text(label),
           selected: isSelected,
-          onSelected: (_) => onTap(),
+          onSelected: (_) {
+            AppHaptics.selectionClick();
+            onTap();
+          },
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(cornerRadius),
           ),
