@@ -326,6 +326,7 @@ class _CommandCenterState extends State<CommandCenter> {
                               ? IconButton(
                                   icon: const Icon(Icons.clear),
                                   onPressed: () {
+                                    AppHaptics.selectionClick();
                                     _controller.clear();
                                     _onSearchChanged('');
                                   },
@@ -875,7 +876,10 @@ class _CommandCenterState extends State<CommandCenter> {
     return ActionChip(
       avatar: Icon(icon, size: 16),
       label: Text(label),
-      onPressed: onPressed,
+      onPressed: () {
+        AppHaptics.selectionClick();
+        onPressed();
+      },
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(chipRadius),

@@ -122,7 +122,14 @@ class DiscoverFeedService {
           : const Duration(seconds: 15);
 
       final response = await http
-          .get(Uri.parse(_feedUrl))
+          .get(
+            Uri.parse(_feedUrl),
+            headers: {
+              'User-Agent': 'ObtainiumPlus',
+              'Accept':
+                  'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            },
+          )
           .timeout(timeoutDuration);
       if (response.statusCode != 200) return null;
       feed = _parseCatalogHtml(response.body);

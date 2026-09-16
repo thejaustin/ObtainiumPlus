@@ -35,6 +35,14 @@ class AppSearchService {
     Map<String, Map<String, dynamic>> querySettings = const {},
     List<String> deselectedSources = const [],
   }) async {
+    if (query.trim().isEmpty) {
+      return const AppSearchResult(
+        results: {},
+        sourcesQueried: 0,
+        sourcesFailed: 0,
+      );
+    }
+
     final provider = sourceProvider ?? SourceProvider();
     final sources = provider.sources
         .where((e) => e.canSearch && !deselectedSources.contains(e.name))

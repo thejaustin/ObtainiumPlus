@@ -707,8 +707,13 @@ class AppActionsFAB extends StatelessWidget {
         : settings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.5).clamp(8.0, 16.0);
 
+    void handleTap() {
+      AppHaptics.selectionClick();
+      onTap();
+    }
+
     return ScaleTouchWrapper(
-      onTap: onTap,
+      onTap: handleTap,
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
@@ -722,7 +727,7 @@ class AppActionsFAB extends StatelessWidget {
         ),
         title: Text(title, style: Theme.of(context).textTheme.titleMedium),
         subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-        onTap: onTap,
+        onTap: handleTap,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(itemRadius),
         ),
