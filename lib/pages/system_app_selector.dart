@@ -1,4 +1,5 @@
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -600,63 +601,83 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       scale: _selectedCount > 0 ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeOutBack,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.tertiary,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                      child: ScaleTouchWrapper(
+                        onTap: (_selectedCount == 0 || _isImporting)
+                            ? null
+                            : () {
+                                AppHaptics.selectionClick();
+                                _importSelectedApps(appsProvider);
+                              },
+                        scaleDownFactor: 0.95,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.tertiary,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          ],
-                        ),
-                        child: FloatingActionButton.extended(
-                          onPressed: (_selectedCount == 0 || _isImporting)
-                              ? null
-                              : () {
-                                  AppHaptics.selectionClick();
-                                  _importSelectedApps(appsProvider);
-                                },
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          hoverElevation: 0,
-                          focusElevation: 0,
-                          highlightElevation: 0,
-                          icon: _isImporting
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: ExpressiveCircularProgressIndicator(
-                                    strokeWidth: 2,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.38),
+                                blurRadius: 16,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 6),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.16),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: FloatingActionButton.extended(
+                            onPressed: (_selectedCount == 0 || _isImporting)
+                                ? null
+                                : () {
+                                    AppHaptics.selectionClick();
+                                    _importSelectedApps(appsProvider);
+                                  },
+                            backgroundColor: Colors.transparent,
+                            elevation: 0,
+                            hoverElevation: 0,
+                            focusElevation: 0,
+                            highlightElevation: 0,
+                            icon: _isImporting
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: ExpressiveCircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color:
+                                          Theme.of(context).colorScheme.onPrimary,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.download_outlined,
                                     color:
                                         Theme.of(context).colorScheme.onPrimary,
                                   ),
-                                )
-                              : Icon(
-                                  Icons.download_outlined,
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                ),
-                          label: Text(
-                            _isImporting
-                                ? tr('importing')
-                                : tr(
-                                    'importXApps',
-                                    args: [_selectedCount.toString()],
-                                  ),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary,
+                            label: Text(
+                              _isImporting
+                                  ? tr('importing')
+                                  : tr(
+                                      'importXApps',
+                                      args: [_selectedCount.toString()],
+                                    ),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
                             ),
                           ),
                         ),
@@ -890,58 +911,78 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               scale: _selectedCount > 0 ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutBack,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.tertiary,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+              child: ScaleTouchWrapper(
+                onTap: (_selectedCount == 0 || _isImporting)
+                    ? null
+                    : () {
+                        AppHaptics.selectionClick();
+                        _importSelectedApps(appsProvider);
+                      },
+                scaleDownFactor: 0.95,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.tertiary,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: FloatingActionButton.extended(
-                  onPressed: (_selectedCount == 0 || _isImporting)
-                      ? null
-                      : () {
-                          AppHaptics.selectionClick();
-                          _importSelectedApps(appsProvider);
-                        },
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  hoverElevation: 0,
-                  focusElevation: 0,
-                  highlightElevation: 0,
-                  icon: _isImporting
-                      ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: ExpressiveCircularProgressIndicator(
-                            strokeWidth: 2,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.38),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 6),
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton.extended(
+                    onPressed: (_selectedCount == 0 || _isImporting)
+                        ? null
+                        : () {
+                            AppHaptics.selectionClick();
+                            _importSelectedApps(appsProvider);
+                          },
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    hoverElevation: 0,
+                    focusElevation: 0,
+                    highlightElevation: 0,
+                    icon: _isImporting
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: ExpressiveCircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          )
+                        : Icon(
+                            Icons.download_outlined,
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
-                        )
-                      : Icon(
-                          Icons.download_outlined,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                  label: Text(
-                    _isImporting
-                        ? tr('importing')
-                        : tr('importXApps', args: [_selectedCount.toString()]),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
+                    label: Text(
+                      _isImporting
+                          ? tr('importing')
+                          : tr('importXApps', args: [_selectedCount.toString()]),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   ),
                 ),
