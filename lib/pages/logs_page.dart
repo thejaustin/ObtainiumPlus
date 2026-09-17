@@ -10,7 +10,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/app_constants.dart';
-import 'package:obtainium/utils/app_haptics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -168,8 +168,8 @@ $logs''';
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: ConditionalBlur(
-                        enableBlur: enableGlass,
-                        borderRadius: BorderRadius.circular(cardRadius),
+                        enabled: enableGlass,
+                        sigma: AppConstants.glassBlurSigma,
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: SingleChildScrollView(
