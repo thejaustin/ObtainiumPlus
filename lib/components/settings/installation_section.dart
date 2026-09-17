@@ -782,7 +782,10 @@ class _InstallationSectionState extends State<InstallationSection>
                                       visualDensity: VisualDensity.compact,
                                       padding: const EdgeInsets.symmetric(horizontal: 12),
                                     ),
-                                    onPressed: _testBinderLatency,
+                                    onPressed: () {
+                                      AppHaptics.selectionClick();
+                                      _testBinderLatency();
+                                    },
                                     child: Text(
                                       _binderLatencyMs != null ? 'Retest' : 'Test',
                                       style: const TextStyle(fontSize: 12),

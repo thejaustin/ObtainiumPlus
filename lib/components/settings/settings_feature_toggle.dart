@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 /// Shared toggle-row builder for settings sections: wraps a single boolean
@@ -34,7 +35,10 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
         title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
         subtitle: Text(subtitle),
         value: value(settings),
-        onChanged: (v) => onChanged(settings, v),
+        onChanged: (v) {
+          AppHaptics.selectionClick();
+          onChanged(settings, v);
+        },
       );
     },
   );

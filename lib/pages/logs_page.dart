@@ -2,11 +2,15 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/app_haptics.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -72,8 +76,16 @@ $logs''';
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final cardRadius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: colorScheme.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -83,6 +95,7 @@ $logs''';
                 icon: const Icon(Icons.copy_outlined),
                 tooltip: tr('copyToClipboard'),
                 onPressed: () {
+                  AppHaptics.selectionClick();
                   if (logString != null) {
                     Clipboard.setData(ClipboardData(text: logString!));
                     showMessage(tr('copiedToClipboard'), context);
@@ -93,6 +106,7 @@ $logs''';
                 icon: const Icon(Icons.delete_outline),
                 tooltip: tr('clearCache'),
                 onPressed: () {
+                  AppHaptics.selectionClick();
                   context.read<LogsProvider>().clear();
                   setState(() {
                     logString = null;
@@ -105,7 +119,10 @@ $logs''';
               IconButton(
                 icon: const Icon(Icons.bug_report),
                 tooltip: tr('reportIssue'),
-                onPressed: _reportIssue,
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  _reportIssue();
+                },
               ),
             ],
             floating: true,
@@ -131,7 +148,44 @@ $logs''';
                               '[${log.level.name}] ${log.timestamp}: ${log.message}',
                         )
                         .join('\n');
-                    return SelectableText(logString ?? '');
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: enableGlass
+                            ? colorScheme.surface.withValues(
+                                alpha: AppConstants.glassSurfaceAlpha,
+                              )
+                            : colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(cardRadius),
+                        border: Border.all(
+                          color: enableGlass
+                              ? colorScheme.onSurface.withValues(
+                                  alpha: AppConstants.glassBorderAlpha,
+                                )
+                              : colorScheme.outlineVariant.withValues(
+                                  alpha: 0.3,
+                                ),
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: ConditionalBlur(
+                        enableBlur: enableGlass,
+                        borderRadius: BorderRadius.circular(cardRadius),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: SingleChildScrollView(
+                            child: SelectableText(
+                              logString ?? '',
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12.5,
+                                height: 1.45,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
                   } else {
                     return const Center(
                       child: ExpressiveCircularProgressIndicator(),

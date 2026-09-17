@@ -125,7 +125,10 @@ class AdvancedSettingsSection extends StatelessWidget {
               ),
               subtitle: Text(tr('backupEncryptionDescription')),
               value: plusSettings.backupEncryptionEnabled,
-              onChanged: (v) => plusSettings.backupEncryptionEnabled = v,
+              onChanged: (v) {
+                AppHaptics.selectionClick();
+                plusSettings.backupEncryptionEnabled = v;
+              },
             );
           },
         ),
@@ -239,7 +242,10 @@ class AdvancedSettingsSection extends StatelessWidget {
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
           subtitle: Text(subtitle),
           value: value(settings),
-          onChanged: (v) => onChanged(settings, v),
+          onChanged: (v) {
+            AppHaptics.selectionClick();
+            onChanged(settings, v);
+          },
         );
       },
     );
