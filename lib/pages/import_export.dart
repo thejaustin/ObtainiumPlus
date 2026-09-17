@@ -430,26 +430,27 @@ class _ImportExportPageState extends State<ImportExportPage> {
       final enableGlass = plusSettings.plusEnableGlassmorphism;
       return Container(
         margin: const EdgeInsets.only(bottom: 12),
-        child: ConditionalBlur(
-          enableBlur: enableGlass,
+        decoration: BoxDecoration(
+          color: enableGlass
+              ? colorScheme.surface.withValues(
+                  alpha: AppConstants.glassSurfaceAlpha,
+                )
+              : colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(cardRadius),
-          child: Container(
+          border: Border.all(
+            color: enableGlass
+                ? colorScheme.onSurface.withValues(
+                    alpha: AppConstants.glassBorderAlpha,
+                  )
+                : colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ConditionalBlur(
+          enabled: enableGlass,
+          sigma: AppConstants.glassBlurSigma,
+          child: Padding(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: enableGlass
-                  ? colorScheme.surface.withValues(
-                      alpha: AppConstants.glassSurfaceAlpha,
-                    )
-                  : colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(cardRadius),
-              border: Border.all(
-                color: enableGlass
-                    ? colorScheme.onSurface.withValues(
-                        alpha: AppConstants.glassBorderAlpha,
-                      )
-                    : colorScheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -552,26 +553,27 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     final enableGlass = plusSettings.plusEnableGlassmorphism;
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      child: ConditionalBlur(
-                        enableBlur: enableGlass,
+                      decoration: BoxDecoration(
+                        color: enableGlass
+                            ? colorScheme.surface.withValues(
+                                alpha: AppConstants.glassSurfaceAlpha,
+                              )
+                            : colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(cardRadius),
-                        child: Container(
+                        border: Border.all(
+                          color: enableGlass
+                              ? colorScheme.onSurface.withValues(
+                                  alpha: AppConstants.glassBorderAlpha,
+                                )
+                              : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: ConditionalBlur(
+                        enabled: enableGlass,
+                        sigma: AppConstants.glassBlurSigma,
+                        child: Padding(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          decoration: BoxDecoration(
-                            color: enableGlass
-                                ? colorScheme.surface.withValues(
-                                    alpha: AppConstants.glassSurfaceAlpha,
-                                  )
-                                : colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(cardRadius),
-                            border: Border.all(
-                              color: enableGlass
-                                  ? colorScheme.onSurface.withValues(
-                                      alpha: AppConstants.glassBorderAlpha,
-                                    )
-                                  : colorScheme.outlineVariant.withValues(alpha: 0.4),
-                            ),
-                          ),
                           child: GeneratedForm(
                             items: [
                               [

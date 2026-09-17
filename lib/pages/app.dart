@@ -548,10 +548,12 @@ class _AppPageState extends State<AppPage> {
                   appsProvider: appsProvider,
                   onUpdate: (id) => getUpdate(id),
                 ),
-                ConditionalBlur(
-                  enableBlur: plusSettings.plusEnableGlassmorphism,
+                ClipRRect(
                   borderRadius: BorderRadius.circular(cardRadius),
-                  child: Container(
+                  child: ConditionalBlur(
+                    enabled: plusSettings.plusEnableGlassmorphism,
+                    sigma: AppConstants.glassBlurSigma,
+                    child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: plusSettings.plusEnableGlassmorphism
@@ -734,9 +736,10 @@ class _AppPageState extends State<AppPage> {
                   ),
                 ),
               ),
-              ],
             ),
-          ),
+          ],
+        ),
+      ),
 
           /* Certificate Hashes */
           if (app != null && app.certificateHashes.isNotEmpty)
@@ -1467,7 +1470,8 @@ class _AppPageState extends State<AppPage> {
       final colorScheme = Theme.of(context).colorScheme;
       final enableGlass = plusSettings.plusEnableGlassmorphism;
       return ConditionalBlur(
-        enableBlur: enableGlass,
+        enabled: enableGlass,
+        sigma: AppConstants.glassBlurSigma,
         child: Container(
           decoration: BoxDecoration(
             color: colorScheme.surface.withValues(
