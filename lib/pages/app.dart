@@ -429,6 +429,9 @@ class _AppPageState extends State<AppPage> {
     var viewSettings = context.watch<ViewSettingsProvider>();
     var updateSettings = context.watch<UpdateSettingsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final cardRadius = settingsProvider.plusOverrideIndividualCornerRadius
+        ? settingsProvider.plusHomeCornerRadius
+        : settingsProvider.plusGlobalCornerRadius;
     var showAppWebpageFinal =
         (viewSettings.showAppWebpage && !widget.showOppositeOfPreferredView) ||
         (!viewSettings.showAppWebpage && widget.showOppositeOfPreferredView);
@@ -545,17 +548,30 @@ class _AppPageState extends State<AppPage> {
                   appsProvider: appsProvider,
                   onUpdate: (id) => getUpdate(id),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ConditionalBlur(
+                  enableBlur: plusSettings.plusEnableGlassmorphism,
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: plusSettings.plusEnableGlassmorphism
+                          ? Theme.of(context).colorScheme.surface.withValues(
+                              alpha: AppConstants.glassSurfaceAlpha,
+                            )
+                          : Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(cardRadius),
+                      border: Border.all(
+                        color: plusSettings.plusEnableGlassmorphism
+                            ? Theme.of(context).colorScheme.onSurface.withValues(
+                                alpha: AppConstants.glassBorderAlpha,
+                              )
+                            : Theme.of(context).colorScheme.outlineVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -717,6 +733,7 @@ class _AppPageState extends State<AppPage> {
                     ],
                   ),
                 ),
+              ),
               ],
             ),
           ),
@@ -1448,16 +1465,25 @@ class _AppPageState extends State<AppPage> {
 
     getBottomSheetMenu() {
       final colorScheme = Theme.of(context).colorScheme;
-      return Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          border: Border(
-            top: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.25),
-              width: 1,
+      final enableGlass = plusSettings.plusEnableGlassmorphism;
+      return ConditionalBlur(
+        enableBlur: enableGlass,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(
+              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
+            ),
+            border: Border(
+              top: BorderSide(
+                color: enableGlass
+                    ? colorScheme.onSurface.withValues(
+                        alpha: AppConstants.glassBorderAlpha,
+                      )
+                    : colorScheme.outlineVariant.withValues(alpha: 0.25),
+                width: 1,
+              ),
             ),
           ),
-        ),
         padding: EdgeInsets.fromLTRB(
           0,
           0,
@@ -1649,6 +1675,7 @@ class _AppPageState extends State<AppPage> {
               },
             ),
         ],
+      ),
       ),
     );
   }
