@@ -14,11 +14,15 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 
 class ImportExportPage extends StatefulWidget {
@@ -43,6 +47,11 @@ class _ImportExportPageState extends State<ImportExportPage> {
     SourceProvider sourceProvider = SourceProvider();
     var appsProvider = context.watch<AppsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final cardRadius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
 
     final exportDirKey = behaviorSettings.prefs?.getString('exportDir');
     if (_exportDirFuture == null || exportDirKey != _lastExportDirKey) {
@@ -197,6 +206,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     }
 
     runUrlImport() {
+      AppHaptics.selectionClick();
       FilePicker.pickFiles()
           .then((result) async {
             if (result != null) {
@@ -238,6 +248,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     }
 
     runSourceSearch(AppSource source) {
+      AppHaptics.selectionClick();
       () async {
             var values = await showDialog<Map<String, dynamic>?>(
               context: context,
@@ -337,6 +348,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     }
 
     runMassSourceImport(MassAppUrlSource source) {
+      AppHaptics.selectionClick();
       () async {
             var values = await showDialog<Map<String, dynamic>?>(
               context: context,
@@ -415,55 +427,75 @@ class _ImportExportPageState extends State<ImportExportPage> {
       required List<Widget> actions,
       Color? iconColor,
     }) {
-      return Card.filled(
-        color: colorScheme.surfaceContainerLow,
+      final enableGlass = plusSettings.plusEnableGlassmorphism;
+      return Container(
         margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: (iconColor ?? colorScheme.primary).withValues(
-                        alpha: 0.12,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: iconColor ?? colorScheme.primary,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: colorScheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        child: ConditionalBlur(
+          enableBlur: enableGlass,
+          borderRadius: BorderRadius.circular(cardRadius),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: enableGlass
+                  ? colorScheme.surface.withValues(
+                      alpha: AppConstants.glassSurfaceAlpha,
+                    )
+                  : colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(cardRadius),
+              border: Border.all(
+                color: enableGlass
+                    ? colorScheme.onSurface.withValues(
+                        alpha: AppConstants.glassBorderAlpha,
+                      )
+                    : colorScheme.outlineVariant.withValues(alpha: 0.4),
               ),
-              const SizedBox(height: 16),
-              Wrap(spacing: 8, runSpacing: 8, children: actions),
-            ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: (iconColor ?? colorScheme.primary).withValues(
+                          alpha: 0.12,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: iconColor ?? colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          if (subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Wrap(spacing: 8, runSpacing: 8, children: actions),
+              ],
+            ),
           ),
         ),
       );
@@ -517,49 +549,66 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   future: _exportDirFuture,
                   builder: (context, snapshot) {
                     if (snapshot.data == null) return const SizedBox.shrink();
-                    return Card.outlined(
+                    final enableGlass = plusSettings.plusEnableGlassmorphism;
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        child: GeneratedForm(
-                          items: [
-                            [
-                              GeneratedFormSwitch(
-                                'autoExportOnChanges',
-                                label: tr('autoExportOnChanges'),
-                                value: behaviorSettings.autoExportOnChanges,
-                              ),
+                      child: ConditionalBlur(
+                        enableBlur: enableGlass,
+                        borderRadius: BorderRadius.circular(cardRadius),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          decoration: BoxDecoration(
+                            color: enableGlass
+                                ? colorScheme.surface.withValues(
+                                    alpha: AppConstants.glassSurfaceAlpha,
+                                  )
+                                : colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(cardRadius),
+                            border: Border.all(
+                              color: enableGlass
+                                  ? colorScheme.onSurface.withValues(
+                                      alpha: AppConstants.glassBorderAlpha,
+                                    )
+                                  : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: GeneratedForm(
+                            items: [
+                              [
+                                GeneratedFormSwitch(
+                                  'autoExportOnChanges',
+                                  label: tr('autoExportOnChanges'),
+                                  value: behaviorSettings.autoExportOnChanges,
+                                ),
+                              ],
+                              [
+                                GeneratedFormDropdown(
+                                  'exportSettings',
+                                  [
+                                    MapEntry('0', tr('none')),
+                                    MapEntry('1', tr('excludeSecrets')),
+                                    MapEntry('2', tr('all')),
+                                  ],
+                                  label: tr('includeSettings'),
+                                  value: behaviorSettings.exportSettings
+                                      .toString(),
+                                ),
+                              ],
                             ],
-                            [
-                              GeneratedFormDropdown(
-                                'exportSettings',
-                                [
-                                  MapEntry('0', tr('none')),
-                                  MapEntry('1', tr('excludeSecrets')),
-                                  MapEntry('2', tr('all')),
-                                ],
-                                label: tr('includeSettings'),
-                                value: behaviorSettings.exportSettings
-                                    .toString(),
-                              ),
-                            ],
-                          ],
-                          onValueChanges: (value, valid, isBuilding) {
-                            if (valid && !isBuilding) {
-                              if (value['autoExportOnChanges'] != null) {
-                                behaviorSettings.autoExportOnChanges =
-                                    value['autoExportOnChanges'] == true;
+                            onValueChanges: (value, valid, isBuilding) {
+                              if (valid && !isBuilding) {
+                                if (value['autoExportOnChanges'] != null) {
+                                  behaviorSettings.autoExportOnChanges =
+                                      value['autoExportOnChanges'] == true;
+                                }
+                                if (value['exportSettings'] != null) {
+                                  behaviorSettings.exportSettings = int.parse(
+                                    value['exportSettings'],
+                                  );
+                                }
                               }
-                              if (value['exportSettings'] != null) {
-                                behaviorSettings.exportSettings = int.parse(
-                                  value['exportSettings'],
-                                );
-                              }
-                            }
-                          },
+                            },
+                          ),
                         ),
                       ),
                     );
