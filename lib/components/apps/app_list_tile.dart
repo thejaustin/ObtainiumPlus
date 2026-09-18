@@ -153,6 +153,11 @@ class AppListTile extends StatelessWidget {
             color: Theme.of(
               context,
             ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            boxShadow: AppShadows.smooth(
+              color: Colors.black,
+              opacity: 0.08,
+              blurFactor: 0.5,
+            ),
           ),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -183,27 +188,36 @@ class AppListTile extends StatelessWidget {
     Widget getSourceBadge() {
       final url = appInMemory.app.url.toLowerCase();
       IconData iconData = Icons.link_rounded;
-      Color color = Theme.of(context).colorScheme.primary;
+      final colorScheme = Theme.of(context).colorScheme;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
 
+      Color brandColor = colorScheme.primary;
       if (url.contains('github.com')) {
         iconData = Icons.terminal_rounded;
-        color = const Color(0xFF24292E);
+        brandColor = const Color(0xFF24292E);
       } else if (url.contains('f-droid.org')) {
         iconData = Icons.android_rounded;
-        color = const Color(0xFF1976D2);
+        brandColor = const Color(0xFF1976D2);
       } else if (url.contains('gitlab.com')) {
         iconData = Icons.account_tree_rounded;
-        color = const Color(0xFFFC6D26);
+        brandColor = const Color(0xFFFC6D26);
       } else if (url.contains('codeberg.org')) {
         iconData = Icons.code_rounded;
-        color = const Color(0xFF2185D0);
+        brandColor = const Color(0xFF2185D0);
       }
 
+      // Use theme primary in dark mode so raw dark brand hex (#24292E) stays visible
+      final color = isDark ? colorScheme.primary.withValues(alpha: 0.85) : brandColor;
+
       return Container(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: color.withValues(alpha: 0.2),
+            width: 0.5,
+          ),
         ),
         child: Icon(iconData, size: 10, color: color),
       );
@@ -457,6 +471,24 @@ class AppListTile extends StatelessWidget {
                             ),
                           ),
 
+                        if (plusSettings.plusEnableGlassmorphism)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 1.0,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.3),
+                                    Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
                         if (displayCategoryColor != null)
                           Positioned(
                             left: 0,
@@ -472,6 +504,7 @@ class AppListTile extends StatelessWidget {
                               ),
                             ),
                           ),
+
 
                         ListTile(
                           visualDensity: isCompact
@@ -528,16 +561,23 @@ class AppListTile extends StatelessWidget {
                                               right: 4,
                                             ),
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 7,
+                                              horizontal: 6,
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .secondaryContainer
-                                                  .withValues(alpha: 0.4),
+                                                  .withValues(alpha: 0.35),
                                               borderRadius:
-                                                  BorderRadius.circular(6),
+                                                  BorderRadius.circular(5),
+                                              border: Border.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary
+                                                    .withValues(alpha: 0.18),
+                                                width: 0.5,
+                                              ),
                                             ),
                                             child: Text(
                                               tag,
@@ -546,7 +586,12 @@ class AppListTile extends StatelessWidget {
                                                   .labelSmall
                                                   ?.copyWith(
                                                     fontSize: 9.5,
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
+                                                    letterSpacing: 0.1,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSecondaryContainer
+                                                        .withValues(alpha: 0.85),
                                                   ),
                                             ),
                                           ),
@@ -571,26 +616,26 @@ class AppListTile extends StatelessWidget {
                                   ),
                                 ),
                               if (viewSettings.displayShowVersion && !isCompact)
-                                Text(
-                                  ' • ${getVersionText()}',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: hasUpdate
-                                            ? Theme.of(
-                                                context,
-                                              ).colorScheme.secondary
-                                            : null,
-                                        fontWeight: hasUpdate
-                                            ? FontWeight.bold
-                                            : null,
-                                        fontStyle:
-                                            SourceUtils.isVersionPseudo(
-                                              appInMemory.app,
-                                            )
-                                            ? FontStyle.italic
-                                            : null,
+                                hasUpdate
+                                    ? _buildVersionUpdatePill(
+                                        context,
+                                        appInMemory.app.installedVersion ?? '?',
+                                        appInMemory.app.latestVersion ?? '?',
+                                      )
+                                    : Text(
+                                        ' • ${getVersionText()}',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.copyWith(
+                                          color: null,
+                                          fontStyle:
+                                              SourceUtils.isVersionPseudo(
+                                                appInMemory.app,
+                                              )
+                                              ? FontStyle.italic
+                                              : null,
+                                        ),
                                       ),
-                                ),
                             ],
                           ),
                           trailing: ValueListenableBuilder<double?>(
@@ -704,6 +749,50 @@ class AppListTile extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Compact pill widget showing the version transition when an update is available.
+  Widget _buildVersionUpdatePill(
+    BuildContext context,
+    String inst,
+    String latest,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        decoration: BoxDecoration(
+          color: colorScheme.secondary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(
+            color: colorScheme.secondary.withValues(alpha: 0.28),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.arrow_upward_rounded,
+              size: 8,
+              color: colorScheme.secondary,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              '$inst → $latest',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.secondary,
+                fontFamily: 'monospace',
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
         ),
       ),
     );
