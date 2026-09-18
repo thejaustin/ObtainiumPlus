@@ -153,7 +153,7 @@ class _AppGridTileState extends State<AppGridTile>
                     : widget.appInMemory.app.pinned
                     ? Theme.of(
                         context,
-                      ).colorScheme.primary.withValues(alpha: 0.3)
+                      ).colorScheme.primary.withValues(alpha: 0.35)
                     : plusSettings.plusEnableGlassmorphism
                     ? Theme.of(context).colorScheme.onSurface.withValues(
                         alpha: AppConstants.glassBorderAlpha,
@@ -173,6 +173,11 @@ class _AppGridTileState extends State<AppGridTile>
                       color: Theme.of(context).colorScheme.primary,
                       intensity: 0.6,
                     )
+                  : widget.hasUpdate
+                  ? AppShadows.smooth(
+                      color: Theme.of(context).colorScheme.error,
+                      opacity: 0.08,
+                    )
                   : null,
             ),
             child: ClipRRect(
@@ -189,7 +194,7 @@ class _AppGridTileState extends State<AppGridTile>
                         child: Container(color: Colors.transparent),
                       ),
                     ),
-                  // Glass sheen
+                  // Glass sheen — top-left source-color tint, fading to transparent
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned.fill(
                       child: Container(
@@ -198,12 +203,31 @@ class _AppGridTileState extends State<AppGridTile>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              _getSourceColor(context).withValues(alpha: 0.15),
-                              Colors.white.withValues(alpha: 0.05),
+                              _getSourceColor(context).withValues(alpha: 0.12),
+                              Colors.white.withValues(alpha: 0.06),
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.05),
+                              Colors.black.withValues(alpha: 0.04),
                             ],
                             stops: const [0.0, 0.2, 0.6, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Top-left specular highlight streak
+                  if (plusSettings.plusEnableGlassmorphism)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 1.0,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.35),
+                              Colors.white.withValues(alpha: 0.0),
+                            ],
                           ),
                         ),
                       ),
@@ -324,6 +348,35 @@ class _AppGridTileState extends State<AppGridTile>
                     ),
                   ),
 
+                  // Pinned indicator overlay — top-left corner pin icon
+                  if (widget.appInMemory.app.pinned && !widget.isSelected)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.25),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.push_pin_rounded,
+                          size: 10,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ),
+
                   Semantics(
                     label: _buildSemanticLabel(),
                     button: true,
@@ -385,7 +438,7 @@ class _AppGridTileState extends State<AppGridTile>
     ViewSettingsProvider viewSettings,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(top: 12.0),
+      padding: const EdgeInsets.only(top: 14.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -426,9 +479,11 @@ class _AppGridTileState extends State<AppGridTile>
     double iconBorderRadius,
     double badgeSize,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       clipBehavior: Clip.none,
       children: [
+        // Icon with layered depth shadow
         Hero(
           tag: 'app_icon_${widget.appInMemory.app.id}',
           child: Container(
@@ -438,10 +493,14 @@ class _AppGridTileState extends State<AppGridTile>
               borderRadius: BorderRadius.circular(iconBorderRadius),
               boxShadow: widget.hasUpdate
                   ? AppShadows.smooth(
-                      color: Theme.of(context).colorScheme.error,
-                      opacity: 0.1,
+                      color: colorScheme.error,
+                      opacity: 0.14,
                     )
-                  : null,
+                  : AppShadows.smooth(
+                      color: Colors.black,
+                      opacity: 0.1,
+                      blurFactor: 0.6,
+                    ),
             ),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -466,10 +525,11 @@ class _AppGridTileState extends State<AppGridTile>
             ),
           ),
         ),
+        // Update badge — pulsing glow dot with arrow accent
         if (widget.hasUpdate)
           Positioned(
-            right: -4,
-            top: -4,
+            right: -5,
+            top: -5,
             child: AnimatedBuilder(
               animation: _pulseAnimation,
               builder: (context, child) {
@@ -480,27 +540,33 @@ class _AppGridTileState extends State<AppGridTile>
                     height: badgeSize,
                     decoration: BoxDecoration(
                       color: widget.isAmbiguous
-                          ? Theme.of(context).colorScheme.tertiary
-                          : Theme.of(context).colorScheme.primary,
+                          ? colorScheme.tertiary
+                          : colorScheme.primary,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: colorScheme.surface,
                         width: 2,
                       ),
                       boxShadow: AppShadows.glow(
                         color: widget.isAmbiguous
-                            ? Theme.of(context).colorScheme.tertiary
-                            : Theme.of(context).colorScheme.primary,
+                            ? colorScheme.tertiary
+                            : colorScheme.primary,
                         intensity: (_pulseAnimation.value - 1.0) * 2,
                       ),
                     ),
-                    child: widget.isAmbiguous
-                        ? Icon(
-                            Icons.help_outline_rounded,
-                            size: badgeSize * 0.7,
-                            color: Theme.of(context).colorScheme.onTertiary,
-                          )
-                        : null,
+                    child: Center(
+                      child: widget.isAmbiguous
+                          ? Icon(
+                              Icons.help_outline_rounded,
+                              size: badgeSize * 0.6,
+                              color: colorScheme.onTertiary,
+                            )
+                          : Icon(
+                              Icons.arrow_upward_rounded,
+                              size: badgeSize * 0.6,
+                              color: colorScheme.onPrimary,
+                            ),
+                    ),
                   ),
                 );
               },
@@ -525,16 +591,17 @@ class _AppGridTileState extends State<AppGridTile>
     ViewSettingsProvider viewSettings,
     TextAlign textAlign,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isCentered = textAlign == TextAlign.center;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: textAlign == TextAlign.start
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.center,
+      crossAxisAlignment:
+          isCentered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
+        // App name row with source badge
         Row(
-          mainAxisAlignment: textAlign == TextAlign.start
-              ? MainAxisAlignment.start
-              : MainAxisAlignment.center,
+          mainAxisAlignment:
+              isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
             Flexible(
               child: Text(
@@ -544,10 +611,12 @@ class _AppGridTileState extends State<AppGridTile>
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: widget.appInMemory.app.pinned || widget.hasUpdate
-                      ? FontWeight.bold
-                      : FontWeight.w600,
-                  letterSpacing: -0.2,
+                  fontWeight:
+                      widget.appInMemory.app.pinned || widget.hasUpdate
+                          ? FontWeight.w700
+                          : FontWeight.w600,
+                  letterSpacing: -0.3,
+                  height: 1.1,
                 ),
               ),
             ),
@@ -555,6 +624,7 @@ class _AppGridTileState extends State<AppGridTile>
             _buildSourceBadge(context),
           ],
         ),
+        // Author line
         if (viewSettings.displayShowAuthor)
           Padding(
             padding: const EdgeInsets.only(top: 2),
@@ -565,62 +635,67 @@ class _AppGridTileState extends State<AppGridTile>
               textAlign: textAlign,
               style: TextStyle(
                 fontSize: 10,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                letterSpacing: 0.1,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
               ),
             ),
           ),
+        // Version — pill styling when update available, plain otherwise
         if (viewSettings.displayShowVersion)
           Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              _getVersionText(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: textAlign,
-              style: TextStyle(
-                fontSize: 10,
-                color: widget.hasUpdate
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                fontWeight: widget.hasUpdate
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-            ),
+            padding: const EdgeInsets.only(top: 4),
+            child: widget.hasUpdate
+                ? _buildUpdateVersionPill(colorScheme, isCentered)
+                : Text(
+                    _getVersionText(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: textAlign,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.65,
+                      ),
+                      fontFamily: 'monospace',
+                    ),
+                  ),
           ),
+        // Tag chips
         if (plusSettings.plusShowTagsInList &&
             widget.appInMemory.app.tags.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: 5),
             child: Wrap(
-              alignment: textAlign == TextAlign.start
-                  ? WrapAlignment.start
-                  : WrapAlignment.center,
-              spacing: 4,
-              runSpacing: 4,
+              alignment: isCentered ? WrapAlignment.center : WrapAlignment.start,
+              spacing: 3,
+              runSpacing: 3,
               children: widget.appInMemory.app.tags
                   .take(2)
                   .map(
                     (tag) => Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
+                        horizontal: 5,
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.secondaryContainer.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(6),
+                        color: colorScheme.secondaryContainer.withValues(
+                          alpha: 0.35,
+                        ),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(
+                          color: colorScheme.secondary.withValues(alpha: 0.15),
+                          width: 0.5,
+                        ),
                       ),
                       child: Text(
                         tag,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                          color: colorScheme.onSecondaryContainer.withValues(
+                            alpha: 0.85,
+                          ),
                         ),
                       ),
                     ),
@@ -628,9 +703,55 @@ class _AppGridTileState extends State<AppGridTile>
                   .toList(),
             ),
           ),
-        // Checking / Progress logic...
+        // Progress / checking indicator
         _buildProgressIndicator(),
       ],
+    );
+  }
+
+  /// Styled pill showing the version transition when an update is available.
+  Widget _buildUpdateVersionPill(ColorScheme colorScheme, bool isCentered) {
+    final app = widget.appInMemory.app;
+    final inst = app.installedVersion ?? '?';
+    final latest = app.latestVersion ?? '?';
+    return Align(
+      alignment: isCentered ? Alignment.center : Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(
+            color: colorScheme.primary.withValues(alpha: 0.25),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.arrow_upward_rounded,
+              size: 8,
+              color: colorScheme.primary,
+            ),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                '$inst → $latest',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.primary,
+                  fontFamily: 'monospace',
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -644,6 +765,7 @@ class _AppGridTileState extends State<AppGridTile>
   }
 
   Widget _buildSourceBadge(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final url = widget.appInMemory.app.url.toLowerCase();
     IconData iconData = Icons.link_rounded;
     Color color = _getSourceColor(context);
@@ -658,13 +780,23 @@ class _AppGridTileState extends State<AppGridTile>
       iconData = Icons.code_rounded;
     }
 
+    // Use theme-aware color for dark mode legibility
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final badgeColor = isDark
+        ? colorScheme.primary.withValues(alpha: 0.8)
+        : color;
+
     return Container(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: badgeColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: badgeColor.withValues(alpha: 0.2),
+          width: 0.5,
+        ),
       ),
-      child: Icon(iconData, size: 8, color: color),
+      child: Icon(iconData, size: 9, color: badgeColor),
     );
   }
 
