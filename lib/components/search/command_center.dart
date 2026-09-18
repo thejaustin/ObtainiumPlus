@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 import 'package:flutter/material.dart';
@@ -245,6 +246,11 @@ class _CommandCenterState extends State<CommandCenter> {
     final theme = Theme.of(context);
     final isUrl = _isDirectUrl(_query);
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final settings = context.watch<SettingsProvider>();
+    final radius = settings.plusOverrideIndividualCornerRadius
+        ? settings.plusHomeCornerRadius
+        : settings.plusGlobalCornerRadius;
+    final sheetRadius = radius.clamp(24.0, 48.0);
     final isDark = theme.brightness == Brightness.dark;
 
     return SafeArea(
@@ -254,9 +260,9 @@ class _CommandCenterState extends State<CommandCenter> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
           child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
             child: ConditionalBlur(
-              sigma: 24,
+              sigma: AppConstants.glassBlurSigma,
               enabled: plusSettings.plusEnableGlassmorphism,
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.85,
@@ -267,16 +273,18 @@ class _CommandCenterState extends State<CommandCenter> {
                               : theme.colorScheme.surface)
                           .withValues(
                             alpha: plusSettings.plusEnableGlassmorphism
-                                ? 0.72
+                                ? AppConstants.glassSurfaceAlpha
                                 : 1.0,
                           ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(sheetRadius),
                   ),
                   border: Border(
                     top: BorderSide(
                       color: plusSettings.plusEnableGlassmorphism
-                          ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
+                          ? theme.colorScheme.onSurface.withValues(
+                              alpha: AppConstants.glassBorderAlpha,
+                            )
                           : theme.colorScheme.outlineVariant.withValues(
                               alpha: AppOpacity.subtle,
                             ),
@@ -300,17 +308,7 @@ class _CommandCenterState extends State<CommandCenter> {
                 child: Column(
                   children: [
                     // Drag Handle
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 12),
-                        width: 32,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.outlineVariant,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    const DragHandle(width: 40),
 
                     // Search Input
                     Padding(
@@ -341,7 +339,31 @@ class _CommandCenterState extends State<CommandCenter> {
                               ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
+                            borderSide: BorderSide(
+                              color: plusSettings.plusEnableGlassmorphism
+                                  ? theme.colorScheme.onSurface.withValues(
+                                      alpha: AppConstants.glassBorderAlpha,
+                                    )
+                                  : Colors.transparent,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: plusSettings.plusEnableGlassmorphism
+                                  ? theme.colorScheme.onSurface.withValues(
+                                      alpha: AppConstants.glassBorderAlpha,
+                                    )
+                                  : theme.colorScheme.outlineVariant
+                                      .withValues(alpha: 0.3),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: theme.colorScheme.primary,
+                              width: 1.5,
+                            ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 16,

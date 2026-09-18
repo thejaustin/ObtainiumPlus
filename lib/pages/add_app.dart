@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -1335,16 +1336,32 @@ class AddAppPageState extends State<AddAppPage> {
           ? plusSettings.plusHomeCornerRadius
           : plusSettings.plusGlobalCornerRadius;
 
+      final sheetRadius = radius.clamp(20.0, 48.0);
       return ClipRRect(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(radius.clamp(20.0, 48.0)),
+          top: Radius.circular(sheetRadius),
         ),
         child: ConditionalBlur(
           enabled: plusSettings.plusEnableGlassmorphism,
-          sigma: 20,
+          sigma: AppConstants.glassBlurSigma,
           child: Container(
-            color: Theme.of(context).colorScheme.surface.withValues(
-              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withValues(
+                alpha: plusSettings.plusEnableGlassmorphism
+                    ? AppConstants.glassSurfaceAlpha
+                    : 1.0,
+              ),
+              border: Border(
+                top: BorderSide(
+                  color: plusSettings.plusEnableGlassmorphism
+                      ? Theme.of(context).colorScheme.onSurface.withValues(
+                          alpha: AppConstants.glassBorderAlpha,
+                        )
+                      : Theme.of(context).colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                ),
+              ),
             ),
             child: scaffold,
           ),
