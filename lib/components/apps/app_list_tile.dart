@@ -366,10 +366,22 @@ class AppListTile extends StatelessWidget {
                           ).colorScheme.primaryContainer.withValues(alpha: 0.7)
                         : hasUpdate
                         ? Theme.of(context).colorScheme.secondaryContainer
-                              .withValues(alpha: isCompact ? 0.15 : 0.25)
+                              .withValues(
+                                alpha: plusSettings.plusEnableGlassmorphism
+                                    ? 0.35
+                                    : (isCompact ? 0.15 : 0.25),
+                              )
                         : appInMemory.app.pinned
                         ? Theme.of(context).colorScheme.surfaceContainerHighest
-                              .withValues(alpha: AppOpacity.moderate)
+                              .withValues(
+                                alpha: plusSettings.plusEnableGlassmorphism
+                                    ? 0.45
+                                    : AppOpacity.moderate,
+                              )
+                        : plusSettings.plusEnableGlassmorphism
+                        ? Theme.of(context).colorScheme.surface.withValues(
+                            alpha: AppConstants.glassSurfaceAlpha,
+                          )
                         : Theme.of(context).colorScheme.surfaceContainerLow,
                     border: Border.all(
                       color: isSelected
@@ -380,6 +392,10 @@ class AppListTile extends StatelessWidget {
                             )
                           : appInMemory.app.pinned
                           ? Theme.of(context).colorScheme.outlineVariant
+                          : plusSettings.plusEnableGlassmorphism
+                          ? Theme.of(context).colorScheme.onSurface.withValues(
+                              alpha: AppConstants.glassBorderAlpha,
+                            )
                           : Theme.of(context).colorScheme.outlineVariant.withValues(
                               alpha: 0.35,
                             ),
@@ -406,6 +422,40 @@ class AppListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(radius),
                     child: Stack(
                       children: [
+                        if (plusSettings.plusEnableGlassmorphism)
+                          Positioned.fill(
+                            child: ConditionalBlur(
+                              enabled: true,
+                              sigma: AppConstants.glassBlurSigma,
+                              child: Container(color: Colors.transparent),
+                            ),
+                          ),
+                        if (plusSettings.plusEnableGlassmorphism)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? [
+                                          Colors.white.withValues(alpha: 0.08),
+                                          Colors.white.withValues(alpha: 0.02),
+                                          Colors.transparent,
+                                          Colors.black.withValues(alpha: 0.04),
+                                        ]
+                                      : [
+                                          Colors.white.withValues(alpha: 0.35),
+                                          Colors.white.withValues(alpha: 0.10),
+                                          Colors.transparent,
+                                          Colors.black.withValues(alpha: 0.02),
+                                        ],
+                                  stops: const [0.0, 0.3, 0.7, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
 
                         if (displayCategoryColor != null)
                           Positioned(

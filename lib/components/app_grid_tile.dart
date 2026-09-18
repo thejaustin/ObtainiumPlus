@@ -139,7 +139,9 @@ class _AppGridTileState extends State<AppGridTile>
                       context,
                     ).colorScheme.errorContainer.withValues(alpha: 0.12)
                   : Theme.of(context).colorScheme.surface.withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism ? 0.45 : 1.0,
+                      alpha: plusSettings.plusEnableGlassmorphism
+                          ? AppConstants.glassSurfaceAlpha
+                          : 1.0,
                     ),
               border: Border.all(
                 color: widget.isSelected
@@ -152,8 +154,12 @@ class _AppGridTileState extends State<AppGridTile>
                     ? Theme.of(
                         context,
                       ).colorScheme.primary.withValues(alpha: 0.3)
+                    : plusSettings.plusEnableGlassmorphism
+                    ? Theme.of(context).colorScheme.onSurface.withValues(
+                        alpha: AppConstants.glassBorderAlpha,
+                      )
                     : Theme.of(context).colorScheme.outline.withValues(
-                        alpha: plusSettings.plusEnableGlassmorphism ? 0.1 : 0,
+                        alpha: 0.1,
                       ),
                 width:
                     widget.isSelected ||
@@ -179,7 +185,7 @@ class _AppGridTileState extends State<AppGridTile>
                     Positioned.fill(
                       child: ConditionalBlur(
                         enabled: true,
-                        sigma: 10,
+                        sigma: AppConstants.glassBlurSigma,
                         child: Container(color: Colors.transparent),
                       ),
                     ),
