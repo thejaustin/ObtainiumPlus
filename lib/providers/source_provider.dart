@@ -19,10 +19,13 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
+import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/utils/url_validator.dart';
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
+export 'package:obtainium/utils/source_utils.dart';
+
 import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
