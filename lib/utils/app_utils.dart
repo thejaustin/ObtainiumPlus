@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hsluv/hsluv.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +13,7 @@ import 'package:provider/provider.dart';
 ///   - disablePageTransitions → instant jump
 ///   - reversePageTransitions → right-to-left (slide back)
 ///   - animationSpeedMultiplier → scales duration
+///   - plusEnableMaterialExpressive → scaled spatial transition with emphasized curves
 Future<T?> pushRoute<T>(BuildContext context, Widget page) {
   final settings = context.read<SettingsProvider>();
   if (settings.disablePageTransitions) {
@@ -23,20 +25,47 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
       ),
     );
   }
+
+  final plusSettings = context.read<PlusSettingsProvider>();
+  final isExpressive = plusSettings.plusEnableMaterialExpressive;
   final speed = settings.animationSpeedMultiplier;
-  final fwdMs = (300 * speed).round();
-  final revMs = (250 * speed).round();
+
+  // Material 3 Expressive motion uses slightly more generous timing (360ms/280ms)
+  // paired with emphasizing curves (fast start, silky deceleration).
+  final fwdMs = ((isExpressive ? 360 : 300) * speed).round();
+  final revMs = ((isExpressive ? 280 : 250) * speed).round();
   final reverse = settings.reversePageTransitions;
+
   return Navigator.of(context).push<T>(
     PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = isExpressive
+            ? CurvedAnimation(
+                parent: reverse ? ReverseAnimation(animation) : animation,
+                curve: Curves.easeInOutCubicEmphasized,
+                reverseCurve: Curves.easeOutCubic,
+              )
+            : (reverse ? ReverseAnimation(animation) : animation);
+
+        final curvedSecondary = isExpressive
+            ? CurvedAnimation(
+                parent: reverse
+                    ? ReverseAnimation(secondaryAnimation)
+                    : secondaryAnimation,
+                curve: Curves.easeInOutCubicEmphasized,
+                reverseCurve: Curves.easeOutCubic,
+              )
+            : (reverse
+                ? ReverseAnimation(secondaryAnimation)
+                : secondaryAnimation);
+
         return SharedAxisTransition(
-          animation: reverse ? ReverseAnimation(animation) : animation,
-          secondaryAnimation: reverse
-              ? ReverseAnimation(secondaryAnimation)
-              : secondaryAnimation,
-          transitionType: SharedAxisTransitionType.horizontal,
+          animation: curvedAnimation,
+          secondaryAnimation: curvedSecondary,
+          transitionType: isExpressive
+              ? SharedAxisTransitionType.scaled
+              : SharedAxisTransitionType.horizontal,
           child: child,
         );
       },

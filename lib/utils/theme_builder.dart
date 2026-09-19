@@ -493,49 +493,55 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds SnackBarThemeData with inverse surface colors
+  /// Builds SnackBarThemeData with inverse surface colors and M3 floating shape
   static SnackBarThemeData _buildSnackBarTheme(ColorScheme colorScheme) {
     return SnackBarThemeData(
       backgroundColor: colorScheme.inverseSurface,
       contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
       actionTextColor: colorScheme.inversePrimary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       behavior: SnackBarBehavior.floating,
-      elevation: 6,
+      elevation: 4,
     );
   }
 
   static ElevatedButtonThemeData _buildElevatedButtonTheme(
     double? cornerRadius,
   ) {
-    if (cornerRadius == null) return const ElevatedButtonThemeData();
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
-        ),
+        shape: cornerRadius != null
+            ? RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+              )
+            : const StadiumBorder(),
       ),
     );
   }
 
   static FilledButtonThemeData _buildFilledButtonTheme(double? cornerRadius) {
-    if (cornerRadius == null) return const FilledButtonThemeData();
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
-        ),
+        shape: cornerRadius != null
+            ? RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+              )
+            : const StadiumBorder(),
       ),
     );
   }
 
   static TextButtonThemeData _buildTextButtonTheme(double? cornerRadius) {
-    if (cornerRadius == null) return const TextButtonThemeData();
     return TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
-        ),
+        shape: cornerRadius != null
+            ? RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+              )
+            : const StadiumBorder(),
       ),
     );
   }
@@ -543,12 +549,14 @@ class ThemeBuilder {
   static OutlinedButtonThemeData _buildOutlinedButtonTheme(
     double? cornerRadius,
   ) {
-    if (cornerRadius == null) return const OutlinedButtonThemeData();
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cornerRadius.clamp(0.0, 20.0)),
-        ),
+        shape: cornerRadius != null
+            ? RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+              )
+            : const StadiumBorder(),
       ),
     );
   }
