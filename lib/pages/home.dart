@@ -121,6 +121,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         // Show Changelog on update
         await showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => GlassDialog(
             title: "What's New in Obtainium+",
             subtitle: "Version $currentVersion",
@@ -146,6 +147,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       } else if (!sp.welcomeShown) {
         await showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (BuildContext ctx) {
             return GeneratedFormModal(
               title: tr('welcome'),
