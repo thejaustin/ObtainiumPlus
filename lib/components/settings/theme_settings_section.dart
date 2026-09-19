@@ -525,11 +525,14 @@ class ThemeSettingsSection extends StatelessWidget {
   Widget _buildThemePresets(BuildContext context) {
     final presets = [
       ('Obtainium', const Color(0xFF6438B5)),
-      ('Material', Colors.blue),
-      ('Emerald', Colors.teal),
-      ('Ruby', Colors.red),
-      ('Amber', Colors.orange),
-      ('Midnight', Colors.indigo),
+      ('Material', const Color(0xFF0B57D0)),
+      ('Oceanic', const Color(0xFF006874)),
+      ('Forest', const Color(0xFF2E6B27)),
+      ('Ruby', const Color(0xFFB3261E)),
+      ('Sunset', const Color(0xFF984061)),
+      ('Amber', const Color(0xFFE8710A)),
+      ('Midnight', const Color(0xFF3F51B5)),
+      ('Slate', const Color(0xFF4E5D6C)),
     ];
 
     return Consumer<ThemeSettingsProvider>(
@@ -724,6 +727,15 @@ class ThemeSettingsSection extends StatelessWidget {
                 tr('themeStyle'),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
+              subtitle: settings.useMaterialYou
+                  ? Text(
+                      'Shapes the color palette generated from your system wallpaper',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.8),
+                      ),
+                    )
+                  : null,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),

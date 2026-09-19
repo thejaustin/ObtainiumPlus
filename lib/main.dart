@@ -648,14 +648,23 @@ class _ObtainiumState extends State<Obtainium> {
           if (lightDynamic != null &&
               darkDynamic != null &&
               themeSettings.useMaterialYou) {
-            // When matching the system style, keep the dynamic scheme
-            // untouched; otherwise harmonize it with the app's palette
-            lightColorScheme = matchSystemStyle
-                ? lightDynamic
-                : lightDynamic.harmonized();
-            darkColorScheme = matchSystemStyle
-                ? darkDynamic
-                : darkDynamic.harmonized();
+            // When matching the system style, keep the raw OS dynamic scheme untouched.
+            // Otherwise, generate an expressive Material 3 scheme using the system's dynamic
+            // primary color seeded with the selected M3 Expressive themeVariant.
+            if (matchSystemStyle) {
+              lightColorScheme = lightDynamic;
+              darkColorScheme = darkDynamic;
+            } else {
+              lightColorScheme = ColorScheme.fromSeed(
+                seedColor: lightDynamic.primary,
+                dynamicSchemeVariant: themeSettings.themeVariant,
+              );
+              darkColorScheme = ColorScheme.fromSeed(
+                seedColor: darkDynamic.primary,
+                brightness: Brightness.dark,
+                dynamicSchemeVariant: themeSettings.themeVariant,
+              );
+            }
           } else {
             lightColorScheme = ColorScheme.fromSeed(
               seedColor: themeSettings.themeColor,
