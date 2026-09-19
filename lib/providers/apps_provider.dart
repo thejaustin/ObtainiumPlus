@@ -739,7 +739,7 @@ class AppsProvider with ChangeNotifier {
       final areAliases = newInfo.packageName != null &&
           AppConstants.arePackageAliases(app.id, newInfo.packageName!);
       if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
-        throw IDChangedError(newInfo.packageName!);
+        throw IDChangedError(newInfo.packageName!, appId: app.id);
       }
       var idChangeWasAllowed = app.allowIdChange || areAliases;
       app.allowIdChange = false;

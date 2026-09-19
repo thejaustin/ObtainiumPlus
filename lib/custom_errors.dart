@@ -179,8 +179,9 @@ class InstallError extends ObtainiumError {
 
 class IDChangedError extends ObtainiumError {
   String? appId;
-  IDChangedError(String newId)
-    : super.withCode('ID_CHANGED', data: {'newId': newId});
+  final String newId;
+  IDChangedError(this.newId, {this.appId})
+    : super.withCode('ID_CHANGED', data: {'newId': newId, 'appId': appId});
 }
 
 class RepositoryRenamedError extends ObtainiumError {
@@ -288,7 +289,9 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
       '${tr('cantInstallOlderVersion')} (versionCode ${data?['currentVersionCode'] ?? '?'} → ${data?['newVersionCode'] ?? '?'})',
     'INSTALL_FAILED' => _formatInstallError(data),
     'DOWNLOAD_CANCELLED' => tr('downloadCancelled'),
-    'ID_CHANGED' => '${tr('appIdMismatch')} - ${data?['newId'] ?? ''}',
+    'ID_CHANGED' => data?['appId'] != null
+        ? '${tr('appIdMismatch')} (${data?['appId']} → ${data?['newId']})'
+        : '${tr('appIdMismatch')} - ${data?['newId'] ?? ''}',
     'REPO_RENAMED' => tr('repoRenamed'),
     'NOT_IMPLEMENTED' => tr('functionNotImplemented'),
     _ => data?['message']?.toString() ?? tr('unexpectedError'),
