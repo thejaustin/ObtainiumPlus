@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 /// Generic Control Grid for Boolean Settings
@@ -74,24 +75,36 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                         letterSpacing: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 1.7,
-                      ),
-                      itemCount: settings.length,
-                      itemBuilder: (context, index) {
-                        final setting = settings[index];
-                        return _GridToggleItem<T>(
-                          setting: setting,
-                          provider: provider,
-                        );
-                      },
+                    // Non-scrolling card grid implemented via Column and Rows
+                    // Using GridView.builder(shrinkWrap: true) inside ExpansionTiles causes
+                    // PageStorage scroll-restoration key collision where bool (_isExpanded)
+                    // is mistakenly cast to double? (scroll offset). Pure rows also avoid
+                    // multi-pass shrinkWrap layout costs.
+                    Column(
+                      children: [
+                        for (
+                          int i = 0;
+                          i < settings.length;
+                          i += crossAxisCount
+                        ) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              for (int j = 0; j < crossAxisCount; j++) ...[
+                                if (j > 0) const SizedBox(width: 8),
+                                Expanded(
+                                  child: (i + j < settings.length)
+                                      ? _GridToggleItem<T>(
+                                          setting: settings[i + j],
+                                          provider: provider,
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
@@ -144,7 +157,10 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () => setting.setValue(provider, !value),
+          onTap: () {
+            AppHaptics.selectionClick();
+            setting.setValue(provider, !value);
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: Column(
