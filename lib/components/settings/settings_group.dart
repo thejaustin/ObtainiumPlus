@@ -42,10 +42,10 @@ class SettingsGroup extends StatelessWidget {
         if (title != null)
           Padding(
             padding: const EdgeInsets.only(
-              left: 20.0,
-              top: 24.0,
+              left: 22.0,
+              top: 22.0,
               bottom: 8.0,
-              right: 12.0,
+              right: 14.0,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -53,9 +53,10 @@ class SettingsGroup extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title!,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
@@ -83,23 +84,32 @@ class SettingsGroup extends StatelessWidget {
                 : settings.plusGlobalCornerRadius;
 
             final container = Container(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              margin: const EdgeInsets.symmetric(vertical: 6.0),
               decoration: BoxDecoration(
                 color:
                     (isDark
                             ? Theme.of(context).colorScheme.surfaceContainerLow
                             : Theme.of(context).colorScheme.surface)
                         .withValues(
-                          alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                          alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0,
                         ),
                 borderRadius: BorderRadius.circular(radius),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outlineVariant
                       .withValues(
-                        alpha: settings.plusEnableGlassmorphism ? 0.4 : 0.2,
+                        alpha: settings.plusEnableGlassmorphism ? 0.35 : 0.18,
                       ),
                   width: 1,
                 ),
+                boxShadow: !isDark && !settings.plusEnableGlassmorphism
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.035),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               clipBehavior: Clip.antiAlias,
               child: Column(

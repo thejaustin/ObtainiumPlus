@@ -151,6 +151,20 @@ class AppConstants {
         return true;
       }
     }
+    // Check for common variant suffixes (.debug, .beta, .nightly, .preview, .foss, .fdroid, .plus, .standalone)
+    const suffixes = [
+      '.debug',
+      '.beta',
+      '.nightly',
+      '.preview',
+      '.foss',
+      '.fdroid',
+      '.plus',
+      '.standalone',
+    ];
+    for (final s in suffixes) {
+      if (id1 == '$id2$s' || id2 == '$id1$s') return true;
+    }
     return false;
   }
 

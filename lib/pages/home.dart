@@ -123,11 +123,16 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           context: context,
           builder: (context) => GlassDialog(
             title: "What's New in Obtainium+",
+            subtitle: "Version $currentVersion",
             icon: Icons.auto_awesome_rounded,
-            content: const SizedBox(
+            scrollable: false,
+            content: SizedBox(
               height: 400,
               width: double.maxFinite,
-              child: ChangelogPage(isModal: true),
+              child: ChangelogPage(
+                isModal: true,
+                targetVersion: currentVersion,
+              ),
             ),
             actions: [
               TextButton(

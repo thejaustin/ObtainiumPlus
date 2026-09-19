@@ -19,6 +19,13 @@ class PlusSettingsProvider with ChangeNotifier {
   }
 
   // Visual & UI Enhancements
+  bool get plusEnableOneHandedMode =>
+      _prefs?.safeBool('plusEnableOneHandedMode') ?? true;
+  set plusEnableOneHandedMode(bool val) {
+    _prefs?.setBool('plusEnableOneHandedMode', val);
+    notifyListeners();
+  }
+
   bool get plusEnableGridView => _prefs?.safeBool('plusEnableGridView') ?? true;
   set plusEnableGridView(bool val) {
     _prefs?.setBool('plusEnableGridView', val);
@@ -267,21 +274,21 @@ class PlusSettingsProvider with ChangeNotifier {
   // Range-bound prefs are clamped at the getter: imported/stale values can
   // be arbitrary, and out-of-range ones break the Sliders bound to them.
   double get plusGlobalCornerRadius =>
-      (_prefs?.safeDouble('plusGlobalCornerRadius') ?? 20.0).clamp(0.0, 40.0);
+      (_prefs?.safeDouble('plusGlobalCornerRadius') ?? 22.0).clamp(0.0, 40.0);
   set plusGlobalCornerRadius(double val) {
     _prefs?.setDouble('plusGlobalCornerRadius', val);
     notifyListeners();
   }
 
   double get plusHomeCornerRadius =>
-      (_prefs?.safeDouble('plusHomeCornerRadius') ?? 20.0).clamp(0.0, 40.0);
+      (_prefs?.safeDouble('plusHomeCornerRadius') ?? 22.0).clamp(0.0, 40.0);
   set plusHomeCornerRadius(double val) {
     _prefs?.setDouble('plusHomeCornerRadius', val);
     notifyListeners();
   }
 
   double get plusSettingsCornerRadius =>
-      (_prefs?.safeDouble('plusSettingsCornerRadius') ?? 16.0).clamp(0.0, 40.0);
+      (_prefs?.safeDouble('plusSettingsCornerRadius') ?? 24.0).clamp(0.0, 40.0);
   set plusSettingsCornerRadius(double val) {
     _prefs?.setDouble('plusSettingsCornerRadius', val);
     notifyListeners();

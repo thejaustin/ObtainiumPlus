@@ -92,6 +92,15 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableBouncyPhysics,
           onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
         ),
+      if (_matches(tr('plusOneHandedMode')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.swipe_down_rounded,
+          title: tr('plusOneHandedMode'),
+          subtitle: tr('plusOneHandedModeDescription'),
+          value: (s) => s.plusEnableOneHandedMode,
+          onChanged: (s, v) => s.plusEnableOneHandedMode = v,
+        ),
       if (_matches(tr('plusTopUILayout'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
           context,

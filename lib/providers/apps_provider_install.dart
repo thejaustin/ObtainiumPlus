@@ -91,7 +91,7 @@ extension AppsProviderInstall on AppsProvider {
       }
       final areAliases = AppConstants.arePackageAliases(app.id, actualPackageName);
       if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
-        throw IDChangedError(actualPackageName)..url = app.url;
+        throw IDChangedError(actualPackageName, appId: app.id)..url = app.url;
       }
       final idChangeWasAllowed = app.allowIdChange || areAliases;
       final originalAppId = app.id;
