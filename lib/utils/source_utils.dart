@@ -391,7 +391,11 @@ class SourceUtils {
           app.additionalSettings['versionDetection'] != true);
 
   static bool isTempId(App app) {
-    return RegExp(r'^[0-9]+$').hasMatch(app.id);
+    // Valid Android package names MUST contain at least one dot (e.g. com.example.app).
+    // Any ID without a dot, or matching numeric/hex hash patterns, is a temporary ID.
+    return !app.id.contains('.') ||
+        RegExp(r'^[0-9]+$').hasMatch(app.id) ||
+        RegExp(r'^[0-9a-fA-F]{8,64}$').hasMatch(app.id);
   }
 
   static String? replaceMatchGroupsInString(

@@ -597,6 +597,8 @@
     "plusQuickFiltersDescription": "Access filtering options directly from the dashboard header",
     "plusTopUILayout": "Top-aligned UI layout",
     "plusTopUILayoutDescription": "Move primary navigation and actions to the top of the screen",
+    "plusOneHandedMode": "One-Handed Reachability (OneUI)",
+    "plusOneHandedModeDescription": "Expands the header viewing area on pull-down to bring controls within thumb reach, centering the title",
     "advancedTheming": "Advanced Theming",
     "advancedThemingDescription": "Unlock granular control over colors, gradients, and transparency",
     "plusShapesAndCorners": "Shapes & Corners",
