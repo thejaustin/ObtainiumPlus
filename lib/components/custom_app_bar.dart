@@ -53,6 +53,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomHeight = widget.bottom?.preferredSize.height ?? 0.0;
 
+    final canPop = ModalRoute.of(context)?.canPop ?? false;
+    final effectiveLeading =
+        widget.leading ?? (canPop ? const BackButton() : null);
+
     // OneUI expanded viewing area height (typically ~240-270dp)
     final effectiveExpandedHeight = widget.expandedHeight ??
         (220.0 + bottomHeight + (widget.subtitle != null ? 24.0 : 0.0));
@@ -62,7 +66,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
       return SliverAppBar(
         pinned: true,
         automaticallyImplyLeading: false,
-        leading: widget.leading,
+        leading: effectiveLeading,
         backgroundColor: colorScheme.surface.withValues(
           alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
         ),
@@ -84,7 +88,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
       pinned: true,
       stretch: true,
       automaticallyImplyLeading: false,
-      leading: widget.leading,
+      leading: effectiveLeading,
+
       backgroundColor: colorScheme.surface,
       expandedHeight: effectiveExpandedHeight,
       collapsedHeight: kToolbarHeight + bottomHeight,
@@ -116,8 +121,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           )!;
 
           final fontSize = lerpDouble(20.0, 32.0, curvedT)!;
-          final hasLeading = widget.leading != null ||
-              (ModalRoute.of(context)?.canPop ?? false);
+          final hasLeading = effectiveLeading != null;
           final leftPadding = lerpDouble(
             hasLeading ? 56.0 : 20.0,
             24.0,

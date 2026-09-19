@@ -138,11 +138,11 @@ class _AppGridTileState extends State<AppGridTile>
                   ? Theme.of(
                       context,
                     ).colorScheme.errorContainer.withValues(alpha: 0.12)
-                  : Theme.of(context).colorScheme.surface.withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism
-                          ? AppConstants.glassSurfaceAlpha
-                          : 1.0,
-                    ),
+                  : plusSettings.plusEnableGlassmorphism
+                  ? Theme.of(context).colorScheme.surface.withValues(
+                      alpha: AppConstants.glassSurfaceAlpha,
+                    )
+                  : Theme.of(context).colorScheme.surfaceContainerLow,
               border: Border.all(
                 color: widget.isSelected
                     ? Theme.of(context).colorScheme.primary
@@ -178,6 +178,14 @@ class _AppGridTileState extends State<AppGridTile>
                       color: Theme.of(context).colorScheme.error,
                       opacity: 0.08,
                     )
+                  : Theme.of(context).brightness == Brightness.light
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
                   : null,
             ),
             child: ClipRRect(
@@ -381,25 +389,29 @@ class _AppGridTileState extends State<AppGridTile>
                     label: _buildSemanticLabel(),
                     button: true,
                     selected: widget.isSelected,
-                    child: GestureDetector(
-                      onTapDown: (_) => setState(() => _isPressed = true),
-                      onTapUp: (_) {
-                        setState(() => _isPressed = false);
-                        widget.onTap();
-                      },
-                      onTapCancel: () => setState(() => _isPressed = false),
-                      onLongPressStart: (_) {
-                        setState(() => _isPressed = true);
-                        AppHaptics.mediumImpact();
-                      },
-                      onLongPressEnd: (_) {
-                        setState(() => _isPressed = false);
-                        widget.onLongPress();
-                      },
+                    child: Material(
+                      color: Colors.transparent,
                       child: InkWell(
-                        onTap: null, // Handled by GestureDetector
-                        onLongPress: null, // Handled by GestureDetector
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          widget.onTap();
+                        },
+                        onLongPress: () {
+                          AppHaptics.mediumImpact();
+                          widget.onLongPress();
+                        },
+                        onHighlightChanged: (highlighted) {
+                          setState(() => _isPressed = highlighted);
+                        },
                         borderRadius: BorderRadius.circular(cardBorderRadius),
+                        splashColor: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.12),
+                        highlightColor: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.06),
                         child: Padding(
                           padding: EdgeInsets.all(padding),
                           child: isHorizontal
@@ -421,6 +433,7 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
                   ),
+
                 ],
               ),
             ),
@@ -438,12 +451,13 @@ class _AppGridTileState extends State<AppGridTile>
     ViewSettingsProvider viewSettings,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(top: 14.0),
+      padding: const EdgeInsets.only(top: 10.0),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _buildIconStack(iconSize, iconBorderRadius, badgeSize),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _buildAppInfo(plusSettings, viewSettings, TextAlign.center),
         ],
       ),
@@ -483,14 +497,19 @@ class _AppGridTileState extends State<AppGridTile>
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Icon with layered depth shadow
+        // Icon with layered depth shadow and subtle squircle container
         Hero(
           tag: 'app_icon_${widget.appInMemory.app.id}',
           child: Container(
             width: iconSize,
             height: iconSize,
             decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(iconBorderRadius),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.12),
+                width: 0.5,
+              ),
               boxShadow: widget.hasUpdate
                   ? AppShadows.smooth(
                       color: colorScheme.error,
@@ -502,6 +521,7 @@ class _AppGridTileState extends State<AppGridTile>
                       blurFactor: 0.6,
                     ),
             ),
+
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               switchInCurve: Curves.easeIn,

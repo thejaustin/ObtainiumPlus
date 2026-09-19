@@ -1731,69 +1731,14 @@ class AppsPageState extends State<AppsPage> {
               controller: scrollController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               slivers: <Widget>[
-                settingsProvider.getAppBarStyleForPage('apps') ==
-                        AppBarStyle.large
-                    ? SliverAppBar.large(
-                        automaticallyImplyLeading: false,
-                        actions: [
-                          // The dashboard layout has its own always-visible
-                          // Omnibar; without it, this is the only reachable
-                          // search entry point on the Apps screen.
-                          if (plusSettings.plusShowAppBarSearch &&
-                              !plusSettings.plusEnableHomeDashboard)
-                            IconButton(
-                              icon: const Icon(Icons.search_rounded),
-                              tooltip: tr('search'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                CommandCenter.show(context);
-                              },
-                            ),
-                          if (!plusSettings.plusEnableFAB)
-                            // A single InkWell handles tap+long-press on
-                            // one recognizer — nesting IconButton's own
-                            // tap recognizer inside an outer
-                            // GestureDetector(onLongPress:) put two
-                            // recognizers in the same arena and could
-                            // delay/suppress the plain tap.
-                            Tooltip(
-                              message: tr('moreAddOptionsHint'),
-                              child: InkResponse(
-                                radius: 24,
-                                onTap: () {
-                                  AppHaptics.selectionClick();
-                                  CommandCenter.show(context);
-                                },
-                                onLongPress: () {
-                                  AppHaptics.heavyImpact();
-                                  AppActionsFAB.showAddAppMenu(context);
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(Icons.add_rounded),
-                                ),
-                              ),
-                            ),
-                          if (!hasExternalSettingsEntry)
-                            IconButton(
-                              icon: const Icon(Icons.settings_rounded),
-                              tooltip: tr('settings'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                pushRoute(context, const SettingsPage());
-                              },
-                            ),
-                        ],
-                        title: Text(
-                          tr('appsString'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    : CustomAppBar(
-                        title: tr('appsString'),
+                CustomAppBar(
+                  title: tr('appsString'),
+                  forceOneHanded:
+                      settingsProvider.getAppBarStyleForPage('apps') ==
+                              AppBarStyle.large
+                          ? true
+                          : null,
+
                         actions: [
                           if (plusSettings.plusShowAppBarSearch &&
                               !plusSettings.plusEnableHomeDashboard)
