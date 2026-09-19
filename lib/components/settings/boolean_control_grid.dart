@@ -71,32 +71,32 @@ class BooleanControlGrid extends StatelessWidget {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 2.2,
+                  Column(
+                    children: [
+                      for (int i = 0; i < settings.length; i += 2) ...[
+                        if (i > 0) const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            for (int j = 0; j < 2; j++) ...[
+                              if (j > 0) const SizedBox(width: 12),
+                              Expanded(
+                                child: (i + j < settings.length)
+                                    ? _buildBooleanControlItem(
+                                        context: context,
+                                        label: settings[i + j].label,
+                                        description: settings[i + j].description,
+                                        value: settings[i + j].getValue(settingsProvider),
+                                        onChanged: (value) {
+                                          settings[i + j].setValue(settingsProvider, value);
+                                        },
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            ],
+                          ],
                         ),
-                    itemCount: this.settings.length,
-                    itemBuilder: (context, index) {
-                      final setting = this.settings[index];
-                      final currentValue = setting.getValue(settingsProvider);
-
-                      return _buildBooleanControlItem(
-                        context: context,
-                        label: setting.label,
-                        description: setting.description,
-                        value: currentValue,
-                        onChanged: (value) {
-                          setting.setValue(settingsProvider, value);
-                        },
-                      );
-                    },
+                      ],
+                    ],
                   ),
                 ],
               ),

@@ -244,10 +244,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
               ],
             ),
           ),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          child: Card(
+        RepaintBoundary(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: Card(
             elevation: 0,
             margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
             color:
@@ -293,7 +294,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             ),
           ),
         ),
-      ],
+      ),
+    ],
     );
   }
 
