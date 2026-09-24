@@ -112,20 +112,63 @@ class AppListTile extends StatelessWidget {
         );
       }
       return ScaleTouchWrapper(
-        child: IconButton.filled(
-          icon: const Icon(Icons.download_rounded),
-          onPressed: () {
-            AppHaptics.selectionClick();
-            appsProvider.downloadAndInstallLatestApps([
-              appInMemory.app.id,
-            ], context);
-          },
-          tooltip: tr('installUpdate'),
-          style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
-          ),
-        ),
+        child: plusSettings.plusUpdateExpressiveBadge
+            // Expressive pill: "↓ 2.4.0"
+            ? FilledButton.tonal(
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  appsProvider.downloadAndInstallLatestApps([
+                    appInMemory.app.id,
+                  ], context);
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.secondaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onSecondaryContainer,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
+                  minimumSize: const Size(0, 32),
+                  shape: const StadiumBorder(),
+                  textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.download_rounded, size: 13),
+                    const SizedBox(width: 4),
+                    Text(
+                      appInMemory.app.latestVersion?.isNotEmpty == true
+                          ? appInMemory.app.latestVersion!
+                          : tr('update'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              )
+            // Classic circular download button (original behaviour).
+            : IconButton.filled(
+                icon: const Icon(Icons.download_rounded),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  appsProvider.downloadAndInstallLatestApps([
+                    appInMemory.app.id,
+                  ], context);
+                },
+                tooltip: tr('installUpdate'),
+                style: IconButton.styleFrom(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.secondaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+              ),
       );
     }
 
@@ -158,6 +201,16 @@ class AppListTile extends StatelessWidget {
               opacity: 0.08,
               blurFactor: 0.5,
             ),
+            // Rim border: gives transparent/white icons contrast against the card.
+            border: plusSettings.plusIconRimBorder
+                ? Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.45),
+                    width: 1.0,
+                  )
+                : null,
           ),
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -404,18 +457,25 @@ class AppListTile extends StatelessWidget {
                           ? Theme.of(context).colorScheme.secondary.withValues(
                               alpha: 0.45,
                             )
+                          : appInMemory.app.pinned &&
+                                plusSettings.plusPinnedBorderAccent
+                          ? Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.55)
                           : appInMemory.app.pinned
                           ? Theme.of(context).colorScheme.outlineVariant
                           : plusSettings.plusEnableGlassmorphism
                           ? Theme.of(context).colorScheme.onSurface.withValues(
                               alpha: AppConstants.glassBorderAlpha,
                             )
-                          : Theme.of(context).colorScheme.outlineVariant.withValues(
-                              alpha: 0.35,
-                            ),
-                      width:
-                          isSelected ||
-                              appInMemory.app.pinned ||
+                          : Theme.of(context)
+                              .colorScheme
+                              .outlineVariant
+                              .withValues(alpha: 0.35),
+                      width: isSelected ||
+                              (appInMemory.app.pinned &&
+                                  plusSettings.plusPinnedBorderAccent) ||
                               (hasUpdate && !isCompact)
                           ? 1.5
                           : 1.0,
@@ -489,7 +549,8 @@ class AppListTile extends StatelessWidget {
                             ),
                           ),
 
-                        if (displayCategoryColor != null)
+                        if (displayCategoryColor != null &&
+                            plusSettings.plusCategoryAccentRibbon)
                           Positioned(
                             left: 0,
                             top: 14,
@@ -517,7 +578,10 @@ class AppListTile extends StatelessWidget {
                           dense: isCompact,
                           leading: Padding(
                             padding: EdgeInsets.only(
-                              left: displayCategoryColor != null ? 6 : 0,
+                              left: (displayCategoryColor != null &&
+                                      plusSettings.plusCategoryAccentRibbon)
+                                  ? 6
+                                  : 0,
                             ),
                             child: Transform.scale(
                               scale: isCompact ? 0.9 : 1.0,

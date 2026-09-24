@@ -179,6 +179,55 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableFAB,
           onChanged: (s, v) => onSetState(() => s.plusEnableFAB = v),
         ),
+      if (_matches(tr('plusFloatingNavBar')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.dock_rounded,
+          title: tr('plusFloatingNavBar'),
+          subtitle: tr('plusFloatingNavBarDescription'),
+          value: (s) => s.plusFloatingNavBar,
+          onChanged: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
+        ),
+      if (_matches(tr('plusNavBarAlwaysShowLabels')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.label_important_rounded,
+          title: tr('plusNavBarAlwaysShowLabels'),
+          subtitle: tr('plusNavBarAlwaysShowLabelsDescription'),
+          value: (s) => s.plusNavBarAlwaysShowLabels,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusNavBarAlwaysShowLabels = v),
+        ),
+      if (_matches(tr('plusHeaderContextSubtitle')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.subtitles_rounded,
+          title: tr('plusHeaderContextSubtitle'),
+          subtitle: tr('plusHeaderContextSubtitleDescription'),
+          value: (s) => s.plusHeaderContextSubtitle,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusHeaderContextSubtitle = v),
+        ),
+      if (_matches(tr('plusFloatingActionBar')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.smart_button_rounded,
+          title: tr('plusFloatingActionBar'),
+          subtitle: tr('plusFloatingActionBarDescription'),
+          value: (s) => s.plusFloatingActionBar,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusFloatingActionBar = v),
+        ),
+      if (_matches(tr('plusExpressiveFilterChips')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.filter_alt_rounded,
+          title: tr('plusExpressiveFilterChips'),
+          subtitle: tr('plusExpressiveFilterChipsDescription'),
+          value: (s) => s.plusExpressiveFilterChips,
+          onChanged: (s, v) =>
+              onSetState(() => s.plusExpressiveFilterChips = v),
+        ),
       if (_matches(tr('showFilterChips')))
         buildFeatureToggle<ViewSettingsProvider>(
           context,
@@ -368,6 +417,52 @@ class AppsViewSettingsSection extends StatelessWidget {
                   description: tr('showDateDescription'),
                   getValue: (s) => s.displayShowDate,
                   setValue: (s, v) => onSetState(() => s.displayShowDate = v),
+                ),
+            ],
+          ),
+        if (plusFeaturesEnabled &&
+            (_matches(tr('plusPinnedBorderAccent')) ||
+                _matches(tr('plusCategoryAccentRibbon')) ||
+                _matches(tr('plusUpdateExpressiveBadge')) ||
+                _matches(tr('plusIconRimBorder'))))
+          GenericBooleanControlGrid<PlusSettingsProvider>(
+            title: tr('plusAppTileStyling'),
+            settings: [
+              if (_matches(tr('plusPinnedBorderAccent')))
+                (
+                  icon: Icons.push_pin_outlined,
+                  label: tr('plusPinnedBorderAccent'),
+                  description: tr('plusPinnedBorderAccentDescription'),
+                  getValue: (s) => s.plusPinnedBorderAccent,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusPinnedBorderAccent = v),
+                ),
+              if (_matches(tr('plusCategoryAccentRibbon')))
+                (
+                  icon: Icons.color_lens_outlined,
+                  label: tr('plusCategoryAccentRibbon'),
+                  description: tr('plusCategoryAccentRibbonDescription'),
+                  getValue: (s) => s.plusCategoryAccentRibbon,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusCategoryAccentRibbon = v),
+                ),
+              if (_matches(tr('plusUpdateExpressiveBadge')))
+                (
+                  icon: Icons.downloading_rounded,
+                  label: tr('plusUpdateExpressiveBadge'),
+                  description: tr('plusUpdateExpressiveBadgeDescription'),
+                  getValue: (s) => s.plusUpdateExpressiveBadge,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusUpdateExpressiveBadge = v),
+                ),
+              if (_matches(tr('plusIconRimBorder')))
+                (
+                  icon: Icons.crop_square_rounded,
+                  label: tr('plusIconRimBorder'),
+                  description: tr('plusIconRimBorderDescription'),
+                  getValue: (s) => s.plusIconRimBorder,
+                  setValue: (s, v) =>
+                      onSetState(() => s.plusIconRimBorder = v),
                 ),
             ],
           ),

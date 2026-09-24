@@ -1470,39 +1470,16 @@ class _AppPageState extends State<AppPage> {
     getBottomSheetMenu() {
       final colorScheme = Theme.of(context).colorScheme;
       final enableGlass = plusSettings.plusEnableGlassmorphism;
-      return ConditionalBlur(
-        enabled: enableGlass,
-        sigma: AppConstants.glassBlurSigma,
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(
-              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
-            ),
-            border: Border(
-              top: BorderSide(
-                color: enableGlass
-                    ? colorScheme.onSurface.withValues(
-                        alpha: AppConstants.glassBorderAlpha,
-                      )
-                    : colorScheme.outlineVariant.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-          ),
-        padding: EdgeInsets.fromLTRB(
-          0,
-          0,
-          0,
-          MediaQuery.of(context).padding.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(child: getInstallOrUpdateButton()),
+      final isFloating = plusSettings.plusFloatingActionBar;
+
+      final menuContent = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              children: [
+                Expanded(child: getInstallOrUpdateButton()),
                   const SizedBox(width: 8.0),
                   IconButton.filledTonal(
                     icon: const Icon(Icons.storefront_outlined),
@@ -1680,10 +1657,68 @@ class _AppPageState extends State<AppPage> {
               },
             ),
         ],
-      ),
-      ),
-    );
-  }
+      );
+
+      if (isFloating) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: ConditionalBlur(
+                enabled: enableGlass,
+                sigma: AppConstants.glassBlurSigma,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHigh.withValues(
+                      alpha: enableGlass ? 0.85 : 0.95,
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                    ),
+                    boxShadow: AppShadows.smooth(
+                      color: Colors.black,
+                      opacity: 0.12,
+                    ),
+                  ),
+                  child: menuContent,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      return ConditionalBlur(
+        enabled: enableGlass,
+        sigma: AppConstants.glassBlurSigma,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(
+              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
+            ),
+            border: Border(
+              top: BorderSide(
+                color: enableGlass
+                    ? colorScheme.onSurface.withValues(
+                        alpha: AppConstants.glassBorderAlpha,
+                      )
+                    : colorScheme.outlineVariant.withValues(alpha: 0.25),
+                width: 1,
+              ),
+            ),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            0,
+            0,
+            0,
+            MediaQuery.of(context).padding.bottom,
+          ),
+          child: menuContent,
+        ),
+      );
+    }
 
     appScreenAppBar() => AppBar(
       leading: IconButton(
@@ -1733,15 +1768,25 @@ class _AppPageState extends State<AppPage> {
       );
     }
 
-    final scaffold = Scaffold(
-      appBar: widget.isModal
-          ? null
-          : (showAppWebpageFinal ? AppBar() : appScreenAppBar()),
-      backgroundColor: widget.isModal
-          ? Colors.transparent
-          : Theme.of(context).colorScheme.surface,
-      body: buildScrollableBody(),
-      bottomSheet: getBottomSheetMenu(),
+    final scaffold = Theme(
+      data: plusSettings.plusFloatingActionBar
+          ? Theme.of(context).copyWith(
+              bottomSheetTheme: const BottomSheetThemeData(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+              ),
+            )
+          : Theme.of(context),
+      child: Scaffold(
+        appBar: widget.isModal
+            ? null
+            : (showAppWebpageFinal ? AppBar() : appScreenAppBar()),
+        backgroundColor: widget.isModal
+            ? Colors.transparent
+            : Theme.of(context).colorScheme.surface,
+        body: buildScrollableBody(),
+        bottomSheet: getBottomSheetMenu(),
+      ),
     );
 
     if (widget.isModal) {
