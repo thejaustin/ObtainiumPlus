@@ -531,6 +531,87 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Visual Polish Toggles (all additive — never remove existing behaviour) ──
+
+  /// Float the bottom nav bar as a pill-shaped frosted dock (vs. flat edge bar).
+  bool get plusFloatingNavBar =>
+      _prefs?.safeBool('plusFloatingNavBar') ?? false;
+  set plusFloatingNavBar(bool val) {
+    _prefs?.setBool('plusFloatingNavBar', val);
+    notifyListeners();
+  }
+
+  /// Always show labels on all nav-bar destinations (vs. selected-only).
+  bool get plusNavBarAlwaysShowLabels =>
+      _prefs?.safeBool('plusNavBarAlwaysShowLabels') ?? false;
+  set plusNavBarAlwaysShowLabels(bool val) {
+    _prefs?.setBool('plusNavBarAlwaysShowLabels', val);
+    notifyListeners();
+  }
+
+  /// Show a prominent thicker border on pinned-app tiles instead of relying
+  /// solely on the pin icon, giving a subtle but instantly-readable highlight.
+  bool get plusPinnedBorderAccent =>
+      _prefs?.safeBool('plusPinnedBorderAccent') ?? true;
+  set plusPinnedBorderAccent(bool val) {
+    _prefs?.setBool('plusPinnedBorderAccent', val);
+    notifyListeners();
+  }
+
+  /// Draw a left-edge category-color accent ribbon on list tiles to make
+  /// categorised apps immediately identifiable at a glance.
+  bool get plusCategoryAccentRibbon =>
+      _prefs?.safeBool('plusCategoryAccentRibbon') ?? false;
+  set plusCategoryAccentRibbon(bool val) {
+    _prefs?.setBool('plusCategoryAccentRibbon', val);
+    notifyListeners();
+  }
+
+  /// Replace the small circular download icon on updatable tiles with an
+  /// expressive pill chip showing the target version (e.g. "↓ 2.4.0").
+  bool get plusUpdateExpressiveBadge =>
+      _prefs?.safeBool('plusUpdateExpressiveBadge') ?? false;
+  set plusUpdateExpressiveBadge(bool val) {
+    _prefs?.setBool('plusUpdateExpressiveBadge', val);
+    notifyListeners();
+  }
+
+  /// Add a subtle rim border to app icons so icons with transparent or white
+  /// backgrounds don't dissolve into the card background.
+  bool get plusIconRimBorder =>
+      _prefs?.safeBool('plusIconRimBorder') ?? false;
+  set plusIconRimBorder(bool val) {
+    _prefs?.setBool('plusIconRimBorder', val);
+    notifyListeners();
+  }
+
+  /// Show a contextual status subtitle under the large OneUI header title
+  /// (e.g. "18 apps · 3 updates ready") that fades as the header collapses.
+  bool get plusHeaderContextSubtitle =>
+      _prefs?.safeBool('plusHeaderContextSubtitle') ?? true;
+  set plusHeaderContextSubtitle(bool val) {
+    _prefs?.setBool('plusHeaderContextSubtitle', val);
+    notifyListeners();
+  }
+
+  /// Display the App Detail install/update bar as a floating pill capsule
+  /// hovering above the nav bar instead of a pinned full-width strip.
+  bool get plusFloatingActionBar =>
+      _prefs?.safeBool('plusFloatingActionBar') ?? false;
+  set plusFloatingActionBar(bool val) {
+    _prefs?.setBool('plusFloatingActionBar', val);
+    notifyListeners();
+  }
+
+  /// Use fully-rounded pill (StadiumBorder) filter chips on the tag filter bar
+  /// instead of the default rounded-rectangle shape.
+  bool get plusExpressiveFilterChips =>
+      _prefs?.safeBool('plusExpressiveFilterChips') ?? true;
+  set plusExpressiveFilterChips(bool val) {
+    _prefs?.setBool('plusExpressiveFilterChips', val);
+    notifyListeners();
+  }
+
   ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
       ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
       : const AlwaysScrollableScrollPhysics();

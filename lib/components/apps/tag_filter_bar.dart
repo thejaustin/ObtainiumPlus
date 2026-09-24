@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/tag_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -16,9 +17,14 @@ class TagFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tagProvider = context.watch<TagProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final tags = tagProvider.allTags.toList()..sort();
 
     if (tags.isEmpty) return const SliverToBoxAdapter();
+
+    final chipShape = plusSettings.plusExpressiveFilterChips
+        ? const StadiumBorder()
+        : null; // null = default M3 rounded-rect
 
     return SliverToBoxAdapter(
       child: SizedBox(
@@ -37,6 +43,7 @@ class TagFilterBar extends StatelessWidget {
                 label: Text(tag ?? tr('all')),
                 selected: isSelected,
                 onSelected: (_) => onTagSelected(tag),
+                shape: chipShape,
               ),
             );
           },
