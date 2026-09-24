@@ -32,48 +32,69 @@ Obtainium+ gives you advanced control over your app list:
 - **Advanced Sorting**: Use the sort icon to organize apps by *Latest Updates*, *Recently Added*, *Install Status*, or *Alphabetical (A-Z/Z-A)*.
 - **Quick Filters**: Use the chips at the top of your apps list to quickly show only apps with "Updates Available" or "Not Installed".
 
-## ⚙️ Settings Hub Overview
+## ⚙️ Settings Overview
 
-The settings page uses a **hub-and-spoke** layout. Each card opens a focused settings sheet.
+The settings page features categorized tabs along with a top **Obtainium+ Features** quick-access card.
 
-| Hub | What's inside |
-|-----|--------------|
-| **Obtainium+ Features** | Vanilla Mode master switch, grid view, icon cache, animations |
-| **Updates & Automation** | Background check interval, WiFi-only, scheduled windows |
-| **Theming** | Light/Dark/AMOLED, Material You, accent color, font |
-| **Layout** | List/grid density, sort order, swipe gestures, category display |
-| **Installation** | Shizuku, AppVerifier, parallel downloads, auto-remove |
-| **Statistics** | Per-app update history and install counts |
-| **Advanced Settings** | App behavior, page transitions, haptics, warnings, deep logging |
-| **Dev & Logs** | Error logs, diagnostics *(visible only in Developer Mode)* |
+| Section | What's inside |
+|---------|--------------|
+| **Obtainium+ Features** | Master toggle, OneUI header reachability, floating dock, action capsule, app tile styling, and visual toggles |
+| **Appearance** | Light/Dark/AMOLED, Material You dynamic scheme variants, curated palette presets, and view options (List/Grid) |
+| **Updates & Install** | Background intervals, scheduled check windows, Shizuku Turbo, silent installs, and AppVerifier |
+| **Notifications** | Update alert preferences, background notifications, and channels |
+| **Behavior** | Swipe gestures, animation scale, page transitions, and tactile haptic feedback |
+| **Advanced & Debug** | Device optimization sheet, deep diagnostics, export/import encryption, and developer logs |
 
 > **Developer Mode:** Long-press the **App Info** button at the bottom of Settings to toggle it on/off.
 
-## 📲 Silent Installs with Shizuku
+## 📱 OneUI Reachability Header
 
-Shizuku lets Obtainium+ install and update apps silently without a system dialog.
+Obtainium+ features a collapsible OneUI-style header for easy one-handed reachability:
+- **Title Shift & Pull-Down**: Pull down on your app list to smoothly bring top items within thumb's reach. The title shifts down into an oversized headline.
+- **Contextual Subtitles**: Glanceable metadata below the header displaying total tracked apps and pending updates (`"18 apps · 3 updates"`).
+- **Customizable**: Toggle in **Settings → Obtainium+ Features → OneUI Reachability Header**.
 
-1. Download and run [Shizuku](https://github.com/RikkaApps/Shizuku)
-2. Open **Settings → Installation → Use Shizuku** and enable it
-3. Grant the permission prompt — if permission is denied, the toggle stays off automatically
-4. Optionally enable **Pretend to be Google Play** if a source requires a Play Store identity
+## 🚤 Floating Navigation Dock & Action Capsule
 
-> **AppVerifier:** Enable *Share new apps with AppVerifier* to cryptographically check APKs before they install.
+- **Floating Navigation Dock**: Replaces the traditional flat-edge navigation bar with a modern floating frosted-glass island dock.
+- **Floating Action Capsule**: On the App Detail screen, quick actions (Install, Update, Web, Options) float gracefully above content inside a frosted pill capsule.
+- **Toggle**: Configure independently in **Settings → Obtainium+ Features**.
+
+## 🎨 App Tile Visual Customization
+
+Tailor the look and feel of app tiles to your preference:
+- **Pinned Border Accent**: Highlight pinned apps with an elegant primary accent border.
+- **Category Accent Ribbon**: Add a subtle colored vertical indicator strip to the leading edge of tiles matching their category color.
+- **Expressive Version Pill**: Display update targets in a compact rounded tonal pill (`↓ 2.4.0`) rather than standard buttons.
+- **Icon Rim Border**: Frame app icons with a crisp specular rim.
+- **Stadium Filter Chips**: Fully rounded pill chips for tags and category filters.
+
+## 📲 Silent Installs with Shizuku & Shizuku Turbo
+
+Shizuku lets Obtainium+ install and update apps silently without a system confirmation dialog.
+
+1. Download and run [Shizuku](https://github.com/RikkaApps/Shizuku).
+2. Open **Settings → Updates & Install → Installation → Use Shizuku** and enable it.
+3. Grant the permission prompt — if permission is denied, the toggle stays off automatically.
+4. Enable **Shizuku Turbo** for high-throughput I/O buffering and adaptive fast polling during batch updates.
+5. Optionally enable **Pretend to be Google Play** if a source requires a Play Store identity.
+
+> **Device Optimization**: Access OEM-specific battery and background guidance for Samsung, Xiaomi, OnePlus, Vivo, Huawei, Nothing OS, and Transsion under **Settings → Advanced & Debug → Device Optimization**.
 
 ## 🎮 App Behavior & Gestures
 
-Found in **Settings → Advanced Settings → App Behavior**:
+Found in **Settings → Behavior → App Behavior**:
 
-- **Swipe gestures** — assign actions (Update, Pin, Share, Launch, Delete, None) to left/right swipes independently
-- **Animation speed** — scale UI animation duration (50%–200%)
-- **Page transitions** — disable or reverse screen switch animations
-- **Haptic feedback** — vibrate on interactions
-- **Undo app removal** — undo deletions within a few seconds via snackbar
+- **Swipe gestures** — assign actions (Update, Pin, Share, Launch, Delete, None) to left/right swipes independently.
+- **Animation speed** — scale UI animation duration (50%–200%).
+- **Page transitions** — disable or reverse screen switch animations.
+- **Haptic feedback** — tactile feedback on clicks, selections, and long presses.
+- **Undo app removal** — undo accidental deletions within a few seconds via snackbar.
 
 ## ⚡ Performance Tips
-- **Background Updates**: Set your update interval in `Settings → Updates & Automation`. Enable **Scheduled Updates** to limit checks to specific hours (e.g., overnight).
-- **Undo Removal**: Accidentally deleted an app? Enable *Undo app removal* in Advanced Settings, then tap "Undo" in the snackbar before it disappears.
-- **Haptic Feedback**: Subtle tactile feedback on interactions — toggle in **Advanced Settings → App Behavior**.
+- **Background Updates**: Set your update interval in `Settings → Updates & Install`. Enable **Scheduled Updates** to limit checks to specific hours (e.g., overnight).
+- **Icon Caching**: In-memory LRU caching guarantees stutter-free 120Hz scrolling across large app lists.
+- **Haptic Feedback**: Subtle tactile feedback on interactions — toggle in **Settings → Behavior**.
 
 ---
 *For technical details on how these features are implemented, see the [Technical Architecture](Technical-Architecture.md) guide.*

@@ -114,42 +114,45 @@ class AppListTile extends StatelessWidget {
       return ScaleTouchWrapper(
         child: plusSettings.plusUpdateExpressiveBadge
             // Expressive pill: "↓ 2.4.0"
-            ? FilledButton.tonal(
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  appsProvider.downloadAndInstallLatestApps([
-                    appInMemory.app.id,
-                  ], context);
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.secondaryContainer,
-                  foregroundColor:
-                      Theme.of(context).colorScheme.onSecondaryContainer,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 0,
-                  ),
-                  minimumSize: const Size(0, 32),
-                  shape: const StadiumBorder(),
-                  textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                      ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.download_rounded, size: 13),
-                    const SizedBox(width: 4),
-                    Text(
-                      appInMemory.app.latestVersion?.isNotEmpty == true
-                          ? appInMemory.app.latestVersion!
-                          : tr('update'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            ? Tooltip(
+                message: tr('installUpdate'),
+                child: FilledButton.tonal(
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    appsProvider.downloadAndInstallLatestApps([
+                      appInMemory.app.id,
+                    ], context);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.secondaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onSecondaryContainer,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 0,
                     ),
-                  ],
+                    minimumSize: const Size(0, 32),
+                    shape: const StadiumBorder(),
+                    textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.download_rounded, size: 13),
+                      const SizedBox(width: 4),
+                      Text(
+                        appInMemory.app.latestVersion?.isNotEmpty == true
+                            ? appInMemory.app.latestVersion!
+                            : tr('update'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               )
             // Classic circular download button (original behaviour).
@@ -611,6 +614,36 @@ class AppListTile extends StatelessWidget {
                           ),
                           subtitle: Row(
                             children: [
+                              if (appInMemory.app.hasPendingRepoRename)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline_rounded,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        size: 13,
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        tr('repoRenamed'),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 10,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               if (plusSettings.plusShowTagsInList &&
                                   appInMemory.app.tags.isNotEmpty)
                                 Padding(

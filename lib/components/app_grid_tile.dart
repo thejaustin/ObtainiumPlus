@@ -150,10 +150,13 @@ class _AppGridTileState extends State<AppGridTile>
                     ? Theme.of(
                         context,
                       ).colorScheme.error.withValues(alpha: AppOpacity.low)
-                    : widget.appInMemory.app.pinned
+                    : widget.appInMemory.app.pinned &&
+                          plusSettings.plusPinnedBorderAccent
                     ? Theme.of(
                         context,
-                      ).colorScheme.primary.withValues(alpha: 0.35)
+                      ).colorScheme.primary.withValues(alpha: 0.55)
+                    : widget.appInMemory.app.pinned
+                    ? Theme.of(context).colorScheme.outlineVariant
                     : plusSettings.plusEnableGlassmorphism
                     ? Theme.of(context).colorScheme.onSurface.withValues(
                         alpha: AppConstants.glassBorderAlpha,
@@ -161,9 +164,9 @@ class _AppGridTileState extends State<AppGridTile>
                     : Theme.of(context).colorScheme.outline.withValues(
                         alpha: 0.1,
                       ),
-                width:
-                    widget.isSelected ||
-                        widget.appInMemory.app.pinned ||
+                width: widget.isSelected ||
+                        (widget.appInMemory.app.pinned &&
+                            plusSettings.plusPinnedBorderAccent) ||
                         widget.hasUpdate
                     ? 1.5
                     : 0.8,
@@ -385,6 +388,40 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
 
+                  // Repo moved warning indicator
+                  if (widget.appInMemory.app.hasPendingRepoRename)
+                    Positioned(
+                      top: 6,
+                      left: widget.appInMemory.app.pinned && !widget.isSelected
+                          ? 28
+                          : 6,
+                      child: Tooltip(
+                        message: tr('repoRenamed'),
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .errorContainer
+                                .withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .error
+                                  .withValues(alpha: 0.4),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.info_outline_rounded,
+                            size: 10,
+                            color: Theme.of(context).colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+
                   Semantics(
                     label: _buildSemanticLabel(),
                     button: true,
@@ -456,7 +493,12 @@ class _AppGridTileState extends State<AppGridTile>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+          _buildIconStack(
+            iconSize,
+            iconBorderRadius,
+            badgeSize,
+            plusSettings,
+          ),
           const SizedBox(height: 8),
           _buildAppInfo(plusSettings, viewSettings, TextAlign.center),
         ],
@@ -473,7 +515,12 @@ class _AppGridTileState extends State<AppGridTile>
   ) {
     return Row(
       children: [
-        _buildIconStack(iconSize, iconBorderRadius, badgeSize),
+        _buildIconStack(
+          iconSize,
+          iconBorderRadius,
+          badgeSize,
+          plusSettings,
+        ),
         const SizedBox(width: 20),
         Expanded(
           child: _buildAppInfo(plusSettings, viewSettings, TextAlign.start),
@@ -492,6 +539,7 @@ class _AppGridTileState extends State<AppGridTile>
     double iconSize,
     double iconBorderRadius,
     double badgeSize,
+    PlusSettingsProvider plusSettings,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Stack(
@@ -506,10 +554,15 @@ class _AppGridTileState extends State<AppGridTile>
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(iconBorderRadius),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.12),
-                width: 0.5,
-              ),
+              border: plusSettings.plusIconRimBorder
+                  ? Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+                      width: 1.0,
+                    )
+                  : Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.12),
+                      width: 0.5,
+                    ),
               boxShadow: widget.hasUpdate
                   ? AppShadows.smooth(
                       color: colorScheme.error,

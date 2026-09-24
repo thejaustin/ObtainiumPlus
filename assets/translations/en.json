@@ -1204,5 +1204,10 @@
     "plusFloatingActionBarDescription": "Display the install and update bar as a floating pill capsule on the app detail page",
     "plusExpressiveFilterChips": "Pill Tag Filter Chips",
     "plusExpressiveFilterChipsDescription": "Use fully rounded stadium pill shapes for tag and category filter chips",
-    "plusAppTileStyling": "App Tile Styling"
+    "plusAppTileStyling": "App Tile Styling",
+    "settingsTabAppearance": "Appearance",
+    "settingsTabUpdatesInstall": "Updates & Install",
+    "settingsTabNotifications": "Notifications",
+    "settingsTabBehavior": "Behavior",
+    "settingsTabAdvancedDebug": "Advanced & Debug"
 }

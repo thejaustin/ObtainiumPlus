@@ -21,9 +21,10 @@ Future<List<String>?> showTagEditor({
   final selectedTags = Set<String>.from(currentTags);
   final TextEditingController _controller = TextEditingController();
 
-  return showDialog<List<String>>(
-    context: context,
-    builder: (ctx) => StatefulBuilder(
+  try {
+    return await showDialog<List<String>>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
       builder: (context, setSheetState) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -186,6 +187,9 @@ Future<List<String>?> showTagEditor({
       },
     ),
   );
+  } finally {
+    _controller.dispose();
+  }
 }
 
 Widget _buildHeader(BuildContext context, bool enableGlass) {
