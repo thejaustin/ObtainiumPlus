@@ -144,17 +144,26 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children:
                       [
-                        (label: 'Appearance', icon: Icons.palette_outlined),
                         (
-                          label: 'Updates & Install',
+                          key: 'settingsTabAppearance',
+                          icon: Icons.palette_outlined,
+                        ),
+                        (
+                          key: 'settingsTabUpdatesInstall',
                           icon: Icons.system_update_rounded,
                         ),
                         (
-                          label: 'Notifications',
+                          key: 'settingsTabNotifications',
                           icon: Icons.notifications_outlined,
                         ),
-                        (label: 'Behavior', icon: Icons.tune_rounded),
-                        (label: 'Advanced & Debug', icon: Icons.code_rounded),
+                        (
+                          key: 'settingsTabBehavior',
+                          icon: Icons.tune_rounded,
+                        ),
+                        (
+                          key: 'settingsTabAdvancedDebug',
+                          icon: Icons.code_rounded,
+                        ),
                       ].asMap().entries.map((entry) {
                         final isSelected = _selectedSectionIndex == entry.key;
                         final tab = entry.value;
@@ -173,7 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       context,
                                     ).colorScheme.onSurfaceVariant,
                             ),
-                            label: Text(tab.label),
+                            label: Text(tr(tab.key)),
                             selected: isSelected,
                             onSelected: (selected) {
                               if (selected) {

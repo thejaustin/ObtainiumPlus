@@ -52,6 +52,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
+  final GlobalKey<AppsPageState> _appsPageKey = GlobalKey<AppsPageState>();
   late List<NavigationPageItem> pages;
 
   // Measured height of the floating bottom nav bar (divider + NavigationBar
@@ -81,7 +82,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       NavigationPageItem(
         'appsString',
         Icons.apps_rounded,
-        AppsPage(key: GlobalKey<AppsPageState>()),
+        AppsPage(key: _appsPageKey),
       ),
       NavigationPageItem(
         'importExport',
@@ -212,15 +213,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     goToExistingApp(String appId) async {
       switchToPage(0);
       var attempts = 0;
-      while ((pages[0].widget.key as GlobalKey<AppsPageState>?)?.currentState ==
-          null) {
+      while (_appsPageKey.currentState == null) {
         if (++attempts > 50) return;
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
       // Navigate to the app
-      (pages[0].widget.key as GlobalKey<AppsPageState>?)?.currentState
-          ?.openAppById(appId);
+      _appsPageKey.currentState?.openAppById(appId);
     }
 
     interpretLink(Uri uri) async {
@@ -356,14 +355,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> switchToPage(int index) async {
+    final currentTab =
+        selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
+    if (_tabController.index == index && currentTab == index) {
+      return;
+    }
     _tabController.animateTo(index);
     setIsReversing(index);
     if (index == 0) {
-      while ((pages[0].widget.key as GlobalKey<AppsPageState>).currentState !=
-          null) {
-        // Avoid duplicate GlobalKey error
-        await Future.delayed(const Duration(microseconds: 1));
-      }
       setState(() {
         selectedIndexHistory.clear();
       });
@@ -385,6 +384,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final settingsProvider = context.watch<SettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final isSelecting = context.select<AppsProvider, bool>(
+      (p) => p.selectedAppIds.isNotEmpty,
+    );
 
     final isTopNav = plusSettings.plusTopUILayout && !settingsProvider.isTV;
     final showNavBar = plusSettings.plusEnableBottomNavBar && !isTopNav;
@@ -444,8 +446,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             return;
           }
           final clearSelected =
-              (pages[0].widget.key as GlobalKey<AppsPageState>).currentState!
-                  .clearSelected();
+              _appsPageKey.currentState?.clearSelected() ?? false;
           if (!clearSelected) {
             SystemNavigator.pop();
           }
@@ -505,9 +506,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             return;
           }
         }
-        final clearSelected = (pages[0].widget.key as GlobalKey<AppsPageState>)
-            .currentState!
-            .clearSelected();
+        final clearSelected =
+            _appsPageKey.currentState?.clearSelected() ?? false;
         if (!clearSelected) {
           SystemNavigator.pop();
         }
@@ -518,7 +518,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         // The omnibar "+" — the single entry point for the combined
         // add/search/discover flow, visible on every tab.
         floatingActionButton:
-            plusSettings.plusEnableFAB && !settingsProvider.isTV
+            plusSettings.plusEnableFAB && !settingsProvider.isTV && !isSelecting
             ? const AppActionsFAB()
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

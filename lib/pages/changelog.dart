@@ -240,11 +240,14 @@ class _ChangelogPageState extends State<ChangelogPage> {
     return '''
 **Obtainium+ $version**
 
-### ✨ Recent Updates
-- Enhanced visual design with glassmorphism and specular accents
-- Fixed package ID mismatch detection for apps with temporary IDs
-- Resolved changelog display at application launch
-- Improved OneUI ergonomics and one-handed navigation
+### ✨ Highlights & New Features
+- **Samsung OneUI Reachability Header**: Collapsible header with smooth title shift on pull-down and contextual app & update counts.
+- **Material 3 Expressive Theming**: Wallpaper dynamic scheme variants, curated palette presets, and spatial scale transitions.
+- **Floating Navigation Dock**: Modern frosted island dock with rounded corners and ambient shadow (with classic flat bar option).
+- **Floating Action Capsule**: Frosted install/update capsule on the App Detail screen.
+- **Customizable App Tile Styling**: Highlighted pinned app borders, category accent ribbons, expressive version update pills (↓ 2.4.0), and icon rim borders across List and Grid views.
+- **Stadium Pill Filter Chips**: Fully rounded tag and category filter chips.
+- **Performance & Stability**: Fixed PageStorage key collisions in Settings, isolated dialog barriers, optimized PMS install locks, and resolved tab switch edge cases.
 
 ---
 [View All Releases on GitHub](https://github.com/thejaustin/ObtainiumPlus/releases)
