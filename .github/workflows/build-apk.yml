@@ -11,6 +11,10 @@ on:
         type: boolean
         description: Mark as pre-release?
         default: false
+      full_release:
+        type: boolean
+        description: Produce an official full release (no -p suffix)?
+        default: false
 
 jobs:
   quality:
@@ -74,6 +78,9 @@ jobs:
           if [[ "${{ github.ref }}" == refs/heads/feature/* ]]; then
             IS_DEV=true
           fi
+          if [ "${{ inputs.beta }}" = "true" ]; then
+            IS_DEV=true
+          fi
           echo "is_dev=$IS_DEV" >> $GITHUB_OUTPUT
 
       - name: Auto-bump version
@@ -84,17 +91,26 @@ jobs:
           CURRENT_VERSION=$(echo "$FULL_VERSION" | cut -d'+' -f1)
           CURRENT_BUILD=$(echo "$FULL_VERSION" | cut -d'+' -f2)
 
-          if [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
-            BASE_VERSION="${BASH_REMATCH[1]}"
-            PATCH_NUM="${BASH_REMATCH[2]}"
-          else
-            BASE_VERSION="$CURRENT_VERSION"
-            PATCH_NUM="0"
+          IS_FULL_RELEASE=false
+          if [ "${{ inputs.full_release }}" = "true" ] || [[ "${{ github.event.head_commit.message }}" =~ \[full[- ]release\] ]] || [[ "${{ github.event.head_commit.message }}" =~ ^chore:\ release ]]; then
+            IS_FULL_RELEASE=true
           fi
 
-          NEW_PATCH=$((PATCH_NUM + 1))
-          NEW_BUILD=$((CURRENT_BUILD + 1))
-          NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
+          if [ "$IS_FULL_RELEASE" = "true" ]; then
+            # Clean version without -p suffix
+            NEW_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-p[0-9]+$//')
+            NEW_BUILD=$((CURRENT_BUILD + 1))
+          elif [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
+            BASE_VERSION="${BASH_REMATCH[1]}"
+            PATCH_NUM="${BASH_REMATCH[2]}"
+            NEW_PATCH=$((PATCH_NUM + 1))
+            NEW_BUILD=$((CURRENT_BUILD + 1))
+            NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
+          else
+            NEW_PATCH=1
+            NEW_BUILD=$((CURRENT_BUILD + 1))
+            NEW_VERSION="${CURRENT_VERSION}-p${NEW_PATCH}"
+          fi
 
           sed -i "s/^version: .*/version: ${NEW_VERSION}+${NEW_BUILD}/" pubspec.yaml
           sed -i "s/^const currentObtainiumPlusVersion = .*/const currentObtainiumPlusVersion = '${NEW_VERSION}';/" lib/utils/version_constant.dart

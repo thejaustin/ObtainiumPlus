@@ -51,18 +51,39 @@ Or, contribute some configurations to the website by creating a PR at [this repo
 
 | Feature | Original Obtainium | Obtainium+ |
 | :--- | :--- | :--- |
-| **Design & Look** | Standard Android design | A beautiful "glass-like" interface (glassmorphism) with smooth colors, subtle blurs, and modern text. |
+| **Design & Theming** | Standard Material design | Glassmorphic interface, Material 3 Expressive wallpaper dynamic variants, curated palette presets, and spatial scale transitions. |
+| **One-Handed Ergonomics** | Fixed top app bar | Samsung OneUI-inspired collapsible header with fluid title shifting on pull-down and live contextual app & update status. |
+| **Navigation & Controls** | Fixed flat bottom bar | Optional floating frosted island dock, always-show labels, and floating action capsule on App Detail pages. |
+| **Card & Tile Customization** | Static list items | Customizable pinned app highlights, category accent ribbons, expressive update pills (↓ 2.4.0), and icon rim borders across List and Grid views. |
+| **Installer Engine** | Standard Shizuku/Root | Shizuku & ShizukuPlus Turbo mode with optimized binder IPC buffers, auto-fallback to package installer, and OEM device optimization hub. |
 | **Play Store Mirroring** | Scrapes APK links | Secure, direct connections to Google Play mirrors using your own private servers (dispensers) or microG. |
-| **Troubleshooting & Logs** | Basic terminal logs | A built-in, easy-to-use diagnostics screen and local crash tracker to solve issues privately. |
-| **Instant Settings** | Requires app restarts to apply | Changes to look, feel, and updates apply instantly as you tap them. |
+| **Troubleshooting & Logs** | Basic terminal logs | Built-in diagnostics screen, real-time logger, and local crash tracker to solve issues privately. |
+| **Instant Settings** | Requires app restarts to apply | Changes to look, feel, animations, and updates apply instantly as you tap them. |
 | **Privacy First** | Uses some default third-party servers | Completely tracking-free. No pre-configured server addresses to protect public servers and guarantee your privacy. |
 
 ---
 
 ## 🚀 Key Features
 
-### 🎨 Beautiful, Modern Design (Glassmorphic Interface)
-Obtainium+ features a premium, clean design with smooth color transitions, soft backdrop blurs, and elegant layouts. Standard sharp boxes and high-contrast lines are replaced with a smooth visual style that is easy on the eyes.
+### 📱 Samsung OneUI Reachability Header
+Engineered for modern large-screen smartphones, Obtainium+ includes a OneUI-inspired collapsible header. When pulled down or at the top of your list, the header smoothly expands to bring interactive content within natural thumb reach, shifting the title into the center alongside real-time contextual information (`18 apps · 3 updates`).
+
+### 🎨 Material 3 Expressive Theming & Palette Presets
+Expand beyond standard dynamic color with Android 16/Material 3 Expressive color schemes (Tonal Spot, Expressive, Fruit Salad, Rainbow, Vibrant, Fidelity, and Monochrome), curated contrast presets, and smooth spatial scale transitions.
+
+### 🏝️ Floating Navigation Dock & Action Capsule
+Experience a refined floating frosted island dock with rounded corners, ambient drop shadows, and full keyboard arrow navigation. The App Detail screen features a floating action capsule that stays accessible above the bottom margin.
+
+### ✨ Granular App Tile & Card Styling
+Customize your app list to your exact aesthetic:
+- **Pinned App Highlights**: Distinctive thicker accented borders for pinned apps.
+- **Category Accent Ribbons**: Color-coded edge ribbons reflecting assigned categories.
+- **Expressive Version Pills**: Tonal status pills showing target versions (`↓ 2.4.0`).
+- **Icon Rim Borders**: Outlines around icon containers preventing transparent or white icons from bleeding into backgrounds.
+- **Stadium Pill Filter Chips**: Fully rounded chips on the tag and category filter bar.
+
+### ⚡ Shizuku / ShizukuPlus Turbo Engine & Device Tuning
+Bypass restrictive background app throttles and OEM installation blocks with native Shizuku and ShizukuPlus integration. Includes an OEM Device Compatibility & Performance hub with direct tuning shortcuts for Samsung (OneUI), Xiaomi (HyperOS/MIUI), OnePlus (OxygenOS), Vivo (Funtouch/OriginOS), Huawei (EMUI/HarmonyOS), Nothing OS, and Transsion devices.
 
 ### 🔒 Play Store Updates (Without a Google Account)
 Update apps that are normally only available on the Google Play Store. To respect public resources and guarantee your privacy, Obtainium+ includes absolutely no hidden tracking and does not ship with any pre-configured servers. You can easily hook in your own secure servers (like a self-hosted token dispenser) or microG profile.

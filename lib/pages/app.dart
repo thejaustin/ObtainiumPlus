@@ -1067,9 +1067,13 @@ class _AppPageState extends State<AppPage> {
       Color color = Theme.of(context).colorScheme.primary;
       String sourceName = tr('unknownSource');
 
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
       if (url.contains('github.com')) {
         iconData = Icons.terminal_rounded;
-        color = const Color(0xFF24292E);
+        color = isDark
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.85)
+            : const Color(0xFF24292E);
         sourceName = 'GitHub';
       } else if (url.contains('f-droid.org')) {
         iconData = Icons.android_rounded;
@@ -1115,7 +1119,7 @@ class _AppPageState extends State<AppPage> {
       children: [
         const SizedBox(height: 12),
         FutureBuilder(
-          future: appsProvider.updateAppIcon(app?.app.id, ignoreCache: true),
+          future: appsProvider.updateAppIcon(app?.app.id),
           builder: (ctx, val) {
             return app?.icon != null
                 ? Row(

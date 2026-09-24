@@ -4,6 +4,8 @@ import 'package:obtainium/providers/tag_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import 'package:obtainium/utils/haptic_utils.dart';
+
 class TagFilterBar extends StatelessWidget {
   final String? activeTag;
   final Function(String?) onTagSelected;
@@ -42,7 +44,10 @@ class TagFilterBar extends StatelessWidget {
               child: FilterChip(
                 label: Text(tag ?? tr('all')),
                 selected: isSelected,
-                onSelected: (_) => onTagSelected(tag),
+                onSelected: (_) {
+                  AppHaptics.selectionClick();
+                  onTagSelected(tag);
+                },
                 shape: chipShape,
               ),
             );
