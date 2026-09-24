@@ -1733,6 +1733,12 @@ class AppsPageState extends State<AppsPage> {
               slivers: <Widget>[
                 CustomAppBar(
                   title: tr('appsString'),
+                  subtitle: plusSettings.plusHeaderContextSubtitle
+                      ? '${listedApps.length} ${listedApps.length == 1 ? 'app' : 'apps'}' +
+                          (existingUpdates.isNotEmpty
+                              ? ' · ${existingUpdates.length} ${existingUpdates.length == 1 ? 'update' : 'updates'}'
+                              : '')
+                      : null,
                   forceOneHanded:
                       settingsProvider.getAppBarStyleForPage('apps') ==
                               AppBarStyle.large

@@ -552,82 +552,135 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             : pageBody,
         bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
-            : ClipRRect(
-                key: _bottomNavBarKey,
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surface.withValues(alpha: 0.8),
-                    child: FocusTraversalGroup(
-                      child: Focus(
-                        onKeyEvent: (node, event) {
-                          if (event is! KeyDownEvent)
-                            return KeyEventResult.ignored;
-                          if (event.logicalKey ==
-                              LogicalKeyboardKey.arrowRight) {
-                            switchToPage((currentIndex + 1) % pages.length);
-                            return KeyEventResult.handled;
-                          }
-                          if (event.logicalKey ==
-                              LogicalKeyboardKey.arrowLeft) {
-                            switchToPage(
-                              (currentIndex - 1 + pages.length) % pages.length,
-                            );
-                            return KeyEventResult.handled;
-                          }
-                          return KeyEventResult.ignored;
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Divider(
-                              height: 1,
-                              thickness: 1,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.4),
-                            ),
-                            NavigationBar(
-                              elevation: 0,
-                              backgroundColor: Colors.transparent,
-                              indicatorColor: Theme.of(
-                                context,
-                              ).colorScheme.primaryContainer,
-                              labelBehavior: NavigationDestinationLabelBehavior
-                                  .onlyShowSelected,
-                              animationDuration: const Duration(
-                                milliseconds: 300,
-                              ),
-                              destinations: pages
-                                  .map(
-                                    (e) => NavigationDestination(
-                                      icon: Icon(e.icon),
-                                      selectedIcon: Icon(
-                                        e.icon,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onPrimaryContainer,
-                                      ),
-                                      label: tr(e.title),
-                                    ),
-                                  )
-                                  .toList(),
-                              onDestinationSelected: (int index) async {
-                                AppHaptics.selectionClick();
-                                switchToPage(index);
-                              },
-                              selectedIndex: currentIndex,
-                            ),
-                          ],
-                        ),
-                      ),
+            : _buildBottomNavBar(
+                context,
+                plusSettings,
+                currentIndex,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar(
+    BuildContext context,
+    PlusSettingsProvider plusSettings,
+    int currentIndex,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isFloating = plusSettings.plusFloatingNavBar;
+    final labelBehavior = plusSettings.plusNavBarAlwaysShowLabels
+        ? NavigationDestinationLabelBehavior.alwaysShow
+        : NavigationDestinationLabelBehavior.onlyShowSelected;
+
+    // Shared keyboard focus handler
+    Widget wrapWithFocus(Widget child) => FocusTraversalGroup(
+          child: Focus(
+            onKeyEvent: (node, event) {
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                switchToPage((currentIndex + 1) % pages.length);
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                switchToPage(
+                  (currentIndex - 1 + pages.length) % pages.length,
+                );
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: child,
+          ),
+        );
+
+    final navBar = NavigationBar(
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      indicatorColor: colorScheme.primaryContainer,
+      labelBehavior: labelBehavior,
+      animationDuration: const Duration(milliseconds: 300),
+      destinations: pages
+          .map(
+            (e) => NavigationDestination(
+              icon: Icon(e.icon),
+              selectedIcon: Icon(
+                e.icon,
+                color: colorScheme.onPrimaryContainer,
+              ),
+              label: tr(e.title),
+            ),
+          )
+          .toList(),
+      onDestinationSelected: (int index) async {
+        AppHaptics.selectionClick();
+        switchToPage(index);
+      },
+      selectedIndex: currentIndex,
+    );
+
+    if (isFloating) {
+      // Floating pill dock — sits inside the Scaffold's body padding area.
+      // Uses ClipRRect + BackdropFilter for the frosted-glass effect, then
+      // wraps everything in a margin'd container so it hovers above the edge.
+      return RepaintBoundary(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: ClipRRect(
+              key: _bottomNavBarKey,
+              borderRadius: BorderRadius.circular(32),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHigh.withValues(
+                      alpha: 0.82,
                     ),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 20,
+                        spreadRadius: -2,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
+                  child: wrapWithFocus(navBar),
                 ),
               ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Classic flat-edge frosted bar (original behaviour preserved).
+    return RepaintBoundary(
+      child: ClipRRect(
+        key: _bottomNavBarKey,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            color: colorScheme.surface.withValues(alpha: 0.8),
+            child: wrapWithFocus(
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
+                  navBar,
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
