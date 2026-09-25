@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
+import 'package:obtainium/components/settings/appearance_hub.dart';
+import 'package:obtainium/components/settings/settings_layout_selector.dart';
 import 'package:obtainium/components/settings/app_behavior_section.dart';
 import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
@@ -286,19 +288,60 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 0) ...[
-                        ThemeSettingsSection(
-                          searchQuery: _searchQuery,
-                          androidInfoFuture: _androidInfoFuture,
-                          colorsNameMap: const <ColorSwatch<Object>, String>{},
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                        AppsViewSettingsSection(
-                          searchQuery: _searchQuery,
-                          onSetState: (fn) => setState(fn),
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
+                        if (_searchQuery.isEmpty &&
+                            plusSettings.plusSettingsUseSubmenuHub) ...[
+                          const SettingsLayoutSelector(),
+                          AppearanceHub(
+                            androidInfoFuture: _androidInfoFuture,
+                            themeContent: ThemeSettingsSection(
+                              searchQuery: _searchQuery,
+                              androidInfoFuture: _androidInfoFuture,
+                              colorsNameMap:
+                                  const <ColorSwatch<Object>, String>{},
+                              showAdvancedSettings:
+                                  plusSettings.plusShowAdvancedSettings,
+                              subCategory: 'theme',
+                            ),
+                            appTileContent: AppsViewSettingsSection(
+                              searchQuery: _searchQuery,
+                              onSetState: (fn) => setState(fn),
+                              showAdvancedSettings:
+                                  plusSettings.plusShowAdvancedSettings,
+                              subCategory: 'tiles',
+                            ),
+                            layoutNavContent: AppsViewSettingsSection(
+                              searchQuery: _searchQuery,
+                              onSetState: (fn) => setState(fn),
+                              showAdvancedSettings:
+                                  plusSettings.plusShowAdvancedSettings,
+                              subCategory: 'layout',
+                            ),
+                            motionPhysicsContent: ThemeSettingsSection(
+                              searchQuery: _searchQuery,
+                              androidInfoFuture: _androidInfoFuture,
+                              colorsNameMap:
+                                  const <ColorSwatch<Object>, String>{},
+                              showAdvancedSettings:
+                                  plusSettings.plusShowAdvancedSettings,
+                              subCategory: 'motion',
+                            ),
+                          ),
+                        ] else ...[
+                          ThemeSettingsSection(
+                            searchQuery: _searchQuery,
+                            androidInfoFuture: _androidInfoFuture,
+                            colorsNameMap:
+                                const <ColorSwatch<Object>, String>{},
+                            showAdvancedSettings:
+                                plusSettings.plusShowAdvancedSettings,
+                          ),
+                          AppsViewSettingsSection(
+                            searchQuery: _searchQuery,
+                            onSetState: (fn) => setState(fn),
+                            showAdvancedSettings:
+                                plusSettings.plusShowAdvancedSettings,
+                          ),
+                        ],
                       ],
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 1) ...[

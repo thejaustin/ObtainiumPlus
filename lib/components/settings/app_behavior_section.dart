@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -30,15 +31,29 @@ class AppBehaviorSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
     List<Widget> children = [
-      // Haptic Feedback
-      if (_matches(tr('enableHapticFeedback')))
-        _buildFeatureToggle(
-          context,
-          icon: Icons.vibration_outlined,
-          title: tr('enableHapticFeedback'),
-          subtitle: tr('enableHapticFeedbackDescription'),
-          value: (s) => s.enableHapticFeedback,
-          onChanged: (s, v) => s.enableHapticFeedback = v,
+      // Haptic Feedback & Undo
+      if (_matches(tr('enableHapticFeedback')) ||
+          _matches(tr('enableUndoForAppRemoval')))
+        GenericBooleanControlGrid<BehaviorSettingsProvider>(
+          title: tr('appBehavior'),
+          settings: [
+            if (_matches(tr('enableHapticFeedback')))
+              (
+                icon: Icons.vibration_outlined,
+                label: tr('enableHapticFeedback'),
+                description: tr('enableHapticFeedbackDescription'),
+                getValue: (s) => s.enableHapticFeedback,
+                setValue: (s, v) => s.enableHapticFeedback = v,
+              ),
+            if (_matches(tr('enableUndoForAppRemoval')))
+              (
+                icon: Icons.undo_outlined,
+                label: tr('enableUndoForAppRemoval'),
+                description: tr('enableUndoForAppRemovalDescription'),
+                getValue: (s) => s.enableUndoForAppRemoval,
+                setValue: (s, v) => s.enableUndoForAppRemoval = v,
+              ),
+          ],
         ),
 
       // Swipe Gestures
@@ -76,18 +91,6 @@ class AppBehaviorSection extends StatelessWidget {
             );
           },
         ),
-
-      // Undo App Removal
-      if (_matches(tr('enableUndoForAppRemoval')))
-        _buildFeatureToggle(
-          context,
-          icon: Icons.undo_outlined,
-          title: tr('enableUndoForAppRemoval'),
-          subtitle: tr('enableUndoForAppRemovalDescription'),
-          value: (s) => s.enableUndoForAppRemoval,
-          onChanged: (s, v) => s.enableUndoForAppRemoval = v,
-        ),
-
     ];
 
     return Column(
@@ -175,33 +178,28 @@ class AppBehaviorSection extends StatelessWidget {
         if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
 
         final items = [
-          if (_matches(tr('plusDiscover')))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.explore_outlined),
-              title: Text(
-                tr('plusDiscover'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusDiscoverDescription')),
-              value: settings.plusEnableDiscover,
-              onChanged: (val) {
-                AppHaptics.selectionClick();
-                settings.plusEnableDiscover = val;
-              },
-            ),
-          if (_matches(tr('plusDiscoverSuggestions')))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.auto_awesome_outlined),
-              title: Text(
-                tr('plusDiscoverSuggestions'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('plusDiscoverSuggestionsDescription')),
-              value: settings.plusDiscoverSuggestions,
-              onChanged: (val) {
-                AppHaptics.selectionClick();
-                settings.plusDiscoverSuggestions = val;
-              },
+          if (_matches(tr('plusDiscover')) ||
+              _matches(tr('plusDiscoverSuggestions')))
+            GenericBooleanControlGrid<PlusSettingsProvider>(
+              title: tr('plusDiscover'),
+              settings: [
+                if (_matches(tr('plusDiscover')))
+                  (
+                    icon: Icons.explore_outlined,
+                    label: tr('plusDiscover'),
+                    description: tr('plusDiscoverDescription'),
+                    getValue: (s) => s.plusEnableDiscover,
+                    setValue: (s, v) => s.plusEnableDiscover = v,
+                  ),
+                if (_matches(tr('plusDiscoverSuggestions')))
+                  (
+                    icon: Icons.auto_awesome_outlined,
+                    label: tr('plusDiscoverSuggestions'),
+                    description: tr('plusDiscoverSuggestionsDescription'),
+                    getValue: (s) => s.plusDiscoverSuggestions,
+                    setValue: (s, v) => s.plusDiscoverSuggestions = v,
+                  ),
+              ],
             ),
           if (_matches(tr('plusEnableBanWarnings'), isAdvanced: true)) ...[
             SwitchListTile.adaptive(

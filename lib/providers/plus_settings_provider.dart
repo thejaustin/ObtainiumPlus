@@ -1,3 +1,4 @@
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,6 +92,60 @@ class PlusSettingsProvider with ChangeNotifier {
       _prefs?.safeBool('plusUseCompactSettings') ?? false;
   set plusUseCompactSettings(bool val) {
     _prefs?.setBool('plusUseCompactSettings', val);
+    notifyListeners();
+  }
+
+  // Settings Layout Style (M3 Expressive Compact Grid vs Classic One UI Grouped)
+  SettingsLayoutMode get plusSettingsLayoutMode {
+    final val = _prefs?.safeString('plusSettingsLayoutMode');
+    if (val == 'classicGrouped') return SettingsLayoutMode.classicGrouped;
+    return SettingsLayoutMode.m3eCompactGrid;
+  }
+
+  set plusSettingsLayoutMode(SettingsLayoutMode mode) {
+    _prefs?.setString('plusSettingsLayoutMode', mode.name);
+    // When changing layout mode, align granular defaults
+    if (mode == SettingsLayoutMode.classicGrouped) {
+      _prefs?.setBool('plusSettingsUseGridToggles', false);
+      _prefs?.setBool('plusSettingsUseVisualThemePicker', false);
+      _prefs?.setBool('plusSettingsUseSubmenuHub', false);
+    } else {
+      _prefs?.setBool('plusSettingsUseGridToggles', true);
+      _prefs?.setBool('plusSettingsUseVisualThemePicker', true);
+      _prefs?.setBool('plusSettingsUseSubmenuHub', true);
+    }
+    notifyListeners();
+  }
+
+  // Granular toggles to customize / bring back elements of the old UI
+  bool get plusSettingsUseGridToggles =>
+      _prefs?.safeBool('plusSettingsUseGridToggles') ??
+      (plusSettingsLayoutMode == SettingsLayoutMode.m3eCompactGrid);
+  set plusSettingsUseGridToggles(bool val) {
+    _prefs?.setBool('plusSettingsUseGridToggles', val);
+    notifyListeners();
+  }
+
+  bool get plusSettingsUseVisualThemePicker =>
+      _prefs?.safeBool('plusSettingsUseVisualThemePicker') ??
+      (plusSettingsLayoutMode == SettingsLayoutMode.m3eCompactGrid);
+  set plusSettingsUseVisualThemePicker(bool val) {
+    _prefs?.setBool('plusSettingsUseVisualThemePicker', val);
+    notifyListeners();
+  }
+
+  bool get plusSettingsUseSubmenuHub =>
+      _prefs?.safeBool('plusSettingsUseSubmenuHub') ??
+      (plusSettingsLayoutMode == SettingsLayoutMode.m3eCompactGrid);
+  set plusSettingsUseSubmenuHub(bool val) {
+    _prefs?.setBool('plusSettingsUseSubmenuHub', val);
+    notifyListeners();
+  }
+
+  bool get plusSettingsUseHeroCards =>
+      _prefs?.safeBool('plusSettingsUseHeroCards') ?? true;
+  set plusSettingsUseHeroCards(bool val) {
+    _prefs?.setBool('plusSettingsUseHeroCards', val);
     notifyListeners();
   }
 

@@ -272,31 +272,6 @@ class _InstallationSectionState extends State<InstallationSection>
               ),
             ),
 
-          // Battery Optimization (background reliability, system shortcut)
-          if (_matches(tr('batteryOptimizationSettings')))
-            ListTile(
-              leading: Icon(
-                Icons.battery_saver_outlined,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              title: Text(
-                tr('batteryOptimizationSettings'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.open_in_new, size: 18),
-                tooltip: tr('batteryOptimizationSettingsPage'),
-                onPressed: () {
-                  AppHaptics.lightImpact();
-                  AppInstallService.openBatteryOptimizationSettings();
-                },
-              ),
-              onTap: () {
-                AppHaptics.lightImpact();
-                AppInstallService.requestBatteryOptimizationExemption();
-              },
-            ),
-
           // Import Installed Apps
           if (_matches(tr('importInstalledApps')))
             ListTile(
@@ -446,77 +421,7 @@ class _InstallationSectionState extends State<InstallationSection>
                   ],
                 ],
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(tr('useShizukuDescription')),
-                  if (_installedShizukuPkg != null) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          _isShizukuGranted
-                              ? Icons.verified_rounded
-                              : Icons.warning_amber_rounded,
-                          size: 13,
-                          color: _isShizukuGranted
-                              ? Colors.green
-                              : Colors.orange,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _isShizukuGranted
-                              ? tr('shizukuStatusTurbo')
-                              : (_installedShizukuPkg == AppConstants.shizukuPlusId
-                                  ? tr('shizukuPlusDetected')
-                                  : tr('shizukuDetected')),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: _isShizukuGranted
-                                ? Colors.green
-                                : Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const Spacer(),
-                        InkWell(
-                          onTap: () {
-                            AppHaptics.lightImpact();
-                            ShizukuInstaller.openShizukuManager();
-                          },
-                          borderRadius: BorderRadius.circular(8),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _installedShizukuPkg == AppConstants.shizukuPlusId
-                                      ? tr('openShizukuPlus')
-                                      : tr('openShizuku'),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 2),
-                                Icon(
-                                  Icons.open_in_new_rounded,
-                                  size: 12,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
+              subtitle: Text(tr('useShizukuDescription')),
               value: behaviorSettings.useShizuku,
               onChanged: (enable) async {
                 AppHaptics.selectionClick();

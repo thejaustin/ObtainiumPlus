@@ -33,3 +33,5 @@ enum AppListDensity { comfortable, compact }
 enum AppBarStyle { compact, large }
 
 enum InstallerMode { system, shizuku, external, root }
+
+enum SettingsLayoutMode { m3eCompactGrid, classicGrouped }

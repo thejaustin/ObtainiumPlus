@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -100,43 +101,33 @@ class NotificationSettingsSection extends StatelessWidget {
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (_matches(tr('enableNotificationDigest')))
-                          SwitchListTile.adaptive(
-                            secondary: Icon(
-                              Icons.mark_email_unread_outlined,
-                              color: settings.plusEnableNotificationDigest
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
-                            ),
-                            title: Text(
-                              tr('enableNotificationDigest'),
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                            subtitle: Text(tr('notificationDigestDescription')),
-                            value: settings.plusEnableNotificationDigest,
-                            onChanged: (val) {
-                              AppHaptics.selectionClick();
-                              settings.plusEnableNotificationDigest = val;
-                            },
-                          ),
-                        if (_matches(tr('enableQuietHours')))
-                          SwitchListTile.adaptive(
-                            secondary: Icon(
-                              Icons.do_not_disturb_on_outlined,
-                              color: settings.plusEnableNotificationQuietHours
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
-                            ),
-                            title: Text(
-                              tr('enableQuietHours'),
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                            subtitle: Text(tr('quietHoursDescription')),
-                            value: settings.plusEnableNotificationQuietHours,
-                            onChanged: (val) {
-                              AppHaptics.selectionClick();
-                              settings.plusEnableNotificationQuietHours = val;
-                            },
+                        if (_matches(tr('enableNotificationDigest')) ||
+                            _matches(tr('enableQuietHours')))
+                          GenericBooleanControlGrid<PlusSettingsProvider>(
+                            title: tr('settingsTabNotifications'),
+                            settings: [
+                              if (_matches(tr('enableNotificationDigest')))
+                                (
+                                  icon: Icons.mark_email_unread_outlined,
+                                  label: tr('enableNotificationDigest'),
+                                  description:
+                                      tr('notificationDigestDescription'),
+                                  getValue: (s) =>
+                                      s.plusEnableNotificationDigest,
+                                  setValue: (s, v) =>
+                                      s.plusEnableNotificationDigest = v,
+                                ),
+                              if (_matches(tr('enableQuietHours')))
+                                (
+                                  icon: Icons.do_not_disturb_on_outlined,
+                                  label: tr('enableQuietHours'),
+                                  description: tr('quietHoursDescription'),
+                                  getValue: (s) =>
+                                      s.plusEnableNotificationQuietHours,
+                                  setValue: (s, v) =>
+                                      s.plusEnableNotificationQuietHours = v,
+                                ),
+                            ],
                           ),
                         AnimatedSize(
                           duration: const Duration(milliseconds: 200),

@@ -16,12 +16,14 @@ class AppsViewSettingsSection extends StatelessWidget {
   final Function(void Function()) onSetState;
   final String? searchQuery;
   final bool? showAdvancedSettings;
+  final String? subCategory;
 
   const AppsViewSettingsSection({
     super.key,
     required this.onSetState,
     this.searchQuery,
     this.showAdvancedSettings,
+    this.subCategory,
   });
 
   bool _matches(String text, {bool isAdvanced = false}) {
@@ -316,30 +318,29 @@ class AppsViewSettingsSection extends StatelessWidget {
         _matches(tr('showDashboardSearch')) ||
         _matches(tr('showFloatingSearch'));
 
-    return ExpressiveSettingsGroup(
-      title: isSearching ? null : tr('appsString'),
-      persistKey: 'appsString',
-      icon: Icons.grid_view_rounded,
-      isExpandable: !isSearching,
-      initiallyExpanded: false,
-      children: [
-        if (categoryWidgets.isNotEmpty)
-          ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('categorySettings'),
-            persistKey: 'categorySettings',
-            isExpandable: true,
-            initiallyExpanded: false,
-            children: categoryWidgets,
-          ),
-        if (viewWidgets.isNotEmpty)
-          ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('viewMode'),
-            persistKey: 'viewMode',
-            isExpandable: true,
-            initiallyExpanded: false,
-            children: viewWidgets,
-          ),
-        if (showFabMenuGrid)
+    final showLayout = subCategory == null || subCategory == 'layout';
+    final showTiles = subCategory == null || subCategory == 'tiles';
+
+    final List<Widget> innerList = [
+      if (showLayout && categoryWidgets.isNotEmpty)
+        ExpressiveSettingsGroup(
+          title: isSearching || subCategory != null
+              ? null
+              : tr('categorySettings'),
+          persistKey: 'categorySettings',
+          isExpandable: subCategory == null,
+          initiallyExpanded: subCategory != null,
+          children: categoryWidgets,
+        ),
+      if (showLayout && viewWidgets.isNotEmpty)
+        ExpressiveSettingsGroup(
+          title: isSearching || subCategory != null ? null : tr('viewMode'),
+          persistKey: 'viewMode',
+          isExpandable: subCategory == null,
+          initiallyExpanded: subCategory != null,
+          children: viewWidgets,
+        ),
+      if (showLayout && showFabMenuGrid)
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('fabMenuItems'),
             settings: [
@@ -381,15 +382,17 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusFeaturesEnabled && sortingWidgets.isNotEmpty)
+        if (showLayout && plusFeaturesEnabled && sortingWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('plusSectionOrganizationSorting'),
+            title: isSearching || subCategory != null
+                ? null
+                : tr('plusSectionOrganizationSorting'),
             persistKey: 'plusSectionOrganizationSorting',
-            isExpandable: true,
-            initiallyExpanded: false,
+            isExpandable: subCategory == null,
+            initiallyExpanded: subCategory != null,
             children: sortingWidgets,
           ),
-        if (showDisplayGrid)
+        if (showTiles && showDisplayGrid)
           GenericBooleanControlGrid<ViewSettingsProvider>(
             title: tr('appTileDisplay'),
             settings: [
@@ -420,7 +423,8 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusFeaturesEnabled &&
+        if (showTiles &&
+            plusFeaturesEnabled &&
             (_matches(tr('plusPinnedBorderAccent')) ||
                 _matches(tr('plusCategoryAccentRibbon')) ||
                 _matches(tr('plusUpdateExpressiveBadge')) ||
@@ -466,7 +470,9 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-        if (plusFeaturesEnabled && _matches(tr('plusEnableSwipeActions')))
+        if (showLayout &&
+            plusFeaturesEnabled &&
+            _matches(tr('plusEnableSwipeActions')))
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('plusEnableSwipeActions'),
             settings: [
@@ -480,7 +486,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               ),
             ],
           ),
-        if (plusFeaturesEnabled && showSearchGrid)
+        if (showLayout && plusFeaturesEnabled && showSearchGrid)
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('searchSettings'),
             settings: [
@@ -504,7 +510,19 @@ class AppsViewSettingsSection extends StatelessWidget {
                 ),
             ],
           ),
-      ],
+      ];
+
+    if (subCategory != null) {
+      return Column(children: innerList);
+    }
+
+    return ExpressiveSettingsGroup(
+      title: isSearching ? null : tr('appsString'),
+      persistKey: 'appsString',
+      icon: Icons.grid_view_rounded,
+      isExpandable: !isSearching,
+      initiallyExpanded: false,
+      children: innerList,
     );
   }
 

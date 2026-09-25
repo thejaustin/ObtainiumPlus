@@ -15,6 +15,8 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/locale_constants.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/components/settings/settings_layout_selector.dart';
+import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
 /// Theme & Colors settings section widget
@@ -24,6 +26,7 @@ class ThemeSettingsSection extends StatelessWidget {
   final Map<ColorSwatch<Object>, String> colorsNameMap;
   final String? searchQuery;
   final bool? showAdvancedSettings;
+  final String? subCategory;
 
   const ThemeSettingsSection({
     super.key,
@@ -31,6 +34,7 @@ class ThemeSettingsSection extends StatelessWidget {
     required this.colorsNameMap,
     this.searchQuery,
     this.showAdvancedSettings,
+    this.subCategory,
   });
 
   bool _matches(String text, {bool isAdvanced = false}) {
@@ -113,11 +117,15 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> themeWidgets = [
-      if (_matches(tr('theme'))) _buildThemeSegmented(context),
+      if (_matches(tr('theme')))
+        plusSettings.plusSettingsUseVisualThemePicker
+            ? const VisualThemeSelector()
+            : _buildThemeSegmented(context),
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
       if (_matches(tr('themePresets'))) _buildThemePresets(context),
       if (_matches(tr('useBlackTheme')) &&
+          !plusSettings.plusSettingsUseVisualThemePicker &&
           themeSettings.theme != ThemeSettings.light)
         buildFeatureToggle<ThemeSettingsProvider>(
           context,
@@ -365,26 +373,33 @@ class ThemeSettingsSection extends StatelessWidget {
       ],
     ];
 
+    final showTheme = subCategory == null || subCategory == 'theme';
+    final showMotion = subCategory == null || subCategory == 'motion';
+
     return Column(
       children: [
-        if (themeWidgets.isNotEmpty)
+        if (subCategory == null)
+          SettingsLayoutSelector(isSearching: isSearching),
+        if (showTheme && themeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('appearance'),
+            title: isSearching || subCategory != null ? null : tr('appearance'),
             persistKey: 'appearance',
             icon: Icons.palette_rounded,
             helpText: tr('appearanceHelp'),
-            isExpandable: !isSearching,
-            initiallyExpanded: false,
+            isExpandable: !isSearching && subCategory == null,
+            initiallyExpanded: subCategory != null,
             children: themeWidgets,
           ),
-        if (shapeWidgets.isNotEmpty)
+        if (showMotion && shapeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('plusShapesAndCorners'),
+            title: isSearching || subCategory != null
+                ? null
+                : tr('plusShapesAndCorners'),
             persistKey: 'plusShapesAndCorners',
             icon: Icons.rounded_corner_rounded,
             helpText: tr('shapesHelp'),
-            isExpandable: !isSearching,
-            initiallyExpanded: false,
+            isExpandable: !isSearching && subCategory == null,
+            initiallyExpanded: subCategory != null,
             onReset: () {
               AppHaptics.heavyImpact();
               plusSettings.plusGlobalCornerRadius = 20.0;
@@ -394,13 +409,13 @@ class ThemeSettingsSection extends StatelessWidget {
             },
             children: shapeWidgets,
           ),
-        if (animationWidgets.isNotEmpty)
+        if (showMotion && animationWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('animations'),
+            title: isSearching || subCategory != null ? null : tr('animations'),
             persistKey: 'animations',
             icon: Icons.animation_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: false,
+            isExpandable: !isSearching && subCategory == null,
+            initiallyExpanded: subCategory != null,
             children: animationWidgets,
           ),
       ],
