@@ -101,6 +101,7 @@ Future<List<String>?> showTagEditor({
                                 const SizedBox(width: 8),
                                 IconButton.filled(
                                   icon: const Icon(Icons.add),
+                                  tooltip: tr('add'),
                                   onPressed: () {
                                     if (_controller.text.trim().isNotEmpty) {
                                       setSheetState(() {

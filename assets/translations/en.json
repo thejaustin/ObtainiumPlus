@@ -414,6 +414,10 @@
     "updateUrl": "Update URL",
     "updateX": "Update {}",
     "updates": "Updates",
+    "updatesCount": {
+        "one": "{} Update",
+        "other": "{} Updates"
+    },
     "updatesAvailable": "Updates Available",
     "updatesAvailableNotifChannel": "Updates available",
     "updatesAvailableNotifDescription": "Notifies the user that updates are available for one or more apps tracked by Obtainium",

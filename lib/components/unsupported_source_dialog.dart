@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/discover.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +17,8 @@ Future<void> showUnsupportedSourceDialog({
   List<String>? suggestedSources,
   String? failedUrl,
 }) {
-  final settings = context.read<SettingsProvider>();
-  final enableGlass = settings.plusEnableGlassmorphism;
+  final plusSettings = context.read<PlusSettingsProvider>();
+  final enableGlass = plusSettings.plusEnableGlassmorphism;
 
   // Default supported sources if none provided
   final sources =

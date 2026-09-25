@@ -310,6 +310,7 @@ class AppListTile extends StatelessWidget {
           ),
         if (hasUpdate) getUpdateButton(),
         PopupMenuButton<String>(
+          tooltip: tr('more'),
           icon: Icon(
             Icons.more_vert_rounded,
             size: 20,

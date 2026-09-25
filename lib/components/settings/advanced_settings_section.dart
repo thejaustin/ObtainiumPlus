@@ -368,10 +368,11 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final deviceCode = data['device_code'] as String;
-        final userCode = data['user_code'] as String;
-        final verificationUri = data['verification_uri'] as String;
-        final interval = (data['interval'] as int? ?? 5) + 1;
+        if (!mounted) return;
+        final deviceCode = data['device_code']?.toString() ?? '';
+        final userCode = data['user_code']?.toString() ?? '';
+        final verificationUri = data['verification_uri']?.toString() ?? '';
+        final interval = ((data['interval'] as num?)?.toInt() ?? 5) + 1;
 
         setState(() {
           _userCode = userCode;
@@ -385,6 +386,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           await _pollForToken(deviceCode, timer);
         });
       } else {
+        if (!mounted) return;
         setState(() {
           _isPolling = false;
           _statusMessage =
@@ -392,6 +394,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isPolling = false;
         _statusMessage = 'Error: $e. Please use manual PAT.';
@@ -414,11 +417,13 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         }),
       );
 
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['access_token'] != null) {
           timer.cancel();
-          final token = data['access_token'] as String;
+          final token = data['access_token']?.toString() ?? '';
+          if (!mounted) return;
           setState(() {
             _controller.text = token;
             _isPolling = false;
@@ -430,6 +435,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           // Keep polling
         } else {
           timer.cancel();
+          if (!mounted) return;
           setState(() {
             _isPolling = false;
             _statusMessage =

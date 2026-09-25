@@ -400,7 +400,7 @@ class _DeviceOptimizationSheetContentState
               ),
               IconButton(
                 icon: const Icon(Icons.close_rounded),
-                tooltip: 'Close',
+                tooltip: tr('close'),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
