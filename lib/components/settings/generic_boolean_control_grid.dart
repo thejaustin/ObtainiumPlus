@@ -51,7 +51,6 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                     .withValues(
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
                     ),
-                borderRadius: BorderRadius.circular(20.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
                   side: BorderSide(

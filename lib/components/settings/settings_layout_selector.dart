@@ -23,7 +23,6 @@ class SettingsLayoutSelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
