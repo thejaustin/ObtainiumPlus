@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/settings/shizuku_status_card.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -1010,159 +1011,9 @@ class _DeviceOptimizationSheetContentState
 
                     const SizedBox(height: 14),
 
-                    // Shizuku Status Card
-                    if (_shizukuStatus == ShizukuLiveStatus.active)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.25),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.bolt_rounded,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Shizuku & ShizukuPlus Turbo Mode Active',
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Elevated installs bypass OEM verification countdowns completely. With 350ms concurrent turbo polling and progressive binder handshakes, installs complete in < 1 second.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else if (_shizukuStatus == ShizukuLiveStatus.notRunning)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.play_circle_outline_rounded,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Shizuku Installed (Service Stopped)',
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Start Shizuku via Wireless Debugging or root to activate silent elevated installs and instant package commitments.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  FilledButton.tonal(
-                                    style: FilledButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                    onPressed: () => ShizukuInstaller.openShizukuManager(),
-                                    child: const Text('Launch Shizuku'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else if (_shizukuStatus == ShizukuLiveStatus.permissionNeeded)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.orange.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.key_rounded,
-                              color: Colors.orange,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Shizuku Authorization Needed',
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Grant ObtainiumPlus permission to connect to Shizuku\'s binder IPC for elevated unattended package installation.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  FilledButton.tonal(
-                                    style: FilledButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                    onPressed: () async {
-                                      try {
-                                        await ShizukuApkInstaller().checkPermission();
-                                        _refreshLiveStatus();
-                                      } catch (_) {}
-                                    },
-                                    child: const Text('Authorize'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    // Shizuku & ShizukuPlus Hero Status Card
+                    const ShizukuStatusCard(margin: EdgeInsets.zero),
+                  ],
                 ),
               ),
               const SizedBox(height: 10),
