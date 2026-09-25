@@ -1497,6 +1497,7 @@ class _AppPageState extends State<AppPage> {
                 ),
                 const SizedBox(width: 4.0),
                 PopupMenuButton<String>(
+                  tooltip: tr('more'),
                   icon: Icon(
                     Icons.more_vert,
                     color: Theme.of(context).colorScheme.primary,
@@ -1727,6 +1728,7 @@ class _AppPageState extends State<AppPage> {
     appScreenAppBar() => AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
+        tooltip: tr('back'),
         onPressed: () {
           Navigator.pop(context);
         },

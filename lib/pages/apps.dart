@@ -1734,9 +1734,9 @@ class AppsPageState extends State<AppsPage> {
                 CustomAppBar(
                   title: tr('appsString'),
                   subtitle: plusSettings.plusHeaderContextSubtitle
-                      ? '${listedApps.length} ${listedApps.length == 1 ? 'app' : 'apps'}' +
+                      ? '${plural('apps', listedApps.length)}' +
                           (existingUpdates.isNotEmpty
-                              ? ' · ${existingUpdates.length} ${existingUpdates.length == 1 ? 'update' : 'updates'}'
+                              ? ' · ${plural('updatesCount', existingUpdates.length)}'
                               : '')
                       : null,
                   forceOneHanded:

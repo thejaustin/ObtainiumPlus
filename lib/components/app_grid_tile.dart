@@ -106,7 +106,11 @@ class _AppGridTileState extends State<AppGridTile>
         double badgeSize = (iconSize * 0.25).clamp(12.0, 18.0);
 
         if (widget.appInMemory.icon == null) {
-          context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && widget.appInMemory.icon == null) {
+              context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
+            }
+          });
         }
 
         final curve = plusSettings.plusEnableEnhancedAnimations
@@ -251,6 +255,7 @@ class _AppGridTileState extends State<AppGridTile>
                     child: Material(
                       color: Colors.transparent,
                       child: PopupMenuButton<String>(
+                        tooltip: tr('more'),
                         icon: Icon(
                           Icons.more_vert_rounded,
                           size: 18,

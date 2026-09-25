@@ -112,6 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   trailing: [
                     if (_searchQuery.isNotEmpty)
                       IconButton(
+                        tooltip: tr('clear'),
                         icon: const Icon(Icons.clear),
                         onPressed: () => _searchController.clear(),
                       ),
