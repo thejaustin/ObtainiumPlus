@@ -56,7 +56,7 @@ class AppearanceHub extends StatelessWidget {
         : tileDecor.take(2).join(' · ');
 
     final layoutSummary =
-        '${viewSettings.viewMode.name.toUpperCase()} · ${viewSettings.appListDensity.name}';
+        '${viewSettings.globalViewMode.name.toUpperCase()} · ${viewSettings.appListDensity.name}';
 
     final List<String> motionDecor = [];
     if (plusSettings.plusEnableGlassmorphism) motionDecor.add('Glass');
