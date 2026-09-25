@@ -99,20 +99,34 @@ jobs:
             IS_FULL_RELEASE=true
           fi
 
+          BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-[pr][0-9]+$//')
+
           if [ "$IS_FULL_RELEASE" = "true" ]; then
-            # Clean version without -p suffix
-            NEW_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-p[0-9]+$//')
-            if [[ "$CURRENT_VERSION" =~ -p[0-9]+$ ]]; then
-              NEW_BUILD=$((CURRENT_BUILD + 1))
-            else
+            # Full release: change -p to -r and reset to 1, or bump existing -r
+            LATEST_R=$(git tag -l "v${BASE_VERSION}-r*" | sed -E 's/.*-r//' | sort -n | tail -n 1)
+            NEW_R=1
+            if [ -n "$LATEST_R" ]; then
+              if [ "$CURRENT_VERSION" = "${BASE_VERSION}-r${LATEST_R}" ]; then
+                NEW_R=$LATEST_R
+              else
+                NEW_R=$((LATEST_R + 1))
+              fi
+            fi
+            NEW_VERSION="${BASE_VERSION}-r${NEW_R}"
+            if [ "$CURRENT_VERSION" = "$NEW_VERSION" ]; then
               NEW_BUILD=$CURRENT_BUILD
+            else
+              NEW_BUILD=$((CURRENT_BUILD + 1))
             fi
           elif [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
-            BASE_VERSION="${BASH_REMATCH[1]}"
             PATCH_NUM="${BASH_REMATCH[2]}"
             NEW_PATCH=$((PATCH_NUM + 1))
             NEW_BUILD=$((CURRENT_BUILD + 1))
             NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
+          elif [[ "$CURRENT_VERSION" =~ ^(.+)-r([0-9]+)$ ]]; then
+            # Starting new development cycle after a release
+            NEW_VERSION="${BASE_VERSION}-p1"
+            NEW_BUILD=$((CURRENT_BUILD + 1))
           else
             NEW_PATCH=1
             NEW_BUILD=$((CURRENT_BUILD + 1))
@@ -128,6 +142,7 @@ jobs:
             echo "version_changed=true" >> $GITHUB_OUTPUT
           fi
 
+          echo "is_full_release=$IS_FULL_RELEASE" >> $GITHUB_OUTPUT
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "build_number=$NEW_BUILD" >> $GITHUB_OUTPUT
           echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -217,49 +232,63 @@ jobs:
         run: |
           TAG_NAME="${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || format('v{0}', steps.bump_version.outputs.version) }}"
           PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | head -1)
-          {
-            printf '**Obtainium+ %s** — build #%s, commit `%s`, %s\n\n' \
-              "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || steps.bump_version.outputs.version }}" \
-              "${{ github.run_number }}" \
-              "${GITHUB_SHA:0:8}" \
-              "$(date -u '+%Y-%m-%d %H:%M UTC')"
-
-            if [ -n "$PREV_TAG" ]; then
-              RANGE="${PREV_TAG}..HEAD"
-              echo "## Changes since ${PREV_TAG}"
-            else
-              RANGE="HEAD"
-              echo "## Recent Changes"
-            fi
-            echo
-
-            FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
-            if [ -n "$FEATS" ]; then
-              echo "### ✨ New Features"
-              echo "$FEATS"
+          if [ -f "CHANGELOG_USER.md" ] && [ "${{ steps.bump_version.outputs.is_full_release }}" = "true" ]; then
+            {
+              cat CHANGELOG_USER.md
               echo
-            fi
-
-            FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
-            if [ -n "$FIXES" ]; then
-              echo "### 🐛 Bug Fixes"
-              echo "$FIXES"
-              echo
-            fi
-
-            OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
-            if [ -n "$OTHERS" ]; then
-              echo "### 🔧 Improvements & Maintenance"
-              echo "$OTHERS"
-              echo
-            fi
-
-            if [ -n "$PREV_TAG" ]; then
+              if [ -n "$PREV_TAG" ]; then
+                echo "---"
+                echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+              fi
               echo
               echo "---"
-              echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
-            fi
-          } > release_body.md
+              echo "[![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google)"
+            } > release_body.md
+          else
+            {
+              printf '**Obtainium+ %s** — build #%s, commit `%s`, %s\n\n' \
+                "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || steps.bump_version.outputs.version }}" \
+                "${{ github.run_number }}" \
+                "${GITHUB_SHA:0:8}" \
+                "$(date -u '+%Y-%m-%d %H:%M UTC')"
+
+              if [ -n "$PREV_TAG" ]; then
+                RANGE="${PREV_TAG}..HEAD"
+                echo "## Changes since ${PREV_TAG}"
+              else
+                RANGE="HEAD"
+                echo "## Recent Changes"
+              fi
+              echo
+
+              FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
+              if [ -n "$FEATS" ]; then
+                echo "### ✨ New Features"
+                echo "$FEATS"
+                echo
+              fi
+
+              FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
+              if [ -n "$FIXES" ]; then
+                echo "### 🐛 Bug Fixes"
+                echo "$FIXES"
+                echo
+              fi
+
+              OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
+              if [ -n "$OTHERS" ]; then
+                echo "### 🔧 Improvements & Maintenance"
+                echo "$OTHERS"
+                echo
+              fi
+
+              if [ -n "$PREV_TAG" ]; then
+                echo
+                echo "---"
+                echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+              fi
+            } > release_body.md
+          fi
 
       - name: Commit version bump
         if: steps.bump_version.outputs.version_changed == 'true'

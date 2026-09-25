@@ -2,7 +2,7 @@
 
 All notable changes to Obtainium+ are documented in this file.
 
-## [v1.7.0] - Official Release (2026-09-24)
+## [v1.6.10-r1] - Official Release (2026-09-24)
 
 ### 📱 Samsung OneUI Reachability Header
 - **Collapsible Fluid Header**: Engineered for large screens; expands smoothly on pull-down to bring top interactive content down to natural thumb reach.

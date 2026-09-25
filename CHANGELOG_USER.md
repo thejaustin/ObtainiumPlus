@@ -1,4 +1,4 @@
-### 🚀 Welcome to Obtainium+ 1.7.0!
+### 🚀 Welcome to Obtainium+ 1.6.10-r1!
 
 This milestone release brings major ergonomic improvements, Material 3 Expressive theming, refined navigation docks, extensive tile customization, and critical stability fixes.
 
