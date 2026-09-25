@@ -1213,5 +1213,22 @@
     "settingsTabUpdatesInstall": "Updates & Install",
     "settingsTabNotifications": "Notifications",
     "settingsTabBehavior": "Behavior",
-    "settingsTabAdvancedDebug": "Advanced & Debug"
+    "settingsTabAdvancedDebug": "Advanced & Debug",
+    "shizukuLogCopied": "Activity log copied to clipboard",
+    "shizukuActivityLog": "Shizuku Activity Log",
+    "shizukuActivityLogDesc": "Recent privileged IPC calls and install audit trail",
+    "shizukuLogEmpty": "No recent Shizuku activity recorded.",
+    "checkingShizukuStatus": "Checking Shizuku Status...",
+    "probingDaemon": "Probing IPC binder daemon & loopback ports",
+    "shizukuNotInstalledDesc": "Install ShizukuPlus, Shizuku, or Dhizuku for elevated installs",
+    "shizukuPlusServiceRunning": "ShizukuPlus Service Running",
+    "shizukuServiceRunning": "Shizuku Service Running",
+    "shizukuServiceRunningDesc": "Unified privilege provider active. Ready for sub-second installs.",
+    "shizukuServiceStopped": "Shizuku Service Inactive",
+    "shizukuServiceStoppedDesc": "Service is not running. Start via Wireless ADB, PC, or Root.",
+    "shizukuAdbPortDetected": "Daemon inactive · ADB loopback open on port {}",
+    "shizukuAdbPortOpenHint": "ADB port {} is active on 127.0.0.1! Open Shizuku to start the service in 1 tap.",
+    "retest": "Retest",
+    "serviceDoctor": "Service Doctor",
+    "activityLog": "Activity Log"
 }

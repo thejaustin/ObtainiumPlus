@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
+import 'package:obtainium/services/adb_port_prober.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/device_utils.dart';
 
@@ -49,10 +50,33 @@ class DeviceCompatibilityService {
   // Samsung One UI Specific Methods
   // --------------------------------------------------------------------------
 
-  /// Opens Samsung Auto Blocker settings (One UI 6.0+ / Android 14+).
+  /// Opens Samsung Auto Blocker settings (One UI 6.0+ / Android 14+ / One UI 8+).
   /// Auto Blocker blocks sideloading and non-store package installations by default.
+  /// Targets the dedicated rampart package introduced in One UI 6.1+, falling back
+  /// to legacy settings components.
   static Future<bool> openSamsungAutoBlockerSettings() async {
     final intents = [
+      // One UI 6.1+ / One UI 7 / One UI 8 dedicated rampart setting activity
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.samsung.android.rampart/com.samsung.android.rampart.ui.MainSettingActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'com.samsung.android.settings.AUTO_BLOCKER',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        componentName:
+            'com.android.settings/com.samsung.android.settings.autoblocker.AutoBlockerSettingsActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'android.settings.SECURITY_ADVANCED_SETTINGS',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
       const AndroidIntent(
         action: 'com.samsung.android.intent.action.AUTO_BLOCKER_SETTINGS',
         flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
@@ -84,8 +108,28 @@ class DeviceCompatibilityService {
   }
 
   /// Opens Samsung "Never sleeping apps" / Battery background limits settings.
+  /// Directs user to the "Never sleeping apps" whitelist (activity_type=2).
   static Future<bool> openSamsungNeverSleepingAppsSettings() async {
     final intents = [
+      AndroidIntent(
+        action: 'com.samsung.android.sm.ACTION_OPEN_CHECKABLE_LISTACTIVITY',
+        componentName:
+            'com.samsung.android.lool/com.samsung.android.sm.battery.ui.usage.CheckableAppListActivity',
+        arguments: {'activity_type': 2},
+        flags: const [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'com.samsung.android.sm.ACTION_BACKGROUND_USAGE_LIMITS',
+        componentName:
+            'com.samsung.android.lool/com.samsung.android.sm.ui.battery.BackgroundUsageLimitsActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
+      const AndroidIntent(
+        action: 'com.samsung.android.sm.ACTION_BATTERY',
+        componentName:
+            'com.samsung.android.lool/com.samsung.android.sm.battery.ui.BatteryActivity',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
       const AndroidIntent(
         action: 'android.intent.action.MAIN',
         componentName:
@@ -576,6 +620,11 @@ class DeviceCompatibilityService {
         package: 'moe.shizuku.privileged.api',
         flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
       ),
+      const AndroidIntent(
+        action: 'android.intent.action.MAIN',
+        package: 'bin.xposed.Dhizuku',
+        flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+      ),
     ];
     for (final intent in intents) {
       try {
@@ -585,6 +634,12 @@ class DeviceCompatibilityService {
     }
     return false;
   }
+
+  /// Probes whether ADB daemon is actively listening on local loopback (port 5555).
+  static Future<int?> probeActiveAdbPort() async {
+    return AdbPortProber.findActiveLoopbackPort();
+  }
+
 
   // --------------------------------------------------------------------------
   // Device Guides for Non-Root / Non-ADB Users

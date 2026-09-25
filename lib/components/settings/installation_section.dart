@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
+import 'package:obtainium/components/settings/shizuku_status_card.dart';
 import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -586,6 +587,11 @@ class _InstallationSectionState extends State<InstallationSection>
                 _checkShizukuStatus();
               },
             ),
+
+            if (behaviorSettings.useShizuku)
+              const ShizukuStatusCard(
+                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              ),
 
             // Animated nested child option: Shizuku Pretend to be Google Play
             if (_matches(tr('shizukuPretendToBeGooglePlay')))
