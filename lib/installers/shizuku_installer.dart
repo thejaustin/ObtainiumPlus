@@ -6,9 +6,33 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/adb_port_prober.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/shizuku_telemetry_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+
+/// Comprehensive snapshot of the active Shizuku service and provider on device.
+class ShizukuProviderInfo {
+  final String? packageId;
+  final String providerLabel;
+  final bool isInstalled;
+  final bool isRunning;
+  final int? binderLatencyMs;
+  final int? activeLoopbackPort;
+
+  const ShizukuProviderInfo({
+    this.packageId,
+    required this.providerLabel,
+    required this.isInstalled,
+    required this.isRunning,
+    this.binderLatencyMs,
+    this.activeLoopbackPort,
+  });
+
+  bool get isPlus => packageId == AppConstants.shizukuPlusId;
+  bool get hasActiveLoopback => activeLoopbackPort != null;
+}
 
 /// Installs via the Shizuku/Dhizuku/Sui binder API for elevated installs with
 /// no user-facing permission dialog. Supports silent installs.
@@ -58,11 +82,45 @@ class ShizukuInstaller extends Installer {
       if (status == null ||
           status == 'binder_not_found' ||
           status == 'services_not_found') {
+        ShizukuTelemetryService.instance.log(
+          action: 'measureLatency',
+          durationMs: sw.elapsedMilliseconds,
+          status: 'stopped',
+          details: 'Binder unavailable ($status)',
+        );
         return null;
       }
-      return sw.elapsedMilliseconds;
-    } catch (_) {
+      final latency = sw.elapsedMilliseconds;
+      ShizukuTelemetryService.instance.log(
+        action: 'measureLatency',
+        durationMs: latency,
+        latencyMs: latency,
+        status: 'success',
+        details: 'Binder response in ${latency}ms',
+      );
+      return latency;
+    } catch (e) {
+      sw.stop();
+      ShizukuTelemetryService.instance.log(
+        action: 'measureLatency',
+        durationMs: sw.elapsedMilliseconds,
+        status: 'error',
+        details: '$e',
+      );
       return null;
+    }
+  }
+
+  /// Fast pre-flight check to determine if the Shizuku daemon is actively responding.
+  static Future<bool> isServiceReady() async {
+    try {
+      final status = await ShizukuApkInstaller()
+          .checkPermission()
+          .timeout(const Duration(milliseconds: 750));
+      return status?.startsWith('authorized') == true ||
+          status?.startsWith('granted') == true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -96,6 +154,70 @@ class ShizukuInstaller extends Installer {
     if (pkg == AppConstants.shizukuPlusId) return 'ShizukuPlus';
     if (pkg == 'bin.xposed.Dhizuku') return 'Dhizuku';
     return 'Shizuku';
+  }
+
+  /// Returns a rich diagnostic snapshot of the Shizuku provider and service.
+  static Future<ShizukuProviderInfo> getDetailedProviderInfo() async {
+    final pkg = await getInstalledShizukuPackageId();
+    final isInstalled = pkg != null;
+    bool isRunning = false;
+    int? latency;
+    int? activePort;
+
+    if (isInstalled) {
+      latency = await measureBinderLatencyMs();
+      isRunning = latency != null;
+      if (!isRunning) {
+        // Probe local ADB loopback to see if port 5555 is open
+        activePort = await AdbPortProber.findActiveLoopbackPort();
+      }
+    }
+
+    String label = 'Shizuku';
+    if (pkg == AppConstants.shizukuPlusId) {
+      label = 'ShizukuPlus';
+    } else if (pkg == 'bin.xposed.Dhizuku') {
+      label = 'Dhizuku';
+    }
+
+    return ShizukuProviderInfo(
+      packageId: pkg,
+      providerLabel: label,
+      isInstalled: isInstalled,
+      isRunning: isRunning,
+      binderLatencyMs: latency,
+      activeLoopbackPort: activePort,
+    );
+  }
+
+  /// Returns true if the status code indicates installation was blocked by
+  /// Samsung Auto Blocker or enterprise Device Policy.
+  static bool isBlockedByAutoBlocker(int code) => code == -21 || code == 21;
+
+  /// Translates raw Android PackageInstaller status codes into actionable diagnostic messages.
+  static String getDiagnosticMessageForErrorCode(int code) {
+    switch (code) {
+      case -21:
+      case 21:
+        return 'Installation blocked by system policy (e.g. Samsung One UI Auto Blocker). Disable Auto Blocker or exempt ObtainiumPlus.';
+      case -1:
+      case 1:
+        return 'Signature conflict or downgrade disallowed. An existing version with conflicting keys is installed.';
+      case -2:
+      case 2:
+        return 'Package parsing error. The APK file may be corrupted, truncated, or incomplete.';
+      case -3:
+      case 3:
+        return 'Insufficient device storage. Free up internal storage to proceed.';
+      case -7:
+      case 7:
+        return 'Incompatible device architecture (ABI) or minimum SDK requirement not met.';
+      case -4:
+      case 4:
+        return 'Package installer session became invalid or expired.';
+      default:
+        return 'Package installation failed with status code $code.';
+    }
   }
 
   /// Launches whichever Shizuku manager is installed (prioritizing ShizukuPlus).
@@ -158,6 +280,7 @@ class ShizukuInstaller extends Installer {
     final bool fallbackEnabled =
         installOptions['shizukuFallbackToSystem'] != false &&
         (settingsProvider.shizukuFallbackToSystem);
+    final stopwatch = Stopwatch()..start();
     if (fallbackEnabled) {
       final preCheckStatus = await ShizukuApkInstaller().checkPermission()
           .timeout(const Duration(seconds: 2), onTimeout: () => null);
@@ -168,7 +291,16 @@ class ShizukuInstaller extends Installer {
         final code = await AndroidPackageInstaller.installApk(
           apkFilePath: apkFilePaths.join(','),
         );
-        return InstallResult.fromPlatformCode(code);
+        stopwatch.stop();
+        final res = InstallResult.fromPlatformCode(code);
+        ShizukuTelemetryService.instance.log(
+          action: 'systemFallback',
+          targetPackage: appId,
+          durationMs: stopwatch.elapsedMilliseconds,
+          status: res.isSuccess ? 'success' : 'error',
+          details: 'Shizuku daemon suspended; fell back to stock installer (code $code)',
+        );
+        return res;
       }
     }
 
@@ -261,6 +393,29 @@ class ShizukuInstaller extends Installer {
       onTimeout: () => InstallResult.error(1),
     );
     pollTimer.cancel();
+    stopwatch.stop();
+
+    // Log telemetry for this install
+    final actionName = uris.length > 1 ? 'installAABSplits' : 'installAPK';
+    final statusStr = res.isSuccess
+        ? 'success'
+        : (isBlockedByAutoBlocker(res.errorCode ?? 0)
+            ? 'blocked'
+            : (res.isCancelled ? 'cancelled' : 'error'));
+    final detailsMsg = res.isSuccess
+        ? 'Successfully committed via Shizuku binder'
+        : (res.errorCode != null
+            ? getDiagnosticMessageForErrorCode(res.errorCode!)
+            : 'Outcome: ${res.outcome}');
+
+    ShizukuTelemetryService.instance.log(
+      action: actionName,
+      targetPackage: appId,
+      durationMs: stopwatch.elapsedMilliseconds,
+      status: statusStr,
+      details: detailsMsg,
+    );
+
     return res;
   }
 }
