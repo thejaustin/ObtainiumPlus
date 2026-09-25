@@ -627,6 +627,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                                       Icons.delete_outline,
                                       size: 18,
                                     ),
+                                    tooltip: tr('remove'),
                                     onPressed: () => auth.removeDispenser(d),
                                   ),
                                 ),
@@ -649,6 +650,7 @@ class _OnboardingPageState extends State<OnboardingPage>
                       ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.add),
+                        tooltip: tr('add'),
                         onPressed: () async {
                           if (_dispenserController.text.isNotEmpty) {
                             auth.addDispenser(_dispenserController.text);
