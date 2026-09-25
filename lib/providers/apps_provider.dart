@@ -1671,8 +1671,10 @@ class AppsProvider with ChangeNotifier {
     final sp = SourceProvider();
     final appsDir = await getAppsDir();
     final List<List<String>> errors = [];
+    final entities = await appsDir.list().toList();
+
     await Future.wait(
-      appsDir.listSync().map((item) async {
+      entities.map((item) async {
         if (!item.path.toLowerCase().endsWith('.json') ||
             (singleId != null &&
                 item.path.split('/').last.toLowerCase() !=
@@ -1681,17 +1683,18 @@ class AppsProvider with ChangeNotifier {
         }
         App? app;
         try {
-          app = App.fromJson(
-            jsonDecode(File(item.path).readAsStringSync()),
-          );
+          final content = await File(item.path).readAsString();
+          app = App.fromJson(jsonDecode(content));
         } catch (err) {
           if (err is FormatException) {
             logs.add(
               'Corrupt JSON when loading App (will be ignored): $err',
             );
-            item.renameSync('${item.path}.corrupt');
+            try {
+              await item.rename('${item.path}.corrupt');
+            } catch (_) {}
           } else if (err is FileSystemException) {
-            // The file can vanish between listSync() and this read (concurrent
+            // The file can vanish between list and this read (concurrent
             // removal/storage clear) — skip it instead of aborting the whole load.
             logs.add(
               'Skipped missing/unreadable app file ${item.path}: $err',
@@ -1701,9 +1704,11 @@ class AppsProvider with ChangeNotifier {
           }
         }
         if (app != null) {
+          String? sourceType;
           try {
             // Validate that a known source handles this URL before adding it.
-            sp.getSource(app.url, overrideSource: app.overrideSource);
+            final src = sp.getSource(app.url, overrideSource: app.overrideSource);
+            sourceType = src.sourceIdentifier;
           } catch (e) {
             errors.add([app.id, app.finalName, e.toString()]);
             return;
@@ -1717,8 +1722,16 @@ class AppsProvider with ChangeNotifier {
               value.downloadProgress,
               value.installedInfo,
               value.icon,
+              download: value.download,
+              sourceType: sourceType,
             ),
-            ifAbsent: () => AppInMemory(app!, null, null, null),
+            ifAbsent: () => AppInMemory(
+              app!,
+              null,
+              null,
+              null,
+              sourceType: sourceType,
+            ),
           );
         }
       }),
@@ -1784,8 +1797,16 @@ class AppsProvider with ChangeNotifier {
             value.downloadProgress,
             installedInfo,
             value.icon,
+            download: value.download,
+            sourceType: value.sourceType,
           ),
-          ifAbsent: () => AppInMemory(app, null, installedInfo, null),
+          ifAbsent: () => AppInMemory(
+            app,
+            null,
+            installedInfo,
+            null,
+            sourceType: aim.sourceType,
+          ),
         );
       }
     } catch (e) {
@@ -1859,9 +1880,16 @@ class AppsProvider with ChangeNotifier {
             value.downloadProgress,
             value.installedInfo,
             icon,
+            download: value.download,
+            sourceType: value.sourceType,
           ),
-          ifAbsent: () =>
-              AppInMemory(currentApp.app, null, currentApp.installedInfo, icon),
+          ifAbsent: () => AppInMemory(
+            currentApp.app,
+            null,
+            currentApp.installedInfo,
+            icon,
+            sourceType: currentApp.sourceType,
+          ),
         );
       }
     }

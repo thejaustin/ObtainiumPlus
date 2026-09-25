@@ -31,6 +31,15 @@ abstract class AppSource {
   bool suppressStandardVersionExtraction = false;
   String get sourceIdentifier => runtimeType.toString();
 
+  RegExp? _hostRegex;
+  RegExp get hostRegex => _hostRegex ??= RegExp(
+    '^${allowSubDomains ? '([^\\.]+\\.)*' : '(www\\.)?'}(${getSourceRegex(hosts)})\$',
+  );
+
+  void invalidateHostRegex() {
+    _hostRegex = null;
+  }
+
   AppSource() {
     name = runtimeType.toString();
   }

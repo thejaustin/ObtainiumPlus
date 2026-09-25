@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -351,7 +352,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
   Future<void> _startOAuthFlow() async {
     setState(() {
       _isPolling = true;
-      _statusMessage = 'Starting connection...';
+      _statusMessage = 'Requesting device code from GitHub...';
       _userCode = null;
       _verificationUri = null;
     });
@@ -378,7 +379,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           _userCode = userCode;
           _verificationUri = verificationUri;
           _statusMessage =
-              'Please open the verification link and enter the code below.';
+              'Open the verification link, enter the code, and approve access.';
         });
 
         _pollTimer?.cancel();
@@ -390,16 +391,26 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         setState(() {
           _isPolling = false;
           _statusMessage =
-              'Error connecting to GitHub. Please use manual PAT below.';
+              'OAuth Device Flow unavailable (${response.statusCode}). Please use the "Generate Token on GitHub" button above.';
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isPolling = false;
-        _statusMessage = 'Error: $e. Please use manual PAT.';
+        _statusMessage = 'Connection error: $e. Please use manual PAT above.';
       });
     }
+  }
+
+  void _cancelOAuthFlow() {
+    _pollTimer?.cancel();
+    setState(() {
+      _isPolling = false;
+      _userCode = null;
+      _verificationUri = null;
+      _statusMessage = null;
+    });
   }
 
   Future<void> _pollForToken(String deviceCode, Timer timer) async {
@@ -428,7 +439,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             _controller.text = token;
             _isPolling = false;
             _userCode = null;
-            _statusMessage = 'Signed in successfully! Click Save.';
+            _statusMessage = 'Signed in successfully! Click Save below.';
           });
           AppHaptics.selectionClick();
         } else if (data['error'] == 'authorization_pending') {
@@ -439,12 +450,12 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           setState(() {
             _isPolling = false;
             _statusMessage =
-                'OAuth session expired or failed. Code: ${data['error']}';
+                'OAuth session ended: ${data['error_description'] ?? data['error'] ?? 'Unknown'}';
           });
         }
       }
     } catch (_) {
-      // Ignore poll errors
+      // Ignore poll network glitches
     }
   }
 
@@ -457,92 +468,160 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (isGitHub) ...[
-          if (!_isPolling && _userCode == null)
-            ElevatedButton.icon(
-              onPressed: _startOAuthFlow,
-              icon: const Icon(Icons.login),
-              label: const Text('Sign In via GitHub OAuth'),
-            )
-          else ...[
-            Center(
-              child: Card(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text(
-                        _userCode ?? '',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _statusMessage ?? '',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          FilledButton.icon(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              launchUrlString(
+                'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=repo',
+                mode: LaunchMode.externalApplication,
+              );
+            },
+            icon: const Icon(Icons.open_in_browser_rounded),
+            label: Text(tr('generateGitHubToken')),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 12),
+            child: Text(
+              tr('generateGitHubTokenDescription'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 11,
               ),
             ),
-            if (_verificationUri != null)
-              TextButton.icon(
-                onPressed: () {
-                  launchUrlString(
-                    _verificationUri!,
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.open_in_browser),
-                label: const Text('Open Verification Page'),
-              ),
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+          ),
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              leading: const Icon(Icons.login_rounded, size: 20),
+              title: Text(
+                tr('oauthDeviceFlowAlternative'),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          ],
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12.0),
-            child: Row(
               children: [
-                Expanded(child: Divider()),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    'OR USE MANUAL PAT',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                if (!_isPolling && _userCode == null) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: OutlinedButton.icon(
+                      onPressed: _startOAuthFlow,
+                      icon: const Icon(Icons.devices_rounded),
+                      label: const Text('Connect via Device Flow'),
+                    ),
                   ),
-                ),
-                Expanded(child: Divider()),
+                ] else ...[
+                  Card(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          if (_userCode != null)
+                            Text(
+                              _userCode!,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _statusMessage ?? '',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_verificationUri != null)
+                    TextButton.icon(
+                      onPressed: () {
+                        launchUrlString(
+                          _verificationUri!,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      },
+                      icon: const Icon(Icons.open_in_browser),
+                      label: const Text('Open Verification Page'),
+                    ),
+                  if (_isPolling) ...[
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _cancelOAuthFlow,
+                      icon: const Icon(Icons.cancel_outlined, size: 16),
+                      label: Text(tr('cancel')),
+                    ),
+                  ],
+                ],
+                if (_statusMessage != null && !_isPolling && _userCode == null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: Text(
+                      _statusMessage!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
+          const SizedBox(height: 8),
         ],
         TextField(
           controller: _controller,
           decoration: InputDecoration(
             labelText: tr('plusTokenLabel'),
             border: const OutlineInputBorder(),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () => _controller.clear(),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: tr('pasteFromClipboard'),
+                  icon: const Icon(Icons.content_paste_rounded),
+                  onPressed: () async {
+                    final data = await Clipboard.getData(Clipboard.kTextPlain);
+                    if (data?.text != null && data!.text!.trim().isNotEmpty) {
+                      AppHaptics.selectionClick();
+                      setState(() {
+                        _controller.text = data.text!.trim();
+                      });
+                    }
+                  },
+                ),
+                if (_controller.text.isNotEmpty)
+                  IconButton(
+                    tooltip: tr('clear'),
+                    icon: const Icon(Icons.clear_rounded),
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      setState(() {
+                        _controller.clear();
+                      });
+                    },
+                  ),
+              ],
             ),
           ),
           obscureText: true,

@@ -269,6 +269,8 @@ class SourceProvider {
     GitHubPersonalRepos(),
   ];
 
+  static final Map<String, AppSource> _hostToSourceCache = {};
+
   AppSource getSource(String url, {String? overrideSource}) {
     url = preStandardizeUrl(url);
     if (overrideSource != null) {
@@ -282,14 +284,21 @@ class SourceProvider {
       }
       final res = srcs.first;
       final originalHosts = res.hosts;
-      final newHost = Uri.parse(url).host;
+      final newHost = Uri.tryParse(url)?.host ?? '';
       res.hosts = [newHost];
       res.hostChanged = true;
+      res.invalidateHostRegex();
       if (originalHosts.contains(newHost)) {
         res.hostIdenticalDespiteAnyChange = true;
       }
       return res;
     }
+
+    final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+    if (host.isNotEmpty && _hostToSourceCache.containsKey(host)) {
+      return _hostToSourceCache[host]!;
+    }
+
     // The non-override path is read-only, so reuse the cached source set.
     final allSources = sources;
     AppSource? source;
@@ -297,10 +306,11 @@ class SourceProvider {
       // A non-match here is expected control flow during source auto-detection,
       // so failures are intentionally not logged (they are just noise).
       try {
-        if (RegExp(
-          '^${s.allowSubDomains ? '([^\\.]+\\.)*' : '(www\\.)?'}(${getSourceRegex(s.hosts)})\$',
-        ).hasMatch(Uri.parse(url).host)) {
+        if (s.hostRegex.hasMatch(host)) {
           source = s;
+          if (host.isNotEmpty) {
+            _hostToSourceCache[host] = s;
+          }
           break;
         }
       } catch (e) {
