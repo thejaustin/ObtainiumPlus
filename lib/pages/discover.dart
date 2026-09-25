@@ -595,6 +595,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                               ),
                             IconButton(
                               icon: const Icon(Icons.search),
+                              tooltip: tr('search'),
                               onPressed: () {
                                 AppHaptics.selectionClick();
                                 runSearch();

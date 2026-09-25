@@ -208,6 +208,7 @@ class AppearanceHub extends StatelessWidget {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close_rounded),
+                          tooltip: tr('close'),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],

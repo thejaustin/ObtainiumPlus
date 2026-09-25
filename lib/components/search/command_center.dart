@@ -323,6 +323,7 @@ class _CommandCenterState extends State<CommandCenter> {
                           suffixIcon: _query.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.clear),
+                                  tooltip: tr('clear'),
                                   onPressed: () {
                                     AppHaptics.selectionClick();
                                     _controller.clear();

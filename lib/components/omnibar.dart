@@ -371,6 +371,7 @@ class _OmnibarState extends State<Omnibar> {
                             button: true,
                             child: IconButton(
                               icon: const Icon(Icons.clear, size: 20),
+                              tooltip: tr('clear'),
                               onPressed: () {
                                 _controller.clear();
                                 _handleInput('');

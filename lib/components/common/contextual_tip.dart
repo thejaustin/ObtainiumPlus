@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -71,6 +72,7 @@ class _ContextualTipState extends State<ContextualTip> {
             ),
             IconButton(
               icon: const Icon(Icons.close, size: 20),
+              tooltip: tr('close'),
               color: Theme.of(context).colorScheme.onTertiaryContainer,
               onPressed: () => setState(() => _dismissed = true),
               padding: EdgeInsets.zero,

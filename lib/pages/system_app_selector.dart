@@ -293,6 +293,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       const SizedBox(width: 8),
                       IconButton.filled(
                         icon: const Icon(Icons.add),
+                        tooltip: tr('add'),
                         onPressed: () => addLabel(controller.text),
                       ),
                     ],

@@ -953,6 +953,7 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
             subtitle: Text(_gsfId),
             trailing: IconButton(
               icon: const Icon(Icons.refresh),
+              tooltip: tr('refresh'),
               onPressed: _getGsfId,
             ),
           ),
@@ -1092,6 +1093,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
                             ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
+                            tooltip: tr('remove'),
                             onPressed: () => authProvider.removeDispenser(d),
                           ),
                         ],
@@ -1110,6 +1112,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
               labelText: tr('addDispenserUrl'),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.add),
+                tooltip: tr('add'),
                 onPressed: () async {
                   if (_controller.text.isNotEmpty) {
                     authProvider.addDispenser(_controller.text);

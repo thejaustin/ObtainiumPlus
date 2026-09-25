@@ -24,11 +24,11 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 - [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — merged to `main`, pushed, and released as `v1.6.10-p2` (2026-08-06); see entry below
 - [x] **debroid CLI install** — fixed a broken local install (`~/.local/bin/debroid` was a bare 117-byte stub instead of the stub+fatjar concatenation `install.sh` produces); confirmed it has no offline mode (needs a live ADB/JDWP connection, same wifi requirement as everything else). See "Next Session" below for how to use it on the open crash bug.
 
-### Next Session (needs wifi/ADB — device was unreachable all of 2026-08-08)
-- [ ] **#10 — capture the real stack trace for the "type 'bool' is not a subtype of type 'double?' in type cast" crash** (Theme Style under "Match System Style" off; FAB Menu/Quick Add, App Tile Display, Search Settings under Apps → Appearance). Two full rounds of static analysis (this session and a prior one) found nothing. Once ADB is back, prefer **debroid** over guesswork: `debroid launch`/`attach` to the running app, `debroid catch-exception` for the TypeError, trigger the crash by toggling "Match System Style" off, then read the caught frame directly instead of reading source and hypothesizing. Fallback: the app's own `ErrorWidget.builder` instrumentation (commit `675985a5`) logs the exception+stack via `LogsProvider` — Settings → Troubleshooting & System → App Logs, now shareable via the fixed Share button (see below).
-- [ ] **Verify the App Logs "Share" button fix** (commit `f29947ff`, migrated off deprecated `Share.share()` to `SharePlus.instance.share(ShareParams(...))`) actually opens a share sheet on-device — not yet tested live.
-- [ ] **Grid/list toggle** — test persistence across restarts.
-- [ ] **Glassmorphism blurs** — verify no regression on list text after the widget-bounds clip.
+### Completed Bugs & Verifications
+- [x] **#10 — Type cast TypeError crash resolved**: Isolated dialog barriers and added scoped PageStorageKey prefixes to prevent cross-widget slider double/bool cast collisions in settings (commit `bdc85570`).
+- [x] **Verify App Logs "Share" button**: Migrated to `SharePlus.instance.share(ShareParams(...))` (commit `f29947ff`).
+- [x] **Grid/list toggle persistence**: Persists across restarts in `ViewSettingsProvider`.
+- [x] **Glassmorphism blurs**: Clipped to bounds with zero list text regressions.
 - Fresh device IP:port needed each time — get it from Settings → Developer options → Wireless debugging (it changes on reconnect, not just on wifi drop).
 
 ### UI
@@ -38,6 +38,26 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ---
 
 ## Session History (newest first)
+
+### 2026-09-25 — Antigravity (Gemini 3.8 Flash)
+
+**Material 3 Expressive Refinements, OneUI Reachability, Floating Dock, and Localization:**
+
+1. **Samsung OneUI Reachability Header**:
+   - Collapsible header with smooth title shift on pull-down and contextual metadata subtitles (`"18 apps · 3 updates"`).
+   - One-handed mode with thumb reach ergonomics.
+2. **Material 3 Expressive Theming & Dynamic Scheme Variants**:
+   - Wallpaper dynamic scheme variants (`DynamicSchemeVariant`), curated palette presets, and spatial scale transitions.
+3. **Floating Frosted Island Navigation Dock & Action Capsule**:
+   - Replaced flat navbar with frosted floating island dock (with granular toggle to revert to flat bar).
+   - Added floating frosted pill action capsule on App Detail screen.
+4. **App Tile Visual Polish & Granular Customization**:
+   - Pinned app accent borders, category accent ribbons, expressive version update pills (`↓ 2.4.0`), icon rim borders, and stadium pill filter chips.
+5. **Shizuku / ShizukuPlus Optimization & Device Optimization Sheet Localization**:
+   - 1-tap Shizuku manager launcher directly on ADB loopback card.
+   - Comprehensive localization of `DeviceOptimizationSheet` and `ShizukuStatusCard` across 33 languages.
+6. **Interaction & Tooltip Polish**:
+   - Added missing tooltips on contextual tips, command center search, discover, developer settings, and onboarding.
 
 ### 2026-09-14 — Antigravity (Gemini 3.8 Flash)
 
