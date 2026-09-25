@@ -332,27 +332,38 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                 ),
               ] else if (hasActivePort && !isRunning) ...[
                 const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          tr('shizukuAdbPortOpenHint', args: ['${info?.activeLoopbackPort}']),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.amber.shade900,
-                          ),
-                        ),
+                    onTap: () {
+                      AppHaptics.lightImpact();
+                      ShizukuInstaller.openShizukuManager();
+                    },
+                    child: Ink(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              tr('shizukuAdbPortOpenHint', args: ['${info?.activeLoopbackPort}']),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.amber.shade900,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.amber),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],

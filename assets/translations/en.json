@@ -1257,5 +1257,17 @@
     "settingsAppearanceLayoutNav": "Layout & Navigation",
     "settingsAppearanceLayoutNavDesc": "View mode, list density, app bar style, and navigation labels",
     "settingsAppearanceMotionPhysics": "Expressive Motion & System UI",
-    "settingsAppearanceMotionPhysicsDesc": "Glassmorphism, bouncy scroll physics, corner radius, and popup slider"
+    "settingsAppearanceMotionPhysicsDesc": "Glassmorphism, bouncy scroll physics, corner radius, and popup slider",
+    "copySpecs": "Copy Specs",
+    "specsCopiedToClipboard": "Device specifications copied to clipboard",
+    "myDevice": "My Device",
+    "recommendedConfigurationSteps": "Recommended Configuration Steps",
+    "knownOEMBehaviors": "Known OEM Behaviors & Sideload Pitfalls",
+    "rootlessSilentUpdates": "Rootless Silent Updates (Android 14+)",
+    "rootlessSilentUpdatesDesc": "Enable 'Update Ownership' and 'User Pre-approval' in ObtainiumPlus Installation settings. Once pre-approved, your apps will update silently in the background without needing root or Shizuku!",
+    "batteryUnrestricted": "Battery: Unrestricted",
+    "batteryOptimized": "Battery: Optimized (Tap to Fix)",
+    "openSetting": "Open",
+    "active": "Active",
+    "you": "YOU"
 }

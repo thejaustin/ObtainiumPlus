@@ -222,10 +222,10 @@ class _DeviceOptimizationSheetContentState
         : 'Manufacturer: $_deviceManufacturer\nModel: $_deviceModel\nAndroid: $_androidVersion (API $_sdkInt)\nPlatform: ${_getOEMLabel(_detectedOEM)}';
     Clipboard.setData(ClipboardData(text: specs));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Device specifications copied to clipboard'),
+      SnackBar(
+        content: Text(tr('specsCopiedToClipboard')),
         behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -384,13 +384,13 @@ class _DeviceOptimizationSheetContentState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Device Compatibility & Performance',
+                      tr('devicePerformanceAndCompatibility'),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      'OEM settings, unthrottled downloads & install fixes',
+                      tr('devicePerformanceAndCompatibilitySubtitle'),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -450,7 +450,7 @@ class _DeviceOptimizationSheetContentState
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          'YOU',
+                          tr('you'),
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -546,17 +546,17 @@ class _DeviceOptimizationSheetContentState
                                                 width: 0.8,
                                               ),
                                             ),
-                                            child: const Row(
+                                            child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Icon(
+                                                const Icon(
                                                   Icons.check_circle_rounded,
                                                   size: 11,
                                                   color: Colors.green,
                                                 ),
-                                                SizedBox(width: 3),
+                                                const SizedBox(width: 3),
                                                 Text(
-                                                  'Active',
+                                                  tr('active'),
                                                   style: TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
@@ -631,8 +631,8 @@ class _DeviceOptimizationSheetContentState
                                           const SizedBox(width: 4),
                                           Text(
                                             _isBatteryUnrestricted == true
-                                                ? 'Battery: Unrestricted'
-                                                : 'Battery: Optimized (Tap to Fix)',
+                                                ? tr('batteryUnrestricted')
+                                                : tr('batteryOptimized'),
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
@@ -715,10 +715,10 @@ class _DeviceOptimizationSheetContentState
                                           const SizedBox(width: 4),
                                           Text(
                                             _isTestingBinder
-                                                ? 'Testing...'
+                                                ? tr('testing')
                                                 : _binderLatencyMs != null
-                                                    ? 'IPC: ${_binderLatencyMs}ms'
-                                                    : 'Test IPC Ping',
+                                                    ? tr('binderLatency', args: ['$_binderLatencyMs'])
+                                                    : tr('testBinderConnection'),
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
@@ -738,7 +738,7 @@ class _DeviceOptimizationSheetContentState
                                     ),
                                   ),
                                   icon: const Icon(Icons.copy_rounded, size: 14),
-                                  label: const Text('Copy Specs'),
+                                  label: Text(tr('copySpecs')),
                                   onPressed: () => _copySpecsToClipboard(context),
                                 ),
                               ],
@@ -788,7 +788,7 @@ class _DeviceOptimizationSheetContentState
                                 AppHaptics.selectionClick();
                                 setState(() => _selectedOEM = _detectedOEM);
                               },
-                              child: const Text('My Device'),
+                              child: Text(tr('myDevice')),
                             ),
                           ],
                         ),
@@ -917,7 +917,7 @@ class _DeviceOptimizationSheetContentState
                                   );
                                 }
                               },
-                              child: const Text('Open'),
+                              child: Text(tr('openSetting')),
                             ),
                           ),
                         ),
@@ -927,7 +927,7 @@ class _DeviceOptimizationSheetContentState
 
                     // Important Highlights Section
                     Text(
-                      'Known OEM Behaviors & Sideload Pitfalls',
+                      tr('knownOEMBehaviors'),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.primary,
@@ -965,7 +965,7 @@ class _DeviceOptimizationSheetContentState
 
                     // Recommended Step-by-Step Setup
                     Text(
-                      'Recommended Configuration Steps',
+                      tr('recommendedConfigurationSteps'),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.primary,
@@ -1043,7 +1043,7 @@ class _DeviceOptimizationSheetContentState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Rootless Silent Updates (Android 14+)',
+                                  tr('rootlessSilentUpdates'),
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: colorScheme.tertiary,
@@ -1051,7 +1051,7 @@ class _DeviceOptimizationSheetContentState
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Enable "Update Ownership" and "User Pre-approval" in ObtainiumPlus Installation settings. Once pre-approved, your apps will update silently in the background without needing root or Shizuku!',
+                                  tr('rootlessSilentUpdatesDesc'),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: colorScheme.onTertiaryContainer,
                                   ),
