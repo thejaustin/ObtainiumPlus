@@ -133,9 +133,10 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
               ),
             ),
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
   }
 }
 
