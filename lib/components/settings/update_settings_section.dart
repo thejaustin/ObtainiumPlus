@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -55,63 +56,50 @@ class UpdateSettingsSection extends StatelessWidget {
         _buildIntervalLabel(context),
         _buildIntervalSlider(context),
       ],
-      if (_matches(tr('bgUpdateRequiresWifi')))
-        Consumer<UpdateSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.wifi_outlined),
-            title: Text(
-              tr('bgUpdateRequiresWifi'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            value: settings.bgUpdateRequiresWifi,
-            onChanged: (v) => settings.bgUpdateRequiresWifi = v,
-          ),
-        ),
-      if (_matches(tr('bgUpdateRequiresCharging')))
-        Consumer<UpdateSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.battery_charging_full_outlined),
-            title: Text(
-              tr('bgUpdateRequiresCharging'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            value: settings.bgUpdateRequiresCharging,
-            onChanged: (v) => settings.bgUpdateRequiresCharging = v,
-          ),
+      if (_matches(tr('bgUpdateRequiresWifi')) ||
+          _matches(tr('bgUpdateRequiresCharging')) ||
+          _matches(tr('checkOnStart')) ||
+          _matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+        GenericBooleanControlGrid<UpdateSettingsProvider>(
+          title: tr('updates'),
+          settings: [
+            if (_matches(tr('bgUpdateRequiresWifi')))
+              (
+                icon: Icons.wifi_outlined,
+                label: tr('bgUpdateRequiresWifi'),
+                description: null,
+                getValue: (s) => s.bgUpdateRequiresWifi,
+                setValue: (s, v) => s.bgUpdateRequiresWifi = v,
+              ),
+            if (_matches(tr('bgUpdateRequiresCharging')))
+              (
+                icon: Icons.battery_charging_full_outlined,
+                label: tr('bgUpdateRequiresCharging'),
+                description: null,
+                getValue: (s) => s.bgUpdateRequiresCharging,
+                setValue: (s, v) => s.bgUpdateRequiresCharging = v,
+              ),
+            if (_matches(tr('checkOnStart')))
+              (
+                icon: Icons.power_settings_new_outlined,
+                label: tr('checkOnStart'),
+                description: tr('checkOnStartDescription'),
+                getValue: (s) => s.checkOnStart,
+                setValue: (s, v) => s.checkOnStart = v,
+              ),
+            if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+              (
+                icon: Icons.check_circle_outline,
+                label: tr('onlyCheckInstalledOrTrackOnlyApps'),
+                description: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
+                getValue: (s) => s.onlyCheckInstalledOrTrackOnlyApps,
+                setValue: (s, v) => s.onlyCheckInstalledOrTrackOnlyApps = v,
+              ),
+          ],
         ),
       _buildForegroundServiceSection(context),
       if (_matches(tr('xiaomiBatteryTroubleshooting')))
         _buildXiaomiTroubleshooting(context),
-
-      // Update check on start
-      if (_matches(tr('checkOnStart')))
-        Consumer<UpdateSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.power_settings_new_outlined),
-            title: Text(
-              tr('checkOnStart'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text(tr('checkOnStartDescription')),
-            value: settings.checkOnStart,
-            onChanged: (v) => settings.checkOnStart = v,
-          ),
-        ),
-
-      // Only check installed or track only apps
-      if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
-        Consumer<UpdateSettingsProvider>(
-          builder: (context, settings, _) => SwitchListTile.adaptive(
-            secondary: const Icon(Icons.check_circle_outline),
-            title: Text(
-              tr('onlyCheckInstalledOrTrackOnlyApps'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text(tr('onlyCheckInstalledOrTrackOnlyAppsDescription')),
-            value: settings.onlyCheckInstalledOrTrackOnlyApps,
-            onChanged: (v) => settings.onlyCheckInstalledOrTrackOnlyApps = v,
-          ),
-        ),
 
       // Concurrency Limit settings
       if (_matches(tr('plusUpdateCheckConcurrency'), isAdvanced: true))

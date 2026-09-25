@@ -77,35 +77,57 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                     ),
                     // Non-scrolling card grid implemented via Column and Rows
                     // Using GridView.builder(shrinkWrap: true) inside ExpansionTiles causes
-                    // PageStorage scroll-restoration key collision where bool (_isExpanded)
-                    // is mistakenly cast to double? (scroll offset). Pure rows also avoid
-                    // multi-pass shrinkWrap layout costs.
-                    Column(
-                      children: [
-                        for (
-                          int i = 0;
-                          i < settings.length;
-                          i += crossAxisCount
-                        ) ...[
-                          if (i > 0) const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              for (int j = 0; j < crossAxisCount; j++) ...[
-                                if (j > 0) const SizedBox(width: 8),
-                                Expanded(
-                                  child: (i + j < settings.length)
-                                      ? _GridToggleItem<T>(
-                                          setting: settings[i + j],
-                                          provider: provider,
-                                        )
-                                      : const SizedBox.shrink(),
-                                ),
+                    if (!plusSettings.plusSettingsUseGridToggles)
+                      Column(
+                        children: settings.map((s) {
+                          final val = s.getValue(provider);
+                          return SwitchListTile.adaptive(
+                            secondary: Icon(s.icon),
+                            title: Text(
+                              s.label,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
+                            ),
+                            subtitle: s.description != null
+                                ? Text(s.description!)
+                                : null,
+                            value: val,
+                            onChanged: (v) {
+                              AppHaptics.selectionClick();
+                              s.setValue(provider, v);
+                            },
+                          );
+                        }).toList(),
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (
+                            int i = 0;
+                            i < settings.length;
+                            i += crossAxisCount
+                          ) ...[
+                            if (i > 0) const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                for (int j = 0; j < crossAxisCount; j++) ...[
+                                  if (j > 0) const SizedBox(width: 8),
+                                  Expanded(
+                                    child: (i + j < settings.length)
+                                        ? _GridToggleItem<T>(
+                                            setting: settings[i + j],
+                                            provider: provider,
+                                          )
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               ),
