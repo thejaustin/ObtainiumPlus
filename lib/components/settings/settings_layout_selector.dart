@@ -21,14 +21,16 @@ class SettingsLayoutSelector extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
+      child: Material(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
+          side: BorderSide(
             color: colorScheme.outlineVariant.withValues(alpha: 0.25),
           ),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
             Padding(

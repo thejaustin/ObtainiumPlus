@@ -44,27 +44,27 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
             child: ConditionalBlur(
               sigma: 10,
               enabled: plusSettings.plusEnableGlassmorphism,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                decoration: BoxDecoration(
-                  color:
-                      (isDark
-                              ? colorScheme.surfaceContainerLow
-                              : colorScheme.surface)
-                          .withValues(
-                            alpha: plusSettings.plusEnableGlassmorphism
-                                ? 0.7
-                                : 1.0,
-                          ),
+              child: Material(
+                color: (isDark
+                        ? colorScheme.surfaceContainerLow
+                        : colorScheme.surface)
+                    .withValues(
+                      alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                    ),
+                borderRadius: BorderRadius.circular(20.0),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
+                  side: BorderSide(
                     color: colorScheme.outlineVariant.withValues(
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.4 : 0.18,
                     ),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Section header: upper-cased label with primary accent
                     Text(
