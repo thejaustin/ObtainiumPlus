@@ -175,7 +175,7 @@ class NotificationSettingsSection extends StatelessWidget {
           persistKey: 'notifications',
           icon: Icons.notifications_active_rounded,
           isExpandable: !isSearching,
-          initiallyExpanded: false,
+          initiallyExpanded: true,
           children: children,
         );
       },

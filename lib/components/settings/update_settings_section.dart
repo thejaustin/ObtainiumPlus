@@ -163,7 +163,7 @@ class UpdateSettingsSection extends StatelessWidget {
       persistKey: 'updates',
       icon: Icons.update_rounded,
       isExpandable: !isSearching,
-      initiallyExpanded: false,
+      initiallyExpanded: true,
       children: children,
     );
   }

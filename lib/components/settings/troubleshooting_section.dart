@@ -245,7 +245,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
       persistKey: 'troubleshootingAndSystem',
       icon: Icons.bug_report_rounded,
       isExpandable: !isSearching,
-      initiallyExpanded: false,
+      initiallyExpanded: true,
       children: items,
     );
   }

@@ -192,7 +192,7 @@ class AdvancedSettingsSection extends StatelessWidget {
       persistKey: 'advanced',
       icon: Icons.settings_applications_rounded,
       isExpandable: !isSearching,
-      initiallyExpanded: false,
+      initiallyExpanded: true,
       children: children,
     );
   }

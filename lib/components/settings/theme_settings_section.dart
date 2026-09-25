@@ -387,7 +387,7 @@ class ThemeSettingsSection extends StatelessWidget {
             icon: Icons.palette_rounded,
             helpText: tr('appearanceHelp'),
             isExpandable: !isSearching && subCategory == null,
-            initiallyExpanded: subCategory != null,
+            initiallyExpanded: true,
             children: themeWidgets,
           ),
         if (showMotion && shapeWidgets.isNotEmpty)
@@ -399,7 +399,7 @@ class ThemeSettingsSection extends StatelessWidget {
             icon: Icons.rounded_corner_rounded,
             helpText: tr('shapesHelp'),
             isExpandable: !isSearching && subCategory == null,
-            initiallyExpanded: subCategory != null,
+            initiallyExpanded: true,
             onReset: () {
               AppHaptics.heavyImpact();
               plusSettings.plusGlobalCornerRadius = 20.0;
@@ -415,7 +415,7 @@ class ThemeSettingsSection extends StatelessWidget {
             persistKey: 'animations',
             icon: Icons.animation_rounded,
             isExpandable: !isSearching && subCategory == null,
-            initiallyExpanded: subCategory != null,
+            initiallyExpanded: true,
             children: animationWidgets,
           ),
       ],
