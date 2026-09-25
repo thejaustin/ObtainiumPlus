@@ -329,7 +329,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               : tr('categorySettings'),
           persistKey: 'categorySettings',
           isExpandable: subCategory == null,
-          initiallyExpanded: subCategory != null,
+          initiallyExpanded: true,
           children: categoryWidgets,
         ),
       if (showLayout && viewWidgets.isNotEmpty)
@@ -337,7 +337,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           title: isSearching || subCategory != null ? null : tr('viewMode'),
           persistKey: 'viewMode',
           isExpandable: subCategory == null,
-          initiallyExpanded: subCategory != null,
+          initiallyExpanded: true,
           children: viewWidgets,
         ),
       if (showLayout && showFabMenuGrid)
@@ -389,7 +389,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 : tr('plusSectionOrganizationSorting'),
             persistKey: 'plusSectionOrganizationSorting',
             isExpandable: subCategory == null,
-            initiallyExpanded: subCategory != null,
+            initiallyExpanded: true,
             children: sortingWidgets,
           ),
         if (showTiles && showDisplayGrid)
@@ -521,7 +521,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       persistKey: 'appsString',
       icon: Icons.grid_view_rounded,
       isExpandable: !isSearching,
-      initiallyExpanded: false,
+      initiallyExpanded: true,
       children: innerList,
     );
   }
