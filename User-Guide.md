@@ -14,11 +14,15 @@ Finding apps to track is easier than ever with the **Discover** tab.
 3. Obtainium+ searches across multiple sources (GitHub, GitLab, etc.) simultaneously.
 4. Tap any result to see details and add it to your tracking list with a single tap.
 
-## 🖼️ Grid View
-For a more visual experience, you can switch from the traditional list to the **Grid View**.
-- **Enable**: Go to `Settings > View Options` and change the **Global View Mode** to "Grid".
-- **Customization**: You can set a custom number of columns (up to 6) and choose whether to group apps by category within the grid.
-- **Category Overrides**: You can even set specific categories to use Grid View while keeping others in List View.
+## 🖼️ Grid View (Material 3 Expressive)
+For a visual, modern experience, switch from the traditional list to the **Grid View**:
+- **Enable**: Go to `Settings > Appearance > View Options` and set **Global View Mode** to "Grid".
+- **Adaptive Columns & Metrics**: Automatically scales from 2 to 6 columns based on screen width, breakpoint, and active metadata (version, author, tags) to guarantee zero layout overflow and perfect proportions on phones, foldables, and tablets.
+- **M3E Tile Elevation**: Continuous squircle curvature, surface container tones, subtle category accent ribbons matching assigned category colors, and touch-interactive specular highlights.
+- **1-Tap Interactive Update Pill**: Tiles with updates available feature an embedded stadium pill (`↓ 2.4.0`) that triggers download and installation directly on tap with tactile feedback.
+- **Multi-Select Mode**: Long-press any tile to enter batch mode with expressive top-corner checkmark indicators.
+- **Category Overrides & Grouping**: Group apps by category sections or keep specific categories in Grid View while others remain in List View.
+
 
 ## 🍦 Vanilla Mode
 We understand that some users prefer the classic Obtainium look. **Vanilla Mode** allows you to revert the entire UI to the original upstream design while keeping the "Plus" performance improvements under the hood.

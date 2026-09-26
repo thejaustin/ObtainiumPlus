@@ -333,6 +333,9 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
   String? _verificationUri;
   String? _statusMessage;
   Timer? _pollTimer;
+  bool _isVerifying = false;
+  String? _verificationResult;
+  bool _verificationSuccess = false;
 
   @override
   void initState() {
@@ -347,6 +350,64 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
     _pollTimer?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _verifyToken() async {
+    final token = _controller.text.trim();
+    if (token.isEmpty) {
+      setState(() {
+        _verificationResult = 'Please enter or paste a token first';
+        _verificationSuccess = false;
+      });
+      return;
+    }
+    setState(() {
+      _isVerifying = true;
+      _verificationResult = null;
+    });
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.github.com/user'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'User-Agent': 'ObtainiumPlus',
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (!mounted) return;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final login = data['login']?.toString() ?? 'Authenticated';
+        final remaining = response.headers['x-ratelimit-remaining'] ?? '5000';
+        final limit = response.headers['x-ratelimit-limit'] ?? '5000';
+        setState(() {
+          _isVerifying = false;
+          _verificationSuccess = true;
+          _verificationResult = '✓ Verified as @$login ($remaining/$limit requests/hr)';
+        });
+        AppHaptics.selectionClick();
+      } else if (response.statusCode == 401) {
+        setState(() {
+          _isVerifying = false;
+          _verificationSuccess = false;
+          _verificationResult = '✗ Invalid token (401 Unauthorized)';
+        });
+      } else {
+        setState(() {
+          _isVerifying = false;
+          _verificationSuccess = false;
+          _verificationResult = 'Token check returned HTTP ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isVerifying = false;
+        _verificationSuccess = false;
+        _verificationResult = 'Verification failed: $e';
+      });
+    }
   }
 
   Future<void> _startOAuthFlow() async {
@@ -468,19 +529,36 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (isGitHub) ...[
-          FilledButton.icon(
-            onPressed: () {
-              AppHaptics.selectionClick();
-              launchUrlString(
-                'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=repo',
-                mode: LaunchMode.externalApplication,
-              );
-            },
-            icon: const Icon(Icons.open_in_browser_rounded),
-            label: Text(tr('generateGitHubToken')),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  launchUrlString(
+                    'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=',
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                icon: const Icon(Icons.public_rounded, size: 18),
+                label: const Text('Public Repos (No Scope / Safest)'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  launchUrlString(
+                    'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=repo',
+                    mode: LaunchMode.externalApplication,
+                  );
+                },
+                icon: const Icon(Icons.lock_outline_rounded, size: 18),
+                label: const Text('Private Repos ("repo" Scope)'),
+              ),
+            ],
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 12),
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
             child: Text(
               tr('generateGitHubTokenDescription'),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -607,6 +685,9 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                       setState(() {
                         _controller.text = data.text!.trim();
                       });
+                      if (isGitHub) {
+                        _verifyToken();
+                      }
                     }
                   },
                 ),
@@ -618,6 +699,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                       AppHaptics.selectionClick();
                       setState(() {
                         _controller.clear();
+                        _verificationResult = null;
                       });
                     },
                   ),
@@ -626,6 +708,54 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           ),
           obscureText: true,
         ),
+        if (isGitHub && _controller.text.trim().isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: _isVerifying ? null : _verifyToken,
+                icon: const Icon(Icons.verified_outlined, size: 16),
+                label: const Text('Verify Token'),
+              ),
+              if (_isVerifying) ...[
+                const SizedBox(width: 8),
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ],
+          ),
+        ],
+        if (_verificationResult != null) ...[
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: _verificationSuccess
+                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5)
+                  : Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _verificationSuccess
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+                    : Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              _verificationResult!,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _verificationSuccess
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.error,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         InkWell(
           onTap: () {
