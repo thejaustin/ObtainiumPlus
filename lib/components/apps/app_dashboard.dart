@@ -309,13 +309,24 @@ class _AppDashboardState extends State<AppDashboard>
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: app.icon != null
-                ? Image.memory(
-                    app.icon!,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
-                  )
-                : const Icon(Icons.apps_rounded, size: 24),
+            child: Builder(
+              builder: (ctx) {
+                if (app.icon == null && app.installedInfo != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (ctx.mounted && app.icon == null) {
+                      ctx.read<AppsProvider>().updateAppIcon(app.app.id);
+                    }
+                  });
+                }
+                return app.icon != null
+                    ? Image.memory(
+                        app.icon!,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      )
+                    : const Icon(Icons.apps_rounded, size: 24);
+              },
+            ),
           ),
         ),
       ),
@@ -361,13 +372,22 @@ class _AppDashboardState extends State<AppDashboard>
               ),
             ],
           ),
-          child: Stack(
-              children: [
-                if (app.icon != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(itemRadius - 2),
-                    child: Image.memory(
-                      app.icon!,
+          child: Builder(
+            builder: (ctx) {
+              if (app.icon == null && app.installedInfo != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (ctx.mounted && app.icon == null) {
+                    ctx.read<AppsProvider>().updateAppIcon(app.app.id);
+                  }
+                });
+              }
+              return Stack(
+                children: [
+                  if (app.icon != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(itemRadius - 2),
+                      child: Image.memory(
+                        app.icon!,
                       fit: BoxFit.cover,
                       width: 64,
                       height: 64,
@@ -400,11 +420,13 @@ class _AppDashboardState extends State<AppDashboard>
                   ),
                 ),
               ],
-            ),
-          ),
+            );
+          },
         ),
-      );
-  }
+      ),
+    ),
+  );
+}
 
   Widget _buildBatchActionsHub(
     BuildContext context,

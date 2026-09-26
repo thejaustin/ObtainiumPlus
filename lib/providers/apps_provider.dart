@@ -654,10 +654,22 @@ class AppsProvider with ChangeNotifier {
   AppsProvider({
     bool isBg = false,
     SettingsProvider? settingsProvider,
+    PlusSettingsProvider? plusSettingsProvider,
+    ThemeSettingsProvider? themeSettingsProvider,
+    UpdateSettingsProvider? updateSettingsProvider,
+    BehaviorSettingsProvider? behaviorSettingsProvider,
+    ViewSettingsProvider? viewSettingsProvider,
     LogsProvider? logsProvider,
   }) {
     _isBg = isBg;
     this.settingsProvider = settingsProvider ?? SettingsProvider();
+    if (plusSettingsProvider != null) plusSettings = plusSettingsProvider;
+    if (themeSettingsProvider != null) themeSettings = themeSettingsProvider;
+    if (updateSettingsProvider != null) updateSettings = updateSettingsProvider;
+    if (behaviorSettingsProvider != null) {
+      behaviorSettings = behaviorSettingsProvider;
+    }
+    if (viewSettingsProvider != null) viewSettings = viewSettingsProvider;
     logs = logsProvider ?? LogsProvider();
     // Subscribe to changes in the app foreground status
     foregroundStream = FGBGEvents.instance.stream.asBroadcastStream();
@@ -684,38 +696,60 @@ class AppsProvider with ChangeNotifier {
       NotificationsProvider.listenForDownloadCancelFromMain();
     }
     () async {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      final initFutures = Future.wait([
-        this.settingsProvider.initializeSettings(),
-        themeSettings.initializeSettings(prefs),
-        updateSettings.initializeSettings(prefs),
-        behaviorSettings.initializeSettings(prefs),
-        viewSettings.initializeSettings(prefs),
-        plusSettings.initializeSettings(prefs),
-      ]);
+      final List<Future<void>> initList = [];
+      if (settingsProvider == null) {
+        initList.add(this.settingsProvider.initializeSettings());
+      }
+      if (plusSettingsProvider == null ||
+          themeSettingsProvider == null ||
+          updateSettingsProvider == null ||
+          behaviorSettingsProvider == null ||
+          viewSettingsProvider == null) {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (themeSettingsProvider == null) {
+          initList.add(themeSettings.initializeSettings(prefs));
+        }
+        if (updateSettingsProvider == null) {
+          initList.add(updateSettings.initializeSettings(prefs));
+        }
+        if (behaviorSettingsProvider == null) {
+          initList.add(behaviorSettings.initializeSettings(prefs));
+        }
+        if (viewSettingsProvider == null) {
+          initList.add(viewSettings.initializeSettings(prefs));
+        }
+        if (plusSettingsProvider == null) {
+          initList.add(plusSettings.initializeSettings(prefs));
+        }
+      }
 
       final dirsFuture = AppFileService.initAppDirectories();
 
-      await initFutures;
+      if (initList.isNotEmpty) {
+        await Future.wait(initList);
+      }
       final dirs = await dirsFuture;
 
       _apkDir = dirs['APKDir']!;
       _iconsCacheDir = dirs['iconsCacheDir']!;
       if (!isBg) {
-        loadingApps = true;
-        notify();
         await loadApps();
-        // Delete any partial APKs (if safe to do so)
-        var cutoff = DateTime.now().subtract(const Duration(days: 7));
-        apkDir
-            .listSync()
-            .where((element) => element.statSync().modified.isBefore(cutoff))
-            .forEach((partialApk) {
-              if (!areDownloadsRunning()) {
-                partialApk.delete(recursive: true);
+        // Delete any partial APKs asynchronously off the critical launch path
+        unawaited(
+          Future(() async {
+            try {
+              var cutoff = DateTime.now().subtract(const Duration(days: 7));
+              final apkList = await apkDir.list().toList();
+              for (final partialApk in apkList) {
+                if (areDownloadsRunning()) break;
+                final stat = await partialApk.stat();
+                if (stat.modified.isBefore(cutoff)) {
+                  await partialApk.delete(recursive: true);
+                }
               }
-            });
+            } catch (_) {}
+          }),
+        );
       }
       _initCompleter.complete();
     }().catchError((e) {
@@ -1673,6 +1707,22 @@ class AppsProvider with ChangeNotifier {
     final List<List<String>> errors = [];
     final entities = await appsDir.list().toList();
 
+    // Map existing cached icon files to avoid repeated per-app disk lookups
+    final iconsDir = _iconsCacheDir ?? (await AppFileService.initAppDirectories())['iconsCacheDir']!;
+    final Map<String, File> cachedIconFiles = {};
+    try {
+      if (await iconsDir.exists()) {
+        final iconEntities = await iconsDir.list().toList();
+        for (final entity in iconEntities) {
+          if (entity is File && entity.path.endsWith('.png')) {
+            final fileName = entity.path.split('/').last;
+            final appId = fileName.substring(0, fileName.length - 4);
+            cachedIconFiles[appId] = entity;
+          }
+        }
+      }
+    } catch (_) {}
+
     await Future.wait(
       entities.map((item) async {
         if (!item.path.toLowerCase().endsWith('.json') ||
@@ -1713,6 +1763,13 @@ class AppsProvider with ChangeNotifier {
             errors.add([app.id, app.finalName, e.toString()]);
             return;
           }
+          // Read cached icon bytes directly during Phase 1 if not yet loaded in memory
+          Uint8List? iconBytes = apps[app.id]?.icon;
+          if (iconBytes == null && cachedIconFiles.containsKey(app.id)) {
+            try {
+              iconBytes = await cachedIconFiles[app.id]!.readAsBytes();
+            } catch (_) {}
+          }
           // Preserve already-loaded installed info and icon across reloads so
           // the list doesn't flash "not installed" while phase 2 is running.
           apps.update(
@@ -1721,7 +1778,7 @@ class AppsProvider with ChangeNotifier {
               app!,
               value.downloadProgress,
               value.installedInfo,
-              value.icon,
+              value.icon ?? iconBytes,
               download: value.download,
               sourceType: sourceType,
             ),
@@ -1729,7 +1786,7 @@ class AppsProvider with ChangeNotifier {
               app!,
               null,
               null,
-              null,
+              iconBytes,
               sourceType: sourceType,
             ),
           );
@@ -1840,11 +1897,26 @@ class AppsProvider with ChangeNotifier {
         behaviorSettings.removeOnExternalUninstall) {
       await removeApps(removedAppIds);
     }
+    // Proactively fetch any missing icons in the background without UI blocking
+    for (final id in apps.keys) {
+      if (apps[id]?.icon == null && apps[id]?.installedInfo != null) {
+        unawaited(updateAppIcon(id));
+      }
+    }
     notifyListeners();
   }
 
+  final Set<String> _failedIconAppIds = {};
+  final Set<String> _pendingIconFetches = {};
+
   Future<void> updateAppIcon(String? appId, {bool ignoreCache = false}) async {
-    if (apps[appId]?.icon == null) {
+    if (appId == null) return;
+    if (_failedIconAppIds.contains(appId) && !ignoreCache) return;
+    if (_pendingIconFetches.contains(appId)) return;
+    if (apps[appId]?.icon != null && !ignoreCache) return;
+
+    _pendingIconFetches.add(appId);
+    try {
       var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
       var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
       Uint8List? icon;
@@ -1892,7 +1964,11 @@ class AppsProvider with ChangeNotifier {
           ),
         );
         _scheduleIconBatchNotification();
+      } else {
+        _failedIconAppIds.add(appId);
       }
+    } finally {
+      _pendingIconFetches.remove(appId);
     }
   }
 
