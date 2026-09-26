@@ -37,7 +37,25 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
-## Session History (newest first)
+### 2026-09-26 — Antigravity (Gemini 3.8 Flash)
+
+**App Behavior Overhaul, GitHub Token Verification, Icon Loading Batching, and M3E Polish:**
+
+1. **Microtask-Debounced Icon Batching (`apps_provider.dart`)**:
+   - Added microtask coalescing (`_scheduleIconBatchNotification`) to prevent multi-frame layout thrashing when reading icons for 50+ installed apps concurrently.
+2. **Generic Boolean Control Grid Symmetry (`generic_boolean_control_grid.dart`)**:
+   - Wrapped card rows in `IntrinsicHeight` with `CrossAxisAlignment.stretch` to ensure balanced, uniform tile heights across differing label line counts.
+3. **GitHub Authentication Modernization & Real-Time Verification (`advanced_settings_section.dart`)**:
+   - Added dual token creation options: "Public Repos (No Scope / Safest)" vs "Private Repos ('repo' Scope)".
+   - Added live token validation calling `https://api.github.com/user` with rate limit header inspection (`x-ratelimit-remaining`), showing immediate feedback ("✓ Verified as @login (4998/5000 requests remaining)").
+   - 1-tap paste button triggers automatic token verification.
+4. **App Behavior Settings Screen Reorganization (`app_behavior_section.dart`)**:
+   - Grouped into 4 clear sections: Interaction & Feedback, Swipe Gestures, Animations & Transitions, and App Discovery & Safety.
+   - Constrained swipe dropdown widths to prevent `RenderFlex` overflows on compact displays.
+   - Smooth `AnimatedSize` collapse when swipe gestures are disabled.
+   - Integrated animation speed multiplier (50%–200%) and page transition toggles directly into the Behavior tab matching documentation.
+5. **Documentation Alignment (`User-Guide.md`)**:
+   - Documented M3 Expressive grid adaptive ratios, touch target considerations, and settings reorganization.
 
 ### 2026-09-25 — Antigravity (Gemini 3.8 Flash)
 

@@ -109,20 +109,23 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                             i += crossAxisCount
                           ) ...[
                             if (i > 0) const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                for (int j = 0; j < crossAxisCount; j++) ...[
-                                  if (j > 0) const SizedBox(width: 8),
-                                  Expanded(
-                                    child: (i + j < settings.length)
-                                        ? _GridToggleItem<T>(
-                                            setting: settings[i + j],
-                                            provider: provider,
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  for (int j = 0; j < crossAxisCount; j++) ...[
+                                    if (j > 0) const SizedBox(width: 8),
+                                    Expanded(
+                                      child: (i + j < settings.length)
+                                          ? _GridToggleItem<T>(
+                                              setting: settings[i + j],
+                                              provider: provider,
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ],
                         ],

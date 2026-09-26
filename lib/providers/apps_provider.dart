@@ -1891,9 +1891,22 @@ class AppsProvider with ChangeNotifier {
             sourceType: currentApp.sourceType,
           ),
         );
+        _scheduleIconBatchNotification();
       }
     }
   }
+
+  bool _iconBatchScheduled = false;
+
+  void _scheduleIconBatchNotification() {
+    if (_iconBatchScheduled) return;
+    _iconBatchScheduled = true;
+    Future.microtask(() {
+      _iconBatchScheduled = false;
+      notifyListeners();
+    });
+  }
+
 
   PackageInfo? _findInBulkInstalledMap(
     Map<String, PackageInfo> map,

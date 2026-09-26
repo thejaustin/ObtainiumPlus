@@ -35,6 +35,11 @@ class AppBehaviorSection extends StatelessWidget {
     final hasSwipe = _matches(tr('enableSwipeGestures')) ||
         _matches(tr('swipeRightAction')) ||
         _matches(tr('swipeLeftAction'));
+    final hasMotion = _matches(tr('animations')) ||
+        _matches(tr('animationSpeed')) ||
+        _matches(tr('disablePageTransitions'), isAdvanced: true) ||
+        _matches(tr('reversePageTransitions')) ||
+        _matches(tr('highlightTouchTargets'));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,38 +90,124 @@ class AppBehaviorSection extends StatelessWidget {
                   _matches(tr('swipeLeftAction')))
                 Consumer<BehaviorSettingsProvider>(
                   builder: (context, settings, child) {
-                    return AnimatedOpacity(
+                    return AnimatedSize(
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOutCubic,
-                      opacity: settings.enableSwipeGestures ? 1.0 : 0.4,
-                      child: AnimatedSize(
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOutCubic,
-                        child: IgnorePointer(
-                          ignoring: !settings.enableSwipeGestures,
-                          child: Column(
-                            children: [
-                              if (_matches(tr('swipeRightAction')))
-                                _buildSwipeActionDropdown(
-                                  context,
-                                  isRight: true,
-                                ),
-                              if (_matches(tr('swipeLeftAction')))
-                                _buildSwipeActionDropdown(
-                                  context,
-                                  isRight: false,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      child: settings.enableSwipeGestures
+                          ? Column(
+                              children: [
+                                if (_matches(tr('swipeRightAction')))
+                                  _buildSwipeActionDropdown(
+                                    context,
+                                    isRight: true,
+                                  ),
+                                if (_matches(tr('swipeLeftAction')))
+                                  _buildSwipeActionDropdown(
+                                    context,
+                                    isRight: false,
+                                  ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
                     );
                   },
                 ),
             ],
           ),
 
-        // 3. Discovery & Safety Group
+        // 3. Motion & Page Transitions Group
+        if (hasMotion)
+          Consumer<BehaviorSettingsProvider>(
+            builder: (context, behaviorSettings, child) {
+              return ExpressiveSettingsGroup(
+                title: isSearching ? null : tr('animations'),
+                persistKey: 'behaviorMotionTransitions',
+                icon: Icons.animation_rounded,
+                isExpandable: !isSearching,
+                initiallyExpanded: true,
+                children: [
+                  if (_matches(tr('animationSpeed')))
+                    ListTile(
+                      leading: const Icon(Icons.speed_outlined),
+                      title: Text(
+                        tr('animationSpeed'),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(
+                        '${(behaviorSettings.animationSpeedMultiplier * 100).round()}%',
+                      ),
+                      trailing: Container(
+                        constraints: const BoxConstraints(maxWidth: 120),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh
+                              .withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant
+                                .withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<double>(
+                            isExpanded: true,
+                            value: behaviorSettings.animationSpeedMultiplier,
+                            borderRadius: BorderRadius.circular(16),
+                            items: const [
+                              DropdownMenuItem(value: 0.5, child: Text('50%')),
+                              DropdownMenuItem(value: 0.75, child: Text('75%')),
+                              DropdownMenuItem(value: 1.0, child: Text('100%')),
+                              DropdownMenuItem(value: 1.5, child: Text('150%')),
+                              DropdownMenuItem(value: 2.0, child: Text('200%')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                AppHaptics.selectionClick();
+                                behaviorSettings.animationSpeedMultiplier = val;
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_matches(tr('disablePageTransitions'), isAdvanced: true))
+                    _buildFeatureToggle(
+                      context,
+                      icon: Icons.animation_outlined,
+                      title: tr('disablePageTransitions'),
+                      subtitle: tr('disablePageTransitionsDescription'),
+                      value: (s) => s.disablePageTransitions,
+                      onChanged: (s, v) => s.disablePageTransitions = v,
+                    ),
+                  if (_matches(tr('reversePageTransitions')) &&
+                      !behaviorSettings.disablePageTransitions)
+                    _buildFeatureToggle(
+                      context,
+                      icon: Icons.swap_horizontal_circle_outlined,
+                      title: tr('reversePageTransitions'),
+                      subtitle: tr('reversePageTransitionsDescription'),
+                      value: (s) => s.reversePageTransitions,
+                      onChanged: (s, v) => s.reversePageTransitions = v,
+                    ),
+                  if (_matches(tr('highlightTouchTargets')))
+                    _buildFeatureToggle(
+                      context,
+                      icon: Icons.touch_app_outlined,
+                      title: tr('highlightTouchTargets'),
+                      subtitle: tr('highlightTouchTargetsDescription'),
+                      value: (s) => s.highlightTouchTargets,
+                      onChanged: (s, v) => s.highlightTouchTargets = v,
+                    ),
+                ],
+              );
+            },
+          ),
+
+        // 4. Discovery & Safety Group
         _buildDiscoverySafetyGroup(context, isSearching),
       ],
     );
@@ -146,28 +237,49 @@ class AppBehaviorSection extends StatelessWidget {
                 : tr('swipeLeftActionDescription'),
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          trailing: DropdownButtonHideUnderline(
-            child: DropdownButton<AppSwipeAction>(
-              value: currentAction,
-              borderRadius: BorderRadius.circular(16),
-              items: AppSwipeAction.values
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(tr('action_${e.name}')),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  AppHaptics.selectionClick();
-                  if (isRight) {
-                    settings.swipeRightAction = value;
-                  } else {
-                    settings.swipeLeftAction = value;
+          trailing: Container(
+            constraints: const BoxConstraints(maxWidth: 140),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHigh
+                  .withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.4),
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<AppSwipeAction>(
+                isExpanded: true,
+                value: currentAction,
+                borderRadius: BorderRadius.circular(16),
+                items: AppSwipeAction.values
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          tr('action_${e.name}'),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    AppHaptics.selectionClick();
+                    if (isRight) {
+                      settings.swipeRightAction = value;
+                    } else {
+                      settings.swipeLeftAction = value;
+                    }
                   }
-                }
-              },
+                },
+              ),
             ),
           ),
         );
