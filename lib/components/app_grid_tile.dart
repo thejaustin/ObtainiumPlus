@@ -1,18 +1,20 @@
-import 'package:obtainium/utils/haptic_utils.dart';
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:obtainium/components/common/conditional_blur.dart';
-import 'dart:ui';
 
+/// A Material 3 Expressive grid tile for displaying apps with tonal elevation,
+/// dynamic spring-scale feedback, contextual action capsule, and rich metadata.
 class AppGridTile extends StatefulWidget {
   final AppInMemory appInMemory;
   final bool isSelected;
@@ -20,6 +22,7 @@ class AppGridTile extends StatefulWidget {
   final VoidCallback onLongPress;
   final bool hasUpdate;
   final bool isAmbiguous;
+  final Color? categoryColor;
 
   const AppGridTile({
     super.key,
@@ -29,6 +32,7 @@ class AppGridTile extends StatefulWidget {
     required this.onLongPress,
     this.hasUpdate = false,
     this.isAmbiguous = false,
+    this.categoryColor,
   });
 
   @override
@@ -77,33 +81,32 @@ class _AppGridTileState extends State<AppGridTile>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // --- ADAPTIVE LAYOUT DETECTION ---
+        // Adaptive horizontal layout detection (e.g. tablet landscape rows or 1-column grids)
         final bool isHorizontal =
             constraints.maxWidth / constraints.maxHeight > 1.5;
 
-        // Calculate responsive sizes based on available width
-        double availableWidth =
-            constraints.maxWidth - 24; // Account for padding
+        final double availableWidth = constraints.maxWidth - 20;
 
-        // Icon size: adaptive
-        double iconSize = isHorizontal
-            ? (constraints.maxHeight * 0.7).clamp(40.0, 100.0)
-            : (availableWidth * 0.65).clamp(40.0, 80.0);
+        // Adaptive icon sizing proportional to tile width
+        final double iconSize = isHorizontal
+            ? (constraints.maxHeight * 0.65).clamp(38.0, 80.0)
+            : (availableWidth * 0.52).clamp(38.0, 68.0);
 
         final plusSettings = context.watch<PlusSettingsProvider>();
         final viewSettings = context.watch<ViewSettingsProvider>();
+        final colorScheme = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
             ? plusSettings.plusHomeCornerRadius
             : plusSettings.plusGlobalCornerRadius;
-        // Radii follow the user's corner-radius setting like every other
-        // card (previously derived from icon size and ignored it).
-        double cardBorderRadius = CardMetrics.cardFor(
+        final double cardBorderRadius = CardMetrics.cardFor(
           baseRadius,
           constraints.maxWidth,
         );
-        double iconBorderRadius = CardMetrics.inner(baseRadius);
-        double padding = (availableWidth * 0.1).clamp(8.0, 12.0);
-        double badgeSize = (iconSize * 0.25).clamp(12.0, 18.0);
+        final double iconBorderRadius = CardMetrics.inner(baseRadius);
+        final double padding = (availableWidth * 0.08).clamp(6.0, 12.0);
+        final double badgeSize = (iconSize * 0.28).clamp(14.0, 20.0);
 
         if (widget.appInMemory.icon == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -113,14 +116,86 @@ class _AppGridTileState extends State<AppGridTile>
           });
         }
 
+        // Resolve category color for M3E accent ribbon
+        final Color? resolvedCategoryColor = widget.categoryColor ??
+            (widget.appInMemory.app.categories.isNotEmpty &&
+                    viewSettings.categories[widget.appInMemory.app.categories.first] != null
+                ? Color(viewSettings.categories[widget.appInMemory.app.categories.first]!)
+                : null);
+
         final curve = plusSettings.plusEnableEnhancedAnimations
             ? (plusSettings.plusEnableMaterialExpressive
                   ? AppConstants.expressiveStandard
                   : AppConstants.standardStandard)
             : Curves.easeInOut;
 
+        // Surface color tokens aligned with Material 3 Expressive
+        Color cardColor;
+        if (widget.isSelected) {
+          cardColor = colorScheme.primaryContainer.withValues(alpha: 0.85);
+        } else if (plusSettings.plusEnableGlassmorphism) {
+          cardColor = colorScheme.surface.withValues(
+            alpha: AppConstants.glassSurfaceAlpha,
+          );
+        } else if (widget.hasUpdate) {
+          cardColor = colorScheme.surfaceContainer;
+        } else {
+          cardColor = colorScheme.surfaceContainerLow;
+        }
+
+        // Border styling with M3E stroke hierarchy
+        Border cardBorder;
+        if (widget.isSelected) {
+          cardBorder = Border.all(color: colorScheme.primary, width: 2.0);
+        } else if (widget.appInMemory.app.pinned && plusSettings.plusPinnedBorderAccent) {
+          cardBorder = Border.all(
+            color: colorScheme.primary.withValues(alpha: 0.65),
+            width: 1.5,
+          );
+        } else if (widget.hasUpdate) {
+          cardBorder = Border.all(
+            color: (widget.isAmbiguous ? colorScheme.tertiary : colorScheme.primary)
+                .withValues(alpha: 0.45),
+            width: 1.2,
+          );
+        } else if (plusSettings.plusEnableGlassmorphism) {
+          cardBorder = Border.all(
+            color: colorScheme.onSurface.withValues(
+              alpha: AppConstants.glassBorderAlpha,
+            ),
+            width: 0.8,
+          );
+        } else {
+          cardBorder = Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 0.8,
+          );
+        }
+
+        List<BoxShadow>? cardShadow;
+        if (widget.isSelected) {
+          cardShadow = AppShadows.glow(
+            color: colorScheme.primary,
+            intensity: 0.5,
+          );
+        } else if (widget.hasUpdate) {
+          cardShadow = AppShadows.smooth(
+            color: widget.isAmbiguous ? colorScheme.tertiary : colorScheme.primary,
+            opacity: isDark ? 0.2 : 0.08,
+            blurFactor: 0.8,
+          );
+        } else if (!isDark) {
+          cardShadow = [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ];
+        }
+
         return AnimatedScale(
-          scale: _isPressed ? 0.95 : 1.0,
+          scale: _isPressed ? 0.96 : 1.0,
           duration: const Duration(milliseconds: 100),
           curve: curve,
           child: AnimatedContainer(
@@ -134,82 +209,25 @@ class _AppGridTileState extends State<AppGridTile>
                 : Curves.easeInOut,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(cardBorderRadius),
-              color: widget.isSelected
-                  ? Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer.withValues(alpha: 0.7)
-                  : widget.hasUpdate
-                  ? Theme.of(
-                      context,
-                    ).colorScheme.errorContainer.withValues(alpha: 0.12)
-                  : plusSettings.plusEnableGlassmorphism
-                  ? Theme.of(context).colorScheme.surface.withValues(
-                      alpha: AppConstants.glassSurfaceAlpha,
-                    )
-                  : Theme.of(context).colorScheme.surfaceContainerLow,
-              border: Border.all(
-                color: widget.isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : widget.hasUpdate
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.error.withValues(alpha: AppOpacity.low)
-                    : widget.appInMemory.app.pinned &&
-                          plusSettings.plusPinnedBorderAccent
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.55)
-                    : widget.appInMemory.app.pinned
-                    ? Theme.of(context).colorScheme.outlineVariant
-                    : plusSettings.plusEnableGlassmorphism
-                    ? Theme.of(context).colorScheme.onSurface.withValues(
-                        alpha: AppConstants.glassBorderAlpha,
-                      )
-                    : Theme.of(context).colorScheme.outline.withValues(
-                        alpha: 0.1,
-                      ),
-                width: widget.isSelected ||
-                        (widget.appInMemory.app.pinned &&
-                            plusSettings.plusPinnedBorderAccent) ||
-                        widget.hasUpdate
-                    ? 1.5
-                    : 0.8,
-              ),
-              boxShadow: widget.isSelected
-                  ? AppShadows.glow(
-                      color: Theme.of(context).colorScheme.primary,
-                      intensity: 0.6,
-                    )
-                  : widget.hasUpdate
-                  ? AppShadows.smooth(
-                      color: Theme.of(context).colorScheme.error,
-                      opacity: 0.08,
-                    )
-                  : Theme.of(context).brightness == Brightness.light
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
+              color: cardColor,
+              border: cardBorder,
+              boxShadow: cardShadow,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(cardBorderRadius),
               child: Stack(
                 children: [
-                  // Backdrop blur clipped to the card — must stay inside
-                  // ClipRRect or it blurs the whole screen behind the tile
+                  // 1. Backdrop blur (clipped inside card)
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned.fill(
                       child: ConditionalBlur(
                         enabled: true,
                         sigma: AppConstants.glassBlurSigma,
-                        child: Container(color: Colors.transparent),
+                        child: const SizedBox.expand(),
                       ),
                     ),
-                  // Glass sheen — top-left source-color tint, fading to transparent
+
+                  // 2. Glass sheen gradient
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned.fill(
                       child: Container(
@@ -218,10 +236,10 @@ class _AppGridTileState extends State<AppGridTile>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              _getSourceColor(context).withValues(alpha: 0.12),
-                              Colors.white.withValues(alpha: 0.06),
+                              _getSourceColor(context).withValues(alpha: 0.10),
+                              Colors.white.withValues(alpha: 0.05),
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.04),
+                              Colors.black.withValues(alpha: 0.03),
                             ],
                             stops: const [0.0, 0.2, 0.6, 1.0],
                           ),
@@ -229,7 +247,7 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
 
-                  // Top-left specular highlight streak
+                  // 3. Top specular highlight streak
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned(
                       top: 0,
@@ -248,234 +266,273 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
 
-                  // Quick Actions Menu
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: PopupMenuButton<String>(
-                        tooltip: tr('more'),
-                        icon: Icon(
-                          Icons.more_vert_rounded,
-                          size: 18,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  // 4. Category Accent Ribbon (M3E)
+                  if (plusSettings.plusCategoryAccentRibbon &&
+                      resolvedCategoryColor != null)
+                    Positioned(
+                      top: 0,
+                      left: cardBorderRadius * 0.5,
+                      right: cardBorderRadius * 0.5,
+                      child: Container(
+                        height: 3.5,
+                        decoration: BoxDecoration(
+                          color: resolvedCategoryColor,
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(3),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: resolvedCategoryColor.withValues(alpha: 0.4),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 150),
-                        onSelected: (value) {
-                          AppHaptics.selectionClick();
-                          final appsProvider = context.read<AppsProvider>();
-                          switch (value) {
-                            case 'togglePin':
-                              widget.appInMemory.app.pinned =
-                                  !widget.appInMemory.app.pinned;
-                              appsProvider.saveApps([widget.appInMemory.app]);
-                              break;
-                            case 'settings':
-                              appsProvider.openAppSettings(
-                                widget.appInMemory.app.id,
-                              );
-                              break;
-                            case 'copyUrl':
-                              Clipboard.setData(
-                                ClipboardData(text: widget.appInMemory.app.url),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(tr('copiedToClipboard')),
-                                ),
-                              );
-                              break;
-                            case 'remove':
-                              appsProvider.removeAppsWithModal(context, [
-                                widget.appInMemory.app,
-                              ]);
-                              break;
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'togglePin',
-                            child: ListTile(
-                              leading: Icon(
-                                widget.appInMemory.app.pinned
-                                    ? Icons.push_pin_rounded
-                                    : Icons.push_pin_outlined,
-                                size: 20,
-                              ),
-                              title: Text(
-                                widget.appInMemory.app.pinned
-                                    ? tr('unpin')
-                                    : tr('pin'),
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                              dense: true,
+                      ),
+                    ),
+
+                  // 5. Main Card Tap Target & Interactive Surface (InkWell)
+                  Positioned.fill(
+                    child: Semantics(
+                      label: _buildSemanticLabel(),
+                      button: true,
+                      selected: widget.isSelected,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            AppHaptics.selectionClick();
+                            widget.onTap();
+                          },
+                          onLongPress: () {
+                            AppHaptics.mediumImpact();
+                            widget.onLongPress();
+                          },
+                          onHighlightChanged: (highlighted) {
+                            setState(() => _isPressed = highlighted);
+                          },
+                          borderRadius: BorderRadius.circular(cardBorderRadius),
+                          splashColor: colorScheme.primary.withValues(alpha: 0.12),
+                          highlightColor:
+                              colorScheme.primary.withValues(alpha: 0.06),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: padding,
+                              vertical: padding + 2,
                             ),
+                            child: isHorizontal
+                                ? _buildHorizontalContent(
+                                    iconSize,
+                                    iconBorderRadius,
+                                    badgeSize,
+                                    plusSettings,
+                                    viewSettings,
+                                  )
+                                : _buildVerticalContent(
+                                    iconSize,
+                                    iconBorderRadius,
+                                    badgeSize,
+                                    plusSettings,
+                                    viewSettings,
+                                  ),
                           ),
-                          PopupMenuItem(
-                            value: 'settings',
-                            child: ListTile(
-                              leading: const Icon(
-                                Icons.settings_outlined,
-                                size: 20,
-                              ),
-                              title: Text(
-                                tr('settings'),
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                              dense: true,
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'copyUrl',
-                            child: ListTile(
-                              leading: const Icon(Icons.copy_rounded, size: 20),
-                              title: Text(
-                                tr('copyAppURL'),
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                              dense: true,
-                            ),
-                          ),
-                          const PopupMenuDivider(),
-                          PopupMenuItem(
-                            value: 'remove',
-                            child: ListTile(
-                              leading: Icon(
-                                Icons.delete_outline_rounded,
-                                color: Theme.of(context).colorScheme.error,
-                                size: 20,
-                              ),
-                              title: Text(
-                                tr('remove'),
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              dense: true,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
 
-                  // Pinned indicator overlay — top-left corner pin icon
+                  // 6. Pinned Indicator (Top-Left)
                   if (widget.appInMemory.app.pinned && !widget.isSelected)
                     Positioned(
                       top: 6,
                       left: 6,
                       child: Container(
-                        padding: const EdgeInsets.all(3),
+                        padding: const EdgeInsets.all(3.5),
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.15),
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.25),
+                            color: colorScheme.primary.withValues(alpha: 0.3),
                             width: 0.5,
                           ),
                         ),
                         child: Icon(
                           Icons.push_pin_rounded,
-                          size: 10,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.85),
+                          size: 11,
+                          color: colorScheme.primary,
                         ),
                       ),
                     ),
 
-                  // Repo moved warning indicator
+                  // 7. Repo Renamed Indicator
                   if (widget.appInMemory.app.hasPendingRepoRename)
                     Positioned(
                       top: 6,
-                      left: widget.appInMemory.app.pinned && !widget.isSelected
-                          ? 28
+                      left: (widget.appInMemory.app.pinned && !widget.isSelected)
+                          ? 30
                           : 6,
                       child: Tooltip(
                         message: tr('repoRenamed'),
                         child: Container(
-                          padding: const EdgeInsets.all(3),
+                          padding: const EdgeInsets.all(3.5),
                           decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .errorContainer
-                                .withValues(alpha: 0.85),
+                            color: colorScheme.errorContainer.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .error
-                                  .withValues(alpha: 0.4),
+                              color: colorScheme.error.withValues(alpha: 0.4),
                               width: 0.5,
                             ),
                           ),
                           child: Icon(
                             Icons.info_outline_rounded,
-                            size: 10,
-                            color: Theme.of(context).colorScheme.onErrorContainer,
+                            size: 11,
+                            color: colorScheme.onErrorContainer,
                           ),
                         ),
                       ),
                     ),
 
-                  Semantics(
-                    label: _buildSemanticLabel(),
-                    button: true,
-                    selected: widget.isSelected,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          AppHaptics.selectionClick();
-                          widget.onTap();
-                        },
-                        onLongPress: () {
-                          AppHaptics.mediumImpact();
-                          widget.onLongPress();
-                        },
-                        onHighlightChanged: (highlighted) {
-                          setState(() => _isPressed = highlighted);
-                        },
-                        borderRadius: BorderRadius.circular(cardBorderRadius),
-                        splashColor: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.12),
-                        highlightColor: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.06),
-                        child: Padding(
-                          padding: EdgeInsets.all(padding),
-                          child: isHorizontal
-                              ? _buildHorizontalContent(
-                                  iconSize,
-                                  iconBorderRadius,
-                                  badgeSize,
-                                  plusSettings,
-                                  viewSettings,
-                                )
-                              : _buildVerticalContent(
-                                  iconSize,
-                                  iconBorderRadius,
-                                  badgeSize,
-                                  plusSettings,
-                                  viewSettings,
+                  // 8. Multi-Select Checkmark OR 3-Dots Menu (Top-Right)
+                  if (widget.isSelected)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.primary.withValues(alpha: 0.4),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.check_rounded,
+                            size: 14,
+                            color: colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: PopupMenuButton<String>(
+                          tooltip: tr('more'),
+                          icon: Icon(
+                            Icons.more_vert_rounded,
+                            size: 18,
+                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 150),
+                          onSelected: (value) {
+                            AppHaptics.selectionClick();
+                            final appsProvider = context.read<AppsProvider>();
+                            switch (value) {
+                              case 'togglePin':
+                                widget.appInMemory.app.pinned =
+                                    !widget.appInMemory.app.pinned;
+                                appsProvider.saveApps([widget.appInMemory.app]);
+                                break;
+                              case 'settings':
+                                appsProvider.openAppSettings(
+                                  widget.appInMemory.app.id,
+                                );
+                                break;
+                              case 'copyUrl':
+                                Clipboard.setData(
+                                  ClipboardData(text: widget.appInMemory.app.url),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(tr('copiedToClipboard')),
+                                  ),
+                                );
+                                break;
+                              case 'remove':
+                                appsProvider.removeAppsWithModal(context, [
+                                  widget.appInMemory.app,
+                                ]);
+                                break;
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'togglePin',
+                              child: ListTile(
+                                leading: Icon(
+                                  widget.appInMemory.app.pinned
+                                      ? Icons.push_pin_rounded
+                                      : Icons.push_pin_outlined,
+                                  size: 20,
                                 ),
+                                title: Text(
+                                  widget.appInMemory.app.pinned
+                                      ? tr('unpin')
+                                      : tr('pin'),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'settings',
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.settings_outlined,
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  tr('settings'),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'copyUrl',
+                              child: ListTile(
+                                leading: const Icon(Icons.copy_rounded, size: 20),
+                                title: Text(
+                                  tr('copyAppURL'),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'remove',
+                              child: ListTile(
+                                leading: Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: colorScheme.error,
+                                  size: 20,
+                                ),
+                                title: Text(
+                                  tr('remove'),
+                                  style: TextStyle(
+                                    color: colorScheme.error,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                dense: true,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-
                 ],
               ),
             ),
@@ -492,22 +549,52 @@ class _AppGridTileState extends State<AppGridTile>
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
   ) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildIconStack(
-            iconSize,
-            iconBorderRadius,
-            badgeSize,
-            plusSettings,
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildIconStack(
+          iconSize,
+          iconBorderRadius,
+          badgeSize,
+          plusSettings,
+        ),
+        const SizedBox(height: 7),
+        // App name: up to 2 lines, centered with expressive typography
+        Text(
+          widget.appInMemory.name,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: (widget.appInMemory.app.pinned || widget.hasUpdate)
+                ? FontWeight.w700
+                : FontWeight.w600,
+            letterSpacing: -0.2,
+            height: 1.15,
+            color: colorScheme.onSurface,
           ),
-          const SizedBox(height: 8),
-          _buildAppInfo(plusSettings, viewSettings, TextAlign.center),
+        ),
+        // Metadata / Version Pill / Status
+        if (widget.hasUpdate) ...[
+          const SizedBox(height: 4),
+          _buildUpdateVersionPill(colorScheme),
+        ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
+          const SizedBox(height: 3),
+          _buildMetadataLine(colorScheme, viewSettings),
         ],
-      ),
+        // Tag chips
+        if (plusSettings.plusShowTagsInList &&
+            widget.appInMemory.app.tags.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _buildTagChips(colorScheme),
+        ],
+        // Download / checking progress indicator
+        _buildProgressIndicator(),
+      ],
     );
   }
 
@@ -526,12 +613,42 @@ class _AppGridTileState extends State<AppGridTile>
           badgeSize,
           plusSettings,
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 16),
         Expanded(
-          child: _buildAppInfo(plusSettings, viewSettings, TextAlign.start),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.appInMemory.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight:
+                      widget.appInMemory.app.pinned || widget.hasUpdate
+                          ? FontWeight.w700
+                          : FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              if (widget.hasUpdate) ...[
+                const SizedBox(height: 4),
+                _buildUpdateVersionPill(Theme.of(context).colorScheme),
+              ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
+                const SizedBox(height: 3),
+                _buildMetadataLine(
+                  Theme.of(context).colorScheme,
+                  viewSettings,
+                ),
+              ],
+              _buildProgressIndicator(),
+            ],
+          ),
         ),
         Icon(
           Icons.chevron_right_rounded,
+          size: 20,
           color: Theme.of(
             context,
           ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
@@ -550,7 +667,7 @@ class _AppGridTileState extends State<AppGridTile>
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Icon with layered depth shadow and subtle squircle container
+        // App icon container with layered depth shadow
         Hero(
           tag: 'app_icon_${widget.appInMemory.app.id}',
           child: Container(
@@ -561,25 +678,27 @@ class _AppGridTileState extends State<AppGridTile>
               borderRadius: BorderRadius.circular(iconBorderRadius),
               border: plusSettings.plusIconRimBorder
                   ? Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                       width: 1.0,
                     )
                   : Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.12),
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.15),
                       width: 0.5,
                     ),
               boxShadow: widget.hasUpdate
                   ? AppShadows.smooth(
-                      color: colorScheme.error,
-                      opacity: 0.14,
+                      color: widget.isAmbiguous
+                          ? colorScheme.tertiary
+                          : colorScheme.primary,
+                      opacity: 0.16,
+                      blurFactor: 0.8,
                     )
                   : AppShadows.smooth(
                       color: Colors.black,
-                      opacity: 0.1,
+                      opacity: 0.08,
                       blurFactor: 0.6,
                     ),
             ),
-
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               switchInCurve: Curves.easeIn,
@@ -603,11 +722,11 @@ class _AppGridTileState extends State<AppGridTile>
             ),
           ),
         ),
-        // Update badge — pulsing glow dot with arrow accent
+        // Update badge — pulsing glow circle on icon
         if (widget.hasUpdate)
           Positioned(
-            right: -5,
-            top: -5,
+            right: -4,
+            top: -4,
             child: AnimatedBuilder(
               animation: _pulseAnimation,
               builder: (context, child) {
@@ -659,177 +778,160 @@ class _AppGridTileState extends State<AppGridTile>
     final inst = app.installedVersion;
     final latest = app.latestVersion;
     if (widget.hasUpdate) {
-      return '${inst ?? '?'} → ${latest ?? '?'}';
+      return latest ?? inst ?? '';
     }
     return inst ?? tr('notInstalled');
   }
 
-  Widget _buildAppInfo(
-    PlusSettingsProvider plusSettings,
-    ViewSettingsProvider viewSettings,
-    TextAlign textAlign,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isCentered = textAlign == TextAlign.center;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment:
-          isCentered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-      children: [
-        // App name row with source badge
-        Row(
-          mainAxisAlignment:
-              isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
-          children: [
-            Flexible(
-              child: Text(
-                widget.appInMemory.name,
-                maxLines: 1,
-                textAlign: textAlign,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight:
-                      widget.appInMemory.app.pinned || widget.hasUpdate
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                  letterSpacing: -0.3,
-                  height: 1.1,
+  /// Interactive update pill with 1-tap download & install action
+  Widget _buildUpdateVersionPill(ColorScheme colorScheme) {
+    final app = widget.appInMemory.app;
+    final version = app.latestVersion?.isNotEmpty == true
+        ? '↓ ${app.latestVersion!}'
+        : tr('update');
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          AppHaptics.selectionClick();
+          context.read<AppsProvider>().downloadAndInstallLatestApps([
+            widget.appInMemory.app.id,
+          ], context);
+        },
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+          decoration: BoxDecoration(
+            color: (widget.isAmbiguous
+                    ? colorScheme.tertiaryContainer
+                    : colorScheme.primaryContainer)
+                .withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: (widget.isAmbiguous
+                      ? colorScheme.tertiary
+                      : colorScheme.primary)
+                  .withValues(alpha: 0.35),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.isAmbiguous
+                    ? Icons.help_outline_rounded
+                    : Icons.download_rounded,
+                size: 10,
+                color: widget.isAmbiguous
+                    ? colorScheme.onTertiaryContainer
+                    : colorScheme.onPrimaryContainer,
+              ),
+              const SizedBox(width: 3),
+              Flexible(
+                child: Text(
+                  version,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: widget.isAmbiguous
+                        ? colorScheme.onTertiaryContainer
+                        : colorScheme.onPrimaryContainer,
+                    fontFamily: 'monospace',
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 4),
-            _buildSourceBadge(context),
-          ],
+            ],
+          ),
         ),
-        // Author line
-        if (viewSettings.displayShowAuthor)
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
+      ),
+    );
+  }
+
+  Widget _buildMetadataLine(
+    ColorScheme colorScheme,
+    ViewSettingsProvider viewSettings,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildSourceBadge(context),
+        if (viewSettings.displayShowVersion &&
+            (widget.appInMemory.app.installedVersion != null ||
+                widget.appInMemory.installedInfo != null)) ...[
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              _getVersionText(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9.5,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ] else if (viewSettings.displayShowAuthor) ...[
+          const SizedBox(width: 4),
+          Flexible(
             child: Text(
               tr('byX', args: [widget.appInMemory.author]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textAlign: textAlign,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 letterSpacing: 0.1,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
               ),
             ),
           ),
-        // Version — pill styling when update available, plain otherwise
-        if (viewSettings.displayShowVersion)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: widget.hasUpdate
-                ? _buildUpdateVersionPill(colorScheme, isCentered)
-                : Text(
-                    _getVersionText(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: textAlign,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.65,
-                      ),
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-          ),
-        // Tag chips
-        if (plusSettings.plusShowTagsInList &&
-            widget.appInMemory.app.tags.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 5),
-            child: Wrap(
-              alignment: isCentered ? WrapAlignment.center : WrapAlignment.start,
-              spacing: 3,
-              runSpacing: 3,
-              children: widget.appInMemory.app.tags
-                  .take(2)
-                  .map(
-                    (tag) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.secondaryContainer.withValues(
-                          alpha: 0.35,
-                        ),
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(
-                          color: colorScheme.secondary.withValues(alpha: 0.15),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Text(
-                        tag,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.2,
-                          color: colorScheme.onSecondaryContainer.withValues(
-                            alpha: 0.85,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-        // Progress / checking indicator
-        _buildProgressIndicator(),
+        ],
       ],
     );
   }
 
-  /// Styled pill showing the version transition when an update is available.
-  Widget _buildUpdateVersionPill(ColorScheme colorScheme, bool isCentered) {
-    final app = widget.appInMemory.app;
-    final inst = app.installedVersion ?? '?';
-    final latest = app.latestVersion ?? '?';
-    return Align(
-      alignment: isCentered ? Alignment.center : Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-        decoration: BoxDecoration(
-          color: colorScheme.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(5),
-          border: Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.25),
-            width: 0.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.arrow_upward_rounded,
-              size: 8,
-              color: colorScheme.primary,
-            ),
-            const SizedBox(width: 3),
-            Flexible(
+  Widget _buildTagChips(ColorScheme colorScheme) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 3,
+      runSpacing: 3,
+      children: widget.appInMemory.app.tags
+          .take(2)
+          .map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 5,
+                vertical: 1.5,
+              ),
+              decoration: BoxDecoration(
+                color: colorScheme.secondaryContainer.withValues(
+                  alpha: 0.35,
+                ),
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(
+                  color: colorScheme.secondary.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
               child: Text(
-                '$inst → $latest',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.primary,
-                  fontFamily: 'monospace',
-                  letterSpacing: 0.1,
+                tag,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                  color: colorScheme.onSecondaryContainer.withValues(
+                    alpha: 0.85,
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
-      ),
+          )
+          .toList(),
     );
   }
 
@@ -858,14 +960,13 @@ class _AppGridTileState extends State<AppGridTile>
       iconData = Icons.code_rounded;
     }
 
-    // Use theme-aware color for dark mode legibility
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final badgeColor = isDark
-        ? colorScheme.primary.withValues(alpha: 0.8)
+        ? colorScheme.primary.withValues(alpha: 0.85)
         : color;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(4),
@@ -889,7 +990,7 @@ class _AppGridTileState extends State<AppGridTile>
           builder: (context, downloadProgress, child) {
             if (downloadProgress != null) {
               return Padding(
-                padding: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.only(top: 5),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -901,7 +1002,7 @@ class _AppGridTileState extends State<AppGridTile>
                               ? '${downloadProgress.toInt()}%'
                               : tr('installing'),
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 10,
+                            fontSize: 9.5,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -914,23 +1015,23 @@ class _AppGridTileState extends State<AppGridTile>
                             },
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 2),
-                              child: Icon(Icons.close_rounded, size: 14),
+                              child: Icon(Icons.close_rounded, size: 13),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     ExpressiveProgressIndicator(
                       value: downloadProgress >= 0 ? downloadProgress / 100 : null,
-                      height: 4,
+                      height: 3.5,
                     ),
                   ],
                 ),
               );
             }
             if (isChecking) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 8),
+              return const Padding(
+                padding: EdgeInsets.only(top: 6),
                 child: ExpressiveProgressIndicator(value: null, height: 2),
               );
             }
@@ -941,7 +1042,6 @@ class _AppGridTileState extends State<AppGridTile>
     );
   }
 
-  /// Builds a semantic label for screen readers
   String _buildSemanticLabel() {
     final StringBuffer label = StringBuffer(widget.appInMemory.name);
 

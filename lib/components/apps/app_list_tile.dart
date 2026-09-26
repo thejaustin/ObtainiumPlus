@@ -65,7 +65,6 @@ class AppListTile extends StatelessWidget {
       if (isAmbiguous) {
         return IconButton.filled(
           icon: const Icon(Icons.help_outline_rounded),
-          tooltip: tr('ambiguousUpdateTitle'),
           onPressed: () {
             AppHaptics.heavyImpact();
             showDialog(

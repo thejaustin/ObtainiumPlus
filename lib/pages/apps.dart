@@ -1,4 +1,5 @@
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/sideloading_notice.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
@@ -1645,23 +1646,31 @@ class AppsPageState extends State<AppsPage> {
       }
 
       if (isGrid) {
-        final width = MediaQuery.of(context).size.width;
-        final columnCount = viewSettings.gridColumnCount != 0
-            ? viewSettings.gridColumnCount
-            : width >= 600
-            ? 4
-            : width >= 400
-            ? 3
-            : 2;
+        final columnCount = GridMetrics.adaptiveColumns(
+          context,
+          preferred: viewSettings.gridColumnCount,
+        );
+        final bool showDetails = viewSettings.displayShowVersion ||
+            viewSettings.displayShowAuthor ||
+            plusSettings.plusShowTagsInList;
+        final double aspectRatio = GridMetrics.childAspectRatio(
+          columnCount: columnCount,
+          hasExtraDetails: showDetails,
+        );
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate((ctx, index) {
               final app = listedApps[index];
+              final categoryColor = app.app.categories.isNotEmpty &&
+                      viewSettings.categories[app.app.categories.first] != null
+                  ? Color(viewSettings.categories[app.app.categories.first]!)
+                  : null;
               return AppGridTile(
                 appInMemory: app,
                 isSelected: selectedAppIds.contains(app.app.id),
                 hasUpdate: existingUpdates.contains(app.app.id),
+                categoryColor: categoryColor,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
@@ -1696,9 +1705,9 @@ class AppsPageState extends State<AppsPage> {
             }, childCount: listedApps.length),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columnCount,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 0.8,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: aspectRatio,
             ),
           ),
         );

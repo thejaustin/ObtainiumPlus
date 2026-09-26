@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/apps/app_shortcuts_menu.dart';
 import 'package:obtainium/models/app_in_memory.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -32,33 +34,37 @@ class AppGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final appsProvider = context.watch<AppsProvider>();
     final isSelectionMode = appsProvider.isSelectionMode;
 
-    // Adaptive column count: If very few apps, make them larger
-    int columnCount = viewSettings.gridColumnCount == 0
-        ? _calculateAdaptiveColumns(context)
-        : viewSettings.gridColumnCount;
+    // Adaptive column count and M3E aspect ratio
+    int columnCount = GridMetrics.adaptiveColumns(
+      context,
+      preferred: viewSettings.gridColumnCount,
+    );
 
-    double childAspectRatio =
-        (viewSettings.displayShowVersion || viewSettings.displayShowAuthor)
-        ? 0.72
-        : 0.8;
+    final bool showDetails = viewSettings.displayShowVersion ||
+        viewSettings.displayShowAuthor ||
+        plusSettings.plusShowTagsInList;
+
+    double childAspectRatio = GridMetrics.childAspectRatio(
+      columnCount: columnCount,
+      hasExtraDetails: showDetails,
+    );
 
     if (apps.length <= 2 && viewSettings.gridColumnCount == 0) {
       columnCount = apps.length == 1 ? 1 : 2;
-      childAspectRatio = apps.length == 1
-          ? 2.5
-          : 1.0; // Wide for 1 app, square for 2
+      childAspectRatio = apps.length == 1 ? 2.5 : 1.0;
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.all(12), // Slightly more padding
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columnCount,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
           childAspectRatio: childAspectRatio,
         ),
         delegate: SliverChildBuilderDelegate(
@@ -80,6 +86,11 @@ class AppGridView extends StatelessWidget {
                   appsProvider.toggleAppSelection(app.app.id),
             );
 
+            final categoryColor = app.app.categories.isNotEmpty &&
+                    viewSettings.categories[app.app.categories.first] != null
+                ? Color(viewSettings.categories[app.app.categories.first]!)
+                : null;
+
             return RepaintBoundary(
               child: AppGridTile(
                 appInMemory: app,
@@ -87,6 +98,7 @@ class AppGridView extends StatelessWidget {
                     appsProvider.selectedApps.contains(app.app.id) ||
                     activeAppId == app.app.id,
                 hasUpdate: hasUpdate,
+                categoryColor: categoryColor,
                 onTap: () {
                   if (isSelectionMode) {
                     appsProvider.toggleAppSelection(app.app.id);

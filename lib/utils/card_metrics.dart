@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/widgets.dart';
 
 /// One radius system for the cards that compartmentalize apps —
 /// dashboard sub-cards, app grid tiles, Discover results, app icons.
@@ -22,4 +23,31 @@ class CardMetrics {
   /// proportional to the card so tight layouts stay card-shaped.
   static double cardFor(double base, double extent) =>
       min(card(base), extent * 0.25);
+}
+
+/// Standardized Material 3 Expressive layout calculations for app grids.
+class GridMetrics {
+  /// Calculates responsive column counts adapting to screen width breakpoints.
+  static int adaptiveColumns(BuildContext context, {int preferred = 0}) {
+    if (preferred > 0) return preferred;
+    final width = MediaQuery.of(context).size.width;
+    if (width >= 1200) return 6;
+    if (width >= 900) return 5;
+    if (width >= 600) return 4;
+    if (width >= 400) return 3;
+    return 2;
+  }
+
+  /// Calculates adaptive child aspect ratio guaranteeing zero vertical overflow
+  /// and optimal typography across phone and tablet screens.
+  static double childAspectRatio({
+    required int columnCount,
+    required bool hasExtraDetails,
+  }) {
+    if (columnCount <= 1) return 2.2;
+    if (columnCount == 2) return hasExtraDetails ? 0.80 : 0.88;
+    if (columnCount == 3) return hasExtraDetails ? 0.70 : 0.78;
+    if (columnCount == 4) return hasExtraDetails ? 0.65 : 0.72;
+    return hasExtraDetails ? 0.62 : 0.68;
+  }
 }

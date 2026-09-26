@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/category_icon_stack.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
 import 'package:obtainium/models/settings_enums.dart';
@@ -120,6 +121,15 @@ class CategorySections extends StatelessWidget {
         ? _calculateAdaptiveColumns(context)
         : settingsProvider.gridColumnCount;
 
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final bool showDetails = settingsProvider.displayShowVersion ||
+        settingsProvider.displayShowAuthor ||
+        plusSettings.plusShowTagsInList;
+    final double aspectRatio = GridMetrics.childAspectRatio(
+      columnCount: columnCount,
+      hasExtraDetails: showDetails,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -151,20 +161,16 @@ class CategorySections extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             addRepaintBoundaries: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columnCount,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio:
-                  (settingsProvider.displayShowVersion ||
-                      settingsProvider.displayShowAuthor)
-                  ? 0.72
-                  : 0.8,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: aspectRatio,
             ),
             itemCount: appsInCategory.length,
             itemBuilder: (context, appIndex) {
@@ -183,6 +189,7 @@ class CategorySections extends StatelessWidget {
                       ),
                 isAmbiguous:
                     app.app.additionalSettings['isAmbiguousUpdate'] == true,
+                categoryColor: categoryColor,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
