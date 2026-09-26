@@ -54,6 +54,12 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
    - **Removed Cluttered 3-Dots Kebab**: Removed the repetitive floating `...` button from every tile in favor of the rich `AppActionsContextMenu` bottom sheet (via long-press) and multi-select checkmark.
    - **Eliminated 60fps Ticker & Double Badge Clash**: Removed continuous `_pulseController` animation loop and redundant `↑` arrow badge, replacing them with a crisp, static M3 Expressive accent dot and a polished, interactive `[download icon] [version]` pill.
    - **Render Isolation**: Wrapped tiles in `RepaintBoundary` with `ValueKey(app.app.id)` and set `addRepaintBoundaries: true` in `SliverChildBuilderDelegate` for smooth 120 FPS scrolling across 150+ apps.
+4. **Material 3 Expressive Shape-Morphing Filter Section (`M3ExpressiveSegmentedFilter`)**:
+   - **Capsule Geometry**: Replaced squared-off `SegmentedButton` (`radius * 0.66`) with fluid pill capsule geometry (`CardMetrics.pill`), removing blocky borders that clashed with the Omnibar and cards.
+   - **Shape Morphing Active Indicator**: Implemented a responsive sliding indicator with `Easing.emphasizedDecelerate` (300ms) that smoothly tracks active segments with M3E depth and inner pill radii.
+   - **Dynamic Typography & State Transitions**: Integrated `AnimatedDefaultTextStyle` and `AnimatedSwitcher` for smooth font-weight (`FontWeight.w700` vs `FontWeight.w500`) and color morphing between active/inactive states.
+   - **Expressive Badging**: Added dynamic animated count badges on "Updates" that morph in when updates are available.
+   - **Sort/Filter Sheet Alignment**: Updated view mode segmented button in `SortFilterPanel` to `CardMetrics.pill` and quick filter chips to `StadiumBorder`.
 
 ### 2026-09-26 (Session 1) — Antigravity (Gemini 3.8 Flash)
 

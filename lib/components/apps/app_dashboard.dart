@@ -12,7 +12,7 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
-import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/apps/m3e_segmented_filter.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class AppDashboard extends StatefulWidget {
@@ -168,49 +168,19 @@ class _AppDashboardState extends State<AppDashboard>
               ),
             ),
 
-          // Filter mode segmented button — slides in after cards
+          // Filter mode M3 Expressive segmented filter — slides in after cards
           _animated(
             _segmentedAnim,
-            SizedBox(
-              width: double.infinity,
-              child: SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'all',
-                    label: Text(tr('all')),
-                    icon: const Icon(Icons.apps_rounded, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: 'updates',
-                    label: Text(tr('updates')),
-                    icon: const Icon(Icons.update_rounded, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: 'installed',
-                    label: Text(tr('installed')),
-                    icon: const Icon(Icons.install_mobile_rounded, size: 18),
-                  ),
-                ],
-                selected: {widget.currentFilterMode},
-                onSelectionChanged: (Set<String> selection) {
-                  AppHaptics.selectionClick();
-                  widget.onFilterChanged(selection.first);
-                },
-                showSelectedIcon: false,
-                style: SegmentedButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  selectedForegroundColor: colorScheme.onSecondaryContainer,
-                  selectedBackgroundColor: colorScheme.secondaryContainer,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(radius * 0.66),
-                  ),
-                  side: BorderSide(
-                    color: colorScheme.outline.withValues(
-                      alpha: settings.plusEnableGlassmorphism ? 0.3 : 0.15,
-                    ),
-                  ),
-                ),
-              ),
+            M3ExpressiveSegmentedFilter(
+              currentMode: widget.currentFilterMode,
+              onModeChanged: widget.onFilterChanged,
+              totalApps: totalApps,
+              updatesCount: updatesAvailable,
+              installedCount: apps
+                  .where((app) => app.app.installedVersion != null)
+                  .length,
+              radius: radius,
+              isGlass: settings.plusEnableGlassmorphism,
             ),
           ),
 

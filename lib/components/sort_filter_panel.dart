@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -419,7 +420,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             style: SegmentedButton.styleFrom(
               visualDensity: VisualDensity.comfortable,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(radius * 0.5),
+                borderRadius: BorderRadius.circular(CardMetrics.pill(radius)),
               ),
             ),
           ),
@@ -430,7 +431,6 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
   Widget _buildQuickFilterSection(ThemeData theme, double radius) {
     final statusFilter = widget.filter.statusFilter;
-    final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
 
     Widget buildChip(String label, bool selected, Function(bool) onSelected) {
       return FilterChip(
@@ -440,9 +440,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           AppHaptics.selectionClick();
           onSelected(v);
         },
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(itemRadius),
-        ),
+        shape: const StadiumBorder(),
       );
     }
 
