@@ -335,7 +335,16 @@ Future<void> _runObtainium() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => AppsProvider()),
+        ChangeNotifierProvider(
+          create: (context) => AppsProvider(
+            settingsProvider: sp,
+            plusSettingsProvider: plusSettings,
+            themeSettingsProvider: themeSettings,
+            behaviorSettingsProvider: behaviorSettings,
+            viewSettingsProvider: viewSettings,
+            updateSettingsProvider: updateSettings,
+          ),
+        ),
         ChangeNotifierProvider(create: (context) => sp),
         ChangeNotifierProvider(create: (context) => plusSettings),
         ChangeNotifierProvider(create: (context) => themeSettings),

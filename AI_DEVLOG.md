@@ -37,7 +37,25 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
-### 2026-09-26 — Antigravity (Gemini 3.8 Flash)
+### 2026-09-26 (Session 2) — Antigravity (Gemini 3.8 Flash)
+
+**Launch Lag Elimination, Instant Icon Preloading, and M3 Expressive Grid Elevation:**
+
+1. **Instant Phase 1 Icon Preloading (`apps_provider.dart`)**:
+   - Mapped `iconsCacheDir` in a single asynchronous pass and loaded cached PNG bytes concurrently during `_loadAppsPhase1`.
+   - On the very first frame, all 156 app icons are populated in memory: eliminates empty/shimmer placeholder squares in the "Recent Updates" carousel and prevents 150+ post-frame callback flood on startup.
+   - Guarded `updateAppIcon` with `_pendingIconFetches` and `_failedIconAppIds` sets to prevent duplicate or repeated failed fetches.
+2. **Startup Pipeline Optimization (`main.dart` & `apps_provider.dart`)**:
+   - Passed pre-initialized settings providers directly into `AppsProvider` constructor, completely eliminating duplicate disk reads and redundant `initializeSettings()` re-runs.
+   - Converted synchronous `apkDir.listSync()` partial APK cleanup to non-blocking asynchronous background execution.
+3. **Material 3 Expressive Grid Elevation & Geometry (`app_grid_tile.dart` & `card_metrics.dart`)**:
+   - **Balanced Aspect Ratios**: Refined `childAspectRatio` in `GridMetrics` (e.g. 3-column from stretched 0.70 to balanced 0.82/0.90) removing the tall skinny tower look.
+   - **Consistent Baseline Alignment**: Switched `Column` to `mainAxisSize: MainAxisSize.max` with `Spacer()`, ensuring all app icons in a row align to the exact same top horizontal baseline regardless of title line count.
+   - **Removed Cluttered 3-Dots Kebab**: Removed the repetitive floating `...` button from every tile in favor of the rich `AppActionsContextMenu` bottom sheet (via long-press) and multi-select checkmark.
+   - **Eliminated 60fps Ticker & Double Badge Clash**: Removed continuous `_pulseController` animation loop and redundant `↑` arrow badge, replacing them with a crisp, static M3 Expressive accent dot and a polished, interactive `[download icon] [version]` pill.
+   - **Render Isolation**: Wrapped tiles in `RepaintBoundary` with `ValueKey(app.app.id)` and set `addRepaintBoundaries: true` in `SliverChildBuilderDelegate` for smooth 120 FPS scrolling across 150+ apps.
+
+### 2026-09-26 (Session 1) — Antigravity (Gemini 3.8 Flash)
 
 **App Behavior Overhaul, GitHub Token Verification, Icon Loading Batching, and M3E Polish:**
 

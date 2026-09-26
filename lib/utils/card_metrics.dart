@@ -45,9 +45,9 @@ class GridMetrics {
     required bool hasExtraDetails,
   }) {
     if (columnCount <= 1) return 2.2;
-    if (columnCount == 2) return hasExtraDetails ? 0.80 : 0.88;
-    if (columnCount == 3) return hasExtraDetails ? 0.70 : 0.78;
-    if (columnCount == 4) return hasExtraDetails ? 0.65 : 0.72;
-    return hasExtraDetails ? 0.62 : 0.68;
+    if (columnCount == 2) return hasExtraDetails ? 0.88 : 0.98;
+    if (columnCount == 3) return hasExtraDetails ? 0.82 : 0.90;
+    if (columnCount == 4) return hasExtraDetails ? 0.78 : 0.86;
+    return hasExtraDetails ? 0.74 : 0.82;
   }
 }

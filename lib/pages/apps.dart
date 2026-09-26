@@ -1660,49 +1660,57 @@ class AppsPageState extends State<AppsPage> {
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate((ctx, index) {
-              final app = listedApps[index];
-              final categoryColor = app.app.categories.isNotEmpty &&
-                      viewSettings.categories[app.app.categories.first] != null
-                  ? Color(viewSettings.categories[app.app.categories.first]!)
-                  : null;
-              return AppGridTile(
-                appInMemory: app,
-                isSelected: selectedAppIds.contains(app.app.id),
-                hasUpdate: existingUpdates.contains(app.app.id),
-                categoryColor: categoryColor,
-                onTap: () {
-                  if (selectedAppIds.isNotEmpty) {
-                    toggleAppSelected(app.app);
-                  } else {
-                    AppHaptics.selectionClick();
-                    showDraggableModalBottomSheet(
-                      context: context,
-                      builder: (context, controller) => AppPage(
-                        appId: app.app.id,
-                        isModal: true,
-                        scrollController: controller,
-                      ),
-                    );
-                  }
-                },
-                onLongPress: () {
-                  if (selectedAppIds.isNotEmpty) {
-                    AppHaptics.selectionClick();
-                    toggleAppSelected(app.app);
-                  } else {
-                    AppHaptics.heavyImpact();
-                    AppActionsContextMenu.show(
-                      context,
-                      app,
-                      onEnterMultiSelect: () {
+            delegate: SliverChildBuilderDelegate(
+              (ctx, index) {
+                final app = listedApps[index];
+                final categoryColor = app.app.categories.isNotEmpty &&
+                        viewSettings.categories[app.app.categories.first] != null
+                    ? Color(viewSettings.categories[app.app.categories.first]!)
+                    : null;
+                return RepaintBoundary(
+                  key: ValueKey(app.app.id),
+                  child: AppGridTile(
+                    appInMemory: app,
+                    isSelected: selectedAppIds.contains(app.app.id),
+                    hasUpdate: existingUpdates.contains(app.app.id),
+                    categoryColor: categoryColor,
+                    onTap: () {
+                      if (selectedAppIds.isNotEmpty) {
                         toggleAppSelected(app.app);
-                      },
-                    );
-                  }
-                },
-              );
-            }, childCount: listedApps.length),
+                      } else {
+                        AppHaptics.selectionClick();
+                        showDraggableModalBottomSheet(
+                          context: context,
+                          builder: (context, controller) => AppPage(
+                            appId: app.app.id,
+                            isModal: true,
+                            scrollController: controller,
+                          ),
+                        );
+                      }
+                    },
+                    onLongPress: () {
+                      if (selectedAppIds.isNotEmpty) {
+                        AppHaptics.selectionClick();
+                        toggleAppSelected(app.app);
+                      } else {
+                        AppHaptics.heavyImpact();
+                        AppActionsContextMenu.show(
+                          context,
+                          app,
+                          onEnterMultiSelect: () {
+                            toggleAppSelected(app.app);
+                          },
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+              childCount: listedApps.length,
+              addRepaintBoundaries: true,
+              addAutomaticKeepAlives: false,
+            ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columnCount,
               mainAxisSpacing: 10,

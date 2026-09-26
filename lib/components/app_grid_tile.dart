@@ -39,43 +39,8 @@ class AppGridTile extends StatefulWidget {
   State<AppGridTile> createState() => _AppGridTileState();
 }
 
-class _AppGridTileState extends State<AppGridTile>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+class _AppGridTileState extends State<AppGridTile> {
   bool _isPressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-    if (widget.hasUpdate) {
-      _pulseController.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void didUpdateWidget(AppGridTile oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.hasUpdate && !oldWidget.hasUpdate) {
-      _pulseController.repeat(reverse: true);
-    } else if (!widget.hasUpdate && oldWidget.hasUpdate) {
-      _pulseController.stop();
-      _pulseController.reset();
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +73,8 @@ class _AppGridTileState extends State<AppGridTile>
         final double padding = (availableWidth * 0.08).clamp(6.0, 12.0);
         final double badgeSize = (iconSize * 0.28).clamp(14.0, 20.0);
 
-        if (widget.appInMemory.icon == null) {
+        if (widget.appInMemory.icon == null &&
+            widget.appInMemory.installedInfo != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && widget.appInMemory.icon == null) {
               context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
@@ -392,7 +358,7 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
 
-                  // 8. Multi-Select Checkmark OR 3-Dots Menu (Top-Right)
+                  // 8. Multi-Select Checkmark (Top-Right)
                   if (widget.isSelected)
                     Positioned(
                       top: 6,
@@ -419,119 +385,6 @@ class _AppGridTileState extends State<AppGridTile>
                           ),
                         ),
                       ),
-                    )
-                  else
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: PopupMenuButton<String>(
-                          tooltip: tr('more'),
-                          icon: Icon(
-                            Icons.more_vert_rounded,
-                            size: 18,
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 150),
-                          onSelected: (value) {
-                            AppHaptics.selectionClick();
-                            final appsProvider = context.read<AppsProvider>();
-                            switch (value) {
-                              case 'togglePin':
-                                widget.appInMemory.app.pinned =
-                                    !widget.appInMemory.app.pinned;
-                                appsProvider.saveApps([widget.appInMemory.app]);
-                                break;
-                              case 'settings':
-                                appsProvider.openAppSettings(
-                                  widget.appInMemory.app.id,
-                                );
-                                break;
-                              case 'copyUrl':
-                                Clipboard.setData(
-                                  ClipboardData(text: widget.appInMemory.app.url),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(tr('copiedToClipboard')),
-                                  ),
-                                );
-                                break;
-                              case 'remove':
-                                appsProvider.removeAppsWithModal(context, [
-                                  widget.appInMemory.app,
-                                ]);
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'togglePin',
-                              child: ListTile(
-                                leading: Icon(
-                                  widget.appInMemory.app.pinned
-                                      ? Icons.push_pin_rounded
-                                      : Icons.push_pin_outlined,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  widget.appInMemory.app.pinned
-                                      ? tr('unpin')
-                                      : tr('pin'),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                dense: true,
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'settings',
-                              child: ListTile(
-                                leading: const Icon(
-                                  Icons.settings_outlined,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  tr('settings'),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                dense: true,
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'copyUrl',
-                              child: ListTile(
-                                leading: const Icon(Icons.copy_rounded, size: 20),
-                                title: Text(
-                                  tr('copyAppURL'),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                dense: true,
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'remove',
-                              child: ListTile(
-                                leading: Icon(
-                                  Icons.delete_outline_rounded,
-                                  color: colorScheme.error,
-                                  size: 20,
-                                ),
-                                title: Text(
-                                  tr('remove'),
-                                  style: TextStyle(
-                                    color: colorScheme.error,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                dense: true,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                 ],
               ),
@@ -551,17 +404,18 @@ class _AppGridTileState extends State<AppGridTile>
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const SizedBox(height: 2),
         _buildIconStack(
           iconSize,
           iconBorderRadius,
           badgeSize,
           plusSettings,
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 8),
         // App name: up to 2 lines, centered with expressive typography
         Text(
           widget.appInMemory.name,
@@ -569,7 +423,7 @@ class _AppGridTileState extends State<AppGridTile>
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: 12.0,
             fontWeight: (widget.appInMemory.app.pinned || widget.hasUpdate)
                 ? FontWeight.w700
                 : FontWeight.w600,
@@ -578,22 +432,22 @@ class _AppGridTileState extends State<AppGridTile>
             color: colorScheme.onSurface,
           ),
         ),
+        const Spacer(),
         // Metadata / Version Pill / Status
         if (widget.hasUpdate) ...[
-          const SizedBox(height: 4),
           _buildUpdateVersionPill(colorScheme),
         ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
-          const SizedBox(height: 3),
           _buildMetadataLine(colorScheme, viewSettings),
         ],
         // Tag chips
         if (plusSettings.plusShowTagsInList &&
             widget.appInMemory.app.tags.isNotEmpty) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           _buildTagChips(colorScheme),
         ],
         // Download / checking progress indicator
         _buildProgressIndicator(),
+        const SizedBox(height: 2),
       ],
     );
   }
@@ -722,51 +576,24 @@ class _AppGridTileState extends State<AppGridTile>
             ),
           ),
         ),
-        // Update badge — pulsing glow circle on icon
+        // Update badge — crisp M3 Expressive accent dot on icon
         if (widget.hasUpdate)
           Positioned(
-            right: -4,
-            top: -4,
-            child: AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _pulseAnimation.value,
-                  child: Container(
-                    width: badgeSize,
-                    height: badgeSize,
-                    decoration: BoxDecoration(
-                      color: widget.isAmbiguous
-                          ? colorScheme.tertiary
-                          : colorScheme.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colorScheme.surface,
-                        width: 2,
-                      ),
-                      boxShadow: AppShadows.glow(
-                        color: widget.isAmbiguous
-                            ? colorScheme.tertiary
-                            : colorScheme.primary,
-                        intensity: (_pulseAnimation.value - 1.0) * 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: widget.isAmbiguous
-                          ? Icon(
-                              Icons.help_outline_rounded,
-                              size: badgeSize * 0.6,
-                              color: colorScheme.onTertiary,
-                            )
-                          : Icon(
-                              Icons.arrow_upward_rounded,
-                              size: badgeSize * 0.6,
-                              color: colorScheme.onPrimary,
-                            ),
-                    ),
-                  ),
-                );
-              },
+            right: 0,
+            top: 0,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: widget.isAmbiguous
+                    ? colorScheme.tertiary
+                    : colorScheme.primary,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colorScheme.surface,
+                  width: 2,
+                ),
+              ),
             ),
           ),
       ],
@@ -787,7 +614,7 @@ class _AppGridTileState extends State<AppGridTile>
   Widget _buildUpdateVersionPill(ColorScheme colorScheme) {
     final app = widget.appInMemory.app;
     final version = app.latestVersion?.isNotEmpty == true
-        ? '↓ ${app.latestVersion!}'
+        ? app.latestVersion!
         : tr('update');
     return Material(
       color: Colors.transparent,
@@ -800,18 +627,18 @@ class _AppGridTileState extends State<AppGridTile>
           ], context);
         },
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: (widget.isAmbiguous
                     ? colorScheme.tertiaryContainer
                     : colorScheme.primaryContainer)
-                .withValues(alpha: 0.9),
+                .withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: (widget.isAmbiguous
                       ? colorScheme.tertiary
                       : colorScheme.primary)
-                  .withValues(alpha: 0.35),
+                  .withValues(alpha: 0.4),
               width: 0.8,
             ),
           ),
@@ -822,19 +649,19 @@ class _AppGridTileState extends State<AppGridTile>
                 widget.isAmbiguous
                     ? Icons.help_outline_rounded
                     : Icons.download_rounded,
-                size: 10,
+                size: 11,
                 color: widget.isAmbiguous
                     ? colorScheme.onTertiaryContainer
                     : colorScheme.onPrimaryContainer,
               ),
-              const SizedBox(width: 3),
+              const SizedBox(width: 3.5),
               Flexible(
                 child: Text(
                   version,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 9.5,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: widget.isAmbiguous
                         ? colorScheme.onTertiaryContainer
