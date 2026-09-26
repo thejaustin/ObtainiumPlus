@@ -520,3 +520,24 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - **Wave animation + import** (`38b7ff3a`)
 - **ConditionalBlur arguments** (`4a243f8e`) — fixed parenthesis/args in `modal_utils.dart`
 - **Glassmorphic dialogs + wave progress** (`133105fb`)
+
+### 2026-09-26 — Antigravity CLI [Session 78e562a6]
+
+**Commits:** `57f9659b` (`feat: elevate app grid with Material 3 Expressive styling, adaptive aspect ratios, and category ribbons`), `c4fa6793` (`v1.6.10-p5`)
+
+**Done:**
+
+*Material 3 Expressive Grid Elevation (`AppGridTile`, `GridMetrics`):*
+- **Adaptive Proportions & Aspect Ratios**: Added `GridMetrics.adaptiveColumns` and `GridMetrics.childAspectRatio` adapting dynamically from 2 to 6 columns based on screen width, active details (version, author, tags), eliminating content squishing and layout overflows.
+- **Stack Hit-Test Hierarchy Correction**: Moved `InkWell` underneath top-corner contextual controls so that the 3-dots popup menu and pinned badges immediately capture gestures without being masked by the full card touch target.
+- **M3E Surface Tones**: Switched resting state to `surfaceContainerLow`, selected state to `primaryContainer` (85% alpha) with primary border, and update state to `surfaceContainer` with subtle primary accent border glow.
+- **Category Accent Ribbon**: Added top curved indicator ribbon matching the app's assigned category color (`plusCategoryAccentRibbon`).
+- **Interactive 1-Tap Update Pill**: Embedded a stadium-style download pill (`↓ 2.4.0`) that immediately triggers app download and installation on tap with tactile feedback.
+- **Multi-Select Checkmark Badge**: Added expressive checkmark pill badge in top-right when tile is selected.
+- **Typography & Source Badge**: Centered app title allowing 2 lines (`height: 1.15`), and aligned source badge inline with metadata.
+
+*CI & Release Verification:*
+- Fixed duplicate tooltip argument in `AppListTile` that broke CI run `#36194357219`.
+- CI pipeline verified green: `Lint and Test`, `Build and Release` (`36214682585`), and auto-bumped to `v1.6.10-p5`.
+- Successfully deployed `app-release.apk` to connected test device via ADB loopback.
+
