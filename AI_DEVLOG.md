@@ -37,6 +37,17 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-26 (Session 3) — Claude Sonnet 4.6 (Thinking)
+
+**M3 Expressive Shape-Morphing Filter Verified & Deployed (v1.6.10-p10):**
+
+1. **Deployed `M3ExpressiveSegmentedFilter` to device**:
+   - Released as `v1.6.10-p10` via GitHub Actions CI (Lint ✓, Analyze ✓, Test ✓, Build ✓).
+   - Sideloaded via `adb install -r -d` from `v1.6.10-p10` release APK.
+   - Live device verification: pill-shaped All/Updates/Installed filter bar renders correctly, `17` updates badge appears dynamically in the Updates tab capsule.
+2. **Fixed import regression** (`fix: restore app_constants import in app_dashboard.dart`):
+   - When swapping the old `SegmentedButton` for `M3ExpressiveSegmentedFilter`, the `dart:ui` import was accidentally replaced with `m3e_segmented_filter.dart`. This broke `AppOpacity` and `AppShadows` lookups used by the `_buildRecentUpdateIcon` and `_buildBatchActionsHub` methods. Restored both imports.
+
 ### 2026-09-26 (Session 2) — Antigravity (Gemini 3.8 Flash)
 
 **Launch Lag Elimination, Instant Icon Preloading, and M3 Expressive Grid Elevation:**
