@@ -12,6 +12,7 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/apps/m3e_segmented_filter.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
