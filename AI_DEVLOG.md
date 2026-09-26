@@ -56,6 +56,9 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
    - Integrated animation speed multiplier (50%–200%) and page transition toggles directly into the Behavior tab matching documentation.
 5. **Documentation Alignment (`User-Guide.md`)**:
    - Documented M3 Expressive grid adaptive ratios, touch target considerations, and settings reorganization.
+6. **CI Verification & Release (`v1.6.10-p7`)**:
+   - Pushed commit `f6e10da1`, CI run `36249098935` passed all checks (`Flutter Analyze`, `Flutter Test`, `Build APK`).
+   - GitHub Release `v1.6.10-p7` automatically published and local repo rebased to auto-bump commit `b3fa6197`.
 
 ### 2026-09-25 — Antigravity (Gemini 3.8 Flash)
 
