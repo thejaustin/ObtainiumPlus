@@ -18,6 +18,10 @@ class CardMetrics {
   /// thumbnails, inner buttons) — reads as concentric with [card].
   static double inner(double base) => (base * 0.5).clamp(8.0, 16.0);
 
+  /// Radius for pill-shaped elements (segmented filter bars, capsule chips, badges)
+  /// adhering to Material 3 Expressive guidelines.
+  static double pill([double base = 28.0]) => max(24.0, base).clamp(24.0, 32.0);
+
   /// Outer radius for cards whose size is driven by a measured extent
   /// (e.g. grid tiles sized by column count): the user's radius, kept
   /// proportional to the card so tight layouts stay card-shaped.
