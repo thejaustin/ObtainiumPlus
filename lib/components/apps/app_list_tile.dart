@@ -416,88 +416,90 @@ class AppListTile extends StatelessWidget {
               horizontal: isCompact ? 4 : 8,
               vertical: isCompact ? 2 : 6,
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onLongPress: onLongPress,
-                onTap: onTap,
+            child: AnimatedContainer(
+              duration: Duration(
+                milliseconds: plusSettings.plusEnableEnhancedAnimations
+                    ? 250
+                    : 0,
+              ),
+              curve: AppConstants.expressiveStandard,
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(radius),
-                child: AnimatedContainer(
-                  duration: Duration(
-                    milliseconds: plusSettings.plusEnableEnhancedAnimations
-                        ? 250
-                        : 0,
-                  ),
-                  curve: AppConstants.expressiveStandard,
-                  decoration: BoxDecoration(
+                color: isSelected
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withValues(alpha: 0.7)
+                    : hasUpdate
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                          .withValues(
+                            alpha: plusSettings.plusEnableGlassmorphism
+                                ? 0.35
+                                : (isCompact ? 0.15 : 0.25),
+                          )
+                    : appInMemory.app.pinned
+                    ? Theme.of(context).colorScheme.surfaceContainerHighest
+                          .withValues(
+                            alpha: plusSettings.plusEnableGlassmorphism
+                                ? 0.45
+                                : AppOpacity.moderate,
+                          )
+                    : plusSettings.plusEnableGlassmorphism
+                    ? Theme.of(context).colorScheme.surface.withValues(
+                        alpha: AppConstants.glassSurfaceAlpha,
+                      )
+                    : Theme.of(context).colorScheme.surfaceContainerLow,
+                border: Border.all(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : hasUpdate
+                      ? Theme.of(context).colorScheme.secondary.withValues(
+                          alpha: 0.45,
+                        )
+                      : appInMemory.app.pinned &&
+                            plusSettings.plusPinnedBorderAccent
+                      ? Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.55)
+                      : appInMemory.app.pinned
+                      ? Theme.of(context).colorScheme.outlineVariant
+                      : plusSettings.plusEnableGlassmorphism
+                      ? Theme.of(context).colorScheme.onSurface.withValues(
+                          alpha: AppConstants.glassBorderAlpha,
+                        )
+                      : Theme.of(context)
+                          .colorScheme
+                          .outlineVariant
+                          .withValues(alpha: 0.35),
+                  width: isSelected ||
+                          (appInMemory.app.pinned &&
+                              plusSettings.plusPinnedBorderAccent) ||
+                          (hasUpdate && !isCompact)
+                      ? 1.5
+                      : 1.0,
+                ),
+                boxShadow: isSelected
+                    ? AppShadows.glow(
+                        color: Theme.of(context).colorScheme.primary,
+                        intensity: 0.6,
+                      )
+                    : hasUpdate && !isCompact
+                    ? AppShadows.smooth(
+                        color: Theme.of(context).colorScheme.secondary,
+                        opacity: 0.08,
+                      )
+                    : null,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(radius),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onLongPress: onLongPress,
+                    onTap: onTap,
                     borderRadius: BorderRadius.circular(radius),
-                    color: isSelected
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer.withValues(alpha: 0.7)
-                        : hasUpdate
-                        ? Theme.of(context).colorScheme.secondaryContainer
-                              .withValues(
-                                alpha: plusSettings.plusEnableGlassmorphism
-                                    ? 0.35
-                                    : (isCompact ? 0.15 : 0.25),
-                              )
-                        : appInMemory.app.pinned
-                        ? Theme.of(context).colorScheme.surfaceContainerHighest
-                              .withValues(
-                                alpha: plusSettings.plusEnableGlassmorphism
-                                    ? 0.45
-                                    : AppOpacity.moderate,
-                              )
-                        : plusSettings.plusEnableGlassmorphism
-                        ? Theme.of(context).colorScheme.surface.withValues(
-                            alpha: AppConstants.glassSurfaceAlpha,
-                          )
-                        : Theme.of(context).colorScheme.surfaceContainerLow,
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : hasUpdate
-                          ? Theme.of(context).colorScheme.secondary.withValues(
-                              alpha: 0.45,
-                            )
-                          : appInMemory.app.pinned &&
-                                plusSettings.plusPinnedBorderAccent
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.55)
-                          : appInMemory.app.pinned
-                          ? Theme.of(context).colorScheme.outlineVariant
-                          : plusSettings.plusEnableGlassmorphism
-                          ? Theme.of(context).colorScheme.onSurface.withValues(
-                              alpha: AppConstants.glassBorderAlpha,
-                            )
-                          : Theme.of(context)
-                              .colorScheme
-                              .outlineVariant
-                              .withValues(alpha: 0.35),
-                      width: isSelected ||
-                              (appInMemory.app.pinned &&
-                                  plusSettings.plusPinnedBorderAccent) ||
-                              (hasUpdate && !isCompact)
-                          ? 1.5
-                          : 1.0,
-                    ),
-                    boxShadow: isSelected
-                        ? AppShadows.glow(
-                            color: Theme.of(context).colorScheme.primary,
-                            intensity: 0.6,
-                          )
-                        : hasUpdate && !isCompact
-                        ? AppShadows.smooth(
-                            color: Theme.of(context).colorScheme.secondary,
-                            opacity: 0.08,
-                          )
-                        : null,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(radius),
+                    splashColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                    highlightColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
                     child: Stack(
                       children: [
                         if (plusSettings.plusEnableGlassmorphism)
@@ -862,13 +864,13 @@ class AppListTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
         decoration: BoxDecoration(
-          color: colorScheme.secondary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(5),
+          color: colorScheme.secondary.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
           border: Border.all(
-            color: colorScheme.secondary.withValues(alpha: 0.28),
-            width: 0.5,
+            color: colorScheme.secondary.withValues(alpha: 0.32),
+            width: 0.6,
           ),
         ),
         child: Row(
@@ -876,14 +878,14 @@ class AppListTile extends StatelessWidget {
           children: [
             Icon(
               Icons.arrow_upward_rounded,
-              size: 8,
+              size: 9,
               color: colorScheme.secondary,
             ),
             const SizedBox(width: 3),
             Text(
               '$inst → $latest',
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 9.5,
                 fontWeight: FontWeight.w700,
                 color: colorScheme.secondary,
                 fontFamily: 'monospace',

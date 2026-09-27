@@ -77,9 +77,11 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
 
   @override
   Widget build(BuildContext context) {
-    final plusSettings = context.watch<PlusSettingsProvider>();
+    final plusEnableAnimations = context.select<PlusSettingsProvider, bool>(
+      (p) => p.plusEnableEnhancedAnimations,
+    );
 
-    if (!plusSettings.plusEnableEnhancedAnimations ||
+    if (!plusEnableAnimations ||
         (widget.onTap == null && widget.onLongPress == null)) {
       // Just return child if animation disabled. We assume the child has its own onTap logic (like InkWell).
       return widget.child;
@@ -91,10 +93,11 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
       onPointerCancel: _onPointerCancel,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
+        child: widget.child,
         builder: (context, child) {
           return Transform.scale(
             scale: _scaleAnimation.value,
-            child: widget.child,
+            child: child,
           );
         },
       ),

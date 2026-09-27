@@ -32,8 +32,10 @@ class AppListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
     final plusEnableSwipeActions = plusSettings.plusEnableSwipeActions;
     final appsProvider = context.watch<AppsProvider>();
+    final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
     final width = MediaQuery.of(context).size.width;
     final horizontalPadding = width > 800 ? (width - 800) / 2 : 0.0;
     final double verticalPadding = apps.length <= 3 ? 24.0 : 8.0;
@@ -42,17 +44,10 @@ class AppListView extends StatelessWidget {
     final unpinnedApps = apps.where((a) => !a.app.pinned).toList();
 
     Widget _buildAppItem(AppInMemory app, bool isPinned, int index) {
-      final inst = app.app.installedVersion;
-      final latest = app.app.latestVersion;
-      final hasUpdate = AppUpdateService.areVersionsDifferent(
-        app.app,
-        inst,
-        latest,
-      );
+      final hasUpdate = pendingUpdates.contains(app.app.id);
       // Swipe surfaces use scheme roles instead of raw palette colors so
       // they harmonize with Material You dynamic color in both brightnesses
       final colorScheme = Theme.of(context).colorScheme;
-      final viewSettings = context.watch<ViewSettingsProvider>();
       final isCompact = viewSettings.appListDensity == AppListDensity.compact;
       final radius = plusSettings.plusOverrideIndividualCornerRadius
           ? plusSettings.plusHomeCornerRadius
