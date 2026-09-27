@@ -37,6 +37,26 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-27 (Session 6) — Antigravity (Gemini 3.8 Flash)
+
+**Instant Triple-Partition Filter Memoization & M3E Direct 1-Tap Install Action (v1.6.10-p15):**
+
+1. **Instantaneous 0 ms Segmented Filter Switching (`lib/pages/apps.dart`)**:
+   - Decoupled `filter.statusFilter` from `baseFilterKey`. Previously, toggling between "All", "Updates", and "Installed" invalidated the entire memoization cache, forcing an expensive multi-pass filter, sort, and pin loop on every tap.
+   - Implemented pre-partitioned memoization (`_memoAllApps`, `_memoUpdatesApps`, `_memoInstalledApps`). The partition lists are computed once whenever search query or sort order changes, and subsequent toggles between "All", "Updates", and "Installed" are instantaneous O(1) assignments.
+   - Accurately filters the listed apps according to the active status filter mode.
+
+2. **M3 Expressive Direct "Install" Action Pill (`lib/components/apps/app_list_tile.dart`)**:
+   - Added direct 1-tap `getInstallButton()` for uninstalled non-trackonly apps in `AppListTile`.
+   - Utilizes M3 Expressive capsule geometry (`StadiumBorder()`), primary container tonal color mapping (`primaryContainer` / `onPrimaryContainer`), and responsive touch scaling (`ScaleTouchWrapper`).
+   - Adapts gracefully between standard and compact density layouts.
+
+3. **M3 Expressive Grid Install & Update Action Capsules (`lib/components/app_grid_tile.dart`)**:
+   - Added `_buildInstallPill` in `AppGridTile` for uninstalled apps with full 1-tap download and installation capability.
+   - Upgraded both `_buildUpdateVersionPill` and `_buildInstallPill` to use `CardMetrics.pillRadius` capsule styling and responsive touch feedback via `ScaleTouchWrapper`.
+
+---
+
 ### 2026-09-27 (Session 5) — Antigravity (Gemini 3.8 Flash)
 
 **List & Grid Jitter Elimination, M3E Pill Badging & Touch Responsiveness (v1.6.10-p14):**

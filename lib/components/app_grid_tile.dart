@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -436,6 +437,9 @@ class _AppGridTileState extends State<AppGridTile> {
         // Metadata / Version Pill / Status
         if (widget.hasUpdate) ...[
           _buildUpdateVersionPill(colorScheme),
+        ] else if (widget.appInMemory.app.installedVersion == null &&
+            widget.appInMemory.app.additionalSettings['trackOnly'] != true) ...[
+          _buildInstallPill(colorScheme),
         ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
           _buildMetadataLine(colorScheme, viewSettings),
         ],
@@ -489,6 +493,10 @@ class _AppGridTileState extends State<AppGridTile> {
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
                 _buildUpdateVersionPill(Theme.of(context).colorScheme),
+              ] else if (widget.appInMemory.app.installedVersion == null &&
+                  widget.appInMemory.app.additionalSettings['trackOnly'] != true) ...[
+                const SizedBox(height: 4),
+                _buildInstallPill(Theme.of(context).colorScheme),
               ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
                 const SizedBox(height: 3),
                 _buildMetadataLine(
@@ -616,62 +624,117 @@ class _AppGridTileState extends State<AppGridTile> {
     final version = app.latestVersion?.isNotEmpty == true
         ? app.latestVersion!
         : tr('update');
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          AppHaptics.selectionClick();
-          context.read<AppsProvider>().downloadAndInstallLatestApps([
-            widget.appInMemory.app.id,
-          ], context);
-        },
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: (widget.isAmbiguous
-                    ? colorScheme.tertiaryContainer
-                    : colorScheme.primaryContainer)
-                .withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
+    return ScaleTouchWrapper(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+          onTap: () {
+            AppHaptics.selectionClick();
+            context.read<AppsProvider>().downloadAndInstallLatestApps([
+              widget.appInMemory.app.id,
+            ], context);
+          },
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
               color: (widget.isAmbiguous
-                      ? colorScheme.tertiary
-                      : colorScheme.primary)
-                  .withValues(alpha: 0.4),
-              width: 0.8,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                widget.isAmbiguous
-                    ? Icons.help_outline_rounded
-                    : Icons.download_rounded,
-                size: 11,
-                color: widget.isAmbiguous
-                    ? colorScheme.onTertiaryContainer
-                    : colorScheme.onPrimaryContainer,
+                      ? colorScheme.tertiaryContainer
+                      : colorScheme.secondaryContainer)
+                  .withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+              border: Border.all(
+                color: (widget.isAmbiguous
+                        ? colorScheme.tertiary
+                        : colorScheme.secondary)
+                    .withValues(alpha: 0.4),
+                width: 0.8,
               ),
-              const SizedBox(width: 3.5),
-              Flexible(
-                child: Text(
-                  version,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: widget.isAmbiguous
-                        ? colorScheme.onTertiaryContainer
-                        : colorScheme.onPrimaryContainer,
-                    fontFamily: 'monospace',
-                    letterSpacing: 0.1,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  widget.isAmbiguous
+                      ? Icons.help_outline_rounded
+                      : Icons.download_rounded,
+                  size: 11,
+                  color: widget.isAmbiguous
+                      ? colorScheme.onTertiaryContainer
+                      : colorScheme.onSecondaryContainer,
+                ),
+                const SizedBox(width: 3.5),
+                Flexible(
+                  child: Text(
+                    version,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: widget.isAmbiguous
+                          ? colorScheme.onTertiaryContainer
+                          : colorScheme.onSecondaryContainer,
+                      fontFamily: 'monospace',
+                      letterSpacing: 0.1,
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Interactive direct install pill with 1-tap download & install action (M3E)
+  Widget _buildInstallPill(ColorScheme colorScheme) {
+    return ScaleTouchWrapper(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+          onTap: () {
+            AppHaptics.selectionClick();
+            context.read<AppsProvider>().downloadAndInstallLatestApps([
+              widget.appInMemory.app.id,
+            ], context);
+          },
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.4),
+                width: 0.8,
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.download_rounded,
+                  size: 11,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+                const SizedBox(width: 3.5),
+                Flexible(
+                  child: Text(
+                    tr('install'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onPrimaryContainer,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

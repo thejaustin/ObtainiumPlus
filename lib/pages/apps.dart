@@ -208,10 +208,11 @@ class AppsPageState extends State<AppsPage> {
   // Memoization fields to make builds and scrolling instantaneous for large app lists
   int? _memoAppsRevision;
   int? _memoAppsCount;
-  String? _memoFilterKey;
+  String? _memoBaseFilterKey;
   String? _memoSortKey;
-  List<AppInMemory>? _memoListedApps;
-  Set<String>? _memoListedAppIdSet;
+  List<AppInMemory>? _memoAllApps;
+  List<AppInMemory>? _memoUpdatesApps;
+  List<AppInMemory>? _memoInstalledApps;
   Set<String>? _memoExistingUpdates;
   List<String>? _memoNewInstalls;
 
@@ -291,17 +292,17 @@ class AppsPageState extends State<AppsPage> {
       });
     }
 
-    final filterKey =
-        '${filter.nameFilter}|${filter.authorFilter}|${filter.idFilter}|${filter.statusFilter.join(",")}|${filter.categoryFilter.join(",")}|${filter.tagFilter.join(",")}|${filter.sourceFilter}|${filter.includeUptodate}|${filter.includeNonInstalled}|$activeTag';
+    final baseFilterKey =
+        '${filter.nameFilter}|${filter.authorFilter}|${filter.idFilter}|${filter.categoryFilter.join(",")}|${filter.tagFilter.join(",")}|${filter.sourceFilter}|${filter.includeUptodate}|${filter.includeNonInstalled}|$activeTag';
     final sortKey =
         '${viewSettings.sortColumn.name}|${viewSettings.sortOrder.name}|${viewSettings.pinUpdates}|${viewSettings.buryNonInstalled}';
     final appsRevision = appsProvider.appsRevision;
     final appsCount = appsProvider.apps.length;
 
-    final canReuse = _memoListedApps != null &&
+    final canReuse = _memoAllApps != null &&
         _memoAppsRevision == appsRevision &&
         _memoAppsCount == appsCount &&
-        _memoFilterKey == filterKey &&
+        _memoBaseFilterKey == baseFilterKey &&
         _memoSortKey == sortKey;
 
     late final Set<String> listedAppIdSet;
@@ -309,8 +310,6 @@ class AppsPageState extends State<AppsPage> {
     late final List<String> newInstalls;
 
     if (canReuse) {
-      listedApps = _memoListedApps!;
-      listedAppIdSet = _memoListedAppIdSet!;
       existingUpdates = _memoExistingUpdates!;
       newInstalls = _memoNewInstalls!;
     } else {
@@ -416,7 +415,7 @@ class AppsPageState extends State<AppsPage> {
       newInstalls = pending.newInstalls; // List<String>
 
       if (viewSettings.pinUpdates) {
-        var temp = [];
+        var temp = <AppInMemory>[];
         listedApps = listedApps.where((sa) {
           if (existingUpdates.contains(sa.app.id)) {
             temp.add(sa);
@@ -428,7 +427,7 @@ class AppsPageState extends State<AppsPage> {
       }
 
       if (viewSettings.buryNonInstalled) {
-        var temp = [];
+        var temp = <AppInMemory>[];
         listedApps = listedApps.where((sa) {
           if (sa.app.installedVersion == null) {
             temp.add(sa);
@@ -439,9 +438,9 @@ class AppsPageState extends State<AppsPage> {
         listedApps = [...listedApps, ...temp];
       }
 
-      var tempRenamed = [];
-      var tempPinned = [];
-      var tempNotPinned = [];
+      var tempRenamed = <AppInMemory>[];
+      var tempPinned = <AppInMemory>[];
+      var tempNotPinned = <AppInMemory>[];
       for (var a in listedApps) {
         if (a.app.hasPendingRepoRename) {
           tempRenamed.add(a);
@@ -452,18 +451,46 @@ class AppsPageState extends State<AppsPage> {
         }
       }
       listedApps = [...tempRenamed, ...tempPinned, ...tempNotPinned];
-      listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
 
-      // Store in memo cache
+      // Store pre-partitioned lists in memo cache
       _memoAppsRevision = appsRevision;
       _memoAppsCount = appsCount;
-      _memoFilterKey = filterKey;
+      _memoBaseFilterKey = baseFilterKey;
       _memoSortKey = sortKey;
-      _memoListedApps = listedApps;
-      _memoListedAppIdSet = listedAppIdSet;
+      _memoAllApps = listedApps;
+      _memoUpdatesApps = listedApps
+          .where((a) => existingUpdates.contains(a.app.id))
+          .toList();
+      _memoInstalledApps = listedApps
+          .where((a) => a.app.installedVersion != null)
+          .toList();
       _memoExistingUpdates = existingUpdates;
       _memoNewInstalls = newInstalls;
     }
+
+    // Instantaneous O(1) partition selection based on statusFilter
+    if (filter.statusFilter.contains('updates')) {
+      listedApps = _memoUpdatesApps!;
+    } else if (filter.statusFilter.contains('installed')) {
+      listedApps = _memoInstalledApps!;
+    } else if (filter.statusFilter.contains('trackonly')) {
+      listedApps = _memoAllApps!
+          .where((a) => a.app.additionalSettings['trackOnly'] == true)
+          .toList();
+    } else if (filter.statusFilter.contains('uptodate')) {
+      listedApps = _memoAllApps!
+          .where((a) =>
+              a.app.installedVersion != null &&
+              !existingUpdates.contains(a.app.id))
+          .toList();
+    } else if (filter.statusFilter.contains('notinstalled')) {
+      listedApps = _memoAllApps!
+          .where((a) => a.app.installedVersion == null)
+          .toList();
+    } else {
+      listedApps = _memoAllApps!;
+    }
+    listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
 
     selectedAppIds = selectedAppIds.where(listedAppIdSet.contains).toSet();
 
