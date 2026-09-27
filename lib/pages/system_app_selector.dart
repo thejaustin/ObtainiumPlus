@@ -198,6 +198,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     final currentLabels = _appLabels[packageName] ?? [];
     final allLabels = _getAllLabels();
     final controller = TextEditingController();
+    final focusNode = FocusNode();
 
     showModalBottomSheet(
       context: context,
@@ -270,31 +271,108 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Add new label
+                  // Add new label with M3E shape morphing
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: controller,
-                          decoration: InputDecoration(
-                            hintText: tr('newLabel'),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                          onSubmitted: addLabel,
-                          textInputAction: TextInputAction.done,
+                        child: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: controller,
+                          builder: (context, val, _) {
+                            final isFocused = focusNode.hasFocus;
+                            final hasText = val.text.isNotEmpty;
+                            final isActive = isFocused || hasText;
+                            final colorScheme = Theme.of(context).colorScheme;
+
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 280),
+                              curve: Easing.emphasizedDecelerate,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  isActive ? 14.0 : 24.0,
+                                ),
+                                boxShadow: isActive
+                                    ? [
+                                        BoxShadow(
+                                          color: colorScheme.primary
+                                              .withValues(alpha: 0.14),
+                                          blurRadius: 10,
+                                          spreadRadius: 0.5,
+                                          offset: const Offset(0, 1.5),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: TextField(
+                                controller: controller,
+                                focusNode: focusNode,
+                                decoration: InputDecoration(
+                                  hintText: tr('newLabel'),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      isActive ? 14.0 : 24.0,
+                                    ),
+                                    borderSide: BorderSide(
+                                      color: isActive
+                                          ? colorScheme.primary
+                                          : colorScheme.outlineVariant
+                                              .withValues(alpha: 0.4),
+                                      width: isActive ? 1.5 : 1.0,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14.0),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.primary,
+                                      width: 1.6,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      isActive ? 14.0 : 24.0,
+                                    ),
+                                    borderSide: BorderSide(
+                                      color: isActive
+                                          ? colorScheme.primary
+                                          : colorScheme.outlineVariant
+                                              .withValues(alpha: 0.4),
+                                      width: isActive ? 1.5 : 1.0,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  suffixIcon: hasText
+                                      ? IconButton(
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            size: 18,
+                                          ),
+                                          tooltip: tr('clear'),
+                                          onPressed: () {
+                                            controller.clear();
+                                            setSheetState(() {});
+                                          },
+                                        )
+                                      : null,
+                                ),
+                                onChanged: (_) => setSheetState(() {}),
+                                onSubmitted: addLabel,
+                                textInputAction: TextInputAction.done,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 8),
-                      IconButton.filled(
-                        icon: const Icon(Icons.add),
-                        tooltip: tr('add'),
-                        onPressed: () => addLabel(controller.text),
+                      ScaleTouchWrapper(
+                        scaleDownFactor: 0.92,
+                        onTap: () => addLabel(controller.text),
+                        child: IconButton.filled(
+                          icon: const Icon(Icons.add),
+                          tooltip: tr('add'),
+                          onPressed: () => addLabel(controller.text),
+                        ),
                       ),
                     ],
                   ),
@@ -326,7 +404,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           );
         },
       ),
-    );
+    ).whenComplete(() {
+      controller.dispose();
+      focusNode.dispose();
+    });
   }
 
   double _appBarBottomHeight(bool hasLabels) {

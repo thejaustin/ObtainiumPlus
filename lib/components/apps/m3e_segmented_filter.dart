@@ -104,14 +104,20 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                     borderRadius: BorderRadius.circular(innerPillRadius),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.shadow.withValues(alpha: 0.08),
-                        blurRadius: 4,
+                        color: colorScheme.primary.withValues(alpha: 0.14),
+                        blurRadius: 8,
+                        spreadRadius: 0.5,
                         offset: const Offset(0, 1.5),
+                      ),
+                      BoxShadow(
+                        color: colorScheme.shadow.withValues(alpha: 0.06),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                     border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.15),
-                      width: 0.5,
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.22),
+                      width: 0.6,
                     ),
                   ),
                 ),
@@ -196,6 +202,7 @@ class _SegmentItem extends StatelessWidget {
         : colorScheme.onSurfaceVariant;
 
     return ScaleTouchWrapper(
+      scaleDownFactor: 0.94,
       onTap: onTap,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -236,28 +243,43 @@ class _SegmentItem extends StatelessWidget {
                 ),
                 if (data.badgeCount != null) ...[
                   const SizedBox(width: 5),
-                  AnimatedContainer(
+                  AnimatedScale(
+                    scale: 1.0,
                     duration: const Duration(milliseconds: 260),
                     curve: Easing.emphasizedDecelerate,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 1.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.error,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${data.badgeCount}',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 260),
+                      curve: Easing.emphasizedDecelerate,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6.5,
+                        vertical: 2.0,
+                      ),
+                      decoration: BoxDecoration(
                         color: isSelected
-                            ? colorScheme.onPrimary
-                            : colorScheme.onError,
-                        height: 1.1,
+                            ? colorScheme.primary
+                            : colorScheme.error,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isSelected
+                                    ? colorScheme.primary
+                                    : colorScheme.error)
+                                .withValues(alpha: 0.28),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '${data.badgeCount}',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected
+                              ? colorScheme.onPrimary
+                              : colorScheme.onError,
+                          height: 1.1,
+                        ),
                       ),
                     ),
                   ),
