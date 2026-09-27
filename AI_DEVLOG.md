@@ -37,6 +37,22 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-27 (Session 4) — Antigravity (Gemini 3.8 Flash)
+
+**Material 3 Expressive Shape-Shifting Search Bars & Large App List Pipeline Optimization (v1.6.10-p12):**
+
+1. **M3 Expressive Shape-Shifting Search Bars (`omnibar.dart`, `command_center.dart`, `discover.dart`)**:
+   - **Omnibar**: Morphs dynamically from a resting capsule pill (`CardMetrics.pill(radius)` ~ 28dp) into an elevated 18–20dp squircle with `Easing.emphasizedDecelerate` (280ms) upon focus or active input. Accent borders morph to primary (1.8dp) with glowing shadow bloom. Upgraded inner action buttons to `StadiumBorder()` and FAB to `CardMetrics.pill()`.
+   - **Command Center**: Search bar now shape-shifts between 28dp pill capsule and 18dp active squircle with primary glow and smooth border transitions.
+   - **Discover Search**: Upgraded from static 12dp rectangular outline to M3 Expressive shape-shifting container with active elevation and focus glow.
+2. **Large App List & Scrolling Performance Optimization (`apps.dart`, `apps_provider.dart`, `app_in_memory.dart`)**:
+   - **Memoized Filtering & Sorting in `AppsPageState`**: Eliminated the redundant 10-pass filtering, tokenizing, regex comparison, and sorting pipeline from running synchronously inside `build()` on every frame and animation tick. Filtered lists are now memoized and only recomputed when the underlying apps collection or filter parameters change, making 120 FPS scrolling instantaneous on large app lists.
+   - **Memoized `findAllPendingUpdates`**: Cached pending updates on `AppsProvider` to eliminate regex version comparison iterations across all apps during UI frame builds.
+   - **Lazy Lowercasing in `AppInMemory`**: Added cached `lowerName` and `lowerAuthor` getters on `AppInMemory` to eliminate string allocations during searches and sorts.
+   - **Asynchronous Icon Checks**: Replaced synchronous `existsSync` file calls in `updateAppIcon` with non-blocking async checks.
+3. **Deployment**:
+   - CI build passed (all tests green). Released and sideloaded `v1.6.10-p12` to device.
+
 ### 2026-09-26 (Session 3) — Claude Sonnet 4.6 (Thinking)
 
 **M3 Expressive Shape-Morphing Filter Verified & Deployed (v1.6.10-p10):**
