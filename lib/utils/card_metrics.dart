@@ -22,6 +22,10 @@ class CardMetrics {
   /// adhering to Material 3 Expressive guidelines.
   static double pill([double base = 28.0]) => max(24.0, base).clamp(24.0, 32.0);
 
+  /// Radius for pill/capsule shaped elements (badges, indicator chips, micro-pills).
+  /// Using a large constant (100.0) ensures complete semicircular capsule caps.
+  static const double pillRadius = 100.0;
+
   /// Outer radius for cards whose size is driven by a measured extent
   /// (e.g. grid tiles sized by column count): the user's radius, kept
   /// proportional to the card so tight layouts stay card-shaped.
