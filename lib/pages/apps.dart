@@ -205,6 +205,16 @@ class AppsPageState extends State<AppsPage> {
 
   var sourceProvider = SourceProvider();
 
+  // Memoization fields to make builds and scrolling instantaneous for large app lists
+  int? _memoAppsRevision;
+  int? _memoAppsCount;
+  String? _memoFilterKey;
+  String? _memoSortKey;
+  List<AppInMemory>? _memoListedApps;
+  Set<String>? _memoListedAppIdSet;
+  Set<String>? _memoExistingUpdates;
+  List<String>? _memoNewInstalls;
+
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
@@ -281,7 +291,180 @@ class AppsPageState extends State<AppsPage> {
       });
     }
 
-    var listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
+    final filterKey =
+        '${filter.nameFilter}|${filter.authorFilter}|${filter.idFilter}|${filter.statusFilter.join(",")}|${filter.categoryFilter.join(",")}|${filter.tagFilter.join(",")}|${filter.sourceFilter}|${filter.includeUptodate}|${filter.includeNonInstalled}|$activeTag';
+    final sortKey =
+        '${viewSettings.sortColumn.name}|${viewSettings.sortOrder.name}|${viewSettings.pinUpdates}|${viewSettings.buryNonInstalled}';
+    final appsRevision = appsProvider.appsRevision;
+    final appsCount = appsProvider.apps.length;
+
+    final canReuse = _memoListedApps != null &&
+        _memoAppsRevision == appsRevision &&
+        _memoAppsCount == appsCount &&
+        _memoFilterKey == filterKey &&
+        _memoSortKey == sortKey;
+
+    late final Set<String> listedAppIdSet;
+    late final Set<String> existingUpdates;
+    late final List<String> newInstalls;
+
+    if (canReuse) {
+      listedApps = _memoListedApps!;
+      listedAppIdSet = _memoListedAppIdSet!;
+      existingUpdates = _memoExistingUpdates!;
+      newInstalls = _memoNewInstalls!;
+    } else {
+      // Pre-compute lowercase filter tokens once (not per-app inside the loop).
+      final lowerNameTokens =
+          filter.nameFilter.isNotEmpty
+              ? filter.nameFilter
+                  .split(' ')
+                  .where((t) => t.trim().isNotEmpty)
+                  .map((t) => t.toLowerCase())
+                  .toList()
+              : const <String>[];
+      final lowerAuthorTokens =
+          filter.authorFilter.isNotEmpty
+              ? filter.authorFilter
+                  .split(' ')
+                  .where((t) => t.trim().isNotEmpty)
+                  .map((t) => t.toLowerCase())
+                  .toList()
+              : const <String>[];
+
+      listedApps = listedApps.where((app) {
+        if (app.app.installedVersion == app.app.latestVersion &&
+            !(filter.includeUptodate)) {
+          return false;
+        }
+        if (app.app.installedVersion == null && !(filter.includeNonInstalled)) {
+          return false;
+        }
+        if (lowerNameTokens.isNotEmpty || lowerAuthorTokens.isNotEmpty) {
+          // Use pre-computed memoized lowerName and lowerAuthor from AppInMemory
+          final lowerName = app.lowerName;
+          final lowerAuthor = app.lowerAuthor;
+          for (var t in lowerNameTokens) {
+            if (!lowerName.contains(t)) return false;
+          }
+          for (var t in lowerAuthorTokens) {
+            if (!lowerAuthor.contains(t)) return false;
+          }
+        }
+        if (filter.idFilter.isNotEmpty) {
+          if (!app.app.id.contains(filter.idFilter)) {
+            return false;
+          }
+        }
+        if (activeTag != null && !app.app.tags.contains(activeTag)) {
+          return false;
+        }
+        if (filter.categoryFilter.isNotEmpty &&
+            !app.app.categories.any(filter.categoryFilter.contains)) {
+          return false;
+        }
+        if (filter.sourceFilter.isNotEmpty) {
+          final srcType = app.sourceType ??
+              sourceProvider
+                  .getSource(app.app.url, overrideSource: app.app.overrideSource)
+                  .runtimeType
+                  .toString();
+          if (srcType != filter.sourceFilter) return false;
+        }
+        return true;
+      }).toList();
+
+      // Pre-compute sort keys using cached lowercased strings
+      final sortCol = viewSettings.sortColumn;
+      final sortKeyMap = <AppInMemory, String>{
+        for (final a in listedApps)
+          a: (sortCol == SortColumnSettings.authorName
+              ? (a.lowerAuthor + a.lowerName)
+              : (a.lowerName + a.lowerAuthor)),
+      };
+
+      listedApps.sort((a, b) {
+        int result = 0;
+        if (sortCol == SortColumnSettings.authorName ||
+            sortCol == SortColumnSettings.nameAuthor) {
+          result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+        } else if (sortCol == SortColumnSettings.releaseDate) {
+          final aDate = a.app.releaseDate;
+          final bDate = b.app.releaseDate;
+          final isDescending =
+              viewSettings.sortOrder == SortOrderSettings.descending;
+          if (aDate == null && bDate == null) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          } else if (aDate == null) {
+            result = isDescending ? -1 : 1;
+          } else if (bDate == null) {
+            result = isDescending ? 1 : -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        }
+        return result;
+      });
+
+      if (viewSettings.sortOrder == SortOrderSettings.descending) {
+        listedApps = listedApps.reversed.toList();
+      }
+
+      // findAllPendingUpdates is memoized on appsProvider
+      final pending = appsProvider.findAllPendingUpdates();
+      existingUpdates = pending.updates; // Set<String>
+      newInstalls = pending.newInstalls; // List<String>
+
+      if (viewSettings.pinUpdates) {
+        var temp = [];
+        listedApps = listedApps.where((sa) {
+          if (existingUpdates.contains(sa.app.id)) {
+            temp.add(sa);
+            return false;
+          }
+          return true;
+        }).toList();
+        listedApps = [...temp, ...listedApps];
+      }
+
+      if (viewSettings.buryNonInstalled) {
+        var temp = [];
+        listedApps = listedApps.where((sa) {
+          if (sa.app.installedVersion == null) {
+            temp.add(sa);
+            return false;
+          }
+          return true;
+        }).toList();
+        listedApps = [...listedApps, ...temp];
+      }
+
+      var tempRenamed = [];
+      var tempPinned = [];
+      var tempNotPinned = [];
+      for (var a in listedApps) {
+        if (a.app.hasPendingRepoRename) {
+          tempRenamed.add(a);
+        } else if (a.app.pinned) {
+          tempPinned.add(a);
+        } else {
+          tempNotPinned.add(a);
+        }
+      }
+      listedApps = [...tempRenamed, ...tempPinned, ...tempNotPinned];
+      listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
+
+      // Store in memo cache
+      _memoAppsRevision = appsRevision;
+      _memoAppsCount = appsCount;
+      _memoFilterKey = filterKey;
+      _memoSortKey = sortKey;
+      _memoListedApps = listedApps;
+      _memoListedAppIdSet = listedAppIdSet;
+      _memoExistingUpdates = existingUpdates;
+      _memoNewInstalls = newInstalls;
+    }
+
     selectedAppIds = selectedAppIds.where(listedAppIdSet.contains).toSet();
 
     toggleAppSelected(App app) {
@@ -293,116 +476,6 @@ class AppsPageState extends State<AppsPage> {
         }
       });
     }
-
-    // Pre-compute lowercase filter tokens once (not per-app inside the loop).
-    final lowerNameTokens =
-        filter.nameFilter.isNotEmpty
-            ? filter.nameFilter
-                .split(' ')
-                .where((t) => t.trim().isNotEmpty)
-                .map((t) => t.toLowerCase())
-                .toList()
-            : const <String>[];
-    final lowerAuthorTokens =
-        filter.authorFilter.isNotEmpty
-            ? filter.authorFilter
-                .split(' ')
-                .where((t) => t.trim().isNotEmpty)
-                .map((t) => t.toLowerCase())
-                .toList()
-            : const <String>[];
-
-    listedApps = listedApps.where((app) {
-      if (app.app.installedVersion == app.app.latestVersion &&
-          !(filter.includeUptodate)) {
-        return false;
-      }
-      if (app.app.installedVersion == null && !(filter.includeNonInstalled)) {
-        return false;
-      }
-      if (lowerNameTokens.isNotEmpty || lowerAuthorTokens.isNotEmpty) {
-        // Compute per-app lowercased strings once, then check all tokens.
-        final lowerName = app.name.toLowerCase();
-        final lowerAuthor = app.author.toLowerCase();
-        for (var t in lowerNameTokens) {
-          if (!lowerName.contains(t)) return false;
-        }
-        for (var t in lowerAuthorTokens) {
-          if (!lowerAuthor.contains(t)) return false;
-        }
-      }
-      if (filter.idFilter.isNotEmpty) {
-        if (!app.app.id.contains(filter.idFilter)) {
-          return false;
-        }
-      }
-      if (activeTag != null && !app.app.tags.contains(activeTag)) {
-        return false;
-      }
-      if (filter.categoryFilter.isNotEmpty &&
-          !app.app.categories.any(filter.categoryFilter.contains)) {
-        return false;
-      }
-      if (filter.sourceFilter.isNotEmpty) {
-        // Use the sourceType cached during loadApps(); fall back to a live
-        // getSource() call only when the cache is absent (e.g. newly-added app).
-        final srcType = app.sourceType ??
-            sourceProvider
-                .getSource(app.app.url, overrideSource: app.app.overrideSource)
-                .runtimeType
-                .toString();
-        if (srcType != filter.sourceFilter) return false;
-      }
-      return true;
-    }).toList();
-
-    // Pre-compute sort keys once per app: avoids O(n log n) string allocs
-    // during comparison (each compare would otherwise allocate 2 strings).
-    final sortCol = viewSettings.sortColumn;
-    final sortKeyMap = <AppInMemory, String>{
-      for (final a in listedApps)
-        a: (sortCol == SortColumnSettings.authorName
-                ? (a.author + a.name)
-                : (a.name + a.author))
-            .toLowerCase(),
-    };
-
-    listedApps.sort((a, b) {
-      int result = 0;
-      if (sortCol == SortColumnSettings.authorName ||
-          sortCol == SortColumnSettings.nameAuthor) {
-        result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
-      } else if (sortCol == SortColumnSettings.releaseDate) {
-        // Handle null dates: apps with unknown release dates are grouped at the end
-        final aDate = a.app.releaseDate;
-        final bDate = b.app.releaseDate;
-        final isDescending =
-            viewSettings.sortOrder == SortOrderSettings.descending;
-        if (aDate == null && bDate == null) {
-          // Both null: sort by name for consistency (uses pre-computed key).
-          result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
-        } else if (aDate == null) {
-          // a has no date, always push to end regardless of sort direction
-          result = isDescending ? -1 : 1;
-        } else if (bDate == null) {
-          // b has no date, always push to end regardless of sort direction
-          result = isDescending ? 1 : -1;
-        } else {
-          result = aDate.compareTo(bDate);
-        }
-      }
-      return result;
-    });
-
-    if (viewSettings.sortOrder == SortOrderSettings.descending) {
-      listedApps = listedApps.reversed.toList();
-    }
-
-    // Single pass over all apps to build both update lists; existingUpdates is
-    // a Set so the pinUpdates .contains() check below is O(1) not O(n).
-    final pending = appsProvider.findAllPendingUpdates();
-    final existingUpdates = pending.updates; // Set<String>
-    final newInstalls = pending.newInstalls; // List<String>
 
     var existingUpdateIdsAllOrSelected = existingUpdates
         .where(
@@ -435,44 +508,6 @@ class AppsPageState extends State<AppsPage> {
     newInstallIdsAllOrSelected = newInstallIdsAllOrSelected
         .where(isNotTrackOnly)
         .toList();
-
-    if (viewSettings.pinUpdates) {
-      var temp = [];
-      listedApps = listedApps.where((sa) {
-        if (existingUpdates.contains(sa.app.id)) {
-          temp.add(sa);
-          return false;
-        }
-        return true;
-      }).toList();
-      listedApps = [...temp, ...listedApps];
-    }
-
-    if (viewSettings.buryNonInstalled) {
-      var temp = [];
-      listedApps = listedApps.where((sa) {
-        if (sa.app.installedVersion == null) {
-          temp.add(sa);
-          return false;
-        }
-        return true;
-      }).toList();
-      listedApps = [...listedApps, ...temp];
-    }
-
-    var tempRenamed = [];
-    var tempPinned = [];
-    var tempNotPinned = [];
-    for (var a in listedApps) {
-      if (a.app.hasPendingRepoRename) {
-        tempRenamed.add(a);
-      } else if (a.app.pinned) {
-        tempPinned.add(a);
-      } else {
-        tempNotPinned.add(a);
-      }
-    }
-    listedApps = [...tempRenamed, ...tempPinned, ...tempNotPinned];
 
     List<String?> getListedCategories() {
       var temp = listedApps.map(

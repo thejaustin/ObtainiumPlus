@@ -28,6 +28,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 
 /// Directly runs the GitHub mass-source import flow from any context,
@@ -127,10 +128,12 @@ class Omnibar extends StatefulWidget {
 
 class _OmnibarState extends State<Omnibar> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   Timer? _debounce;
   bool _isUrl = false;
   bool _isValidUrl = false;
   String? _urlError;
+  bool _isFocused = false;
   final SourceProvider _sourceProvider = SourceProvider();
 
   @override
@@ -138,10 +141,21 @@ class _OmnibarState extends State<Omnibar> {
     super.initState();
     _controller.text = widget.initialQuery ?? '';
     _checkInputType(_controller.text);
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     _debounce?.cancel();
     _controller.dispose();
     super.dispose();
@@ -214,43 +228,68 @@ class _OmnibarState extends State<Omnibar> {
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
-    final itemRadius = (radius * 0.66).clamp(12.0, 32.0);
+    final pillRadius = CardMetrics.pill(radius);
+    final isFocusedOrHasText = _isFocused || _controller.text.isNotEmpty;
+    // Material 3 Expressive Shape Shifting:
+    // Resting: full capsule pill (28dp)
+    // Active/Focused: expressive squircle morphing (18-20dp) with primary glow and elevation!
+    final currentRadius = isFocusedOrHasText
+        ? (radius * 0.75).clamp(16.0, 22.0)
+        : pillRadius;
 
     return Semantics(
       label: _isUrl ? tr('appURLList') : tr('search'),
       textField: true,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Easing.standard,
+        duration: const Duration(milliseconds: 280),
+        curve: Easing.emphasizedDecelerate,
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(
-            alpha: settings.plusEnableGlassmorphism ? 0.45 : 0.7,
-          ),
-          borderRadius: BorderRadius.circular(itemRadius),
+          color: isFocusedOrHasText
+              ? colorScheme.surfaceContainerHighest.withValues(
+                  alpha: settings.plusEnableGlassmorphism ? 0.7 : 0.95,
+                )
+              : colorScheme.surfaceContainerHigh.withValues(
+                  alpha: settings.plusEnableGlassmorphism ? 0.45 : 0.7,
+                ),
+          borderRadius: BorderRadius.circular(currentRadius),
           border: Border.all(
             color: _isValidUrl
-                ? colorScheme.primary.withValues(alpha: AppOpacity.half)
+                ? colorScheme.primary
                 : _urlError != null
-                ? colorScheme.error.withValues(alpha: AppOpacity.half)
-                : colorScheme.outline.withValues(
-                    alpha: settings.plusEnableGlassmorphism
-                        ? 0.15
-                        : AppOpacity.medium,
+                ? colorScheme.error
+                : isFocusedOrHasText
+                ? colorScheme.primary.withValues(alpha: 0.8)
+                : colorScheme.outlineVariant.withValues(
+                    alpha: settings.plusEnableGlassmorphism ? 0.3 : 0.25,
                   ),
-            width: 1.5,
+            width: isFocusedOrHasText || _isValidUrl || _urlError != null ? 1.8 : 1.0,
           ),
-          boxShadow: settings.plusEnableGlassmorphism
+          boxShadow: isFocusedOrHasText
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    spreadRadius: -2,
+                    color: (_isValidUrl
+                            ? colorScheme.primary
+                            : _urlError != null
+                            ? colorScheme.error
+                            : colorScheme.primary)
+                        .withValues(alpha: 0.16),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 2),
                   ),
                 ]
-              : null,
+              : (settings.plusEnableGlassmorphism
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        spreadRadius: -2,
+                      ),
+                    ]
+                  : null),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(itemRadius),
+          borderRadius: BorderRadius.circular(currentRadius),
           child: Stack(
             children: [
               // Backdrop blur clipped to the bar — must stay inside
@@ -283,7 +322,7 @@ class _OmnibarState extends State<Omnibar> {
                 children: [
                   // Icon indicating input type — AnimatedSwitcher for smooth transitions
                   InkWell(
-                    borderRadius: BorderRadius.circular(itemRadius),
+                    borderRadius: BorderRadius.circular(currentRadius),
                     onTap: () {
                       if (!_isUrl) {
                         CommandCenter.show(
@@ -325,6 +364,7 @@ class _OmnibarState extends State<Omnibar> {
                   Expanded(
                     child: TextField(
                       controller: _controller,
+                      focusNode: _focusNode,
                       decoration: InputDecoration(
                         hintText: _isUrl
                             ? (_isValidUrl
@@ -431,11 +471,7 @@ class _OmnibarState extends State<Omnibar> {
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      itemRadius * 0.8,
-                                    ),
-                                  ),
+                                  shape: const StadiumBorder(),
                                 ),
                                 child: Text(
                                   _isValidUrl ? tr('add') : tr('sources'),
@@ -469,11 +505,7 @@ class _OmnibarState extends State<Omnibar> {
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                       ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          itemRadius * 0.8,
-                                        ),
-                                      ),
+                                      shape: const StadiumBorder(),
                                     ),
                                   ),
                                 ),
@@ -771,10 +803,7 @@ class AppActionsFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
-    final fabRadius = (settings.plusGlobalCornerRadius * 0.66).clamp(
-      12.0,
-      28.0,
-    );
+    final fabRadius = CardMetrics.pill(settings.plusGlobalCornerRadius);
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final colorScheme = Theme.of(context).colorScheme;
 
