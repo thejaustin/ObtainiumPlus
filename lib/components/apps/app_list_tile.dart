@@ -47,6 +47,7 @@ class AppListTile extends StatelessWidget {
       (p) => p.checkingUpdateIds.contains(appInMemory.app.id),
     );
 
+    final isCompact = viewSettings.appListDensity == AppListDensity.compact;
     final isAmbiguous =
         hasUpdate &&
         appInMemory.app.additionalSettings['isAmbiguousUpdate'] == true;
@@ -128,11 +129,11 @@ class AppListTile extends StatelessWidget {
                         Theme.of(context).colorScheme.secondaryContainer,
                     foregroundColor:
                         Theme.of(context).colorScheme.onSecondaryContainer,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isCompact ? 8 : 12,
                       vertical: 0,
                     ),
-                    minimumSize: const Size(0, 32),
+                    minimumSize: Size(0, isCompact ? 28 : 32),
                     shape: const StadiumBorder(),
                     textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -170,6 +171,79 @@ class AppListTile extends StatelessWidget {
                       Theme.of(context).colorScheme.secondaryContainer,
                   foregroundColor:
                       Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+              ),
+      );
+    }
+
+    Widget getInstallButton() {
+      if (isCheckingUpdate) {
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      }
+      return ScaleTouchWrapper(
+        child: plusSettings.plusUpdateExpressiveBadge
+            // Expressive pill: "↓ Install"
+            ? Tooltip(
+                message: tr('install'),
+                child: FilledButton.tonal(
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    appsProvider.downloadAndInstallLatestApps([
+                      appInMemory.app.id,
+                    ], context);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isCompact ? 8 : 12,
+                      vertical: 0,
+                    ),
+                    minimumSize: Size(0, isCompact ? 28 : 32),
+                    shape: const StadiumBorder(),
+                    textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.download_rounded, size: 13),
+                      const SizedBox(width: 4),
+                      Text(
+                        tr('install'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            // Classic circular download button
+            : IconButton.filled(
+                icon: const Icon(Icons.download_rounded),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  appsProvider.downloadAndInstallLatestApps([
+                    appInMemory.app.id,
+                  ], context);
+                },
+                tooltip: tr('install'),
+                style: IconButton.styleFrom(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
       );
@@ -294,7 +368,6 @@ class AppListTile extends StatelessWidget {
                   : null
             : null);
 
-    final isCompact = viewSettings.appListDensity == AppListDensity.compact;
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -308,7 +381,11 @@ class AppListTile extends StatelessWidget {
             onPressed: onShowChanges,
             tooltip: tr('viewChanges'),
           ),
-        if (hasUpdate) getUpdateButton(),
+        if (hasUpdate)
+          getUpdateButton()
+        else if (appInMemory.app.installedVersion == null &&
+            appInMemory.app.additionalSettings['trackOnly'] != true)
+          getInstallButton(),
         PopupMenuButton<String>(
           tooltip: tr('more'),
           icon: Icon(
