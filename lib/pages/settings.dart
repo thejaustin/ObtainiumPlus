@@ -107,22 +107,62 @@ class _SettingsPageState extends State<SettingsPage> {
               preferredSize: const Size.fromHeight(60),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: SearchBar(
-                  controller: _searchController,
-                  hintText: tr('searchSettings'),
-                  leading: const Icon(Icons.search),
-                  trailing: [
-                    if (_searchQuery.isNotEmpty)
-                      IconButton(
-                        tooltip: tr('clear'),
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => _searchController.clear(),
-                      ),
-                  ],
-                  elevation: WidgetStateProperty.all(0),
-                  backgroundColor: WidgetStateProperty.all(
-                    Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Easing.emphasizedDecelerate,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      _searchQuery.isNotEmpty ? 18.0 : 28.0,
+                    ),
+                    boxShadow: _searchQuery.isNotEmpty
+                        ? [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.16),
+                              blurRadius: 14,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: SearchBar(
+                    controller: _searchController,
+                    hintText: tr('searchSettings'),
+                    leading: const Icon(Icons.search),
+                    trailing: [
+                      if (_searchQuery.isNotEmpty)
+                        IconButton(
+                          tooltip: tr('clear'),
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => _searchController.clear(),
+                        ),
+                    ],
+                    elevation: WidgetStateProperty.all(0),
+                    shape: WidgetStateProperty.resolveWith((states) {
+                      final isFocused = states.contains(WidgetState.focused);
+                      final isShifted = isFocused || _searchQuery.isNotEmpty;
+                      return RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          isShifted ? 18.0 : 28.0,
+                        ),
+                        side: BorderSide(
+                          color: isShifted
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.3),
+                          width: isShifted ? 1.5 : 1.0,
+                        ),
+                      );
+                    }),
+                    backgroundColor: WidgetStateProperty.all(
+                      Theme.of(context).colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ),
