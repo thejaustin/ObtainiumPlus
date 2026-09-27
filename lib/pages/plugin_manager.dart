@@ -11,6 +11,14 @@ class PluginManagerPage extends StatefulWidget {
 
 class _PluginManagerPageState extends State<PluginManagerPage> {
   final TextEditingController _urlController = TextEditingController();
+  final FocusNode _urlFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _urlFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,30 +87,94 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
               ),
             ),
             const SizedBox(height: 24),
-            TextField(
-              controller: _urlController,
-              decoration: InputDecoration(
-                labelText: 'Plugin URL',
-                hintText: 'https://raw.githubusercontent.com/.../plugin.js',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                filled: true,
-                fillColor: cs.surface.withValues(alpha: 0.5),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: IconButton.filledTonal(
-                    icon: const Icon(Icons.download_rounded),
-                    onPressed: () {
-                      if (_urlController.text.isNotEmpty) {
-                        pluginProvider.installFromUrl(_urlController.text);
-                        _urlController.clear();
-                        FocusScope.of(context).unfocus();
-                      }
-                    },
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _urlController,
+              builder: (context, val, _) {
+                final isFocused = _urlFocusNode.hasFocus;
+                final hasText = val.text.isNotEmpty;
+                final isActive = isFocused || hasText;
+
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Easing.emphasizedDecelerate,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(isActive ? 16.0 : 26.0),
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: cs.primary.withValues(alpha: 0.14),
+                              blurRadius: 12,
+                              spreadRadius: 0.5,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
-                ),
-              ),
+                  child: TextField(
+                    controller: _urlController,
+                    focusNode: _urlFocusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Plugin URL',
+                      hintText:
+                          'https://raw.githubusercontent.com/.../plugin.js',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          isActive ? 16.0 : 26.0,
+                        ),
+                        borderSide: BorderSide(
+                          color: isActive
+                              ? cs.primary
+                              : cs.outlineVariant.withValues(alpha: 0.4),
+                          width: isActive ? 1.5 : 1.0,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                        borderSide: BorderSide(color: cs.primary, width: 1.6),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          isActive ? 16.0 : 26.0,
+                        ),
+                        borderSide: BorderSide(
+                          color: isActive
+                              ? cs.primary
+                              : cs.outlineVariant.withValues(alpha: 0.4),
+                          width: isActive ? 1.5 : 1.0,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: cs.surface.withValues(alpha: 0.5),
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (hasText)
+                            IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _urlController.clear();
+                              },
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: IconButton.filledTonal(
+                              icon: const Icon(Icons.download_rounded),
+                              onPressed: () {
+                                if (_urlController.text.isNotEmpty) {
+                                  pluginProvider
+                                      .installFromUrl(_urlController.text);
+                                  _urlController.clear();
+                                  FocusScope.of(context).unfocus();
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

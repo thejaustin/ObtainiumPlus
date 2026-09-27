@@ -49,22 +49,60 @@ class CategorySections extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final appsProvider = context.watch<AppsProvider>();
+    final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
     final isGridView = viewSettings.globalViewMode == ViewMode.grid;
+
+    // Single-pass O(N) grouping by category to eliminate redundant multi-pass scans
+    final appsByCategory = <String?, List<AppInMemory>>{
+      for (final cat in listedCategories) cat: <AppInMemory>[],
+    };
+    for (final app in listedApps) {
+      if (app.app.categories.isEmpty) {
+        appsByCategory[null]?.add(app);
+      } else {
+        for (final cat in app.app.categories) {
+          appsByCategory[cat]?.add(app);
+        }
+      }
+    }
+
+    // Pre-compute update counts per category in O(N)
+    final categoryUpdateCounts = <String?, int>{};
+    appsByCategory.forEach((cat, apps) {
+      categoryUpdateCounts[cat] = apps
+          .where((a) => a.app.installedVersion == null
+              ? a.app.additionalSettings['trackOnly'] != true
+              : pendingUpdates.contains(a.app.id))
+          .length;
+    });
 
     if (isGridView) {
       return SliverList(
         delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
-          return _buildCategoryGridSection(context, index, viewSettings);
+          final catName = listedCategories[index];
+          return _buildCategoryGridSection(
+            context,
+            index,
+            viewSettings,
+            appsByCategory[catName] ?? const [],
+            categoryUpdateCounts[catName] ?? 0,
+            pendingUpdates,
+          );
         }, childCount: listedCategories.length),
       );
     } else if (plusSettings.plusEnableCategoryReorder) {
       // Enable drag-to-reorder when Plus Feature is enabled
       return SliverReorderableList(
         itemBuilder: (BuildContext context, int index) {
+          final catName = listedCategories[index];
           return _buildCategoryCollapsibleTile(
             context,
             index,
             viewSettings,
+            appsByCategory[catName] ?? const [],
+            categoryUpdateCounts[catName] ?? 0,
+            pendingUpdates,
             enableReorder: true,
           );
         },
@@ -85,10 +123,14 @@ class CategorySections extends StatelessWidget {
       // Simple list when reorder is disabled
       return SliverList(
         delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+          final catName = listedCategories[index];
           return _buildCategoryCollapsibleTile(
             context,
             index,
             viewSettings,
+            appsByCategory[catName] ?? const [],
+            categoryUpdateCounts[catName] ?? 0,
+            pendingUpdates,
             enableReorder: false,
           );
         }, childCount: listedCategories.length),
@@ -100,6 +142,9 @@ class CategorySections extends StatelessWidget {
     BuildContext context,
     int index,
     ViewSettingsProvider settingsProvider,
+    List<AppInMemory> appsInCategory,
+    int updateCount,
+    Set<String> pendingUpdates,
   ) {
     final String? categoryName = listedCategories[index];
     final int? categoryColorInt = categoryName != null
@@ -108,14 +153,6 @@ class CategorySections extends StatelessWidget {
     final Color? categoryColor = categoryColorInt != null
         ? getCachedCategoryColor(categoryColorInt)
         : null;
-
-    final appsInCategory = listedApps
-        .where(
-          (e) =>
-              e.app.categories.contains(categoryName) ||
-              (e.app.categories.isEmpty && categoryName == null),
-        )
-        .toList();
 
     final columnCount = settingsProvider.gridColumnCount == 0
         ? _calculateAdaptiveColumns(context)
@@ -156,7 +193,7 @@ class CategorySections extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              _buildCategoryStats(context, appsInCategory),
+              _buildCategoryStats(context, appsInCategory.length, updateCount),
             ],
           ),
         ),
@@ -182,11 +219,7 @@ class CategorySections extends StatelessWidget {
                     activeAppId == app.app.id,
                 hasUpdate: app.app.installedVersion == null
                     ? app.app.additionalSettings['trackOnly'] != true
-                    : AppUpdateService.areVersionsDifferent(
-                        app.app,
-                        app.app.installedVersion,
-                        app.app.latestVersion,
-                      ),
+                    : pendingUpdates.contains(app.app.id),
                 isAmbiguous:
                     app.app.additionalSettings['isAmbiguousUpdate'] == true,
                 categoryColor: categoryColor,
@@ -207,51 +240,69 @@ class CategorySections extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryStats(BuildContext context, List<AppInMemory> apps) {
+  Widget _buildCategoryStats(
+    BuildContext context,
+    int totalCount,
+    int updateCount,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final updateCount = apps
-        .where(
-          (a) => AppUpdateService.areVersionsDifferent(
-            a.app,
-            a.app.installedVersion,
-            a.app.latestVersion,
-          ),
-        )
-        .length;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (updateCount > 0) ...[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 2.5),
             decoration: BoxDecoration(
-              color: colorScheme.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
+              color: colorScheme.errorContainer.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
               border: Border.all(
-                color: colorScheme.error.withValues(alpha: 0.2),
+                color: colorScheme.error.withValues(alpha: 0.25),
+                width: 0.8,
               ),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.update_rounded, size: 12, color: colorScheme.error),
-                const SizedBox(width: 4),
+                Icon(
+                  Icons.update_rounded,
+                  size: 12.5,
+                  color: colorScheme.onErrorContainer,
+                ),
+                const SizedBox(width: 3.5),
                 Text(
-                  updateCount.toString(),
+                  '$updateCount',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.error,
+                    color: colorScheme.onErrorContainer,
+                    height: 1.1,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
-        Text(
-          apps.length.toString(),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 2.5),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+              width: 0.8,
+            ),
+          ),
+          child: Text(
+            '$totalCount',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurfaceVariant,
+              height: 1.1,
+            ),
+          ),
         ),
       ],
     );
@@ -260,7 +311,10 @@ class CategorySections extends StatelessWidget {
   Widget _buildCategoryCollapsibleTile(
     BuildContext context,
     int index,
-    ViewSettingsProvider settingsProvider, {
+    ViewSettingsProvider settingsProvider,
+    List<AppInMemory> appsInCategory,
+    int updateCount,
+    Set<String> pendingUpdates, {
     bool enableReorder = true,
   }) {
     final String? categoryName = listedCategories[index];
@@ -273,14 +327,6 @@ class CategorySections extends StatelessWidget {
     final transparent = Theme.of(
       context,
     ).colorScheme.surface.withValues(alpha: 0.0).value;
-
-    final appsInCategory = listedApps
-        .where(
-          (e) =>
-              e.app.categories.contains(categoryName) ||
-              (e.app.categories.isEmpty && categoryName == null),
-        )
-        .toList();
 
     List<Uint8List?> categoryIcons = [];
     if (settingsProvider.categoryIconPosition !=
@@ -353,7 +399,7 @@ class CategorySections extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildCategoryStats(context, appsInCategory),
+            _buildCategoryStats(context, appsInCategory.length, updateCount),
             if (enableReorder) ...[
               const SizedBox(width: 8),
               ReorderableDragStartListener(
@@ -369,11 +415,7 @@ class CategorySections extends StatelessWidget {
                 appInMemory: app,
                 hasUpdate: app.app.installedVersion == null
                     ? app.app.additionalSettings['trackOnly'] != true
-                    : AppUpdateService.areVersionsDifferent(
-                        app.app,
-                        app.app.installedVersion,
-                        app.app.latestVersion,
-                      ),
+                    : pendingUpdates.contains(app.app.id),
 
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {

@@ -37,6 +37,34 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-27 (Session 8) — Antigravity (Gemini 3.8 Flash)
+
+**Performance Optimizations for Large Lists, M3E Tag & Segmented Filter Polish, and Universal Morphing Inputs:**
+
+1. **Category Sections Single-Pass O(N) Grouping & O(1) Update Checking (`category_sections.dart`)**:
+   - Eliminated redundant `O(N * M)` category filtering passes on every build and scroll frame. Implemented single-pass grouping into `appsByCategory`.
+   - Pre-computed update counts per category in O(N) and replaced regex-heavy `AppUpdateService.areVersionsDifferent` calls on tile builds with instant O(1) `pendingUpdates.contains(app.id)` lookups.
+   - Upgraded category update counters and total badges to M3 Expressive pill capsules (`CardMetrics.pillRadius`) with tonal `errorContainer` and surface containers.
+
+2. **AppListView Scrolling & Allocation Performance (`app_list_view.dart`)**:
+   - Replaced duplicate `where` filters with single-pass partitioning of pinned and unpinned apps.
+   - Enabled `addRepaintBoundaries: true` on `SliverChildBuilderDelegate` for smooth 120Hz scrolling across long app lists.
+
+3. **M3 Expressive Segmented Filter Indicator Glow & Bouncy Badges (`m3e_segmented_filter.dart`)**:
+   - Added primary-tinted elevation glow (`BoxShadow` with `primary.withValues(alpha: 0.14)`) and refined borders to the sliding indicator pill.
+   - Wrapped the update count badge with `AnimatedScale` and drop shadow for bouncy animated transitions.
+   - Tuned touch scaling factor to `0.94` for snappy tactile response.
+
+4. **Interactive M3E Filter Chips (`tag_filter_bar.dart`)**:
+   - Wrapped tag filter chips in `ScaleTouchWrapper` (scale `0.94`) for tactile physical spring response on tap.
+   - Standardized on `StadiumBorder()` with dynamic selection tonal highlighting, elevated focus, and smooth outlines.
+
+5. **Universal Morphing Inputs & Focus Glows (`tag_editor.dart`, `plugin_manager.dart`, `system_app_selector.dart`)**:
+   - Extended M3 Expressive shape morphing (pill `24-26dp` ↔ squircle `14-16dp` with `Easing.emphasizedDecelerate`), primary elevation glow, and clear actions to `TagEditor`, `PluginManager`, and `SystemAppSelector` label creation inputs.
+   - Ensured robust lifecycle management with proper controller and focus node disposal.
+
+---
+
 ### 2026-09-27 (Session 7) — Antigravity (Gemini 3.8 Flash)
 
 **Universal M3 Expressive Search Bar Shape Morphing & Persistent Filter Inputs (v1.6.10-p16):**

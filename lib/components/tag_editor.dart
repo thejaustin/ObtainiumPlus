@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ Future<List<String>?> showTagEditor({
 
   final selectedTags = Set<String>.from(currentTags);
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   try {
     return await showDialog<List<String>>(
@@ -68,41 +70,121 @@ Future<List<String>?> showTagEditor({
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Add new tag
+                            // Add new tag with M3E shape morphing
                             Row(
                               children: [
                                 Expanded(
-                                  child: TextField(
-                                    controller: _controller,
-                                    decoration: InputDecoration(
-                                      hintText: tr('newTag'),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 12,
+                                  child: ValueListenableBuilder<TextEditingValue>(
+                                    valueListenable: _controller,
+                                    builder: (context, val, _) {
+                                      final isFocused = _focusNode.hasFocus;
+                                      final hasText = val.text.isNotEmpty;
+                                      final isActive = isFocused || hasText;
+                                      final colorScheme =
+                                          Theme.of(context).colorScheme;
+
+                                      return AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 280),
+                                        curve: Easing.emphasizedDecelerate,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            isActive ? 14.0 : 24.0,
                                           ),
-                                      prefixIcon: const Icon(
-                                        Icons.tag_outlined,
-                                      ),
-                                    ),
-                                    onSubmitted: (value) {
-                                      if (value.trim().isNotEmpty) {
-                                        setSheetState(() {
-                                          selectedTags.add(value.trim());
-                                          _controller.clear();
-                                        });
-                                      }
+                                          boxShadow: isActive
+                                              ? [
+                                                  BoxShadow(
+                                                    color: colorScheme.primary
+                                                        .withValues(
+                                                          alpha: 0.14,
+                                                        ),
+                                                    blurRadius: 10,
+                                                    spreadRadius: 0.5,
+                                                    offset: const Offset(0, 1.5),
+                                                  ),
+                                                ]
+                                              : null,
+                                        ),
+                                        child: TextField(
+                                          controller: _controller,
+                                          focusNode: _focusNode,
+                                          decoration: InputDecoration(
+                                            hintText: tr('newTag'),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    isActive ? 14.0 : 24.0,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color: isActive
+                                                    ? colorScheme.primary
+                                                    : colorScheme.outlineVariant
+                                                        .withValues(alpha: 0.4),
+                                                width: isActive ? 1.5 : 1.0,
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14.0),
+                                              borderSide: BorderSide(
+                                                color: colorScheme.primary,
+                                                width: 1.6,
+                                              ),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    isActive ? 14.0 : 24.0,
+                                                  ),
+                                              borderSide: BorderSide(
+                                                color: isActive
+                                                    ? colorScheme.primary
+                                                    : colorScheme.outlineVariant
+                                                        .withValues(alpha: 0.4),
+                                                width: isActive ? 1.5 : 1.0,
+                                              ),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 12,
+                                                ),
+                                            prefixIcon: const Icon(
+                                              Icons.tag_outlined,
+                                            ),
+                                            suffixIcon: hasText
+                                                ? IconButton(
+                                                    icon: const Icon(
+                                                      Icons.clear,
+                                                      size: 18,
+                                                    ),
+                                                    tooltip: tr('clear'),
+                                                    onPressed: () {
+                                                      _controller.clear();
+                                                      setSheetState(() {});
+                                                    },
+                                                  )
+                                                : null,
+                                          ),
+                                          onChanged: (_) =>
+                                              setSheetState(() {}),
+                                          onSubmitted: (value) {
+                                            if (value.trim().isNotEmpty) {
+                                              setSheetState(() {
+                                                selectedTags.add(value.trim());
+                                                _controller.clear();
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      );
                                     },
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                IconButton.filled(
-                                  icon: const Icon(Icons.add),
-                                  tooltip: tr('add'),
-                                  onPressed: () {
+                                ScaleTouchWrapper(
+                                  scaleDownFactor: 0.92,
+                                  onTap: () {
                                     if (_controller.text.trim().isNotEmpty) {
                                       setSheetState(() {
                                         selectedTags.add(
@@ -112,6 +194,20 @@ Future<List<String>?> showTagEditor({
                                       });
                                     }
                                   },
+                                  child: IconButton.filled(
+                                    icon: const Icon(Icons.add),
+                                    tooltip: tr('add'),
+                                    onPressed: () {
+                                      if (_controller.text.trim().isNotEmpty) {
+                                        setSheetState(() {
+                                          selectedTags.add(
+                                            _controller.text.trim(),
+                                          );
+                                          _controller.clear();
+                                        });
+                                      }
+                                    },
+                                  ),
                                 ),
                               ],
                             ),
@@ -190,6 +286,7 @@ Future<List<String>?> showTagEditor({
   );
   } finally {
     _controller.dispose();
+    _focusNode.dispose();
   }
 }
 

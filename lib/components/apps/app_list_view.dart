@@ -38,10 +38,15 @@ class AppListView extends StatelessWidget {
     final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
     final width = MediaQuery.of(context).size.width;
     final horizontalPadding = width > 800 ? (width - 800) / 2 : 0.0;
-    final double verticalPadding = apps.length <= 3 ? 24.0 : 8.0;
-
-    final pinnedApps = apps.where((a) => a.app.pinned).toList();
-    final unpinnedApps = apps.where((a) => !a.app.pinned).toList();
+    final pinnedApps = <AppInMemory>[];
+    final unpinnedApps = <AppInMemory>[];
+    for (final a in apps) {
+      if (a.app.pinned) {
+        pinnedApps.add(a);
+      } else {
+        unpinnedApps.add(a);
+      }
+    }
 
     Widget _buildAppItem(AppInMemory app, bool isPinned, int index) {
       final hasUpdate = pendingUpdates.contains(app.app.id);
@@ -249,7 +254,7 @@ class AppListView extends StatelessWidget {
                 },
                 childCount: unpinnedApps.length,
                 addAutomaticKeepAlives: false,
-                addRepaintBoundaries: false,
+                addRepaintBoundaries: true,
               ),
             ),
         ],
