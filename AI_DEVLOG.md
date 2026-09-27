@@ -37,6 +37,26 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-27 (Session 5) — Antigravity (Gemini 3.8 Flash)
+
+**List & Grid Jitter Elimination, M3E Pill Badging & Touch Responsiveness (v1.6.10-p14):**
+
+1. **O(1) Scroll & Build Lookup for Grid and List Items (`app_grid_view.dart`, `app_list_view.dart`)**:
+   - Replaced live, per-tile regex string parsing via `AppUpdateService.areVersionsDifferent` inside both `AppGridView` and `AppListView` item builder delegates with an O(1) cached set lookup (`appsProvider.findAllPendingUpdates().updates.contains(app.app.id)`).
+   - Eliminated redundant `context.watch<ViewSettingsProvider>()` call inside `AppListView` item delegate, hoisting to top-level `build()`.
+2. **Tactile Touch Responsiveness & Ripple Occlusion Fix (`app_list_tile.dart`, `scale_touch_wrapper.dart`)**:
+   - Fixed `AppListTile` paint occlusion where `AnimatedContainer` background drew on top of `InkWell` ripple layer; inverted the hierarchy to `AnimatedContainer -> ClipRRect -> Material(color: Colors.transparent) -> InkWell` so ink ripples and highlights are clearly visible and tactile.
+   - Optimized `ScaleTouchWrapper` with `context.select<PlusSettingsProvider, bool>` and passed `child: widget.child` to `AnimatedBuilder` to cache subtrees, eliminating rebuilding overhead during press scale interactions.
+   - Upgraded `_buildVersionUpdatePill` to `CardMetrics.pillRadius` with subtle border and micro-capsule padding.
+3. **App Details Page M3 Expressive Geometry Polish (`app.dart`)**:
+   - Upgraded status badges (`upToDate`, `updateAvailable`) and changelog button from 12dp rectangular geometry to `CardMetrics.pillRadius` M3E capsules.
+   - Replaced static action cards in `_buildActionCard` with `ScaleTouchWrapper`, `CardMetrics.inner(cardRadius)`, and responsive ink ripples.
+   - Upgraded detailed source badge and package ID containers to M3E pill capsules (`CardMetrics.pillRadius`).
+4. **Predictive Back & M3 Page Transitions (`theme.dart`)**:
+   - Configured `PredictiveBackPageTransitionsBuilder` for Android in `lib/theme.dart`, enabling system predictive back swipe navigation and M3 zoom-scale transitions on Android 14/15/16.
+
+---
+
 ### 2026-09-27 (Session 4) — Antigravity (Gemini 3.8 Flash)
 
 **Material 3 Expressive Shape-Shifting Search Bars & Large App List Pipeline Optimization (v1.6.10-p12):**

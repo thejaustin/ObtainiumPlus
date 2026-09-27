@@ -37,6 +37,7 @@ class AppGridView extends StatelessWidget {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final appsProvider = context.watch<AppsProvider>();
     final isSelectionMode = appsProvider.isSelectionMode;
+    final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
 
     // Adaptive column count and M3E aspect ratio
     int columnCount = GridMetrics.adaptiveColumns(
@@ -70,13 +71,7 @@ class AppGridView extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (BuildContext context, int index) {
             var app = apps[index];
-            final inst = app.app.installedVersion;
-            final latest = app.app.latestVersion;
-            final hasUpdate = AppUpdateService.areVersionsDifferent(
-              app.app,
-              inst,
-              latest,
-            );
+            final hasUpdate = pendingUpdates.contains(app.app.id);
 
             void showAppShortcuts() => showAppShortcutsMenu(
               context,

@@ -23,6 +23,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/apps/app_version_history.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
@@ -592,21 +593,25 @@ class _AppPageState extends State<AppPage> {
                                 if (changeLogFn != null || app?.app.releaseDate != null) ...[
                                   const SizedBox(height: 6),
                                   InkWell(
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                                     onTap: changeLogFn != null
                                         ? () {
                                             AppHaptics.selectionClick();
                                             changeLogFn();
                                           }
                                         : null,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+                                      ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(
                                             Icons.history_rounded,
-                                            size: 14,
+                                            size: 13,
                                             color: Theme.of(context).colorScheme.primary,
                                           ),
                                           const SizedBox(width: 4),
@@ -629,10 +634,10 @@ class _AppPageState extends State<AppPage> {
                           if (app?.app.installedVersion != null &&
                               app?.app.installedVersion == app?.app.latestVersion)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -661,10 +666,10 @@ class _AppPageState extends State<AppPage> {
                                 app.app.latestVersion,
                               ))
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.secondaryContainer,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -921,29 +926,38 @@ class _AppPageState extends State<AppPage> {
       required VoidCallback onTap,
       required Color color,
     }) {
-      return Material(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Column(
-              children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
+      final actionRadius = CardMetrics.inner(cardRadius).clamp(14.0, 20.0);
+      return ScaleTouchWrapper(
+        onTap: onTap,
+        child: Material(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(actionRadius),
+          child: InkWell(
+            onTap: () {
+              AppHaptics.selectionClick();
+              onTap();
+            },
+            borderRadius: BorderRadius.circular(actionRadius),
+            splashColor: color.withValues(alpha: 0.18),
+            highlightColor: color.withValues(alpha: 0.08),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              child: Column(
+                children: [
+                  Icon(icon, color: color, size: 20),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1090,11 +1104,11 @@ class _AppPageState extends State<AppPage> {
       }
 
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1180,12 +1194,12 @@ class _AppPageState extends State<AppPage> {
         const SizedBox(height: 12),
         Center(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
               ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
             ),
             child: Text(
               app?.app.id ?? '',
