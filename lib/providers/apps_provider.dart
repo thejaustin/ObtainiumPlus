@@ -1918,13 +1918,13 @@ class AppsProvider with ChangeNotifier {
     _pendingIconFetches.add(appId);
     try {
       var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
-      var alreadyCached = cachedIcon.existsSync() && !ignoreCache;
+      var alreadyCached = !ignoreCache && await cachedIcon.exists();
       Uint8List? icon;
       if (alreadyCached) {
         try {
           icon = await cachedIcon.readAsBytes();
         } catch (e) {
-          // The cache file can vanish between the existsSync() check above
+          // The cache file can vanish between the exists check above
           // and this read (concurrent cache clear / low-storage cleanup) —
           // fall back to re-fetching from the installed package (#235).
           alreadyCached = false;
@@ -1934,7 +1934,7 @@ class AppsProvider with ChangeNotifier {
       icon ??= await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon();
       if (icon != null && !alreadyCached) {
         try {
-          if (!iconsCacheDir.existsSync()) {
+          if (!await iconsCacheDir.exists()) {
             await iconsCacheDir.create(recursive: true);
           }
           await cachedIcon.writeAsBytes(icon.toList());
@@ -2337,10 +2337,16 @@ class AppsProvider with ChangeNotifier {
     );
   }
 
+  int _appsRevision = 0;
+  int get appsRevision => _appsRevision;
+
+  ({Set<String> updates, List<String> newInstalls})? _cachedPendingUpdates;
+
   /// Single-pass: returns pending installed-app updates as a [Set] (O(1) lookup)
   /// and not-yet-installed apps as a [List]. Avoids two separate O(n) passes.
+  /// Memoized until apps collection changes to eliminate regex re-evaluation during builds.
   ({Set<String> updates, List<String> newInstalls}) findAllPendingUpdates() =>
-      AppUpdateService.findAllPendingUpdates(apps);
+      _cachedPendingUpdates ??= AppUpdateService.findAllPendingUpdates(apps);
 
   Map<String, dynamic> generateExportJSON({
     List<String>? appIds,
@@ -2509,6 +2515,8 @@ class AppsProvider with ChangeNotifier {
 
   @override
   void notifyListeners() {
+    _appsRevision++;
+    _cachedPendingUpdates = null;
     super.notifyListeners();
     // Debounce: coalesce rapid bursts (download progress, icon loads) into a
     // single widget update 500 ms after the last notification settles.
@@ -2521,16 +2529,7 @@ class AppsProvider with ChangeNotifier {
 
   Future<void> _updateWidgetData() async {
     try {
-      int count = 0;
-      for (var entry in apps.entries) {
-        if (AppUpdateService.areVersionsDifferent(
-          entry.value.app,
-          entry.value.app.installedVersion,
-          entry.value.app.latestVersion,
-        )) {
-          count++;
-        }
-      }
+      final count = findAllPendingUpdates().updates.length;
       await HomeWidget.saveWidgetData<int>('pending_updates_count', count);
       await HomeWidget.updateWidget(androidName: 'HomeWidgetProvider');
     } catch (e) {

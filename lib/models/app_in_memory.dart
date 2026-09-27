@@ -80,6 +80,12 @@ class AppInMemory {
   String get name => app.overrideName ?? app.finalName;
   String get author => app.overrideAuthor ?? app.finalAuthor;
 
+  String? _lowerName;
+  String get lowerName => _lowerName ??= name.toLowerCase();
+
+  String? _lowerAuthor;
+  String get lowerAuthor => _lowerAuthor ??= author.toLowerCase();
+
   bool get needsRefreshBeforeDownload =>
       app.settings.getBool('refreshBeforeDownload') ||
       (app.apkUrls.isNotEmpty && app.apkUrls.first.value == 'placeholder');

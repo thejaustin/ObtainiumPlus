@@ -84,6 +84,8 @@ class DiscoverPageState extends State<DiscoverPage> {
   Map<String, MapEntry<String, List<String>>> results = {};
   SourceProvider sourceProvider = SourceProvider();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearchFocused = false;
   Map<String, Map<String, dynamic>> sourceQuerySettings = {};
   Timer? _searchDebounce;
 
@@ -96,6 +98,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     super.initState();
     searchQuery = widget.initialQuery;
     _searchController.text = widget.initialQuery;
+    _searchFocusNode.addListener(_onSearchFocusChange);
 
     // Initialize default query settings for searchable sources
     for (var source in searchableSources) {
@@ -105,8 +108,18 @@ class DiscoverPageState extends State<DiscoverPage> {
     }
   }
 
+  void _onSearchFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isSearchFocused = _searchFocusNode.hasFocus;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _searchFocusNode.removeListener(_onSearchFocusChange);
+    _searchFocusNode.dispose();
     _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -564,49 +577,110 @@ class DiscoverPageState extends State<DiscoverPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: tr('searchSomeSourcesLabel'),
-                        prefixIcon: IconButton(
-                          icon: const Icon(Icons.tune),
-                          onPressed: () {
-                            AppHaptics.selectionClick();
-                            showSearchOptions();
-                          },
-                          tooltip: tr('searchOptions'),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Easing.emphasizedDecelerate,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          _isSearchFocused || searchQuery.isNotEmpty
+                              ? 18.0
+                              : 28.0,
                         ),
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (searchQuery.isNotEmpty)
+                        boxShadow: (_isSearchFocused || searchQuery.isNotEmpty)
+                            ? [
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.16),
+                                  blurRadius: 14,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        decoration: InputDecoration(
+                          hintText: tr('searchSomeSourcesLabel'),
+                          prefixIcon: IconButton(
+                            icon: const Icon(Icons.tune),
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              showSearchOptions();
+                            },
+                            tooltip: tr('searchOptions'),
+                          ),
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (searchQuery.isNotEmpty)
+                                IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  tooltip: tr('clear'),
+                                  onPressed: () {
+                                    AppHaptics.selectionClick();
+                                    _searchDebounce?.cancel();
+                                    _searchController.clear();
+                                    setState(() {
+                                      searchQuery = '';
+                                      results = {};
+                                    });
+                                  },
+                                ),
                               IconButton(
-                                icon: const Icon(Icons.clear),
-                                tooltip: tr('clear'),
+                                icon: const Icon(Icons.search),
+                                tooltip: tr('search'),
                                 onPressed: () {
                                   AppHaptics.selectionClick();
-                                  _searchDebounce?.cancel();
-                                  _searchController.clear();
-                                  setState(() {
-                                    searchQuery = '';
-                                    results = {};
-                                  });
+                                  runSearch();
                                 },
                               ),
-                            IconButton(
-                              icon: const Icon(Icons.search),
-                              tooltip: tr('search'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                runSearch();
-                              },
+                            ],
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              _isSearchFocused || searchQuery.isNotEmpty
+                                  ? 18.0
+                                  : 28.0,
                             ),
-                          ],
+                            borderSide: BorderSide(
+                              color: (_isSearchFocused || searchQuery.isNotEmpty)
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outlineVariant,
+                              width: (_isSearchFocused || searchQuery.isNotEmpty)
+                                  ? 1.8
+                                  : 1.0,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              _isSearchFocused || searchQuery.isNotEmpty
+                                  ? 18.0
+                                  : 28.0,
+                            ),
+                            borderSide: BorderSide(
+                              color: (_isSearchFocused || searchQuery.isNotEmpty)
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant
+                                      .withValues(alpha: 0.3),
+                              width: (_isSearchFocused || searchQuery.isNotEmpty)
+                                  ? 1.8
+                                  : 1.0,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18.0),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1.8,
+                            ),
+                          ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       onChanged: (value) {
                         // setState so the clear button and per-source filter
                         // chips react to the query as it is typed

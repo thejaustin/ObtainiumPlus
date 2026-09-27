@@ -128,9 +128,12 @@ class _CommandCenterState extends State<CommandCenter> {
     return false;
   }
 
+  bool _isFocused = false;
+
   @override
   void initState() {
     super.initState();
+    _focusNode.addListener(_onFocusChange);
     if (widget.initialQuery != null) {
       _controller.text = widget.initialQuery!;
       _query = widget.initialQuery!;
@@ -139,8 +142,17 @@ class _CommandCenterState extends State<CommandCenter> {
     _focusNode.requestFocus();
   }
 
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
     _debounce?.cancel();
     _controller.dispose();
     _focusNode.dispose();
@@ -313,64 +325,99 @@ class _CommandCenterState extends State<CommandCenter> {
                     // Search Input
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        style: theme.textTheme.titleMedium,
-                        decoration: InputDecoration(
-                          hintText: tr('searchOrPasteUrl'),
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _query.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  tooltip: tr('clear'),
-                                  onPressed: () {
-                                    AppHaptics.selectionClick();
-                                    _controller.clear();
-                                    _onSearchChanged('');
-                                  },
-                                )
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 280),
+                        curve: Easing.emphasizedDecelerate,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            _isFocused || _query.isNotEmpty ? 18.0 : 28.0,
+                          ),
+                          boxShadow: (_isFocused || _query.isNotEmpty)
+                              ? [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.16,
+                                    ),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
                               : null,
-                          filled: true,
-                          fillColor: theme.colorScheme.surfaceContainerHigh
-                              .withValues(
-                                alpha: plusSettings.plusEnableGlassmorphism
-                                    ? 0.5
+                        ),
+                        child: TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          style: theme.textTheme.titleMedium,
+                          decoration: InputDecoration(
+                            hintText: tr('searchOrPasteUrl'),
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _query.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    tooltip: tr('clear'),
+                                    onPressed: () {
+                                      AppHaptics.selectionClick();
+                                      _controller.clear();
+                                      _onSearchChanged('');
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceContainerHigh
+                                .withValues(
+                                  alpha: plusSettings.plusEnableGlassmorphism
+                                      ? 0.5
+                                      : 1.0,
+                                ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                _isFocused || _query.isNotEmpty ? 18.0 : 28.0,
+                              ),
+                              borderSide: BorderSide(
+                                color: (_isFocused || _query.isNotEmpty)
+                                    ? theme.colorScheme.primary
+                                    : (plusSettings.plusEnableGlassmorphism
+                                        ? theme.colorScheme.onSurface.withValues(
+                                            alpha: AppConstants.glassBorderAlpha,
+                                          )
+                                        : Colors.transparent),
+                                width: (_isFocused || _query.isNotEmpty)
+                                    ? 1.8
                                     : 1.0,
                               ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(
-                              color: plusSettings.plusEnableGlassmorphism
-                                  ? theme.colorScheme.onSurface.withValues(
-                                      alpha: AppConstants.glassBorderAlpha,
-                                    )
-                                  : Colors.transparent,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(
+                                _isFocused || _query.isNotEmpty ? 18.0 : 28.0,
+                              ),
+                              borderSide: BorderSide(
+                                color: (_isFocused || _query.isNotEmpty)
+                                    ? theme.colorScheme.primary
+                                    : (plusSettings.plusEnableGlassmorphism
+                                        ? theme.colorScheme.onSurface.withValues(
+                                            alpha: AppConstants.glassBorderAlpha,
+                                          )
+                                        : theme.colorScheme.outlineVariant
+                                            .withValues(alpha: 0.3)),
+                                width: (_isFocused || _query.isNotEmpty)
+                                    ? 1.8
+                                    : 1.0,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18.0),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.primary,
+                                width: 1.8,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
                             ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(
-                              color: plusSettings.plusEnableGlassmorphism
-                                  ? theme.colorScheme.onSurface.withValues(
-                                      alpha: AppConstants.glassBorderAlpha,
-                                    )
-                                  : theme.colorScheme.outlineVariant
-                                      .withValues(alpha: 0.3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(
-                              color: theme.colorScheme.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                          ),
+                          onChanged: _onSearchChanged,
                         ),
-                        onChanged: _onSearchChanged,
                       ),
                     ),
 
