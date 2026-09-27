@@ -704,8 +704,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                         runSearch();
                       },
                     ),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
+                  ),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOutCubic,
                       child: searchQuery.isNotEmpty
                           ? Column(
