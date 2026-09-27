@@ -55,6 +55,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late List<Animation<double>> _sectionAnimations;
+  late final TextEditingController _nameController;
+  late final TextEditingController _authorController;
+  late final TextEditingController _idController;
 
   @override
   void initState() {
@@ -74,12 +77,33 @@ class _SortFilterPanelState extends State<SortFilterPanel>
       );
     });
 
+    _nameController = TextEditingController(text: widget.filter.nameFilter);
+    _authorController = TextEditingController(text: widget.filter.authorFilter);
+    _idController = TextEditingController(text: widget.filter.idFilter);
+
     _animController.forward();
+  }
+
+  @override
+  void didUpdateWidget(SortFilterPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.filter.nameFilter != _nameController.text) {
+      _nameController.text = widget.filter.nameFilter;
+    }
+    if (widget.filter.authorFilter != _authorController.text) {
+      _authorController.text = widget.filter.authorFilter;
+    }
+    if (widget.filter.idFilter != _idController.text) {
+      _idController.text = widget.filter.idFilter;
+    }
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _nameController.dispose();
+    _authorController.dispose();
+    _idController.dispose();
     super.dispose();
   }
 
@@ -200,6 +224,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                                           widget.filter.includeUptodate = true;
                                           widget.filter.includeNonInstalled =
                                               true;
+                                          _nameController.clear();
+                                          _authorController.clear();
+                                          _idController.clear();
                                         });
                                         widget.onFilterChanged();
                                       },
@@ -620,17 +647,17 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         ),
         children: [
           const SizedBox(height: 16),
-          _buildTextField(tr('appName'), widget.filter.nameFilter, (v) {
+          _buildTextField(tr('appName'), _nameController, (v) {
             widget.filter.nameFilter = v;
             widget.onFilterChanged();
           }, theme),
           const SizedBox(height: 16),
-          _buildTextField(tr('author'), widget.filter.authorFilter, (v) {
+          _buildTextField(tr('author'), _authorController, (v) {
             widget.filter.authorFilter = v;
             widget.onFilterChanged();
           }, theme),
           const SizedBox(height: 16),
-          _buildTextField(tr('appId'), widget.filter.idFilter, (v) {
+          _buildTextField(tr('appId'), _idController, (v) {
             widget.filter.idFilter = v;
             widget.onFilterChanged();
           }, theme),
@@ -668,20 +695,91 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
   Widget _buildTextField(
     String label,
-    String initialValue,
+    TextEditingController controller,
     Function(String) onChanged,
     ThemeData theme,
   ) {
-    return TextField(
-      decoration: InputDecoration(
-        labelText: label,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-      ),
-      controller: TextEditingController(text: initialValue),
-      onChanged: onChanged,
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, child) {
+        final hasText = value.text.isNotEmpty;
+        return Focus(
+          child: Builder(
+            builder: (fContext) {
+              final isFocused = Focus.of(fContext).hasFocus;
+              final isShifted = isFocused || hasText;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 280),
+                curve: Easing.emphasizedDecelerate,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
+                  boxShadow: isShifted
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                            blurRadius: 12,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: TextField(
+                  controller: controller,
+                  onChanged: onChanged,
+                  decoration: InputDecoration(
+                    labelText: label,
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: hasText
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            tooltip: tr('clear'),
+                            onPressed: () {
+                              controller.clear();
+                              onChanged('');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerHigh.withValues(
+                      alpha: 0.6,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
+                      borderSide: BorderSide(
+                        color: isShifted
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        width: isShifted ? 1.5 : 1.0,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
+                      borderSide: BorderSide(
+                        color: isShifted
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        width: isShifted ? 1.5 : 1.0,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.primary,
+                        width: 1.8,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

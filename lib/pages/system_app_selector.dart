@@ -525,36 +525,85 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       horizontal: 20,
                       vertical: 8,
                     ),
-                    child: SearchBar(
-                      hintText: tr('searchApps'),
-                      leading: const Icon(Icons.search),
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      elevation: WidgetStateProperty.all(0),
-                      backgroundColor: WidgetStateProperty.all(
-                        Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHigh.withValues(
-                          alpha: plusSettings.plusEnableGlassmorphism
-                              ? 0.5
-                              : 1.0,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Easing.emphasizedDecelerate,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          _searchQuery.isNotEmpty ? 18.0 : 28.0,
                         ),
-                      ),
-                      trailing: _isLoading
-                          ? null
-                          : [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 12),
-                                child: Text(
-                                  '${filteredApps.length}',
-                                  style: Theme.of(context).textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
+                        boxShadow: _searchQuery.isNotEmpty
+                            ? [
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.16),
+                                  blurRadius: 14,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                            ],
+                              ]
+                            : null,
+                      ),
+                      child: SearchBar(
+                        hintText: tr('searchApps'),
+                        leading: const Icon(Icons.search),
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        elevation: WidgetStateProperty.all(0),
+                        shape: WidgetStateProperty.resolveWith((states) {
+                          final isFocused = states.contains(WidgetState.focused);
+                          final isShifted = isFocused || _searchQuery.isNotEmpty;
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              isShifted ? 18.0 : 28.0,
+                            ),
+                            side: BorderSide(
+                              color: isShifted
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant
+                                      .withValues(alpha: 0.3),
+                              width: isShifted ? 1.5 : 1.0,
+                            ),
+                          );
+                        }),
+                        backgroundColor: WidgetStateProperty.all(
+                          Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHigh.withValues(
+                            alpha: plusSettings.plusEnableGlassmorphism
+                                ? 0.5
+                                : 1.0,
+                          ),
+                        ),
+                        trailing: _isLoading
+                            ? null
+                            : [
+                                if (_searchQuery.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.clear, size: 20),
+                                    tooltip: tr('clear'),
+                                    onPressed: () =>
+                                        setState(() => _searchQuery = ''),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: Text(
+                                    '${filteredApps.length}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                      ),
                     ),
                   ),
                   if (hasLabels) ...[
@@ -795,36 +844,83 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SearchBar(
-                  hintText: tr('searchApps'),
-                  leading: const Icon(Icons.search),
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                  elevation: WidgetStateProperty.all(0),
-                  backgroundColor: WidgetStateProperty.all(
-                    Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHigh.withValues(
-                      alpha: settings.plusEnableGlassmorphism
-                          ? AppOpacity.half
-                          : 1.0,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Easing.emphasizedDecelerate,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      _searchQuery.isNotEmpty ? 18.0 : 28.0,
                     ),
-                  ),
-                  trailing: _isLoading
-                      ? null
-                      : [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: Text(
-                              '${filteredApps.length}',
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
+                    boxShadow: _searchQuery.isNotEmpty
+                        ? [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.16),
+                              blurRadius: 14,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                        ],
+                          ]
+                        : null,
+                  ),
+                  child: SearchBar(
+                    hintText: tr('searchApps'),
+                    leading: const Icon(Icons.search),
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                    elevation: WidgetStateProperty.all(0),
+                    shape: WidgetStateProperty.resolveWith((states) {
+                      final isFocused = states.contains(WidgetState.focused);
+                      final isShifted = isFocused || _searchQuery.isNotEmpty;
+                      return RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          isShifted ? 18.0 : 28.0,
+                        ),
+                        side: BorderSide(
+                          color: isShifted
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .outlineVariant
+                                  .withValues(alpha: 0.3),
+                          width: isShifted ? 1.5 : 1.0,
+                        ),
+                      );
+                    }),
+                    backgroundColor: WidgetStateProperty.all(
+                      Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHigh.withValues(
+                        alpha: settings.plusEnableGlassmorphism
+                            ? AppOpacity.half
+                            : 1.0,
+                      ),
+                    ),
+                    trailing: _isLoading
+                        ? null
+                        : [
+                            if (_searchQuery.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                tooltip: tr('clear'),
+                                onPressed: () =>
+                                    setState(() => _searchQuery = ''),
+                              ),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: Text(
+                                '${filteredApps.length}',
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ),
+                          ],
+                  ),
                 ),
                 if (hasLabels) ...[
                   const SizedBox(height: 8),

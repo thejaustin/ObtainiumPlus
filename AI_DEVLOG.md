@@ -37,6 +37,22 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-27 (Session 7) — Antigravity (Gemini 3.8 Flash)
+
+**Universal M3 Expressive Search Bar Shape Morphing & Persistent Filter Inputs (v1.6.10-p16):**
+
+1. **Universal Search Bar Shape Morphing (`settings.dart`, `system_app_selector.dart`)**:
+   - Upgraded `SearchBar` in `SettingsPage` and `SystemAppSelector` (both primary page and modal sheet) to dynamically morph between resting capsule pill geometry (`28.0dp`) and active squircle shape (`18.0dp`) when focused or when search text is present.
+   - Powered by `Easing.emphasizedDecelerate` (280ms duration) and animated primary-tinted elevation glow shadows (`BoxShadow` with `primary.withValues(alpha: 0.16)`).
+   - Added clear button suffixes to swiftly reset queries.
+
+2. **Persistent Controllers & Morphing Filter Inputs (`sort_filter_panel.dart`)**:
+   - Replaced ephemeral per-build `TextEditingController` instantiation with persistent stateful controllers (`_nameController`, `_authorController`, `_idController`) in `_SortFilterPanelState`.
+   - Enhanced `_buildTextField` with `ValueListenableBuilder` and `AnimatedContainer` squircle morphing (`28.0dp` pill → `16.0dp` squircle), primary focus borders, and inline clear icons.
+   - Synchronized reset actions and widget updates cleanly via `didUpdateWidget`.
+
+---
+
 ### 2026-09-27 (Session 6) — Antigravity (Gemini 3.8 Flash)
 
 **Instant Triple-Partition Filter Memoization & M3E Direct 1-Tap Install Action (v1.6.10-p15):**
