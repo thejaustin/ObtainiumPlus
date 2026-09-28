@@ -89,29 +89,46 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
+  // Memoization fields to avoid recomputing updates, pinned apps, and deep-copying on filter toggles
+  int? _lastAppsRevision;
+  int? _lastAppsCount;
+  List<AppInMemory>? _cachedApps;
+  List<AppInMemory>? _cachedUpdateApps;
+  List<AppInMemory>? _cachedPinnedApps;
+  int _cachedInstalledCount = 0;
+
   @override
   Widget build(BuildContext context) {
     final appsProvider = context.watch<AppsProvider>();
     final settings = context.watch<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
-    final apps = appsProvider.getAppValues();
+    final appsRevision = appsProvider.appsRevision;
+    final appsCount = appsProvider.apps.length;
+
+    if (_cachedApps == null ||
+        _lastAppsRevision != appsRevision ||
+        _lastAppsCount != appsCount) {
+      _lastAppsRevision = appsRevision;
+      _lastAppsCount = appsCount;
+      _cachedApps = appsProvider.getAppValues(deepCopy: false);
+      final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
+      _cachedUpdateApps = _cachedApps!
+          .where((app) => pendingUpdates.contains(app.app.id))
+          .toList();
+      _cachedPinnedApps =
+          _cachedApps!.where((app) => app.app.pinned).toList();
+      _cachedInstalledCount = _cachedApps!
+          .where((app) => app.app.installedVersion != null)
+          .length;
+    }
+
+    final apps = _cachedApps!;
     final totalApps = apps.length;
-
-    final updateApps = apps
-        .where(
-          (app) =>
-              app.app.installedVersion != null &&
-              AppUpdateService.areVersionsDifferent(
-                app.app,
-                app.app.installedVersion,
-                app.app.latestVersion,
-              ),
-        )
-        .toList();
+    final updateApps = _cachedUpdateApps!;
     final updatesAvailable = updateApps.length;
-
-    final pinnedApps = apps.where((app) => app.app.pinned).toList();
+    final pinnedApps = _cachedPinnedApps!;
+    final installedCount = _cachedInstalledCount;
 
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
@@ -177,9 +194,7 @@ class _AppDashboardState extends State<AppDashboard>
               onModeChanged: widget.onFilterChanged,
               totalApps: totalApps,
               updatesCount: updatesAvailable,
-              installedCount: apps
-                  .where((app) => app.app.installedVersion != null)
-                  .length,
+              installedCount: installedCount,
               radius: radius,
               isGlass: settings.plusEnableGlassmorphism,
             ),

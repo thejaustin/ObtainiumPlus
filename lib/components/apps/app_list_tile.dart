@@ -113,6 +113,7 @@ class AppListTile extends StatelessWidget {
         );
       }
       return ScaleTouchWrapper(
+        scaleDownFactor: 0.92,
         child: plusSettings.plusUpdateExpressiveBadge
             // Expressive pill: "↓ 2.4.0"
             ? Tooltip(
@@ -129,11 +130,23 @@ class AppListTile extends StatelessWidget {
                         Theme.of(context).colorScheme.secondaryContainer,
                     foregroundColor:
                         Theme.of(context).colorScheme.onSecondaryContainer,
+                    elevation: 0.8,
+                    shadowColor: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withValues(alpha: 0.25),
+                    side: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withValues(alpha: 0.35),
+                      width: 0.8,
+                    ),
                     padding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? 8 : 12,
+                      horizontal: isCompact ? 10 : 13,
                       vertical: 0,
                     ),
-                    minimumSize: Size(0, isCompact ? 28 : 32),
+                    minimumSize: Size(0, isCompact ? 28 : 34),
                     shape: const StadiumBorder(),
                     textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -143,7 +156,7 @@ class AppListTile extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.download_rounded, size: 13),
+                      const Icon(Icons.download_rounded, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         appInMemory.app.latestVersion?.isNotEmpty == true
@@ -157,8 +170,8 @@ class AppListTile extends StatelessWidget {
                 ),
               )
             // Classic circular download button (original behaviour).
-            : IconButton.filled(
-                icon: const Icon(Icons.download_rounded),
+            : IconButton.filledTonal(
+                icon: const Icon(Icons.download_rounded, size: 18),
                 onPressed: () {
                   AppHaptics.selectionClick();
                   appsProvider.downloadAndInstallLatestApps([
@@ -171,6 +184,13 @@ class AppListTile extends StatelessWidget {
                       Theme.of(context).colorScheme.secondaryContainer,
                   foregroundColor:
                       Theme.of(context).colorScheme.onSecondaryContainer,
+                  side: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withValues(alpha: 0.3),
+                    width: 0.8,
+                  ),
                 ),
               ),
       );
@@ -188,6 +208,7 @@ class AppListTile extends StatelessWidget {
         );
       }
       return ScaleTouchWrapper(
+        scaleDownFactor: 0.92,
         child: plusSettings.plusUpdateExpressiveBadge
             // Expressive pill: "↓ Install"
             ? Tooltip(
@@ -204,11 +225,23 @@ class AppListTile extends StatelessWidget {
                         Theme.of(context).colorScheme.primaryContainer,
                     foregroundColor:
                         Theme.of(context).colorScheme.onPrimaryContainer,
+                    elevation: 0.8,
+                    shadowColor: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.28),
+                    side: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.35),
+                      width: 0.8,
+                    ),
                     padding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? 8 : 12,
+                      horizontal: isCompact ? 10 : 13,
                       vertical: 0,
                     ),
-                    minimumSize: Size(0, isCompact ? 28 : 32),
+                    minimumSize: Size(0, isCompact ? 28 : 34),
                     shape: const StadiumBorder(),
                     textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -218,7 +251,7 @@ class AppListTile extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.download_rounded, size: 13),
+                      const Icon(Icons.download_rounded, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         tr('install'),
@@ -230,8 +263,8 @@ class AppListTile extends StatelessWidget {
                 ),
               )
             // Classic circular download button
-            : IconButton.filled(
-                icon: const Icon(Icons.download_rounded),
+            : IconButton.filledTonal(
+                icon: const Icon(Icons.download_rounded, size: 18),
                 onPressed: () {
                   AppHaptics.selectionClick();
                   appsProvider.downloadAndInstallLatestApps([
@@ -244,6 +277,13 @@ class AppListTile extends StatelessWidget {
                       Theme.of(context).colorScheme.primaryContainer,
                   foregroundColor:
                       Theme.of(context).colorScheme.onPrimaryContainer,
+                  side: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.3),
+                    width: 0.8,
+                  ),
                 ),
               ),
       );

@@ -37,6 +37,35 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-09-28 (Session 9) — Antigravity (Gemini 3.8 Flash)
+
+**Instant Segmented Filter Pill Caching, Universal Touch Physics, M3E Install Button & SearchBar Shape Morphing:**
+
+1. **Instant O(1) Segmented Filter Pill Toggling (`app_dashboard.dart` & `apps.dart`)**:
+   - Resolved the performance bottleneck when toggling between `all`, `updates`, and `installed` pills.
+   - Discovered and eliminated costly `appsProvider.getAppValues()` (defaulting to deep copies of all apps) and regex-heavy `AppUpdateService.areVersionsDifferent` passes inside `AppDashboard.build()`.
+   - Added memoization in `_AppDashboardState` keyed on `appsRevision` and `appsCount` to reuse pre-filtered `updateApps`, `pinnedApps`, and `installedCount` with 0 allocations and 0 ms latency on filter toggles.
+   - Eliminated $O(N^2)$ `reduce((v, e) => [...v, ...e])` category list copying in `apps.dart`, replaced with cached sorted category arrays (`_memoAllCategories`, `_memoUpdatesCategories`, `_memoInstalledCategories`).
+
+2. **Universal Touch Spring Scaling (`scale_touch_wrapper.dart`)**:
+   - Fixed bug where `ScaleTouchWrapper` early-returned unscaled widgets if `onTap == null`. Now attaches pointer-down/up/cancel listeners unconditionally to animate any wrapped child when enhanced animations are enabled.
+
+3. **M3 Expressive Install & Update Buttons on App List (`app_list_tile.dart` & `apps.dart`)**:
+   - Upgraded direct install and update buttons in `AppListTile` with M3 Expressive pill capsule styling (`StadiumBorder`), `0.92` tactile spring scale factor, elevated container shadows, subtle tonal borders, and `14dp` icons.
+   - Refined non-badge fallback to `IconButton.filledTonal` with matching borders.
+   - Upgraded classic list update button with `ScaleTouchWrapper` and `IconButton.filledTonal`.
+
+4. **App-wide M3 Expressive SearchBar Shape-Shifting (`theme_builder.dart` & `apps.dart`)**:
+   - Added dynamic shape morphing to global `SearchBarThemeData` via `WidgetStateProperty.resolveWith`: full capsule pill (`28dp`) at rest morphing fluidly into an elevated squircle (`18dp`) with primary focus outline.
+   - Upgraded `_TVSearchBar` in `apps.dart` with focus listener and animated squircle container with primary glow.
+
+5. **Scroll & Tab State Persistence (`apps.dart` & `home.dart`)**:
+   - Added `AutomaticKeepAliveClientMixin` (`wantKeepAlive => true`) to `AppsPageState` so apps list state and scroll position are never destroyed on tab switches.
+   - Added `PageStorageKey('apps_custom_scroll_view')` to `CustomScrollView`.
+   - Standardized `NavigationBar` destination indicator to `const StadiumBorder()` for consistent M3 Expressive capsule tabs.
+
+---
+
 ### 2026-09-27 (Session 8) — Antigravity (Gemini 3.8 Flash)
 
 **Performance Optimizations for Large Lists, M3E Tag & Segmented Filter Polish, and Universal Morphing Inputs:**
