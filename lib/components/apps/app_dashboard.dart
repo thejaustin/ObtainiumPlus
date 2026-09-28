@@ -111,7 +111,7 @@ class _AppDashboardState extends State<AppDashboard>
         _lastAppsCount != appsCount) {
       _lastAppsRevision = appsRevision;
       _lastAppsCount = appsCount;
-      _cachedApps = appsProvider.getAppValues(deepCopy: false);
+      _cachedApps = appsProvider.getAppValues(deepCopy: false).toList();
       final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
       _cachedUpdateApps = _cachedApps!
           .where((app) => pendingUpdates.contains(app.app.id))
