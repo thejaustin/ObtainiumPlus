@@ -165,7 +165,11 @@ Null Function()? getChangeLogFn(BuildContext context, App app) {
   };
 }
 
-class AppsPageState extends State<AppsPage> {
+class AppsPageState extends State<AppsPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late AppsFilter filter = widget.initialFilter ?? AppsFilter();
   final AppsFilter neutralFilter = AppsFilter();
   var updatesOnlyFilter = AppsFilter(
@@ -215,9 +219,16 @@ class AppsPageState extends State<AppsPage> {
   List<AppInMemory>? _memoInstalledApps;
   Set<String>? _memoExistingUpdates;
   List<String>? _memoNewInstalls;
+  Set<String>? _memoAllAppIdSet;
+  Set<String>? _memoUpdatesAppIdSet;
+  Set<String>? _memoInstalledAppIdSet;
+  List<String?>? _memoAllCategories;
+  List<String?>? _memoUpdatesCategories;
+  List<String?>? _memoInstalledCategories;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final plusSettings = context.watch<PlusSettingsProvider>();
     final appsProvider = context.watch<AppsProvider>();
 
@@ -466,31 +477,84 @@ class AppsPageState extends State<AppsPage> {
           .toList();
       _memoExistingUpdates = existingUpdates;
       _memoNewInstalls = newInstalls;
+
+      List<String?> extractSortedCategories(List<AppInMemory> source) {
+        final catSet = <String?>{};
+        for (final a in source) {
+          if (a.app.categories.isEmpty) {
+            catSet.add(null);
+          } else {
+            catSet.addAll(a.app.categories);
+          }
+        }
+        final list = catSet.toList();
+        list.sort((a, b) {
+          if (a == null) return 1;
+          if (b == null) return -1;
+          return a.toLowerCase().compareTo(b.toLowerCase());
+        });
+        return list;
+      }
+
+      _memoAllCategories = extractSortedCategories(_memoAllApps!);
+      _memoUpdatesCategories = extractSortedCategories(_memoUpdatesApps!);
+      _memoInstalledCategories = extractSortedCategories(_memoInstalledApps!);
+
+      _memoAllAppIdSet = _memoAllApps!.map((e) => e.app.id).toSet();
+      _memoUpdatesAppIdSet = _memoUpdatesApps!.map((e) => e.app.id).toSet();
+      _memoInstalledAppIdSet = _memoInstalledApps!.map((e) => e.app.id).toSet();
     }
 
     // Instantaneous O(1) partition selection based on statusFilter
+    late final List<String?> listedCategories;
     if (filter.statusFilter.contains('updates')) {
       listedApps = _memoUpdatesApps!;
+      listedAppIdSet = _memoUpdatesAppIdSet!;
+      listedCategories = _memoUpdatesCategories!;
     } else if (filter.statusFilter.contains('installed')) {
       listedApps = _memoInstalledApps!;
+      listedAppIdSet = _memoInstalledAppIdSet!;
+      listedCategories = _memoInstalledCategories!;
     } else if (filter.statusFilter.contains('trackonly')) {
       listedApps = _memoAllApps!
           .where((a) => a.app.additionalSettings['trackOnly'] == true)
           .toList();
+      listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
+      final catSet = <String?>{};
+      for (final a in listedApps) {
+        if (a.app.categories.isEmpty) catSet.add(null); else catSet.addAll(a.app.categories);
+      }
+      listedCategories = catSet.toList()
+        ..sort((a, b) => a == null ? 1 : b == null ? -1 : a.toLowerCase().compareTo(b.toLowerCase()));
     } else if (filter.statusFilter.contains('uptodate')) {
       listedApps = _memoAllApps!
           .where((a) =>
               a.app.installedVersion != null &&
               !existingUpdates.contains(a.app.id))
           .toList();
+      listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
+      final catSet = <String?>{};
+      for (final a in listedApps) {
+        if (a.app.categories.isEmpty) catSet.add(null); else catSet.addAll(a.app.categories);
+      }
+      listedCategories = catSet.toList()
+        ..sort((a, b) => a == null ? 1 : b == null ? -1 : a.toLowerCase().compareTo(b.toLowerCase()));
     } else if (filter.statusFilter.contains('notinstalled')) {
       listedApps = _memoAllApps!
           .where((a) => a.app.installedVersion == null)
           .toList();
+      listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
+      final catSet = <String?>{};
+      for (final a in listedApps) {
+        if (a.app.categories.isEmpty) catSet.add(null); else catSet.addAll(a.app.categories);
+      }
+      listedCategories = catSet.toList()
+        ..sort((a, b) => a == null ? 1 : b == null ? -1 : a.toLowerCase().compareTo(b.toLowerCase()));
     } else {
       listedApps = _memoAllApps!;
+      listedAppIdSet = _memoAllAppIdSet!;
+      listedCategories = _memoAllCategories!;
     }
-    listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
 
     selectedAppIds = selectedAppIds.where(listedAppIdSet.contains).toSet();
 
@@ -504,13 +568,11 @@ class AppsPageState extends State<AppsPage> {
       });
     }
 
-    var existingUpdateIdsAllOrSelected = existingUpdates
-        .where(
-          (element) => selectedAppIds.isEmpty
-              ? listedAppIdSet.contains(element)
-              : selectedAppIds.contains(element),
-        )
-        .toList();
+    var existingUpdateIdsAllOrSelected = selectedAppIds.isEmpty
+        ? (filter.statusFilter.contains('updates')
+            ? listedAppIdSet.toList()
+            : existingUpdates.where(listedAppIdSet.contains).toList())
+        : existingUpdates.where(selectedAppIds.contains).toList();
     var newInstallIdsAllOrSelected = newInstalls
         .where(
           (element) => selectedAppIds.isEmpty
@@ -536,30 +598,12 @@ class AppsPageState extends State<AppsPage> {
         .where(isNotTrackOnly)
         .toList();
 
-    List<String?> getListedCategories() {
-      var temp = listedApps.map(
-        (e) => e.app.categories.isNotEmpty ? e.app.categories : [null],
-      );
-      return temp.isNotEmpty
-          ? {
-              ...temp.reduce((v, e) => [...v, ...e]),
-            }.toList()
-          : [];
-    }
-
-    var listedCategories = getListedCategories();
-    listedCategories.sort((a, b) {
-      return a != null && b != null
-          ? a.toLowerCase().compareTo(b.toLowerCase())
-          : a == null
-          ? 1
-          : -1;
-    });
-
-    Set<App> selectedApps = listedApps
-        .map((e) => e.app)
-        .where((a) => selectedAppIds.contains(a.id))
-        .toSet();
+    Set<App> selectedApps = selectedAppIds.isEmpty
+        ? const <App>{}
+        : listedApps
+            .where((a) => selectedAppIds.contains(a.app.id))
+            .map((e) => e.app)
+            .toSet();
 
     getLoadingWidgets() {
       return [
@@ -665,41 +709,52 @@ class AppsPageState extends State<AppsPage> {
     }
 
     getUpdateButton(int appIndex) {
-      return IconButton(
-        visualDensity: VisualDensity.compact,
-        color: Theme.of(context).colorScheme.primary,
-        tooltip:
+      return ScaleTouchWrapper(
+        scaleDownFactor: 0.92,
+        child: IconButton.filledTonal(
+          visualDensity: VisualDensity.compact,
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              width: 0.8,
+            ),
+          ),
+          tooltip:
+              listedApps[appIndex].app.additionalSettings['trackOnly'] == true
+              ? tr('markUpdated')
+              : tr('update'),
+          onPressed: appsProvider.areDownloadsRunning()
+              ? null
+              : () {
+                  appsProvider
+                      .downloadAndInstallLatestApps([
+                        listedApps[appIndex].app.id,
+                      ], globalNavigatorKey.currentContext)
+                      .then((res) {
+                        if (res.isNotEmpty) {
+                          var np = context.read<NotificationsProvider>();
+                          np.cancel(UpdateNotification([]).id);
+                          np.cancel(
+                            SilentUpdateAttemptNotification(
+                              [],
+                              id: res[0].hashCode,
+                            ).id,
+                          );
+                        }
+                      })
+                      .catchError((e) {
+                        if (context.mounted) showError(e, context);
+                        return <String>[];
+                      });
+                },
+          icon: Icon(
             listedApps[appIndex].app.additionalSettings['trackOnly'] == true
-            ? tr('markUpdated')
-            : tr('update'),
-        onPressed: appsProvider.areDownloadsRunning()
-            ? null
-            : () {
-                appsProvider
-                    .downloadAndInstallLatestApps([
-                      listedApps[appIndex].app.id,
-                    ], globalNavigatorKey.currentContext)
-                    .then((res) {
-                      if (res.isNotEmpty) {
-                        var np = context.read<NotificationsProvider>();
-                        np.cancel(UpdateNotification([]).id);
-                        np.cancel(
-                          SilentUpdateAttemptNotification(
-                            [],
-                            id: res[0].hashCode,
-                          ).id,
-                        );
-                      }
-                    })
-                    .catchError((e) {
-                      if (context.mounted) showError(e, context);
-                      return <String>[];
-                    });
-              },
-        icon: Icon(
-          listedApps[appIndex].app.additionalSettings['trackOnly'] == true
-              ? Icons.check_circle_outline
-              : Icons.install_mobile,
+                ? Icons.check_circle_outline
+                : Icons.install_mobile,
+            size: 18,
+          ),
         ),
       );
     }
@@ -761,13 +816,7 @@ class AppsPageState extends State<AppsPage> {
       var showChangesFn = getChangeLogFn(context, listedApps[index].app);
       var trackOnly =
           listedApps[index].app.additionalSettings['trackOnly'] == true;
-      var hasUpdate =
-          listedApps[index].app.installedVersion != null &&
-          AppUpdateService.areVersionsDifferent(
-            listedApps[index].app,
-            listedApps[index].app.installedVersion,
-            listedApps[index].app.latestVersion,
-          );
+      var hasUpdate = existingUpdates.contains(listedApps[index].app.id);
       // Also show the install button for uninstalled, non-track-only apps
       var needsInstall =
           !trackOnly && listedApps[index].app.installedVersion == null;
@@ -1806,6 +1855,7 @@ class AppsPageState extends State<AppsPage> {
             interactive: true,
             controller: scrollController,
             child: CustomScrollView(
+              key: const PageStorageKey<String>('apps_custom_scroll_view'),
               physics: plusSettings.scrollPhysics,
               controller: scrollController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -2326,29 +2376,63 @@ class _TVSearchBar extends StatefulWidget {
 
 class _TVSearchBarState extends State<_TVSearchBar> {
   final FocusNode _textFocus = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _textFocus.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (mounted) setState(() => _isFocused = _textFocus.hasFocus);
+  }
 
   @override
   void dispose() {
+    _textFocus.removeListener(_onFocusChange);
     _textFocus.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isShifted = _isFocused || widget.controller.text.isNotEmpty;
+    final currentRadius = isShifted ? 18.0 : 28.0;
     return Column(
       children: [
         TvTextFieldFocus(
           textFocusNode: _textFocus,
-          borderRadius: 28,
-          child: TextField(
-            focusNode: _textFocus,
-            controller: widget.controller,
-            onChanged: widget.onChanged,
-            decoration: InputDecoration(
-              hintText: widget.hintText,
-              prefixIcon: const Icon(Icons.search_rounded),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(28)),
+          borderRadius: currentRadius,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Easing.emphasizedDecelerate,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(currentRadius),
+              boxShadow: isShifted
+                  ? [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.16),
+                        blurRadius: 14,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: TextField(
+              focusNode: _textFocus,
+              controller: widget.controller,
+              onChanged: widget.onChanged,
+              decoration: InputDecoration(
+                hintText: widget.hintText,
+                prefixIcon: const Icon(Icons.search_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(currentRadius)),
+                ),
               ),
             ),
           ),

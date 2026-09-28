@@ -454,7 +454,18 @@ class ThemeBuilder {
       backgroundColor: WidgetStateProperty.all(
         colorScheme.surfaceContainerHigh,
       ),
-      shape: WidgetStateProperty.all(const StadiumBorder()),
+      shape: WidgetStateProperty.resolveWith((states) {
+        final isFocused = states.contains(WidgetState.focused);
+        return RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(isFocused ? 18.0 : 28.0),
+          side: BorderSide(
+            color: isFocused
+                ? colorScheme.primary
+                : colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: isFocused ? 1.5 : 1.0,
+          ),
+        );
+      }),
       hintStyle: WidgetStateProperty.all(
         TextStyle(color: colorScheme.onSurfaceVariant),
       ),

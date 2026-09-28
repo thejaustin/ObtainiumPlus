@@ -597,6 +597,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       elevation: 0,
       backgroundColor: Colors.transparent,
       indicatorColor: colorScheme.primaryContainer,
+      indicatorShape: const StadiumBorder(),
       labelBehavior: labelBehavior,
       animationDuration: const Duration(milliseconds: 300),
       destinations: pages

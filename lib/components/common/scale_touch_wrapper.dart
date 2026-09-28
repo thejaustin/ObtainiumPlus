@@ -57,9 +57,7 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
   }
 
   void _onPointerDown(PointerDownEvent event) {
-    if (widget.onTap != null || widget.onLongPress != null) {
-      _controller.forward();
-    }
+    _controller.forward();
   }
 
   void _onPointerUp(PointerUpEvent event) {
@@ -81,9 +79,8 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
       (p) => p.plusEnableEnhancedAnimations,
     );
 
-    if (!plusEnableAnimations ||
-        (widget.onTap == null && widget.onLongPress == null)) {
-      // Just return child if animation disabled. We assume the child has its own onTap logic (like InkWell).
+    if (!plusEnableAnimations) {
+      // Return unscaled child if enhanced animations are disabled in settings.
       return widget.child;
     }
 
