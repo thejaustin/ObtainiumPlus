@@ -21,6 +21,7 @@ class AppDashboard extends StatefulWidget {
   final Function(String) onFilterChanged;
   final Function(String) onSearchQuery;
   final Function(String) onUrlInput;
+  final Function(String)? onDiscoverSearch;
   final VoidCallback onCheckUpdates;
 
   const AppDashboard({
@@ -29,6 +30,7 @@ class AppDashboard extends StatefulWidget {
     required this.onFilterChanged,
     required this.onSearchQuery,
     required this.onUrlInput,
+    this.onDiscoverSearch,
     required this.onCheckUpdates,
   });
 
@@ -151,6 +153,7 @@ class _AppDashboardState extends State<AppDashboard>
             Omnibar(
               onSearchQuery: widget.onSearchQuery,
               onUrlInput: widget.onUrlInput,
+              onDiscoverSearch: widget.onDiscoverSearch,
             ),
 
           if (pinnedApps.isNotEmpty || !appsProvider.isSelectionMode)

@@ -496,7 +496,7 @@ class HTML extends AppSource {
               : uri.origin;
           return MapEntry('${e.hashCode}-$fileName', e);
         }).toList(),
-        AppNames(uri.host, tr('app')),
+        AppNames(uri.host, uri.pathSegments.isNotEmpty ? uri.pathSegments.last : uri.host),
       );
     } catch (e) {
       rethrowOrWrapError(e);
