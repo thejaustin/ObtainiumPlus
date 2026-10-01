@@ -50,7 +50,9 @@ class VivoAppStore extends AppSource {
       if (apkUrl == null) {
         throw NoAPKError();
       }
-      final appName = json['title_zh']?.toString() ?? tr('app');
+      final appName = json['title_zh']?.toString().trim().isNotEmpty == true
+          ? json['title_zh'].toString()
+          : json['package_name']?.toString() ?? name;
       final packageName = json['package_name']?.toString() ?? '';
       final versionCode = json['version_code']?.toString() ?? '';
       final developer = json['developer']?.toString() ?? name;
