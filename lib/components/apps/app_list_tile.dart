@@ -786,8 +786,9 @@ class AppListTile extends StatelessWidget {
                                                   .colorScheme
                                                   .secondaryContainer
                                                   .withValues(alpha: 0.35),
-                                              borderRadius:
-                                                  BorderRadius.circular(5),
+                                              borderRadius: BorderRadius.circular(
+                                                CardMetrics.pillRadius,
+                                              ),
                                               border: Border.all(
                                                 color: Theme.of(context)
                                                     .colorScheme
@@ -860,7 +861,24 @@ class AppListTile extends StatelessWidget {
                                 appInMemory.downloadProgressNotifier,
                             builder: (context, downloadProgress, child) {
                               return AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 250),
+                                duration: const Duration(milliseconds: 300),
+                                switchInCurve: AppConstants.expressiveDecelerate,
+                                switchOutCurve: AppConstants.expressiveAccelerate,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(0.12, 0),
+                                        end: Offset.zero,
+                                      ).animate(CurvedAnimation(
+                                        parent: animation,
+                                        curve: AppConstants.expressiveDecelerate,
+                                      )),
+                                      child: child,
+                                    ),
+                                  );
+                                },
                                 child: downloadProgress != null
                                     ? SizedBox(
                                         key: const ValueKey('download'),

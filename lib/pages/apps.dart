@@ -52,6 +52,7 @@ import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/components/app_tile_skeleton.dart';
 
 class AppsPage extends StatefulWidget {
   final AppsFilter? initialFilter;
@@ -652,6 +653,48 @@ class AppsPageState extends State<AppsPage>
             .toSet();
 
     getLoadingWidgets() {
+      // Show M3E skeleton tiles during initial load instead of hourglass icon
+      if (appsProvider.loadingApps && listedApps.isEmpty) {
+        if (viewSettings.globalViewMode == ViewMode.grid) {
+          final columnCount = GridMetrics.adaptiveColumns(
+            context,
+            preferred: viewSettings.gridColumnCount,
+          );
+          return [
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              sliver: SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (_, __) => const AppTileSkeleton(isGrid: true),
+                  childCount: 12,
+                  addRepaintBoundaries: false,
+                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columnCount,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: GridMetrics.childAspectRatio(
+                    columnCount: columnCount,
+                    hasExtraDetails: viewSettings.displayShowVersion ||
+                        viewSettings.displayShowAuthor ||
+                        plusSettings.plusShowTagsInList,
+                  ),
+                ),
+              ),
+            ),
+          ];
+        }
+        return [
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (_, __) => const AppTileSkeleton(isGrid: false),
+              childCount: 10,
+              addRepaintBoundaries: false,
+            ),
+          ),
+        ];
+      }
+
       return [
         if (listedApps.isEmpty)
           SliverFillRemaining(
@@ -672,11 +715,8 @@ class AppsPageState extends State<AppsPage>
                           child: Opacity(
                             opacity: value.clamp(0.0, 1.0),
                             child: Icon(
-                              appsProvider.apps.isEmpty &&
-                                      !appsProvider.loadingApps
+                              appsProvider.apps.isEmpty
                                   ? Icons.apps_outage_rounded
-                                  : appsProvider.loadingApps
-                                  ? Icons.hourglass_empty_rounded
                                   : Icons.search_off_rounded,
                               size: 80,
                               color: Theme.of(
@@ -690,9 +730,7 @@ class AppsPageState extends State<AppsPage>
                     const SizedBox(height: 24),
                     Text(
                       appsProvider.apps.isEmpty
-                          ? appsProvider.loadingApps
-                                ? tr('pleaseWait')
-                                : tr('noApps')
+                          ? tr('noApps')
                           : tr('noAppsForFilter'),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
@@ -701,8 +739,7 @@ class AppsPageState extends State<AppsPage>
                           ),
                       textAlign: TextAlign.center,
                     ),
-                    if (appsProvider.apps.isEmpty &&
-                        !appsProvider.loadingApps) ...[
+                    if (appsProvider.apps.isEmpty) ...[
                       const SizedBox(height: 12),
                       Text(
                         'Tap the + button to add your first app',
@@ -1865,7 +1902,7 @@ class AppsPageState extends State<AppsPage>
                 );
               },
               childCount: listedApps.length,
-              addRepaintBoundaries: true,
+              addRepaintBoundaries: false,
               addAutomaticKeepAlives: false,
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

@@ -227,7 +227,7 @@ class _ActiveDownloadTile extends StatelessWidget {
                             SizedBox(
                               width: 11,
                               height: 11,
-                              child: CircularProgressIndicator(
+                              child: ExpressiveCircularProgressIndicator(
                                 strokeWidth: 1.8,
                                 color: colorScheme.secondary,
                               ),

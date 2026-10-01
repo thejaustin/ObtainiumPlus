@@ -19,12 +19,12 @@ class _UpdateBadgeState extends State<UpdateBadge>
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2400),
       vsync: this,
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.10).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutSine),
     );
   }
 

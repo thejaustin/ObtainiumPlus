@@ -37,15 +37,15 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
-      reverseDuration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 80),
+      reverseDuration: const Duration(milliseconds: 320),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDownFactor)
         .animate(
           CurvedAnimation(
             parent: _controller,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
+            curve: Curves.easeIn,
+            reverseCurve: Curves.easeOutBack,
           ),
         );
   }
