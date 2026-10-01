@@ -35,6 +35,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_package_manager/android_package_manager.dart'
     hide LaunchMode;
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/components/app_icon_shimmer.dart';
 
 class AppPage extends StatefulWidget {
   const AppPage({
@@ -1135,41 +1136,50 @@ class _AppPageState extends State<AppPage> {
         FutureBuilder(
           future: appsProvider.updateAppIcon(app?.app.id),
           builder: (ctx, val) {
-            return app?.icon != null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+            final iconSize = small ? 80.0 : 120.0;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Hero(
+                  tag: 'app_icon_${widget.appId}',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: app?.icon != null
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: app?.icon != null
+                        ? InkWell(
+                            onTap: app == null
+                                ? null
+                                : () => pm.openApp(app.app.id),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Image.memory(
+                                app!.icon!,
+                                height: iconSize,
+                                width: iconSize,
+                                fit: BoxFit.contain,
+                                gaplessPlayback: true,
+                                filterQuality: FilterQuality.medium,
+                              ),
                             ),
-                          ],
-                        ),
-                        child: InkWell(
-                          onTap: app == null
-                              ? null
-                              : () => pm.openApp(app.app.id),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: Image.memory(
-                              app!.icon!,
-                              height: small ? 80 : 120,
-                              width: small ? 80 : 120,
-                              fit: BoxFit.contain,
-                              gaplessPlayback: true,
-                              filterQuality: FilterQuality.medium,
-                            ),
+                          )
+                        : AppIconShimmer(
+                            size: iconSize,
+                            borderRadius: 24,
                           ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Container();
+                  ),
+                ),
+              ],
+            );
           },
         ),
         const SizedBox(height: 24),
