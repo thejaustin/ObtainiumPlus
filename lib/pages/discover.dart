@@ -11,7 +11,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroid.dart';
-import 'package:obtainium/components/apps/app_tile_skeleton.dart';
+import 'package:obtainium/components/app_tile_skeleton.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/discover_app_icon.dart';
