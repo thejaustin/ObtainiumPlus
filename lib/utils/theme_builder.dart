@@ -85,7 +85,14 @@ class ThemeBuilder {
       chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(colorScheme),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: colorScheme.primary,
+        linearTrackColor: colorScheme.surfaceContainerHighest,
+        circularTrackColor: colorScheme.surfaceContainerHighest,
+        refreshBackgroundColor: colorScheme.surfaceContainerHigh,
+        strokeWidth: 3.0,
+        year2023: false,
+      ),
       iconTheme: IconThemeData(
         color: colorScheme.onSurface,
         opacity: 1.0,

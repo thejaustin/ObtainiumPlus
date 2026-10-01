@@ -8,12 +8,26 @@ class NetworkIndicator extends StatefulWidget {
   State<NetworkIndicator> createState() => _NetworkIndicatorState();
 }
 
-class _NetworkIndicatorState extends State<NetworkIndicator> {
+class _NetworkIndicatorState extends State<NetworkIndicator>
+    with SingleTickerProviderStateMixin {
   NetworkQuality _quality = NetworkQuality.good;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseScale;
+  late Animation<double> _pulseOpacity;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _pulseScale = Tween<double>(begin: 1.0, end: 1.5).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
+    );
+    _pulseOpacity = Tween<double>(begin: 0.6, end: 0.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
+    );
     _checkQuality();
   }
 
@@ -22,34 +36,77 @@ class _NetworkIndicatorState extends State<NetworkIndicator> {
     if (mounted) {
       setState(() {
         _quality = quality;
+        if (quality == NetworkQuality.offline) {
+          _pulseController.repeat();
+        } else {
+          _pulseController.stop();
+          _pulseController.reset();
+        }
       });
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    Color indicatorColor;
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  Color _colorForQuality(ColorScheme cs) {
     switch (_quality) {
       case NetworkQuality.good:
-        indicatorColor = Colors.green;
-        break;
+        return cs.primary;
       case NetworkQuality.slow:
-        indicatorColor = Colors.orange;
-        break;
+        return cs.tertiary;
       case NetworkQuality.offline:
-        indicatorColor = Colors.red;
-        break;
+        return cs.error;
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = _colorForQuality(colorScheme);
 
     return Tooltip(
       message: 'Network: ${_quality.name}',
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-          color: indicatorColor,
-          shape: BoxShape.circle,
+      child: SizedBox(
+        width: 26,
+        height: 26,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (_quality == NetworkQuality.offline)
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, _) {
+                  return Transform.scale(
+                    scale: _pulseScale.value,
+                    child: Opacity(
+                      opacity: _pulseOpacity.value,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: color, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
         ),
       ),
     );
