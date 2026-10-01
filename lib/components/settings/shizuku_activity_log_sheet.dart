@@ -176,10 +176,10 @@ class _ShizukuActivityLogSheetContentState
                     Color statusColor;
                     IconData statusIcon;
                     if (e.isSuccess) {
-                      statusColor = Colors.green;
+                      statusColor = colorScheme.primary;
                       statusIcon = Icons.check_circle_rounded;
                     } else if (e.isBlocked) {
-                      statusColor = Colors.orange;
+                      statusColor = colorScheme.tertiary;
                       statusIcon = Icons.shield_rounded;
                     } else {
                       statusColor = colorScheme.error;

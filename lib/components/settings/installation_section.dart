@@ -10,6 +10,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
@@ -679,9 +680,9 @@ class _InstallationSectionState extends State<InstallationSection>
                                     fontWeight: FontWeight.w500,
                                     color: _binderLatencyMs != null && !_isTestingBinder
                                         ? (_binderLatencyMs! < 50
-                                            ? Colors.green
+                                            ? Theme.of(context).colorScheme.primary
                                             : _binderLatencyMs! < 120
-                                                ? Colors.orange
+                                                ? Theme.of(context).colorScheme.tertiary
                                                 : Theme.of(context).colorScheme.error)
                                         : null,
                                   ),
@@ -691,7 +692,7 @@ class _InstallationSectionState extends State<InstallationSection>
                                   ? const SizedBox(
                                       width: 20,
                                       height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                                     )
                                   : FilledButton.tonal(
                                       style: FilledButton.styleFrom(

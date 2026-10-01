@@ -7,6 +7,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
@@ -197,7 +198,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                 ListTile(
                   leading: Icon(
                     Icons.security_rounded,
-                    color: _isShizukuGranted ? Colors.green : colorScheme.primary,
+                    color: _isShizukuGranted ? colorScheme.primary : colorScheme.onSurfaceVariant,
                   ),
                   title: Text(
                     '$_shizukuProvider Integration',
@@ -243,7 +244,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                          child: ExpressiveCircularProgressIndicator(strokeWidth: 2.5),
                         )
                       : ScaleTouchWrapper(
                           onTap: _runBenchmark,

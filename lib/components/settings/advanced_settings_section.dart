@@ -172,12 +172,12 @@ class AdvancedSettingsSection extends StatelessWidget {
       if (_matches(tr('factoryReset'))) ...[
         const Divider(),
         ListTile(
-          leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
+          leading: Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
           title: Text(
             tr('factoryReset'),
             style: Theme.of(
               context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.red),
+            ).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.error),
           ),
           subtitle: Text(tr('factoryResetDescription')),
           onTap: () => _showResetConfirmation(context),
@@ -221,7 +221,7 @@ class AdvancedSettingsSection extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
-            child: Text(tr('reset'), style: const TextStyle(color: Colors.red)),
+            child: Text(tr('reset'), style: const TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),

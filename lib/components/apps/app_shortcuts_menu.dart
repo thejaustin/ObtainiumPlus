@@ -206,10 +206,10 @@ void showAppShortcutsMenu(
               ),
 
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                leading: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
                 title: Text(
                   tr('remove'),
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
