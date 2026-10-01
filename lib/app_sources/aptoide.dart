@@ -74,7 +74,9 @@ class Aptoide extends AppSource {
         standardUrl,
         additionalSettings,
       );
-      final String appName = appDetails['name'] ?? tr('app');
+      final String appName = appDetails['name']?.toString().trim().isNotEmpty == true
+          ? appDetails['name'].toString()
+          : appDetails['package_name']?.toString() ?? name;
       final String author = appDetails['developer']?['name'] ?? name;
       final String? dateStr = appDetails['updated'];
       final String? version = appDetails['file']?['vername'];

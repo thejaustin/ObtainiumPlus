@@ -122,7 +122,9 @@ class Uptodown extends AppSource {
       if (appId == null) {
         throw NoReleasesError();
       }
-      final String appName = appDetails['name'] ?? tr('app');
+      final String appName = appDetails['name']?.toString().trim().isNotEmpty == true
+          ? appDetails['name'].toString()
+          : appId;
       final String author = appDetails['author'] ?? name;
       final String? dateStr = appDetails['dateStr'];
       DateTime? relDate;
