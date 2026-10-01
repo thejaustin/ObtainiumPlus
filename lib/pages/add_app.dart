@@ -18,7 +18,7 @@ import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
-import 'package:obtainium/components/apps/app_tile_skeleton.dart';
+import 'package:obtainium/components/app_tile_skeleton.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/pages/import_export.dart';

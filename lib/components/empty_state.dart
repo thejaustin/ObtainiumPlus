@@ -128,9 +128,6 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                     },
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(220, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
                     ),
                     icon: const Icon(Icons.add_rounded),
                     label: Text(
