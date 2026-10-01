@@ -24,6 +24,7 @@ class AppGridTile extends StatefulWidget {
   final bool hasUpdate;
   final bool isAmbiguous;
   final Color? categoryColor;
+  final Duration entranceDelay;
 
   const AppGridTile({
     super.key,
@@ -34,19 +35,47 @@ class AppGridTile extends StatefulWidget {
     this.hasUpdate = false,
     this.isAmbiguous = false,
     this.categoryColor,
+    this.entranceDelay = Duration.zero,
   });
 
   @override
   State<AppGridTile> createState() => _AppGridTileState();
 }
 
-class _AppGridTileState extends State<AppGridTile> {
+class _AppGridTileState extends State<AppGridTile>
+    with SingleTickerProviderStateMixin {
   bool _isPressed = false;
+  late final AnimationController _entranceController;
+  late final Animation<double> _entranceFade;
+  late final Animation<Offset> _entranceSlide;
 
   @override
   void initState() {
     super.initState();
     _scheduleIconLoadIfNeeded();
+    _entranceController = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
+    );
+    _entranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
+    );
+    _entranceSlide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: AppConstants.expressiveDecelerate,
+      ),
+    );
+    if (widget.entranceDelay == Duration.zero) {
+      _entranceController.forward();
+    } else {
+      Future.delayed(widget.entranceDelay, () {
+        if (mounted) _entranceController.forward();
+      });
+    }
   }
 
   @override
@@ -58,6 +87,12 @@ class _AppGridTileState extends State<AppGridTile> {
             oldWidget.appInMemory.app.id != widget.appInMemory.app.id)) {
       _scheduleIconLoadIfNeeded();
     }
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
   }
 
   void _scheduleIconLoadIfNeeded() {
@@ -73,8 +108,12 @@ class _AppGridTileState extends State<AppGridTile> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
+    return FadeTransition(
+      opacity: _entranceFade,
+      child: SlideTransition(
+        position: _entranceSlide,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
         // Adaptive horizontal layout detection (e.g. tablet landscape rows or 1-column grids)
         final bool isHorizontal =
             constraints.maxWidth / constraints.maxHeight > 1.5;
@@ -380,7 +419,9 @@ class _AppGridTileState extends State<AppGridTile> {
             ),
           ),
         );
-      },
+          },
+        ),
+      ),
     );
   }
 

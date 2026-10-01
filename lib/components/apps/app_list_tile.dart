@@ -304,7 +304,7 @@ class AppListTile extends StatelessWidget {
       );
 
       return Hero(
-        tag: 'icon_${appInMemory.app.id}',
+        tag: 'app_icon_${appInMemory.app.id}',
         child: Container(
           width: 44,
           height: 44,
