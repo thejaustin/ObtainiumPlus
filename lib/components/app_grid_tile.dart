@@ -44,6 +44,34 @@ class _AppGridTileState extends State<AppGridTile> {
   bool _isPressed = false;
 
   @override
+  void initState() {
+    super.initState();
+    _scheduleIconLoadIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(AppGridTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.appInMemory.icon == null &&
+        widget.appInMemory.installedInfo != null &&
+        (oldWidget.appInMemory.icon != null ||
+            oldWidget.appInMemory.app.id != widget.appInMemory.app.id)) {
+      _scheduleIconLoadIfNeeded();
+    }
+  }
+
+  void _scheduleIconLoadIfNeeded() {
+    if (widget.appInMemory.icon == null &&
+        widget.appInMemory.installedInfo != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.appInMemory.icon == null) {
+          context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -73,15 +101,6 @@ class _AppGridTileState extends State<AppGridTile> {
         final double iconBorderRadius = CardMetrics.inner(baseRadius);
         final double padding = (availableWidth * 0.08).clamp(6.0, 12.0);
         final double badgeSize = (iconSize * 0.28).clamp(14.0, 20.0);
-
-        if (widget.appInMemory.icon == null &&
-            widget.appInMemory.installedInfo != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && widget.appInMemory.icon == null) {
-              context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
-            }
-          });
-        }
 
         // Resolve category color for M3E accent ribbon
         final Color? resolvedCategoryColor = widget.categoryColor ??
@@ -771,12 +790,10 @@ class _AppGridTileState extends State<AppGridTile> {
                 vertical: 1.5,
               ),
               decoration: BoxDecoration(
-                color: colorScheme.secondaryContainer.withValues(
-                  alpha: 0.35,
-                ),
-                borderRadius: BorderRadius.circular(5),
+                color: colorScheme.secondaryContainer.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                 border: Border.all(
-                  color: colorScheme.secondary.withValues(alpha: 0.15),
+                  color: colorScheme.secondary.withValues(alpha: 0.18),
                   width: 0.5,
                 ),
               ),
