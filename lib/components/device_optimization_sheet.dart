@@ -5,6 +5,7 @@ import 'package:obtainium/components/settings/shizuku_status_card.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
@@ -478,7 +479,7 @@ class _DeviceOptimizationSheetContentState
         // Main scrollable guide content
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: ExpressiveCircularProgressIndicator())
               : ListView(
                   controller: widget.scrollController,
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),

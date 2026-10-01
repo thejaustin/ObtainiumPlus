@@ -202,9 +202,11 @@ class UpdateSettingsSection extends StatelessWidget {
 
           if (isXiaomi) {
             return ListTile(
-              leading: const Icon(
-                Icons.battery_alert_outlined,
-                color: Colors.orange,
+              leading: Builder(
+                builder: (ctx) => Icon(
+                  Icons.battery_alert_outlined,
+                  color: Theme.of(ctx).colorScheme.tertiary,
+                ),
               ),
               title: Text(
                 tr('xiaomiBatteryTroubleshooting'),

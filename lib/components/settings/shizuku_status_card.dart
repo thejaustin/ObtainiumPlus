@@ -5,6 +5,7 @@ import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/shizuku_activity_log_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 
 /// Interactive Shizuku / ShizukuPlus Service Status Card,
@@ -109,7 +110,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     if (_isLoading) {
       containerColor = colorScheme.surfaceContainerLow;
       borderColor = colorScheme.outlineVariant.withValues(alpha: 0.4);
-      statusDotColor = Colors.orange;
+      statusDotColor = colorScheme.tertiary;
       statusTitle = tr('checkingShizukuStatus');
       statusSubtitle = tr('probingDaemon');
       leadingIcon = Icons.hourglass_top_rounded;
@@ -123,7 +124,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     } else if (isRunning) {
       containerColor = colorScheme.primaryContainer.withValues(alpha: 0.4);
       borderColor = colorScheme.primary.withValues(alpha: 0.35);
-      statusDotColor = Colors.green;
+      statusDotColor = colorScheme.primary;
       statusTitle = isPlus
           ? tr('shizukuPlusServiceRunning')
           : tr('shizukuServiceRunning');
@@ -248,7 +249,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         boxShadow: isRunning
                             ? [
                                 BoxShadow(
-                                  color: Colors.green.withValues(alpha: 0.4),
+                                  color: colorScheme.primary.withValues(alpha: 0.4),
                                   blurRadius: 6,
                                   spreadRadius: 2,
                                 ),
@@ -281,8 +282,8 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                             Icons.speed_rounded,
                             size: 13,
                             color: latency < 50
-                                ? Colors.green
-                                : (latency < 120 ? Colors.orange : colorScheme.error),
+                                ? colorScheme.primary
+                                : (latency < 120 ? colorScheme.tertiary : colorScheme.error),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -394,7 +395,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                           ? const SizedBox(
                               width: 14,
                               height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.refresh_rounded, size: 15),
                       label: Text(
