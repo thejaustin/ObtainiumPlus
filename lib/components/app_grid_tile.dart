@@ -319,21 +319,11 @@ class _AppGridTileState extends State<AppGridTile> {
                     Positioned(
                       top: 6,
                       left: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(3.5),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.3),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.push_pin_rounded,
-                          size: 11,
-                          color: colorScheme.primary,
-                        ),
+                      child: _buildOverlayBadge(
+                        icon: Icons.push_pin_rounded,
+                        backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.9),
+                        iconColor: colorScheme.primary,
+                        borderColor: colorScheme.primary.withValues(alpha: 0.3),
                       ),
                     ),
 
@@ -344,24 +334,12 @@ class _AppGridTileState extends State<AppGridTile> {
                       left: (widget.appInMemory.app.pinned && !widget.isSelected)
                           ? 30
                           : 6,
-                      child: Tooltip(
-                        message: tr('repoRenamed'),
-                        child: Container(
-                          padding: const EdgeInsets.all(3.5),
-                          decoration: BoxDecoration(
-                            color: colorScheme.errorContainer.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: colorScheme.error.withValues(alpha: 0.4),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.info_outline_rounded,
-                            size: 11,
-                            color: colorScheme.onErrorContainer,
-                          ),
-                        ),
+                      child: _buildOverlayBadge(
+                        icon: Icons.info_outline_rounded,
+                        backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.9),
+                        iconColor: colorScheme.onErrorContainer,
+                        borderColor: colorScheme.error.withValues(alpha: 0.4),
+                        tooltip: tr('repoRenamed'),
                       ),
                     ),
 
@@ -370,27 +348,12 @@ class _AppGridTileState extends State<AppGridTile> {
                     Positioned(
                       top: 6,
                       right: 6,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: colorScheme.primary.withValues(alpha: 0.4),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.check_rounded,
-                            size: 14,
-                            color: colorScheme.onPrimary,
-                          ),
-                        ),
+                      child: _buildOverlayBadge(
+                        icon: Icons.check_rounded,
+                        backgroundColor: colorScheme.primary,
+                        iconColor: colorScheme.onPrimary,
+                        circle: true,
+                        shadow: true,
                       ),
                     ),
                 ],
@@ -469,6 +432,7 @@ class _AppGridTileState extends State<AppGridTile> {
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         _buildIconStack(
@@ -498,17 +462,14 @@ class _AppGridTileState extends State<AppGridTile> {
               ),
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
-                _buildUpdateVersionPill(Theme.of(context).colorScheme),
+                _buildUpdateVersionPill(colorScheme),
               ] else if (widget.appInMemory.app.installedVersion == null &&
                   widget.appInMemory.app.additionalSettings['trackOnly'] != true) ...[
                 const SizedBox(height: 4),
-                _buildInstallPill(Theme.of(context).colorScheme),
+                _buildInstallPill(colorScheme),
               ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
                 const SizedBox(height: 3),
-                _buildUpToDatePill(
-                  Theme.of(context).colorScheme,
-                  viewSettings,
-                ),
+                _buildUpToDatePill(colorScheme, viewSettings),
               ],
               _buildProgressIndicator(),
             ],
@@ -517,9 +478,7 @@ class _AppGridTileState extends State<AppGridTile> {
         Icon(
           Icons.chevron_right_rounded,
           size: 20,
-          color: Theme.of(
-            context,
-          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
         ),
       ],
     );
@@ -747,47 +706,54 @@ class _AppGridTileState extends State<AppGridTile> {
     );
   }
 
-  Widget _buildMetadataLine(
+  Widget _buildUpToDatePill(
     ColorScheme colorScheme,
     ViewSettingsProvider viewSettings,
   ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildSourceBadge(context),
-        if (viewSettings.displayShowVersion &&
-            (widget.appInMemory.app.installedVersion != null ||
-                widget.appInMemory.installedInfo != null)) ...[
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              _getVersionText(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                fontFamily: 'monospace',
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildSourceBadge(context),
+          if (viewSettings.displayShowVersion &&
+              (widget.appInMemory.app.installedVersion != null ||
+                  widget.appInMemory.installedInfo != null)) ...[
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                _getVersionText(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  fontFamily: 'monospace',
+                ),
               ),
             ),
-          ),
-        ] else if (viewSettings.displayShowAuthor) ...[
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              tr('byX', args: [widget.appInMemory.author]),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9.5,
-                letterSpacing: 0.1,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+          ] else if (viewSettings.displayShowAuthor) ...[
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                tr('byX', args: [widget.appInMemory.author]),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  letterSpacing: 0.1,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+                ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -829,6 +795,44 @@ class _AppGridTileState extends State<AppGridTile> {
           )
           .toList(),
     );
+  }
+
+  /// Shared factory for the small overlay badges (pinned, repo-renamed, selected).
+  Widget _buildOverlayBadge({
+    required IconData icon,
+    required Color backgroundColor,
+    required Color iconColor,
+    Color? borderColor,
+    bool circle = false,
+    bool shadow = false,
+    String? tooltip,
+  }) {
+    final badge = Container(
+      width: circle ? 22 : null,
+      height: circle ? 22 : null,
+      padding: circle ? null : const EdgeInsets.all(3.5),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        shape: circle ? BoxShape.circle : BoxShape.rectangle,
+        borderRadius: circle ? null : BorderRadius.circular(6),
+        border: borderColor != null
+            ? Border.all(color: borderColor, width: 0.5)
+            : null,
+        boxShadow: shadow
+            ? [
+                BoxShadow(
+                  color: backgroundColor.withValues(alpha: 0.4),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ]
+            : null,
+      ),
+      child: Center(
+        child: Icon(icon, size: circle ? 14 : 11, color: iconColor),
+      ),
+    );
+    return tooltip != null ? Tooltip(message: tooltip, child: badge) : badge;
   }
 
   Color _getSourceColor(BuildContext context) {

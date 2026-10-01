@@ -1815,7 +1815,7 @@ class AppsPageState extends State<AppsPage>
           hasExtraDetails: showDetails,
         );
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (ctx, index) {
@@ -1870,8 +1870,8 @@ class AppsPageState extends State<AppsPage>
             ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columnCount,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
               childAspectRatio: aspectRatio,
             ),
           ),
