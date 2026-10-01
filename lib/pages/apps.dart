@@ -2079,6 +2079,25 @@ class AppsPageState extends State<AppsPage>
     );
   }
 
+  Future<void> _addDiscoverApp(String url) async {
+    if (_pendingDiscoverAddUrls.contains(url)) return;
+    setState(() => _pendingDiscoverAddUrls.add(url));
+    try {
+      final errors = await context.read<AppsProvider>().addAppsByURL([url]);
+      if (!mounted) return;
+      if (errors.isNotEmpty) {
+        showError(errors[0][1], context);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
+        _clearDiscoverResults();
+      }
+    } finally {
+      if (mounted) setState(() => _pendingDiscoverAddUrls.remove(url));
+    }
+  }
+
   List<Widget> _buildDiscoverResultsSlivers(
     BuildContext context,
     PlusSettingsProvider plusSettings,
@@ -2278,57 +2297,11 @@ class AppsPageState extends State<AppsPage>
                                 color: cs.primary,
                               ),
                               tooltip: tr('addApp'),
-                              onPressed: () async {
-                                if (_pendingDiscoverAddUrls.contains(url)) return;
-                                setState(() => _pendingDiscoverAddUrls.add(url));
-                                try {
-                                  final errors = await context
-                                      .read<AppsProvider>()
-                                      .addAppsByURL([url]);
-                                  if (!mounted) return;
-                                  if (errors.isNotEmpty) {
-                                    showError(errors[0][1], context);
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(tr('appAdded'))),
-                                    );
-                                    _clearDiscoverResults();
-                                  }
-                                } finally {
-                                  if (mounted) {
-                                    setState(() =>
-                                        _pendingDiscoverAddUrls.remove(url));
-                                  }
-                                }
-                              },
+                              onPressed: () => _addDiscoverApp(url),
                             ),
                         ],
                       ),
-                      onTap: isPending
-                          ? null
-                          : () async {
-                              if (_pendingDiscoverAddUrls.contains(url)) return;
-                              setState(() => _pendingDiscoverAddUrls.add(url));
-                              try {
-                                final errors = await context
-                                    .read<AppsProvider>()
-                                    .addAppsByURL([url]);
-                                if (!mounted) return;
-                                if (errors.isNotEmpty) {
-                                  showError(errors[0][1], context);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(tr('appAdded'))),
-                                  );
-                                  _clearDiscoverResults();
-                                }
-                              } finally {
-                                if (mounted) {
-                                  setState(() =>
-                                      _pendingDiscoverAddUrls.remove(url));
-                                }
-                              }
-                            },
+                      onTap: isPending ? null : () => _addDiscoverApp(url),
                     ),
                   ),
                 ),
