@@ -21,6 +21,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
@@ -180,6 +181,13 @@ class AppsPageState extends State<AppsPage>
   String? activeTag;
   DateTime? refreshingSince;
 
+  // Inline discover search state
+  Map<String, MapEntry<String, List<String>>> _discoverResults = {};
+  bool _isDiscoverSearching = false;
+  String? _activeDiscoverQuery;
+  bool _discoverSearchFailed = false;
+  Set<String> _pendingDiscoverAddUrls = {};
+
   /// Clears the current selection, if any. Returns whether there was a
   /// selection to clear, so callers (e.g. the system-back handler) can decide
   /// whether to treat the back gesture as "clear selection" or fall through
@@ -199,6 +207,44 @@ class AppsPageState extends State<AppsPage>
           selectedAppIds.add(a.id);
         }
       });
+    }
+  }
+
+  void _clearDiscoverResults() {
+    setState(() {
+      _discoverResults = {};
+      _isDiscoverSearching = false;
+      _activeDiscoverQuery = null;
+      _discoverSearchFailed = false;
+      _pendingDiscoverAddUrls = {};
+    });
+  }
+
+  Future<void> _runDiscoverSearch(String query) async {
+    if (query.trim().isEmpty) return;
+    setState(() {
+      _activeDiscoverQuery = query.trim();
+      _isDiscoverSearching = true;
+      _discoverResults = {};
+      _discoverSearchFailed = false;
+    });
+    try {
+      final settings = context.read<SettingsProvider>();
+      final result = await AppSearchService.searchAllSources(
+        query.trim(),
+        sourceProvider: SourceProvider(),
+        deselectedSources: settings.searchDeselected,
+      );
+      if (mounted && _activeDiscoverQuery == query.trim()) {
+        setState(() {
+          _discoverResults = result.results;
+          _discoverSearchFailed = result.allSourcesFailed;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _discoverSearchFailed = true);
+    } finally {
+      if (mounted) setState(() => _isDiscoverSearching = false);
     }
   }
 
@@ -1840,10 +1886,14 @@ class AppsPageState extends State<AppsPage>
     }
 
     return PopScope(
-      canPop: selectedAppIds.isEmpty,
+      canPop: selectedAppIds.isEmpty && _activeDiscoverQuery == null,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
-          clearSelected();
+          if (_activeDiscoverQuery != null) {
+            _clearDiscoverResults();
+          } else {
+            clearSelected();
+          }
         }
       },
       child: Scaffold(
@@ -1982,6 +2032,7 @@ class AppsPageState extends State<AppsPage>
                       onSearchQuery: (query) {
                         setState(() {
                           filter.nameFilter = query;
+                          if (query.isEmpty) _clearDiscoverResults();
                         });
                       },
                       onUrlInput: (url) {
@@ -1996,6 +2047,7 @@ class AppsPageState extends State<AppsPage>
                           }
                         });
                       },
+                      onDiscoverSearch: _runDiscoverSearch,
                       onCheckUpdates: refresh,
                     ),
                   ),
@@ -2011,7 +2063,10 @@ class AppsPageState extends State<AppsPage>
                     },
                   ),
                 ...getLoadingWidgets(),
-                getDisplayedList(),
+                if (_activeDiscoverQuery != null)
+                  ..._buildDiscoverResultsSlivers(context, plusSettings)
+                else
+                  getDisplayedList(),
               ],
             ),
           ),
@@ -2022,6 +2077,268 @@ class AppsPageState extends State<AppsPage>
             : [getFilterButtonsRow()],
       ),
     );
+  }
+
+  List<Widget> _buildDiscoverResultsSlivers(
+    BuildContext context,
+    PlusSettingsProvider plusSettings,
+  ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
+
+    // Header row: query label + clear button
+    final header = SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+        child: Row(
+          children: [
+            Icon(Icons.travel_explore_rounded, size: 18, color: cs.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '"$_activeDiscoverQuery"',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _clearDiscoverResults,
+              icon: const Icon(Icons.close_rounded, size: 16),
+              label: Text(tr('clear')),
+              style: TextButton.styleFrom(
+                foregroundColor: cs.onSurfaceVariant,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (_isDiscoverSearching && _discoverResults.isEmpty) {
+      return [
+        header,
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(child: ExpressiveCircularProgressIndicator()),
+          ),
+        ),
+      ];
+    }
+
+    if (!_isDiscoverSearching && _discoverResults.isEmpty) {
+      return [
+        header,
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _discoverSearchFailed
+                        ? Icons.wifi_off_rounded
+                        : Icons.search_off_rounded,
+                    color: cs.onSurfaceVariant,
+                    size: 32,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _discoverSearchFailed
+                        ? tr('searchAllSourcesFailed')
+                        : tr('noResultsFound'),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+
+    return [
+      header,
+      if (_isDiscoverSearching)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: ExpressiveProgressIndicator(value: null, height: 3),
+          ),
+        ),
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (ctx, index) {
+              final entry = _discoverResults.entries.elementAt(index);
+              final url = entry.key;
+              final result = entry.value;
+              final name = result.value.isNotEmpty ? result.value[0] : url;
+              final source = result.key;
+              final isPending = _pendingDiscoverAddUrls.contains(url);
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Material(
+                  color: cs.surfaceContainer,
+                  borderRadius: BorderRadius.circular(itemRadius),
+                  child: ScaleTouchWrapper(
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(itemRadius),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      leading: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                          color: cs.primaryContainer,
+                        ),
+                        child: Center(
+                          child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                            style: TextStyle(
+                              color: cs.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.secondaryContainer,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              source,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: cs.onSecondaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.tune_rounded),
+                            tooltip: tr('advancedOptions'),
+                            onPressed: () {
+                              _clearDiscoverResults();
+                              showAddAppSheet(context: context, initialUrl: url);
+                            },
+                          ),
+                          if (isPending)
+                            const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: ExpressiveCircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          else
+                            IconButton(
+                              icon: Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: cs.primary,
+                              ),
+                              tooltip: tr('addApp'),
+                              onPressed: () async {
+                                if (_pendingDiscoverAddUrls.contains(url)) return;
+                                setState(() => _pendingDiscoverAddUrls.add(url));
+                                try {
+                                  final errors = await context
+                                      .read<AppsProvider>()
+                                      .addAppsByURL([url]);
+                                  if (!mounted) return;
+                                  if (errors.isNotEmpty) {
+                                    showError(errors[0][1], context);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(tr('appAdded'))),
+                                    );
+                                    _clearDiscoverResults();
+                                  }
+                                } finally {
+                                  if (mounted) {
+                                    setState(() =>
+                                        _pendingDiscoverAddUrls.remove(url));
+                                  }
+                                }
+                              },
+                            ),
+                        ],
+                      ),
+                      onTap: isPending
+                          ? null
+                          : () async {
+                              if (_pendingDiscoverAddUrls.contains(url)) return;
+                              setState(() => _pendingDiscoverAddUrls.add(url));
+                              try {
+                                final errors = await context
+                                    .read<AppsProvider>()
+                                    .addAppsByURL([url]);
+                                if (!mounted) return;
+                                if (errors.isNotEmpty) {
+                                  showError(errors[0][1], context);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(tr('appAdded'))),
+                                  );
+                                  _clearDiscoverResults();
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() =>
+                                      _pendingDiscoverAddUrls.remove(url));
+                                }
+                              }
+                            },
+                    ),
+                  ),
+                ),
+              );
+            },
+            childCount: _discoverResults.length,
+          ),
+        ),
+      ),
+    ];
   }
 
   void openAppById(String appId) {

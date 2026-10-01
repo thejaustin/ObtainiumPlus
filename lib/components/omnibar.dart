@@ -111,6 +111,7 @@ Future<void> _runMassImport(
 class Omnibar extends StatefulWidget {
   final Function(String)? onSearchQuery;
   final Function(String)? onUrlInput;
+  final Function(String)? onDiscoverSearch;
   final String? initialQuery;
   final bool showDiscoverOptions;
 
@@ -118,6 +119,7 @@ class Omnibar extends StatefulWidget {
     super.key,
     this.onSearchQuery,
     this.onUrlInput,
+    this.onDiscoverSearch,
     this.initialQuery,
     this.showDiscoverOptions = true,
   });
@@ -325,10 +327,12 @@ class _OmnibarState extends State<Omnibar> {
                     borderRadius: BorderRadius.circular(currentRadius),
                     onTap: () {
                       if (!_isUrl) {
-                        CommandCenter.show(
-                          context,
-                          initialQuery: _controller.text.trim(),
-                        );
+                        final query = _controller.text.trim();
+                        if (widget.onDiscoverSearch != null && query.isNotEmpty) {
+                          widget.onDiscoverSearch!(query);
+                        } else {
+                          CommandCenter.show(context, initialQuery: query);
+                        }
                       }
                     },
                     child: Padding(
@@ -387,11 +391,11 @@ class _OmnibarState extends State<Omnibar> {
                         if (_isUrl && _isValidUrl) {
                           widget.onUrlInput?.call(value);
                         } else if (!_isUrl && value.isNotEmpty) {
-                          // Local filtering alone is a dead end if the app
-                          // isn't tracked yet — escalate to the full
-                          // local+discover search so there's always a path
-                          // to find and add it.
-                          CommandCenter.show(context, initialQuery: value);
+                          if (widget.onDiscoverSearch != null) {
+                            widget.onDiscoverSearch!(value.trim());
+                          } else {
+                            CommandCenter.show(context, initialQuery: value);
+                          }
                         }
                       },
                       keyboardType: _isUrl
@@ -491,10 +495,15 @@ class _OmnibarState extends State<Omnibar> {
                                   button: true,
                                   child: FilledButton.tonalIcon(
                                     onPressed: () {
-                                      CommandCenter.show(
-                                        context,
-                                        initialQuery: _controller.text.trim(),
-                                      );
+                                      final query = _controller.text.trim();
+                                      if (widget.onDiscoverSearch != null) {
+                                        widget.onDiscoverSearch!(query);
+                                      } else {
+                                        CommandCenter.show(
+                                          context,
+                                          initialQuery: query,
+                                        );
+                                      }
                                     },
                                     icon: const Icon(
                                       Icons.travel_explore_rounded,
