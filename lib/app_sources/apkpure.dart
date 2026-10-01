@@ -126,7 +126,9 @@ class APKPure extends AppSource {
       throw NoVersionError();
     }
     final String author = v['developer']?.toString() ?? name;
-    final String appName = v['title']?.toString() ?? tr('app');
+    final String appName = v['title']?.toString().trim().isNotEmpty == true
+        ? v['title'].toString()
+        : v['package_name']?.toString() ?? name;
     final DateTime? releaseDate = v['update_date'] != null
         ? DateTime.tryParse(v['update_date'].toString())
         : null;
