@@ -330,9 +330,16 @@ class AppListTile extends StatelessWidget {
                 : null,
           ),
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeIn,
-            switchOutCurve: Curves.easeOut,
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: AppConstants.expressiveDecelerate,
+            switchOutCurve: AppConstants.expressiveAccelerate,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.82, end: 1.0).animate(animation),
+                child: child,
+              ),
+            ),
             child: appInMemory.icon != null
                 ? ClipRRect(
                     key: ValueKey('icon_${appInMemory.app.id}'),
