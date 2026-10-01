@@ -67,29 +67,27 @@ class CategorySections extends StatelessWidget {
       }
     }
 
-    // Pre-compute update counts per category in O(N)
+    // Pre-compute pending-update counts per category in O(N)
     final categoryUpdateCounts = <String?, int>{};
     appsByCategory.forEach((cat, apps) {
-      categoryUpdateCounts[cat] = apps
-          .where((a) => a.app.installedVersion == null
-              ? a.app.additionalSettings['trackOnly'] != true
-              : pendingUpdates.contains(a.app.id))
-          .length;
+      categoryUpdateCounts[cat] =
+          apps.where((a) => pendingUpdates.contains(a.app.id)).length;
     });
 
     if (isGridView) {
-      return SliverList(
-        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
-          final catName = listedCategories[index];
-          return _buildCategoryGridSection(
-            context,
-            index,
-            viewSettings,
-            appsByCategory[catName] ?? const [],
-            categoryUpdateCounts[catName] ?? 0,
-            pendingUpdates,
-          );
-        }, childCount: listedCategories.length),
+      return SliverMainAxisGroup(
+        slivers: [
+          for (int i = 0; i < listedCategories.length; i++)
+            ..._buildCategoryGridSectionSlivers(
+              context,
+              i,
+              viewSettings,
+              plusSettings,
+              appsByCategory[listedCategories[i]] ?? const [],
+              categoryUpdateCounts[listedCategories[i]] ?? 0,
+              pendingUpdates,
+            ),
+        ],
       );
     } else if (plusSettings.plusEnableCategoryReorder) {
       // Enable drag-to-reorder when Plus Feature is enabled
@@ -138,10 +136,15 @@ class CategorySections extends StatelessWidget {
     }
   }
 
-  Widget _buildCategoryGridSection(
+  /// Returns a list of slivers [header, grid, spacer] for one category in grid mode.
+  /// Using SliverGrid instead of GridView(shrinkWrap: true) allows lazy layout —
+  /// only visible tiles are measured, eliminating the "layout all children to
+  /// determine height" cost of shrinkWrap.
+  List<Widget> _buildCategoryGridSectionSlivers(
     BuildContext context,
     int index,
     ViewSettingsProvider settingsProvider,
+    PlusSettingsProvider plusSettings,
     List<AppInMemory> appsInCategory,
     int updateCount,
     Set<String> pendingUpdates,
@@ -158,7 +161,6 @@ class CategorySections extends StatelessWidget {
         ? _calculateAdaptiveColumns(context)
         : settingsProvider.gridColumnCount;
 
-    final plusSettings = context.watch<PlusSettingsProvider>();
     final bool showDetails = settingsProvider.displayShowVersion ||
         settingsProvider.displayShowAuthor ||
         plusSettings.plusShowTagsInList;
@@ -167,18 +169,19 @@ class CategorySections extends StatelessWidget {
       hasExtraDetails: showDetails,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return [
+      SliverToBoxAdapter(
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: const Alignment(-1, 0),
               end: const Alignment(-0.97, 0),
               colors: [
-                categoryColor ?? Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.surface.withValues(alpha: 0.0),
+                categoryColor ?? colorScheme.surface,
+                colorScheme.surface.withValues(alpha: 0.0),
               ],
               stops: const [0.99, 1],
             ),
@@ -186,7 +189,7 @@ class CategorySections extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                (categoryName ?? tr('noCategory')).toUpperCase(), // Simplified
+                (categoryName ?? tr('noCategory')).toUpperCase(),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -197,20 +200,18 @@ class CategorySections extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            addRepaintBoundaries: true,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columnCount,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: aspectRatio,
-            ),
-            itemCount: appsInCategory.length,
-            itemBuilder: (context, appIndex) {
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columnCount,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: aspectRatio,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, appIndex) {
               final app = appsInCategory[appIndex];
               return AppGridTile(
                 appInMemory: app,
@@ -231,11 +232,14 @@ class CategorySections extends StatelessWidget {
                 onLongPress: () => toggleAppSelected(app.app),
               );
             },
+            childCount: appsInCategory.length,
+            addRepaintBoundaries: true,
+            addAutomaticKeepAlives: false,
           ),
         ),
-        const SizedBox(height: 16),
-      ],
-    );
+      ),
+      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+    ];
   }
 
   Widget _buildCategoryStats(
