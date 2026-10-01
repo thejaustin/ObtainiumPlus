@@ -60,12 +60,12 @@ class AppGridView extends StatelessWidget {
     }
 
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columnCount,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
           childAspectRatio: childAspectRatio,
         ),
         delegate: SliverChildBuilderDelegate(
@@ -113,7 +113,7 @@ class AppGridView extends StatelessWidget {
           },
           childCount: apps.length,
           addAutomaticKeepAlives: false,
-          addRepaintBoundaries: false,
+          addRepaintBoundaries: true,
         ),
       ),
     );

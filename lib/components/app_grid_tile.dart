@@ -56,7 +56,7 @@ class _AppGridTileState extends State<AppGridTile> {
         // Adaptive icon sizing proportional to tile width
         final double iconSize = isHorizontal
             ? (constraints.maxHeight * 0.65).clamp(38.0, 80.0)
-            : (availableWidth * 0.52).clamp(38.0, 68.0);
+            : (availableWidth * 0.50).clamp(42.0, 74.0);
 
         final plusSettings = context.watch<PlusSettingsProvider>();
         final viewSettings = context.watch<ViewSettingsProvider>();
@@ -105,7 +105,13 @@ class _AppGridTileState extends State<AppGridTile> {
             alpha: AppConstants.glassSurfaceAlpha,
           );
         } else if (widget.hasUpdate) {
-          cardColor = colorScheme.surfaceContainer;
+          cardColor = colorScheme.secondaryContainer.withValues(
+            alpha: isDark ? 0.32 : 0.22,
+          );
+        } else if (widget.appInMemory.app.pinned) {
+          cardColor = colorScheme.surfaceContainerHighest.withValues(
+            alpha: isDark ? 0.40 : 0.50,
+          );
         } else {
           cardColor = colorScheme.surfaceContainerLow;
         }
@@ -121,7 +127,7 @@ class _AppGridTileState extends State<AppGridTile> {
           );
         } else if (widget.hasUpdate) {
           cardBorder = Border.all(
-            color: (widget.isAmbiguous ? colorScheme.tertiary : colorScheme.primary)
+            color: (widget.isAmbiguous ? colorScheme.tertiary : colorScheme.secondary)
                 .withValues(alpha: 0.45),
             width: 1.2,
           );
@@ -134,7 +140,7 @@ class _AppGridTileState extends State<AppGridTile> {
           );
         } else {
           cardBorder = Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.25),
             width: 0.8,
           );
         }
@@ -147,15 +153,15 @@ class _AppGridTileState extends State<AppGridTile> {
           );
         } else if (widget.hasUpdate) {
           cardShadow = AppShadows.smooth(
-            color: widget.isAmbiguous ? colorScheme.tertiary : colorScheme.primary,
-            opacity: isDark ? 0.2 : 0.08,
+            color: widget.isAmbiguous ? colorScheme.tertiary : colorScheme.secondary,
+            opacity: isDark ? 0.22 : 0.10,
             blurFactor: 0.8,
           );
-        } else if (!isDark) {
+        } else {
           cardShadow = [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
+              blurRadius: isDark ? 8 : 10,
               offset: const Offset(0, 2),
             ),
           ];
@@ -424,24 +430,24 @@ class _AppGridTileState extends State<AppGridTile> {
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 12.0,
+            fontSize: 12.5,
             fontWeight: (widget.appInMemory.app.pinned || widget.hasUpdate)
                 ? FontWeight.w700
                 : FontWeight.w600,
             letterSpacing: -0.2,
-            height: 1.15,
+            height: 1.18,
             color: colorScheme.onSurface,
           ),
         ),
         const Spacer(),
-        // Metadata / Version Pill / Status
+        // Footer: Action Pill or Status Pill
         if (widget.hasUpdate) ...[
           _buildUpdateVersionPill(colorScheme),
         ] else if (widget.appInMemory.app.installedVersion == null &&
             widget.appInMemory.app.additionalSettings['trackOnly'] != true) ...[
           _buildInstallPill(colorScheme),
         ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
-          _buildMetadataLine(colorScheme, viewSettings),
+          _buildUpToDatePill(colorScheme, viewSettings),
         ],
         // Tag chips
         if (plusSettings.plusShowTagsInList &&
@@ -499,7 +505,7 @@ class _AppGridTileState extends State<AppGridTile> {
                 _buildInstallPill(Theme.of(context).colorScheme),
               ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
                 const SizedBox(height: 3),
-                _buildMetadataLine(
+                _buildUpToDatePill(
                   Theme.of(context).colorScheme,
                   viewSettings,
                 ),

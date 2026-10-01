@@ -198,15 +198,15 @@ class CategorySections extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             addRepaintBoundaries: true,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columnCount,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
               childAspectRatio: aspectRatio,
             ),
             itemCount: appsInCategory.length,
@@ -217,9 +217,7 @@ class CategorySections extends StatelessWidget {
                 isSelected:
                     selectedAppIds.contains(app.app.id) ||
                     activeAppId == app.app.id,
-                hasUpdate: app.app.installedVersion == null
-                    ? app.app.additionalSettings['trackOnly'] != true
-                    : pendingUpdates.contains(app.app.id),
+                hasUpdate: pendingUpdates.contains(app.app.id),
                 isAmbiguous:
                     app.app.additionalSettings['isAmbiguousUpdate'] == true,
                 categoryColor: categoryColor,
