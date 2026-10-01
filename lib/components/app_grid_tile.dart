@@ -587,9 +587,16 @@ class _AppGridTileState extends State<AppGridTile>
                     ),
             ),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeIn,
-              switchOutCurve: Curves.easeOut,
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: AppConstants.expressiveDecelerate,
+              switchOutCurve: AppConstants.expressiveAccelerate,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.82, end: 1.0).animate(animation),
+                  child: child,
+                ),
+              ),
               child: widget.appInMemory.icon != null
                   ? ClipRRect(
                       key: ValueKey('icon_${widget.appInMemory.app.id}'),
