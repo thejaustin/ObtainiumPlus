@@ -294,14 +294,17 @@ class _OnboardingPageState extends State<OnboardingPage>
         onPressed: onPressed,
         icon: Icon(
           isGranted ? Icons.check_circle : icon,
-          color: isGranted ? Colors.green : null,
+          color: isGranted ? Theme.of(context).colorScheme.primary : null,
         ),
         label: Text(label),
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(48),
           side: isGranted
               ? BorderSide(
-                  color: Colors.green.withValues(alpha: AppOpacity.half),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: AppOpacity.half),
                 )
               : null,
         ),
@@ -498,7 +501,9 @@ class _OnboardingPageState extends State<OnboardingPage>
                     subtitle: _microGAvailable
                         ? tr('microGDetected')
                         : tr('microGNotFound'),
-                    iconColor: _microGAvailable ? Colors.green : Colors.orange,
+                    iconColor: _microGAvailable
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.tertiary,
                   ),
                   const SizedBox(height: 4),
                   _buildPermissionButton(

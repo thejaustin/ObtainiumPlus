@@ -445,7 +445,7 @@ class DeveloperSettingsPage extends StatelessWidget {
           _buildSection(context, tr('testing'), [
             ListTile(
               leading: const Icon(Icons.flash_on_outlined),
-              iconColor: Colors.red,
+              iconColor: Theme.of(context).colorScheme.error,
               title: Text(tr('triggerTestCrash')),
               subtitle: Text(tr('forcesCrashVerify')),
               onTap: () {
@@ -554,7 +554,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                   title: Text(tr('anonymousDispenser')),
                   subtitle: Text(tr('useThrowawayAccounts')),
                   trailing: authProvider.authMode == AuthMode.anonymous
-                      ? const Icon(Icons.check, color: Colors.green)
+                      ? Icon(Icons.check, color: cs.primary)
                       : null,
                   onTap: () async {
                     authProvider.setAuthMode(AuthMode.anonymous);
@@ -567,7 +567,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                   title: Text(tr('personalMicroG')),
                   subtitle: Text(tr('useRealAccount')),
                   trailing: authProvider.authMode == AuthMode.microG
-                      ? const Icon(Icons.check, color: Colors.green)
+                      ? Icon(Icons.check, color: cs.primary)
                       : null,
                   onTap: () {
                     authProvider.setAuthMode(AuthMode.microG);
@@ -579,7 +579,7 @@ class DeveloperSettingsPage extends StatelessWidget {
                   title: Text(tr('hybridSafetyFirst')),
                   subtitle: Text(tr('anonymousForSearch')),
                   trailing: authProvider.authMode == AuthMode.hybrid
-                      ? const Icon(Icons.check, color: Colors.green)
+                      ? Icon(Icons.check, color: cs.primary)
                       : null,
                   onTap: () async {
                     authProvider.setAuthMode(AuthMode.hybrid);
@@ -778,9 +778,10 @@ class DeveloperSettingsPage extends StatelessWidget {
 
     if (score > 100) score = 100;
 
+    final cs = Theme.of(context).colorScheme;
     final color = score > 80
-        ? Colors.green
-        : (score > 50 ? Colors.orange : Colors.red);
+        ? cs.primary
+        : (score > 50 ? cs.tertiary : cs.error);
 
     final String labelKey = score > 80
         ? 'safetyExcellent'
@@ -868,7 +869,7 @@ void showDeviceProfilePicker(BuildContext context) {
                 ),
               ),
               trailing: authProvider.selectedProfile.name == p.name
-                  ? const Icon(Icons.check, color: Colors.green)
+                  ? Icon(Icons.check, color: cs.primary)
                   : null,
               onTap: () {
                 authProvider.setDeviceProfile(p);
@@ -1062,9 +1063,9 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Chip(
-                avatar: const Icon(
+                avatar: Icon(
                   Icons.check_circle,
-                  color: Colors.green,
+                  color: cs.primary,
                   size: 16,
                 ),
                 label: Text(tr('activeTokenReady')),

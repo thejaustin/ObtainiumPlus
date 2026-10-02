@@ -38,14 +38,14 @@ class _TalkerScreenState extends State<TalkerScreen> {
     Color getTitleColor(String title) {
       switch (title) {
         case 'INFO':
-          return Colors.green;
+          return colorScheme.primary;
         case 'WARNING':
-          return Colors.orange;
+          return colorScheme.tertiary;
         case 'ERROR':
         case 'EXCEPTION':
-          return Colors.red;
+          return colorScheme.error;
         case 'DEBUG':
-          return Colors.blue;
+          return colorScheme.secondary;
         default:
           return colorScheme.primary;
       }
