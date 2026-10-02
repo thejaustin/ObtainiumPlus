@@ -173,7 +173,7 @@ class _AppGridTileState extends State<AppGridTile>
           );
         } else if (widget.hasUpdate) {
           cardColor = colorScheme.secondaryContainer.withValues(
-            alpha: isDark ? 0.32 : 0.22,
+            alpha: isDark ? 0.22 : 0.14,
           );
         } else if (widget.appInMemory.app.pinned) {
           cardColor = colorScheme.surfaceContainerHighest.withValues(
@@ -267,7 +267,7 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
 
-                  // 2. Glass sheen gradient
+                  // 2. Glass sheen gradient — neutral only, no source brand color bleed
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned.fill(
                       child: Container(
@@ -276,12 +276,9 @@ class _AppGridTileState extends State<AppGridTile>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              _getSourceColor(context).withValues(alpha: 0.10),
-                              Colors.white.withValues(alpha: 0.05),
+                              Colors.white.withValues(alpha: 0.07),
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.03),
                             ],
-                            stops: const [0.0, 0.2, 0.6, 1.0],
                           ),
                         ),
                       ),
@@ -563,37 +560,25 @@ class _AppGridTileState extends State<AppGridTile>
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // App icon container with layered depth shadow
+        // App icon container — no background fill, icon renders directly on card surface
         Hero(
           tag: 'app_icon_${widget.appInMemory.app.id}',
           child: Container(
             width: iconSize,
             height: iconSize,
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(iconBorderRadius),
               border: plusSettings.plusIconRimBorder
                   ? Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                       width: 1.0,
                     )
-                  : Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.15),
-                      width: 0.5,
-                    ),
-              boxShadow: widget.hasUpdate
-                  ? AppShadows.smooth(
-                      color: widget.isAmbiguous
-                          ? colorScheme.tertiary
-                          : colorScheme.primary,
-                      opacity: 0.16,
-                      blurFactor: 0.8,
-                    )
-                  : AppShadows.smooth(
-                      color: Colors.black,
-                      opacity: 0.08,
-                      blurFactor: 0.6,
-                    ),
+                  : null,
+              boxShadow: AppShadows.smooth(
+                color: Colors.black,
+                opacity: 0.10,
+                blurFactor: 0.7,
+              ),
             ),
             child: AnimatedSwitcher(
               duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 350 : 0),
@@ -625,21 +610,21 @@ class _AppGridTileState extends State<AppGridTile>
             ),
           ),
         ),
-        // Update badge — crisp M3 Expressive accent dot on icon
+        // Update badge — accent dot that seams into the card background
         if (widget.hasUpdate)
           Positioned(
-            right: 0,
-            top: 0,
+            right: -1,
+            top: -1,
             child: Container(
-              width: 10,
-              height: 10,
+              width: 11,
+              height: 11,
               decoration: BoxDecoration(
                 color: widget.isAmbiguous
                     ? colorScheme.tertiary
-                    : colorScheme.primary,
+                    : colorScheme.secondary,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: colorScheme.surface,
+                  color: cardColor,
                   width: 2,
                 ),
               ),
@@ -679,18 +664,10 @@ class _AppGridTileState extends State<AppGridTile>
           child: Ink(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: (widget.isAmbiguous
-                      ? colorScheme.tertiaryContainer
-                      : colorScheme.secondaryContainer)
-                  .withValues(alpha: 0.95),
+              color: widget.isAmbiguous
+                  ? colorScheme.tertiary
+                  : colorScheme.secondary,
               borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-              border: Border.all(
-                color: (widget.isAmbiguous
-                        ? colorScheme.tertiary
-                        : colorScheme.secondary)
-                    .withValues(alpha: 0.4),
-                width: 0.8,
-              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -701,8 +678,8 @@ class _AppGridTileState extends State<AppGridTile>
                       : Icons.download_rounded,
                   size: 11,
                   color: widget.isAmbiguous
-                      ? colorScheme.onTertiaryContainer
-                      : colorScheme.onSecondaryContainer,
+                      ? colorScheme.onTertiary
+                      : colorScheme.onSecondary,
                 ),
                 const SizedBox(width: 3.5),
                 Flexible(
@@ -714,8 +691,8 @@ class _AppGridTileState extends State<AppGridTile>
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: widget.isAmbiguous
-                          ? colorScheme.onTertiaryContainer
-                          : colorScheme.onSecondaryContainer,
+                          ? colorScheme.onTertiary
+                          : colorScheme.onSecondary,
                       fontFamily: 'monospace',
                       letterSpacing: 0.1,
                     ),
