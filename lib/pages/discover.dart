@@ -569,6 +569,7 @@ class DiscoverPageState extends State<DiscoverPage> {
         ? {for (final s in _suggestions) s.url: s.iconUrl}
         : <String, String?>{};
     final scrollContent = CustomScrollView(
+        physics: plusSettings.scrollPhysics,
         slivers: [
           if (widget.showAppBar) CustomAppBar(title: tr('discover')),
           if (widget.showSearchBar)
