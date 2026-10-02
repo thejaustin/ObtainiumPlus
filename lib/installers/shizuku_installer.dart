@@ -340,6 +340,9 @@ class ShizukuInstaller extends Installer {
           if (existingVersionCode == null || existingVersionCode == 0) {
             if (targetVersionCode != null && targetVersionCode > 0) {
               if (currentCode >= targetVersionCode) isSuccess = true;
+            } else if (targetVersionName != null &&
+                targetVersionName.isNotEmpty) {
+              if (info.versionName == targetVersionName) isSuccess = true;
             } else {
               isSuccess = true;
             }
@@ -353,6 +356,11 @@ class ShizukuInstaller extends Installer {
                 targetVersionName != existingVersionName) {
               if (info.versionName == targetVersionName) isSuccess = true;
             } else if (currentCode > existingVersionCode) {
+              isSuccess = true;
+            } else if (currentCode == 0 &&
+                existingVersionCode == 0 &&
+                targetVersionName != null &&
+                info.versionName == targetVersionName) {
               isSuccess = true;
             }
           }

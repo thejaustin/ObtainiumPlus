@@ -446,11 +446,16 @@ class AppInstallService {
               // New installation
               if (targetVersionCode != null && targetVersionCode > 0) {
                 if (currentCode >= targetVersionCode) isSuccess = true;
+              } else if (targetVersionName != null &&
+                  targetVersionName.isNotEmpty) {
+                // versionCode unavailable — match by version name
+                if (info.versionName == targetVersionName) isSuccess = true;
               } else {
                 isSuccess = true;
               }
             } else {
-              // Update
+              // Update — also fall back to version-name when both codes are
+              // null/0 (Android 15+ longVersionCode > INT_MAX overflow).
               if (targetVersionCode != null &&
                   targetVersionCode > 0 &&
                   targetVersionCode > existingVersionCode) {
@@ -460,6 +465,11 @@ class AppInstallService {
                   targetVersionName != existingVersionName) {
                 if (info.versionName == targetVersionName) isSuccess = true;
               } else if (currentCode > existingVersionCode) {
+                isSuccess = true;
+              } else if (currentCode == 0 &&
+                  existingVersionCode == 0 &&
+                  targetVersionName != null &&
+                  info.versionName == targetVersionName) {
                 isSuccess = true;
               }
             }
@@ -816,6 +826,11 @@ class AppInstallService {
       if (apps[file.appId] != null) {
         apps[file.appId]!.app.installedVersion =
             apps[file.appId]!.app.latestVersion;
+        // Persist the new installedVersion and refresh PackageInfo so the UI
+        // immediately reflects the installed state without waiting for next load.
+        if (saveApps != null) {
+          await saveApps([apps[file.appId]!.app]);
+        }
 
         // Android 14+ Update Ownership
         var osInfo = await DeviceInfoPlugin().androidInfo;

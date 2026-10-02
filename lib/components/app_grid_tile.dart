@@ -951,13 +951,23 @@ class _AppGridTileState extends State<AppGridTile>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          downloadProgress >= 0
-                              ? '${downloadProgress.toInt()}%'
-                              : tr('installing'),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            () {
+                              if (downloadProgress < 0) return tr('installing');
+                              final speed = formatSpeed(
+                                widget.appInMemory.downloadSpeedBytesPerSec,
+                              );
+                              return speed != null
+                                  ? '${downloadProgress.toInt()}% · $speed'
+                                  : '${downloadProgress.toInt()}%';
+                            }(),
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                         if (downloadProgress >= 0)
