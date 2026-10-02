@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
@@ -140,12 +141,13 @@ class _ThemeThumbnailCard extends StatelessWidget {
         .watch<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
+    return ScaleTouchWrapper(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
           duration: Duration(milliseconds: animsEnabled ? 220 : 0),
           curve: AppConstants.expressiveDecelerate,
           padding: const EdgeInsets.all(6),
@@ -211,7 +213,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildMockupPreview(BuildContext context) {

@@ -79,20 +79,10 @@ void showChangeLogDialog(
         message: app.latestVersion,
         additionalWidgets: [
           changesUrl != null
-              ? InkWell(
-                  child: Text(
-                    changesUrl,
-                    style: const TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  onTap: () {
-                    launchUrlString(
-                      changesUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
+              ? LinkText(
+                  text: changesUrl,
+                  url: changesUrl,
+                  style: const TextStyle(fontStyle: FontStyle.italic),
                 )
               : const SizedBox.shrink(),
           changesUrl != null
