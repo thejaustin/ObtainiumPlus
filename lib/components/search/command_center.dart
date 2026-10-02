@@ -258,6 +258,7 @@ class _CommandCenterState extends State<CommandCenter> {
     final theme = Theme.of(context);
     final isUrl = _isDirectUrl(_query);
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
     final settings = context.watch<SettingsProvider>();
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
@@ -326,7 +327,7 @@ class _CommandCenterState extends State<CommandCenter> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 280),
+                        duration: Duration(milliseconds: animsEnabled ? 280 : 0),
                         curve: Easing.emphasizedDecelerate,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
@@ -441,11 +442,11 @@ class _CommandCenterState extends State<CommandCenter> {
                     Expanded(
                       child: _query.isEmpty
                           ? AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
+                              duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                               child: _buildInitialState(),
                             )
                           : AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
+                              duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                               child: ListView(
                                 keyboardDismissBehavior:
                                     ScrollViewKeyboardDismissBehavior.onDrag,
@@ -454,7 +455,7 @@ class _CommandCenterState extends State<CommandCenter> {
                                 ),
                                 children: [
                                   AnimatedSize(
-                                    duration: const Duration(milliseconds: 300),
+                                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                                     curve: Curves.easeOutCubic,
                                     child: _localResults.isNotEmpty
                                         ? Column(
@@ -472,7 +473,7 @@ class _CommandCenterState extends State<CommandCenter> {
                                         : const SizedBox.shrink(),
                                   ),
                                   AnimatedSize(
-                                    duration: const Duration(milliseconds: 300),
+                                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                                     curve: Curves.easeOutCubic,
                                     child: isUrl
                                         ? Column(
@@ -490,7 +491,7 @@ class _CommandCenterState extends State<CommandCenter> {
                                         : const SizedBox.shrink(),
                                   ),
                                   AnimatedSize(
-                                    duration: const Duration(milliseconds: 300),
+                                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                                     curve: Curves.easeOutCubic,
                                     child:
                                         (_query.isNotEmpty &&
