@@ -24,6 +24,7 @@ import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
@@ -227,6 +228,9 @@ class _OmnibarState extends State<Omnibar> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final settings = context.watch<SettingsProvider>();
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
@@ -243,7 +247,7 @@ class _OmnibarState extends State<Omnibar> {
       label: _isUrl ? tr('appURLList') : tr('search'),
       textField: true,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
+        duration: Duration(milliseconds: animsEnabled ? 280 : 0),
         curve: Easing.emphasizedDecelerate,
         decoration: BoxDecoration(
           color: isFocusedOrHasText
@@ -341,7 +345,7 @@ class _OmnibarState extends State<Omnibar> {
                         vertical: 8,
                       ),
                       child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
+                        duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                         transitionBuilder: (child, anim) => FadeTransition(
                           opacity: anim,
                           child: ScaleTransition(scale: anim, child: child),
@@ -407,7 +411,7 @@ class _OmnibarState extends State<Omnibar> {
 
                   // Clear button
                   AnimatedSize(
-                    duration: const Duration(milliseconds: 300),
+                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                     curve: Curves.easeOutCubic,
                     child: _controller.text.isNotEmpty
                         ? Semantics(
@@ -428,7 +432,7 @@ class _OmnibarState extends State<Omnibar> {
 
                   // Action button: Add for URLs, or Search Online for text queries
                   AnimatedSize(
-                    duration: const Duration(milliseconds: 300),
+                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                     curve: Curves.easeOutCubic,
                     child: _isUrl
                         ? Container(
