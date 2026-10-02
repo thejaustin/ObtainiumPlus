@@ -154,7 +154,25 @@ class _AppPageState extends State<AppPage> {
                   ),
                   trailing:
                       plusSettings.plusDefaultStorePackage == store['package']
-                      ? const Chip(label: Text('Default'))
+                      ? Chip(
+                          label: Text(
+                            'Default',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          avatar: Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6),
+                          side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), width: 0.8),
+                          shape: const StadiumBorder(),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          visualDensity: VisualDensity.compact,
+                        )
                       : TextButton(
                           onPressed: () {
                             AppHaptics.selectionClick();
