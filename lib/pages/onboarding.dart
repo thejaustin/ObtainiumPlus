@@ -16,6 +16,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
@@ -267,17 +268,19 @@ class _OnboardingPageState extends State<OnboardingPage>
       ),
     );
 
+    Widget card = enableGlass
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: container,
+            ),
+          )
+        : container;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: enableGlass
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: container,
-              ),
-            )
-          : container,
+      child: onTap != null ? ScaleTouchWrapper(child: card) : card,
     );
   }
 

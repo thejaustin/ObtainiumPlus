@@ -172,22 +172,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               message:
                   "${tr('googleVerificationWarningP1')}\n\n${tr('googleVerificationWarningP3')}",
               additionalWidgets: [
-                InkWell(
-                  onTap: () {
-                    launchUrlString(
-                      'https://keepandroidopen.org/',
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      tr('googleVerificationWarningP2'),
-                      style: const TextStyle(
-                        decoration: TextDecoration.underline,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: LinkText(
+                    text: tr('googleVerificationWarningP2'),
+                    url: 'https://keepandroidopen.org/',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
