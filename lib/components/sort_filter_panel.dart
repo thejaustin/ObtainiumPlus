@@ -1,3 +1,4 @@
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:ui';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -81,7 +82,16 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     _authorController = TextEditingController(text: widget.filter.authorFilter);
     _idController = TextEditingController(text: widget.filter.idFilter);
 
-    _animController.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animsEnabled =
+          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      if (animsEnabled) {
+        _animController.forward();
+      } else {
+        _animController.value = 1.0;
+      }
+    });
   }
 
   @override

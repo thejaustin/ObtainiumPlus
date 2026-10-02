@@ -1868,9 +1868,11 @@ class AppsPageState extends State<AppsPage>
                     isSelected: selectedAppIds.contains(app.app.id),
                     hasUpdate: existingUpdates.contains(app.app.id),
                     categoryColor: categoryColor,
-                    entranceDelay: Duration(
-                      milliseconds: index < 10 ? index * 35 : 0,
-                    ),
+                    entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                        ? Duration(
+                            milliseconds: index < 10 ? index * 35 : 0,
+                          )
+                        : Duration.zero,
                     onTap: () {
                       if (selectedAppIds.isNotEmpty) {
                         toggleAppSelected(app.app);

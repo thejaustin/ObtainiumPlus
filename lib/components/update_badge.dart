@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:provider/provider.dart';
 
 class UpdateBadge extends StatefulWidget {
   final double size;
@@ -21,11 +23,16 @@ class _UpdateBadgeState extends State<UpdateBadge>
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 2400),
       vsync: this,
-    )..repeat(reverse: true);
-
+    );
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.10).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutSine),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
+        _pulseController.repeat(reverse: true);
+      }
+    });
   }
 
   @override
