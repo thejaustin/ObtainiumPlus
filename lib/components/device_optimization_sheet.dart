@@ -263,9 +263,9 @@ class _DeviceOptimizationSheetContentState
   Color _getShizukuChipColor(ColorScheme colorScheme) {
     switch (_shizukuStatus) {
       case ShizukuLiveStatus.active:
-        return Colors.green;
+        return colorScheme.primary;
       case ShizukuLiveStatus.permissionNeeded:
-        return Colors.orange;
+        return colorScheme.tertiary;
       case ShizukuLiveStatus.notRunning:
         return colorScheme.primary;
       case ShizukuLiveStatus.rootless:
@@ -540,20 +540,20 @@ class _DeviceOptimizationSheetContentState
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.green.withValues(alpha: 0.15),
+                                              color: colorScheme.primary.withValues(alpha: 0.15),
                                               borderRadius: BorderRadius.circular(8),
                                               border: Border.all(
-                                                color: Colors.green.withValues(alpha: 0.4),
+                                                color: colorScheme.primary.withValues(alpha: 0.4),
                                                 width: 0.8,
                                               ),
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                const Icon(
+                                                Icon(
                                                   Icons.check_circle_rounded,
                                                   size: 11,
-                                                  color: Colors.green,
+                                                  color: colorScheme.primary,
                                                 ),
                                                 const SizedBox(width: 3),
                                                 Text(
@@ -561,7 +561,7 @@ class _DeviceOptimizationSheetContentState
                                                   style: TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.green,
+                                                    color: colorScheme.primary,
                                                   ),
                                                 ),
                                               ],
@@ -607,12 +607,12 @@ class _DeviceOptimizationSheetContentState
                                       ),
                                       decoration: BoxDecoration(
                                         color: _isBatteryUnrestricted == true
-                                            ? Colors.green.withValues(alpha: 0.15)
+                                            ? colorScheme.primary.withValues(alpha: 0.15)
                                             : colorScheme.errorContainer.withValues(alpha: 0.6),
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: _isBatteryUnrestricted == true
-                                              ? Colors.green.withValues(alpha: 0.4)
+                                              ? colorScheme.primary.withValues(alpha: 0.4)
                                               : colorScheme.error.withValues(alpha: 0.4),
                                           width: 0.8,
                                         ),
@@ -626,7 +626,7 @@ class _DeviceOptimizationSheetContentState
                                                 : Icons.battery_alert_rounded,
                                             size: 13,
                                             color: _isBatteryUnrestricted == true
-                                                ? Colors.green
+                                                ? colorScheme.primary
                                                 : colorScheme.error,
                                           ),
                                           const SizedBox(width: 4),
@@ -638,7 +638,7 @@ class _DeviceOptimizationSheetContentState
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
                                               color: _isBatteryUnrestricted == true
-                                                  ? Colors.green
+                                                  ? colorScheme.primary
                                                   : colorScheme.error,
                                             ),
                                           ),

@@ -292,8 +292,8 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: latency < 50
-                                  ? Colors.green
-                                  : (latency < 120 ? Colors.orange : colorScheme.error),
+                                  ? colorScheme.primary
+                                  : (latency < 120 ? colorScheme.tertiary : colorScheme.error),
                             ),
                           ),
                         ],
