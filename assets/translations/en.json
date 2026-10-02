@@ -601,6 +601,8 @@
     "plusQuickFiltersDescription": "Access filtering options directly from the dashboard header",
     "plusTopUILayout": "Top-aligned UI layout",
     "plusTopUILayoutDescription": "Move primary navigation and actions to the top of the screen",
+    "plusSettingsBottomNavBar": "Bottom navigation in Settings",
+    "plusSettingsBottomNavBarDescription": "Show section tabs as a bottom navigation bar for one-handed reach. Disable to restore the horizontal chip tabs at the top.",
     "plusOneHandedMode": "One-Handed Reachability (OneUI)",
     "plusOneHandedModeDescription": "Expands the header viewing area on pull-down to bring controls within thumb reach, centering the title",
     "advancedTheming": "Advanced Theming",
