@@ -153,6 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
           : null,
       body: CustomScrollView(
         controller: _scrollController,
+        physics: plusSettings.scrollPhysics,
         slivers: [
           CustomAppBar(
             title: tr('settings'),
@@ -237,6 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: ListView(
                   controller: _tabsScrollController,
                   scrollDirection: Axis.horizontal,
+                  physics: plusSettings.scrollPhysics,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
                     (

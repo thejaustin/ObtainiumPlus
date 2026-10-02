@@ -105,6 +105,7 @@ class _StatisticsPageState extends State<StatisticsPage>
 
   @override
   Widget build(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final appsProvider = context.watch<AppsProvider>();
     final allApps = appsProvider.getAppValues().toList();
 
@@ -211,6 +212,7 @@ class _StatisticsPageState extends State<StatisticsPage>
 
           return SingleChildScrollView(
             controller: widget.scrollController,
+            physics: plusSettings.scrollPhysics,
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
