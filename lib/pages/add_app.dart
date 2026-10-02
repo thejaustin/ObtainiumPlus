@@ -1154,7 +1154,8 @@ class AddAppPageState extends State<AddAppPage> {
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
-                child: Material(
+                child: ScaleTouchWrapper(
+                  child: Material(
                   color: colorScheme.surfaceContainerHighest.withValues(
                     alpha: 0.3,
                   ),
@@ -1210,6 +1211,7 @@ class AddAppPageState extends State<AddAppPage> {
                       ),
                     ),
                   ),
+                ),
                 ),
               );
             }),
