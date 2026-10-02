@@ -161,9 +161,12 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
     final value = setting.getValue(provider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: animsEnabled ? 200 : 0),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
         color: value
@@ -197,7 +200,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                       curve: Curves.easeOutCubic,
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
@@ -221,7 +224,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                         bottom: 0,
                         child: AnimatedScale(
                           scale: value ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 200),
+                          duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                           curve: Curves.easeOutBack,
                           child: Container(
                             width: 14,

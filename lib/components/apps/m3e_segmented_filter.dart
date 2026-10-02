@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:provider/provider.dart';
 
 /// A Material 3 Expressive segmented filter bar featuring fluid shape-morphing
 /// selection indicators, capsule geometry, dynamic badge transitions, and responsive layout.
@@ -42,6 +44,9 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
     final pillRadius = CardMetrics.pill(radius);
     final innerPillRadius = pillRadius - 3.5;
 
@@ -92,7 +97,7 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
             children: [
               // Fluid shape-morphing active indicator pill
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
+                duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                 curve: Easing.emphasizedDecelerate,
                 left: inset + (activeIndex * segmentWidth),
                 top: inset,
@@ -197,6 +202,9 @@ class _SegmentItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
     final fgColor = isSelected
         ? colorScheme.onSecondaryContainer
         : colorScheme.onSurfaceVariant;
@@ -215,7 +223,7 @@ class _SegmentItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                   child: Icon(
                     data.icon,
                     key: ValueKey(isSelected),
@@ -226,7 +234,7 @@ class _SegmentItem extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
+                    duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -245,10 +253,10 @@ class _SegmentItem extends StatelessWidget {
                   const SizedBox(width: 5),
                   AnimatedScale(
                     scale: 1.0,
-                    duration: const Duration(milliseconds: 260),
+                    duration: Duration(milliseconds: animsEnabled ? 260 : 0),
                     curve: Easing.emphasizedDecelerate,
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
+                      duration: Duration(milliseconds: animsEnabled ? 260 : 0),
                       curve: Easing.emphasizedDecelerate,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6.5,
