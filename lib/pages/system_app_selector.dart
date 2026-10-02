@@ -1188,7 +1188,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   Widget _buildAppTile(_EnhancedPackageInfo pkg, AppsProvider appsProvider) {
     final appLabels = _appLabels[pkg.packageName] ?? [];
 
-    return Card(
+    return ScaleTouchWrapper(
+      child: Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: 0,
       color: pkg.isSelected
@@ -1276,7 +1277,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildGridAppTile(
@@ -1285,7 +1286,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   ) {
     final appLabels = _appLabels[pkg.packageName] ?? [];
 
-    return Card(
+    return ScaleTouchWrapper(
+      child: Card(
       elevation: 0,
       color: pkg.isSelected
           ? Theme.of(context).colorScheme.primaryContainer.withValues(
@@ -1374,7 +1376,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildLabelChip(String label, {bool small = false}) {

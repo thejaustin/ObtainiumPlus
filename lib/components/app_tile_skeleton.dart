@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
@@ -23,10 +24,18 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
-    )..repeat(reverse: true);
+    );
     _animation = Tween<double>(begin: 0.4, end: 0.9).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
+        _controller.repeat(reverse: true);
+      } else {
+        _controller.value = 0.65;
+      }
+    });
   }
 
   @override
