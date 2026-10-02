@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -239,12 +240,13 @@ class _LayoutModeButton extends StatelessWidget {
         .watch<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
+    return ScaleTouchWrapper(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: AnimatedContainer(
           duration: Duration(milliseconds: animsEnabled ? 200 : 0),
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -288,6 +290,6 @@ class _LayoutModeButton extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

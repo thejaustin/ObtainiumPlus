@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -165,7 +166,8 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
         .watch<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
 
-    return AnimatedContainer(
+    return ScaleTouchWrapper(
+      child: AnimatedContainer(
       duration: Duration(milliseconds: animsEnabled ? 200 : 0),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
@@ -264,7 +266,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

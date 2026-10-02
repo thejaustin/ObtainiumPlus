@@ -9,6 +9,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:http/http.dart' as http;
@@ -757,20 +758,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           ),
         ],
         const SizedBox(height: 12),
-        InkWell(
-          onTap: () {
-            launchUrlString(
-              widget.helpUrl,
-              mode: LaunchMode.externalApplication,
-            );
-          },
-          child: Text(
-            tr('plusTokenConfigHelp'),
-            style: const TextStyle(
-              fontSize: 12,
-              decoration: TextDecoration.underline,
-            ),
-          ),
+        LinkText(
+          text: tr('plusTokenConfigHelp'),
+          url: widget.helpUrl,
+          style: const TextStyle(fontSize: 12),
         ),
         const SizedBox(height: 24),
         Row(

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -114,7 +115,8 @@ class BooleanControlGrid extends StatelessWidget {
     required bool value,
     required Function(bool) onChanged,
   }) {
-    return Container(
+    return ScaleTouchWrapper(
+      child: Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12.0),
@@ -171,6 +173,6 @@ class BooleanControlGrid extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
