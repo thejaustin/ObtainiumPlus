@@ -1773,7 +1773,7 @@ class _AppPageState extends State<AppPage> {
               controller: widget.scrollController,
               physics: widget.isModal
                   ? const BouncingScrollPhysics()
-                  : const AlwaysScrollableScrollPhysics(),
+                  : plusSettings.scrollPhysics,
               slivers: [
                 SliverToBoxAdapter(
                   child: Column(children: [getFullInfoColumn()]),
