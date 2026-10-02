@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/models/app_in_memory.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
@@ -54,14 +55,25 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
   }
 
   void _toggleExpansion() {
+    final animsEnabled = context
+        .read<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
     setState(() {
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
-        _controller.forward();
         AppHaptics.mediumImpact();
+        if (animsEnabled) {
+          _controller.forward();
+        } else {
+          _controller.value = 1.0;
+        }
       } else {
-        _controller.reverse();
         AppHaptics.lightImpact();
+        if (animsEnabled) {
+          _controller.reverse();
+        } else {
+          _controller.value = 0.0;
+        }
       }
     });
   }
