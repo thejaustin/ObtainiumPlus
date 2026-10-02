@@ -1252,6 +1252,8 @@
     "settingsUseVisualThemePickerDesc": "Display themes as visual cards with light/dark mockup previews",
     "settingsUseSubmenuHub": "Appearance Submenu Hub",
     "settingsUseSubmenuHubDesc": "Compartmentalize appearance into dedicated submenus instead of a single long list",
+    "settingsUseHeroCards": "Expressive Status Cards",
+    "settingsUseHeroCardsDesc": "Show the large Shizuku status card and other prominent service indicator banners",
     "settingsAppearanceThemesAndColors": "Theme & Dynamic Color",
     "settingsAppearanceThemesAndColorsDesc": "Dark mode, Monet dynamic palette, preset styles, and custom accent colors",
     "settingsAppearanceAppTileStyling": "App Tile & Card Styling",

@@ -494,7 +494,8 @@ class _InstallationSectionState extends State<InstallationSection>
               },
             ),
 
-            if (behaviorSettings.useShizuku)
+            if (behaviorSettings.useShizuku &&
+                context.read<PlusSettingsProvider>().plusSettingsUseHeroCards)
               const ShizukuStatusCard(
                 margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               ),

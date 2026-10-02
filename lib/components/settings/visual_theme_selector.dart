@@ -228,7 +228,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
                 itemColor: const Color(0xFFE2E4E9),
               ),
             ),
-            Container(width: 0.8, color: Colors.grey.withValues(alpha: 0.3)),
+            Container(width: 0.8, color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
             Expanded(
               child: _MockHalf(
                 bgColor: const Color(0xFF16171B),
