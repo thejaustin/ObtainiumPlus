@@ -405,7 +405,13 @@ class _StatisticsPageState extends State<StatisticsPage>
                     if (fraction <= 0) return const SizedBox.shrink();
                     return TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0.0, end: fraction),
-                      duration: Duration(milliseconds: 500 + e.key * 100),
+                      duration: Duration(
+                        milliseconds: context
+                                .read<PlusSettingsProvider>()
+                                .plusEnableEnhancedAnimations
+                            ? 500 + e.key * 100
+                            : 0,
+                      ),
                       curve: Curves.easeOutCubic,
                       builder: (context, value, _) => Container(
                         width: (totalWidth * value).clamp(0.0, totalWidth),
