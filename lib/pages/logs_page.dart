@@ -87,6 +87,7 @@ $logs''';
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
+        physics: plusSettings.scrollPhysics,
         slivers: [
           SliverAppBar(
             title: Text(tr('appLogs')),

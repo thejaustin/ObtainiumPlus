@@ -505,6 +505,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
+        physics: plusSettings.scrollPhysics,
         slivers: <Widget>[
           CustomAppBar(title: tr('importExport')),
           SliverPadding(
