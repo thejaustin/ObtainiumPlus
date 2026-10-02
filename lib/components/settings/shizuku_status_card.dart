@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/shizuku_activity_log_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:provider/provider.dart';
 
 /// Interactive Shizuku / ShizukuPlus Service Status Card,
 /// inspired by the Material 3 Expressive ServerStatus card in ShizukuPlus.
@@ -39,13 +41,19 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
+    );
     _pulseAnimation = Tween<double>(begin: 0.45, end: 1.0).animate(
       CurvedAnimation(
         parent: _pulseController,
         curve: Curves.easeInOut,
       ),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
+        _pulseController.repeat(reverse: true);
+      }
+    });
     _loadStatus();
   }
 
@@ -237,7 +245,10 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
 
                   // Animated Status Indicator Dot
                   FadeTransition(
-                    opacity: isRunning || _isTesting
+                    opacity: (isRunning || _isTesting) &&
+                            context
+                                .watch<PlusSettingsProvider>()
+                                .plusEnableEnhancedAnimations
                         ? _pulseAnimation
                         : const AlwaysStoppedAnimation(1.0),
                     child: Container(

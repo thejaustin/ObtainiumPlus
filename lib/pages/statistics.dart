@@ -1,3 +1,4 @@
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -46,7 +47,17 @@ class _StatisticsPageState extends State<StatisticsPage>
     _entranceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
-    )..forward();
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animsEnabled =
+          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      if (animsEnabled) {
+        _entranceController.forward();
+      } else {
+        _entranceController.value = 1.0;
+      }
+    });
   }
 
   @override

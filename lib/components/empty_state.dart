@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -48,7 +49,16 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       begin: 0.88,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _controller.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animsEnabled =
+          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      if (animsEnabled) {
+        _controller.forward();
+      } else {
+        _controller.value = 1.0;
+      }
+    });
   }
 
   @override

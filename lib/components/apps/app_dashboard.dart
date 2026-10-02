@@ -1,3 +1,4 @@
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:share_plus/share_plus.dart';
@@ -68,7 +69,16 @@ class _AppDashboardState extends State<AppDashboard>
       curve: const Interval(0.38, 1.0, curve: curve),
     );
 
-    _entranceController.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animsEnabled =
+          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      if (animsEnabled) {
+        _entranceController.forward();
+      } else {
+        _entranceController.value = 1.0;
+      }
+    });
   }
 
   @override
