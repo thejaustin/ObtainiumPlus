@@ -1090,10 +1090,10 @@ class _AppPageState extends State<AppPage> {
             ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.85)
             : const Color(0xFF24292E);
         sourceName = 'GitHub';
-      } else if (url.contains('f-droid.org')) {
+      } else if (url.contains('f-droid.org') || url.contains('izzysoft.de')) {
         iconData = Icons.android_rounded;
         color = const Color(0xFF1976D2);
-        sourceName = 'F-Droid';
+        sourceName = url.contains('izzysoft.de') ? 'IzzyOnDroid' : 'F-Droid';
       } else if (url.contains('gitlab.com')) {
         iconData = Icons.account_tree_rounded;
         color = const Color(0xFFFC6D26);
@@ -1102,6 +1102,54 @@ class _AppPageState extends State<AppPage> {
         iconData = Icons.code_rounded;
         color = const Color(0xFF2185D0);
         sourceName = 'Codeberg';
+      } else if (url.contains('play.google.com')) {
+        iconData = Icons.shop_rounded;
+        color = const Color(0xFF34A853);
+        sourceName = 'Play Store';
+      } else if (url.contains('apkmirror.com')) {
+        iconData = Icons.archive_rounded;
+        color = isDark ? const Color(0xFF80BBFF) : const Color(0xFF1A73E8);
+        sourceName = 'APKMirror';
+      } else if (url.contains('apkpure.net') || url.contains('apkpure.com')) {
+        iconData = Icons.inventory_2_rounded;
+        color = const Color(0xFF00B0FF);
+        sourceName = 'APKPure';
+      } else if (url.contains('apkcombo.com')) {
+        iconData = Icons.view_comfy_rounded;
+        color = const Color(0xFF7C4DFF);
+        sourceName = 'APKCombo';
+      } else if (url.contains('bitbucket.org')) {
+        iconData = Icons.merge_rounded;
+        color = const Color(0xFF0052CC);
+        sourceName = 'Bitbucket';
+      } else if (url.contains('git.sr.ht')) {
+        iconData = Icons.hub_rounded;
+        color = isDark ? const Color(0xFFB0BEC5) : const Color(0xFF37474F);
+        sourceName = 'SourceHut';
+      } else if (url.contains('sourceforge.net')) {
+        iconData = Icons.build_rounded;
+        color = const Color(0xFFFF6D00);
+        sourceName = 'SourceForge';
+      } else if (url.contains('itch.io')) {
+        iconData = Icons.videogame_asset_rounded;
+        color = const Color(0xFFFA5C5C);
+        sourceName = 'itch.io';
+      } else if (url.contains('aptoide.com')) {
+        iconData = Icons.storefront_rounded;
+        color = const Color(0xFFFF5722);
+        sourceName = 'Aptoide';
+      } else if (url.contains('coolapk.com')) {
+        iconData = Icons.ac_unit_rounded;
+        color = const Color(0xFF1ABC9C);
+        sourceName = 'CoolApk';
+      } else if (url.contains('appgallery.huawei.com') || url.contains('appgallery.cloud.huawei.com')) {
+        iconData = Icons.widgets_rounded;
+        color = const Color(0xFFCF0A2C);
+        sourceName = 'AppGallery';
+      } else if (url.contains('uptodown.com')) {
+        iconData = Icons.download_rounded;
+        color = const Color(0xFF00C853);
+        sourceName = 'Uptodown';
       }
 
       return Container(
