@@ -221,7 +221,7 @@ class AdvancedSettingsSection extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
-            child: Text(tr('reset'), style: const TextStyle(color: Theme.of(context).colorScheme.error)),
+            child: Text(tr('reset'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
