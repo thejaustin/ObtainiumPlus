@@ -275,7 +275,7 @@ class _MockHalf extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: bgColor,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
