@@ -1015,7 +1015,7 @@ class AppsPageState extends State<AppsPage>
         child: ListTile(
           autofocus: index == 0 && settingsProvider.isTV,
           tileColor: listedApps[index].app.pinned
-              ? Colors.grey.withValues(alpha: 0.1)
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
               : Colors.transparent,
           selectedTileColor: Theme.of(context).colorScheme.primary.withValues(
             alpha: listedApps[index].app.pinned ? 0.2 : 0.1,

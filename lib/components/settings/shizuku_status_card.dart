@@ -355,24 +355,26 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                     child: Ink(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
+                        color: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: colorScheme.tertiary.withValues(alpha: 0.4),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.bolt_rounded, size: 16, color: Colors.amber),
+                          Icon(Icons.bolt_rounded, size: 16, color: colorScheme.tertiary),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               tr('shizukuAdbPortOpenHint', args: ['${info?.activeLoopbackPort}']),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w500,
-                                color: Colors.amber.shade900,
+                                color: colorScheme.onTertiaryContainer,
                               ),
                             ),
                           ),
-                          const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.amber),
+                          Icon(Icons.chevron_right_rounded, size: 18, color: colorScheme.tertiary),
                         ],
                       ),
                     ),

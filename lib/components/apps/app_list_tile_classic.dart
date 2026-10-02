@@ -164,7 +164,7 @@ class AppListTileClassic extends StatelessWidget {
       child: ListTile(
         autofocus: index == 0 && settingsProvider.isTV,
         tileColor: appInMemory.app.pinned
-            ? Colors.grey.withValues(alpha: 0.1)
+            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
             : Colors.transparent,
         selectedTileColor: Theme.of(context).colorScheme.primary.withValues(
           alpha: appInMemory.app.pinned ? 0.2 : 0.1,
