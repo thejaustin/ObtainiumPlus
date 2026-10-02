@@ -328,6 +328,7 @@ class AppFileService {
           (e is ClientException ||
               e is SocketException ||
               e is HandshakeException ||
+              e is TimeoutException ||
               (e is HttpException &&
                   !e.message.contains('404') &&
                   !e.message.contains('403') &&
