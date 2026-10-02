@@ -160,8 +160,8 @@ class SettingsLayoutSelector extends StatelessWidget {
                   ),
                   _buildGranularSwitch(
                     context,
-                    title: tr('shizukuStatusCard'),
-                    subtitle: tr('plusMaterialExpressiveDescription'),
+                    title: tr('settingsUseHeroCards'),
+                    subtitle: tr('settingsUseHeroCardsDesc'),
                     value: plusSettings.plusSettingsUseHeroCards,
                     onChanged: (v) =>
                         plusSettings.plusSettingsUseHeroCards = v,

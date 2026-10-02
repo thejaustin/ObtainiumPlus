@@ -1204,7 +1204,7 @@ class AddAppPageState extends State<AddAppPage> {
                           Icon(
                             Icons.arrow_forward_ios_rounded,
                             size: 14,
-                            color: colorScheme.outline,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ],
                       ),
