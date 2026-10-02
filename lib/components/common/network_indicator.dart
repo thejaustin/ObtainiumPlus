@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/network_utils.dart';
+import 'package:provider/provider.dart';
 
 class NetworkIndicator extends StatefulWidget {
   const NetworkIndicator({super.key});
@@ -36,7 +38,10 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
     if (mounted) {
       setState(() {
         _quality = quality;
-        if (quality == NetworkQuality.offline) {
+        final animsEnabled = context
+            .read<PlusSettingsProvider>()
+            .plusEnableEnhancedAnimations;
+        if (quality == NetworkQuality.offline && animsEnabled) {
           _pulseController.repeat();
         } else {
           _pulseController.stop();
@@ -67,6 +72,9 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final color = _colorForQuality(colorScheme);
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
 
     return Tooltip(
       message: 'Network: ${_quality.name}',
@@ -76,7 +84,7 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (_quality == NetworkQuality.offline)
+            if (_quality == NetworkQuality.offline && animsEnabled)
               AnimatedBuilder(
                 animation: _pulseController,
                 builder: (context, _) {
