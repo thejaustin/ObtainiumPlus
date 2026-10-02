@@ -215,7 +215,7 @@ class _AppDashboardState extends State<AppDashboard>
 
           // Recent updates — Adaptive Hide + AnimatedSize
           AnimatedSize(
-            duration: const Duration(milliseconds: 320),
+            duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 320 : 0),
             curve: Easing.emphasizedDecelerate,
             child:
                 (updatesAvailable > 0 &&

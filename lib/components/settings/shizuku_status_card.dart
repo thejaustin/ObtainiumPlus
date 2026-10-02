@@ -154,7 +154,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     }
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 300 : 0),
       margin: widget.margin,
       decoration: BoxDecoration(
         color: containerColor,

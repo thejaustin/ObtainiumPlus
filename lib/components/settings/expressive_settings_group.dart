@@ -133,7 +133,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     // Build the leading icon widget (tinted container style)
     Widget? leadingWidget = widget.icon != null
         ? AnimatedContainer(
-            duration: const Duration(milliseconds: 260),
+            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0),
             curve: Curves.easeOutCubic,
             width: 36,
             height: 36,
@@ -254,7 +254,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
           ),
         RepaintBoundary(
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
             curve: Curves.easeOutCubic,
             child: Card(
             elevation: 0,

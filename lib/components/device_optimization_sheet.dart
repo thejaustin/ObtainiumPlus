@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
@@ -799,7 +801,7 @@ class _DeviceOptimizationSheetContentState
                     const SizedBox(height: 16),
 
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 260),
+                      duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 260 : 0),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
                       transitionBuilder: (child, anim) {

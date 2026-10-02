@@ -122,6 +122,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     final theme = Theme.of(context);
     final settingsProvider = context.watch<ViewSettingsProvider>();
     final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final sourceProvider = SourceProvider();
     final isDark = theme.brightness == Brightness.dark;
 
@@ -719,7 +720,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               final isFocused = Focus.of(fContext).hasFocus;
               final isShifted = isFocused || hasText;
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
+                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Easing.emphasizedDecelerate,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),

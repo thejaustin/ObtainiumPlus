@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 
 class PluginManagerPage extends StatefulWidget {
   const PluginManagerPage({super.key});
@@ -95,7 +96,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                 final isActive = isFocused || hasText;
 
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 280),
+                  duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(isActive ? 16.0 : 26.0),

@@ -707,7 +707,7 @@ class AppsPageState extends State<AppsPage>
                   children: [
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 800),
+                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 800 : 0),
                       curve: Curves.elasticOut,
                       builder: (context, value, child) {
                         return Transform.scale(
@@ -1132,7 +1132,7 @@ class AppsPageState extends State<AppsPage>
     getSelectAllButton() {
       final isSelected = selectedAppIds.isNotEmpty;
       return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
         child: isSelected
             ? TextButton.icon(
                 key: const ValueKey('deselect'),
@@ -1146,7 +1146,7 @@ class AppsPageState extends State<AppsPage>
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 label: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                   transitionBuilder: (child, animation) =>
                       ScaleTransition(scale: animation, child: child),
                   child: Text(
@@ -1167,7 +1167,7 @@ class AppsPageState extends State<AppsPage>
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 label: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                   transitionBuilder: (child, animation) =>
                       ScaleTransition(scale: animation, child: child),
                   child: Text(
@@ -1725,7 +1725,7 @@ class AppsPageState extends State<AppsPage>
       final colorScheme = Theme.of(context).colorScheme;
 
       return AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
@@ -2737,7 +2737,7 @@ class _TVSearchBarState extends State<_TVSearchBar> {
           textFocusNode: _textFocus,
           borderRadius: currentRadius,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 250 : 0),
             curve: Easing.emphasizedDecelerate,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(currentRadius),
