@@ -392,7 +392,7 @@ class _SelectionModalState extends State<SelectionModal> {
                   ),
                 )
               : AnimatedContainer(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                  duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: entrySelections[entry] == true

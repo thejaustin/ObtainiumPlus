@@ -167,7 +167,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         children: [
           _buildInfoCard(cs),
           const SizedBox(height: 24),
-          _buildProviderSection(cs),
+          _buildProviderSection(cs, context),
           const SizedBox(height: 24),
           _buildComponentsSection(cs),
           const SizedBox(height: 24),
@@ -278,7 +278,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildProviderSection(ColorScheme cs) {
+  Widget _buildProviderSection(ColorScheme cs, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -297,7 +297,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         ..._providers.keys.map((String value) {
           final isSelected = _selectedProvider == value;
           return AnimatedContainer(
-            duration: Duration(milliseconds: animsEnabled ? 200 : 0),
+            duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: isSelected
