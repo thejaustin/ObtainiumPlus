@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
+import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -135,6 +136,9 @@ class _ThemeThumbnailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
 
     return Material(
       color: Colors.transparent,
@@ -142,8 +146,8 @@ class _ThemeThumbnailCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
+          duration: Duration(milliseconds: animsEnabled ? 220 : 0),
+          curve: AppConstants.expressiveDecelerate,
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: isSelected
