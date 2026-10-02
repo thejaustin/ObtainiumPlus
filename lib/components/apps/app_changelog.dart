@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
+import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -25,20 +26,10 @@ void showChangeLogDialog(
         message: app.latestVersion,
         additionalWidgets: [
           changesUrl != null
-              ? GestureDetector(
-                  child: Text(
-                    changesUrl,
-                    style: const TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  onTap: () {
-                    launchUrlString(
-                      changesUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
+              ? LinkText(
+                  text: changesUrl,
+                  url: changesUrl,
+                  style: const TextStyle(fontStyle: FontStyle.italic),
                 )
               : const SizedBox.shrink(),
           changesUrl != null
