@@ -1043,7 +1043,7 @@ class _AppPageState extends State<AppPage> {
                         );
                       }
                     },
-                    color: Colors.blueAccent,
+                    color: colorScheme.secondary,
                   ),
                 ),
                 const SizedBox(width: 8),
