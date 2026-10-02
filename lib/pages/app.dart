@@ -808,7 +808,30 @@ class _AppPageState extends State<AppPage> {
               runSpacing: 4,
               children: [
                 ...app?.app.tags
-                        .map((tag) => Chip(label: Text(tag)))
+                        .map(
+                          (tag) => Chip(
+                            label: Text(
+                              tag,
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            avatar: Icon(
+                              Icons.label_rounded,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                            backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.25),
+                              width: 0.8,
+                            ),
+                            shape: const StadiumBorder(),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        )
                         .toList() ??
                     [],
                 ActionChip(
