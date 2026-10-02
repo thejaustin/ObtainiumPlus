@@ -2627,11 +2627,10 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return AlertDialog(
+    return GlassDialog(
+      title: tr('changeX', args: [plural('apps', widget.totalApps).toLowerCase()]),
+      icon: Icons.system_update_alt_rounded,
       scrollable: true,
-      title: Text(
-        tr('changeX', args: [plural('apps', widget.totalApps).toLowerCase()]),
-      ),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
