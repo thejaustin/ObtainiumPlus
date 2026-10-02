@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
@@ -289,8 +290,9 @@ class _ErrorAppState extends State<ErrorApp> {
   ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(action),
+      builder: (ctx) => GlassDialog(
+        title: action,
+        icon: Icons.build_circle_outlined,
         content: Text('Are you sure you want to proceed with: $action?'),
         actions: [
           TextButton(
@@ -313,8 +315,9 @@ class _ErrorAppState extends State<ErrorApp> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Repair Successful'),
+      builder: (ctx) => GlassDialog(
+        title: 'Repair Successful',
+        icon: Icons.check_circle_outline_rounded,
         content: const Text(
           'The repair action has been applied. Please restart Obtainium+ to see if the issue is resolved.',
         ),

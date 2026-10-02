@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/logs_provider.dart';
@@ -30,9 +31,10 @@ Future<bool> showConfirmDialog(
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
-      content: content,
+    builder: (ctx) => GlassDialog(
+      title: title,
+      icon: Icons.help_outline_rounded,
+      content: content ?? const SizedBox.shrink(),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
@@ -62,13 +64,11 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
-        return AlertDialog(
-          scrollable: true,
-          title: Text(
-            e is MultiAppMultiError
-                ? tr(isError ? 'someErrors' : 'updates')
-                : tr(isError ? 'unexpectedError' : 'unknown'),
-          ),
+        return GlassDialog(
+          title: e is MultiAppMultiError
+              ? tr(isError ? 'someErrors' : 'updates')
+              : tr(isError ? 'unexpectedError' : 'unknown'),
+          icon: isError ? Icons.error_outline_rounded : Icons.info_outline_rounded,
           content: GestureDetector(
             onLongPress: () {
               Clipboard.setData(ClipboardData(text: e.toString()));
@@ -379,8 +379,9 @@ Future<void> showHelpDialog(
 }) {
   return showDialog(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
+    builder: (ctx) => GlassDialog(
+      title: title,
+      icon: Icons.help_outline_rounded,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

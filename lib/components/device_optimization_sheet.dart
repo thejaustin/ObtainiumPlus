@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
@@ -303,14 +304,9 @@ class _DeviceOptimizationSheetContentState
       case ShizukuLiveStatus.rootless:
         showDialog<void>(
           context: context,
-          builder: (dialogCtx) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.verified_user_outlined, size: 22),
-                SizedBox(width: 8),
-                Text('Rootless Mode Active'),
-              ],
-            ),
+          builder: (dialogCtx) => GlassDialog(
+            title: 'Rootless Mode Active',
+            icon: Icons.verified_user_outlined,
             content: const Text(
               'ObtainiumPlus operates with 100% native Android package management without requiring root or ADB access.\n\n'
               '• Android 14+: Background updates install silently via "Update Ownership" & "User Pre-approval".\n\n'
