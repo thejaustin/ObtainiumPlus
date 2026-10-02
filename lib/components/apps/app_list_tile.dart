@@ -330,16 +330,28 @@ class AppListTile extends StatelessWidget {
                 : null,
           ),
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            switchInCurve: AppConstants.expressiveDecelerate,
-            switchOutCurve: AppConstants.expressiveAccelerate,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 0.82, end: 1.0).animate(animation),
-                child: child,
-              ),
+            duration: Duration(
+              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 350 : 180,
             ),
+            switchInCurve: plusSettings.plusEnableEnhancedAnimations
+                ? AppConstants.expressiveDecelerate
+                : Curves.easeOut,
+            switchOutCurve: plusSettings.plusEnableEnhancedAnimations
+                ? AppConstants.expressiveAccelerate
+                : Curves.easeIn,
+            transitionBuilder: (child, animation) =>
+                plusSettings.plusEnableEnhancedAnimations
+                    ? FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.82,
+                            end: 1.0,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      )
+                    : FadeTransition(opacity: animation, child: child),
             child: appInMemory.icon != null
                 ? ClipRRect(
                     key: ValueKey('icon_${appInMemory.app.id}'),
@@ -868,10 +880,27 @@ class AppListTile extends StatelessWidget {
                                 appInMemory.downloadProgressNotifier,
                             builder: (context, downloadProgress, child) {
                               return AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                switchInCurve: AppConstants.expressiveDecelerate,
-                                switchOutCurve: AppConstants.expressiveAccelerate,
+                                duration: Duration(
+                                  milliseconds: plusSettings
+                                          .plusEnableEnhancedAnimations
+                                      ? 300
+                                      : 150,
+                                ),
+                                switchInCurve: plusSettings
+                                        .plusEnableEnhancedAnimations
+                                    ? AppConstants.expressiveDecelerate
+                                    : Curves.easeOut,
+                                switchOutCurve: plusSettings
+                                        .plusEnableEnhancedAnimations
+                                    ? AppConstants.expressiveAccelerate
+                                    : Curves.easeIn,
                                 transitionBuilder: (child, animation) {
+                                  if (!plusSettings.plusEnableEnhancedAnimations) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    );
+                                  }
                                   return FadeTransition(
                                     opacity: animation,
                                     child: SlideTransition(
