@@ -10,6 +10,7 @@ import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
+import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -269,6 +270,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         if (_searchQuery.isEmpty &&
                             plusSettings.plusSettingsUseSubmenuHub) ...[
                           const SettingsLayoutSelector(),
+                          const VisualThemeSelector(),
+                          const SizedBox(height: 4),
                           AppearanceHub(
                             androidInfoFuture: _androidInfoFuture,
                             themeContent: ThemeSettingsSection(
