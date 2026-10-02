@@ -267,7 +267,7 @@ class _AppGridTileState extends State<AppGridTile>
                       ),
                     ),
 
-                  // 2. Glass sheen gradient — neutral only, no source brand color bleed
+                  // 2. Glass sheen gradient
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned.fill(
                       child: Container(
@@ -276,9 +276,12 @@ class _AppGridTileState extends State<AppGridTile>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Colors.white.withValues(alpha: 0.07),
+                              _getSourceColor(context).withValues(alpha: 0.10),
+                              Colors.white.withValues(alpha: 0.05),
                               Colors.transparent,
+                              Colors.black.withValues(alpha: 0.03),
                             ],
+                            stops: const [0.0, 0.2, 0.6, 1.0],
                           ),
                         ),
                       ),
