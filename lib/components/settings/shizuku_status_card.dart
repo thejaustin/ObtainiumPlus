@@ -7,6 +7,7 @@ import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -344,7 +345,8 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                 ),
               ] else if (hasActivePort && !isRunning) ...[
                 const SizedBox(height: 10),
-                Material(
+                ScaleTouchWrapper(
+                  child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(8),
@@ -379,7 +381,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                       ),
                     ),
                   ),
-                ),
+                )),
               ],
 
               const SizedBox(height: 12),
