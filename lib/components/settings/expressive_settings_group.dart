@@ -69,10 +69,17 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
   void _handleExpansionChange(bool expanded) {
     AppHaptics.selectionClick();
     setState(() => _isExpanded = expanded);
-    if (expanded) {
-      _expandController.forward();
+    final animsEnabled = context
+        .read<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
+    if (animsEnabled) {
+      if (expanded) {
+        _expandController.forward();
+      } else {
+        _expandController.reverse();
+      }
     } else {
-      _expandController.reverse();
+      _expandController.value = expanded ? 1.0 : 0.0;
     }
   }
 
