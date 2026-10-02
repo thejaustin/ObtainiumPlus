@@ -163,6 +163,15 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.plusShowStatusHub,
           onChanged: (s, v) => onSetState(() => s.plusShowStatusHub = v),
         ),
+      if (_matches(tr('plusSettingsBottomNavBar')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.dock_rounded,
+          title: tr('plusSettingsBottomNavBar'),
+          subtitle: tr('plusSettingsBottomNavBarDescription'),
+          value: (s) => s.plusSettingsBottomNavBar,
+          onChanged: (s, v) => onSetState(() => s.plusSettingsBottomNavBar = v),
+        ),
       if (_matches(tr('plusEnableBottomNavBar')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,

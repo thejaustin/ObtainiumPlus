@@ -149,6 +149,13 @@ class PlusSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get plusSettingsBottomNavBar =>
+      _prefs?.safeBool('plusSettingsBottomNavBar') ?? true;
+  set plusSettingsBottomNavBar(bool val) {
+    _prefs?.setBool('plusSettingsBottomNavBar', val);
+    notifyListeners();
+  }
+
   bool get plusShowAdvancedSettings =>
       _prefs?.safeBool('plusShowAdvancedSettings') ?? true;
   set plusShowAdvancedSettings(bool val) {

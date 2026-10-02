@@ -69,13 +69,22 @@ class _AppGridTileState extends State<AppGridTile>
         curve: AppConstants.expressiveDecelerate,
       ),
     );
-    if (widget.entranceDelay == Duration.zero) {
-      _entranceController.forward();
-    } else {
-      Future.delayed(widget.entranceDelay, () {
-        if (mounted) _entranceController.forward();
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animsEnabled =
+          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      if (!animsEnabled) {
+        _entranceController.value = 1.0;
+        return;
+      }
+      if (widget.entranceDelay == Duration.zero) {
+        _entranceController.forward();
+      } else {
+        Future.delayed(widget.entranceDelay, () {
+          if (mounted) _entranceController.forward();
+        });
+      }
+    });
   }
 
   @override

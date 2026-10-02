@@ -31,6 +31,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _tabsScrollController = ScrollController();
   String _searchQuery = '';
   bool _showIntervalLabel = true;
   late Future<AndroidDeviceInfo> _androidInfoFuture;
@@ -88,6 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _tabsScrollController.dispose();
     super.dispose();
   }
 
@@ -97,56 +99,58 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: ClipRect(
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 280),
-          curve: Easing.emphasizedDecelerate,
-          alignment: Alignment.topCenter,
-          heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
-          child: NavigationBar(
-            selectedIndex: _selectedSectionIndex,
-            onDestinationSelected: (index) {
-              AppHaptics.selectionClick();
-              setState(() {
-                _previousSectionIndex = _selectedSectionIndex;
-                _selectedSectionIndex = index;
-              });
-              _scrollController.animateTo(
-                0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-              );
-            },
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(Icons.palette_outlined),
-                selectedIcon: const Icon(Icons.palette_rounded),
-                label: tr('appearance'),
+      bottomNavigationBar: plusSettings.plusSettingsBottomNavBar
+          ? ClipRect(
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 280),
+                curve: Easing.emphasizedDecelerate,
+                alignment: Alignment.topCenter,
+                heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
+                child: NavigationBar(
+                  selectedIndex: _selectedSectionIndex,
+                  onDestinationSelected: (index) {
+                    AppHaptics.selectionClick();
+                    setState(() {
+                      _previousSectionIndex = _selectedSectionIndex;
+                      _selectedSectionIndex = index;
+                    });
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                    );
+                  },
+                  destinations: [
+                    NavigationDestination(
+                      icon: const Icon(Icons.palette_outlined),
+                      selectedIcon: const Icon(Icons.palette_rounded),
+                      label: tr('appearance'),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.system_update_outlined),
+                      selectedIcon: const Icon(Icons.system_update_rounded),
+                      label: tr('updates'),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.notifications_outlined),
+                      selectedIcon: const Icon(Icons.notifications_rounded),
+                      label: tr('notifications'),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.tune_outlined),
+                      selectedIcon: const Icon(Icons.tune_rounded),
+                      label: tr('settingsTabBehavior'),
+                    ),
+                    NavigationDestination(
+                      icon: const Icon(Icons.code_rounded),
+                      selectedIcon: const Icon(Icons.code_rounded),
+                      label: tr('advanced'),
+                    ),
+                  ],
+                ),
               ),
-              NavigationDestination(
-                icon: const Icon(Icons.system_update_outlined),
-                selectedIcon: const Icon(Icons.system_update_rounded),
-                label: tr('updates'),
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.notifications_outlined),
-                selectedIcon: const Icon(Icons.notifications_rounded),
-                label: tr('notifications'),
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.tune_outlined),
-                selectedIcon: const Icon(Icons.tune_rounded),
-                label: tr('settingsTabBehavior'),
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.code_rounded),
-                selectedIcon: const Icon(Icons.code_rounded),
-                label: tr('advanced'),
-              ),
-            ],
-          ),
-        ),
-      ),
+            )
+          : null,
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -226,6 +230,107 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          if (!plusSettings.plusSettingsBottomNavBar && _searchQuery.isEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 52,
+                child: ListView(
+                  controller: _tabsScrollController,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    (
+                      key: 'settingsTabAppearance',
+                      icon: Icons.palette_outlined,
+                    ),
+                    (
+                      key: 'settingsTabUpdatesInstall',
+                      icon: Icons.system_update_rounded,
+                    ),
+                    (
+                      key: 'settingsTabNotifications',
+                      icon: Icons.notifications_outlined,
+                    ),
+                    (
+                      key: 'settingsTabBehavior',
+                      icon: Icons.tune_rounded,
+                    ),
+                    (
+                      key: 'settingsTabAdvancedDebug',
+                      icon: Icons.code_rounded,
+                    ),
+                  ].asMap().entries.map((entry) {
+                    final isSelected = _selectedSectionIndex == entry.key;
+                    final tab = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ChoiceChip(
+                        avatar: Icon(
+                          tab.icon,
+                          size: 16,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        label: Text(tr(tab.key)),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            AppHaptics.selectionClick();
+                            setState(() {
+                              _previousSectionIndex = _selectedSectionIndex;
+                              _selectedSectionIndex = entry.key;
+                            });
+                            _scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                            );
+                            if (_tabsScrollController.hasClients) {
+                              final targetOffset =
+                                  (entry.key * 130.0 - 48.0).clamp(
+                                0.0,
+                                _tabsScrollController
+                                    .position.maxScrollExtent,
+                              );
+                              _tabsScrollController.animateTo(
+                                targetOffset,
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeOutCubic,
+                              );
+                            }
+                          }
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            plusSettings.plusGlobalCornerRadius,
+                          ),
+                        ),
+                        side: BorderSide.none,
+                        showCheckmark: false,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.surfaceContainer,
+                        selectedColor:
+                            Theme.of(context).colorScheme.primaryContainer,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverToBoxAdapter(
