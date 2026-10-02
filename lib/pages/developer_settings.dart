@@ -869,7 +869,7 @@ void showDeviceProfilePicker(BuildContext context) {
                 ),
               ),
               trailing: authProvider.selectedProfile.name == p.name
-                  ? Icon(Icons.check, color: cs.primary)
+                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
                   : null,
               onTap: () {
                 authProvider.setDeviceProfile(p);
