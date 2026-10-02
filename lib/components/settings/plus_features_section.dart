@@ -40,7 +40,7 @@ class PlusFeaturesSection extends StatelessWidget {
         final bool isEnabled = settings.enableAllPlusFeatures;
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 300 : 0),
           curve: Curves.easeOutCubic,
           margin: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
@@ -67,7 +67,7 @@ class PlusFeaturesSection extends StatelessWidget {
                   showPlusFeaturesSheet(context: context);
                 },
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
+                  duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
                   transitionBuilder: (child, anim) =>
                       ScaleTransition(scale: anim, child: child),
                   child: Icon(

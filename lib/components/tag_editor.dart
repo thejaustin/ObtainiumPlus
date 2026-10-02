@@ -84,8 +84,7 @@ Future<List<String>?> showTagEditor({
                                           Theme.of(context).colorScheme;
 
                                       return AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 280),
+                                        duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                                         curve: Easing.emphasizedDecelerate,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(

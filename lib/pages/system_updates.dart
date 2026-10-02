@@ -5,6 +5,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/play_store_mirror_service.dart';
 import 'package:provider/provider.dart';
@@ -64,6 +65,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final animsEnabled = context.watch<PlusSettingsProvider>().plusEnableEnhancedAnimations;
     final stateKey = _isScanning
         ? 'scanning'
         : (_updates.isEmpty ? 'empty' : 'results');
@@ -136,7 +138,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
     }
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: animsEnabled ? 300 : 0),
       transitionBuilder: (child, anim) =>
           FadeTransition(opacity: anim, child: child),
       child: KeyedSubtree(key: ValueKey(stateKey), child: body),

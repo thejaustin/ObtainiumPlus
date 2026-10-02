@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -126,6 +127,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final appsProvider = context.watch<AppsProvider>();
+    final animsEnabled = context.watch<PlusSettingsProvider>().plusEnableEnhancedAnimations;
 
     // Calculate overall progress from selected components
     double overallProgress = 0;
@@ -295,7 +297,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         ..._providers.keys.map((String value) {
           final isSelected = _selectedProvider == value;
           return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: Duration(milliseconds: animsEnabled ? 200 : 0),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: isSelected

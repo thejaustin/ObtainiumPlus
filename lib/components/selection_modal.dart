@@ -3,6 +3,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/generated_form.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -118,6 +119,7 @@ class _SelectionModalState extends State<SelectionModal> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final enableGlass = settings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -390,7 +392,7 @@ class _SelectionModalState extends State<SelectionModal> {
                   ),
                 )
               : AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: entrySelections[entry] == true

@@ -596,7 +596,7 @@ class _AppGridTileState extends State<AppGridTile>
                     ),
             ),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
+              duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 350 : 0),
               switchInCurve: AppConstants.expressiveDecelerate,
               switchOutCurve: AppConstants.expressiveAccelerate,
               transitionBuilder: (child, animation) => FadeTransition(

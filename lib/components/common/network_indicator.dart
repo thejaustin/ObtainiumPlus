@@ -105,7 +105,7 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
                 },
               ),
             AnimatedContainer(
-              duration: const Duration(milliseconds: 400),
+              duration: Duration(milliseconds: animsEnabled ? 400 : 0),
               curve: Curves.easeOutCubic,
               width: 8,
               height: 8,

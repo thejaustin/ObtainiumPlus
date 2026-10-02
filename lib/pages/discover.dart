@@ -385,6 +385,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     final sourceName = result.key;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final animsEnabled = context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
 
     final radius = settings.plusOverrideIndividualCornerRadius
         ? settings.plusHomeCornerRadius
@@ -397,7 +398,7 @@ class DiscoverPageState extends State<DiscoverPage> {
         sigma: 12,
         enabled: settings.plusEnableGlassmorphism,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: Duration(milliseconds: animsEnabled ? 300 : 0),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color:
@@ -579,7 +580,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                 child: Column(
                   children: [
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 280),
+                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                       curve: Easing.emphasizedDecelerate,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(
@@ -707,7 +708,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                   ),
                   AnimatedSize(
-                    duration: const Duration(milliseconds: 250),
+                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
                       curve: Curves.easeInOutCubic,
                       child: searchQuery.isNotEmpty
                           ? Column(

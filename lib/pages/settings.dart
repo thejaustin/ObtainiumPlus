@@ -102,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage> {
       bottomNavigationBar: plusSettings.plusSettingsBottomNavBar
           ? ClipRect(
               child: AnimatedAlign(
-                duration: const Duration(milliseconds: 280),
+                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Easing.emphasizedDecelerate,
                 alignment: Alignment.topCenter,
                 heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
@@ -162,7 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 280),
+                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(
@@ -337,7 +337,7 @@ class _SettingsPageState extends State<SettingsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverToBoxAdapter(
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
+                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0),
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (Widget child, Animation<double> animation) {

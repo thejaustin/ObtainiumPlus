@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -38,7 +39,7 @@ class ActiveOperationsBanner extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       child: AnimatedSize(
-        duration: const Duration(milliseconds: 350),
+        duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 350 : 0),
         curve: Easing.emphasizedDecelerate,
         child: Card(
           margin: EdgeInsets.zero,

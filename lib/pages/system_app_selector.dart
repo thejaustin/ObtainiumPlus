@@ -284,7 +284,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             final colorScheme = Theme.of(context).colorScheme;
 
                             return AnimatedContainer(
-                              duration: const Duration(milliseconds: 280),
+                              duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                               curve: Easing.emphasizedDecelerate,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(
@@ -607,7 +607,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       vertical: 8,
                     ),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 280),
+                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                       curve: Easing.emphasizedDecelerate,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(
@@ -730,7 +730,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   ? null
                   : AnimatedScale(
                       scale: _selectedCount > 0 ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
+                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                       curve: Curves.easeOutBack,
                       child: ScaleTouchWrapper(
                         onTap: (_selectedCount == 0 || _isImporting)
@@ -926,7 +926,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 280),
+                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(
@@ -1087,7 +1087,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ? null
           : AnimatedScale(
               scale: _selectedCount > 0 ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
+              duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
               curve: Curves.easeOutBack,
               child: ScaleTouchWrapper(
                 onTap: (_selectedCount == 0 || _isImporting)

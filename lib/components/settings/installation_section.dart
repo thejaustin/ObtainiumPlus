@@ -502,7 +502,7 @@ class _InstallationSectionState extends State<InstallationSection>
             // Animated nested child option: Shizuku Pretend to be Google Play
             if (_matches(tr('shizukuPretendToBeGooglePlay')))
               AnimatedSize(
-                duration: const Duration(milliseconds: 280),
+                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: behaviorSettings.useShizuku
@@ -561,7 +561,7 @@ class _InstallationSectionState extends State<InstallationSection>
             // Animated nested child: Fallback to stock when binder unavailable
             if (_matches(tr('shizukuFallbackToSystem'), isAdvanced: true))
               AnimatedSize(
-                duration: const Duration(milliseconds: 280),
+                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: behaviorSettings.useShizuku
@@ -620,7 +620,7 @@ class _InstallationSectionState extends State<InstallationSection>
             // Animated nested child: Binder latency diagnostics button
             if (_isShizukuGranted && _matches('shizuku binder latency diagnostics test'))
               AnimatedSize(
-                duration: const Duration(milliseconds: 280),
+                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: behaviorSettings.useShizuku
@@ -659,7 +659,7 @@ class _InstallationSectionState extends State<InstallationSection>
                                 color: Theme.of(context).colorScheme.tertiary,
                               ),
                               title: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
+                                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
                                 child: Text(
                                   _isTestingBinder
                                       ? tr('testingBinder')

@@ -91,7 +91,7 @@ class AppBehaviorSection extends StatelessWidget {
                 Consumer<BehaviorSettingsProvider>(
                   builder: (context, settings, child) {
                     return AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
+                      duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 250 : 0),
                       curve: Curves.easeInOutCubic,
                       child: settings.enableSwipeGestures
                           ? Column(
@@ -378,7 +378,7 @@ class AppBehaviorSection extends StatelessWidget {
                     },
                   ),
                   AnimatedSize(
-                    duration: const Duration(milliseconds: 250),
+                    duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 250 : 0),
                     curve: Curves.easeInOutCubic,
                     child: settings.plusEnableBanWarnings
                         ? Padding(

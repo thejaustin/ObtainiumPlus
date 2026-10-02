@@ -1476,7 +1476,9 @@ class _AppPageState extends State<AppPage> {
 
       return ScaleTouchWrapper(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
+          duration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0,
+          ),
           switchInCurve: Curves.easeOutCubic,
           switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (child, anim) => FadeTransition(

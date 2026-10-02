@@ -85,7 +85,7 @@ class NotificationSettingsSection extends StatelessWidget {
                 },
               ),
             AnimatedSize(
-              duration: const Duration(milliseconds: 250),
+              duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
               curve: Curves.easeInOutCubic,
               child: !settings.plusEnableNotificationEnhancements
                   ? Padding(
@@ -130,7 +130,7 @@ class NotificationSettingsSection extends StatelessWidget {
                             ],
                           ),
                         AnimatedSize(
-                          duration: const Duration(milliseconds: 200),
+                          duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 200 : 0),
                           curve: Curves.easeInOutCubic,
                           child: settings.plusEnableNotificationQuietHours &&
                                   _matches(tr('quietHoursSchedule'))
