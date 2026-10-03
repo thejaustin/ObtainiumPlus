@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:io' show SocketException;
 import 'dart:ui' show Locale;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:android_package_installer/android_package_installer.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class ObtainiumError {
@@ -19,6 +18,11 @@ class ObtainiumError {
   /// even when the error itself was thrown deep inside a source with no app
   /// reference. Not part of the localized [message]; only surfaced via
   /// [toString].
+  ///
+  /// This field is intentionally mutable so that URL context can be attached
+  /// after construction via [withUrlContext] or the `..url =` cascade pattern
+  /// without requiring every error subclass to carry a `copyWithUrl` factory.
+  /// TODO: Make immutable with a proper copy-with-url pattern across all subclasses.
   String? url;
 
   ObtainiumError(
@@ -71,29 +75,19 @@ Never rethrowOrWrapError(
   if (error is ObtainiumError) {
     if (error.unexpected) {
       final resolvedStack = error.stack ?? StackTrace.current;
-      unawaited(
-        LogsProvider().add(
-          'Unexpected ObtainiumError: ${error.toString()}\n$resolvedStack',
-          level: LogLevel.error,
-        ),
+      AppLogger.error(
+        'Unexpected ObtainiumError: ${error.toString()}\n$resolvedStack',
+        message:
+            'Unexpected ObtainiumError: ${error.toString()}\n$resolvedStack',
       );
-      throw ObtainiumError(
-        error.message,
-        code: 'UNEXPECTED',
-        unexpected: true,
-        stack: resolvedStack,
-        data: error.data,
-        url: error.url,
-      );
+      throw error;
     }
     throw error;
   }
   final capturedStack = stack ?? StackTrace.current;
-  unawaited(
-    LogsProvider().add(
-      'Wrapping unexpected error: $error\n$capturedStack',
-      level: LogLevel.error,
-    ),
+  AppLogger.error(
+    'Wrapping unexpected error: $error\n$capturedStack',
+    message: 'Wrapping unexpected error: $error\n$capturedStack',
   );
   throw ObtainiumError(
     sourceName != null ? '$sourceName: $error' : error.toString(),
@@ -144,6 +138,25 @@ class NoAPKError extends ObtainiumError {
   NoAPKError() : super.withCode('NO_APK');
 }
 
+/// The latest release is younger than the configured minimum update age and
+/// the source cannot provide an older release (#3303).
+class MinUpdateAgeError extends ObtainiumError {
+  MinUpdateAgeError(DateTime releaseDate, int minAgeDays)
+    : super.withCode(
+        'MIN_UPDATE_AGE',
+        data: {
+          'releaseDate': releaseDate.toIso8601String(),
+          'minAgeDays': minAgeDays,
+        },
+      );
+}
+
+/// RuStore lists some apps only as aggregated cards pulled from an external
+/// source and does not host an APK for them (see #3298).
+class RuStoreAggregatedAppError extends ObtainiumError {
+  RuStoreAggregatedAppError() : super.withCode('RUSTORE_AGGREGATED_APP');
+}
+
 class NoVersionError extends ObtainiumError {
   String? appId;
   NoVersionError() : super.withCode('NO_VERSION');
@@ -177,6 +190,23 @@ class InstallError extends ObtainiumError {
       );
 }
 
+/// The downloaded APK's signing certificate does not match the expected hash
+/// (user-provided) or the installed app's certificate.
+class SigningCertMismatchError extends ObtainiumError {
+  SigningCertMismatchError({
+    required bool hardBlock,
+    required Set<String> expected,
+    required Set<String> actual,
+  }) : super.withCode(
+         'SIGNING_CERT_MISMATCH',
+         data: {
+           'hardBlock': hardBlock,
+           'expected': expected.toList(),
+           'actual': actual.toList(),
+         },
+       );
+}
+
 class IDChangedError extends ObtainiumError {
   String? appId;
   final String newId;
@@ -200,7 +230,10 @@ class CheckUpdatesException extends ObtainiumError {
   CheckUpdatesException(this.updates, this.errors)
     : super.withCode('CHECK_UPDATES_FAILED', unexpected: true);
   @override
-  String toString() => errors.toString();
+  String toString() {
+    final base = url != null && url!.isNotEmpty ? '$message ($url)' : message;
+    return '$base\n${errors.toString()}';
+  }
 }
 
 class DownloadCancelledError extends ObtainiumError {
@@ -237,6 +270,10 @@ class MultiAppMultiError extends ObtainiumError {
     }
     rawErrors[appId] = error;
     final string = error.toString();
+    for (final entry in idsByErrorString.entries) {
+      entry.value.remove(appId);
+    }
+    idsByErrorString.removeWhere((k, v) => v.isEmpty);
     var tempIds = idsByErrorString.remove(string);
     if (tempIds == null) {
       tempIds = [];
@@ -283,6 +320,11 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
       args: [data?['sourceName'] ?? ''],
     ),
     'NO_APK' => tr('noAPKFound'),
+    'MIN_UPDATE_AGE' => tr(
+      'releaseTooYoungForMinAge',
+      args: ['${data?['minAgeDays'] ?? ''}'],
+    ),
+    'RUSTORE_AGGREGATED_APP' => tr('rustoreAggregatedAppNoApk'),
     'NO_VERSION' => tr('noVersionFound'),
     'UNSUPPORTED_URL' => tr('urlMatchesNoSource'),
     'DOWNGRADE' =>
@@ -332,8 +374,6 @@ bool isEnglish() {
   if (_appCurrentLocale != null) return _appCurrentLocale!.languageCode == 'en';
   return false;
 }
-
-String lowerCaseIfEnglish(String str) => isEnglish() ? str.toLowerCase() : str;
 
 String list2FriendlyString(List<String> list) {
   final isUsingEnglish = isEnglish();

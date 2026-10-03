@@ -2,45 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
-
-int compareAlphaNumeric(String a, String b) {
-  final List<String> aParts = _splitAlphaNumeric(a);
-  final List<String> bParts = _splitAlphaNumeric(b);
-
-  for (int i = 0; i < aParts.length && i < bParts.length; i++) {
-    final String aPart = aParts[i];
-    final String bPart = bParts[i];
-
-    final bool aIsNumber = _isDigit(aPart);
-    final bool bIsNumber = _isDigit(bPart);
-
-    if (aIsNumber && bIsNumber) {
-      final int aNumber = int.parse(aPart);
-      final int bNumber = int.parse(bPart);
-      final int cmp = aNumber.compareTo(bNumber);
-      if (cmp != 0) {
-        return cmp;
-      }
-    } else if (!aIsNumber && !bIsNumber) {
-      final int cmp = aPart.compareTo(bPart);
-      if (cmp != 0) {
-        return cmp;
-      }
-    } else {
-      // Alphanumeric strings come before numeric strings
-      return aIsNumber ? 1 : -1;
-    }
-  }
-
-  return aParts.length.compareTo(bParts.length);
-}
+import 'package:obtainium/utils/string_compare.dart';
 
 List<String> collectAllStringsFromJSONObject(dynamic obj) {
   List<String> extractor(dynamic obj) {
@@ -63,44 +33,47 @@ List<String> collectAllStringsFromJSONObject(dynamic obj) {
   return extractor(obj);
 }
 
-List<String> _splitAlphaNumeric(String s) {
-  if (s.isEmpty) return [];
-  final List<String> parts = [];
-  final StringBuffer sb = StringBuffer();
-
-  bool isNumeric = _isDigit(s[0]);
-  sb.write(s[0]);
-
-  for (int i = 1; i < s.length; i++) {
-    final bool currentIsNumeric = _isDigit(s[i]);
-    if (currentIsNumeric == isNumeric) {
-      sb.write(s[i]);
-    } else {
-      parts.add(sb.toString());
-      sb.clear();
-      sb.write(s[i]);
-      isNumeric = currentIsNumeric;
-    }
-  }
-
-  parts.add(sb.toString());
-
-  return parts;
-}
-
-bool _isDigit(String s) {
-  if (s.isEmpty) return false;
-  return s.codeUnitAt(0) >= 48 && s.codeUnitAt(0) <= 57;
-}
-
 List<MapEntry<String, String>> getLinksInLines(String lines) =>
-    RegExp(r'(?:(?:http|https|ftp)://)\S+')
+    RegExp(r'''(?:(?:http|https|ftp)://)[^\s"'<>()\[\]{}]+''')
         .allMatches(lines)
         .map(
-          (match) =>
-              MapEntry(match.group(0)!, match.group(0)?.split('/').last ?? ''),
+          (match) => match
+              .group(0)!
+              // Punctuation usually belongs to the surrounding text/code
+              // rather than to the URL itself.
+              .replaceFirst(RegExp(r'[.,;:!?]+$'), ''),
         )
+        .where((url) => url.isNotEmpty)
+        .map((url) => MapEntry(url, url.split('/').last))
         .toList();
+
+/// Collects absolute and root-relative URLs found in element attributes
+/// (e.g. `<script src="/js/app.js">`), resolved against [reqUrl].
+List<MapEntry<String, String>> getLinksInHtmlAttributes(
+  Document html,
+  Uri reqUrl,
+) {
+  final links = <MapEntry<String, String>>[];
+  for (final element in html.querySelectorAll('*')) {
+    for (final value in element.attributes.values) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) continue;
+      final isAbsolute = RegExp(
+        r'^(https?|ftp)://',
+        caseSensitive: false,
+      ).hasMatch(trimmed);
+      if (!isAbsolute && !trimmed.startsWith('/')) continue;
+      final resolved = ensureAbsoluteUrl(trimmed, reqUrl);
+      final uri = Uri.tryParse(resolved);
+      if (uri == null ||
+          !['http', 'https', 'ftp'].contains(uri.scheme.toLowerCase())) {
+        continue;
+      }
+      links.add(MapEntry(resolved, resolved.split('/').last));
+    }
+  }
+  return links;
+}
 
 /// Given an HTTP response, grab some links according to the common additional settings
 /// (those that apply to intermediate and final steps)
@@ -108,9 +81,7 @@ Future<List<MapEntry<String, String>>> grabLinksCommonFromRes(
   Response res,
   Map<String, dynamic> additionalSettings,
 ) async {
-  if (res.statusCode != 200) {
-    throw getObtainiumHttpError(res);
-  }
+  ensureHttpSuccess(res);
   final reqUrl = res.request?.url ?? Uri.parse('');
   return grabLinksCommon(res.body, reqUrl, additionalSettings);
 }
@@ -138,28 +109,44 @@ Future<List<MapEntry<String, String>>> grabLinksCommon(
       .map((e) => MapEntry(ensureAbsoluteUrl(e.key, reqUrl), e.value))
       .toList();
   if (allLinks.isEmpty || matchLinksOutsideATags) {
-    // Decode the body if the response is a JSON
-    try {
-      final jsonStrings = collectAllStringsFromJSONObject(jsonDecode(rawBody));
-      allLinks = getLinksInLines(jsonStrings.join('\n'));
-      if (allLinks.isEmpty) {
-        allLinks = getLinksInLines(
-          jsonStrings
-              .map((l) {
-                return ensureAbsoluteUrl(l, reqUrl);
-              })
-              .join('\n'),
-        );
+    // Merge every link source instead of replacing one set with another:
+    // <a> links, URLs in the raw text and URLs in element attributes are all
+    // valid candidates when [matchLinksOutsideATags] is enabled.
+    final merged = <String, MapEntry<String, String>>{
+      for (final link in allLinks) link.key: link,
+    };
+    void addAll(Iterable<MapEntry<String, String>> links) {
+      for (final link in links) {
+        merged.putIfAbsent(link.key, () => link);
       }
-    } catch (e) {
-      unawaited(
-        LogsProvider().add(
-          'Failed to parse HTML links: ${e.toString()}',
-          level: LogLevel.warning,
-        ),
-      );
-      allLinks = getLinksInLines(rawBody);
     }
+
+    if (allLinks.isEmpty) {
+      try {
+        final jsonStrings = collectAllStringsFromJSONObject(
+          jsonDecode(rawBody),
+        );
+        var jsonLinks = getLinksInLines(jsonStrings.join('\n'));
+        if (jsonLinks.isEmpty) {
+          jsonLinks = getLinksInLines(
+            jsonStrings
+                .map((l) {
+                  return ensureAbsoluteUrl(l, reqUrl);
+                })
+                .join('\n'),
+          );
+        }
+        addAll(jsonLinks);
+      } catch (e) {
+        AppLogger.warn('Failed to parse HTML links: ${e.toString()}');
+        addAll(getLinksInLines(rawBody));
+      }
+    }
+    if (matchLinksOutsideATags) {
+      addAll(getLinksInLines(rawBody));
+      addAll(getLinksInHtmlAttributes(html, reqUrl));
+    }
+    allLinks = merged.values.toList();
   }
   List<MapEntry<String, String>> links = [];
   final bool skipSort = additionalSettings['skipSort'] == true;
@@ -172,12 +159,7 @@ Future<List<MapEntry<String, String>>> grabLinksCommon(
       try {
         link = Uri.decodeFull(element.key);
       } catch (e) {
-        unawaited(
-          LogsProvider().add(
-            'Failed to decode URI in HTML filter: ${e.toString()}',
-            level: LogLevel.debug,
-          ),
-        );
+        AppLogger.debug('Failed to decode URI in HTML filter: ${e.toString()}');
       }
       return reg.hasMatch(filterLinkByText ? element.value : link);
     }).toList();
@@ -187,11 +169,8 @@ Future<List<MapEntry<String, String>>> grabLinksCommon(
       try {
         link = Uri.decodeFull(element.key);
       } catch (e) {
-        unawaited(
-          LogsProvider().add(
-            'Failed to decode URI in HTML APK filter: ${e.toString()}',
-            level: LogLevel.debug,
-          ),
+        AppLogger.debug(
+          'Failed to decode URI in HTML APK filter: ${e.toString()}',
         );
       }
       return AppSource.isApkOrContainerFile(
@@ -353,6 +332,14 @@ class HTML extends AppSource {
         value: 'partialAPKHash',
       ),
     ],
+    [
+      GeneratedFormTextField(
+        'zippedApkFilterRegEx',
+        label: tr('zippedApkFilterRegEx'),
+        required: false,
+        additionalValidators: [(value) => regExValidator(value)],
+      ),
+    ],
   ];
 
   @override
@@ -409,12 +396,12 @@ class HTML extends AppSource {
           await sourceRequest(currentUrl, additionalSettings),
           intermediateLinks[i],
         );
+        if (intermediateLinks[i]['autoLinkFilterByArch'] == true) {
+          intLinks = await filterApksByArch(intLinks);
+        }
         if (intLinks.isEmpty) {
           throw NoReleasesError(note: currentUrl);
         } else {
-          if (intermediateLinks[i]['autoLinkFilterByArch'] == true) {
-            intLinks = await filterApksByArch(intLinks);
-          }
           currentUrl = intLinks.last.key;
         }
       }
@@ -448,11 +435,8 @@ class HTML extends AppSource {
       try {
         relDecoded = Uri.decodeFull(rel);
       } catch (e) {
-        unawaited(
-          LogsProvider().add(
-            'Failed to decode URI for version extraction: ${e.toString()}',
-            level: LogLevel.debug,
-          ),
+        AppLogger.debug(
+          'Failed to decode URI for version extraction: ${e.toString()}',
         );
       }
       String? version;
@@ -463,29 +447,32 @@ class HTML extends AppSource {
             ? versionExtractionWholePageString
             : relDecoded,
       );
+      // Use a local copy for the request helpers: additionalSettings is stored
+      // on the App, and writing the transient resolved URL into it would leak
+      // into the app's persisted configuration.
+      final requestSettings = Map<String, dynamic>.from(additionalSettings)
+        ..['url'] = rel;
       final apkReqHeaders = await getRequestHeaders(
-        additionalSettings,
+        requestSettings,
         rel,
         forAPKDownload: true,
       );
       if (version == null &&
-          additionalSettings['defaultPseudoVersioningMethod'] == 'ETag') {
+          requestSettings['defaultPseudoVersioningMethod'] == 'ETag') {
         version = await checkETagHeader(
-          rel,
+          requestSettings,
           headers: apkReqHeaders,
-          allowInsecure: additionalSettings['allowInsecure'] == true,
         );
         if (version == null || version.isEmpty) {
           throw NoVersionError();
         }
       }
       version ??=
-          additionalSettings['defaultPseudoVersioningMethod'] == 'APKLinkHash'
+          requestSettings['defaultPseudoVersioningMethod'] == 'APKLinkHash'
           ? rel.hashCode.toString()
           : (await checkPartialDownloadHashDynamic(
-              rel,
+              requestSettings,
               headers: apkReqHeaders,
-              allowInsecure: additionalSettings['allowInsecure'] == true,
             )).toString();
       return APKDetails(
         version,

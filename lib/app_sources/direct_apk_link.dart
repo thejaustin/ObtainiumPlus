@@ -43,6 +43,14 @@ class DirectAPKLink extends AppSource {
         value: 'partialAPKHash',
       ),
     ],
+    [
+      GeneratedFormTextField(
+        'zippedApkFilterRegEx',
+        label: tr('zippedApkFilterRegEx'),
+        required: false,
+        additionalValidators: [(value) => regExValidator(value)],
+      ),
+    ],
   ];
 
   @override
@@ -91,7 +99,7 @@ class DirectAPKLink extends AppSource {
       }
       additionalSettingsNew['directAPKLink'] = true;
       additionalSettingsNew['versionDetection'] = false;
-      return html.getLatestAPKDetails(standardUrl, additionalSettingsNew);
+      return await html.getLatestAPKDetails(standardUrl, additionalSettingsNew);
     } catch (e) {
       rethrowOrWrapError(e);
     }

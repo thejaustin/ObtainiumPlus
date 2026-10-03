@@ -49,6 +49,9 @@ Locale? tryParseLocale(String? localeString) {
 
 enum ActionBannerMode { all, updatesOnly, none }
 
+/// How much vertical space each app row uses in the app list.
+enum AppListDensity { standard, compact, dense }
+
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   SettingsProvider([this.prefs]);

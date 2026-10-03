@@ -70,6 +70,9 @@ import 'package:obtainium/providers/apps_provider_lifecycle.dart';
 import 'package:obtainium/providers/apps_provider_updates.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 
+import 'package:obtainium/utils/signing_cert_utils.dart';
+import 'package:obtainium/utils/translation_loader.dart';
+
 export 'apps_provider_import_export.dart';
 export 'apps_provider_install.dart';
 export 'apps_provider_lifecycle.dart';
@@ -129,16 +132,14 @@ class CancellationToken {
 }
 
 Future<File> downloadFileWithRetry(
-  String url,
   String fileName,
   bool fileNameHasExt,
   Function? onProgress,
-  String destDir, {
+  String destDir,
+  Map<String, dynamic> additionalSettings, {
   bool useExisting = true,
   Map<String, String>? headers,
   int retries = _defaultRetries,
-  bool allowInsecure = false,
-  LogsProvider? logs,
   CancellationToken? cancellationToken,
   bool Function()? isCancelled,
 }) async {
@@ -158,35 +159,24 @@ Future<File> downloadFileWithRetry(
   );
 }
 
-String hashListOfLists(List<List<int>> data) {
+String _hashListOfLists(List<List<int>> data) {
   final bytes = utf8.encode(jsonEncode(data));
   return sha256.convert(bytes).toString().substring(0, 8);
 }
 
 Future<String> checkPartialDownloadHashDynamic(
-  String url, {
+  Map<String, dynamic> additionalSettings, {
   int startingSize = _partialHashCheckStartingSize,
   int lowerLimit = _partialHashCheckLowerLimit,
   Map<String, String>? headers,
-  bool allowInsecure = false,
 }) async {
   for (int i = startingSize; i >= lowerLimit; i -= _partialHashCheckDecrement) {
     // Both requests fetch the same byte range to confirm the hash is
     // stable. The loop decrements on mismatch; when two consecutive
     // requests agree, the hash is considered valid.
     final List<String> ab = await Future.wait([
-      checkPartialDownloadHash(
-        url,
-        i,
-        headers: headers,
-        allowInsecure: allowInsecure,
-      ),
-      checkPartialDownloadHash(
-        url,
-        i,
-        headers: headers,
-        allowInsecure: allowInsecure,
-      ),
+      checkPartialDownloadHash(additionalSettings, i, headers: headers),
+      checkPartialDownloadHash(additionalSettings, i, headers: headers),
     ]);
     if (ab[0] == ab[1]) {
       return ab[0];
@@ -196,47 +186,53 @@ Future<String> checkPartialDownloadHashDynamic(
 }
 
 Future<String> checkPartialDownloadHash(
-  String url,
+  Map<String, dynamic> additionalSettings,
   int bytesToGrab, {
   Map<String, String>? headers,
-  bool allowInsecure = false,
 }) async {
-  final req = Request('GET', Uri.parse(url));
-  if (headers != null) {
-    req.headers.addAll(headers);
-  }
-  req.headers[HttpHeaders.rangeHeader] = 'bytes=0-$bytesToGrab';
-  final client = IOClient(createHttpClient(allowInsecure));
+  final url = additionalSettings['url'] as String;
+  final reqHeaders = <String, String>{...?headers};
+  reqHeaders[HttpHeaders.rangeHeader] = 'bytes=0-$bytesToGrab';
+  final responseWithClient = await sourceRequestStreamResponse(
+    'GET',
+    reqHeaders,
+    additionalSettings,
+  );
+  final client = responseWithClient.value.key;
+  final response = responseWithClient.value.value;
   try {
-    final response = await client.send(req);
     if (response.statusCode < 200 || response.statusCode > 299) {
-      throw ObtainiumError(response.reasonPhrase ?? tr('unexpectedError'))
-        ..url = url;
+      throw ObtainiumError(
+        response.reasonPhrase.isNotEmpty
+            ? response.reasonPhrase
+            : tr('unexpectedError'),
+      )..url = url;
     }
-    final List<List<int>> bytes = await response.stream
-        .take(bytesToGrab)
-        .toList();
-    return hashListOfLists(bytes);
+    final List<List<int>> bytes = await response.take(bytesToGrab).toList();
+    return _hashListOfLists(bytes);
   } finally {
     client.close();
   }
 }
 
 Future<String?> checkETagHeader(
-  String url, {
+  Map<String, dynamic> additionalSettings, {
   Map<String, String>? headers,
-  bool allowInsecure = false,
 }) async {
-  final reqHeaders = headers ?? {};
-  final req = Request('GET', Uri.parse(url));
-  req.headers.addAll(reqHeaders);
-  final client = IOClient(createHttpClient(allowInsecure));
+  final responseWithClient = await sourceRequestStreamResponse(
+    'GET',
+    headers ?? {},
+    additionalSettings,
+  );
+  final client = responseWithClient.value.key;
+  final response = responseWithClient.value.value;
   try {
-    final StreamedResponse response = await client.send(req);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       return null;
     }
-    final etag = response.headers[HttpHeaders.etagHeader]?.replaceAll('"', '');
+    final etag = response.headers
+        .value(HttpHeaders.etagHeader)
+        ?.replaceAll('"', '');
     return etag != null
         ? sha256.convert(utf8.encode(etag)).toString().substring(0, 12)
         : null;
@@ -257,15 +253,13 @@ void deleteFile(File file) {
 
 /// Downloads a file to [destDir] with progress reporting, delegating to [AppFileService.downloadFile].
 Future<File> downloadFile(
-  String url,
   String fileName,
   bool fileNameHasExt,
   Function? onProgress,
-  String destDir, {
+  String destDir,
+  Map<String, dynamic> additionalSettings, {
   bool useExisting = true,
   Map<String, String>? headers,
-  bool allowInsecure = false,
-  LogsProvider? logs,
   CancellationToken? cancellationToken,
   bool Function()? isCancelled,
 }) async {
@@ -291,18 +285,28 @@ Future<int?> getDownloadSize(
   String url, {
   Map<String, String>? headers,
   bool allowInsecure = false,
+  bool enableCertificatePinning = false,
 }) async {
   final reqHeaders = headers ?? {};
-  final client = IOClient(createHttpClient(allowInsecure));
+  final Map<String, dynamic> additionalSettings = {
+    'allowInsecure': allowInsecure,
+    'url': url,
+    'enableCertificatePinning': enableCertificatePinning,
+  };
+  final responseWithClient = await sourceRequestStreamResponse(
+    'GET',
+    reqHeaders,
+    additionalSettings,
+  );
+  final client = responseWithClient.value.key;
+  final response = responseWithClient.value.value;
   try {
-    final getReq = Request('GET', Uri.parse(url));
-    getReq.headers.addAll(reqHeaders);
-    final response = await client.send(getReq);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       return null;
     }
+    // HttpClientResponse reports -1 for an unknown length.
     final length = response.contentLength;
-    return (length != null && length > 0) ? length : null;
+    return length > 0 ? length : null;
   } on SocketException {
     return null;
   } on TimeoutException {
@@ -312,12 +316,7 @@ Future<int?> getDownloadSize(
   } on HandshakeException {
     return null;
   } catch (e) {
-    unawaited(
-      LogsProvider().add(
-        'Unexpected error in getDownloadSize: $e',
-        level: LogLevel.error,
-      ),
-    );
+    AppLogger.error(e, message: 'Unexpected error in getDownloadSize');
     return null;
   } finally {
     client.close();
@@ -401,45 +400,14 @@ Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   return null;
 }
 
-/// Snapshot of a package's install state, taken before an install so that
-/// [waitForPackageInstall] can later tell whether the install landed.
-class InstallBaseline {
-  final bool wasInstalled;
-  final int? updateTime;
-  const InstallBaseline(this.wasInstalled, this.updateTime);
-}
-
-/// Captures the current install state of [appId] to compare against later.
-Future<InstallBaseline> captureInstallBaseline(String appId) async {
-  final info = await getInstalledInfo(appId);
-  return InstallBaseline(info != null, info?.lastUpdateTime);
-}
-
-/// Polls for an install that can't report completion synchronously (a silent
-/// background install, or a hand-off to an external installer). Returns true as
-/// soon as the package appears (when it wasn't installed before) or its update
-/// timestamp changes relative to [baseline] — a version-agnostic signal that
-/// also works with pseudo-versions — or false if neither happens within
-/// [attempts] × [interval].
-Future<bool> waitForPackageInstall(
-  String appId,
-  InstallBaseline baseline, {
-  required int attempts,
-  Duration interval = const Duration(milliseconds: 500),
-}) async {
-  for (var attempt = 0; attempt < attempts; attempt++) {
-    final info = await getInstalledInfo(appId);
-    if (info != null) {
-      if (!baseline.wasInstalled) return true;
-      final updateTimeAfter = info.lastUpdateTime;
-      if (baseline.updateTime == null ||
-          (updateTimeAfter != null && updateTimeAfter != baseline.updateTime)) {
-        return true;
-      }
-    }
-    await Future.delayed(interval);
-  }
-  return false;
+/// The on-device version of [app], as either its version code or version name
+/// depending on the app's `useVersionCodeAsOSVersion` setting. Null when the
+/// app is not installed.
+String? realInstalledVersionOf(App app, PackageInfo? installedInfo) {
+  if (installedInfo == null) return null;
+  return app.settings.getBool('useVersionCodeAsOSVersion')
+      ? installedInfo.versionCode?.toString()
+      : installedInfo.versionName;
 }
 
 Future<Directory> getAppStorageDir() async {
@@ -531,6 +499,8 @@ class AppsProvider with ChangeNotifier {
   // Set in dispose() to guard against deferred callbacks running post-disposal.
   bool _disposed = false;
 
+  final Completer<void> _readyCompleter = Completer<void>();
+
   // Tracks whether a background save occurred since the last load.
   bool _needsBgReload = false;
   // When Phase 1 last completed — used to suppress redundant FGBG reloads.
@@ -589,12 +559,7 @@ class AppsProvider with ChangeNotifier {
     if (!_needsBgReload) return;
     _needsBgReload = false;
     loadApps().catchError((e) {
-      unawaited(
-        logs.add(
-          'Reload after background save failed: $e',
-          level: LogLevel.error,
-        ),
-      );
+      AppLogger.error(e, message: 'Reload after background save failed');
     });
   }
 
@@ -616,6 +581,7 @@ class AppsProvider with ChangeNotifier {
 
   /// Requests cancellation of an ongoing download for [appId], if any.
   void cancelDownload(String appId) {
+    if (_disposed) return;
     _downloadCancellations[appId]?.cancel();
     final entry = apps[appId];
     if (entry != null && entry.downloadProgress != null) {
@@ -642,9 +608,7 @@ class AppsProvider with ChangeNotifier {
     _autoExportDebounce = Timer(const Duration(seconds: 2), () {
       if (!_disposed) {
         export(isAuto: true).catchError((e) {
-          unawaited(
-            logs.add('Auto-export failed: $e', level: LogLevel.warning),
-          );
+          AppLogger.warn('Auto-export failed: $e');
           return null;
         });
       }
@@ -753,10 +717,9 @@ class AppsProvider with ChangeNotifier {
       }
       _initCompleter.complete();
     }().catchError((e) {
+      if (!_readyCompleter.isCompleted) _readyCompleter.completeError(e);
       initError = e.toString();
-      unawaited(
-        logs.add('AppsProvider async init error: $e', level: LogLevel.error),
-      );
+      AppLogger.error(e, message: 'AppsProvider async init error');
     });
   }
 
@@ -2480,6 +2443,13 @@ class AppsProvider with ChangeNotifier {
 
   @override
   void dispose() {
+    if (NotificationsProvider.onDownloadCancelRequested == cancelDownload) {
+      NotificationsProvider.onDownloadCancelRequested = null;
+    }
+    for (final token in _downloadCancellations.values) {
+      token.cancel();
+    }
+    _downloadCancellations.clear();
     _disposed = true;
     foregroundSubscription?.cancel();
     _autoExportDebounce?.cancel();
@@ -2502,7 +2472,10 @@ class AppsProvider with ChangeNotifier {
     final Map<String, dynamic> errorsMap = results[1];
     for (var app in pps) {
       if (apps.containsKey(app.id)) {
-        errorsMap.addAll({app.id: tr('appAlreadyAdded')});
+        errorsMap.addAll({
+          app.id:
+              '${tr('appAlreadyAdded')}: ${apps[app.id]?.app.name ?? app.id}',
+        });
       } else {
         await saveApps([app], onlyIfExists: false);
       }
