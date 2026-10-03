@@ -14,7 +14,11 @@ No local Flutter SDK — CI is the compile/test gate. Use `scripts/dev/`:
 | Download latest APK artifact | `bash scripts/dev/fetch-apk.sh` |
 
 Pushing to `main` triggers `build-apk.yml` automatically: analyze → flutter test → APK → auto version bump (`1.4.3-pNN`) committed back to main.
-**Always `git pull --rebase origin main` before push** — CI bump commits land constantly.
+**Always `git fetch origin && git merge origin/main --no-edit` before push** — CI bump commits land constantly.
+**Prefer feature branches** (`feat/xxx`) for multi-commit work to avoid the merge-loop: each push to `main` triggers CI + version bump + a new commit you must pull before the next push.
+
+## PostToolUse hook
+`.claude/settings.json` runs `check-syntax.sh` automatically after every Edit/Write. This catches Dart parse errors and type mismatches locally before CI. If the hook output shows `SYNTAX ERRORS FOUND`, fix before committing.
 
 ## Critical crash rules — do not reintroduce
 
@@ -29,6 +33,46 @@ Pushing to `main` triggers `build-apk.yml` automatically: analyze → flutter te
 ## Testing
 - `test/settings_page_test.dart` pumps every settings tab in CI — the regression gate for blank-page bugs.
 - Test gotchas: translations must come from an in-memory AssetLoader (rootBundle load only completes for the first test in a file); `FlutterError.onError` capture must be installed inside the test body and restored before the post-test check.
+
+## Dart / Flutter type pitfalls — do not reintroduce
+
+| Pattern | Rule |
+|---------|------|
+| `ShapeBorderTween` with `TweenAnimationBuilder` | `ShapeBorderTween` extends `Tween<ShapeBorder?>` (nullable). Always use `TweenAnimationBuilder<ShapeBorder?>` and resolve: `final s = shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))` before passing to `Material`/`InkWell`/`BoxDecoration` |
+| `BackdropFilter` / glassmorphism | Never use raw `BackdropFilter`. Always use `lib/components/common/conditional_blur.dart` → `ConditionalBlur(enabled: plusSettings.plusEnableGlassmorphism, sigma: N, child: ...)`. Remove `dart:ui` import after migration unless `ui.TextDirection` is needed |
+| Animation durations | Every duration must check the setting: `Duration(milliseconds: animsEnabled ? N : 0)`. Never hardcode durations. Read `plusEnableEnhancedAnimations` from `PlusSettingsProvider` |
+| `context.watch` vs `context.select` | `context.watch<P>()` rebuilds on ANY field change in P. `context.select<P,T>((p) => p.field)` rebuilds only when `field` changes. Use `select` in leaf widgets reading a single setting |
+| `command grep` not `grep` | Shell `grep` is overridden to `ugrep` which crashes. Always prefix with `command grep` |
+
+## Performance patterns
+
+| Pattern | Where to apply |
+|---------|---------------|
+| Memoize filter+sort by `appsRevision` | Never filter/sort app lists inside `build()`. Memoize in `State` keyed on `appsRevision`+`appsCount` — recompute only when deps change |
+| `ValueNotifier<T>` for progress | Progress values should use `ValueNotifier` + `ValueListenableBuilder`, not `notifyListeners()`, to avoid full tree rebuilds on every tick |
+| Microtask coalesce (`_scheduleXNotification`) | Rapid back-to-back `notifyListeners()` (icon loads, concurrent saves) should coalesce: `if (!_flag) { _flag = true; Future.microtask(() { _flag = false; notifyListeners(); }); }` |
+| `deepCopy: false` in read-only `build()` | `getAppValues()` deep-copies all app objects by default. Pass `deepCopy: false` in build methods that never mutate |
+
+## M3E design tokens
+
+| Token | Usage |
+|-------|-------|
+| `CardMetrics.pill(radius)` | Outer capsule geometry for nav bars, segmented filters |
+| `CardMetrics.inner(radius)` | Inner pill for nested buttons, indicators |
+| `CardMetrics.card(radius)` | App-list cards and grid tiles |
+| `Cubic(0.05, 0.7, 0.1, 1.0)` | `expressiveDecelerate` — use for ALL shape morphs |
+| `AppConstants.glassBlurSigma` (24.0) | Strong glass blur (dialogs, omnibar sheet) |
+| `AppConstants.glassBlurSigmaSoft` (12.0) | Soft glass blur (nav bars, cards) |
+| `ScaleTouchWrapper(scaleDownFactor: 0.94, hapticOnPressDown: true)` | Standard interactive element wrapper |
+
+## Dead code traps
+
+These files exist but are unreachable — editing them does nothing:
+- `apps_provider_lifecycle.dart`, `apps_provider_install.dart` — extension methods shadowed by same-named class methods in `apps_provider.dart`
+- `app_crud_service.dart` — imported by zero files
+- `lib/components/app_list_tile.dart` (top-level) — shadowed by `lib/components/apps/app_list_tile.dart`
+
+Always check the `lib/components/apps/` subdirectory, not `lib/components/` root, for app-tile files.
 
 ## Sentry / issues
 - Sentry DSN injected via `--dart-define=SENTRY_DSN` (CI secret); `sentry-sync.yml` mirrors unresolved issues to GH issues (label `sentry-crash`) every 6h.

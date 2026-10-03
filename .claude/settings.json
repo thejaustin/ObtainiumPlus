@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /data/data/com.termux/files/home/projects/ObtainiumPlus && bash scripts/dev/check-syntax.sh 2>&1 | tail -6"
+          }
+        ]
+      }
+    ]
+  }
+}

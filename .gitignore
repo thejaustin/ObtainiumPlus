@@ -1,3 +1,9 @@
+# Large binary artifacts — store via GitHub Releases, not git history
+apk-releases/
+*.apk
+*.aab
+pubspec_history.diff
+
 # Miscellaneous
 *.class
 *.log

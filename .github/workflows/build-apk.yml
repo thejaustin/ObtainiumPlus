@@ -30,6 +30,13 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -167,6 +174,13 @@ jobs:
 
       - name: Install Android SDK Platform 36
         run: sdkmanager "platforms;android-36"
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-
 
       - name: Get dependencies
         run: flutter pub get
