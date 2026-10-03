@@ -46,7 +46,7 @@ class TelegramApp extends AppSource {
         const String apkUrl = _tgDownloadUrl;
         return APKDetails(version, [
           MapEntry<String, String>('telegram-$version.apk', apkUrl),
-        ], const AppNames('Telegram', 'Telegram'));
+        ], AppNames('Telegram', 'Telegram'));
       } else {
         throw getObtainiumHttpError(res);
       }
