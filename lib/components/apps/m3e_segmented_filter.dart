@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -158,17 +158,14 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
       },
     );
 
-    if (isGlass) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(pillRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: content,
-        ),
-      );
-    }
-
-    return content;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(pillRadius),
+      child: ConditionalBlur(
+        enabled: isGlass,
+        sigma: 8,
+        child: content,
+      ),
+    );
   }
 }
 

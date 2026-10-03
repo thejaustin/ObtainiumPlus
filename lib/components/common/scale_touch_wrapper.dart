@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -13,6 +12,10 @@ class ScaleTouchWrapper extends StatefulWidget {
   final bool hapticOnTap;
   final bool hapticOnLongPress;
 
+  /// Fire [AppHaptics.tapDown] immediately when the pointer makes contact.
+  /// This is the M3E pattern: haptics feel physical when fired on touch, not release.
+  final bool hapticOnPressDown;
+
   const ScaleTouchWrapper({
     super.key,
     required this.child,
@@ -21,6 +24,7 @@ class ScaleTouchWrapper extends StatefulWidget {
     this.scaleDownFactor = 0.96,
     this.hapticOnTap = false,
     this.hapticOnLongPress = true,
+    this.hapticOnPressDown = false,
   });
 
   @override
@@ -38,14 +42,16 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 80),
-      reverseDuration: const Duration(milliseconds: 320),
+      // Expressive spring-back: slightly longer for overshooting feel
+      reverseDuration: const Duration(milliseconds: 360),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDownFactor)
         .animate(
           CurvedAnimation(
             parent: _controller,
             curve: Curves.easeIn,
-            reverseCurve: Curves.easeOutBack,
+            // M3E spring: overshoots past 1.0 on release for a physical bounce
+            reverseCurve: AppConstants.expressiveDecelerate,
           ),
         );
   }
@@ -58,15 +64,11 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
 
   void _onPointerDown(PointerDownEvent event) {
     _controller.forward();
+    if (widget.hapticOnPressDown) AppHaptics.tapDown();
   }
 
   void _onPointerUp(PointerUpEvent event) {
     _controller.reverse();
-    // We let the inner GestureDetector or InkWell handle the actual onTap
-    // callback so we don't fire twice, but we can do haptics here if we want.
-    // However, if we do haptics here, we'll fire haptics even if the tap was cancelled
-    // by scrolling. It's better to let the widget itself handle taps, or only
-    // trigger animation via Listener.
   }
 
   void _onPointerCancel(PointerCancelEvent event) {
@@ -79,10 +81,7 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
       (p) => p.plusEnableEnhancedAnimations,
     );
 
-    if (!plusEnableAnimations) {
-      // Return unscaled child if enhanced animations are disabled in settings.
-      return widget.child;
-    }
+    if (!plusEnableAnimations) return widget.child;
 
     return Listener(
       onPointerDown: _onPointerDown,

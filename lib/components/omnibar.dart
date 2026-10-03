@@ -1,6 +1,5 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
-import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
@@ -747,16 +746,13 @@ class AppActionsFAB extends StatelessWidget {
           ),
         );
 
-        if (!enableGlass) return sheet;
         return ClipRRect(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(sheetRadius),
           ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: AppConstants.glassBlurSigma,
-              sigmaY: AppConstants.glassBlurSigma,
-            ),
+          child: ConditionalBlur(
+            enabled: enableGlass,
+            sigma: AppConstants.glassBlurSigma,
             child: sheet,
           ),
         );
@@ -834,6 +830,7 @@ class AppActionsFAB extends StatelessWidget {
           showAddAppMenu(context);
         },
         scaleDownFactor: 0.95,
+        hapticOnPressDown: true,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
