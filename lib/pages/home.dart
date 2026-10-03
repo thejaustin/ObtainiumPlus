@@ -14,7 +14,7 @@ import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
-import 'dart:ui';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
@@ -587,10 +587,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       selectedIndex: currentIndex,
     );
 
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
+
     if (isFloating) {
-      // Floating pill dock — sits inside the Scaffold's body padding area.
-      // Uses ClipRRect + BackdropFilter for the frosted-glass effect, then
-      // wraps everything in a margin'd container so it hovers above the edge.
+      // Floating pill dock — frosted when glassmorphism is on, solid otherwise.
       return RepaintBoundary(
         child: SafeArea(
           child: Padding(
@@ -598,16 +598,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: ClipRRect(
               key: _bottomNavBarKey,
               borderRadius: BorderRadius.circular(32),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: ConditionalBlur(
+                enabled: enableGlass,
+                sigma: 16,
                 child: Container(
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHigh.withValues(
-                      alpha: 0.82,
+                      alpha: enableGlass ? 0.82 : 1.0,
                     ),
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: enableGlass ? 0.3 : 0.15,
+                      ),
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -627,14 +630,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     }
 
-    // Classic flat-edge frosted bar (original behaviour preserved).
+    // Classic flat-edge bar — frosted when glassmorphism is on, solid otherwise.
     return RepaintBoundary(
       child: ClipRRect(
         key: _bottomNavBarKey,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: ConditionalBlur(
+          enabled: enableGlass,
+          sigma: 12,
           child: Container(
-            color: colorScheme.surface.withValues(alpha: 0.8),
+            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.8 : 1.0),
             child: wrapWithFocus(
               Column(
                 mainAxisSize: MainAxisSize.min,

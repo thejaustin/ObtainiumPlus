@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -412,10 +411,16 @@ class _ReleaseList extends StatefulWidget {
 
 class _ReleaseListState extends State<_ReleaseList> {
   int _selectedIndex = 0;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final releases = widget.releases;
     final selected = releases[_selectedIndex.clamp(0, releases.length - 1)];
 
@@ -443,7 +448,7 @@ class _ReleaseListState extends State<_ReleaseList> {
         Expanded(
           child: _MarkdownBody(
             body: selected.body,
-            scrollController: ScrollController(),
+            scrollController: _scrollController,
           ),
         ),
       ],

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -228,9 +228,16 @@ class _OnboardingPageState extends State<OnboardingPage>
       leading: Icon(icon, color: iconColor ?? colorScheme.primary),
       title: Text(
         title,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
       dense: true,
       trailing: onTap != null
           ? const Icon(Icons.chevron_right, size: 18)
@@ -268,15 +275,14 @@ class _OnboardingPageState extends State<OnboardingPage>
       ),
     );
 
-    Widget card = enableGlass
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: container,
-            ),
-          )
-        : container;
+    Widget card = ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: ConditionalBlur(
+        enabled: enableGlass,
+        sigma: 10,
+        child: container,
+      ),
+    );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -327,9 +333,16 @@ class _OnboardingPageState extends State<OnboardingPage>
       secondary: Icon(icon, size: 22),
       title: Text(
         title,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
       value: value,
       onChanged: onChanged,
       dense: true,
