@@ -495,6 +495,10 @@ class SettingsProvider with ChangeNotifier {
       prefs?.safeBool('plusOverrideIndividualCornerRadius') ?? false;
   bool get plusEnableNotificationDigest =>
       prefs?.safeBool('plusEnableNotificationDigest') ?? false;
+  int get minimumUpdateAgeDays =>
+      prefs?.safeInt('minimumUpdateAgeDays') ?? 0;
+  bool get hideDowngrades => prefs?.safeBool('hideDowngrades') ?? false;
+
   // plusSettings is accessed as a provider — return a reference to self
   // so code like `settings.plusSettings.someField` doesn't blow up at runtime.
   // For compile-time, the property just needs to exist with a valid type.

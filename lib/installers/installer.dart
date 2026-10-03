@@ -47,6 +47,7 @@ class InstallResult {
 
   bool get isSuccess => outcome == InstallOutcome.success;
   bool get isError => outcome == InstallOutcome.error;
+  bool get isCancelled => outcome == InstallOutcome.cancelled;
 }
 
 /// Strategy that performs the platform-specific parts of an app installation.

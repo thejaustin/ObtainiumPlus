@@ -13,6 +13,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart' show formatDownloadSize;
 import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/nav_helper.dart';
 
 /// Prefix for the download-notification Cancel action id; the app ID is appended
 /// so the tap handler knows which download to stop.
@@ -419,7 +420,7 @@ class NotificationsProvider {
     }
     if (payload!.startsWith(appIdTapPayloadPrefix)) {
       final appId = payload.substring(appIdTapPayloadPrefix.length);
-      final navigator = appNavigatorKey.currentState;
+      final navigator = globalNavigatorKey.currentState;
       if (navigator != null && appId.isNotEmpty) {
         NavHelper.pushAppPage(navigator.context, appId);
       }
@@ -428,7 +429,7 @@ class NotificationsProvider {
     final lines = payload.split('\n');
     final title = lines.first;
     final content = lines.sublist(1).join('\n');
-    appNavigatorKey.currentState?.push(
+    globalNavigatorKey.currentState?.push(
       PageRouteBuilder(
         pageBuilder: (context, _, _) => AlertDialog(
           title: Text(title),
