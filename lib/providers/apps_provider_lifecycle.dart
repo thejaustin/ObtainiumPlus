@@ -18,6 +18,7 @@ import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/services/version_service.dart' show reconcileTrackedVersion, versionDetectionPossible;
 import 'package:path_provider/path_provider.dart';
 
 /// App persistence (load/save/remove), icons, and version-detection helpers.

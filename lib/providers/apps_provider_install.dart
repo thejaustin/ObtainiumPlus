@@ -15,9 +15,12 @@ import 'package:obtainium/components/app_detail_widgets.dart'
     hide AppFilePicker, APKOriginWarningDialog;
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/external_installer.dart';
+import 'package:obtainium/installers/install_utils.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
+import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
+import 'package:obtainium/utils/haptic_utils.dart' show AppHaptics;
 import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
@@ -1633,7 +1636,7 @@ extension AppsProviderInstall on AppsProvider {
       // doesn't report "Installing" before installation actually begins.
       apps[id]?.downloadProgress = _downloadCompleteProgress.toDouble();
       notify();
-      if (!isBg) settingsProvider.lightImpact();
+      if (!isBg) AppHaptics.lightImpact();
       willBeSilent = await canInstallSilently(apps[id]!.app);
       final installer = getInstaller();
       await installer.ensurePermission();
