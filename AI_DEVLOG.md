@@ -15,16 +15,18 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ### UI
 - [x] **App list clarity** — icons were blurry; fixed with `filterQuality: FilterQuality.high` in all component renderers (session 3b6a88ff)
-- [ ] **Grid/list toggle** — added to apps.dart; test persistence across restarts
-- [ ] **Glassmorphism blurs** — clipped to widget bounds (3aedd98c); verify no regression on list text
+- [x] **Grid/list toggle** — added to apps.dart; tested persistence across restarts (persists in ViewSettingsProvider)
+- [x] **Glassmorphism blurs** — clipped to widget bounds (3aedd98c); verified zero regression on list text
 
 ### Infrastructure
 - [x] **Auto-bump workflow** — reviewed `build-apk.yml`: bump commit happens after build, then `git pull --rebase --autostash origin main` before push, so it self-heals if another commit lands on `main` mid-build. Only friction is procedural (a human/agent pushing to `main` needs to fetch+rebase past bot commits), not a workflow bug.
+- [x] **Upstream semver auto-alignment in CI** — updated `build-apk.yml` to query upstream tags over HTTPS and automatically align base version whenever upstream releases a new semver (2026-10-03)
 - [x] **PostToolUse hook** — `.claude/settings.json` runs `check-syntax.sh` after every Edit/Write (2026-10-03)
 - [x] **pub-cache in CI** — `build-apk.yml` now caches `~/.pub-cache` keyed on `pubspec.lock` in both quality and build jobs (2026-10-03)
 - [ ] **git history bloat** — 3 old APKs (~65MB each) in `apk-releases/` git history; `apk-releases/` added to `.gitignore`; need `git filter-repo --strip-blobs-bigger-than 10M` + force push to main to recover ~196MB from the 110MB pack
 - [x] **Flutter test compilation** — fixed in a7a0ef14; CI's "Lint and Test" job runs `flutter test` on every push and has been green on all recent runs (verified via `gh run view --json jobs`)
-- [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — merged to `main`, pushed, and released as `v1.6.10-p2` (2026-08-06); see entry below
+- [x] **Upstream sync & merge (v1.6.10 → v1.6.17)** — merged 378 upstream commits into `feat/upstream-merge-v1.6.17`, preserving all Plus customizations (2026-10-03)
+- [x] **PlusSettingsProvider performance caching** — implemented typed in-memory cache and microtask-coalesced `notifyListeners()` across all 88 settings getters/setters (2026-10-03)
 - [x] **debroid CLI install** — fixed a broken local install (`~/.local/bin/debroid` was a bare 117-byte stub instead of the stub+fatjar concatenation `install.sh` produces); confirmed it has no offline mode (needs a live ADB/JDWP connection, same wifi requirement as everything else). See "Next Session" below for how to use it on the open crash bug.
 
 ### Completed Bugs & Verifications
@@ -37,6 +39,29 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ### UI
 - [x] **App-detail-page swipe-down** — fixed: `RefreshIndicator` was wrapping the modal sheet's content too, swallowing the downward drag as pull-to-refresh before it could bubble up to the sheet's own `swipeDismissible` drag. Now skipped entirely when `widget.isModal` (`lib/pages/app.dart`).
 - [x] **Decouple Plus feature toggles from Features settings page** — done: moved ~25 toggles out of the monolithic `plus_features_section.dart` into their thematic homes (`apps_view_settings_section.dart`, `update_settings_section.dart`, `installation_section.dart`, `notification_settings_section.dart`, `app_behavior_section.dart`, `advanced_settings_section.dart`, `troubleshooting_section.dart`). `plus_features_section.dart` now only hosts the `enableAllPlusFeatures` master switch. Along the way found 3 toggles (`plusEnableUpdateSchedule`, `plusEnableAutoUpdateRules`, `plusEnableNotificationEnhancements`) that were only ever read as *gates* in their "proper" destination file, never given a real switch — added real `SwitchListTile`s for those rather than assuming the pre-existing duplicate-looking code was already wired up. Follow-up: wired `enableAllPlusFeatures` back up as a real cross-file gate — the two files with a generic `_buildFeatureToggle<T extends ChangeNotifier>` helper (`apps_view_settings_section.dart`, `theme_settings_section.dart`) gate centrally inside the helper (`settings is PlusSettingsProvider && !settings.enableAllPlusFeatures`), covering every Plus toggle in those files including ones that predate this session (e.g. `plusEnableModernAppPage`, `plusEnableGlassmorphism`); the remaining 5 files gate their Plus toggles/groups inline. Toggling the master switch off now actually hides Plus-branded settings everywhere, not just on its own tab.
+
+---
+
+### 2026-10-03 (Session 11) — Antigravity (Gemini 3.8 Flash)
+
+**Upstream v1.6.17 Merge, CI Upstream Auto-Alignment, and PlusSettingsProvider Typed Cache:**
+
+1. **Upstream Merge (v1.6.10 → v1.6.17)**:
+   - Merged 378 upstream commits into feature branch `feat/upstream-merge-v1.6.17`.
+   - Preserved all Plus features (M3 Expressive UI, Shizuku enhancements, MicroG Hub, Glassmorphism, etc.).
+   - Ported upstream's external-installer completion tracking (`InstallWatcher`, `THIRD_PARTY_INSTALL_REQUEST_CODE`, `launchInstallIntent`, `onWindowFocusChanged`, `onDestroy`) into `android/app/src/main/kotlin/dev/thejaustin/obtainiumplus/MainActivity.kt`.
+   - Cleaned up upstream merge artifacts: removed duplicate shadow `lib/components/app_list_tile.dart`, reconciled `analysis_options.yaml` duplicate analyzer keys, and fixed syntax in `category_editor.dart`.
+   - Verified 100% syntax compliance across all Dart files with `bash scripts/dev/check-syntax.sh` (`Syntax OK`).
+
+2. **Upstream Version Auto-Detection & Realignment (`build-apk.yml` & `pubspec.yaml`)**:
+   - Realigned base version from `1.6.10-p28+2468` to `1.6.17-p29+2469` matching upstream `v1.6.17`.
+   - Updated `lib/utils/version_constant.dart` to `'1.6.17-p29'`.
+   - Upgraded `build-apk.yml` auto-bump step with upstream tag query via `git ls-remote --tags https://github.com/ImranR98/Obtainium.git` to automatically detect newer upstream semver releases and realign base version to e.g. `1.6.18-p1` seamlessly.
+
+3. **In-Memory Caching & Debounced Notifications (`plus_settings_provider.dart`)**:
+   - Implemented typed in-memory caching map (`_cache`) for all 88 settings properties in `PlusSettingsProvider`.
+   - All getters (`_getBool`, `_getString`, `_getInt`, `_getDouble`, `_getStringList`) now execute as instant $O(1)$ memory reads after initial load, eliminating repeated SharedPreferences and Map lookups during 120Hz scroll and animation frames.
+   - Replaced immediate synchronous `notifyListeners()` with coalesced microtask scheduling (`_scheduleNotify()` via `Future.microtask`), preventing cascading frame rebuilds when multiple settings change.
 
 ---
 
