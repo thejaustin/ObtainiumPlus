@@ -1,1 +1,1 @@
-const currentObtainiumPlusVersion = '1.6.10-p26';
+const currentObtainiumPlusVersion = '1.6.10-p27';
