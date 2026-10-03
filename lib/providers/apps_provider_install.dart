@@ -250,9 +250,9 @@ extension AppsProviderInstall on AppsProvider {
       );
       additionalSettingsPlusSourceConfig['url'] = downloadUrl;
       var downloadedFile = await downloadFileWithRetry(
+        downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
-        headers: headers,
         (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
           final int? prog = progress?.ceil();
           if (apps[app.id] != null) {
@@ -283,8 +283,9 @@ extension AppsProviderInstall on AppsProvider {
           prevProg = prog;
         },
         this.apkDir.path,
-        additionalSettingsPlusSourceConfig,
+        headers: headers,
         useExisting: useExisting,
+        allowInsecure: app.additionalSettings['allowInsecure'] == true,
         cancellationToken: cancellationToken,
       );
       completedDownloads = 1;
@@ -338,13 +339,14 @@ extension AppsProviderInstall on AppsProvider {
             additionalSettingsPlusSourceConfig['url'] = splitUrl;
             completedDownloads = i;
             final splitFile = await downloadFileWithRetry(
+              splitUrl,
               '$fileNameNoExt-$i',
               false,
               reportProgress,
               this.apkDir.path,
-              additionalSettingsPlusSourceConfig,
               useExisting: useExisting,
               headers: splitHeaders,
+              allowInsecure: app.additionalSettings['allowInsecure'] == true,
               cancellationToken: cancellationToken,
             );
             if (splitFile.path.toLowerCase().endsWith('.apk')) {
@@ -1697,6 +1699,7 @@ extension AppsProviderInstall on AppsProvider {
       try {
         final String downloadPath = '${await getStorageRootPath()}/Download';
         await downloadFileWithRetry(
+          url,
           fileName,
           true,
           (double? progress, [int? received, int? total]) {
@@ -1713,7 +1716,6 @@ extension AppsProviderInstall on AppsProvider {
             );
           },
           downloadPath,
-          app.additionalSettings,
           headers: await SourceProvider()
               .getSource(app.url, overrideSource: app.overrideSource)
               .getRequestHeaders(
