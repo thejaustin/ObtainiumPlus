@@ -404,6 +404,19 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  ColourSchemeMode get colourSchemeMode {
+    final val = prefs?.safeString('colourSchemeMode');
+    return ColourSchemeMode.values.firstWhere(
+      (e) => e.name == val,
+      orElse: () => ColourSchemeMode.standard,
+    );
+  }
+
+  set colourSchemeMode(ColourSchemeMode val) {
+    prefs?.setString('colourSchemeMode', val.name);
+    notifyListeners();
+  }
+
   bool get exportInstalledOnly =>
       prefs?.safeBool('exportInstalledOnly') ?? false;
   set exportInstalledOnly(bool val) {
