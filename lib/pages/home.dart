@@ -19,7 +19,6 @@ import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -119,31 +118,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
 
       if (plusSettings.plusLastSeenVersion != currentVersion) {
-        // Show Changelog on update
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => GlassDialog(
-            title: "What's New in Obtainium+",
-            subtitle: "Version $currentVersion",
-            icon: Icons.auto_awesome_rounded,
-            scrollable: false,
-            content: SizedBox(
-              height: 400,
-              width: double.maxFinite,
-              child: ChangelogPage(
-                isModal: true,
-                targetVersion: currentVersion,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(tr('ok')),
-              ),
-            ],
-          ),
-        );
+        // Show What's New bottom sheet on update
+        if (context.mounted) {
+          await showWhatsNewSheet(context, targetVersion: currentVersion);
+        }
         plusSettings.plusLastSeenVersion = currentVersion;
       } else if (!sp.welcomeShown) {
         await showDialog(
