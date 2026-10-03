@@ -75,6 +75,9 @@ List<List<String>> stringMapListTo2DList(
 ) => mapList.map((e) => [e.key, e.value]).toList();
 
 /// Converts a 2D list (decoded from JSON) back into a list of [MapEntry] pairs.
+/// Default number of concurrent fetch operations used when no user override applies.
+const int kDefaultFetchConcurrency = 3;
+
 List<MapEntry<String, String>> assumed2DlistToStringMapList(
   List<dynamic> arr,
 ) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
