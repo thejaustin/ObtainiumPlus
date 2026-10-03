@@ -25,6 +25,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/utils/locale_utils.dart';
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});
@@ -164,13 +165,13 @@ class _ImportExportPageState extends State<ImportExportPage> {
               showMessage(tr('cancelled'), context);
               return;
             }
-            if (result.files.isEmpty) {
+            if (result.isEmpty) {
               return;
             }
             setState(() {
               importInProgress = true;
             });
-            var path = result.files.single.path;
+            var path = result.first.path;
             if (path == null) {
               throw ObtainiumError(tr('noFilePickerAvailable'));
             }
@@ -210,8 +211,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
       AppHaptics.selectionClick();
       FilePicker.pickFiles()
           .then((result) async {
-            if (result != null) {
-              var path = result.files.single.path;
+            if (result != null && result.isNotEmpty) {
+              var path = result.first.path;
               if (path == null) return;
               var data = await File(path).readAsString();
               urlListImport(

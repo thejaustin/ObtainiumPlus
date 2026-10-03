@@ -318,20 +318,25 @@ class ShizukuInstaller extends Installer {
     final int? existingVersionCode = installOptions['existingVersionCode'] as int?;
     final String? existingVersionName = installOptions['existingVersionName'] as String?;
 
-    // Start fast concurrent package verification polling (every 350ms)
-    // so we detect successful installation the instant the OS completes it,
-    // avoiding Shizuku binder callback delays or freezes.
-    int pollCount = 0;
+    // Concurrent package-verification polling.
+    // Adaptive interval: 350ms for the first 10s, then every ~3rd tick (~1050ms)
+    // to reduce package manager pressure during longer installs.
+    final pollStart = DateTime.now().millisecondsSinceEpoch;
+    int pollTick = 0;
     pollTimer = Timer.periodic(const Duration(milliseconds: 350), (t) async {
-      pollCount++;
+      pollTick++;
       if (completer.isCompleted) {
         t.cancel();
         return;
       }
-      if (pollCount > 200) {
+      final elapsedMs = DateTime.now().millisecondsSinceEpoch - pollStart;
+      // Stop 5s before overall timeout to avoid racing with cleanup
+      if (elapsedMs > 85000) {
         t.cancel();
         return;
       }
+      // After 10s switch to ~1s effective interval to ease PM pressure
+      if (elapsedMs > 10000 && pollTick % 3 != 0) return;
       try {
         final info = await AppInstallService.getInstalledInfo(appId, printErr: false);
         if (info != null) {
@@ -386,8 +391,23 @@ class ShizukuInstaller extends Installer {
       }
     }
 
-    runShizuku().then((code) {
-      if (!completer.isCompleted) {
+    // Fire Shizuku install with a 30s binder-hang guard. A hung binder callback
+    // is the primary cause of the indefinite spinner — detect it early, log it,
+    // and let polling continue detecting success in the background.
+    runShizuku().timeout(
+      const Duration(seconds: 30),
+      onTimeout: () {
+        ShizukuTelemetryService.instance.log(
+          action: 'binderHang',
+          targetPackage: appId,
+          durationMs: stopwatch.elapsedMilliseconds,
+          status: 'hang',
+          details: 'Shizuku callback silent for 30s; polling continues',
+        );
+        return null; // Don't resolve completer — polling or overall timeout handles it
+      },
+    ).then((code) {
+      if (code != null && !completer.isCompleted) {
         completer.complete(InstallResult.fromPlatformCode(code));
       }
     }).catchError((err) {
@@ -396,8 +416,9 @@ class ShizukuInstaller extends Installer {
       }
     });
 
+    // 90s ceiling: 30s binder hang detection + 60s polling window after
     final res = await completer.future.timeout(
-      const Duration(seconds: 75),
+      const Duration(seconds: 90),
       onTimeout: () => InstallResult.error(1),
     );
     pollTimer.cancel();
