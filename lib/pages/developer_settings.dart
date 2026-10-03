@@ -672,8 +672,8 @@ class DeveloperSettingsPage extends StatelessWidget {
         allowedExtensions: ['apk'],
       );
 
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
+      if (result != null && result.isNotEmpty && result.first.path != null) {
+        final file = File(result.first.path!);
         if (context.mounted) {
           final plusSettings = context.read<PlusSettingsProvider>();
           final behaviorSettings = context.read<BehaviorSettingsProvider>();
