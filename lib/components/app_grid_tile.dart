@@ -453,6 +453,7 @@ class _AppGridTileState extends State<AppGridTile>
           iconBorderRadius,
           badgeSize,
           plusSettings,
+          cardColor,
         ),
         const SizedBox(height: 8),
         // App name: up to 2 lines, centered with expressive typography
@@ -509,6 +510,7 @@ class _AppGridTileState extends State<AppGridTile>
           iconBorderRadius,
           badgeSize,
           plusSettings,
+          cardColor,
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -558,6 +560,7 @@ class _AppGridTileState extends State<AppGridTile>
     double iconBorderRadius,
     double badgeSize,
     PlusSettingsProvider plusSettings,
+    Color cardColor,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Stack(
