@@ -1642,7 +1642,7 @@ class _AppPageState extends State<AppPage> {
                 duration: morphDuration,
                 curve: morphCurve,
                 builder: (ctx, width, _) {
-                  return TweenAnimationBuilder<ShapeBorder>(
+                  return TweenAnimationBuilder<ShapeBorder?>(
                     tween: ShapeBorderTween(
                       begin: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -1652,6 +1652,10 @@ class _AppPageState extends State<AppPage> {
                     duration: morphDuration,
                     curve: morphCurve,
                     builder: (ctx, shape, _) {
+                      final resolvedShape = shape ??
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          );
                       return AnimatedContainer(
                         duration: Duration(milliseconds: animsEnabled ? 260 : 0),
                         curve: morphCurve,
@@ -1660,16 +1664,16 @@ class _AppPageState extends State<AppPage> {
                         decoration: BoxDecoration(
                           color: fillColor,
                           // Mirror shape for BoxDecoration clip
-                          borderRadius: shape is StadiumBorder
+                          borderRadius: resolvedShape is StadiumBorder
                               ? BorderRadius.circular(24)
                               : BorderRadius.circular(14),
                         ),
                         child: Material(
                           color: Colors.transparent,
-                          shape: shape,
+                          shape: resolvedShape,
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
-                            customBorder: shape,
+                            customBorder: resolvedShape,
                             onTap: onPressed,
                             splashColor: onColor.withValues(alpha: 0.16),
                             highlightColor: onColor.withValues(alpha: 0.08),
