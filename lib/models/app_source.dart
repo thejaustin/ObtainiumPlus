@@ -28,7 +28,9 @@ abstract class AppSource {
   bool allowInsecureRedirects = false;
   bool changeLogPageIsStandardUrl = false;
   bool inferAppIdFromUrlPath = false;
+  bool inferAppIdEvenWhenTrackOnly = false;
   bool suppressStandardVersionExtraction = false;
+  List<String> trustedApkHosts = [];
   String get sourceIdentifier => runtimeType.toString();
 
   RegExp? _hostRegex;

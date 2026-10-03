@@ -41,17 +41,6 @@ class Codeberg extends AppSource {
     ..._gh.additionalSourceAppSpecificSettingFormItems,
   ];
 
-  @override
-  Future<Map<String, String>?> getRequestHeaders(
-    Map<String, dynamic> additionalSettings,
-    String url, {
-    bool forAPKDownload = false,
-  }) => _gh.getRequestHeaders(
-    additionalSettings,
-    url,
-    forAPKDownload: forAPKDownload,
-  );
-
   GeneratedFormTextField _tokenFormItem({
     required bool isDefaultHost,
     String value = '',
