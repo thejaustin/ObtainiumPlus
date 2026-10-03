@@ -25,6 +25,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/utils/locale_utils.dart';
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});

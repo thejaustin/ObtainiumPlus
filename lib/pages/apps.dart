@@ -27,8 +27,9 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
+import 'package:obtainium/theme.dart' show AppSpacings;
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:obtainium/components/custom_app_bar.dart';
