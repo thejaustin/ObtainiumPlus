@@ -367,6 +367,7 @@ class _AppGridTileState extends State<AppGridTile>
                                     badgeSize,
                                     plusSettings,
                                     viewSettings,
+                                    cardColor,
                                   )
                                 : _buildVerticalContent(
                                     iconSize,
@@ -374,6 +375,7 @@ class _AppGridTileState extends State<AppGridTile>
                                     badgeSize,
                                     plusSettings,
                                     viewSettings,
+                                    cardColor,
                                   ),
                           ),
                         ),
@@ -440,6 +442,7 @@ class _AppGridTileState extends State<AppGridTile>
     double badgeSize,
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
+    Color cardColor,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Column(
@@ -501,6 +504,7 @@ class _AppGridTileState extends State<AppGridTile>
     double badgeSize,
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
+    Color cardColor,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
