@@ -7,16 +7,21 @@ import 'dart:ui';
 
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart' show formatDownloadSize;
+import 'package:obtainium/utils/nav_helper.dart';
 import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 import 'package:obtainium/providers/source_provider.dart';
 
 /// Prefix for the download-notification Cancel action id; the app ID is appended
 /// so the tap handler knows which download to stop.
 const String cancelDownloadActionPrefix = 'cancel_download::';
+
+/// Prefix marking a notification payload that carries an app ID; tapping such a
+/// notification opens that app's detail page.
+const String appIdTapPayloadPrefix = 'appIdTap::';
 
 const int updateNotificationId = 2;
 const int silentUpdateNotificationId = 3;
@@ -31,9 +36,21 @@ const int downloadNotificationBaseId = 100;
 /// between concurrently downloading apps as unlikely as a raw hashCode.
 const int downloadNotificationIdRange = 2000000000;
 
+/// Base ID for "file downloaded" completion notifications, kept clear of the
+/// in-progress download range above.
+const int downloadedNotificationBaseId = 2000000100;
+
+/// Size of the ID space for completion notifications.
+const int downloadedNotificationIdRange = 140000000;
+
+/// Stable notification ID for a string key within [base]'s range.
+int notificationIdForKey(String key, int base, int range) =>
+    base + (key.hashCode.abs() % range);
+
 /// Name under which the main isolate registers a port to receive download-cancel
 /// requests forwarded from the notification-action background isolate.
 const String _downloadCancelPortName = 'obtainium_download_cancel';
+ReceivePort? _downloadCancelPort;
 
 /// The app ID targeted by a download-cancel notification action, or null if
 /// [actionId] isn't a download-cancel action.
@@ -85,6 +102,7 @@ class ObtainiumNotification {
   int? progPercent;
   bool onlyAlertOnce;
   String? payload;
+  String? appId;
   List<AndroidNotificationAction>? androidActions;
 
   ObtainiumNotification(
@@ -98,6 +116,7 @@ class ObtainiumNotification {
     this.onlyAlertOnce = false,
     this.progPercent,
     this.payload,
+    this.appId,
     this.androidActions,
   });
 }
@@ -117,6 +136,7 @@ class UpdateNotification extends ObtainiumNotification {
         tr('updatesAvailableNotifChannel'),
         tr('updatesAvailableNotifDescription'),
         Importance.max,
+        appId: updates.length == 1 ? updates.first.id : null,
       );
 }
 
@@ -135,13 +155,14 @@ class TrackOnlyUpdateNotification extends ObtainiumNotification {
         tr('updatesAvailableNotifChannel'),
         tr('updatesAvailableNotifDescription'),
         Importance.max,
+        appId: updates.length == 1 ? updates.first.id : null,
       );
 }
 
 class SilentUpdateNotification extends ObtainiumNotification {
   SilentUpdateNotification(List<App> updates, bool succeeded, {int? id})
     : super(
-        id ?? 3,
+        id ?? silentUpdateNotificationId,
         succeeded ? tr('appsUpdated') : tr('appsNotUpdated'),
         _buildUpdateMessage(
           updates,
@@ -155,13 +176,14 @@ class SilentUpdateNotification extends ObtainiumNotification {
         tr('appsUpdatedNotifChannel'),
         tr('appsUpdatedNotifDescription'),
         Importance.defaultImportance,
+        appId: updates.length == 1 ? updates.first.id : null,
       );
 }
 
 class SilentUpdateAttemptNotification extends ObtainiumNotification {
   SilentUpdateAttemptNotification(List<App> updates, {int? id})
     : super(
-        id ?? 8,
+        id ?? silentUpdateAttemptNotificationId,
         tr('appsPossiblyUpdated'),
         _buildUpdateMessage(
           updates,
@@ -173,13 +195,14 @@ class SilentUpdateAttemptNotification extends ObtainiumNotification {
         tr('appsPossiblyUpdatedNotifChannel'),
         tr('appsPossiblyUpdatedNotifDescription'),
         Importance.defaultImportance,
+        appId: updates.length == 1 ? updates.first.id : null,
       );
 }
 
 class ErrorCheckingUpdatesNotification extends ObtainiumNotification {
   ErrorCheckingUpdatesNotification(String error, {int? id})
     : super(
-        id ?? 5,
+        id ?? errorCheckingUpdatesNotificationId,
         tr('errorCheckingUpdates'),
         error,
         'BG_UPDATE_CHECK_ERROR',
@@ -211,14 +234,22 @@ class AppsRemovedNotification extends ObtainiumNotification {
 
 class DownloadNotification extends ObtainiumNotification {
   static const int _baseId = downloadNotificationBaseId;
+
+  /// [idKey] must be stable for the download (e.g. an app ID, or an app
+  /// ID + asset URL) so two different apps with the same display name don't
+  /// share a progress notification.
+  static int idForKey(String idKey) =>
+      notificationIdForKey(idKey, _baseId, downloadNotificationIdRange);
+
   DownloadNotification(
     String appName,
     int progPercent, {
     String? appId,
+    String? idKey,
     int? receivedBytes,
     int? totalBytes,
   }) : super(
-         _baseId + (appName.hashCode.abs() % downloadNotificationIdRange),
+         idForKey(idKey ?? appId ?? appName),
          tr('downloadingX', args: [appName]),
          formatDownloadSize(receivedBytes, totalBytes) ?? '',
          'APP_DOWNLOADING',
@@ -241,9 +272,13 @@ class DownloadNotification extends ObtainiumNotification {
 }
 
 class DownloadedNotification extends ObtainiumNotification {
-  DownloadedNotification(String fileName, String downloadUrl)
+  DownloadedNotification(String fileName, String downloadUrl, {super.appId})
     : super(
-        downloadUrl.hashCode.abs(),
+        notificationIdForKey(
+          downloadUrl,
+          downloadedNotificationBaseId,
+          downloadedNotificationIdRange,
+        ),
         tr('downloadedX', args: [fileName]),
         '',
         'FILE_DOWNLOADED',
@@ -326,16 +361,22 @@ class NotificationsProvider {
     if (prevPort != null) {
       IsolateNameServer.removePortNameMapping(_downloadCancelPortName);
     }
-    final port = ReceivePort();
+    _downloadCancelPort?.close();
+    _downloadCancelPort = ReceivePort();
     IsolateNameServer.registerPortWithName(
-      port.sendPort,
+      _downloadCancelPort!.sendPort,
       _downloadCancelPortName,
     );
-    port.listen((message) {
+    _downloadCancelPort!.listen((message) {
       if (message is String && message.isNotEmpty) {
         onDownloadCancelRequested?.call(message);
       }
     });
+  }
+
+  static void dispose() {
+    _downloadCancelPort?.close();
+    _downloadCancelPort = null;
   }
 
   Future<void> checkLaunchByNotif() async {
@@ -350,33 +391,39 @@ class NotificationsProvider {
   }
 
   void _showNotificationPayload(String? payload, {bool doublePop = false}) {
-    if (payload?.isNotEmpty == true) {
-      final lines = payload!.split('\n');
-      final title = lines.first;
-      final content = lines.sublist(1).join('\n');
-      globalNavigatorKey.currentState?.push(
-        PageRouteBuilder(
-          opaque: false,
-          barrierDismissible: true,
-          pageBuilder: (context, _, __) => GlassDialog(
-            title: title,
-            icon: Icons.notifications_active_outlined,
-            content: Text(content),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(null);
-                  if (doublePop) {
-                    Navigator.of(context).pop(null);
-                  }
-                },
-                child: Text(tr('ok')),
-              ),
-            ],
-          ),
-        ),
-      );
+    if (payload?.isNotEmpty != true) {
+      return;
     }
+    if (payload!.startsWith(appIdTapPayloadPrefix)) {
+      final appId = payload.substring(appIdTapPayloadPrefix.length);
+      final navigator = appNavigatorKey.currentState;
+      if (navigator != null && appId.isNotEmpty) {
+        NavHelper.pushAppPage(navigator.context, appId);
+      }
+      return;
+    }
+    final lines = payload.split('\n');
+    final title = lines.first;
+    final content = lines.sublist(1).join('\n');
+    appNavigatorKey.currentState?.push(
+      PageRouteBuilder(
+        pageBuilder: (context, _, __) => AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+                if (doublePop) {
+                  Navigator.of(context).pop(null);
+                }
+              },
+              child: Text(tr('ok')),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> cancel(int id) async {
@@ -445,7 +492,9 @@ class NotificationsProvider {
     cancelExisting: cancelExisting,
     onlyAlertOnce: notif.onlyAlertOnce,
     progPercent: notif.progPercent,
-    payload: notif.payload,
+    payload: notif.appId != null
+        ? '$appIdTapPayloadPrefix${notif.appId}'
+        : notif.payload,
     androidActions: notif.androidActions,
   );
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -14,26 +15,24 @@ class RootInstaller extends Installer {
   String get modeKey => 'root';
 
   @override
-  Future<bool> canInstallSilently(App app) async => true;
+  Future<bool> canInstallSilently(App app) async => checkPermission();
 
   @override
   Future<bool> checkPermission() async {
     try {
-      final res = await Process.run('su', [
-        '-c',
-        'id',
-      ]).timeout(const Duration(seconds: 5));
-      return res.exitCode == 0 && res.stdout.toString().contains('uid=0');
-    } catch (_) {
+      return (await _runAsRoot('id -u')).stdout.toString().trim() == '0';
+    } on ProcessException {
+      AppLogger.info(
+        'Root check failed: su binary or caller is not available.',
+      );
       return false;
     }
   }
 
   @override
   Future<void> ensurePermission() async {
-    final granted = await checkPermission();
-    if (!granted) {
-      throw ObtainiumError(tr('rootNotDetected'));
+    if (!await checkPermission()) {
+      throw ObtainiumError(tr('rootNotGranted'));
     }
   }
 
@@ -43,65 +42,48 @@ class RootInstaller extends Installer {
     required String appId,
     Map<String, dynamic> installOptions = const {},
   }) async {
-    if (apkFilePaths.isEmpty) {
-      return InstallResult.error(1);
-    }
     try {
-      ProcessResult res;
-      if (apkFilePaths.length == 1) {
-        final escaped = apkFilePaths.first.replaceAll("'", "'\\''");
-        res = await Process.run('su', [
-          '-c',
-          "pm install -r -d '$escaped'",
-        ]).timeout(const Duration(minutes: 3));
-      } else {
-        // Multi-APK / Split APK install via pm install-create session
-        final sessionCreate = await Process.run('su', [
-          '-c',
-          'pm install-create -r -d',
-        ]).timeout(const Duration(seconds: 30));
-        if (sessionCreate.exitCode != 0) {
-          return InstallResult.error(sessionCreate.exitCode);
-        }
-        // Output format: "Success: created install session [12345]"
-        final match = RegExp(
-          r'\[(\d+)\]',
-        ).firstMatch(sessionCreate.stdout.toString());
-        if (match == null) {
-          return InstallResult.error(1);
-        }
-        final sessionId = match.group(1)!;
-        bool writeSuccess = true;
-        for (int i = 0; i < apkFilePaths.length; i++) {
-          final p = apkFilePaths[i];
-          final f = File(p);
-          final size = await f.length();
-          final escaped = p.replaceAll("'", "'\\''");
-          final writeRes = await Process.run('su', [
-            '-c',
-            "pm install-write -S $size $sessionId split_$i '$escaped'",
-          ]).timeout(const Duration(minutes: 2));
-          if (writeRes.exitCode != 0) {
-            writeSuccess = false;
-            break;
-          }
-        }
-        if (!writeSuccess) {
-          await Process.run('su', ['-c', 'pm install-abandon $sessionId']);
-          return InstallResult.error(1);
-        }
-        res = await Process.run('su', [
-          '-c',
-          'pm install-commit $sessionId',
-        ]).timeout(const Duration(minutes: 3));
+      // Stage the APKs under /data/local/tmp, which pm can read,
+      // then install and remove the temp copies in the same session.
+      // Paths are written by index so the base APK (index 0) stays first
+      // for split-APK installs.
+      final stagedCopies = [
+        for (var i = 0; i < apkFilePaths.length; i++)
+          'cp ${_quoteShell(apkFilePaths[i])} "\$d/obt$i.apk"',
+      ].join('\n');
+      final stagedApks = [
+        for (var i = 0; i < apkFilePaths.length; i++) '"\$d/obt$i.apk"',
+      ].join(' ');
+      final installLine = installOptions['shizukuPretendToBeGooglePlay'] == true
+          ? "pm install -r -i 'com.android.vending' --user \"\$uid\" $stagedApks"
+          : 'pm install -r --user "\$uid" $stagedApks';
+      final script = [
+        'd="\$(mktemp -d /data/local/tmp/obtainium.XXXXXX)" || exit 1',
+        'trap \'rm -rf "\$d"\' EXIT',
+        stagedCopies,
+        'uid="\$(am get-current-user 2>/dev/null)"; uid="\${uid:-0}"',
+        installLine,
+      ].join('\n');
+      final result = await _runAsRoot(script);
+      if (result.exitCode != 0) {
+        final detail = result.stderr.toString().trim();
+        AppLogger.warn('Root pm install failed for $appId: $detail');
+        return InstallResult.error(result.exitCode);
       }
-      final out = '${res.stdout} ${res.stderr}';
-      if (res.exitCode == 0 && out.toLowerCase().contains('success')) {
-        return InstallResult.success();
-      }
-      return InstallResult.error(res.exitCode != 0 ? res.exitCode : 1);
-    } catch (_) {
-      return InstallResult.error(1);
+      return InstallResult.success();
+    } on ProcessException catch (e) {
+      AppLogger.error(e, message: 'Root pm install failed for $appId');
+      return InstallResult.error(-1);
+    } on IOException catch (e) {
+      AppLogger.error(e, message: 'Root pm install I/O error for $appId');
+      return InstallResult.error(-1);
     }
   }
+
+  Future<ProcessResult> _runAsRoot(String cmd) =>
+      Process.run('su', ['-c', cmd]);
+
+  static String _quoteShell(String path) =>
+      "'${path.replaceAll("'", "'\\''")}'";
+
 }

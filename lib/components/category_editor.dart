@@ -1,12 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/foundation.dart' show setEquals;
-import 'package:flutter/material.dart';
-import 'package:obtainium/components/generated_form_renderer.dart'
-    show generateRandomLightColor;
+import 'package:material_ui/material_ui.dart';
+import 'package:obtainium/utils/color_utils.dart' show generateRandomLightColor;
+import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +30,9 @@ const List<Color> kCategoryPalette = [
   Color(0xFF8D6E63),
   Color(0xFF78909C),
 ];
+
+/// Fallback swatch colour for a category that has no registered colour.
+const int kDefaultCategoryColor = 0xFFCCCCCC;
 
 /// The outcome of editing a category via [showCategoryEditor].
 class CategoryEditResult {
@@ -79,9 +83,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   late final TextEditingController _nameCtrl = TextEditingController(
     text: widget.existingName ?? '',
   );
-  late final ValueNotifier<String> _nameNotifier = ValueNotifier(
-    widget.existingName ?? '',
-  );
+  final FocusNode _nameFocus = FocusNode();
   late Color _color = widget.initialColor;
 
   bool get _isEditing => widget.existingName != null;
@@ -89,7 +91,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _nameNotifier.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -100,9 +102,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     final appsProvider = context.read<AppsProvider>();
     final cats = Map<String, int>.from(settingsProvider.categories);
     final prev = widget.existingName;
-    // Creating a category whose name already exists must not overwrite the
-    // existing one's color (matches main, which no-ops on duplicates).
-    if (prev == null && cats.containsKey(name)) {
+    // Renaming onto an existing category (or creating a duplicate) must not
+    // overwrite the existing one's color or silently merge the two.
+    if (name != prev && cats.containsKey(name)) {
       if (context.mounted) {
         showMessage(tr('categoryAlreadyExists'), context);
       }
@@ -114,11 +116,16 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
       final changed = <App>[];
       for (final aim in appsProvider.apps.values) {
         if (aim.app.categories.contains(prev)) {
-          aim.app = aim.app.copyWith(
-            categories: aim.app.categories
-                .map((c) => c == prev ? name : c)
-                .toList(),
-          );
+          final migrated = aim.app.categories
+              .map((c) => c == prev ? name : c)
+              .toList();
+          // An app may already have referenced the target name; never store
+          // the same category twice.
+          final deduped = <String>[];
+          for (final c in migrated) {
+            if (!deduped.contains(c)) deduped.add(c);
+          }
+          aim.app = aim.app.copyWith(categories: deduped);
           changed.add(aim.app);
         }
       }
@@ -137,7 +144,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     final settingsProvider = context.read<SettingsProvider>();
     final confirmed = await showConfirmDialog(
       context,
-      title: tr('deleteCategoriesQuestion'),
+      title: tr('deleteCategoryQuestion'),
       content: Text(tr('categoryDeleteWarning')),
       autofocusConfirm: context.read<SettingsProvider>().isTV,
     );
@@ -192,33 +199,36 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     return Semantics(
       button: true,
       selected: selected,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: selected ? cs.onSurface : cs.outlineVariant,
-              width: selected ? 3 : 1,
+      child: TvFocusRing(
+        borderRadius: 24,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected ? cs.onSurface : cs.outlineVariant,
+                width: selected ? 3 : 1,
+              ),
             ),
+            child: icon == null
+                ? (selected
+                      ? Icon(
+                          Icons.check,
+                          size: 20,
+                          color:
+                              ThemeData.estimateBrightnessForColor(color) ==
+                                  Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                        )
+                      : null)
+                : Center(child: icon),
           ),
-          child: icon == null
-              ? (selected
-                    ? Icon(
-                        Icons.check,
-                        size: 20,
-                        color:
-                            ThemeData.estimateBrightnessForColor(color) ==
-                                Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
-                      )
-                    : null)
-              : Center(child: icon),
         ),
       ),
     );
@@ -227,103 +237,117 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    // Account for both the on-screen keyboard and the system navigation bar,
+    // and keep the sheet scrollable so the action row never ends up hidden
+    // behind them (see #3240).
+    final bottomPadding =
+        20 +
+        MediaQuery.of(context).viewInsets.bottom +
+        MediaQuery.of(context).padding.bottom;
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        4,
-        20,
-        20 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            _isEditing ? tr('editCategory') : tr('newCategory'),
-            style: textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          ConnectedCard(
-            child: TextField(
-              controller: _nameCtrl,
-              autofocus: !_isEditing,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(labelText: tr('categoryName')),
-              onChanged: (value) => _nameNotifier.value = value,
-              onSubmitted: (_) {
-                if (_nameCtrl.text.trim().isNotEmpty) _save();
-              },
+      padding: EdgeInsets.fromLTRB(20, 4, 20, bottomPadding),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              _isEditing ? tr('editCategory') : tr('newCategory'),
+              style: textTheme.titleLarge,
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(tr('colour'), style: textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final c in kCategoryPalette)
-                _swatch(
-                  color: c,
-                  selected: c.toARGB32() == _color.toARGB32(),
-                  onTap: () => setState(() => _color = c),
-                ),
-              _swatch(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                selected: false,
-                onTap: () =>
-                    setState(() => _color = generateRandomLightColor()),
-                icon: Tooltip(
-                  message: tr('randomColour'),
-                  child: const Icon(Icons.casino_outlined, size: 20),
-                ),
-              ),
-              _swatch(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                selected: false,
-                onTap: _pickCustomColor,
-                icon: Tooltip(
-                  message: tr('custom'),
-                  child: const Icon(Icons.colorize_outlined, size: 20),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewPadding.bottom + 8,
-            ),
-            child: Row(
-              children: [
-                if (_isEditing)
-                  TextButton.icon(
-                    onPressed: _delete,
-                    icon: const Icon(Icons.delete_outline),
-                    label: Text(tr('remove')),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(tr('cancel')),
-                ),
-                const SizedBox(width: 8),
-                ValueListenableBuilder<String>(
-                  valueListenable: _nameNotifier,
-                  builder: (context, value, _) {
-                    final canSave = value.trim().isNotEmpty;
-                    return FilledButton(
-                      onPressed: canSave ? _save : null,
-                      child: Text(tr('continue')),
-                    );
+            const SizedBox(height: 16),
+            ConnectedCard(
+              child: () {
+                final isTV = context.read<SettingsProvider>().isTV;
+                final field = TextField(
+                  focusNode: _nameFocus,
+                  controller: _nameCtrl,
+                  autofocus: !_isEditing && !isTV,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(labelText: tr('categoryName')),
+                  onSubmitted: (_) {
+                    if (_nameCtrl.text.trim().isNotEmpty) _save();
                   },
+                );
+                return isTV
+                    ? TvTextFieldFocus(
+                        textFocusNode: _nameFocus,
+                        borderRadius: 16,
+                        child: field,
+                      )
+                    : field;
+              }(),
+            ),
+            const SizedBox(height: 20),
+            Text(tr('colour'), style: textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final c in kCategoryPalette)
+                  _swatch(
+                    color: c,
+                    selected: c.toARGB32() == _color.toARGB32(),
+                    onTap: () => setState(() => _color = c),
+                  ),
+                _swatch(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  selected: false,
+                  onTap: () =>
+                      setState(() => _color = generateRandomLightColor()),
+                  icon: Tooltip(
+                    message: tr('randomColour'),
+                    child: const Icon(Icons.casino_outlined, size: 20),
+                  ),
+                ),
+                _swatch(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  selected: false,
+                  onTap: _pickCustomColor,
+                  icon: Tooltip(
+                    message: tr('custom'),
+                    child: const Icon(Icons.colorize_outlined, size: 20),
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewPadding.bottom + 8,
+              ),
+              child: Row(
+                children: [
+                  if (_isEditing)
+                    TextButton.icon(
+                      onPressed: _delete,
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(tr('remove')),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(tr('cancel')),
+                  ),
+                  const SizedBox(width: 8),
+                  ValueListenableBuilder<String>(
+                    valueListenable: _nameNotifier,
+                    builder: (context, value, _) {
+                      final canSave = value.trim().isNotEmpty;
+                      return FilledButton(
+                        onPressed: canSave ? _save : null,
+                        child: Text(tr('continue')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -443,10 +467,9 @@ class _CategorySelectorState extends State<CategorySelector> {
         spacing: 8,
         runSpacing: 8,
         children: [
-          ActionChip(
-            avatar: const Icon(Icons.add, size: 18),
-            label: Text(tr('newCategory')),
-            onPressed: _create,
+          Tooltip(
+            message: tr('newCategory'),
+            child: ActionChip(label: const Text('+'), onPressed: _create),
           ),
         ],
       );
@@ -505,12 +528,14 @@ class CategoryManager extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final categories = context.watch<SettingsProvider>().categories;
+    final categories = context.select<SettingsProvider, Map<String, int>>(
+      (p) => p.categories,
+    );
     final names = categories.keys.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     if (names.isEmpty) {
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             tr('noCategories'),
@@ -519,10 +544,12 @@ class CategoryManager extends StatelessWidget {
             ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const Spacer(),
-          ActionChip(
-            avatar: const Icon(Icons.add, size: 18),
-            label: Text(tr('newCategory')),
-            onPressed: () => showCategoryEditor(context),
+          Tooltip(
+            message: tr('newCategory'),
+            child: ActionChip(
+              label: const Text('+'),
+              onPressed: () => showCategoryEditor(context),
+            ),
           ),
         ],
       );

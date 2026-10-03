@@ -20,7 +20,7 @@ should follow when working in this codebase.
 | Persistence | One JSON file per app on disk + `SharedPreferences` for settings + `flutter_secure_storage` for credentials + `sqflite` for logs |
 | Localization | `easy_localization` (`assets/translations/*.json`, key-based `tr()` / `plural()`) |
 | Background work | `workmanager` (periodic background tasks, Android-only) |
-| Installation | Installer abstraction (`StockInstaller` / `ShizukuInstaller` / `ExternalInstaller`) backed by `android_package_installer`, `shizuku_apk_installer`, `android_intent_plus` |
+| Installation | Installer abstraction (`StockInstaller` / `ShizukuInstaller` / `ExternalInstaller` / `RootInstaller`) backed by `android_package_installer`, `shizuku_apk_installer`, `android_intent_plus`, `su` |
 
 ### Entry point: `lib/main.dart`
 
@@ -85,8 +85,9 @@ lib/
 │  ├─ installer.dart              Abstract Installer + InstallResult
 │  ├─ stock_installer.dart        AndroidPackageInstaller
 │  ├─ shizuku_installer.dart      Shizuku/Dhizuku/Sui
-│  └─ external_installer.dart     Third-party installer hand-off
-└─ app_sources/                  One file per supported source (28 sources + githubstars)
+│  ├─ external_installer.dart     Third-party installer hand-off
+│  └─ root_installer.dart         Root `su` + `pm install`
+└─ app_sources/                  One file per supported source (29 sources + githubstars)
 ```
 
 ---
@@ -358,8 +359,8 @@ Background work is scheduled via **`workmanager`** (Android periodic tasks). The
 - Tarballs are extracted from supported compression formats (gzip, bzip2, xz) into
   split APK directories.
 - `installApk` / `installApkDir` select the installer strategy (`StockInstaller`,
-  `ShizukuInstaller`, or `ExternalInstaller`) based on user settings. See
-  `lib/installers/`.
+  `ShizukuInstaller`, `ExternalInstaller`, or `RootInstaller`) based on user
+  settings. See `lib/installers/`.
 - `canInstallSilently(app)` decides whether a background silent install is allowed.
 - `moveObbFile` uses **SAF (`shared_storage`) on Android 11+**, direct file access on
   older versions.
@@ -374,18 +375,26 @@ installation methods. The abstract `Installer` class (`installer.dart`) defines:
 
 ```dart
 abstract class Installer {
-  Future<InstallResult> installApk(App app, String path, ...);
-  Future<InstallResult> installApkDir(App app, String dir, ...);
+  String get modeKey;
+  Future<bool> canInstallSilently(App app);
+  Future<bool> checkPermission();
+  Future<void> ensurePermission();
+  Future<InstallResult> installApk(
+    List<String> apkFilePaths, {
+    required String appId,
+    Map<String, dynamic> installOptions,
+  });
 }
 ```
 
-Three concrete implementations:
+Four concrete implementations:
 
 | Installer | Backend | Use case |
 | --- | --- | --- |
 | `StockInstaller` | `android_package_installer` plugin (PackageInstaller session API) | Standard installs; supports silent install via ADB-granted `INSTALL_PACKAGES` |
 | `ShizukuInstaller` | `shizuku_apk_installer` plugin | Self-update of Obtainium itself, or when Shizuku/Dhizuku/Sui is available |
 | `ExternalInstaller` | Native `MethodChannel` bridge (`external_install_bridge.dart` + `MainActivity.kt`) | Hands off to a third-party installer app chosen by the user; lists eligible targets via `listInstallTargets()` and converts file paths to `content://` URIs via `FileProvider` |
+| `RootInstaller` | `su` + `pm install` CLI | Elevated installs for the current foreground user, not just user 0 (needed under multi-user) |
 
 The selection logic (in `apps_provider_install.dart`) checks: self-update → `ShizukuInstaller`;
 user has chosen an external installer → `ExternalInstaller`; otherwise → `StockInstaller`.
@@ -485,8 +494,39 @@ flutter build apk --flavor normal   # or use ./build.sh
   switch to `ref: main`/`ref: master`.
 - `sign.sh` reads the keystore password from an env var and locates `apksigner` robustly;
   `build.sh` / `docker/Dockerfile` handle reproducible/CI builds.
-- **Note:** The project currently lacks automated tests. Run `flutter analyze` and
-  `dart format --set-exit-if-changed .` locally before opening a PR.
+- Run `flutter analyze` and `dart format --set-exit-if-changed .` locally before opening a PR.
+
+### End-to-end tests (emulator)
+
+The E2E suites live in `integration_test/` and drive the real app on an attached
+emulator or device. Always use the runner: it generates the fixture APKs, starts
+a local HTTP server on `:8000`, disables animation scales, installs the test
+package with Obtainium as its installer (so silent updates are allowed), runs
+each suite through `flutter test` on the device, and restores everything
+afterwards.
+
+```bash
+./tool/e2e.sh              # auto-detect the attached device; run all applicable suites
+./tool/e2e.sh --no-install # skip the install/update suite
+./tool/e2e.sh --tv         # force the TV suites (auto-detected normally)
+./tool/e2e.sh --help
+```
+
+- Requires a running emulator/device (launching it is left to you) and an
+  Android SDK (`ANDROID_HOME`, defaulting to `~/Android/Sdk`) with build-tools
+  and a platform JAR. Set `E2E_DEVICE=<serial>` when more than one device is
+  attached.
+- Phone/tablet suites: `smoke_test`, `add_remove_app_test`,
+  `screens_navigation_test`, `install_update_test`. TV-only suites:
+  `tv_navigation_test`, `tv_controls_test`, `tv_layout_test`.
+- Fixture APKs are generated by `tool/e2e_assets.sh` into `build/e2e_assets/`
+  and are never committed.
+- Suites are device-guarded: TV suites skip on a phone and vice versa. Running a
+  single file directly with
+  `flutter test integration_test/<file>.dart -d <device> --flavor normal` is
+  only for debugging; the install suite then needs
+  `--dart-define=E2E_RUN_INSTALL=true` plus the runner's server and
+  pre-install setup, and skips with an explanation otherwise.
 
 ---
 
@@ -501,3 +541,4 @@ flutter build apk --flavor normal   # or use ./build.sh
 | Change install behaviour | `apps_provider_install.dart` |
 | Add a reusable widget/dialog | `components/ui_widgets.dart` (or a dedicated component file) |
 | Theme/shape/motion tweaks | `buildObtainiumTheme()` in `lib/theme.dart` (`positionalTileShape`, `StadiumBorder`, `ExpressiveMotion` tokens all live here) |
+| Add or change an end-to-end test | `integration_test/` suites; run them with `tool/e2e.sh` (see "End-to-end tests" above) |
