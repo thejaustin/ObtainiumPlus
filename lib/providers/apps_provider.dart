@@ -36,7 +36,9 @@ import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
+import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -132,15 +134,17 @@ class CancellationToken {
 }
 
 Future<File> downloadFileWithRetry(
+  String url,
   String fileName,
   bool fileNameHasExt,
   Function? onProgress,
-  String destDir,
-  Map<String, dynamic> additionalSettings, {
+  String destDir, {
   bool useExisting = true,
   Map<String, String>? headers,
   int retries = _defaultRetries,
   CancellationToken? cancellationToken,
+  bool allowInsecure = false,
+  LogsProvider? logs,
   bool Function()? isCancelled,
 }) async {
   return await AppFileService.downloadFileWithRetry(
@@ -253,14 +257,16 @@ void deleteFile(File file) {
 
 /// Downloads a file to [destDir] with progress reporting, delegating to [AppFileService.downloadFile].
 Future<File> downloadFile(
+  String url,
   String fileName,
   bool fileNameHasExt,
   Function? onProgress,
-  String destDir,
-  Map<String, dynamic> additionalSettings, {
+  String destDir, {
   bool useExisting = true,
   Map<String, String>? headers,
   CancellationToken? cancellationToken,
+  bool allowInsecure = false,
+  LogsProvider? logs,
   bool Function()? isCancelled,
 }) async {
   return await AppFileService.downloadFile(
