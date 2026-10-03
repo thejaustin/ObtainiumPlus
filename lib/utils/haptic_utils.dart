@@ -30,18 +30,38 @@ class AppHaptics {
     if (enabled) HapticFeedback.vibrate();
   }
 
-  // Semantic outcome haptics — app-wide convention:
-  // success = light impact, failure/error = heavy impact.
-  // Prefer these over the raw impact methods when signalling the outcome
-  // of an operation (e.g. install completed vs install failed).
+  // ── Semantic outcome haptics ─────────────────────────────────────────────
+  // Prefer these over raw impact methods when signalling operation outcomes.
 
   /// Positive outcome (e.g. successful install or update).
-  static void success() {
-    lightImpact();
-  }
+  static void success() => lightImpact();
 
   /// Negative outcome (e.g. failed install, downgrade error).
-  static void failure() {
-    heavyImpact();
+  static void failure() => heavyImpact();
+
+  // ── M3E interaction haptics ──────────────────────────────────────────────
+  // Used for shape morphs, press-down events, and multi-beat patterns.
+
+  /// Fires on pointer contact — more physical than waiting for pointer-up.
+  /// Use with [ScaleTouchWrapper]'s hapticOnPressDown for responsive feel.
+  static void tapDown() => selectionClick();
+
+  /// Subtle cue fired when a UI element begins a shape morph transition.
+  static void morphCue() => selectionClick();
+
+  /// Two successive impulses — for warnings or a "double confirm" feel.
+  /// Fires medium then light immediately (OS sequences them on Android).
+  static void warning() {
+    if (!enabled) return;
+    HapticFeedback.mediumImpact();
+    HapticFeedback.lightImpact();
+  }
+
+  /// Double-beat confirm — light then medium.
+  /// Communicates successful completion of a significant action.
+  static void doubleImpact() {
+    if (!enabled) return;
+    HapticFeedback.lightImpact();
+    HapticFeedback.mediumImpact();
   }
 }

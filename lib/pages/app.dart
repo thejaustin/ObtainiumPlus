@@ -1454,6 +1454,8 @@ class _AppPageState extends State<AppPage> {
 
     getInstallOrUpdateButton() {
       final plusSettings = context.watch<PlusSettingsProvider>();
+      final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+      final colorScheme = Theme.of(context).colorScheme;
       final defaultStorePackage = plusSettings.plusDefaultStorePackage;
       final defaultStoreName = plusSettings.plusDefaultStoreName;
 
@@ -1473,116 +1475,246 @@ class _AppPageState extends State<AppPage> {
               ? (!trackOnly ? tr('update') : tr('markUpdated'))
               : (!trackOnly ? tr('install') : tr('markInstalled')));
 
-      Widget button;
+      // ── M3E state machine ─────────────────────────────────────────────────
+      // Each state drives shape, color, and content independently.
+      final String stateKey = isDownloading
+          ? 'downloading'
+          : (isInstalled && !hasUpdate)
+              ? 'open'
+              : isInstalled
+                  ? 'update'
+                  : 'install';
+
+      final ShapeBorder targetShape = isDownloading
+          ? const StadiumBorder()
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
+
+      final Color fillColor = isDownloading
+          ? colorScheme.surfaceContainerHighest
+          : (isInstalled && !hasUpdate)
+              ? colorScheme.secondaryContainer
+              : isInstalled
+                  ? colorScheme.tertiaryContainer
+                  : colorScheme.primary;
+
+      final Color onColor = isDownloading
+          ? colorScheme.onSurfaceVariant
+          : (isInstalled && !hasUpdate)
+              ? colorScheme.onSecondaryContainer
+              : isInstalled
+                  ? colorScheme.onTertiaryContainer
+                  : colorScheme.onPrimary;
+
+      // Content for each state, keyed so AnimatedSwitcher replaces them
+      Widget content;
       if (isDownloading) {
         final progress = app?.downloadProgress;
-        button = FilledButton.icon(
+        content = Row(
           key: const ValueKey('downloading'),
-          onPressed: null,
-          icon: const SizedBox(
-            width: 18,
-            height: 18,
-            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
-          ),
-          label: Text(
-            progress != null && progress >= 0
-                ? '${progress.toInt()}%'
-                : tr('installing'),
-          ),
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: ExpressiveCircularProgressIndicator(
+                strokeWidth: 2,
+                color: onColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              progress != null && progress >= 0
+                  ? '${progress.toInt()}%'
+                  : tr('installing'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: onColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         );
       } else if (isInstalled && !hasUpdate) {
-        button = FilledButton.tonalIcon(
+        content = Row(
           key: const ValueKey('open'),
-          onPressed: () async {
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.open_in_new_rounded, size: 18, color: onColor),
+            const SizedBox(width: 8),
+            Text(
+              tr('open'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: onColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+      } else {
+        content = Row(
+          key: ValueKey(stateKey),
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isInstalled ? Icons.system_update_alt_rounded : Icons.download_rounded,
+              size: 18,
+              color: onColor,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                buttonText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: onColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+
+      VoidCallback? onPressed;
+      if (!isDownloading) {
+        if (isInstalled && !hasUpdate) {
+          onPressed = () async {
             AppHaptics.selectionClick();
             if (app?.app.id != null) {
               await AppInstallService.openApp(app!.app.id);
             }
-          },
-          icon: const Icon(Icons.open_in_new_rounded, size: 18),
-          label: Text(tr('open')),
-        );
-      } else {
-        button = FilledButton.icon(
-          key: ValueKey(isInstalled ? 'update' : 'install'),
-          onPressed: canAct
-              ? () async {
-                  if (defaultStorePackage != null && app?.app.id != null) {
-                    AppHaptics.heavyImpact();
-                    final scheme = defaultStorePackage == 'org.fdroid.fdroid'
-                        ? 'fdroid.app://details?id='
-                        : 'market://details?id=';
-                    await _openInStore(
-                      defaultStorePackage,
-                      scheme,
-                      app!.app.id,
-                    );
-                    return;
-                  }
-                  try {
-                    var successMessage = !isInstalled
-                        ? tr('installed')
-                        : tr('appsUpdated');
-                    AppHaptics.heavyImpact();
-                    var res = await appsProvider.downloadAndInstallLatestApps(
-                      app?.app.id != null ? [app!.app.id] : [],
-                      globalNavigatorKey.currentContext,
-                    );
-                    if (res.isNotEmpty && !trackOnly && context.mounted) {
-                      showMessage(successMessage, context);
-                    }
-                    if (res.isNotEmpty && context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                    if (res.isNotEmpty) {
-                      var np = context.read<NotificationsProvider>();
-                      np.cancel(UpdateNotification([]).id);
-                      np.cancel(
-                        SilentUpdateAttemptNotification(
-                          [],
-                          id: res[0].hashCode,
-                        ).id,
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) showError(e, context);
-                  }
-                }
-              : null,
-          icon: Icon(
-            isInstalled
-                ? Icons.system_update_alt_rounded
-                : Icons.download_rounded,
-            size: 18,
-          ),
-          label: Text(
-            buttonText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
+          };
+        } else if (canAct) {
+          onPressed = () async {
+            if (defaultStorePackage != null && app?.app.id != null) {
+              AppHaptics.heavyImpact();
+              final scheme = defaultStorePackage == 'org.fdroid.fdroid'
+                  ? 'fdroid.app://details?id='
+                  : 'market://details?id=';
+              await _openInStore(defaultStorePackage, scheme, app!.app.id);
+              return;
+            }
+            try {
+              final successMessage = !isInstalled ? tr('installed') : tr('appsUpdated');
+              AppHaptics.heavyImpact();
+              final res = await appsProvider.downloadAndInstallLatestApps(
+                app?.app.id != null ? [app!.app.id] : [],
+                globalNavigatorKey.currentContext,
+              );
+              if (res.isNotEmpty && !trackOnly && context.mounted) {
+                showMessage(successMessage, context);
+              }
+              if (res.isNotEmpty && context.mounted) {
+                Navigator.of(context).pop();
+              }
+              if (res.isNotEmpty) {
+                var np = context.read<NotificationsProvider>();
+                np.cancel(UpdateNotification([]).id);
+                np.cancel(SilentUpdateAttemptNotification([], id: res[0].hashCode).id);
+              }
+            } catch (e) {
+              if (context.mounted) showError(e, context);
+            }
+          };
+        }
       }
 
-      return ScaleTouchWrapper(
-        child: AnimatedSwitcher(
-          duration: Duration(
-            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0,
-          ),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.95, end: 1.0).animate(anim),
-              child: child,
+      // ── M3E shape-shifting wrapper ────────────────────────────────────────
+      // Width morphs: compact pill when downloading, full-width otherwise.
+      // Shape morphs: StadiumBorder (downloading) ↔ RoundedRectangle (action).
+      final morphDuration = Duration(milliseconds: animsEnabled ? 400 : 0);
+      const morphCurve = Cubic(0.05, 0.7, 0.1, 1.0); // expressiveDecelerate
+
+      return LayoutBuilder(
+        builder: (ctx, constraints) {
+          final targetWidth = isDownloading
+              ? constraints.maxWidth.clamp(140.0, 200.0)
+              : constraints.maxWidth;
+
+          return ScaleTouchWrapper(
+            hapticOnPressDown: onPressed != null,
+            child: Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(end: targetWidth),
+                duration: morphDuration,
+                curve: morphCurve,
+                builder: (ctx, width, _) {
+                  return TweenAnimationBuilder<ShapeBorder>(
+                    tween: ShapeBorderTween(
+                      begin: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      end: targetShape,
+                    ),
+                    duration: morphDuration,
+                    curve: morphCurve,
+                    builder: (ctx, shape, _) {
+                      return AnimatedContainer(
+                        duration: Duration(milliseconds: animsEnabled ? 260 : 0),
+                        curve: morphCurve,
+                        width: width,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: fillColor,
+                          // Mirror shape for BoxDecoration clip
+                          borderRadius: shape is StadiumBorder
+                              ? BorderRadius.circular(24)
+                              : BorderRadius.circular(14),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          shape: shape,
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            customBorder: shape,
+                            onTap: onPressed,
+                            splashColor: onColor.withValues(alpha: 0.16),
+                            highlightColor: onColor.withValues(alpha: 0.08),
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration: Duration(
+                                  milliseconds: animsEnabled ? 200 : 0,
+                                ),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, anim) =>
+                                    FadeTransition(
+                                      opacity: anim,
+                                      child: ScaleTransition(
+                                        scale: Tween<double>(
+                                          begin: 0.85,
+                                          end: 1.0,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: anim,
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        ),
+                                        child: child,
+                                      ),
+                                    ),
+                                child: Padding(
+                                  key: ValueKey(stateKey),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: content,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-          child: SizedBox(
-            key: button.key,
-            width: double.infinity,
-            child: button,
-          ),
-        ),
+          );
+        },
       );
     }
 
