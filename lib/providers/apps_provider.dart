@@ -199,6 +199,7 @@ Future<String> checkPartialDownloadHash(
   reqHeaders[HttpHeaders.rangeHeader] = 'bytes=0-$bytesToGrab';
   final responseWithClient = await sourceRequestStreamResponse(
     'GET',
+    url,
     reqHeaders,
     additionalSettings,
   );
@@ -225,6 +226,7 @@ Future<String?> checkETagHeader(
 }) async {
   final responseWithClient = await sourceRequestStreamResponse(
     'GET',
+    additionalSettings['url'] as String,
     headers ?? {},
     additionalSettings,
   );
@@ -301,6 +303,7 @@ Future<int?> getDownloadSize(
   };
   final responseWithClient = await sourceRequestStreamResponse(
     'GET',
+    url,
     reqHeaders,
     additionalSettings,
   );

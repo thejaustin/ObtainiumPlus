@@ -54,6 +54,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final GlobalKey<AppsPageState> _appsPageKey = GlobalKey<AppsPageState>();
   late List<NavigationPageItem> pages;
 
+  bool _providersInitialized = false;
+  late SourceProvider sourceProvider;
+  late SettingsProvider settingsProvider;
+  late AppsProvider appsProvider;
+
   // Measured height of the floating bottom nav bar (divider + NavigationBar
   // + its own safe-area inset). extendBody:true lets page content draw
   // behind the translucent bar for the frosted-glass look, so each page
