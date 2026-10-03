@@ -299,7 +299,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         } else if (action == 'refresh') {
           final targetId = uri.queryParameters['id'];
           await appsProvider.checkUpdates(
-            forceAll: targetId == null,
             specificIds: targetId != null ? [targetId] : null,
           );
         } else {
