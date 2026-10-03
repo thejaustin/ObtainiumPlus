@@ -20,6 +20,7 @@ import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
+import 'package:obtainium/services/http_service.dart' show HttpService;
 import 'package:obtainium/utils/haptic_utils.dart' show AppHaptics;
 import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
@@ -767,7 +768,7 @@ extension AppsProviderInstall on AppsProvider {
         installedVersion: apps[file.appId]!.app.latestVersion,
       );
       unawaited(file.file.delete(recursive: true));
-      if (!isBg) settingsProvider.heavyImpact();
+      if (!isBg) AppHaptics.heavyImpact();
     }
     // Cancelled or already-installed/pending: keep the file so a retry can
     // reuse it without re-downloading (matches main).
