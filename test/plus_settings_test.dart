@@ -54,8 +54,8 @@ void main() {
 
     // Mutate multiple properties synchronously
     provider.plusEnableEnhancedAnimations = false;
-    provider.plusHapticsEnabled = false;
-    provider.plusCornerRadius = 16.0;
+    provider.plusEnableBouncyPhysics = false;
+    provider.plusGlobalCornerRadius = 16.0;
 
     // Immediately before microtask flushes, notifications are coalesced
     expect(notifyCount, 0);
@@ -64,8 +64,8 @@ void main() {
     await Future.microtask(() {});
     expect(notifyCount, 1);
     expect(provider.plusEnableEnhancedAnimations, false);
-    expect(provider.plusHapticsEnabled, false);
-    expect(provider.plusCornerRadius, 16.0);
+    expect(provider.plusEnableBouncyPhysics, false);
+    expect(provider.plusGlobalCornerRadius, 16.0);
   });
 }
 

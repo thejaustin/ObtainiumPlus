@@ -164,21 +164,21 @@ class _OnboardingPageState extends State<OnboardingPage>
           if (info?.versionName != null) {
             appsToAdd.add(
               App(
-                obtainiumId,
-                obtainiumUrl,
-                'thejaustin',
-                'Obtainium+',
-                info!.versionName,
-                info.versionName!,
-                [],
-                0,
-                {
+                id: obtainiumId,
+                url: obtainiumUrl,
+                author: 'thejaustin',
+                name: 'Obtainium+',
+                installedVersion: info!.versionName,
+                latestVersion: info.versionName!,
+                apkUrls: const [],
+                preferredApkIndex: 0,
+                additionalSettings: const {
                   'versionDetection': true,
                   'apkFilterRegEx': 'fdroid',
                   'invertAPKFilter': true,
                 },
-                null,
-                true, // always pin Obtainium+ to the top
+                lastUpdateCheck: null,
+                pinned: true,
               ),
             );
           }
