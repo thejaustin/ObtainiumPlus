@@ -26,6 +26,7 @@ export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
 export 'package:obtainium/utils/source_utils.dart';
+export 'package:obtainium/services/http_service.dart' show ensureHttpSuccess;
 
 import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
