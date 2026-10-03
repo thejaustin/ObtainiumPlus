@@ -20,6 +20,7 @@ import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
+import 'package:obtainium/services/http_service.dart' as _httpSvc;
 import 'package:obtainium/utils/haptic_utils.dart' show AppHaptics;
 import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
@@ -979,7 +980,7 @@ extension AppsProviderInstall on AppsProvider {
       if (url == 'placeholder') {
         return null;
       }
-      return HttpService.extractRootHost(Uri.parse(url).host);
+      return _httpSvc.HttpService.extractRootHost(Uri.parse(url).host);
     }
 
     // If the picked APK comes from an origin different from the source, get user confirmation (if context provided)
