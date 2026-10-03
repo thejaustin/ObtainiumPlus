@@ -74,6 +74,27 @@ These files exist but are unreachable — editing them does nothing:
 
 Always check the `lib/components/apps/` subdirectory, not `lib/components/` root, for app-tile files.
 
+## Branding
+
+- Display name `Obtainium+` (`label` in `android/app/src/main/res/values/string.xml`); applicationId `dev.thejaustin.obtainiumplus`. Dart package name stays `obtainium` in `pubspec.yaml` — don't rename it (breaks every `package:obtainium/...` import).
+- Version scheme: upstream version + `-pNN` patch suffix (e.g. `1.6.17-p1`), auto-bumped by CI.
+- Fork-specific settings/features are "Plus" (`PlusSettingsProvider`, `plusEnable*` keys); the `enableAllPlusFeatures` master switch hides all Plus-branded settings.
+- Icon assets live in `assets/graphics/` (`icon.svg`, `icon.png`, `icon_small.png`).
+
+### Project family (all by thejaustin)
+
+| Product | Display name | Repo | Package / coordinates | Upstream |
+|---------|-------------|------|------------------------|----------|
+| Shizuku+ | `Shizuku+` | `thejaustin/ShizukuPlus` | `af.shizuku.plus.api` (Plus flavor), `moe.shizuku.privileged.api` (Drop-In flavor) | thedjchi/Shizuku ← RikkaApps/Shizuku |
+| Shizuku+-API | `Shizuku+-API` | `thejaustin/ShizukuPlus-API` | Maven group `af.shizuku.plus`; JitPack `com.github.thejaustin:Shizuku+-API:<ver>-plus` | RikkaApps/Shizuku-API |
+| Obtainium+ | `Obtainium+` | `thejaustin/ObtainiumPlus` | `dev.thejaustin.obtainiumplus` | ImranR98/Obtainium |
+| SuperShade | `SuperShade` | `thejaustin/SuperShade` | `com.supershade` | original (no upstream) |
+
+Naming rules:
+- User-facing text uses the `+` form (`Shizuku+`, `Obtainium+`); repo names, URLs, and code identifiers spell it `Plus` (`ShizukuPlus`, `PlusSettingsProvider`). Never write "Shizuku Plus" or "ObtainiumPlus" in UI strings.
+- `SuperShade` is one word, capital S twice — never "Super Shade" / "Supershade".
+- Refer to upstreams by their own names (Shizuku, Obtainium) and credit them; don't rebrand upstream attributions or license notices.
+
 ## Sentry / issues
 - Sentry DSN injected via `--dart-define=SENTRY_DSN` (CI secret); `sentry-sync.yml` mirrors unresolved issues to GH issues (label `sentry-crash`) every 6h.
 - Sentry quota can exhaust — "no Sentry issues" ≠ "no crashes".
