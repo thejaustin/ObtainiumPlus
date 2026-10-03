@@ -20,6 +20,9 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ### Infrastructure
 - [x] **Auto-bump workflow** — reviewed `build-apk.yml`: bump commit happens after build, then `git pull --rebase --autostash origin main` before push, so it self-heals if another commit lands on `main` mid-build. Only friction is procedural (a human/agent pushing to `main` needs to fetch+rebase past bot commits), not a workflow bug.
+- [x] **PostToolUse hook** — `.claude/settings.json` runs `check-syntax.sh` after every Edit/Write (2026-10-03)
+- [x] **pub-cache in CI** — `build-apk.yml` now caches `~/.pub-cache` keyed on `pubspec.lock` in both quality and build jobs (2026-10-03)
+- [ ] **git history bloat** — 3 old APKs (~65MB each) in `apk-releases/` git history; `apk-releases/` added to `.gitignore`; need `git filter-repo --strip-blobs-bigger-than 10M` + force push to main to recover ~196MB from the 110MB pack
 - [x] **Flutter test compilation** — fixed in a7a0ef14; CI's "Lint and Test" job runs `flutter test` on every push and has been green on all recent runs (verified via `gh run view --json jobs`)
 - [x] **`upstream-sync` merge chain (v1.5.0 → v1.6.10)** — merged to `main`, pushed, and released as `v1.6.10-p2` (2026-08-06); see entry below
 - [x] **debroid CLI install** — fixed a broken local install (`~/.local/bin/debroid` was a bare 117-byte stub instead of the stub+fatjar concatenation `install.sh` produces); confirmed it has no offline mode (needs a live ADB/JDWP connection, same wifi requirement as everything else). See "Next Session" below for how to use it on the open crash bug.
@@ -34,6 +37,28 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 ### UI
 - [x] **App-detail-page swipe-down** — fixed: `RefreshIndicator` was wrapping the modal sheet's content too, swallowing the downward drag as pull-to-refresh before it could bubble up to the sheet's own `swipeDismissible` drag. Now skipped entirely when `widget.isModal` (`lib/pages/app.dart`).
 - [x] **Decouple Plus feature toggles from Features settings page** — done: moved ~25 toggles out of the monolithic `plus_features_section.dart` into their thematic homes (`apps_view_settings_section.dart`, `update_settings_section.dart`, `installation_section.dart`, `notification_settings_section.dart`, `app_behavior_section.dart`, `advanced_settings_section.dart`, `troubleshooting_section.dart`). `plus_features_section.dart` now only hosts the `enableAllPlusFeatures` master switch. Along the way found 3 toggles (`plusEnableUpdateSchedule`, `plusEnableAutoUpdateRules`, `plusEnableNotificationEnhancements`) that were only ever read as *gates* in their "proper" destination file, never given a real switch — added real `SwitchListTile`s for those rather than assuming the pre-existing duplicate-looking code was already wired up. Follow-up: wired `enableAllPlusFeatures` back up as a real cross-file gate — the two files with a generic `_buildFeatureToggle<T extends ChangeNotifier>` helper (`apps_view_settings_section.dart`, `theme_settings_section.dart`) gate centrally inside the helper (`settings is PlusSettingsProvider && !settings.enableAllPlusFeatures`), covering every Plus toggle in those files including ones that predate this session (e.g. `plusEnableModernAppPage`, `plusEnableGlassmorphism`); the remaining 5 files gate their Plus toggles/groups inline. Toggling the master switch off now actually hides Plus-branded settings everywhere, not just on its own tab.
+
+---
+
+### 2026-10-03 (Session 10) — Claude Code (Sonnet 4.6)
+
+**Build fix, process hardening, and design-space improvements:**
+
+1. **`ShapeBorderTween` type fix (`lib/pages/app.dart`)** — `ShapeBorderTween` extends `Tween<ShapeBorder?>` (nullable), not `Tween<ShapeBorder>`. Changed `TweenAnimationBuilder<ShapeBorder>` → `TweenAnimationBuilder<ShapeBorder?>` and added `resolvedShape` null fallback before passing to `Material`/`InkWell`/`BoxDecoration`. Previously broke CI `flutter test` (caught by `shizuku_enhancements_test.dart`). Root pattern: never use `ShapeBorderTween` with a non-nullable `TweenAnimationBuilder<ShapeBorder>`.
+
+2. **PostToolUse hook** — Created `.claude/settings.json` that runs `check-syntax.sh` automatically after every Edit/Write in Claude Code sessions. This would have caught the above type error locally before any CI round-trip.
+
+3. **CI pub-cache** — Added explicit `actions/cache@v4` for `~/.pub-cache` keyed on `pubspec.lock` in both `quality` and `build` jobs. Previously `cache: true` on `subosito/flutter-action` only cached the Flutter SDK, not pub packages — every run re-fetched all packages. Expected ~3 min saving on cache hits.
+
+4. **`.gitignore` hardening** — Added `apk-releases/`, `*.apk`, `*.aab`, `pubspec_history.diff`. Three old APK files (~65MB each) still live in git history (`git count-objects -vH` shows 110MB pack); need `git filter-repo --strip-blobs-bigger-than 10M` + force push to recover ~196MB. Data preserved in GitHub releases.
+
+5. **CLAUDE.md enriched** — Added sections: Dart/Flutter type pitfalls, performance patterns, M3E design tokens table, dead code traps. Updated push workflow to `git fetch + merge` and noted feature-branch preference.
+
+6. **Global CLAUDE.md** — Added ObtainiumPlus quick-ref and cross-project patterns section.
+
+**Pending from this session:**
+- [ ] Performance improvements to `apps_provider.dart` + `plus_settings_provider.dart` (debounced `notifyListeners`, cached SharedPreferences reads) — audited, not yet implemented
+- [ ] `git filter-repo` history rewrite to remove APK blobs (requires force push — needs explicit approval)
 
 ---
 
