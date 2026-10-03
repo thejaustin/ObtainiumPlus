@@ -42,6 +42,22 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-10-03 (Session 12) — Claude Code (Sonnet 4.6 / Opus 4.7)
+
+**Shizuku installer hang detection, adaptive polling, 90s ceiling (`lib/installers/shizuku_installer.dart`, commit `252fcda3`):**
+
+1. **Binder hang guard (30s)** — wrapped `runShizuku()` with `.timeout(30s, onTimeout: () => null)`. When the Shizuku callback goes silent (the primary cause of the indefinite spinner), we log a `binderHang` telemetry event and unblock the flow — polling continues detecting success in the background without waiting the full timeout.
+2. **Adaptive polling** — switched from a flat 350ms `Timer.periodic` to adaptive logic: 350ms for the first 10s, then every 3rd tick (~1050ms effective interval) to reduce package manager pressure during large or slow installs.
+3. **Time-based poll ceiling** — replaced brittle `pollCount > 200` (~70s cap) with `elapsedMs > 85000` (85s cap), giving polling a proper window after a hang is detected.
+4. **Overall timeout raised 75s → 90s** — 30s binder hang detection + 60s polling window to catch late-arriving installs.
+
+**Settings page `TypeError: type 'bool' is not a subtype of type 'double?'` crash fix (`lib/pages/settings.dart`, commit `1fb16813`):**
+
+- Root cause: `CustomScrollView` and `ListView` in `settings.dart` had no explicit `PageStorageKey`, so Flutter auto-assigned positional keys. The auto-generated keys collided with `ExpansionTile`'s bool-typed `PageStorage` entries. When `ScrollPosition.restoreScrollOffset` tried to read an offset, it fetched a `bool` instead of `double?` and threw a `TypeError`.
+- Fix: pinned `const PageStorageKey<String>('settings_page_scroll')` on the `CustomScrollView` and `const PageStorageKey<String>('settings_tabs_scroll')` on the `ListView`, disambiguating them from all `ExpansionTile` keys. Fixes issues #301, #303, #304, #256, #300.
+
+---
+
 ### 2026-10-03 (Session 11) — Antigravity (Gemini 3.8 Flash)
 
 **Upstream v1.6.17 Merge, CI Upstream Auto-Alignment, and PlusSettingsProvider Typed Cache:**
