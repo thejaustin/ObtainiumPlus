@@ -53,10 +53,11 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
    - Cleaned up upstream merge artifacts: removed duplicate shadow `lib/components/app_list_tile.dart`, reconciled `analysis_options.yaml` duplicate analyzer keys, and fixed syntax in `category_editor.dart`.
    - Verified 100% syntax compliance across all Dart files with `bash scripts/dev/check-syntax.sh` (`Syntax OK`).
 
-2. **Upstream Version Auto-Detection & Realignment (`build-apk.yml` & `pubspec.yaml`)**:
-   - Realigned base version from `1.6.10-p28+2468` to `1.6.17-p29+2469` matching upstream `v1.6.17`.
-   - Updated `lib/utils/version_constant.dart` to `'1.6.17-p29'`.
-   - Upgraded `build-apk.yml` auto-bump step with upstream tag query via `git ls-remote --tags https://github.com/ImranR98/Obtainium.git` to automatically detect newer upstream semver releases and realign base version to e.g. `1.6.18-p1` seamlessly.
+2. **Upstream Version Auto-Detection & Reset to p1 (`build-apk.yml` & `pubspec.yaml`)**:
+   - Realigned base version from `1.6.10-p28` to **`1.6.17-p1+2470`** matching upstream `v1.6.17` (resetting patch cycle to `p1` rather than carrying over `p28`→`p30`).
+   - Updated `lib/utils/version_constant.dart` to `'1.6.17-p1'`.
+   - Upgraded `build-apk.yml` auto-bump step with tag-aware, base-resetting logic: queries remote upstream tags via `git ls-remote --tags https://github.com/ImranR98/Obtainium.git` and local tags via `git tag -l "v${BASE_VERSION}-p*"`. Whenever upstream base version advances, patch cycle resets to `p1`.
+   - Adjusted `dynamic_color: ^1.9.0` in `pubspec.yaml` to resolve pub version solving conflict with `loading_indicator_m3e`.
 
 3. **In-Memory Caching & Debounced Notifications (`plus_settings_provider.dart`)**:
    - Implemented typed in-memory caching map (`_cache`) for all 88 settings properties in `PlusSettingsProvider`.
