@@ -8,6 +8,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -29,13 +30,13 @@ export 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
-import 'package:obtainium/app_sources/app_source.dart';
+import 'package:obtainium/app_sources/app_source.dart'
+    hide AppSource, MassAppUrlSource;
 import 'package:obtainium/app_sources/aptoide.dart';
 import 'package:obtainium/app_sources/codeberg.dart';
 import 'package:obtainium/app_sources/bitbucket.dart';
 import 'package:obtainium/app_sources/gitea.dart';
-import '../app_sources/samsung_galaxy_store.dart';
-import '../app_sources/xda_developers.dart';
+import 'package:obtainium/app_sources/xda_developers.dart';
 import 'package:obtainium/app_sources/coolapk.dart';
 import 'package:obtainium/app_sources/direct_apk_link.dart';
 import 'package:obtainium/app_sources/farsroid.dart';
@@ -62,7 +63,6 @@ import 'package:obtainium/app_sources/uptodown.dart';
 import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/app_sources/githubstars.dart';
 import 'package:obtainium/app_sources/githubpersonalrepos.dart';
 import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/providers/logs_provider.dart';

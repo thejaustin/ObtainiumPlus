@@ -80,6 +80,7 @@ dependencies:
   encrypt: ^5.0.3
   flutter_js: ^0.8.7
   home_widget: ^0.9.3
+  logger: ^2.5.0
 
 dev_dependencies:
   flutter_test:
