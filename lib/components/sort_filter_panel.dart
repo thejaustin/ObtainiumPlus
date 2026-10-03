@@ -1,6 +1,5 @@
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'dart:ui';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 

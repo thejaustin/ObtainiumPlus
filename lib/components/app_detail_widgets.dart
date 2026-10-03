@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -28,19 +29,20 @@ class AppInfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final isTV = context.read<SettingsProvider>().isTV;
-    return AlertDialog(
-      scrollable: true,
-      title: Text(app.name),
+    return GlassDialog(
+      title: app.name,
+      icon: Icons.info_outline_rounded,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (app.icon != null)
-            Center(child: AppIcon(bytes: app.icon, size: 56, radius: 14))
+            Center(child: AppIcon(bytes: app.icon, size: 64, radius: 16))
           else
             const SizedBox.shrink(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text(
             app.name,
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -48,17 +50,26 @@ class AppInfoDialog extends StatelessWidget {
           Text(
             tr('byX', args: [app.author]),
             style: textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
+          const SizedBox(height: 4),
           Text(
             app.app.url,
             style: textTheme.labelSmall?.copyWith(
               decoration: TextDecoration.underline,
+              color: colorScheme.primary,
             ),
           ),
-          Text(app.app.id, style: textTheme.labelSmall),
-          const SizedBox(height: 8),
+          Text(
+            app.app.id,
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
           Text(appInstalledVersionText(app.app), style: textTheme.bodyMedium),
           Text(
             tr(
@@ -72,7 +83,9 @@ class AppInfoDialog extends StatelessWidget {
                     tr('never'),
               ],
             ),
-            style: textTheme.bodySmall,
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -118,13 +131,11 @@ class _AppFilePickerState extends State<AppFilePicker> {
     fileUrl ??=
         widget.initVal ??
         (urlsToSelectFrom.isNotEmpty ? urlsToSelectFrom.first : null);
-    return AlertDialog(
-      scrollable: true,
-      title: Text(
-        widget.pickAnyAsset
-            ? tr('selectX', args: [lowerCaseIfEnglish(tr('releaseAsset'))])
-            : tr('pickAnAPK'),
-      ),
+    return GlassDialog(
+      title: widget.pickAnyAsset
+          ? tr('selectX', args: [lowerCaseIfEnglish(tr('releaseAsset'))])
+          : tr('pickAnAPK'),
+      icon: Icons.download_rounded,
       content: fileUrl == null
           ? const SizedBox.shrink()
           : RadioGroup<String>(
@@ -139,14 +150,13 @@ class _AppFilePickerState extends State<AppFilePicker> {
               },
               child: Column(
                 children: [
-                  urlsToSelectFrom.length > 1
-                      ? Text(
-                          tr(
-                            'appHasMoreThanOnePackage',
-                            args: [widget.app.finalName],
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                  if (urlsToSelectFrom.length > 1)
+                    Text(
+                      tr(
+                        'appHasMoreThanOnePackage',
+                        args: [widget.app.finalName],
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   if (isTV)
                     ...urlsToSelectFrom.asMap().entries.map(
@@ -178,9 +188,8 @@ class _AppFilePickerState extends State<AppFilePicker> {
                                 list2FriendlyString(
                                   widget.archs!.map((e) => '\'$e\'').toList(),
                                 ),
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontStyle: FontStyle.italic,
-                        fontSize: 12,
                       ),
                     ),
                 ],
@@ -228,9 +237,9 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
   @override
   Widget build(BuildContext context) {
     final isTV = context.read<SettingsProvider>().isTV;
-    return AlertDialog(
-      scrollable: true,
-      title: Text(tr('warning')),
+    return GlassDialog(
+      title: tr('warning'),
+      icon: Icons.warning_amber_rounded,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
