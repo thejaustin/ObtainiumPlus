@@ -70,7 +70,7 @@ Future<bool> showContinueCancelDialog(
 }
 
 void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
-  if (isError) context.read<SettingsProvider>().heavyImpact();
+  if (isError) AppHaptics.heavyImpact();
   if (isError) {
     AppLogger.error(e, message: e.toString());
   } else {

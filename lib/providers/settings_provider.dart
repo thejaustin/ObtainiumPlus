@@ -404,6 +404,20 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get exportInstalledOnly =>
+      prefs?.safeBool('exportInstalledOnly') ?? false;
+  set exportInstalledOnly(bool val) {
+    prefs?.setBool('exportInstalledOnly', val);
+    notifyListeners();
+  }
+
+  String get autoExportFileName =>
+      prefs?.safeString('autoExportFileName') ?? '';
+  set autoExportFileName(String val) {
+    prefs?.setString('autoExportFileName', val);
+    notifyListeners();
+  }
+
   // preferredUpdateSource is in BehaviorSettingsProvider
   String get preferredUpdateSource {
     final val = prefs?.safeString('preferredUpdateSource') ?? 'direct';

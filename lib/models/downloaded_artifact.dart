@@ -6,7 +6,7 @@ class DownloadedApk {
   DownloadedApk(this.appId, this.file);
 }
 
-enum DownloadedDirType { XAPK, ZIP, TARBALL }
+enum DownloadedDirType { XAPK, ZIP, TARBALL, splitApks }
 
 class DownloadedDir {
   String appId;
