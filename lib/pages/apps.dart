@@ -38,6 +38,7 @@ import 'package:obtainium/components/generated_form_renderer.dart'
     show TvTextFieldFocus;
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/components/apps/active_operations_banner.dart';
 import 'package:obtainium/pages/app.dart';
@@ -45,6 +46,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/nav_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -2528,6 +2530,7 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
 
   Widget _sectionHeader(String label, List<String> ids, ColorScheme cs) {
     if (ids.isEmpty) return const SizedBox.shrink();
+    final tt = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 4),
       child: Row(
@@ -2535,15 +2538,14 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
+            style: tt.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: cs.primary,
             ),
           ),
           Text(
             ' (${ids.length})',
-            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -2552,6 +2554,7 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
 
   Widget _appCheckRow(String id, ColorScheme cs) {
     final aim = widget.apps[id];
+    final tt = Theme.of(context).textTheme;
     if (aim == null) return const SizedBox.shrink();
     final isNewInstall = aim.app.installedVersion == null;
     final isUpdate =
@@ -2570,6 +2573,7 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
       visualDensity: VisualDensity.compact,
       value: selectedIds.contains(id),
       onChanged: (checked) {
+        context.read<SettingsProvider>().selectionClick();
         setState(() {
           if (checked == true) {
             selectedIds.add(id);
@@ -2599,14 +2603,22 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
               tr('byX', args: [aim.author]),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           if (versionLabel.isNotEmpty)
-            Text(
-              versionLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+            Directionality(
+              // Force LTR for the "old → new" transition so the arrow isn't
+              // bidi-mirrored/reordered under RTL locales, which made it
+              // look like a downgrade instead of an update.
+              textDirection: isUpdate
+                  ? TextDirection.ltr
+                  : Directionality.of(context),
+              child: Text(
+                versionLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
             ),
         ],
       ),
@@ -2758,7 +2770,7 @@ class _TVSearchBarState extends State<_TVSearchBar> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacings.elementGap),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: widget.trailing,

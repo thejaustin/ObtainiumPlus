@@ -73,8 +73,14 @@ List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('gl'), 'Galego'),
 ];
 const fallbackLocale = Locale('en');
+final Set<Locale> supportedLocaleSet = supportedLocales
+    .map((e) => e.key)
+    .toSet();
 const localeDir = 'assets/translations';
 bool isFdroidBuild = false;
+
+const String _unexpectedErrorText = 'An unexpected error occurred.';
+const String _closeText = 'Close';
 
 /// Global navigator key, used to navigate from outside the widget tree
 /// (e.g. tapping a notification).
@@ -424,18 +430,13 @@ class _ObtainiumState extends State<Obtainium> {
   void _handleFirstRun(
     SettingsProvider settings,
     AppsProvider apps,
-    Logger logger,
     BuildContext context,
   ) {
-    if (settings.prefs == null) {
-      settings.initializeSettings();
-      return;
-    }
     if (_firstRunHandled) return;
     _firstRunHandled = true;
     final isFirstRun = settings.checkAndFlipFirstRun();
     if (isFirstRun) {
-      logger.info('This is the first ever run of Obtainium.');
+      AppLogger.info('This is the first ever run of Obtainium.');
       if (!settings.isTV) {
         unawaited(Permission.notification.request());
       }
@@ -466,14 +467,18 @@ class _ObtainiumState extends State<Obtainium> {
                 );
               }
             })
-            .catchError((err) {
-              logger.error('Failed to add Obtainium on first run', err);
+            .catchError((err, stack) {
+              AppLogger.error(
+                err,
+                stackTrace: stack,
+                message: 'Failed to add Obtainium on first run',
+              );
             });
       }
     }
     final currentLang = context.locale.languageCode;
     final deviceLang = context.deviceLocale.languageCode;
-    if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
+    if (!supportedLocaleSet.contains(context.locale) ||
         (settings.forcedLocale == null && deviceLang != currentLang)) {
       settings.resetLocaleSafe(context);
     } else if (settings.forcedLocale != null) {
@@ -484,8 +489,19 @@ class _ObtainiumState extends State<Obtainium> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final settingsProvider = context.read<SettingsProvider>();
+      await settingsProvider.initializeSettings();
+      if (!mounted) return;
+      _settingsProvider = settingsProvider;
+      if (settingsProvider.isTV) {
+        // TV remotes are the primary input, so focus highlights must always be
+        // painted. The default automatic strategy can get stuck in "touch"
+        // mode and leave the user with no visible focus position at all.
+        FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.alwaysTraditional;
+      }
+      settingsProvider.addListener(_onSettingsChanged);
       final appsProvider = context.read<AppsProvider>();
       final logger = AppLogger(logs: context.read<LogsProvider>());
       final notifs = context.read<NotificationsProvider>();
@@ -494,7 +510,7 @@ class _ObtainiumState extends State<Obtainium> {
 
       if (!_launchByNotifChecked) {
         _launchByNotifChecked = true;
-        notifs.checkLaunchByNotif();
+        unawaited(notifs.checkLaunchByNotif());
       }
     });
   }
@@ -568,7 +584,7 @@ class _ObtainiumState extends State<Obtainium> {
 
   @override
   void dispose() {
-    LogsProvider.close();
+    _settingsProvider?.removeListener(_onSettingsChanged);
     super.dispose();
   }
 

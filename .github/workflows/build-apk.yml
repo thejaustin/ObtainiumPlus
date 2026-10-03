@@ -108,6 +108,17 @@ jobs:
 
           BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-[pr][0-9]+$//')
 
+          # Detect if upstream has released a newer base semver tag
+          UPSTREAM_TAG=$(git ls-remote --tags https://github.com/ImranR98/Obtainium.git 'refs/tags/v*' 2>/dev/null | awk '{print $2}' | sed 's|refs/tags/v||' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [ -n "$UPSTREAM_TAG" ]; then
+            HIGHER_VERSION=$(printf '%s\n%s\n' "$BASE_VERSION" "$UPSTREAM_TAG" | sort -V | tail -n 1)
+            if [ "$HIGHER_VERSION" != "$BASE_VERSION" ]; then
+              echo "Upstream base version ($UPSTREAM_TAG) is newer than current base ($BASE_VERSION). Aligning base version."
+              BASE_VERSION="$UPSTREAM_TAG"
+              CURRENT_VERSION="${BASE_VERSION}-p0"
+            fi
+          fi
+
           if [ "$IS_FULL_RELEASE" = "true" ]; then
             # Full release: change -p to -r and reset to 1, or bump existing -r
             LATEST_R=$(git tag -l "v${BASE_VERSION}-r*" | sed -E 's/.*-r//' | sort -n | tail -n 1)

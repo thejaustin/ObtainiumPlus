@@ -1,15 +1,15 @@
-// Defines App sources and provides functions used to interact with them.
+// ========================================================================
+// SourceProvider — resolves URLs to AppSource instances and builds Apps.
 //
-// AppSource is an abstract class with a concrete implementation for each source.
-// Legacy JSON migration logic lives at the bottom of this file.
+// App sources, models, and services live in their own libraries. This file
+// re-exports them so existing `import source_provider.dart` call sites keep
+// resolving the same names.
+// ========================================================================
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/dom.dart';
 import 'package:http/http.dart';
@@ -29,8 +29,8 @@ export 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
+import 'package:obtainium/app_sources/app_source.dart';
 import 'package:obtainium/app_sources/aptoide.dart';
-import 'package:obtainium/app_sources/apk4free.dart';
 import 'package:obtainium/app_sources/codeberg.dart';
 import 'package:obtainium/app_sources/bitbucket.dart';
 import 'package:obtainium/app_sources/gitea.dart';
@@ -42,16 +42,18 @@ import 'package:obtainium/app_sources/farsroid.dart';
 import 'package:obtainium/app_sources/fdroid.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/app_sources/github.dart';
+import 'package:obtainium/app_sources/githubstars.dart';
 import 'package:obtainium/app_sources/gitlab.dart';
+import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/app_sources/huaweiappgallery.dart';
 import 'package:obtainium/app_sources/itchio.dart';
 import 'package:obtainium/app_sources/izzyondroid.dart';
-import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/app_sources/jenkins.dart';
 import 'package:obtainium/app_sources/liteapks.dart';
 import 'package:obtainium/app_sources/neutroncode.dart';
 import 'package:obtainium/app_sources/rockmods.dart';
 import 'package:obtainium/app_sources/rustore.dart';
+import 'package:obtainium/app_sources/samsunggalaxystore.dart';
 import 'package:obtainium/app_sources/sourceforge.dart';
 import 'package:obtainium/app_sources/sourcehut.dart';
 import 'package:obtainium/app_sources/telegramapp.dart';
@@ -258,10 +260,19 @@ class SourceProvider {
     HTML(), // Must be the last entry — hostless sources are tried in order and HTML is the catch-all fallback
   ];
 
-  /// Cached, read-only source list built lazily by [_buildSources].
+  /// Cached, read-only source list built lazily from [_sourceFactories].
   /// Because sources are immutable after construction, the cache is safe.
   static List<AppSource>? _cachedSources;
-  List<AppSource> get sources => _cachedSources ??= _buildSources();
+  List<AppSource> get sources =>
+      _cachedSources ??= _sourceFactories.map((f) => f()).toList();
+
+  /// Factory lookup by persisted source identifier.
+  static Map<String, AppSource Function()>? _sourceFactoriesById;
+  static Map<String, AppSource Function()> get _sourceFactoriesByIdCache =>
+      _sourceFactoriesById ??= {
+        for (final factory in _sourceFactories)
+          factory().sourceIdentifier: factory,
+      };
 
   /// Add mass URL source classes here so they are available via the service.
   List<MassAppUrlSource> massUrlSources = [
@@ -274,15 +285,13 @@ class SourceProvider {
   AppSource getSource(String url, {String? overrideSource}) {
     url = preStandardizeUrl(url);
     if (overrideSource != null) {
-      // The override path mutates the chosen source's host config, so build a
-      // throwaway instance here rather than touching the shared cache.
-      final srcs = _buildSources().where(
-        (e) => e.sourceIdentifier == overrideSource,
-      );
-      if (srcs.isEmpty) {
+      final factory = _sourceFactoriesByIdCache[overrideSource];
+      if (factory == null) {
         throw UnsupportedURLError()..url = url;
       }
-      final res = srcs.first;
+      // The override path mutates the chosen source's host config, so use a
+      // throwaway instance rather than touching the shared cache.
+      final res = factory();
       final originalHosts = res.hosts;
       final newHost = Uri.tryParse(url)?.host ?? '';
       res.hosts = [newHost];
@@ -327,7 +336,7 @@ class SourceProvider {
           s.sourceSpecificStandardizeURL(url, forSelection: true);
           source = s;
           break;
-        } catch (e) {
+        } on ObtainiumError {
           // Ignore and try the next source.
         }
       }
@@ -336,17 +345,6 @@ class SourceProvider {
       throw UnsupportedURLError()..url = url;
     }
     return source;
-  }
-
-  bool ifRequiredAppSpecificSettingsExist(AppSource source) {
-    for (var row in source.combinedAppSpecificSettingFormItems) {
-      for (var element in row) {
-        if (element is GeneratedFormTextField && element.required) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 
   String generateTempID(
@@ -415,7 +413,7 @@ class SourceProvider {
     } on ObtainiumError catch (e) {
       throw e..withUrlContext(url);
     }
-    final APKDetails apk;
+    APKDetails apk;
     try {
       apk = await source.getLatestAPKDetails(standardUrl, additionalSettings);
     } on ObtainiumError catch (e) {
@@ -438,24 +436,31 @@ class SourceProvider {
         apk.version,
       );
       if (extractedVersion != null) {
-        apk.version = extractedVersion;
+        apk = apk.copyWith(version: extractedVersion);
       }
     }
 
     if (additionalSettings['releaseDateAsVersion'] == true &&
         apk.releaseDate != null) {
-      apk.version = apk.releaseDate!.microsecondsSinceEpoch.toString();
+      apk = apk.copyWith(
+        version: apk.releaseDate!.microsecondsSinceEpoch.toString(),
+      );
     }
-    apk.apkUrls = filterApks(
-      apk.apkUrls,
-      additionalSettings['apkFilterRegEx'],
-      additionalSettings['invertAPKFilter'],
+    final settingsProvider = SettingsProvider();
+    await settingsProvider.initializeSettings();
+    apk = apk.copyWith(
+      apkUrls: filterApks(
+        apk.apkUrls,
+        additionalSettings['apkFilterRegEx'] ??
+            settingsProvider.globalApkFilterRegEx,
+        additionalSettings['invertAPKFilter'],
+      ),
     );
     if (apk.apkUrls.isEmpty && !trackOnly) {
       throw NoAPKError()..url = standardUrl;
     }
     if (additionalSettings['autoApkFilterByArch'] == true) {
-      apk.apkUrls = await filterApksByArch(apk.apkUrls);
+      apk = apk.copyWith(apkUrls: await filterApksByArch(apk.apkUrls));
       if (apk.apkUrls.isEmpty && !trackOnly) {
         throw NoAPKError()..url = standardUrl;
       }
@@ -485,6 +490,7 @@ class SourceProvider {
       categories: currentApp?.categories ?? const [],
       releaseDate: apk.releaseDate,
       changeLog: apk.changeLog,
+      releaseUrl: apk.releaseUrl,
       overrideSource: sourceIsOverriden
           ? source.sourceIdentifier
           : currentApp?.overrideSource,
@@ -548,7 +554,7 @@ class SourceProvider {
   }) async {
     final List<App> apps = [];
     final Map<String, dynamic> errors = {};
-    const concurrency = 4;
+    const concurrency = kDefaultFetchConcurrency;
     for (var i = 0; i < urls.length; i += concurrency) {
       final end = i + concurrency > urls.length ? urls.length : i + concurrency;
       final batch = urls.sublist(i, end);
@@ -556,7 +562,7 @@ class SourceProvider {
         batch.map((url) async {
           try {
             if (alreadyAddedUrls.contains(url)) {
-              throw ObtainiumError(tr('appAlreadyAdded'));
+              throw ObtainiumError('${tr('appAlreadyAdded')} ($url)');
             }
             final source = sourceOverride ?? getSource(url);
             return await getApp(

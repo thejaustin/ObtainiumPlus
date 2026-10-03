@@ -6,7 +6,13 @@
 # Full analysis + tests happen in CI (build-apk.yml).
 set -uo pipefail
 cd "$(dirname "$0")/../.."
-errors=$(dart format --output=none lib/ test/ 2>&1 >/dev/null | grep -v 'analysis_options.yaml' || true)
+
+if ! command -v dart >/dev/null 2>&1; then
+    echo "⚠️  Dart SDK not found on PATH. Run 'pkg install dart' in Termux to enable fast syntax verification."
+    exit 0
+fi
+
+errors=$(dart format --output=none lib/ test/ 2>&1 >/dev/null | command grep -v 'analysis_options.yaml' || true)
 if [[ -n "$errors" ]]; then
     echo "$errors"
     echo "SYNTAX ERRORS FOUND"

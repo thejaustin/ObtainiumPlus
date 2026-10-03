@@ -6,7 +6,7 @@ import 'package:html/parser.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class Farsroid extends AppSource {
@@ -52,9 +52,7 @@ class Farsroid extends AppSource {
       final String appName = Uri.parse(standardUrl).pathSegments.last;
 
       final res = await sourceRequest(standardUrl, additionalSettings);
-      if (res.statusCode != 200) {
-        throw getObtainiumHttpError(res);
-      }
+      ensureHttpSuccess(res);
       final html = parse(res.body);
       final dlinks = html.querySelectorAll('.download-links');
       if (dlinks.isEmpty) {
@@ -71,19 +69,12 @@ class Farsroid extends AppSource {
         'https://${hosts[0]}/api/download-box/?post_id=$postId&post_version=$version',
         additionalSettings,
       );
-      if (res2.statusCode != 200) {
-        throw getObtainiumHttpError(res2);
-      }
+      ensureHttpSuccess(res2);
       Map<String, dynamic>? farsroidJson;
       try {
         farsroidJson = jsonDecode(res2.body) as Map<String, dynamic>?;
       } catch (e) {
-        unawaited(
-          LogsProvider().add(
-            'Failed to decode Farsroid JSON: $e',
-            level: LogLevel.error,
-          ),
-        );
+        AppLogger.error(e, message: 'Failed to decode Farsroid JSON');
         throw NoAPKError();
       }
       final html2 = farsroidJson?['data']?['content'] as String? ?? '';
