@@ -9,7 +9,7 @@ import 'package:obtainium/providers/source_provider.dart';
 const int _installSuccessCode = 0;
 const int _installAlreadyPendingCode = 3;
 
-enum InstallOutcome { success, cancelled, error }
+enum InstallOutcome { success, cancelled, alreadyInstalled, error }
 
 /// Unified result of an install operation, replacing the previous
 /// "nullable int code" pattern used by the platform install APIs.
@@ -37,7 +37,7 @@ class InstallResult {
       return InstallResult.cancelled();
     }
     if (code == _installAlreadyPendingCode) {
-      return InstallResult.cancelled();
+      return InstallResult(outcome: InstallOutcome.alreadyInstalled);
     }
     if (code == _installSuccessCode) {
       return InstallResult.success();
@@ -48,6 +48,7 @@ class InstallResult {
   bool get isSuccess => outcome == InstallOutcome.success;
   bool get isError => outcome == InstallOutcome.error;
   bool get isCancelled => outcome == InstallOutcome.cancelled;
+  bool get isAlreadyInstalled => outcome == InstallOutcome.alreadyInstalled;
 }
 
 /// Strategy that performs the platform-specific parts of an app installation.
