@@ -12,6 +12,7 @@ import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/providers/source_provider.dart' show SourceProvider;
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/services/apk_filter_service.dart';
 
 Map<String, dynamic> _migrateAppToHTML(

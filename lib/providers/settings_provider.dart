@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/logger.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -49,15 +50,14 @@ Locale? tryParseLocale(String? localeString) {
 
 enum ActionBannerMode { all, updatesOnly, none }
 
-/// How much vertical space each app row uses in the app list.
-enum AppListDensity { standard, compact, dense }
-
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   SettingsProvider([this.prefs]);
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   final Map<String, String> _secureCache = {};
   static const List<String> _secureKeys = ['github-creds', 'gitlab-creds'];
+
+  void selectionClick() => AppHaptics.selectionClick();
 
   String? defaultAppDir;
   bool justStarted = true;
