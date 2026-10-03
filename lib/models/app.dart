@@ -31,27 +31,28 @@ class App {
 
   bool get hasPendingRepoRename => pendingRepoRenameUrl != null;
 
-  App(
-    this.id,
-    this.url,
-    this.author,
-    this.name,
+  App({
+    required this.id,
+    required this.url,
+    required this.author,
+    required this.name,
     this.installedVersion,
-    this.latestVersion,
-    this.apkUrls,
-    this.preferredApkIndex,
-    this.additionalSettings,
+    required this.latestVersion,
+    List<MapEntry<String, String>>? apkUrls,
+    required this.preferredApkIndex,
+    required this.additionalSettings,
     this.lastUpdateCheck,
-    this.pinned, {
+    this.pinned = false,
     this.categories = const [],
-    this.tags = const [], // NEW: Default empty tags
+    this.tags = const [],
     this.releaseDate,
     this.changeLog,
     this.overrideSource,
     this.allowIdChange = false,
-    this.otherAssetUrls = const [],
+    List<MapEntry<String, String>>? otherAssetUrls,
     this.versionHistory = const [],
-  });
+  })  : apkUrls = apkUrls ?? const [],
+        otherAssetUrls = otherAssetUrls ?? const [];
 
   @override
   String toString() {
@@ -107,22 +108,23 @@ class App {
     Object? pendingRepoRenameUrl = _sentinel,
   }) {
     return App(
-        id ?? this.id,
-        url ?? this.url,
-        author ?? this.author,
-        name ?? this.name,
-        installedVersion == _sentinel
+        id: id ?? this.id,
+        url: url ?? this.url,
+        author: author ?? this.author,
+        name: name ?? this.name,
+        installedVersion: installedVersion == _sentinel
             ? this.installedVersion
             : installedVersion as String?,
-        latestVersion ?? this.latestVersion,
-        apkUrls ?? List<MapEntry<String, String>>.from(this.apkUrls),
-        preferredApkIndex ?? this.preferredApkIndex,
-        additionalSettings ??
+        latestVersion: latestVersion ?? this.latestVersion,
+        apkUrls: apkUrls ?? List<MapEntry<String, String>>.from(this.apkUrls),
+        preferredApkIndex: preferredApkIndex ?? this.preferredApkIndex,
+        additionalSettings:
+            additionalSettings ??
             Map<String, dynamic>.from(this.additionalSettings),
-        lastUpdateCheck == _sentinel
+        lastUpdateCheck: lastUpdateCheck == _sentinel
             ? this.lastUpdateCheck
             : lastUpdateCheck as DateTime?,
-        pinned ?? this.pinned,
+        pinned: pinned ?? this.pinned,
         categories: categories ?? List<String>.from(this.categories),
         tags: tags ?? List<String>.from(this.tags),
         releaseDate: releaseDate == _sentinel
@@ -146,19 +148,19 @@ class App {
   }
 
   App deepCopy() => App(
-    id,
-    url,
-    author,
-    name,
-    installedVersion,
-    latestVersion,
-    apkUrls,
-    preferredApkIndex,
-    Map.from(additionalSettings),
-    lastUpdateCheck,
-    pinned,
+    id: id,
+    url: url,
+    author: author,
+    name: name,
+    installedVersion: installedVersion,
+    latestVersion: latestVersion,
+    apkUrls: List.from(apkUrls),
+    preferredApkIndex: preferredApkIndex,
+    additionalSettings: Map.from(additionalSettings),
+    lastUpdateCheck: lastUpdateCheck,
+    pinned: pinned,
     categories: List<String>.from(categories),
-    tags: List<String>.from(tags), // NEW: Deep copy tags
+    tags: List<String>.from(tags),
     changeLog: changeLog,
     releaseDate: releaseDate,
     overrideSource: overrideSource,
@@ -175,27 +177,28 @@ class App {
       json = migrator(json);
     }
     return App(
-      URLValidator.sanitizeAppId(json['id'] as String),
-      json['url'] as String,
-      json['author'] as String,
-      json['name'] as String,
-      json['installedVersion'] == null
+      id: URLValidator.sanitizeAppId(json['id'] as String),
+      url: json['url'] as String,
+      author: json['author'] as String,
+      name: json['name'] as String,
+      installedVersion: json['installedVersion'] == null
           ? null
           : json['installedVersion'] as String,
-      (json['latestVersion'] ?? tr('unknown')) as String,
-      assumed2DlistToStringMapList(
+      latestVersion: (json['latestVersion'] ?? tr('unknown')) as String,
+      apkUrls: assumed2DlistToStringMapList(
         safeJsonDecode(json['apkUrls'], [
               ["placeholder", "placeholder"],
             ])
             as List<dynamic>,
       ),
-      (json['preferredApkIndex'] ?? -1) as int,
-      safeJsonDecode(json['additionalSettings'], <String, dynamic>{})
-          as Map<String, dynamic>,
-      json['lastUpdateCheck'] == null
+      preferredApkIndex: (json['preferredApkIndex'] ?? -1) as int,
+      additionalSettings:
+          safeJsonDecode(json['additionalSettings'], <String, dynamic>{})
+              as Map<String, dynamic>,
+      lastUpdateCheck: json['lastUpdateCheck'] == null
           ? null
           : DateTime.fromMicrosecondsSinceEpoch(json['lastUpdateCheck']),
-      json['pinned'] ?? false,
+      pinned: json['pinned'] ?? false,
       categories: json['categories'] != null
           ? (json['categories'] as List<dynamic>)
                 .map((e) => e.toString())

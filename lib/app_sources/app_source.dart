@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
+import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/apk_filter_service.dart';
 import 'package:obtainium/services/http_service.dart';

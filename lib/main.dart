@@ -447,21 +447,21 @@ class _ObtainiumState extends State<Obtainium> {
                 unawaited(
                   apps.saveApps([
                     App(
-                      obtainiumId,
-                      obtainiumUrl,
-                      'ImranR98',
-                      'Obtainium',
-                      value!.versionName,
-                      value.versionName!,
-                      [],
-                      0,
-                      {
+                      id: obtainiumId,
+                      url: obtainiumUrl,
+                      author: 'ImranR98',
+                      name: 'Obtainium',
+                      installedVersion: value!.versionName,
+                      latestVersion: value.versionName!,
+                      apkUrls: const [],
+                      preferredApkIndex: 0,
+                      additionalSettings: const {
                         'versionDetection': true,
                         'apkFilterRegEx': 'fdroid',
                         'invertAPKFilter': true,
                       },
-                      null,
-                      false,
+                      lastUpdateCheck: null,
+                      pinned: false,
                     ),
                   ], onlyIfExists: false),
                 );
