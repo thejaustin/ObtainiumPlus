@@ -37,4 +37,35 @@ void main() {
     expect(provider.plusSettingsUseGridToggles, true);
     expect(provider.plusSettingsLayoutMode, SettingsLayoutMode.classicGrouped);
   });
+
+  test('PlusSettingsProvider in-memory caching and notification coalescing', () async {
+    SharedPreferences.setMockInitialValues({'plusEnableEnhancedAnimations': true});
+    final prefs = await SharedPreferences.getInstance();
+    final provider = PlusSettingsProvider();
+    await provider.initializeSettings(prefs);
+
+    // Initial read populates cache
+    expect(provider.plusEnableEnhancedAnimations, true);
+
+    int notifyCount = 0;
+    provider.addListener(() {
+      notifyCount++;
+    });
+
+    // Mutate multiple properties synchronously
+    provider.plusEnableEnhancedAnimations = false;
+    provider.plusEnableBouncyPhysics = false;
+    provider.plusGlobalCornerRadius = 16.0;
+
+    // Immediately before microtask flushes, notifications are coalesced
+    expect(notifyCount, 0);
+
+    // After microtask flushes, exactly 1 notification is fired
+    await Future.microtask(() {});
+    expect(notifyCount, 1);
+    expect(provider.plusEnableEnhancedAnimations, false);
+    expect(provider.plusEnableBouncyPhysics, false);
+    expect(provider.plusGlobalCornerRadius, 16.0);
+  });
 }
+

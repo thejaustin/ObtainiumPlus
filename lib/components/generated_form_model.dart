@@ -23,6 +23,7 @@ class GeneratedFormTextField extends GeneratedFormItem {
   final bool password;
   final List<String>? autoCompleteOptions;
   final String? helpUrl;
+  final String? trailingKey;
 
   GeneratedFormTextField(
     super.key, {
@@ -35,6 +36,7 @@ class GeneratedFormTextField extends GeneratedFormItem {
     this.password = false,
     this.autoCompleteOptions,
     this.helpUrl,
+    this.trailingKey,
   });
 
   @override
@@ -55,6 +57,7 @@ class GeneratedFormTextField extends GeneratedFormItem {
       password: password,
       autoCompleteOptions: autoCompleteOptions,
       helpUrl: helpUrl,
+      trailingKey: trailingKey,
     );
   }
 }

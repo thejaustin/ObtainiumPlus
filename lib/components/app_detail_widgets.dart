@@ -349,7 +349,7 @@ class SigningCertMismatchDialog extends StatelessWidget {
         if (!hardBlock)
           TextButton(
             onPressed: () {
-              context.read<SettingsProvider>().selectionClick();
+              AppHaptics.selectionClick();
               Navigator.of(context).pop(false);
             },
             child: Text(tr('dontInstall')),
@@ -357,7 +357,7 @@ class SigningCertMismatchDialog extends StatelessWidget {
         FilledButton(
           autofocus: !isTV,
           onPressed: () {
-            context.read<SettingsProvider>().selectionClick();
+            AppHaptics.selectionClick();
             Navigator.of(context).pop(!hardBlock);
           },
           child: Text(hardBlock ? tr('ok') : tr('installAnyway')),

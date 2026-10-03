@@ -106,7 +106,18 @@ jobs:
             IS_FULL_RELEASE=true
           fi
 
-          BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-[pr][0-9]+$//')
+          CURRENT_BASE=$(echo "$CURRENT_VERSION" | sed -E 's/-[pr][0-9]+$//')
+          BASE_VERSION="$CURRENT_BASE"
+
+          # Detect if upstream has released a newer base semver tag
+          UPSTREAM_TAG=$(git ls-remote --tags https://github.com/ImranR98/Obtainium.git 'refs/tags/v*' 2>/dev/null | awk '{print $2}' | sed 's|refs/tags/v||' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          if [ -n "$UPSTREAM_TAG" ]; then
+            HIGHER_VERSION=$(printf '%s\n%s\n' "$BASE_VERSION" "$UPSTREAM_TAG" | sort -V | tail -n 1)
+            if [ "$HIGHER_VERSION" != "$BASE_VERSION" ]; then
+              echo "Upstream base version ($UPSTREAM_TAG) is newer than current base ($BASE_VERSION). Aligning base version."
+              BASE_VERSION="$UPSTREAM_TAG"
+            fi
+          fi
 
           if [ "$IS_FULL_RELEASE" = "true" ]; then
             # Full release: change -p to -r and reset to 1, or bump existing -r
@@ -125,19 +136,41 @@ jobs:
             else
               NEW_BUILD=$((CURRENT_BUILD + 1))
             fi
-          elif [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
-            PATCH_NUM="${BASH_REMATCH[2]}"
-            NEW_PATCH=$((PATCH_NUM + 1))
-            NEW_BUILD=$((CURRENT_BUILD + 1))
-            NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
-          elif [[ "$CURRENT_VERSION" =~ ^(.+)-r([0-9]+)$ ]]; then
-            # Starting new development cycle after a release
-            NEW_VERSION="${BASE_VERSION}-p1"
-            NEW_BUILD=$((CURRENT_BUILD + 1))
           else
-            NEW_PATCH=1
-            NEW_BUILD=$((CURRENT_BUILD + 1))
-            NEW_VERSION="${CURRENT_VERSION}-p${NEW_PATCH}"
+            # Check existing tags for this base version
+            LATEST_P=$(git tag -l "v${BASE_VERSION}-p*" | sed -E 's/.*-p//' | sort -n | tail -n 1)
+
+            if [ "$CURRENT_VERSION" = "${BASE_VERSION}-p1" ] && [ -z "$LATEST_P" ]; then
+              # Already pre-set to p1 for this base version and not yet released
+              NEW_VERSION="${BASE_VERSION}-p1"
+              NEW_BUILD=$CURRENT_BUILD
+            elif [ "$BASE_VERSION" != "$CURRENT_BASE" ] || [ -z "$LATEST_P" ]; then
+              # Upstream base version changed, or first patch on this base version: reset to p1
+              NEW_VERSION="${BASE_VERSION}-p1"
+              NEW_BUILD=$((CURRENT_BUILD + 1))
+            elif [[ "$CURRENT_VERSION" =~ ^(.+)-p([0-9]+)$ ]]; then
+              CURR_P="${BASH_REMATCH[2]}"
+              if [ "$CURR_P" -gt "$LATEST_P" ]; then
+                NEW_PATCH=$((CURR_P + 1))
+              else
+                NEW_PATCH=$((LATEST_P + 1))
+              fi
+              NEW_BUILD=$((CURRENT_BUILD + 1))
+              NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
+            elif [[ "$CURRENT_VERSION" =~ ^(.+)-r([0-9]+)$ ]]; then
+              # Starting new development cycle after a release
+              if [ -n "$LATEST_P" ]; then
+                NEW_PATCH=$((LATEST_P + 1))
+              else
+                NEW_PATCH=1
+              fi
+              NEW_BUILD=$((CURRENT_BUILD + 1))
+              NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
+            else
+              NEW_PATCH=1
+              NEW_BUILD=$((CURRENT_BUILD + 1))
+              NEW_VERSION="${BASE_VERSION}-p${NEW_PATCH}"
+            fi
           fi
 
           sed -i "s/^version: .*/version: ${NEW_VERSION}+${NEW_BUILD}/" pubspec.yaml
