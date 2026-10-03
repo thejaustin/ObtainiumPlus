@@ -390,6 +390,20 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get enableCertificatePinning =>
+      prefs?.safeBool('enableCertificatePinning') ?? false;
+  set enableCertificatePinning(bool val) {
+    prefs?.setBool('enableCertificatePinning', val);
+    notifyListeners();
+  }
+
+  bool get verifySigningCertHashes =>
+      prefs?.safeBool('verifySigningCertHashes') ?? false;
+  set verifySigningCertHashes(bool val) {
+    prefs?.setBool('verifySigningCertHashes', val);
+    notifyListeners();
+  }
+
   // preferredUpdateSource is in BehaviorSettingsProvider
   String get preferredUpdateSource {
     final val = prefs?.safeString('preferredUpdateSource') ?? 'direct';
