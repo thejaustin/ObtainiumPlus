@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -142,10 +143,12 @@ class _AppFilePickerState extends State<AppFilePicker> {
               groupValue: fileUrl!.value,
               onChanged: (String? val) {
                 setState(() {
-                  fileUrl = urlsToSelectFrom.firstWhere(
-                    (e) => e.value == val,
-                    orElse: () => urlsToSelectFrom.first,
-                  );
+                  fileUrl = urlsToSelectFrom.isNotEmpty
+                      ? urlsToSelectFrom.firstWhere(
+                          (e) => e.value == val,
+                          orElse: () => urlsToSelectFrom.first,
+                        )
+                      : fileUrl;
                 });
               },
               child: Column(
@@ -282,6 +285,82 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
             Navigator.of(context).pop(true);
           },
           child: Text(tr('continue')),
+        ),
+      ],
+    );
+  }
+}
+
+/// Warns that the downloaded APK's signing certificate does not match the
+/// expected hash (user-provided) or the installed app's certificate. Pops
+/// `true` to install anyway; hard blocks only allow cancelling.
+class SigningCertMismatchDialog extends StatelessWidget {
+  const SigningCertMismatchDialog({
+    super.key,
+    required this.appName,
+    required this.expectedHashes,
+    required this.actualHashes,
+    required this.hardBlock,
+  });
+
+  final String appName;
+  final List<String> expectedHashes;
+  final List<String> actualHashes;
+
+  /// A user-provided expected hash did not match, so the install is refused
+  /// without offering an "install anyway" escape hatch.
+  final bool hardBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTV = context.read<SettingsProvider>().isTV;
+    final textTheme = Theme.of(context).textTheme;
+
+    Widget hashBlock(String label, List<String> hashes) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: textTheme.labelMedium),
+        if (hashes.isEmpty)
+          Text(tr('none'), style: textTheme.bodySmall)
+        else
+          for (final hash in hashes) Text(hash, style: textTheme.bodySmall),
+      ],
+    );
+
+    return AlertDialog(
+      scrollable: true,
+      title: Text(tr('signingCertMismatchTitle')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            hardBlock
+                ? tr('signingCertMismatchHardBlockBody', args: [appName])
+                : tr('signingCertMismatchWarningBody', args: [appName]),
+          ),
+          const SizedBox(height: 12),
+          hashBlock(tr('expectedSigningCertHash'), expectedHashes),
+          const SizedBox(height: 8),
+          hashBlock(tr('actualSigningCertHash'), actualHashes),
+        ],
+      ),
+      actions: [
+        if (!hardBlock)
+          TextButton(
+            onPressed: () {
+              context.read<SettingsProvider>().selectionClick();
+              Navigator.of(context).pop(false);
+            },
+            child: Text(tr('dontInstall')),
+          ),
+        FilledButton(
+          autofocus: !isTV,
+          onPressed: () {
+            context.read<SettingsProvider>().selectionClick();
+            Navigator.of(context).pop(!hardBlock);
+          },
+          child: Text(hardBlock ? tr('ok') : tr('installAnyway')),
         ),
       ],
     );

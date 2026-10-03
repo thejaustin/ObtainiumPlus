@@ -14,37 +14,39 @@ dependencies:
 
   path_provider: ^2.1.6
   flutter_fgbg: ^0.8.0
-  flutter_local_notifications: ^22.0.1
+  flutter_local_notifications: ^22.3.0
   provider: ^6.1.5+1
   http: ^1.6.0
   webview_flutter: ^4.14.1
-  dynamic_system_colors: ^1.9.0
-  html: ^0.15.6
+  dynamic_color: ^2.1.0
+  material_ui: ^1.2.0
+  material_color_utilities: ^0.13.0
+  html: ^0.15.7
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
-  permission_handler: ^12.0.3
-  fluttertoast: ^9.1.0
+  permission_handler: ^13.0.2
+  fluttertoast: ^10.0.0
   device_info_plus: ^13.2.0
-  file_picker: ^12.0.0-beta.7
-  animations: ^2.2.0
+  file_picker: ^12.3.0
+  animations: ^3.0.0
   loading_indicator_m3e: ^0.1.1
   android_package_installer: # TODO: Upstream PR pending; if not accepted, keep fork maintained
     git:
       url: https://github.com/ImranR98/android_package_installer
-      ref: c0a7e4759b20a0c2cd1b4d40a41ff395e5f3d0e4
+      ref: 94525707bd1fba8cba4d19b4cb2b928580913510
   android_package_manager: # TODO: Submit PR to upstream and switch back when merged
     git:
       url: https://github.com/ImranR98/android_package_manager
-      ref: 98661a5824c94ae990ae0f7bf0bdb1478300c4f7
-  share_plus: ^13.2.0
-  sqflite: ^2.4.3
+      ref: b5bc0365bd7faab6f51f6ec8baf4a9dab0df9117
+  share_plus: ^13.3.0
+  sqflite: ^2.4.4
   easy_localization: ^3.0.8
-  intl: ^0.20.2
-  android_intent_plus: ^6.0.0
+  intl: ^0.20.3
+  android_intent_plus: ^6.1.0
   flutter_archive: ^6.3.1
-  archive: ^4.0.9
+  archive: ^4.2.0
   hsluv: ^1.1.3
-  connectivity_plus: ^7.2.0
+  connectivity_plus: ^7.3.1
   shared_storage: # Actively maintained fork (more current than upstream); no action needed
     git:
       url: https://github.com/AlexBacich/shared-storage
@@ -53,7 +55,7 @@ dependencies:
   bcrypt: ^1.2.0
   app_links: ^7.2.1
   equations: ^6.0.0
-  flex_color_picker: ^3.8.0
+  flex_color_picker: ^4.0.0
   android_system_font: # Upstream (re7gog) archived 2026-01-19; using self-maintained fork
     git:
       url: https://github.com/thejaustin/android_system_font
@@ -64,7 +66,7 @@ dependencies:
       ref: 3ef7f8fbf904848d144304556b0f80c91fee82a5
   markdown: ^7.3.1
   flutter_typeahead: ^6.0.0
-  battery_plus: ^7.1.0
+  battery_plus: ^7.1.1
   flutter_charset_detector: ^6.0.0
   protobuf: ^3.1.0
   flutter_markdown_plus: ^1.0.12
@@ -78,8 +80,12 @@ dependencies:
   encrypt: ^5.0.3
   flutter_js: ^0.8.7
   home_widget: ^0.9.3
+  workmanager: ^0.10.10
+  logger: ^2.8.0
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
@@ -99,6 +105,8 @@ flutter:
   assets:
     - assets/translations/
     - assets/graphics/icon_small.png
+    - assets/graphics/
+    - assets/ca-certs/
 
   fonts:
       - family: Montserrat

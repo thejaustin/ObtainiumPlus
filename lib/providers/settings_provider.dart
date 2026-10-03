@@ -7,8 +7,12 @@ import 'package:obtainium/utils/logger.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -47,7 +51,22 @@ Locale? tryParseLocale(String? localeString) {
   return null;
 }
 
+enum InstallerMode { system, shizuku, external, root }
+
+enum GroupByMode { none, category, source }
+
+enum ThemeSettings { system, light, dark }
+
+enum SortColumnSettings { added, nameAuthor, authorName, releaseDate }
+
+enum SortOrderSettings { ascending, descending }
+
+enum ColourSchemeMode { standard, vibrant, expressive, materialYou }
+
 enum ActionBannerMode { all, updatesOnly, none }
+
+/// How much vertical space each app row uses in the app list.
+enum AppListDensity { standard, compact, dense }
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
@@ -117,10 +136,207 @@ class SettingsProvider with ChangeNotifier {
     } catch (e) {
       isTV = false;
     }
+    _migrateLegacyExportSetting();
+    _normalizeInstallPreference();
+    _migrateGroupBySetting();
     notifyListeners();
   }
 
-  void notifyPlusSettingsChanged() {
+  void _migrateLegacyExportSetting() {
+    if (_getInt('exportSettings') != null) return;
+    final legacyBool = _getBool('exportSettings');
+    if (legacyBool != null) {
+      prefs?.setInt('exportSettings', legacyBool ? 1 : 0);
+    }
+  }
+
+  void _migrateGroupBySetting() {
+    if (_getString('groupBy') != null) return;
+    final legacy = _getBool('groupByCategory');
+    if (legacy != null) {
+      prefs?.setString(
+        'groupBy',
+        legacy ? GroupByMode.category.name : GroupByMode.none.name,
+      );
+      unawaited(prefs?.remove('groupByCategory') ?? Future.value());
+    }
+  }
+
+  void _normalizeInstallPreference() {
+    if (_getString('installMethod') != null) return;
+    final shizukuFlag = _getBool('useShizuku');
+    if (shizukuFlag != null) {
+      prefs?.setString(
+        'installMethod',
+        shizukuFlag ? InstallerMode.shizuku.name : InstallerMode.system.name,
+      );
+      unawaited(prefs?.remove('useShizuku') ?? Future.value());
+    }
+  }
+
+  bool get useSystemFont {
+    return _getBool('useSystemFont') ?? false;
+  }
+
+  set useSystemFont(bool useSystemFont) {
+    prefs?.setBool('useSystemFont', useSystemFont);
+    notifyListeners();
+  }
+
+  String get installerMode {
+    final stored = _getString('installMethod');
+    if (stored != null && InstallerMode.values.any((m) => m.name == stored)) {
+      return stored;
+    }
+    return InstallerMode.system.name;
+  }
+
+  set installerMode(String mode) {
+    final resolved = InstallerMode.values.any((m) => m.name == mode)
+        ? mode
+        : InstallerMode.system.name;
+    prefs?.setString('installMethod', resolved);
+    notifyListeners();
+  }
+
+  bool get useShizuku => installerMode == InstallerMode.shizuku.name;
+
+  set useShizuku(bool useShizuku) {
+    installerMode = useShizuku
+        ? InstallerMode.shizuku.name
+        : InstallerMode.system.name;
+  }
+
+  String? get externalInstallerPackage =>
+      getSettingString('externalInstallerPackage');
+
+  set externalInstallerPackage(String? val) {
+    if (val == null || val.isEmpty) {
+      prefs?.remove('externalInstallerPackage');
+    } else {
+      prefs?.setString('externalInstallerPackage', val);
+    }
+    notifyListeners();
+  }
+
+  String? get externalInstallerComponent =>
+      getSettingString('externalInstallerComponent');
+
+  set externalInstallerComponent(String? val) {
+    if (val == null || val.isEmpty) {
+      prefs?.remove('externalInstallerComponent');
+    } else {
+      prefs?.setString('externalInstallerComponent', val);
+    }
+    notifyListeners();
+  }
+
+  ThemeSettings get theme {
+    final stored = _getInt('theme');
+    if (stored != null && stored >= 0 && stored < ThemeSettings.values.length) {
+      return ThemeSettings.values[stored];
+    }
+    return ThemeSettings.system;
+  }
+
+  set theme(ThemeSettings t) {
+    prefs?.setInt('theme', t.index);
+    notifyListeners();
+  }
+
+  Color get themeColor {
+    final int? colorCode = _getInt('themeColor');
+    return (colorCode != null) ? Color(colorCode) : obtainiumThemeColor;
+  }
+
+  set themeColor(Color themeColor) {
+    prefs?.setInt('themeColor', themeColor.toARGB32());
+    notifyListeners();
+  }
+
+  ColourSchemeMode get colourSchemeMode {
+    final stored = _getInt('colourSchemeMode');
+    if (stored != null &&
+        stored >= 0 &&
+        stored < ColourSchemeMode.values.length) {
+      return ColourSchemeMode.values[stored];
+    }
+    return (_getBool('useMaterialYou') ?? false)
+        ? ColourSchemeMode.materialYou
+        : ColourSchemeMode.standard;
+  }
+
+  set colourSchemeMode(ColourSchemeMode mode) {
+    prefs?.setInt('colourSchemeMode', mode.index);
+    prefs?.setBool('useMaterialYou', mode == ColourSchemeMode.materialYou);
+    notifyListeners();
+  }
+
+  bool get useBlackTheme {
+    return _getBool('useBlackTheme') ?? false;
+  }
+
+  set useBlackTheme(bool useBlackTheme) {
+    prefs?.setBool('useBlackTheme', useBlackTheme);
+    notifyListeners();
+  }
+
+  int get updateInterval {
+    final stored = _getInt('updateInterval') ?? 360;
+    return stored < 0 ? 0 : stored;
+  }
+
+  set updateInterval(int min) {
+    prefs?.setInt('updateInterval', min);
+    notifyListeners();
+  }
+
+  double get updateIntervalSliderVal {
+    final stored = _getDouble('updateIntervalSliderVal') ?? 6.0;
+    return stored < 0 ? 0.0 : stored;
+  }
+
+  set updateIntervalSliderVal(double val) {
+    prefs?.setDouble('updateIntervalSliderVal', val);
+    notifyListeners();
+  }
+
+  bool get checkOnStart {
+    return _getBool('checkOnStart') ?? false;
+  }
+
+  set checkOnStart(bool checkOnStart) {
+    prefs?.setBool('checkOnStart', checkOnStart);
+    notifyListeners();
+  }
+
+  SortColumnSettings get sortColumn {
+    final stored = _getInt('sortColumn');
+    if (stored != null &&
+        stored >= 0 &&
+        stored < SortColumnSettings.values.length) {
+      return SortColumnSettings.values[stored];
+    }
+    return SortColumnSettings.nameAuthor;
+  }
+
+  set sortColumn(SortColumnSettings s) {
+    prefs?.setInt('sortColumn', s.index);
+    notifyListeners();
+  }
+
+  SortOrderSettings get sortOrder {
+    final stored = _getInt('sortOrder');
+    if (stored != null &&
+        stored >= 0 &&
+        stored < SortOrderSettings.values.length) {
+      return SortOrderSettings.values[stored];
+    }
+    return SortOrderSettings.ascending;
+  }
+
+  set sortOrder(SortOrderSettings s) {
+    prefs?.setInt('sortOrder', s.index);
     notifyListeners();
   }
 
@@ -209,6 +425,28 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String? _categoriesRaw;
+  Map<String, int>? _categoriesCache;
+
+  Map<String, int> get categories {
+    final raw = _getString('categories') ?? '{}';
+    if (raw != _categoriesRaw || _categoriesCache == null) {
+      _categoriesRaw = raw;
+      try {
+        _categoriesCache = Map<String, int>.from(jsonDecode(raw));
+      } catch (e) {
+        AppLogger.error(e, message: 'Corrupted categories data, resetting');
+        _categoriesCache = <String, int>{};
+      }
+    }
+    return _categoriesCache!;
+  }
+
+  void setCategories(Map<String, int> cats) {
+    prefs?.setString('categories', jsonEncode(cats));
+    notifyListeners();
+  }
+
   Locale? get forcedLocale {
     final fl = tryParseLocale(_getString('forcedLocale'));
     final set =
@@ -261,6 +499,24 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get hideDowngrades {
+    return _getBool('hideDowngrades') ?? true;
+  }
+
+  set hideDowngrades(bool hide) {
+    prefs?.setBool('hideDowngrades', hide);
+    notifyListeners();
+  }
+
+  bool get tactileFeedbackEnabled {
+    return _getBool('tactileFeedbackEnabled') ?? true;
+  }
+
+  set tactileFeedbackEnabled(bool val) {
+    prefs?.setBool('tactileFeedbackEnabled', val);
+    notifyListeners();
+  }
+
   bool get showBatteryOptimizationPrompt {
     return prefs?.getBool('showBatteryOptimizationPrompt') ?? true;
   }
@@ -276,6 +532,263 @@ class SettingsProvider with ChangeNotifier {
 
   set includePrereleasesByDefault(bool val) {
     prefs?.setBool('includePrereleasesByDefault', val);
+    notifyListeners();
+  }
+
+  bool get removeOnExternalUninstall {
+    return _getBool('removeOnExternalUninstall') ?? false;
+  }
+
+  set removeOnExternalUninstall(bool value) {
+    prefs?.setBool('removeOnExternalUninstall', value);
+    notifyListeners();
+  }
+
+  bool get checkUpdateOnDetailPage {
+    return _getBool('checkUpdateOnDetailPage') ?? false;
+  }
+
+  set checkUpdateOnDetailPage(bool value) {
+    prefs?.setBool('checkUpdateOnDetailPage', value);
+    notifyListeners();
+  }
+
+  bool get enableBackgroundUpdates {
+    return _getBool('enableBackgroundUpdates') ?? true;
+  }
+
+  set enableBackgroundUpdates(bool val) {
+    prefs?.setBool('enableBackgroundUpdates', val);
+    notifyListeners();
+  }
+
+  bool get enableCertificatePinning {
+    return _getBool('enableCertificatePinning') ?? false;
+  }
+
+  set enableCertificatePinning(bool enableCertificatePinning) {
+    prefs?.setBool('enableCertificatePinning', enableCertificatePinning);
+    notifyListeners();
+  }
+
+  bool get bgUpdatesOnWiFiOnly {
+    return _getBool('bgUpdatesOnWiFiOnly') ?? false;
+  }
+
+  set bgUpdatesOnWiFiOnly(bool val) {
+    prefs?.setBool('bgUpdatesOnWiFiOnly', val);
+    notifyListeners();
+  }
+
+  bool get bgUpdatesWhileChargingOnly {
+    return _getBool('bgUpdatesWhileChargingOnly') ?? false;
+  }
+
+  set bgUpdatesWhileChargingOnly(bool val) {
+    prefs?.setBool('bgUpdatesWhileChargingOnly', val);
+    notifyListeners();
+  }
+
+  bool get highlightTouchTargets {
+    return _getBool('highlightTouchTargets') ?? false;
+  }
+
+  set highlightTouchTargets(bool val) {
+    prefs?.setBool('highlightTouchTargets', val);
+    notifyListeners();
+  }
+
+  bool get disableSwipeActions {
+    return _getBool('disableSwipeActions') ?? false;
+  }
+
+  set disableSwipeActions(bool val) {
+    prefs?.setBool('disableSwipeActions', val);
+    notifyListeners();
+  }
+
+  bool get alwaysUsePhoneLayout {
+    return _getBool('alwaysUsePhoneLayout') ?? false;
+  }
+
+  set alwaysUsePhoneLayout(bool val) {
+    prefs?.setBool('alwaysUsePhoneLayout', val);
+    notifyListeners();
+  }
+
+  Future<Uri?> getExportDir() async {
+    final uriString = _getString('exportDir');
+    if (uriString == null) {
+      return null;
+    }
+    final uri = Uri.parse(uriString);
+    // The directory may be temporarily unreadable (e.g. a WebDAV mount not
+    // yet available right after a reboot). Keep the stored URI so it can be
+    // retried later, and only clear it via pickExportDir.
+    try {
+      if (!(await saf.canRead(uri) ?? false) ||
+          !(await saf.canWrite(uri) ?? false)) {
+        return null;
+      }
+    } catch (e) {
+      // A revoked grant or unavailable provider can throw from the platform
+      // channel; treat it as "not currently available" rather than crashing.
+      AppLogger.error(e, message: 'Failed to check export directory access');
+      return null;
+    }
+    return uri;
+  }
+
+  Future<void> pickExportDir({bool remove = false}) async {
+    final existingSAFPerms = (await saf.persistedUriPermissions()) ?? [];
+    final currentOneWayDataSyncDir = await getExportDir();
+    Uri? newOneWayDataSyncDir;
+    if (!remove) {
+      // Some devices (e.g. certain Android TV boxes) have no activity that
+      // handles ACTION_OPEN_DOCUMENT_TREE; check first so the user gets a
+      // clear message instead of a raw platform exception.
+      if ((await saf.canOpenDocumentTree()) != true) {
+        throw ObtainiumError(tr('noFilePickerAvailable'));
+      }
+      try {
+        newOneWayDataSyncDir = (await saf.openDocumentTree());
+      } catch (e) {
+        AppLogger.error(e, message: 'Failed to open document tree');
+        throw ObtainiumError(tr('noFilePickerAvailable'));
+      }
+    }
+    if (currentOneWayDataSyncDir?.path != newOneWayDataSyncDir?.path) {
+      if (newOneWayDataSyncDir == null) {
+        await prefs?.remove('exportDir');
+      } else {
+        unawaited(
+          prefs?.setString('exportDir', newOneWayDataSyncDir.toString()),
+        );
+      }
+      notifyListeners();
+    }
+    for (var e in existingSAFPerms) {
+      if (e.uri != newOneWayDataSyncDir) {
+        try {
+          await saf.releasePersistableUriPermission(e.uri);
+        } catch (err) {
+          // The grant may have already been revoked (e.g. by the OS after an
+          // app update); releasing it is best-effort cleanup only.
+          AppLogger.error(
+            err,
+            message: 'Failed to release stale URI permission',
+          );
+        }
+      }
+    }
+  }
+
+  bool get autoExportOnChanges {
+    return _getBool('autoExportOnChanges') ?? false;
+  }
+
+  set autoExportOnChanges(bool val) {
+    prefs?.setBool('autoExportOnChanges', val);
+    notifyListeners();
+  }
+
+  String? get autoExportFileName => getSettingString('autoExportFileName');
+
+  set autoExportFileName(String? val) {
+    final cleaned = val?.replaceAll(RegExp(r'[/\\:*?"<>|]'), '').trim();
+    if (cleaned == null || cleaned.isEmpty) {
+      prefs?.remove('autoExportFileName');
+    } else {
+      prefs?.setString('autoExportFileName', cleaned);
+    }
+    notifyListeners();
+  }
+
+  String? get globalApkFilterRegEx => getSettingString('globalApkFilterRegEx');
+
+  set globalApkFilterRegEx(String? val) {
+    final cleaned = val?.trim();
+    if (cleaned == null || cleaned.isEmpty) {
+      prefs?.remove('globalApkFilterRegEx');
+    } else {
+      prefs?.setString('globalApkFilterRegEx', cleaned);
+    }
+    notifyListeners();
+  }
+
+  bool get onlyCheckInstalledOrTrackOnlyApps {
+    return _getBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
+  }
+
+  set onlyCheckInstalledOrTrackOnlyApps(bool val) {
+    prefs?.setBool('onlyCheckInstalledOrTrackOnlyApps', val);
+    notifyListeners();
+  }
+
+  bool get collapseGroupsOnStartup {
+    return _getBool('collapseGroupsOnStartup') ?? false;
+  }
+
+  set collapseGroupsOnStartup(bool val) {
+    prefs?.setBool('collapseGroupsOnStartup', val);
+    notifyListeners();
+  }
+
+  bool get skipBulkUpdateConfirmation {
+    return _getBool('skipBulkUpdateConfirmation') ?? false;
+  }
+
+  set skipBulkUpdateConfirmation(bool val) {
+    prefs?.setBool('skipBulkUpdateConfirmation', val);
+    notifyListeners();
+  }
+
+  int get minimumUpdateAgeDays {
+    return _getInt('minimumUpdateAgeDays') ?? 0;
+  }
+
+  set minimumUpdateAgeDays(int val) {
+    prefs?.setInt('minimumUpdateAgeDays', val < 0 ? 0 : val);
+    notifyListeners();
+  }
+
+  int get exportSettings {
+    return _getInt('exportSettings') ?? 1;
+  }
+
+  set exportSettings(int val) {
+    prefs?.setInt('exportSettings', val > 2 || val < 0 ? 1 : val);
+    notifyListeners();
+  }
+
+  bool get exportInstalledOnly {
+    return _getBool('exportInstalledOnly') ?? false;
+  }
+
+  set exportInstalledOnly(bool val) {
+    prefs?.setBool('exportInstalledOnly', val);
+    notifyListeners();
+  }
+
+  bool get parallelDownloads {
+    return _getBool('parallelDownloads') ?? true;
+  }
+
+  set parallelDownloads(bool val) {
+    prefs?.setBool('parallelDownloads', val);
+    notifyListeners();
+  }
+
+  AppListDensity get appListDensity {
+    final stored = _getString('appListDensity');
+    if (stored != null && AppListDensity.values.any((d) => d.name == stored)) {
+      return AppListDensity.values.byName(stored);
+    }
+    return AppListDensity.standard;
+  }
+
+  set appListDensity(AppListDensity val) {
+    prefs?.setString('appListDensity', val.name);
     notifyListeners();
   }
 
@@ -307,71 +820,52 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Warn (and require confirmation) when a downloaded APK's signing
+  /// certificate differs from the installed app's certificate. User-provided
+  /// expected hashes are enforced regardless of this setting.
+  bool get verifySigningCertHashes {
+    return _getBool('verifySigningCertHashes') ?? true;
+  }
+
+  set verifySigningCertHashes(bool val) {
+    prefs?.setBool('verifySigningCertHashes', val);
+    notifyListeners();
+  }
+
+  bool get shizukuPretendToBeGooglePlay {
+    return _getBool('shizukuPretendToBeGooglePlay') ?? false;
+  }
+
+  set shizukuPretendToBeGooglePlay(bool val) {
+    prefs?.setBool('shizukuPretendToBeGooglePlay', val);
+    notifyListeners();
+  }
+
   // ---------------------------------------------------------------------------
-  // Forwarding getters for settings that moved to dedicated providers.
-  // Files still referencing these via SettingsProvider continue to compile.
+  // Fork-only: Plus feature settings and forwarding getters.
   // ---------------------------------------------------------------------------
 
-  // --- BehaviorSettingsProvider forwards ---
-  @Deprecated('Use BehaviorSettingsProvider.useShizuku')
-  bool get useShizuku => prefs?.safeBool('useShizuku') ?? false;
-  bool get removeOnExternalUninstall =>
-      prefs?.safeBool('removeOnExternalUninstall') ?? false;
+  void notifyPlusSettingsChanged() {
+    notifyListeners();
+  }
+
   bool get disablePageTransitions =>
       prefs?.safeBool('disablePageTransitions') ?? false;
   bool get reversePageTransitions =>
       prefs?.safeBool('reversePageTransitions') ?? false;
-  bool get autoExportOnChanges =>
-      prefs?.safeBool('autoExportOnChanges') ?? false;
-  set autoExportOnChanges(bool val) {
-    prefs?.setBool('autoExportOnChanges', val);
-    notifyListeners();
-  }
 
-  String get installerMode =>
-      prefs?.safeString('installMethod') ??
-      (prefs?.safeBool('useShizuku') ?? false
-          ? InstallerMode.shizuku.name
-          : InstallerMode.system.name);
-  String? get externalInstallerPackage {
-    final str = prefs?.safeString('externalInstallerPackage');
-    return str?.isNotEmpty == true ? str : null;
-  }
-
-  String? get externalInstallerComponent {
+  String? get externalInstallerComponentForward {
     final str = prefs?.safeString('externalInstallerComponent');
     return str?.isNotEmpty == true ? str : null;
   }
 
-  // --- ViewSettingsProvider forwards ---
-  // Mirrors ViewSettingsProvider.categories against the same prefs key.
-  Map<String, int> get categories {
-    try {
-      return Map<String, int>.from(
-        jsonDecode(prefs?.safeString('categories') ?? '{}'),
-      );
-    } catch (e) {
-      return {};
-    }
-  }
-
-  bool get highlightTouchTargets =>
-      prefs?.safeBool('highlightTouchTargets') ?? false;
-  set highlightTouchTargets(bool val) {
-    prefs?.setBool('highlightTouchTargets', val);
-    notifyListeners();
-  }
-
-  int get exportSettings => prefs?.safeInt('exportSettings') ?? 1;
-  bool get parallelDownloads => prefs?.safeBool('parallelDownloads') ?? true;
-  bool get shizukuPretendToBeGooglePlay =>
-      prefs?.safeBool('shizukuPretendToBeGooglePlay') ?? false;
   bool get shizukuFallbackToSystem =>
       prefs?.safeBool('shizukuFallbackToSystem') ?? true;
   set shizukuFallbackToSystem(bool val) {
     prefs?.setBool('shizukuFallbackToSystem', val);
     notifyListeners();
   }
+
   double get animationSpeedMultiplier =>
       prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   bool get enableContextualTips =>
@@ -403,9 +897,6 @@ class SettingsProvider with ChangeNotifier {
   String get updateSettings => prefs?.safeString('updateSettings') ?? '';
 
   // --- UpdateSettingsProvider forwards ---
-  @Deprecated('Use UpdateSettingsProvider.onlyCheckInstalledOrTrackOnlyApps')
-  bool get onlyCheckInstalledOrTrackOnlyApps =>
-      prefs?.safeBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
   String get obtainiumReleaseChannel =>
       prefs?.safeString('obtainiumReleaseChannel') ?? 'stable';
   String get autoUpdateRules => prefs?.safeString('autoUpdateRules') ?? '';
@@ -456,22 +947,6 @@ class SettingsProvider with ChangeNotifier {
   // For compile-time, the property just needs to exist with a valid type.
   SettingsProvider get plusSettings => this;
 
-  // Forwarding methods for callers that still reference SettingsProvider
-  // for things that moved to BehaviorSettingsProvider. Mirrors
-  // BehaviorSettingsProvider's implementation against the same prefs keys.
-  Future<Uri?> getExportDir() async {
-    final uriString = prefs?.safeString('exportDir');
-    if (uriString == null) return null;
-    Uri? uri = Uri.parse(uriString);
-    if (!(await saf.canRead(uri) ?? false) ||
-        !(await saf.canWrite(uri) ?? false)) {
-      uri = null;
-      await prefs?.remove('exportDir');
-      notifyListeners();
-    }
-    return uri;
-  }
-
   // Stub for app bar style — returns AppBarStyle.
   AppBarStyle getAppBarStyleForPage(String page) {
     final index = prefs?.safeInt('appBarStyle_$page') ?? 0;
@@ -489,33 +964,6 @@ class SettingsProvider with ChangeNotifier {
 
   // Stub for install permission (moved to BehaviorSettingsProvider).
   Future<bool> getInstallPermission({bool enforce = false}) async => true;
-
-  Future<void> pickExportDir({bool remove = false}) async {
-    final existingSAFPerms = (await saf.persistedUriPermissions()) ?? [];
-    final currentOneWayDataSyncDir = await getExportDir();
-    Uri? newOneWayDataSyncDir;
-    if (!remove) {
-      try {
-        newOneWayDataSyncDir = (await saf.openDocumentTree());
-      } catch (_) {
-        throw ObtainiumError(tr('noFilePickerAvailable'));
-      }
-    }
-    if (currentOneWayDataSyncDir?.path != newOneWayDataSyncDir?.path) {
-      if (newOneWayDataSyncDir == null) {
-        await prefs?.remove('exportDir');
-      } else {
-        await prefs?.setString('exportDir', newOneWayDataSyncDir.toString());
-      }
-      notifyListeners();
-    }
-    for (var e in existingSAFPerms) {
-      await saf.releasePersistableUriPermission(e.uri);
-    }
-  }
-
-  bool get enableBackgroundUpdates =>
-      prefs?.safeBool('enableBackgroundUpdates') ?? true;
 
   int get updateCheckConcurrencyLimit =>
       prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3;

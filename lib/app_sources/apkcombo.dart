@@ -11,6 +11,8 @@ class APKCombo extends AppSource {
     inferAppIdFromUrlPath = true;
   }
 
+  static const String _userAgent = 'curl/8.0.1';
+
   @override
   String sourceSpecificStandardizeURL(
     String url, {
@@ -32,7 +34,7 @@ class APKCombo extends AppSource {
     // served by a Cloudflare R2 presigned URL on a different host, and sending
     // an apkcombo.com Host there makes R2 reject the signed request (403).
     return {
-      'User-Agent': 'curl/8.0.1',
+      'User-Agent': _userAgent,
       'Accept': '*/*',
       'Connection': 'keep-alive',
     };
@@ -46,9 +48,7 @@ class APKCombo extends AppSource {
       '$standardUrl/download/apk',
       additionalSettings,
     );
-    if (res.statusCode != 200) {
-      throw getObtainiumHttpError(res);
-    }
+    ensureHttpSuccess(res);
     final html = parse(res.body);
     return html
         .querySelectorAll('#variants-tab > div > ul > li')
@@ -82,8 +82,15 @@ class APKCombo extends AppSource {
             }
             final String verCode =
                 a.querySelector('.info .header .vercode')?.text.trim() ?? '';
+            final String fallbackName;
+            final fallbackSegments = Uri.tryParse(url)?.pathSegments;
+            if (fallbackSegments != null && fallbackSegments.isNotEmpty) {
+              fallbackName = fallbackSegments.last;
+            } else {
+              fallbackName = 'app-$verCode.apk';
+            }
             return MapEntry<String, String>(
-              arch != null ? '$arch-$verCode.apk' : '',
+              arch != null ? '$arch-$verCode.apk' : fallbackName,
               url,
             );
           }
@@ -122,9 +129,7 @@ class APKCombo extends AppSource {
         throw NoReleasesError();
       }
       final preres = await sourceRequest(standardUrl, additionalSettings);
-      if (preres.statusCode != 200) {
-        throw getObtainiumHttpError(preres);
-      }
+      ensureHttpSuccess(preres);
       final res = parse(preres.body);
       final String? version = res.querySelector('div.version')?.text.trim();
       if (version == null || version.isEmpty) {

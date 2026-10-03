@@ -589,3 +589,74 @@ class _FooterIcon extends StatelessWidget {
     );
   }
 }
+
+class _LocaleDropdown extends StatelessWidget {
+  const _LocaleDropdown();
+
+  @override
+  Widget build(BuildContext context) {
+    final settingsProvider = context.read<SettingsProvider>();
+    final forcedLocale = context.select<SettingsProvider, Locale?>(
+      (p) => p.forcedLocale,
+    );
+    return TvDropdownMenu<Locale?>(
+      expandedInsets: EdgeInsets.zero,
+      label: Text(tr('language')),
+      initialSelection: forcedLocale,
+      dropdownMenuEntries: [
+        DropdownMenuEntry<Locale?>(value: null, label: tr('followSystem')),
+        ...supportedLocales.map(
+          (e) => DropdownMenuEntry<Locale?>(value: e.key, label: e.value),
+        ),
+      ],
+      onSelected: (value) {
+        settingsProvider.forcedLocale = value;
+        if (value != null) {
+          context.setLocale(value);
+        } else {
+          settingsProvider.resetLocaleSafe(context);
+        }
+      },
+    );
+  }
+}
+
+class _ColourSchemeDropdown extends StatelessWidget {
+  const _ColourSchemeDropdown();
+
+  @override
+  Widget build(BuildContext context) {
+    final colourSchemeMode = context.select<SettingsProvider, ColourSchemeMode>(
+      (p) => p.colourSchemeMode,
+    );
+    final settingsProvider = context.read<SettingsProvider>();
+    return TvDropdownMenu<ColourSchemeMode>(
+      expandedInsets: EdgeInsets.zero,
+      label: Text(tr('colourScheme')),
+      initialSelection: colourSchemeMode,
+      dropdownMenuEntries: [
+        DropdownMenuEntry(
+          value: ColourSchemeMode.standard,
+          label: tr('standard'),
+        ),
+        DropdownMenuEntry(
+          value: ColourSchemeMode.vibrant,
+          label: tr('vibrant'),
+        ),
+        DropdownMenuEntry(
+          value: ColourSchemeMode.expressive,
+          label: tr('expressive'),
+        ),
+        DropdownMenuEntry(
+          value: ColourSchemeMode.materialYou,
+          label: tr('useMaterialYou'),
+        ),
+      ],
+      onSelected: (value) {
+        if (value != null) {
+          settingsProvider.colourSchemeMode = value;
+        }
+      },
+    );
+  }
+}

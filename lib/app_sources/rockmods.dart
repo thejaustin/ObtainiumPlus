@@ -4,6 +4,8 @@ import 'package:html/parser.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
+/// Set as track-only due to new site design making scraping impossible (PR #2966)
+/// See also: PR #2720
 class RockMods extends AppSource {
   RockMods() {
     name = 'RockMods';
@@ -44,9 +46,7 @@ class RockMods extends AppSource {
   ) async {
     try {
       final res = await sourceRequest(standardUrl, additionalSettings);
-      if (res.statusCode != 200) {
-        throw getObtainiumHttpError(res);
-      }
+      ensureHttpSuccess(res);
 
       String? appName;
       String? appVersion;

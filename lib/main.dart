@@ -16,6 +16,7 @@ import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -73,12 +74,22 @@ List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('gl'), 'Galego'),
 ];
 const fallbackLocale = Locale('en');
+final Set<Locale> supportedLocaleSet = supportedLocales
+    .map((e) => e.key)
+    .toSet();
 const localeDir = 'assets/translations';
 bool isFdroidBuild = false;
+
+const String _unexpectedErrorText = 'An unexpected error occurred.';
+const String _closeText = 'Close';
 
 /// Global navigator key, used to navigate from outside the widget tree
 /// (e.g. tapping a notification).
 final globalNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Alias for [globalNavigatorKey] used by components that reference the
+/// upstream name.
+final appNavigatorKey = globalNavigatorKey;
 
 /// Loads translations outside of the widget tree (e.g. in a background
 /// isolate that never builds the EasyLocalization widget).
@@ -228,15 +239,15 @@ void main() async {
 
 Future<void> _runObtainium() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppLogger.init();
   // Replace the release-mode ErrorWidget (a bare grey rectangle — see issue
   // #217) with a card that names the failure, so a broken widget is
   // reportable instead of an anonymous blank page.
   ErrorWidget.builder = (FlutterErrorDetails details) {
-    unawaited(
-      LogsProvider().add(
-        'Widget build error: ${details.exception}\n${details.stack}',
-        level: LogLevel.error,
-      ),
+    AppLogger.error(
+      details.exception,
+      stackTrace: details.stack,
+      message: 'Widget build error',
     );
     return Directionality(
       textDirection: ui.TextDirection.ltr,
@@ -277,12 +288,7 @@ Future<void> _runObtainium() async {
     );
   };
   ui.PlatformDispatcher.instance.onError = (error, stack) {
-    unawaited(
-      LogsProvider().add(
-        'Uncaught platform error: $error\n$stack',
-        level: LogLevel.error,
-      ),
-    );
+    AppLogger.error(error, stackTrace: stack, message: 'Uncaught platform error');
     return true;
   };
   try {
@@ -389,6 +395,9 @@ class _ObtainiumState extends State<Obtainium> {
   var _lastUpdateInterval = -1;
   var _lastUseFGService = false;
   var existingUpdateInterval = -1;
+  Locale? _lastLocale;
+  SettingsProvider? _settingsProvider;
+  int? _lastSyncedUpdateInterval;
 
   void _manageServices(
     UpdateSettingsProvider updateSettings,
@@ -417,25 +426,34 @@ class _ObtainiumState extends State<Obtainium> {
         } catch (_) {}
       }
     } catch (e) {
-      logs.add('BackgroundFetch operation failed: $e');
+      AppLogger.warn('BackgroundFetch operation failed: $e');
+    }
+  }
+
+  Future<void> _syncWorkManager() async {
+    // BackgroundFetch is used for background updates in this fork.
+    // This method is kept for compatibility with _onSettingsChanged.
+  }
+
+  void _onSettingsChanged() {
+    final settingsProvider = _settingsProvider;
+    if (settingsProvider != null &&
+        settingsProvider.updateInterval != _lastSyncedUpdateInterval) {
+      _lastSyncedUpdateInterval = settingsProvider.updateInterval;
+      unawaited(_syncWorkManager());
     }
   }
 
   void _handleFirstRun(
     SettingsProvider settings,
     AppsProvider apps,
-    Logger logger,
     BuildContext context,
   ) {
-    if (settings.prefs == null) {
-      settings.initializeSettings();
-      return;
-    }
     if (_firstRunHandled) return;
     _firstRunHandled = true;
     final isFirstRun = settings.checkAndFlipFirstRun();
     if (isFirstRun) {
-      logger.info('This is the first ever run of Obtainium.');
+      AppLogger.info('This is the first ever run of Obtainium.');
       if (!settings.isTV) {
         unawaited(Permission.notification.request());
       }
@@ -466,14 +484,18 @@ class _ObtainiumState extends State<Obtainium> {
                 );
               }
             })
-            .catchError((err) {
-              logger.error('Failed to add Obtainium on first run', err);
+            .catchError((err, stack) {
+              AppLogger.error(
+                err,
+                stackTrace: stack,
+                message: 'Failed to add Obtainium on first run',
+              );
             });
       }
     }
     final currentLang = context.locale.languageCode;
     final deviceLang = context.deviceLocale.languageCode;
-    if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
+    if (!supportedLocaleSet.contains(context.locale) ||
         (settings.forcedLocale == null && deviceLang != currentLang)) {
       settings.resetLocaleSafe(context);
     } else if (settings.forcedLocale != null) {
@@ -484,17 +506,28 @@ class _ObtainiumState extends State<Obtainium> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final settingsProvider = context.read<SettingsProvider>();
+      await settingsProvider.initializeSettings();
+      if (!mounted) return;
+      _settingsProvider = settingsProvider;
+      if (settingsProvider.isTV) {
+        // TV remotes are the primary input, so focus highlights must always be
+        // painted. The default automatic strategy can get stuck in "touch"
+        // mode and leave the user with no visible focus position at all.
+        FocusManager.instance.highlightStrategy =
+            FocusHighlightStrategy.alwaysTraditional;
+      }
+      settingsProvider.addListener(_onSettingsChanged);
       final appsProvider = context.read<AppsProvider>();
-      final logger = AppLogger(logs: context.read<LogsProvider>());
       final notifs = context.read<NotificationsProvider>();
 
-      _handleFirstRun(settingsProvider, appsProvider, logger, context);
+      unawaited(_syncWorkManager());
+      _handleFirstRun(settingsProvider, appsProvider, context);
 
       if (!_launchByNotifChecked) {
         _launchByNotifChecked = true;
-        notifs.checkLaunchByNotif();
+        unawaited(notifs.checkLaunchByNotif());
       }
     });
   }
@@ -568,7 +601,7 @@ class _ObtainiumState extends State<Obtainium> {
 
   @override
   void dispose() {
-    LogsProvider.close();
+    _settingsProvider?.removeListener(_onSettingsChanged);
     super.dispose();
   }
 
@@ -623,7 +656,6 @@ class _ObtainiumState extends State<Obtainium> {
     final themeSettings = context.watch<ThemeSettingsProvider>();
     final appsProvider = context.read<AppsProvider>();
     final logs = context.read<LogsProvider>();
-    final notifs = context.read<NotificationsProvider>();
 
     if (updateSettings.updateInterval != existingUpdateInterval) {
       existingUpdateInterval = updateSettings.updateInterval;
@@ -633,17 +665,15 @@ class _ObtainiumState extends State<Obtainium> {
     }
 
     _manageServices(updateSettings, logs);
-    _handleFirstRun(
-      settingsProvider,
-      appsProvider,
-      AppLogger(logs: logs),
-      context,
-    );
+    _handleFirstRun(settingsProvider, appsProvider, context);
 
     return WithForegroundTask(
       child: DynamicColorBuilder(
         builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-          setAppLocale(context.locale);
+          if (context.locale != _lastLocale) {
+            _lastLocale = context.locale;
+            setAppLocale(context.locale);
+          }
           // Decide on a colour/brightness scheme based on OS and user settings
           ColorScheme lightColorScheme;
           ColorScheme darkColorScheme;
@@ -714,7 +744,7 @@ class _ObtainiumState extends State<Obtainium> {
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            navigatorKey: globalNavigatorKey,
+            navigatorKey: appNavigatorKey,
             debugShowCheckedModeBanner: false,
             theme: ThemeBuilder.buildTheme(
               colorScheme: themeSettings.theme == ThemeSettings.dark

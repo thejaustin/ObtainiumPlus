@@ -1,9 +1,20 @@
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obtainium/providers/source_provider.dart' show TypedSettings;
+import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/models/typed_settings.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/models/version_history_entry.dart';
+
+/// Converts a list of [MapEntry] pairs into a 2D list of strings for JSON encoding.
+List<List<String>> stringMapListTo2DList(
+  List<MapEntry<String, String>> mapList,
+) => mapList.map((e) => [e.key, e.value]).toList();
+
+/// Converts a 2D list (decoded from JSON) back into a list of [MapEntry] pairs.
+List<MapEntry<String, String>> assumed2DlistToStringMapList(
+  List<dynamic> arr,
+) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
 
 class App {
   late String id;
@@ -19,9 +30,10 @@ class App {
   late DateTime? lastUpdateCheck;
   bool pinned = false;
   List<String> categories;
-  List<String> tags; // NEW: Tags for cross-category organization
+  List<String> tags;
   late DateTime? releaseDate;
   late String? changeLog;
+  late String? releaseUrl;
   late String? overrideSource;
   bool allowIdChange = false;
   List<VersionHistoryEntry> versionHistory = [];
@@ -29,7 +41,8 @@ class App {
   /// If non-null, the app's source has a new canonical URL and a rename is pending.
   String? pendingRepoRenameUrl;
 
-  bool get hasPendingRepoRename => pendingRepoRenameUrl != null;
+  bool get hasPendingRepoRename =>
+      pendingRepoRenameUrl != null && pendingRepoRenameUrl!.isNotEmpty;
 
   App(
     this.id,
@@ -44,9 +57,10 @@ class App {
     this.lastUpdateCheck,
     this.pinned, {
     this.categories = const [],
-    this.tags = const [], // NEW: Default empty tags
+    this.tags = const [],
     this.releaseDate,
     this.changeLog,
+    this.releaseUrl,
     this.overrideSource,
     this.allowIdChange = false,
     this.otherAssetUrls = const [],
@@ -58,32 +72,25 @@ class App {
     return 'ID: $id URL: $url INSTALLED: $installedVersion LATEST: $latestVersion APK: $apkUrls PREFERREDAPK: $preferredApkIndex ADDITIONALSETTINGS: ${additionalSettings.toString()} LASTCHECK: ${lastUpdateCheck.toString()} PINNED $pinned';
   }
 
-  String? get overrideName =>
-      additionalSettings['appName']?.toString().trim().isNotEmpty == true
-      ? additionalSettings['appName']
-      : null;
-
-  String get finalName {
-    return overrideName ?? name;
+  String? get overrideName {
+    final n = settings.getStringOrNull('appName');
+    return n != null && n.trim().isNotEmpty ? n : null;
   }
 
-  String? get overrideAuthor =>
-      additionalSettings['appAuthor']?.toString().trim().isNotEmpty == true
-      ? additionalSettings['appAuthor']
-      : null;
+  String get finalName => overrideName ?? name;
 
-  String get finalAuthor {
-    return overrideAuthor ?? author;
+  String? get overrideAuthor {
+    final a = settings.getStringOrNull('appAuthor');
+    return a != null && a.trim().isNotEmpty ? a : null;
   }
+
+  String get finalAuthor => overrideAuthor ?? author;
 
   /// Type-safe accessor for [additionalSettings].
   TypedSettings get settings => TypedSettings(additionalSettings);
 
   static const Object _sentinel = Object();
 
-  /// Returns a copy of this [App] with the given fields replaced. Pass an
-  /// explicit `null` for a nullable field (e.g. `installedVersion: null`) to
-  /// clear it; omit the argument to keep the current value.
   App copyWith({
     String? id,
     String? url,
@@ -101,6 +108,7 @@ class App {
     List<String>? tags,
     Object? releaseDate = _sentinel,
     Object? changeLog = _sentinel,
+    Object? releaseUrl = _sentinel,
     Object? overrideSource = _sentinel,
     bool? allowIdChange,
     List<VersionHistoryEntry>? versionHistory,
@@ -131,6 +139,9 @@ class App {
         changeLog: changeLog == _sentinel
             ? this.changeLog
             : changeLog as String?,
+        releaseUrl: releaseUrl == _sentinel
+            ? this.releaseUrl
+            : releaseUrl as String?,
         overrideSource: overrideSource == _sentinel
             ? this.overrideSource
             : overrideSource as String?,
@@ -158,14 +169,15 @@ class App {
     lastUpdateCheck,
     pinned,
     categories: List<String>.from(categories),
-    tags: List<String>.from(tags), // NEW: Deep copy tags
+    tags: List<String>.from(tags),
     changeLog: changeLog,
     releaseDate: releaseDate,
+    releaseUrl: releaseUrl,
     overrideSource: overrideSource,
     allowIdChange: allowIdChange,
     otherAssetUrls: List.from(otherAssetUrls),
     versionHistory: List.from(versionHistory),
-  );
+  )..pendingRepoRenameUrl = pendingRepoRenameUrl;
 
   factory App.fromJson(
     Map<String, dynamic> json, {
@@ -174,56 +186,70 @@ class App {
     if (migrator != null) {
       json = migrator(json);
     }
-    return App(
-      URLValidator.sanitizeAppId(json['id'] as String),
-      json['url'] as String,
-      json['author'] as String,
-      json['name'] as String,
-      json['installedVersion'] == null
-          ? null
-          : json['installedVersion'] as String,
-      (json['latestVersion'] ?? tr('unknown')) as String,
-      assumed2DlistToStringMapList(
-        safeJsonDecode(json['apkUrls'], [
-              ["placeholder", "placeholder"],
-            ])
-            as List<dynamic>,
-      ),
-      (json['preferredApkIndex'] ?? -1) as int,
-      safeJsonDecode(json['additionalSettings'], <String, dynamic>{})
-          as Map<String, dynamic>,
-      json['lastUpdateCheck'] == null
-          ? null
-          : DateTime.fromMicrosecondsSinceEpoch(json['lastUpdateCheck']),
-      json['pinned'] ?? false,
-      categories: json['categories'] != null
-          ? (json['categories'] as List<dynamic>)
-                .map((e) => e.toString())
-                .toList()
-          : json['category'] != null
-          ? [json['category'] as String]
-          : [],
-      tags: json['tags'] != null
-          ? (json['tags'] as List<dynamic>).map((e) => e.toString()).toList()
-          : [], // NEW: Load tags from JSON
-      releaseDate: json['releaseDate'] == null
-          ? null
-          : DateTime.fromMicrosecondsSinceEpoch(json['releaseDate']),
-      changeLog: json['changeLog'] == null ? null : json['changeLog'] as String,
-      overrideSource: json['overrideSource'],
-      allowIdChange: json['allowIdChange'] ?? false,
-      otherAssetUrls: assumed2DlistToStringMapList(
-        safeJsonDecode(json['otherAssetUrls'], <dynamic>[]) as List<dynamic>,
-      ),
-      versionHistory: json['versionHistory'] != null
-          ? (json['versionHistory'] as List<dynamic>)
-                .map(
-                  (e) =>
-                      VersionHistoryEntry.fromJson(e as Map<String, dynamic>),
-                )
-                .toList()
-          : [],
-    );
+    try {
+      return App(
+        URLValidator.sanitizeAppId(json['id'] as String),
+        json['url'] as String,
+        json['author'] as String,
+        json['name'] as String,
+        json['installedVersion'] == null
+            ? null
+            : json['installedVersion'] as String,
+        (json['latestVersion'] ?? tr('unknown')) as String,
+        assumed2DlistToStringMapList(
+          safeJsonDecode(json['apkUrls'], [
+                ["placeholder", "placeholder"],
+              ])
+              as List<dynamic>,
+        ),
+        (json['preferredApkIndex'] ?? -1) as int,
+        safeJsonDecode(json['additionalSettings'], <String, dynamic>{})
+            as Map<String, dynamic>,
+        json['lastUpdateCheck'] == null
+            ? null
+            : DateTime.fromMicrosecondsSinceEpoch(json['lastUpdateCheck']),
+        json['pinned'] ?? false,
+        categories: json['categories'] != null
+            ? (json['categories'] as List<dynamic>)
+                  .map((e) => e.toString())
+                  .toList()
+            : json['category'] != null
+            ? [json['category'] as String]
+            : [],
+        tags: json['tags'] != null
+            ? (json['tags'] as List<dynamic>)
+                  .map((e) => e.toString())
+                  .toList()
+            : [],
+        releaseDate: json['releaseDate'] == null
+            ? null
+            : DateTime.fromMicrosecondsSinceEpoch(json['releaseDate']),
+        changeLog: json['changeLog'] == null
+            ? null
+            : json['changeLog'] as String,
+        releaseUrl: json['releaseUrl'] as String?,
+        overrideSource: json['overrideSource'],
+        allowIdChange: json['allowIdChange'] ?? false,
+        otherAssetUrls: assumed2DlistToStringMapList(
+          safeJsonDecode(json['otherAssetUrls'], <dynamic>[]) as List<dynamic>,
+        ),
+        versionHistory: json['versionHistory'] != null
+            ? (json['versionHistory'] as List<dynamic>)
+                  .map(
+                    (e) =>
+                        VersionHistoryEntry.fromJson(e as Map<String, dynamic>),
+                  )
+                  .toList()
+            : [],
+      )..pendingRepoRenameUrl = json['pendingRepoRenameUrl'] as String?;
+    } on TypeError catch (e) {
+      AppLogger.error(
+        e,
+        stackTrace: e.stackTrace,
+        message: 'Type mismatch in App.fromJson',
+      );
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() => {
@@ -240,11 +266,25 @@ class App {
     'lastUpdateCheck': lastUpdateCheck?.microsecondsSinceEpoch,
     'pinned': pinned,
     'categories': categories,
-    'tags': tags, // NEW: Save tags to JSON
+    'tags': tags,
     'releaseDate': releaseDate?.microsecondsSinceEpoch,
     'changeLog': changeLog,
+    'releaseUrl': releaseUrl,
     'overrideSource': overrideSource,
     'allowIdChange': allowIdChange,
+    'pendingRepoRenameUrl': pendingRepoRenameUrl,
     'versionHistory': versionHistory.map((e) => e.toJson()).toList(),
   };
 }
+
+/// Returns true if the app's ID is a temporary placeholder rather than a real
+/// package name.
+bool isTempId(App app) {
+  return RegExp(r'^[0-9]+$').hasMatch(app.id) ||
+      RegExp(r'^[0-9a-f]{12}$').hasMatch(app.id);
+}
+
+/// Returns true when the app uses pseudo-versioning (track-only or disabled version detection).
+bool isVersionPseudo(App app) =>
+    app.settings.getBool('trackOnly') ||
+    (app.installedVersion != null && !app.settings.getBool('versionDetection'));

@@ -17,7 +17,7 @@ import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -72,6 +72,17 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         });
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_providersInitialized) {
+      sourceProvider = context.read<SourceProvider>();
+      settingsProvider = context.read<SettingsProvider>();
+      appsProvider = context.read<AppsProvider>();
+      _providersInitialized = true;
+    }
   }
 
   @override
@@ -247,7 +258,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         title: Text(tr('rawJson')),
                         children: [
                           Text(
-                            dataStr,
+                            data,
                             style: const TextStyle(fontFamily: 'monospace'),
                           ),
                         ],
@@ -260,14 +271,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             if (!mounted) return;
             dynamic parsedData;
             try {
-              parsedData = jsonDecode(dataStr);
+              parsedData = jsonDecode(data);
             } catch (e) {
-              unawaited(
-                LogsProvider().add(
-                  'Failed to decode deep-link JSON: $e',
-                  level: LogLevel.error,
-                ),
-              );
+              AppLogger.error(e, message: 'Failed to decode deep-link JSON');
               throw ObtainiumError(tr('invalidInput'));
             }
             var appsProvider = context.read<AppsProvider>();
@@ -285,6 +291,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               context,
             );
           }
+        } else if (action == 'refresh') {
+          final targetId = uri.queryParameters['id'];
+          await appsProvider.checkUpdates(
+            forceAll: targetId == null,
+            specificIds: targetId != null ? [targetId] : null,
+          );
         } else {
           throw ObtainiumError(tr('unknown'));
         }

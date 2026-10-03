@@ -4,11 +4,10 @@ import 'dart:io';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
-import 'package:obtainium/app_sources/html.dart';
+import 'package:obtainium/utils/string_compare.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
@@ -16,6 +15,8 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
 
 class GitHub extends AppSource {
+  static const int _fallbackCacheSeconds = 3600;
+
   GitHub({bool hostChanged = false}) {
     name = 'GitHub';
     hosts = ['github.com'];
@@ -35,12 +36,12 @@ class GitHub extends AppSource {
       password: true,
       required: false,
       helpUrl:
-          'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
+          'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token',
     ),
     GeneratedFormTextField(
       'GHReqPrefix',
       label: tr('GHReqPrefix'),
-      hint: 'gh-proxy.org',
+      hint: 'gh-proxy.com',
       required: false,
       additionalValidators: [
         (value) {
@@ -220,18 +221,14 @@ class GitHub extends AppSource {
               return appIds.first;
             }
           } catch (err) {
-            unawaited(
-              LogsProvider().add(
-                'Error parsing build.gradle from ${res.request?.url.toString() ?? standardUrl}: ${err.toString()}',
-              ),
+            AppLogger.info(
+              'Error parsing build.gradle from ${res.request?.url.toString() ?? standardUrl}: ${err.toString()}',
             );
           }
         }
       } catch (err) {
-        unawaited(
-          LogsProvider().add(
-            'Failed to extract ID from build.gradle or APK: ${err.toString()}',
-          ),
+        AppLogger.info(
+          'Failed to extract ID from build.gradle or APK: ${err.toString()}',
         );
       }
     }
@@ -341,10 +338,8 @@ class GitHub extends AppSource {
   ) async {
     var res = await sourceRequest(url, additionalSettings);
     if (_isAuthRejection(res)) {
-      unawaited(
-        LogsProvider().add(
-          'GitHub request for $url rejected due to token access, retrying without token.',
-        ),
+      AppLogger.info(
+        'GitHub request for $url rejected due to token access, retrying without token.',
       );
       res = await sourceRequest(
         url,
@@ -404,10 +399,8 @@ class GitHub extends AppSource {
         try {
           newUrl = jsonDecode(res2.body)['html_url'];
         } catch (e) {
-          unawaited(
-            LogsProvider().add(
-              'Failed to parse redirect response for repo rename: ${e.toString()}',
-            ),
+          AppLogger.info(
+            'Failed to parse redirect response for repo rename: ${e.toString()}',
           );
         }
         if (newUrl != null) {
@@ -493,7 +486,7 @@ class GitHub extends AppSource {
       for (final r in releases) {
         if (r == null) continue;
         final name = (r['tag_name'] ?? r['name'])?.toString() ?? '';
-        formats[r] = findStandardFormatsForVersion(name, false);
+        formats[r] = findStandardFormatsForVersion(name, strict: false);
       }
     }
 
@@ -532,7 +525,11 @@ class GitHub extends AppSource {
       if (sortMethod != 'name' && stdFormats.isNotEmpty) {
         final sortedFormats = stdFormats.toList()
           ..sort((x, y) => y.length.compareTo(x.length));
-        final reg = RegExp(sortedFormats.first);
+        final regCache = <String, RegExp>{};
+        final reg = regCache.putIfAbsent(
+          sortedFormats.first,
+          () => RegExp(sortedFormats.first),
+        );
         final matchA = reg.firstMatch(nameA);
         final matchB = reg.firstMatch(nameB);
         if (matchA == null || matchB == null) {
@@ -575,31 +572,47 @@ class GitHub extends AppSource {
     required String? regexNotesFilter,
     required bool includeZips,
     required bool includeTarballs,
+    required bool useLatestAssetDateAsReleaseDate,
+    required int minAgeDays,
     required Map<String, dynamic> additionalSettings,
     required Map<String, String> sourceConfigSettingValues,
   }) {
-    var prereleaseSkipped = 0;
+    var releaseSkipped = 0;
+    final titleRegex = regexFilter != null ? RegExp(regexFilter) : null;
+    final notesRegex = regexNotesFilter != null
+        ? RegExp(regexNotesFilter)
+        : null;
     for (int i = 0; i < releases.length; i++) {
-      if (!fallbackToOlderReleases && i > prereleaseSkipped) break;
+      if (!fallbackToOlderReleases && i > releaseSkipped) break;
       if (!includePrereleases && releases[i]['prerelease'] == true) {
-        prereleaseSkipped++;
+        releaseSkipped++;
         continue;
       }
       if (releases[i]['draft'] == true) {
+        releaseSkipped++;
         continue;
       }
       var nameToFilter = releases[i]['name'] as String?;
       if (nameToFilter == null || nameToFilter.trim().isEmpty) {
         nameToFilter = releases[i]['tag_name']?.toString() ?? '';
       }
-      if (regexFilter != null &&
-          !RegExp(regexFilter).hasMatch(nameToFilter.trim())) {
+      if (titleRegex != null && !titleRegex.hasMatch(nameToFilter.trim())) {
         continue;
       }
-      if (regexNotesFilter != null &&
-          !RegExp(
-            regexNotesFilter,
-          ).hasMatch(((releases[i]['body'] as String?) ?? '').trim())) {
+      if (notesRegex != null &&
+          !notesRegex.hasMatch(
+            ((releases[i]['body'] as String?) ?? '').trim(),
+          )) {
+        continue;
+      }
+      if (isReleaseTooYoung(
+        _getReleaseDateFromRelease(
+          releases[i],
+          useLatestAssetDateAsReleaseDate,
+        ),
+        minAgeDays,
+      )) {
+        releaseSkipped++;
         continue;
       }
       final allAssetsWithUrls = _findReleaseAssetUrls(
@@ -719,6 +732,7 @@ class GitHub extends AppSource {
         additionalSettings['sortMethodChoice'] ?? 'smartname-datefallback';
     final bool includeZips = additionalSettings['includeZips'] == true;
     final bool includeTarballs = additionalSettings['includeTarballs'] == true;
+    final int minAgeDays = await effectiveMinUpdateAgeDays(additionalSettings);
     dynamic latestRelease;
     if (verifyLatestTag) {
       final uri = Uri.parse(requestUrl);
@@ -771,17 +785,25 @@ class GitHub extends AppSource {
       }
       _positionLatestRelease(releases, latestRelease);
       releases = releases.reversed.toList();
-      final targetRelease = _selectGitHubTargetRelease(
-        releases: releases,
-        fallbackToOlderReleases: fallbackToOlderReleases,
-        includePrereleases: includePrereleases,
-        regexFilter: regexFilter,
-        regexNotesFilter: regexNotesFilter,
-        includeZips: includeZips,
-        includeTarballs: includeTarballs,
-        additionalSettings: additionalSettings,
-        sourceConfigSettingValues: sourceConfigSettingValues,
-      );
+      dynamic targetRelease;
+      // Prefer an eligible release; if none is old enough, fall back to the
+      // newest so the caller can suppress it until it ages.
+      for (final int age in minAgeDays > 0 ? [minAgeDays, 0] : [0]) {
+        targetRelease = _selectGitHubTargetRelease(
+          releases: releases,
+          fallbackToOlderReleases: fallbackToOlderReleases,
+          includePrereleases: includePrereleases,
+          regexFilter: regexFilter,
+          regexNotesFilter: regexNotesFilter,
+          includeZips: includeZips,
+          includeTarballs: includeTarballs,
+          useLatestAssetDateAsReleaseDate: useLatestAssetDateAsReleaseDate,
+          minAgeDays: age,
+          additionalSettings: additionalSettings,
+          sourceConfigSettingValues: sourceConfigSettingValues,
+        );
+        if (targetRelease != null) break;
+      }
       if (targetRelease == null) {
         throw NoReleasesError();
       }
@@ -1118,8 +1140,9 @@ class GitHub extends AppSource {
     String rootProp, {
     Function(Response)? onHttpErrorCode,
     Map<String, dynamic> querySettings = const {},
+    Map<String, dynamic> additionalSettings = const {},
   }) async {
-    final Response res = await sourceRequest(requestUrl, {});
+    final Response res = await sourceRequest(requestUrl, additionalSettings);
     if (res.statusCode == 200) {
       final int minStarCount =
           int.tryParse(querySettings['minStarCount']?.toString() ?? '') ?? 0;
@@ -1212,7 +1235,7 @@ class GitHub extends AppSource {
       final now = DateTime.now();
       final resetEpochSeconds =
           int.tryParse(res.headers['x-ratelimit-reset'] ?? '') ??
-          now.millisecondsSinceEpoch ~/ 1000 + 3600;
+          now.millisecondsSinceEpoch ~/ 1000 + _fallbackCacheSeconds;
       final nowSeconds = now.millisecondsSinceEpoch ~/ 1000;
       final remainingMinutes = ((resetEpochSeconds - nowSeconds) / 60)
           .ceil()
