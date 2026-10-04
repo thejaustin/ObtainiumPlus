@@ -32,7 +32,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/services/apk_filter_service.dart';
+import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
 import 'package:obtainium/services/http_service.dart';
 import 'package:obtainium/installers/install_utils.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;

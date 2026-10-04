@@ -26,6 +26,7 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -2573,7 +2574,7 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
       visualDensity: VisualDensity.compact,
       value: selectedIds.contains(id),
       onChanged: (checked) {
-        context.read<SettingsProvider>().selectionClick();
+        AppHaptics.selectionClick();
         setState(() {
           if (checked == true) {
             selectedIds.add(id);
@@ -2611,7 +2612,7 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
               // bidi-mirrored/reordered under RTL locales, which made it
               // look like a downgrade instead of an update.
               textDirection: isUpdate
-                  ? TextDirection.ltr
+                  ? ui.TextDirection.ltr
                   : Directionality.of(context),
               child: Text(
                 versionLabel,

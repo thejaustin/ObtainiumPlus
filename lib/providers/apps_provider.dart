@@ -2,6 +2,8 @@ import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'package:obtainium/utils/url_validator.dart';
+import 'package:obtainium/utils/locale_utils.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -81,6 +83,9 @@ export 'apps_provider_updates.dart';
 // Named constants for magic numbers and hardcoded values
 const int _defaultRetries = 3;
 const int _retryDelaySeconds = 5;
+const int _progressUpdateIntervalMs = 500;
+const int _downloadBufferSize = 32 * 1024;
+const int _downloadProgressFallback = 30;
 const int _partialHashCheckStartingSize = 1024;
 const int _partialHashCheckLowerLimit = 128;
 const int _partialHashCheckDecrement = 256;
@@ -1163,7 +1168,7 @@ class AppsProvider with ChangeNotifier {
         downloadUrl,
         forAPKDownload: true,
       );
-      var downloadedFile = await downloadFileWithRetry(
+      var downloadedFile = await AppFileService.downloadFileWithRetry(
         downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
@@ -1716,7 +1721,7 @@ class AppsProvider with ChangeNotifier {
     Future<void> downloadFn(MapEntry<String, String> fileUrl, App app) async {
       try {
         String downloadPath = '${await getStorageRootPath()}/Download';
-        await downloadFile(
+        await AppFileService.downloadFile(
           fileUrl.value,
           fileUrl.key,
           true,

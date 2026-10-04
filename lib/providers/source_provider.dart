@@ -138,14 +138,12 @@ HttpClient createHttpClient(bool insecure) =>
 Future<MapEntry<Uri, MapEntry<HttpClient, HttpClientResponse>>>
 sourceRequestStreamResponse(
   String method,
-  String url,
   Map<String, String>? requestHeaders,
   Map<String, dynamic> additionalSettings, {
   bool followRedirects = true,
   Object? postBody,
 }) => HttpService().sourceRequestStreamResponse(
   method,
-  url,
   requestHeaders,
   additionalSettings,
   followRedirects: followRedirects,
