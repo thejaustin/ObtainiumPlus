@@ -42,6 +42,31 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+### 2026-10-04 (Session 13) — Claude Code (Sonnet 4.6)
+
+**Crash hardening, NaN serialization, CI versioning, and safe_prefs defense-in-depth (PR #332):**
+
+1. **NaN serialization crashes (#271 #241 #240)** — Three `jsonEncode()` call sites that bypassed `safeJsonEncode()` in `app_json_migration.dart`, `apps_provider_import_export.dart`, and `apps_provider_lifecycle.dart` (the app save path). NaN from source plugin `additionalSettings` could crash background saves and exports. Fixed by routing through `safeJsonEncode`.
+
+2. **Icon cache TOCTOU race (#235)** — `updateAppIcon` in `apps_provider_lifecycle.dart` called `existsSync()` then `readAsBytes()` with no guard against the file being deleted between the two calls (concurrent cache clear / low-storage cleanup). Wrapped `readAsBytes()` in `try/catch` to fall through to re-fetching from the installed package.
+
+3. **safe_prefs hardening (#304 #303 #300 #256)** — Root cause of bool→double TypeError was already fixed in session 12 (`PageStorageKey` collision on settings scroll views, commit `1fb16813`). Added defense-in-depth: every `safe_prefs.dart` getter now wraps the underlying `SharedPreferences.get()` in `try/catch` so any platform-level cast exception falls back to `null → caller's default` instead of propagating into widget mounts.
+
+4. **safeBool gap** — `settings_provider.dart` had one direct `prefs?.getBool()` call; changed to `safeBool()`. Two raw `getString()` calls in import_export paths changed to `safeString()`.
+
+5. **deepCopy perf** — `app_shortcuts_menu.dart` called `getAppValues()` without `deepCopy: false` on every shortcut menu open (unnecessary full clone of all app objects).
+
+6. **CI versioning** — Added `makeLatest: true` to `ncipollo/release-action` so each stable release properly supersedes the previous as GitHub "Latest". Fixed `PREV_TAG` to filter on canonical `vX.Y.Z-pN` tags only, excluding ad-hoc tags (e.g. `v1.6.17-plus`) that contaminated changelog ranges. Deleted stale `v1.6.17-plus` release; promoted `v1.6.17-p2` as Latest.
+
+7. **Upstream merge (v1.6.10 → v1.6.17)** — Merged in prior session; settings UI dark NavigationBar fix (`backgroundColor: Theme.of(context).colorScheme.surfaceContainer`) and `material_ui.DefaultMaterialLocalizations.delegate` added to `main.dart` to prevent null crash on all `material_ui` widgets.
+
+**Open backlog (carried forward):**
+- [ ] `git filter-repo` history rewrite to remove APK blobs (~196MB, requires force push — needs explicit approval)
+- [ ] Performance: `context.watch<AppsProvider>()` in many leaf widgets causes full rebuilds on any AppsProvider change — audit and migrate high-frequency widgets to `context.select`
+- [ ] Issue #330 (ANR/freeze) — likely resolved by PageStorageKey fix; monitor Sentry for recurrence
+
+---
+
 ### 2026-10-03 (Session 12) — Claude Code (Sonnet 4.6 / Opus 4.7)
 
 **Shizuku installer hang detection, adaptive polling, 90s ceiling (`lib/installers/shizuku_installer.dart`, commit `252fcda3`):**
