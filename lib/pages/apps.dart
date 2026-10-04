@@ -21,6 +21,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/theme.dart';
 import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/models/settings_enums.dart';
