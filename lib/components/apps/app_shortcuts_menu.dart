@@ -241,7 +241,7 @@ void _showTagEditorStandalone(
 ) async {
   final appsProvider = context.read<AppsProvider>();
   final allTags = appsProvider
-      .getAppValues()
+      .getAppValues(deepCopy: false)
       .expand((a) => a.app.tags)
       .toSet()
       .toList();

@@ -55,7 +55,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
         ? settings.plusHomeCornerRadius
         : settings.plusGlobalCornerRadius;
 
-    final exportDirKey = behaviorSettings.prefs?.getString('exportDir');
+    final exportDirKey = behaviorSettings.prefs?.safeString('exportDir');
     if (_exportDirFuture == null || exportDirKey != _lastExportDirKey) {
       _lastExportDirKey = exportDirKey;
       _exportDirFuture = behaviorSettings.getExportDir();

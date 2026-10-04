@@ -6,8 +6,7 @@ import 'package:obtainium/utils/color_utils.dart' show generateRandomLightColor;
 import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart'
-    hide lowerCaseUnlessLang;
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
@@ -313,7 +312,6 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
             Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewPadding.bottom + 8,

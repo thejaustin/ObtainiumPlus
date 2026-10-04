@@ -3,7 +3,11 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+// settings.dart imports material_ui (not flutter/material), so all Material
+// widgets in SettingsPage use material_ui's own MaterialLocalizations type.
+import 'package:material_ui/material_ui.dart' as mui;
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -68,9 +72,21 @@ void main() {
         ],
         child: Builder(
           builder: (context) => MaterialApp(
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
+            // settings.dart imports material_ui (not flutter/material), so all
+            // Material widgets use material_ui's own MaterialLocalizations type.
+            // We must include both Flutter's and material_ui's delegates, or
+            // widgets like SearchBar/ChoiceChip throw "No MaterialLocalizations".
+            localizationsDelegates: [
+              ...context.localizationDelegates,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              mui.DefaultMaterialLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en')],
+            // Hardcode 'en' so the test never picks up the CI machine's
+            // platform locale, which may be 'C' (POSIX) and unsupported.
+            locale: const Locale('en'),
             home: SettingsPage(initialTab: tab),
           ),
         ),
@@ -94,7 +110,11 @@ void main() {
   }
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // plusSettingsBottomNavBar defaults to true, which renders a NavigationBar
+    // that requires MaterialLocalizations via _NavigationBarDestinationSemantics.
+    // Tests focus on settings-section stability, not nav-bar behaviour, so
+    // disable it here to keep the test harness simple.
+    SharedPreferences.setMockInitialValues({'plusSettingsBottomNavBar': false});
     FlutterSecureStorage.setMockInitialValues({});
   });
 
@@ -150,6 +170,7 @@ void main() {
       // The issue #217 corruption class: keys stored with the wrong type
       // (JSON import) or stale enum indexes must not blank the page
       SharedPreferences.setMockInitialValues({
+        'plusSettingsBottomNavBar': false, // keep nav bar hidden (see setUp comment)
         'plusSettingsCornerRadius': 16, // int where double expected
         'plusGlobalCornerRadius': 'oops', // string where double expected
         'theme': 99, // out-of-range enum index

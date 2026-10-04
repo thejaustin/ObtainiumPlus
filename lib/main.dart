@@ -15,7 +15,8 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
 import 'package:obtainium/services/background_update_service.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -40,6 +41,7 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 // ignore: implementation_imports
 import 'package:easy_localization/src/localization.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:material_ui/material_ui.dart' as mui;
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -85,6 +87,10 @@ const String _closeText = 'Close';
 /// Global navigator key, used to navigate from outside the widget tree
 /// (e.g. tapping a notification).
 final globalNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Alias for [globalNavigatorKey] used by components that reference the
+/// upstream name.
+final appNavigatorKey = globalNavigatorKey;
 
 /// Loads translations outside of the widget tree (e.g. in a background
 /// isolate that never builds the EasyLocalization widget).
@@ -234,15 +240,15 @@ void main() async {
 
 Future<void> _runObtainium() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppLogger.init();
   // Replace the release-mode ErrorWidget (a bare grey rectangle — see issue
   // #217) with a card that names the failure, so a broken widget is
   // reportable instead of an anonymous blank page.
   ErrorWidget.builder = (FlutterErrorDetails details) {
-    unawaited(
-      LogsProvider().add(
-        'Widget build error: ${details.exception}\n${details.stack}',
-        level: LogLevel.error,
-      ),
+    AppLogger.error(
+      details.exception,
+      stackTrace: details.stack,
+      message: 'Widget build error',
     );
     return Directionality(
       textDirection: ui.TextDirection.ltr,
@@ -283,12 +289,7 @@ Future<void> _runObtainium() async {
     );
   };
   ui.PlatformDispatcher.instance.onError = (error, stack) {
-    unawaited(
-      LogsProvider().add(
-        'Uncaught platform error: $error\n$stack',
-        level: LogLevel.error,
-      ),
-    );
+    AppLogger.error(error, stackTrace: stack, message: 'Uncaught platform error');
     return true;
   };
   try {
@@ -395,6 +396,9 @@ class _ObtainiumState extends State<Obtainium> {
   var _lastUpdateInterval = -1;
   var _lastUseFGService = false;
   var existingUpdateInterval = -1;
+  Locale? _lastLocale;
+  SettingsProvider? _settingsProvider;
+  int? _lastSyncedUpdateInterval;
 
   void _manageServices(
     UpdateSettingsProvider updateSettings,
@@ -423,7 +427,21 @@ class _ObtainiumState extends State<Obtainium> {
         } catch (_) {}
       }
     } catch (e) {
-      logs.add('BackgroundFetch operation failed: $e');
+      AppLogger.warn('BackgroundFetch operation failed: $e');
+    }
+  }
+
+  Future<void> _syncWorkManager() async {
+    // BackgroundFetch is used for background updates in this fork.
+    // This method is kept for compatibility with _onSettingsChanged.
+  }
+
+  void _onSettingsChanged() {
+    final settingsProvider = _settingsProvider;
+    if (settingsProvider != null &&
+        settingsProvider.updateInterval != _lastSyncedUpdateInterval) {
+      _lastSyncedUpdateInterval = settingsProvider.updateInterval;
+      unawaited(_syncWorkManager());
     }
   }
 
@@ -447,21 +465,21 @@ class _ObtainiumState extends State<Obtainium> {
                 unawaited(
                   apps.saveApps([
                     App(
-                      id: obtainiumId,
-                      url: obtainiumUrl,
-                      author: 'ImranR98',
-                      name: 'Obtainium',
-                      installedVersion: value!.versionName,
-                      latestVersion: value.versionName!,
-                      apkUrls: const [],
-                      preferredApkIndex: 0,
-                      additionalSettings: const {
+                      obtainiumId,
+                      obtainiumUrl,
+                      'ImranR98',
+                      'Obtainium',
+                      value!.versionName,
+                      value.versionName!,
+                      [],
+                      0,
+                      {
                         'versionDetection': true,
                         'apkFilterRegEx': 'fdroid',
                         'invertAPKFilter': true,
                       },
-                      lastUpdateCheck: null,
-                      pinned: false,
+                      null,
+                      false,
                     ),
                   ], onlyIfExists: false),
                 );
@@ -503,10 +521,10 @@ class _ObtainiumState extends State<Obtainium> {
       }
       settingsProvider.addListener(_onSettingsChanged);
       final appsProvider = context.read<AppsProvider>();
-      final logger = AppLogger(logs: context.read<LogsProvider>());
       final notifs = context.read<NotificationsProvider>();
 
-      _handleFirstRun(settingsProvider, appsProvider, logger, context);
+      unawaited(_syncWorkManager());
+      _handleFirstRun(settingsProvider, appsProvider, context);
 
       if (!_launchByNotifChecked) {
         _launchByNotifChecked = true;
@@ -639,7 +657,6 @@ class _ObtainiumState extends State<Obtainium> {
     final themeSettings = context.watch<ThemeSettingsProvider>();
     final appsProvider = context.read<AppsProvider>();
     final logs = context.read<LogsProvider>();
-    final notifs = context.read<NotificationsProvider>();
 
     if (updateSettings.updateInterval != existingUpdateInterval) {
       existingUpdateInterval = updateSettings.updateInterval;
@@ -649,17 +666,15 @@ class _ObtainiumState extends State<Obtainium> {
     }
 
     _manageServices(updateSettings, logs);
-    _handleFirstRun(
-      settingsProvider,
-      appsProvider,
-      AppLogger(logs: logs),
-      context,
-    );
+    _handleFirstRun(settingsProvider, appsProvider, context);
 
     return WithForegroundTask(
       child: DynamicColorBuilder(
         builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-          setAppLocale(context.locale);
+          if (context.locale != _lastLocale) {
+            _lastLocale = context.locale;
+            setAppLocale(context.locale);
+          }
           // Decide on a colour/brightness scheme based on OS and user settings
           ColorScheme lightColorScheme;
           ColorScheme darkColorScheme;
@@ -727,10 +742,13 @@ class _ObtainiumState extends State<Obtainium> {
 
           return MaterialApp(
             title: 'Obtainium',
-            localizationsDelegates: context.localizationDelegates,
+            localizationsDelegates: [
+              ...context.localizationDelegates,
+              mui.DefaultMaterialLocalizations.delegate,
+            ],
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            navigatorKey: globalNavigatorKey,
+            navigatorKey: appNavigatorKey,
             debugShowCheckedModeBanner: false,
             theme: ThemeBuilder.buildTheme(
               colorScheme: themeSettings.theme == ThemeSettings.dark

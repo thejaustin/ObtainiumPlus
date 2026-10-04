@@ -278,7 +278,7 @@ jobs:
         id: build_changelog
         run: |
           TAG_NAME="${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || format('v{0}', steps.bump_version.outputs.version) }}"
-          PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | head -1)
+          PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[pr][0-9]+)?$' | head -1)
           if [ -f "CHANGELOG_USER.md" ] && [ "${{ steps.bump_version.outputs.is_full_release }}" = "true" ]; then
             {
               cat CHANGELOG_USER.md
@@ -362,6 +362,7 @@ jobs:
           name: "${{ (steps.detect_build.outputs.is_dev == 'true' && format('Obtainium+ Dev Build #{0}', github.run_number)) || format('Obtainium+ {0}', steps.bump_version.outputs.version) }}"
           draft: false
           prerelease: ${{ steps.detect_build.outputs.is_dev == 'true' }}
+          makeLatest: ${{ steps.detect_build.outputs.is_dev != 'true' }}
           generateReleaseNotes: false
           artifacts: "build/app/outputs/flutter-apk/*.apk"
           token: ${{ secrets.GITHUB_TOKEN }}

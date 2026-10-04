@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart' hide DropdownMenuEntry;
-import 'package:material_ui/material_ui.dart' show DropdownMenuEntry;
+import 'package:material_ui/material_ui.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/appearance_hub.dart';
@@ -14,12 +13,12 @@ import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/components/ui_widgets.dart' show TvDropdownMenu;
-import 'package:obtainium/models/settings_enums.dart' show ColourSchemeMode;
-import 'package:obtainium/utils/locale_constants.dart' show supportedLocales;
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/utils/locale_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -111,6 +110,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 alignment: Alignment.topCenter,
                 heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
                 child: NavigationBar(
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                   selectedIndex: _selectedSectionIndex,
                   onDestinationSelected: (index) {
                     AppHaptics.selectionClick();
@@ -156,7 +156,6 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           : null,
       body: CustomScrollView(
-        key: const PageStorageKey<String>('settings_page_scroll'),
         controller: _scrollController,
         physics: plusSettings.scrollPhysics,
         slivers: [
@@ -241,7 +240,6 @@ class _SettingsPageState extends State<SettingsPage> {
               child: SizedBox(
                 height: 52,
                 child: ListView(
-                  key: const PageStorageKey<String>('settings_tabs_scroll'),
                   controller: _tabsScrollController,
                   scrollDirection: Axis.horizontal,
                   physics: plusSettings.scrollPhysics,
