@@ -19,6 +19,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 
 String obtainiumTempId = 'imranr98_obtainium_github.com';
@@ -51,22 +52,9 @@ Locale? tryParseLocale(String? localeString) {
   return null;
 }
 
-enum InstallerMode { system, shizuku, external, root }
-
 enum GroupByMode { none, category, source }
 
-enum ThemeSettings { system, light, dark }
-
-enum SortColumnSettings { added, nameAuthor, authorName, releaseDate }
-
-enum SortOrderSettings { ascending, descending }
-
-enum ColourSchemeMode { standard, vibrant, expressive, materialYou }
-
 enum ActionBannerMode { all, updatesOnly, none }
-
-/// How much vertical space each app row uses in the app list.
-enum AppListDensity { standard, compact, dense }
 
 class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
@@ -784,7 +772,7 @@ class SettingsProvider with ChangeNotifier {
     if (stored != null && AppListDensity.values.any((d) => d.name == stored)) {
       return AppListDensity.values.byName(stored);
     }
-    return AppListDensity.standard;
+    return AppListDensity.comfortable;
   }
 
   set appListDensity(AppListDensity val) {

@@ -144,7 +144,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         final app = appsProvider.apps.values.firstWhere(
           (a) => a.app.url == url,
           orElse: () => AppInMemory(
-            App(id: '', url: '', author: '', name: '', latestVersion: '', preferredApkIndex: 0, additionalSettings: const {}),
+            App('', '', '', '', null, '', [], 0, const {}, null, false),
             null,
             null,
             null,
