@@ -11,6 +11,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/color_utils.dart';
 import 'package:obtainium/providers/app_json_migration.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -97,7 +98,7 @@ extension AppsProviderLifecycle on AppsProvider {
       // interleave writes or race each other's rename. #2089
       final String tmpPath =
           '$filePath.${DateTime.now().microsecondsSinceEpoch}-${_saveTempCounter++}.tmp';
-      await File(tmpPath).writeAsString(jsonEncode(app.toJson()));
+      await File(tmpPath).writeAsString(safeJsonEncode(app.toJson()));
       await File(tmpPath).rename(filePath);
     }
 
@@ -353,9 +354,16 @@ extension AppsProviderLifecycle on AppsProvider {
       packageLastUpdateTime: app?.installedInfo?.lastUpdateTime,
     );
     if (app?.icon == null || !alreadyCached) {
-      final icon = alreadyCached
-          ? (await cachedIcon.readAsBytes())
-          : (await app?.installedInfo?.applicationInfo?.getAppIcon());
+      Uint8List? icon;
+      if (alreadyCached) {
+        try {
+          icon = await cachedIcon.readAsBytes();
+        } catch (_) {
+          // File deleted between existsSync and readAsBytes (cache clear / low storage).
+          // Fall through to re-fetch from the installed package.
+        }
+      }
+      icon ??= await app?.installedInfo?.applicationInfo?.getAppIcon();
       if (icon != null && !alreadyCached) {
         if (!cachedIcon.parent.existsSync()) {
           cachedIcon.parent.createSync(recursive: true);

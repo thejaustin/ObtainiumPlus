@@ -327,7 +327,7 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
     _migrateHuaweiAppGallery(json, additionalSettings);
   }
 
-  json['additionalSettings'] = jsonEncode(additionalSettings);
+  json['additionalSettings'] = safeJsonEncode(additionalSettings);
   _migrateFdroidOverrides(json);
   return json;
 }
