@@ -15,13 +15,9 @@ import 'package:obtainium/components/app_detail_widgets.dart'
     hide AppFilePicker, APKOriginWarningDialog;
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/external_installer.dart';
-import 'package:obtainium/installers/install_utils.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
-import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
-import 'package:obtainium/services/http_service.dart' as _httpSvc;
-import 'package:obtainium/utils/haptic_utils.dart' show AppHaptics;
 import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
@@ -35,6 +31,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
+import 'package:obtainium/services/http_service.dart';
+import 'package:obtainium/installers/install_utils.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 
 // NOTE: This provider extension is intentionally UX-coupled — it shows dialogs,
@@ -250,9 +250,9 @@ extension AppsProviderInstall on AppsProvider {
       );
       additionalSettingsPlusSourceConfig['url'] = downloadUrl;
       var downloadedFile = await downloadFileWithRetry(
-        downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
+        headers: headers,
         (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
           final int? prog = progress?.ceil();
           if (apps[app.id] != null) {
@@ -283,9 +283,8 @@ extension AppsProviderInstall on AppsProvider {
           prevProg = prog;
         },
         this.apkDir.path,
-        headers: headers,
+        additionalSettingsPlusSourceConfig,
         useExisting: useExisting,
-        allowInsecure: app.additionalSettings['allowInsecure'] == true,
         cancellationToken: cancellationToken,
       );
       completedDownloads = 1;
@@ -339,14 +338,13 @@ extension AppsProviderInstall on AppsProvider {
             additionalSettingsPlusSourceConfig['url'] = splitUrl;
             completedDownloads = i;
             final splitFile = await downloadFileWithRetry(
-              splitUrl,
               '$fileNameNoExt-$i',
               false,
               reportProgress,
               this.apkDir.path,
+              additionalSettingsPlusSourceConfig,
               useExisting: useExisting,
               headers: splitHeaders,
-              allowInsecure: app.additionalSettings['allowInsecure'] == true,
               cancellationToken: cancellationToken,
             );
             if (splitFile.path.toLowerCase().endsWith('.apk')) {
@@ -982,7 +980,7 @@ extension AppsProviderInstall on AppsProvider {
       if (url == 'placeholder') {
         return null;
       }
-      return _httpSvc.HttpService.extractRootHost(Uri.parse(url).host);
+      return HttpService.extractRootHost(Uri.parse(url).host);
     }
 
     // If the picked APK comes from an origin different from the source, get user confirmation (if context provided)
@@ -1699,7 +1697,6 @@ extension AppsProviderInstall on AppsProvider {
       try {
         final String downloadPath = '${await getStorageRootPath()}/Download';
         await downloadFileWithRetry(
-          url,
           fileName,
           true,
           (double? progress, [int? received, int? total]) {
@@ -1716,6 +1713,7 @@ extension AppsProviderInstall on AppsProvider {
             );
           },
           downloadPath,
+          app.additionalSettings,
           headers: await SourceProvider()
               .getSource(app.url, overrideSource: app.overrideSource)
               .getRequestHeaders(

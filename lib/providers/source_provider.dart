@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/dom.dart';
 import 'package:http/http.dart';
@@ -20,24 +21,26 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
+import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/utils/url_validator.dart';
+import 'package:obtainium/services/http_service.dart';
 export 'package:obtainium/models/app.dart';
+export 'package:obtainium/models/typed_settings.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
 export 'package:obtainium/utils/source_utils.dart';
-export 'package:obtainium/services/http_service.dart' show ensureHttpSuccess;
 
+import 'package:obtainium/app_sources/apk4free.dart';
 import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
-import 'package:obtainium/app_sources/app_source.dart'
-    hide AppSource, MassAppUrlSource;
 import 'package:obtainium/app_sources/aptoide.dart';
 import 'package:obtainium/app_sources/codeberg.dart';
 import 'package:obtainium/app_sources/bitbucket.dart';
 import 'package:obtainium/app_sources/gitea.dart';
-import 'package:obtainium/app_sources/xda_developers.dart';
+import '../app_sources/samsung_galaxy_store.dart';
+import '../app_sources/xda_developers.dart';
 import 'package:obtainium/app_sources/coolapk.dart';
 import 'package:obtainium/app_sources/direct_apk_link.dart';
 import 'package:obtainium/app_sources/farsroid.dart';
@@ -55,7 +58,6 @@ import 'package:obtainium/app_sources/liteapks.dart';
 import 'package:obtainium/app_sources/neutroncode.dart';
 import 'package:obtainium/app_sources/rockmods.dart';
 import 'package:obtainium/app_sources/rustore.dart';
-import 'package:obtainium/app_sources/samsunggalaxystore.dart';
 import 'package:obtainium/app_sources/sourceforge.dart';
 import 'package:obtainium/app_sources/sourcehut.dart';
 import 'package:obtainium/app_sources/telegramapp.dart';
@@ -64,24 +66,12 @@ import 'package:obtainium/app_sources/uptodown.dart';
 import 'package:obtainium/app_sources/vivoappstore.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/app_sources/githubstars.dart';
 import 'package:obtainium/app_sources/githubpersonalrepos.dart';
 import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
-
-/// Converts a list of [MapEntry] pairs into a 2D list of strings for JSON encoding.
-List<List<String>> stringMapListTo2DList(
-  List<MapEntry<String, String>> mapList,
-) => mapList.map((e) => [e.key, e.value]).toList();
-
-/// Converts a 2D list (decoded from JSON) back into a list of [MapEntry] pairs.
-/// Default number of concurrent fetch operations used when no user override applies.
-const int kDefaultFetchConcurrency = 3;
-
-List<MapEntry<String, String>> assumed2DlistToStringMapList(
-  List<dynamic> arr,
-) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
 
 /// Delegates to [HttpService.ensureAbsoluteUrl].
 String ensureAbsoluteUrl(String ambiguousUrl, Uri referenceAbsoluteUrl) =>
@@ -144,22 +134,24 @@ String getSourceRegex(List<String> hosts) {
   return '(${hosts.join('|').replaceAll('.', '\\.')})';
 }
 
-/// Delegates to [HttpService.createHttpClient].
-HttpClient createHttpClient(bool insecure) =>
-    HttpService().createHttpClient(insecure);
+
+/// Throws an [ObtainiumError] unless [res] has a 200 status code.
+void ensureHttpSuccess(http.Response res) {
+  if (res.statusCode != 200) {
+    throw getObtainiumHttpError(res);
+  }
+}
 
 /// Delegates to [HttpService.sourceRequestStreamResponse].
 Future<MapEntry<Uri, MapEntry<HttpClient, HttpClientResponse>>>
 sourceRequestStreamResponse(
   String method,
-  String url,
   Map<String, String>? requestHeaders,
   Map<String, dynamic> additionalSettings, {
   bool followRedirects = true,
   Object? postBody,
 }) => HttpService().sourceRequestStreamResponse(
   method,
-  url,
   requestHeaders,
   additionalSettings,
   followRedirects: followRedirects,
@@ -220,48 +212,53 @@ bool isVersionPseudo(App app) =>
     app.settings.getBool('trackOnly') ||
     (app.installedVersion != null && !app.settings.getBool('versionDetection'));
 
+const int kDefaultFetchConcurrency = 4;
+
 class SourceProvider {
   static final SourceProvider _instance = SourceProvider._();
   factory SourceProvider() => _instance;
   SourceProvider._();
 
-  // Builds a fresh set of source instances. Adding a source here makes it
-  // available via the service. Kept private so callers go through [sources]
-  // (cached) or, when per-call mutation is needed, [_buildSources] directly.
-  static List<AppSource> _buildSources() => [
-    GooglePlay(),
-    GitHub(),
-    GitLab(),
-    Codeberg(),
-    FDroid(),
-    FDroidRepo(),
-    IzzyOnDroid(),
-    SourceHut(),
-    APKPure(),
-    Aptoide(),
-    Uptodown(),
-    ItchIO(),
-    HuaweiAppGallery(),
-    Tencent(),
-    VivoAppStore(),
-    RuStore(),
-    Apk4Free(),
-    Farsroid(),
-    CoolApk(),
-    LiteAPKs(),
-    SourceForge(),
-    Jenkins(),
-    APKMirror(),
-    APKCombo(),
-    RockMods(),
-    TelegramApp(),
-    NeutronCode(),
-    DirectAPKLink(),
-    Gitea(),
-    Bitbucket(),
-    SamsungGalaxyStore(),
-    XdaDevelopers(),
-    HTML(), // Must be the last entry — hostless sources are tried in order and HTML is the catch-all fallback
+  // Factories for every source, in auto-detection order: sources with hosts
+  // are matched by host, then hostless sources are tried in order. HTML is the
+  // catch-all fallback and must stay last. Adding a source means adding one
+  // entry here.
+  static final List<AppSource Function()> _sourceFactories = [
+    () => GitHub(),
+    () => GitLab(),
+    () => Codeberg(),
+    () => FDroid(),
+    () => FDroidRepo(),
+    () => IzzyOnDroid(),
+    () => SourceHut(),
+    () => APKPure(),
+    () => Aptoide(),
+    () => Uptodown(),
+    () => ItchIO(),
+    () => HuaweiAppGallery(),
+    () => Tencent(),
+    () => VivoAppStore(),
+    () => RuStore(),
+    () => Farsroid(),
+    () => SamsungGalaxyStore(),
+    () => LiteAPKs(),
+    () => Apk4Free(),
+    () => CoolApk(),
+    () => SourceForge(),
+    () => Jenkins(),
+    () => APKMirror(),
+    () => APKCombo(),
+    () => RockMods(),
+    () => TelegramApp(),
+    () => NeutronCode(),
+    () => DirectAPKLink(),
+    () => GooglePlay(),
+    () => Gitea(),
+    () => Bitbucket(),
+    () => XdaDevelopers(),
+    // HTML must stay last: hostless sources are tried in order and HTML is the
+    // catch-all fallback.
+    () => HTML(),
   ];
 
   /// Cached, read-only source list built lazily from [_sourceFactories].
@@ -318,16 +315,9 @@ class SourceProvider {
     for (var s in allSources.where((element) => element.hosts.isNotEmpty)) {
       // A non-match here is expected control flow during source auto-detection,
       // so failures are intentionally not logged (they are just noise).
-      try {
-        if (s.hostRegex.hasMatch(host)) {
-          source = s;
-          if (host.isNotEmpty) {
-            _hostToSourceCache[host] = s;
-          }
-          break;
-        }
-      } catch (e) {
-        // Ignore and try the next source.
+      if (s.matchesHost(Uri.parse(url).host)) {
+        source = s;
+        break;
       }
     }
     if (source == null) {
@@ -367,15 +357,11 @@ class SourceProvider {
     String standardUrl,
     bool inferAppIdIfOptional,
   ) async {
-    // generateTempID's sha256-hex output never needs sanitizing, but every other
-    // path below returns a value derived from external/attacker-influenced input
-    // (a source's inferred id, a user/import-supplied override, or a reused id
-    // that predates this fix) — resolve to one raw value, then sanitize the single
-    // return, so a future branch added here can't forget the file-safety guarantee.
-    String? rawId = currentApp?.id;
-    rawId ??= additionalSettings['appId'] as String?;
-    if (rawId == null &&
-        !trackOnly &&
+    if (currentApp?.id != null) return currentApp!.id;
+    final explicitId = additionalSettings['appId'] as String?;
+    if (explicitId != null && explicitId.trim().isNotEmpty) return explicitId;
+    String? rawId;
+    if ((!trackOnly || source.inferAppIdEvenWhenTrackOnly) &&
         (!source.appIdInferIsOptional ||
             (source.appIdInferIsOptional && inferAppIdIfOptional))) {
       rawId = await source.tryInferringAppId(
@@ -422,6 +408,17 @@ class SourceProvider {
       apk = await source.getLatestAPKDetails(standardUrl, additionalSettings);
     } on ObtainiumError catch (e) {
       throw e..withUrlContext(standardUrl);
+    }
+
+    // Adding an app must honor the minimum update age too. Sources that can
+    // look back already return an older eligible release, so this only blocks
+    // sources whose latest release is too young and has no older alternative.
+    if (currentApp == null && !trackOnly) {
+      final minAgeDays = await effectiveMinUpdateAgeDays(additionalSettings);
+      if (isReleaseTooYoung(apk.releaseDate, minAgeDays)) {
+        throw MinUpdateAgeError(apk.releaseDate!, minAgeDays)
+          ..url = standardUrl;
+      }
     }
 
     if (apk.assetSha256s != null && apk.assetSha256s!.isNotEmpty) {
@@ -472,7 +469,7 @@ class SourceProvider {
     var name = currentApp != null ? currentApp.name.trim() : '';
     name = name.isNotEmpty ? name : apk.names.name;
     final App finalApp = App(
-      id: await _resolveAppId(
+      await _resolveAppId(
         source,
         currentApp,
         additionalSettings,
@@ -480,20 +477,21 @@ class SourceProvider {
         standardUrl,
         inferAppIdIfOptional,
       ),
-      url: standardUrl,
-      author: apk.names.author,
-      name: name,
-      installedVersion: currentApp?.installedVersion,
-      latestVersion: apk.version,
-      apkUrls: apk.apkUrls,
-      preferredApkIndex: currentApp?.preferredApkIndex ??
+      standardUrl,
+      apk.names.author,
+      name,
+      currentApp?.installedVersion,
+      apk.version,
+      apk.apkUrls,
+      currentApp?.preferredApkIndex ??
           (apk.apkUrls.isNotEmpty ? apk.apkUrls.length - 1 : 0),
-      additionalSettings: additionalSettings,
-      lastUpdateCheck: DateTime.now(),
-      pinned: currentApp?.pinned ?? false,
+      additionalSettings,
+      DateTime.now(),
+      currentApp?.pinned ?? false,
       categories: currentApp?.categories ?? const [],
       releaseDate: apk.releaseDate,
       changeLog: apk.changeLog,
+      releaseUrl: apk.releaseUrl,
       overrideSource: sourceIsOverriden
           ? source.sourceIdentifier
           : currentApp?.overrideSource,
@@ -594,224 +592,7 @@ class SourceProvider {
   }
 }
 
-/// Type-safe wrapper around [App.additionalSettings] that eliminates
-/// manual casts and null checks when reading per-source configuration values.
-///
-/// Usage:
-/// ```dart
-/// if (app.settings.getBool('trackOnly')) { ... }
-/// String? regex = app.settings.getStringOrNull('apkFilterRegEx');
-/// ```
-class TypedSettings {
-  final Map<String, dynamic> _raw;
 
-  const TypedSettings(Map<String, dynamic> raw) : _raw = raw;
-
-  bool getBool(String key, {bool defaultValue = false}) {
-    final val = _raw[key];
-    if (val == null) return defaultValue;
-    if (val is bool) return val;
-    if (val is String) return val == 'true';
-    return defaultValue;
-  }
-
-  int? getIntOrNull(String key) {
-    final val = _raw[key];
-    if (val is int) return val;
-    if (val is String) return int.tryParse(val);
-    return null;
-  }
-
-  String? getStringOrNull(String key) {
-    final val = _raw[key];
-    if (val == null) return null;
-    if (val is String) return val.isNotEmpty ? val : null;
-    return val.toString();
-  }
-
-  String getString(String key, {String defaultValue = ''}) =>
-      getStringOrNull(key) ?? defaultValue;
-
-  @override
-  String toString() => _raw.toString();
-}
-
-class HttpService {
-  static const int maxRedirects = 10;
-
-  HttpClient createHttpClient(bool insecure) {
-    final client = HttpClient();
-    // dart:io's HttpClient has no connection timeout by default, so a
-    // stalled TCP handshake (dead host, silent firewall drop, bad DNS)
-    // hangs the request forever with no way to recover — this was the
-    // root cause of search/update-check results silently never appearing.
-    client.connectionTimeout = const Duration(seconds: 15);
-    if (insecure) {
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-    }
-    return client;
-  }
-
-  String ensureAbsoluteUrl(String ambiguousUrl, Uri referenceAbsoluteUrl) {
-    try {
-      ambiguousUrl = ambiguousUrl.trim();
-      if (Uri.parse(ambiguousUrl).isAbsolute) {
-        return ambiguousUrl;
-      }
-    } on FormatException {
-      // Non-parsable URL, fall through to resolve logic below
-    }
-    return referenceAbsoluteUrl.resolve(ambiguousUrl).toString();
-  }
-
-  /// Performs an HTTP request with redirect following, returning the final URL, client, and streamed response.
-  Future<MapEntry<Uri, MapEntry<HttpClient, HttpClientResponse>>>
-  sourceRequestStreamResponse(
-    String method,
-    String url,
-    Map<String, String>? requestHeaders,
-    Map<String, dynamic> additionalSettings, {
-    bool followRedirects = true,
-    Object? postBody,
-  }) async {
-    var currentUrl = Uri.parse(url);
-    var redirectCount = 0;
-    List<Cookie> cookies = [];
-    HttpClient? httpClient;
-    final headers = requestHeaders != null
-        ? Map<String, String>.from(requestHeaders)
-        : null;
-    while (redirectCount < maxRedirects) {
-      httpClient = createHttpClient(
-        additionalSettings['allowInsecure'] == true,
-      );
-      final request = await httpClient.openUrl(method, currentUrl);
-      if (headers != null) {
-        headers.forEach((key, value) {
-          request.headers.set(key, value);
-        });
-      }
-      request.cookies.addAll(cookies);
-      request.followRedirects = false;
-      if (postBody != null) {
-        request.headers.contentType = ContentType.json;
-        request.write(jsonEncode(postBody));
-      }
-      // connectionTimeout only bounds the TCP handshake — a server that
-      // accepts the connection but never sends a response header would
-      // still hang here forever without this.
-      final response = await request.close().timeout(
-        const Duration(seconds: 30),
-        onTimeout: () => throw ObtainiumError(tr('requestTimedOut')),
-      );
-
-      if (followRedirects &&
-          (response.statusCode >= 300 && response.statusCode <= 399)) {
-        final location = response.headers.value(HttpHeaders.locationHeader);
-        if (location != null) {
-          final nextUrl = Uri.parse(ensureAbsoluteUrl(location, currentUrl));
-          if (currentUrl.scheme == 'https' &&
-              nextUrl.scheme == 'http' &&
-              additionalSettings['allowInsecure'] != true &&
-              additionalSettings['allowInsecureRedirects'] != true) {
-            httpClient.close();
-            throw ObtainiumError(tr('insecureRedirect'));
-          }
-          if (nextUrl.host != currentUrl.host && headers != null) {
-            headers.removeWhere((k, v) {
-              final lower = k.toLowerCase();
-              return lower == 'authorization' || lower == 'proxy-authorization';
-            });
-          }
-          currentUrl = nextUrl;
-          redirectCount++;
-          cookies = response.cookies;
-          httpClient.close();
-          httpClient = null;
-          continue;
-        }
-      }
-
-      return MapEntry(currentUrl, MapEntry(httpClient, response));
-    }
-    httpClient?.close();
-    throw ObtainiumError(tr('tooManyRedirects'));
-  }
-
-  Future<http.Response> httpClientResponseStreamToFinalResponse(
-    HttpClient httpClient,
-    String method,
-    String url,
-    HttpClientResponse response,
-  ) async {
-    try {
-      final bytes = (await response.fold<BytesBuilder>(
-        BytesBuilder(),
-        (b, d) => b..add(d),
-      )).toBytes();
-
-      final headers = <String, String>{};
-      response.headers.forEach((name, values) {
-        headers[name] = values.join(', ');
-      });
-
-      return http.Response.bytes(
-        bytes,
-        response.statusCode,
-        headers: headers,
-        request: http.Request(method, Uri.parse(url)),
-      );
-    } finally {
-      httpClient.close();
-    }
-  }
-
-  ObtainiumError getHttpError(http.Response res) {
-    if (res.statusCode == 404) return NoReleasesError();
-
-    final reasonLower = res.reasonPhrase?.toLowerCase() ?? '';
-    final bodySample = res.body.length > 1000
-        ? res.body.substring(0, 1000).toLowerCase()
-        : res.body.toLowerCase();
-
-    final isRateLimit =
-        res.statusCode == 429 ||
-        res.statusCode == 403 ||
-        reasonLower.contains('rate limit') ||
-        reasonLower.contains('too many requests') ||
-        bodySample.contains('rate limit') ||
-        bodySample.contains('too many requests');
-
-    if (isRateLimit) {
-      final retryAfter = res.headers['retry-after'];
-      final secs = retryAfter != null ? int.tryParse(retryAfter) : null;
-      if (secs != null) return RateLimitError((secs / 60).ceil());
-
-      final resetHeader = res.headers['x-ratelimit-reset'];
-      if (resetHeader != null) {
-        final parsed = int.tryParse(resetHeader);
-        if (parsed != null) {
-          // x-ratelimit-reset is typically in seconds since epoch
-          final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-          final remainingMinutes = ((parsed - nowSeconds) / 60).ceil().clamp(
-            1,
-            9999,
-          );
-          return RateLimitError(remainingMinutes);
-        }
-      }
-      return RateLimitError(30); // Default to conservative 30 minutes
-    }
-
-    return ObtainiumHttpError(
-      res.statusCode,
-      (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
-          ? res.reasonPhrase!
-          : tr('errorWithHttpStatusCode', args: [res.statusCode.toString()]),
-    );
-  }
-}
 
 class VersionService {
   static const defaultMatchGroup = '0';

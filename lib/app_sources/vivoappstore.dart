@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/services/http_service.dart' show ensureHttpSuccess;
 
 class VivoAppStore extends AppSource {
   static const appDetailUrl =
@@ -61,6 +60,7 @@ class VivoAppStore extends AppSource {
       if (id == null) {
         throw NoAPKError();
       }
+      final apkUrl = '$apkDownloadUrl${Uri.encodeQueryComponent(id)}';
       final appName = json['title_zh']?.toString().trim().isNotEmpty == true
           ? json['title_zh'].toString()
           : json['package_name']?.toString() ?? name;
@@ -69,7 +69,6 @@ class VivoAppStore extends AppSource {
       final developer = json['developer']?.toString() ?? name;
       final uploadTime = json['upload_time']?.toString();
       final apkName = '${packageName}_$versionCode.apk';
-      final apkUrl = '$apkDownloadUrl$id';
       return APKDetails(
         versionName,
         [MapEntry(apkName, apkUrl)],

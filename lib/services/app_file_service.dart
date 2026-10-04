@@ -411,9 +411,8 @@ class AppFileService {
         try {
           final probeResponse = await sourceRequestStreamResponse(
             'HEAD',
-            url,
             reqHeaders,
-            {'allowInsecure': allowInsecure},
+            {'allowInsecure': allowInsecure, 'url': url},
           );
           final probeClient = probeResponse.value.key;
           final probeRes = probeResponse.value.value;
@@ -464,25 +463,23 @@ class AppFileService {
     try {
       var responseWithClient = await sourceRequestStreamResponse(
         'GET',
-        url,
         reqHeaders,
-        {'allowInsecure': allowInsecure},
+        {'allowInsecure': allowInsecure, 'url': url},
       );
       responseClient = responseWithClient.value.key;
       HttpClientResponse response = responseWithClient.value.value;
 
       // Handle 416 Range Not Satisfiable (e.g. remote file changed)
       if (response.statusCode == HttpStatus.requestedRangeNotSatisfiable && rangeStart > 0) {
-        responseClient.close();
+        responseClient?.close();
         deleteFile(tempDownloadedFile);
         rangeStart = 0;
         received = 0;
         reqHeaders.remove('range');
         responseWithClient = await sourceRequestStreamResponse(
           'GET',
-          url,
           reqHeaders,
-          {'allowInsecure': allowInsecure},
+          {'allowInsecure': allowInsecure, 'url': url},
         );
         responseClient = responseWithClient.value.key;
         response = responseWithClient.value.value;
@@ -490,7 +487,7 @@ class AppFileService {
 
       if (response.statusCode < 200 || response.statusCode > 299) {
         final retryAfter = response.headers.value('retry-after');
-        responseClient.close();
+        responseClient?.close();
         if (tempDownloadedFile.existsSync() && rangeStart == 0) {
           deleteFile(tempDownloadedFile);
         }

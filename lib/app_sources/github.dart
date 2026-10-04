@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
@@ -338,10 +339,8 @@ class GitHub extends AppSource {
   ) async {
     var res = await sourceRequest(url, additionalSettings);
     if (_isAuthRejection(res)) {
-      unawaited(
-        LogsProvider().add(
-          'GitHub request for $url rejected due to token access, retrying without token.',
-        ),
+      AppLogger.info(
+        'GitHub request for $url rejected due to token access, retrying without token.',
       );
       res = await sourceRequest(
         url,
@@ -488,7 +487,7 @@ class GitHub extends AppSource {
       for (final r in releases) {
         if (r == null) continue;
         final name = (r['tag_name'] ?? r['name'])?.toString() ?? '';
-        formats[r] = findStandardFormatsForVersion(name, strict: false);
+        formats[r] = findStandardFormatsForVersion(name, false);
       }
     }
 

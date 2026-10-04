@@ -28,7 +28,7 @@ dependencies:
   fluttertoast: ^10.0.0
   device_info_plus: ^13.2.0
   file_picker: ^12.3.0
-  animations: ^2.2.0
+  animations: ^3.0.0
   loading_indicator_m3e: ^0.1.1
   android_package_installer: # TODO: Upstream PR pending; if not accepted, keep fork maintained
     git:
@@ -46,7 +46,7 @@ dependencies:
   flutter_archive: ^6.3.1
   archive: ^4.2.0
   hsluv: ^1.1.3
-  connectivity_plus: ^7.2.0
+  connectivity_plus: ^7.3.1
   shared_storage: # Actively maintained fork (more current than upstream); no action needed
     git:
       url: https://github.com/AlexBacich/shared-storage
@@ -55,11 +55,11 @@ dependencies:
   bcrypt: ^1.2.0
   app_links: ^7.2.1
   equations: ^6.0.0
-  flex_color_picker: ^3.8.0
-  android_system_font: # Upstream (re7gog) archived 2026-01-19; using self-maintained fork
+  flex_color_picker: ^4.0.0
+  android_system_font: # re7gog archived 2026-01-19; ImranR98 fork is AGP-9-compatible
     git:
-      url: https://github.com/thejaustin/android_system_font
-      ref: 077e15d7d0acb82283b89dfd82f4984b27b28f95
+      url: https://github.com/ImranR98/android_system_font
+      ref: 7efa523a0cb40fb243318450c60dfd0e882e6b0c
   shizuku_apk_installer: # Upstream (re7gog) archived 2026-07-10; using self-maintained fork
     git:
       url: https://github.com/thejaustin/shizuku_apk_installer
@@ -71,7 +71,7 @@ dependencies:
   protobuf: ^3.1.0
   flutter_markdown_plus: ^1.0.12
   background_fetch: ^1.7.0
-  flutter_foreground_task: ^9.2.2
+  flutter_foreground_task: ^11.0.3
   go_router: ^17.2.3
   shimmer: ^3.0.0
   introduction_screen: ^4.0.0
@@ -80,7 +80,8 @@ dependencies:
   encrypt: ^5.0.3
   flutter_js: ^0.8.7
   home_widget: ^0.9.3
-  logger: ^2.5.0
+  workmanager: ^0.10.10
+  logger: ^2.8.0
 
 dev_dependencies:
   flutter_test:
@@ -102,6 +103,8 @@ flutter:
   assets:
     - assets/translations/
     - assets/graphics/icon_small.png
+    - assets/graphics/
+    - assets/ca-certs/
 
   fonts:
       - family: Montserrat

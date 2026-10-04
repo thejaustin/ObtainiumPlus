@@ -107,6 +107,8 @@ class ObtainiumHttpError extends ObtainiumError {
         );
 }
 
+typedef HTTPStatusError = ObtainiumHttpError;
+
 class RateLimitError extends ObtainiumError {
   final int remainingMinutes;
   RateLimitError(this.remainingMinutes)
@@ -331,6 +333,10 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
       '${tr('cantInstallOlderVersion')} (versionCode ${data?['currentVersionCode'] ?? '?'} → ${data?['newVersionCode'] ?? '?'})',
     'INSTALL_FAILED' => _formatInstallError(data),
     'DOWNLOAD_CANCELLED' => tr('downloadCancelled'),
+    'SIGNING_CERT_MISMATCH' =>
+      data?['hardBlock'] == true
+          ? tr('signingCertMismatchHardBlock')
+          : tr('signingCertMismatchMessage'),
     'ID_CHANGED' => data?['appId'] != null
         ? '${tr('appIdMismatch')} (${data?['appId']} → ${data?['newId']})'
         : '${tr('appIdMismatch')} - ${data?['newId'] ?? ''}',

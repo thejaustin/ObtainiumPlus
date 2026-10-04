@@ -159,7 +159,6 @@ class FDroidRepo extends AppSource {
   Map<String, dynamic> runOnAddAppInputChange(String inputUrl) {
     try {
       final appId = Uri.parse(inputUrl).queryParameters['appId'];
-      _appIdFoundInUrl = appId != null;
       if (appId != null) {
         return {'appIdOrName': appId};
       }

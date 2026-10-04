@@ -161,7 +161,7 @@ class _TvDropdownMenuState<T> extends State<TvDropdownMenu<T>> {
   }
 
   void _openMenu() {
-    context.read<SettingsProvider>().selectionClick();
+    AppHaptics.selectionClick();
     _menuController.open();
   }
 

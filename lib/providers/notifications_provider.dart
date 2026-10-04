@@ -11,9 +11,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart' show formatDownloadSize;
+import 'package:obtainium/utils/nav_helper.dart';
 import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/nav_helper.dart';
 
 /// Prefix for the download-notification Cancel action id; the app ID is appended
 /// so the tap handler knows which download to stop.
@@ -391,36 +391,12 @@ class NotificationsProvider {
   }
 
   void _showNotificationPayload(String? payload, {bool doublePop = false}) {
-    if (payload?.isNotEmpty == true) {
-      final lines = payload!.split('\n');
-      final title = lines.first;
-      final content = lines.sublist(1).join('\n');
-      globalNavigatorKey.currentState?.push(
-        PageRouteBuilder(
-          opaque: false,
-          barrierDismissible: true,
-          pageBuilder: (context, _, __) => GlassDialog(
-            title: title,
-            icon: Icons.notifications_active_outlined,
-            content: Text(content),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(null);
-                  if (doublePop) {
-                    Navigator.of(context).pop(null);
-                  }
-                },
-                child: Text(tr('ok')),
-              ),
-            ],
-          ),
-        ),
-      );
+    if (payload?.isNotEmpty != true) {
+      return;
     }
     if (payload!.startsWith(appIdTapPayloadPrefix)) {
       final appId = payload.substring(appIdTapPayloadPrefix.length);
-      final navigator = globalNavigatorKey.currentState;
+      final navigator = appNavigatorKey.currentState;
       if (navigator != null && appId.isNotEmpty) {
         NavHelper.pushAppPage(navigator.context, appId);
       }
@@ -429,9 +405,9 @@ class NotificationsProvider {
     final lines = payload.split('\n');
     final title = lines.first;
     final content = lines.sublist(1).join('\n');
-    globalNavigatorKey.currentState?.push(
+    appNavigatorKey.currentState?.push(
       PageRouteBuilder(
-        pageBuilder: (context, _, _) => AlertDialog(
+        pageBuilder: (context, _, __) => AlertDialog(
           title: Text(title),
           content: Text(content),
           actions: [
