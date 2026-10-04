@@ -107,6 +107,8 @@ class ObtainiumHttpError extends ObtainiumError {
         );
 }
 
+typedef HTTPStatusError = ObtainiumHttpError;
+
 class RateLimitError extends ObtainiumError {
   final int remainingMinutes;
   RateLimitError(this.remainingMinutes)

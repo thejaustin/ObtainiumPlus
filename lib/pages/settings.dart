@@ -17,6 +17,8 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/utils/locale_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
