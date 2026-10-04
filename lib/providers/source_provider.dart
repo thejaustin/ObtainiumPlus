@@ -134,6 +134,13 @@ String getSourceRegex(List<String> hosts) {
 HttpClient createHttpClient(bool insecure) =>
     HttpService().createHttpClient(insecure);
 
+/// Throws an [ObtainiumError] unless [res] has a 200 status code.
+void ensureHttpSuccess(http.Response res) {
+  if (res.statusCode != 200) {
+    throw getObtainiumHttpError(res);
+  }
+}
+
 /// Delegates to [HttpService.sourceRequestStreamResponse].
 Future<MapEntry<Uri, MapEntry<HttpClient, HttpClientResponse>>>
 sourceRequestStreamResponse(

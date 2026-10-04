@@ -1,5 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/appearance_hub.dart';

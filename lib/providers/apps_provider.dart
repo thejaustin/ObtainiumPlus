@@ -3,7 +3,6 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
-import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -86,6 +85,8 @@ const int _retryDelaySeconds = 5;
 const int _progressUpdateIntervalMs = 500;
 const int _downloadBufferSize = 32 * 1024;
 const int _downloadProgressFallback = 30;
+const int _maxDownloadPolls = 60;
+const int _downloadPollIntervalSeconds = 5;
 const int _partialHashCheckStartingSize = 1024;
 const int _partialHashCheckLowerLimit = 128;
 const int _partialHashCheckDecrement = 256;
