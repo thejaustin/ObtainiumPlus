@@ -206,6 +206,8 @@ bool isVersionPseudo(App app) =>
     app.settings.getBool('trackOnly') ||
     (app.installedVersion != null && !app.settings.getBool('versionDetection'));
 
+const int kDefaultFetchConcurrency = 4;
+
 class SourceProvider {
   static final SourceProvider _instance = SourceProvider._();
   factory SourceProvider() => _instance;

@@ -31,6 +31,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/services/apk_filter_service.dart';
+import 'package:obtainium/services/http_service.dart';
+import 'package:obtainium/installers/install_utils.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 
 // NOTE: This provider extension is intentionally UX-coupled — it shows dialogs,
@@ -764,7 +768,7 @@ extension AppsProviderInstall on AppsProvider {
         installedVersion: apps[file.appId]!.app.latestVersion,
       );
       unawaited(file.file.delete(recursive: true));
-      if (!isBg) settingsProvider.heavyImpact();
+      if (!isBg) AppHaptics.heavyImpact();
     }
     // Cancelled or already-installed/pending: keep the file so a retry can
     // reuse it without re-downloading (matches main).
@@ -1633,7 +1637,7 @@ extension AppsProviderInstall on AppsProvider {
       // doesn't report "Installing" before installation actually begins.
       apps[id]?.downloadProgress = _downloadCompleteProgress.toDouble();
       notify();
-      if (!isBg) settingsProvider.lightImpact();
+      if (!isBg) AppHaptics.lightImpact();
       willBeSilent = await canInstallSilently(apps[id]!.app);
       final installer = getInstaller();
       await installer.ensurePermission();
