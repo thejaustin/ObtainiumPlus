@@ -8,8 +8,10 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/dom.dart';
 import 'package:http/http.dart';
@@ -19,14 +21,17 @@ import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
+import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/utils/url_validator.dart';
+import 'package:obtainium/services/http_service.dart';
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/typed_settings.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
 export 'package:obtainium/utils/source_utils.dart';
 
+import 'package:obtainium/app_sources/apk4free.dart';
 import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
@@ -53,7 +58,6 @@ import 'package:obtainium/app_sources/liteapks.dart';
 import 'package:obtainium/app_sources/neutroncode.dart';
 import 'package:obtainium/app_sources/rockmods.dart';
 import 'package:obtainium/app_sources/rustore.dart';
-import 'package:obtainium/app_sources/samsunggalaxystore.dart';
 import 'package:obtainium/app_sources/sourceforge.dart';
 import 'package:obtainium/app_sources/sourcehut.dart';
 import 'package:obtainium/app_sources/telegramapp.dart';
@@ -359,6 +363,7 @@ class SourceProvider {
     if (currentApp?.id != null) return currentApp!.id;
     final explicitId = additionalSettings['appId'] as String?;
     if (explicitId != null && explicitId.trim().isNotEmpty) return explicitId;
+    String? rawId;
     if ((!trackOnly || source.inferAppIdEvenWhenTrackOnly) &&
         (!source.appIdInferIsOptional ||
             (source.appIdInferIsOptional && inferAppIdIfOptional))) {
