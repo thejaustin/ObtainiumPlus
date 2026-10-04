@@ -134,9 +134,6 @@ String getSourceRegex(List<String> hosts) {
   return '(${hosts.join('|').replaceAll('.', '\\.')})';
 }
 
-/// Delegates to [HttpService.createHttpClient].
-HttpClient createHttpClient(bool insecure) =>
-    HttpService().createHttpClient(insecure);
 
 /// Throws an [ObtainiumError] unless [res] has a 200 status code.
 void ensureHttpSuccess(http.Response res) {
