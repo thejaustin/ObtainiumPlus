@@ -41,6 +41,7 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 // ignore: implementation_imports
 import 'package:easy_localization/src/localization.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:material_ui/material_ui.dart' as mui;
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -741,7 +742,10 @@ class _ObtainiumState extends State<Obtainium> {
 
           return MaterialApp(
             title: 'Obtainium',
-            localizationsDelegates: context.localizationDelegates,
+            localizationsDelegates: [
+              ...context.localizationDelegates,
+              mui.DefaultMaterialLocalizations.delegate,
+            ],
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             navigatorKey: appNavigatorKey,
