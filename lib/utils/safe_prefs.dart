@@ -12,37 +12,57 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// (so callers' `?? default` kicks in) instead of throwing.
 extension SafePrefs on SharedPreferences {
   double? safeDouble(String key) {
-    final value = get(key);
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    return null;
+    try {
+      final value = get(key);
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   int? safeInt(String key) {
-    final value = get(key);
-    if (value is int) return value;
-    if (value is double) return value.round();
-    return null;
+    try {
+      final value = get(key);
+      if (value is int) return value;
+      if (value is double) return value.round();
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   bool? safeBool(String key) {
-    final value = get(key);
-    if (value is bool) return value;
-    if (value is String && (value == 'true' || value == 'false')) {
-      return value == 'true';
+    try {
+      final value = get(key);
+      if (value is bool) return value;
+      if (value is String && (value == 'true' || value == 'false')) {
+        return value == 'true';
+      }
+      return null;
+    } catch (_) {
+      return null;
     }
-    return null;
   }
 
   String? safeString(String key) {
-    final value = get(key);
-    return value is String ? value : null;
+    try {
+      final value = get(key);
+      return value is String ? value : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   List<String>? safeStringList(String key) {
-    final value = get(key);
-    if (value is List) return value.whereType<String>().toList();
-    return null;
+    try {
+      final value = get(key);
+      if (value is List) return value.whereType<String>().toList();
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Reads an enum stored by index. Returns null when the stored value is
