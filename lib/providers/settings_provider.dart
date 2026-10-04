@@ -507,7 +507,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get showBatteryOptimizationPrompt {
-    return prefs?.getBool('showBatteryOptimizationPrompt') ?? true;
+    return prefs?.safeBool('showBatteryOptimizationPrompt') ?? true;
   }
 
   set showBatteryOptimizationPrompt(bool show) {

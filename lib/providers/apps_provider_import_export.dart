@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/utils/app_utils.dart';
 
 import 'package:obtainium/providers/app_json_migration.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -41,7 +42,7 @@ extension AppsProviderImportExport on AppsProvider {
                 jsonDecode(json['additionalSettings'] as String)
                     as Map<String, dynamic>;
             additionalSettings.removeWhere((key, _) => key.endsWith('-creds'));
-            json['additionalSettings'] = jsonEncode(additionalSettings);
+            json['additionalSettings'] = safeJsonEncode(additionalSettings);
           }
           return json;
         })
