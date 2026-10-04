@@ -69,14 +69,19 @@ void main() {
         ],
         child: Builder(
           builder: (context) => MaterialApp(
+            // Explicit delegates ensure MaterialLocalizations is available on
+            // the first frame regardless of platform locale (CI machines often
+            // report a POSIX 'C' locale that no Material delegate covers).
             localizationsDelegates: [
               ...context.localizationDelegates,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
+            supportedLocales: const [Locale('en')],
+            // Hardcode 'en' so the test never picks up the CI machine's
+            // platform locale, which may be 'C' (POSIX) and unsupported.
+            locale: const Locale('en'),
             home: SettingsPage(initialTab: tab),
           ),
         ),
