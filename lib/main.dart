@@ -15,7 +15,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
 import 'package:obtainium/services/background_update_service.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';

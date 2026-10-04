@@ -1,5 +1,6 @@
 // Exposes functions used to save/load app settings
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:obtainium/utils/safe_prefs.dart';
