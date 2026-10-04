@@ -146,11 +146,15 @@ class _TvTextFieldFocusState extends State<TvTextFieldFocus> {
   }
 }
 
+int generateDeterministicId(int n, {int seed2 = 0, int seed3 = 0}) =>
+    Object.hash(n, seed2, seed3);
+
 class _GeneratedFormState extends State<GeneratedForm> {
   Map<String, dynamic> values = {};
   final Map<String, TextEditingController> _textControllers = {};
   final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
   final Map<String, int> _subFormGenerations = {};
+  int _subFormGenerationCount = 0;
 
   InputDecoration _fieldDecoration({
     required String labelText,
@@ -611,41 +615,6 @@ class _GeneratedFormState extends State<GeneratedForm> {
 
   @override
   Widget build(BuildContext context) {
-    final List<List<Widget>> renderedInputs = [
-      for (final row in formInputs) [...row],
-    ];
-    for (var r = 0; r < renderedInputs.length; r++) {
-      for (var e = 0; e < renderedInputs[r].length; e++) {
-        final item = widget.items[r][e];
-        final String fieldKey = item.key;
-        if (item is GeneratedFormSwitch) {
-          renderedInputs[r][e] = ToggleTile(
-            label: tr(item.label),
-            value: values[fieldKey] as bool,
-            noPadding: widget.noTilePadding,
-            helpWidgets: item.tooltip != null
-                ? [Text(item.tooltip!)]
-                : const [],
-            onChanged: item.disabled
-                ? null
-                : (value) {
-                    setState(() {
-                      values[fieldKey] = value;
-                      notifyFormChange();
-                    });
-                  },
-          );
-        } else if (item is GeneratedFormSubForm) {
-          renderedInputs[r][e] = _buildSubForm(
-            item,
-            fieldKey,
-            isFirst: r == 0,
-            isLast: r == widget.items.length - 1,
-          );
-        }
-      }
-    }
-
 
     final List<Widget> inputRowWidgets = [];
     for (var r = 0; r < widget.items.length; r++) {
