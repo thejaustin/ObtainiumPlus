@@ -42,6 +42,8 @@ abstract class AppSource {
     _hostRegex = null;
   }
 
+  bool matchesHost(String host) => hostRegex.hasMatch(host);
+
   AppSource() {
     name = runtimeType.toString();
   }

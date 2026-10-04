@@ -75,14 +75,6 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
   );
 }
 
-List<List<String>> stringMapListTo2DList(
-  List<MapEntry<String, String>> mapList,
-) => mapList.map((e) => [e.key, e.value]).toList();
-
-List<MapEntry<String, String>> assumed2DlistToStringMapList(
-  List<dynamic> arr,
-) => arr.map((e) => MapEntry(e[0] as String, e[1] as String)).toList();
-
 /// Safely decode JSON string with a fallback value if parsing fails.
 /// Also handles cases where the input is already decoded (not a String).
 dynamic safeJsonDecode(dynamic jsonValue, dynamic fallback) {
