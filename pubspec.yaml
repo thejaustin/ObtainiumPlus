@@ -56,10 +56,10 @@ dependencies:
   app_links: ^7.2.1
   equations: ^6.0.0
   flex_color_picker: ^4.0.0
-  android_system_font: # Upstream (re7gog) archived 2026-01-19; using self-maintained fork
+  android_system_font: # re7gog archived 2026-01-19; ImranR98 fork is AGP-9-compatible
     git:
-      url: https://github.com/thejaustin/android_system_font
-      ref: 077e15d7d0acb82283b89dfd82f4984b27b28f95
+      url: https://github.com/ImranR98/android_system_font
+      ref: 7efa523a0cb40fb243318450c60dfd0e882e6b0c
   shizuku_apk_installer: # Upstream (re7gog) archived 2026-07-10; using self-maintained fork
     git:
       url: https://github.com/thejaustin/shizuku_apk_installer
