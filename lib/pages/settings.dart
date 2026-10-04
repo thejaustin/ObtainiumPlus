@@ -110,6 +110,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 alignment: Alignment.topCenter,
                 heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
                 child: NavigationBar(
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                   selectedIndex: _selectedSectionIndex,
                   onDestinationSelected: (index) {
                     AppHaptics.selectionClick();
