@@ -3,6 +3,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -37,7 +38,7 @@ import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
-import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
