@@ -94,7 +94,11 @@ void main() {
   }
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // plusSettingsBottomNavBar defaults to true, which renders a NavigationBar
+    // that requires MaterialLocalizations via _NavigationBarDestinationSemantics.
+    // Tests focus on settings-section stability, not nav-bar behaviour, so
+    // disable it here to keep the test harness simple.
+    SharedPreferences.setMockInitialValues({'plusSettingsBottomNavBar': false});
     FlutterSecureStorage.setMockInitialValues({});
   });
 
@@ -150,6 +154,7 @@ void main() {
       // The issue #217 corruption class: keys stored with the wrong type
       // (JSON import) or stale enum indexes must not blank the page
       SharedPreferences.setMockInitialValues({
+        'plusSettingsBottomNavBar': false, // keep nav bar hidden (see setUp comment)
         'plusSettingsCornerRadius': 16, // int where double expected
         'plusGlobalCornerRadius': 'oops', // string where double expected
         'theme': 99, // out-of-range enum index
