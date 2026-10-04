@@ -9,6 +9,7 @@ import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';

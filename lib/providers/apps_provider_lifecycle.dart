@@ -11,7 +11,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
-import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
 import 'package:obtainium/utils/color_utils.dart';
 import 'package:obtainium/providers/app_json_migration.dart';
 import 'package:obtainium/providers/apps_provider.dart';

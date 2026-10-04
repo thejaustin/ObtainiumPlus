@@ -7,6 +7,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/safe_prefs.dart';
 
 import 'package:obtainium/providers/app_json_migration.dart';
 import 'package:obtainium/providers/apps_provider.dart';
