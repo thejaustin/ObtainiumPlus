@@ -25,14 +25,17 @@ String trackedAfter({
 /// Whether the UI would show an update badge for the given app state.
 bool updateShown(String installed, String latest) {
   final app = App(
-    id: 'com.example.app',
-    url: 'https://github.com/example/app',
-    author: 'example',
-    name: 'App',
-    installedVersion: installed,
-    latestVersion: latest,
-    preferredApkIndex: 0,
-    additionalSettings: const {'versionDetection': true},
+    'com.example.app',
+    'https://github.com/example/app',
+    'example',
+    'App',
+    installed,
+    latest,
+    const [],
+    0,
+    const {'versionDetection': true},
+    null,
+    false,
   );
   return isAppUpdateable(app, SettingsProvider());
 }
