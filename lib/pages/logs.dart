@@ -7,6 +7,7 @@ import 'package:obtainium/core/logging/app_log_db.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/theme.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -204,7 +205,7 @@ class _LogsPageState extends State<LogsPage> {
               IconButton(
                 onPressed: hasLogs
                     ? () {
-                        context.read<SettingsProvider>().selectionClick();
+                        AppHaptics.selectionClick();
                         _copyLogs();
                       }
                     : null,
@@ -215,7 +216,7 @@ class _LogsPageState extends State<LogsPage> {
               IconButton(
                 onPressed: hasLogs
                     ? () {
-                        context.read<SettingsProvider>().selectionClick();
+                        AppHaptics.selectionClick();
                         _shareLogs();
                       }
                     : null,
@@ -225,7 +226,7 @@ class _LogsPageState extends State<LogsPage> {
             IconButton(
               onPressed: hasLogs
                   ? () {
-                      context.read<SettingsProvider>().selectionClick();
+                      AppHaptics.selectionClick();
                       _clearLogs();
                     }
                   : null,

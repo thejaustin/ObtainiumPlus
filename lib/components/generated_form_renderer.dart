@@ -357,7 +357,6 @@ class _GeneratedFormState extends State<GeneratedForm> {
     _textControllers.clear();
     _fieldKeys.clear();
     _subFormGenerations.clear();
-    _subFormGenerationCount = 0;
     values = {
       for (final row in widget.items)
         for (final item in row) item.key: item.value,
@@ -616,6 +615,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
 
   @override
   Widget build(BuildContext context) {
+
     final List<Widget> inputRowWidgets = [];
     for (var r = 0; r < widget.items.length; r++) {
       final List<Widget> rowItems = [];

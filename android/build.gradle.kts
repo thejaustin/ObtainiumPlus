@@ -15,15 +15,17 @@ allprojects {
     }
 }
 
+// KGP 2.4+ removed support for Kotlin language versions < 2.0. Override all
+// subprojects so legacy plugins (sentry_flutter, android_file_picker, etc.)
+// that declare languageVersion 1.6/1.8 in their own build.gradle don't fail.
 subprojects {
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         compilerOptions {
-            languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
-            apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
+            languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+            apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
         }
     }
 }
-
 
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
