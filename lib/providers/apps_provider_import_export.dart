@@ -107,7 +107,7 @@ extension AppsProviderImportExport on AppsProvider {
         return null;
       }
       if (exportDir == null) {
-        if (settingsProvider.prefs?.getString('exportDir') != null) {
+        if (settingsProvider.prefs?.safeString('exportDir') != null) {
           AppLogger.info(
             'Auto-export skipped: export directory permission unavailable',
           );
