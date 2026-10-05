@@ -46,10 +46,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
               sigma: 10,
               enabled: plusSettings.plusEnableGlassmorphism,
               child: Material(
-                color: (isDark
-                        ? colorScheme.surfaceContainerLow
-                        : colorScheme.surface)
-                    .withValues(
+                color: colorScheme.surfaceContainerLow.withValues(
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
                     ),
                 shape: RoundedRectangleBorder(

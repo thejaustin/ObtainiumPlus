@@ -40,15 +40,12 @@ class BooleanControlGrid extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               margin: EdgeInsets.zero,
               decoration: BoxDecoration(
-                color:
-                    (isDark
-                            ? Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest
-                            : Theme.of(context).colorScheme.surface)
-                        .withValues(
-                          alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0,
-                        ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerLow
+                    .withValues(
+                      alpha: settings.plusEnableGlassmorphism ? 0.6 : 1.0,
+                    ),
                 borderRadius: BorderRadius.circular(24.0),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outlineVariant

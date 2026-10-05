@@ -86,13 +86,12 @@ class SettingsGroup extends StatelessWidget {
             final container = Container(
               margin: const EdgeInsets.symmetric(vertical: 6.0),
               decoration: BoxDecoration(
-                color:
-                    (isDark
-                            ? Theme.of(context).colorScheme.surfaceContainerLow
-                            : Theme.of(context).colorScheme.surface)
-                        .withValues(
-                          alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0,
-                        ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerLow
+                    .withValues(
+                      alpha: settings.plusEnableGlassmorphism ? 0.72 : 1.0,
+                    ),
                 borderRadius: BorderRadius.circular(radius),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outlineVariant
