@@ -69,20 +69,31 @@ class _SelectionModalState extends State<SelectionModal> {
 
   void _updateFilteredEntries() {
     filteredEntrySelections.clear();
+    RegExp? re;
+    if (filterRegex.isNotEmpty) {
+      try {
+        re = RegExp(filterRegex);
+      } catch (_) {
+        // Invalid regex — treat as plain substring match below
+      }
+    }
     entrySelections.forEach((key, value) {
       var searchableText = key.value.isEmpty ? key.key : key.value[0];
-      if (filterRegex.isEmpty || RegExp(filterRegex).hasMatch(searchableText)) {
+      if (filterRegex.isEmpty ||
+          (re != null ? re.hasMatch(searchableText) : searchableText.contains(filterRegex))) {
         filteredEntrySelections.putIfAbsent(key, () => value);
       }
     });
     if (filterRegex.isNotEmpty && filteredEntrySelections.isEmpty) {
+      RegExp? reCI;
+      try {
+        reCI = RegExp(filterRegex, caseSensitive: false);
+      } catch (_) {}
       entrySelections.forEach((key, value) {
         var searchableText = key.value.isEmpty ? key.key : key.value[0];
-        if (filterRegex.isEmpty ||
-            RegExp(
-              filterRegex,
-              caseSensitive: false,
-            ).hasMatch(searchableText)) {
+        if (reCI != null
+            ? reCI.hasMatch(searchableText)
+            : searchableText.toLowerCase().contains(filterRegex.toLowerCase())) {
           filteredEntrySelections.putIfAbsent(key, () => value);
         }
       });
