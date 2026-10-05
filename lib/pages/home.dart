@@ -143,20 +143,22 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         // two consecutive startup modals after an update is terrible UX.
         sp.googleVerificationWarningShown = true;
       } else if (!sp.welcomeShown) {
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext ctx) {
-            return GeneratedFormModal(
-              title: tr('welcome'),
-              items: const [],
-              message:
-                  "Welcome to Obtainium+!\n\nThis app allows you to install and update apps directly from their sources, bypassing traditional app stores.\n\nTo get started, tap the '+' button to add your first app.",
-              singleNullReturnButton: tr('ok'),
-            );
-          },
-        );
-        sp.welcomeShown = true;
+        if (context.mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext ctx) {
+              return GeneratedFormModal(
+                title: tr('welcome'),
+                items: const [],
+                message:
+                    "Welcome to Obtainium+!\n\nThis app allows you to install and update apps directly from their sources, bypassing traditional app stores.\n\nTo get started, tap the '+' button to add your first app.",
+                singleNullReturnButton: tr('ok'),
+              );
+            },
+          );
+          sp.welcomeShown = true;
+        }
       }
       if (!mounted) return;
       if (!sp.googleVerificationWarningShown && DateTime.now().year == 2026) {

@@ -279,15 +279,11 @@ class _CommandCenterState extends State<CommandCenter> {
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.85,
                 decoration: BoxDecoration(
-                  color:
-                      (isDark
-                              ? theme.colorScheme.surfaceContainerHighest
-                              : theme.colorScheme.surface)
-                          .withValues(
-                            alpha: plusSettings.plusEnableGlassmorphism
-                                ? AppConstants.glassSurfaceAlpha
-                                : 1.0,
-                          ),
+                  color: plusSettings.plusEnableGlassmorphism
+                      ? theme.colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                      : (isDark
+                          ? theme.colorScheme.surfaceContainerHighest
+                          : theme.colorScheme.surfaceContainerLow),
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(sheetRadius),
                   ),

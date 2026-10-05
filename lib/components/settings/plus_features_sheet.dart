@@ -97,7 +97,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     final innerRadius = CardMetrics.inner(radius);
 
     return Material(
-      color: colorScheme.surface,
+      color: colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       child: ListView(
         controller: widget.scrollController,

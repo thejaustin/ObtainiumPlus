@@ -662,12 +662,12 @@ class AppDownloadService {
           // Android 14+ User Pre-approval for non-silent installs (context required)
           var osInfo = await DeviceInfoPlugin().androidInfo;
           if (context != null && context.mounted) {
-            final settingsProvider = Provider.of<SettingsProvider>(
+            final plusSettingsProvider = Provider.of<PlusSettingsProvider>(
               context,
               listen: false,
             );
             if (osInfo.version.sdkInt >= 34 &&
-                settingsProvider.plusEnableUserPreapproval) {
+                plusSettingsProvider.plusEnableUserPreapproval) {
               AppInstallService.requestUserPreapproval(apps[id]!.app.id);
             }
           }

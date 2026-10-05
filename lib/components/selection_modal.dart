@@ -135,9 +135,9 @@ class _SelectionModalState extends State<SelectionModal> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(
-            alpha: enableGlass ? 0.78 : 1.0,
-          ),
+          color: enableGlass
+              ? colorScheme.surface.withValues(alpha: 0.78)
+              : colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(dialogRadius),
           border: Border.all(
             color: enableGlass

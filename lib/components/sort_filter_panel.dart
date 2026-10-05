@@ -135,13 +135,11 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         enabled: plusSettings.plusEnableGlassmorphism,
         child: Container(
           decoration: BoxDecoration(
-            color:
-                (isDark
-                        ? theme.colorScheme.surfaceContainerHigh
-                        : theme.colorScheme.surface)
-                    .withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism ? 0.75 : 1.0,
-                    ),
+            color: plusSettings.plusEnableGlassmorphism
+                ? theme.colorScheme.surface.withValues(alpha: 0.75)
+                : (isDark
+                    ? theme.colorScheme.surfaceContainerHigh
+                    : theme.colorScheme.surfaceContainerLow),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),

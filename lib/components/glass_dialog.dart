@@ -39,9 +39,9 @@ class GlassDialog extends StatelessWidget {
         width: width,
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withValues(
-            alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
-          ),
+          color: enableGlass
+              ? Theme.of(context).colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+              : Theme.of(context).colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
             color: enableGlass

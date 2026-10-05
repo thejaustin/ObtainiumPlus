@@ -52,9 +52,9 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 460),
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(
-            alpha: enableGlass ? 0.78 : 1.0,
-          ),
+          color: enableGlass
+              ? colorScheme.surface.withValues(alpha: 0.78)
+              : colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: enableGlass

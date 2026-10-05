@@ -38,9 +38,9 @@ Future<List<String>?> showTagEditor({
           child: Container(
             constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
             decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.surface.withValues(alpha: enableGlass ? 0.85 : 1.0),
+              color: enableGlass
+                  ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)
+                  : Theme.of(context).colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: Theme.of(

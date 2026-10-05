@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -23,8 +22,7 @@ class SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use listen: false to avoid type mismatch issues when nested in specialized Consumers
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final settings = context.watch<PlusSettingsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Robustly filter out hidden/empty widgets

@@ -6,8 +6,9 @@ All notable changes to Obtainium+ are documented in this file.
 
 ### 🐛 Bug Fixes & Polish
 
-- **Light Mode Card Backgrounds**: Fixed app shortcuts menu, omnibar's add-app sheet, sort/filter panel, selection modal, version history, and several other surfaces using the page background color (`surface`) instead of the elevated card tone (`surfaceContainerLow`) in light mode — cards were invisible against the page.
-- **Settings Changes Now Apply Immediately**: Plus settings (glassmorphism, corner radius, expressive progress, contextual tips, etc.) now update live as soon as you change them. Previously, components were listening to the wrong provider and would not rebuild until you navigated away.
+- **Light Mode Card & Dialog Backgrounds**: Fixed all dialogs (generated form, selection, logs, critical issue, force update, import error, tag editor, unsupported source) and bottom sheets (sort/filter panel, search, appearance hub, Plus features) using the plain page background (`surface`) instead of the proper elevated tone — dialogs now use `surfaceContainerHigh` and bottom sheets use `surfaceContainerLow`, making them visually distinct in light mode.
+- **Settings Changes Now Apply Immediately**: Plus settings (glassmorphism, corner radius, expressive progress, contextual tips, etc.) now update live as soon as you change them. Previously, components were listening to the wrong provider and would not rebuild until you navigated away. Additional affected components fixed in this pass: settings group cards, Plus features sheet, search command center.
+- **Welcome Dialog Safety**: Added `context.mounted` guard around the first-run welcome dialog to prevent a use-after-disposal crash on devices that destroy the home widget before the first frame completes.
 - **Export / Share Crash (NaN)**: Prevented JSON encoding failure when app metadata contained `NaN` or `Infinity` values, which could crash the share/export flow.
 - **Version History Crash**: Added `PageStorageKey` to the version history expansion tile to prevent a `bool`/`double` type mismatch crash when scrolling back to a previously-visited app.
 - **Update Check Unresponsiveness**: Yielded to the UI thread between each update check to prevent the app from becoming unresponsive during large background scans.

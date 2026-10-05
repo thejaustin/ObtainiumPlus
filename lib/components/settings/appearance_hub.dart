@@ -155,12 +155,11 @@ class AppearanceHub extends StatelessWidget {
             child: Container(
               height: MediaQuery.of(context).size.height * 0.88,
               decoration: BoxDecoration(
-                color: (Theme.of(context).brightness == Brightness.dark
+                color: plusSettings.plusEnableGlassmorphism
+                    ? colorScheme.surface.withValues(alpha: 0.9)
+                    : (Theme.of(context).brightness == Brightness.dark
                         ? colorScheme.surfaceContainerHigh
-                        : colorScheme.surface)
-                    .withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism ? 0.9 : 1.0,
-                    ),
+                        : colorScheme.surfaceContainerLow),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border(
