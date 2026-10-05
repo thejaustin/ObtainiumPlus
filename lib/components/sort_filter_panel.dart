@@ -631,6 +631,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     return Theme(
       data: theme.copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
+        key: const PageStorageKey<String>('sort_filter_advanced'),
         tilePadding: EdgeInsets.zero,
         initiallyExpanded: hasAdvancedFilters,
         leading: Container(

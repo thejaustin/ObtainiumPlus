@@ -818,6 +818,7 @@ class AddAppPageState extends State<AddAppPage> {
         Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
+            key: const PageStorageKey<String>('add_app_advanced'),
             leading: const Icon(Icons.tune_rounded),
             title: Text(
               tr('advancedOptions'),

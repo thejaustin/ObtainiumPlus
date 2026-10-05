@@ -159,6 +159,7 @@ class ThemeSettingsSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
+            key: const PageStorageKey<String>('settings_advanced_theming'),
             leading: const Icon(Icons.science_outlined),
             title: Text(
               tr('advancedTheming'),

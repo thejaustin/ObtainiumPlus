@@ -152,6 +152,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ExpansionTile(
+        key: PageStorageKey<String>('system_update:${update.packageName}'),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
           foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,

@@ -114,6 +114,7 @@ class SettingsLayoutSelector extends StatelessWidget {
             Theme(
               data: theme.copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
+                key: const PageStorageKey<String>('settings_layout_granular'),
                 tilePadding: const EdgeInsets.symmetric(horizontal: 16),
                 childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 leading: Icon(
