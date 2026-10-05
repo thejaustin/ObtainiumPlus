@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -22,9 +21,9 @@ class ExpressiveProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
-    if (!settings.plusEnableExpressiveProgress) {
+    if (!plusSettings.plusEnableExpressiveProgress) {
       return SizedBox(
         height: height,
         child: LinearProgressIndicator(
@@ -68,9 +67,9 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
-    if (!settings.plusEnableExpressiveProgress) {
+    if (!plusSettings.plusEnableExpressiveProgress) {
       return CircularProgressIndicator(
         value: value,
         color: color,
@@ -78,8 +77,6 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
         strokeWidth: strokeWidth,
       );
     }
-
-    final plusSettings = context.watch<PlusSettingsProvider>();
 
     if (value == null && plusSettings.plusDevUseThirdPartyLoadingIndicator) {
       return FittedBox(

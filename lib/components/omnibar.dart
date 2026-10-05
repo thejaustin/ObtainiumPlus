@@ -24,7 +24,6 @@ import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -226,13 +225,11 @@ class _OmnibarState extends State<Omnibar> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.watch<SettingsProvider>();
-    final animsEnabled = context
-        .watch<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final pillRadius = CardMetrics.pill(radius);
     final isFocusedOrHasText = _isFocused || _controller.text.isNotEmpty;
     // Material 3 Expressive Shape Shifting:
@@ -251,10 +248,10 @@ class _OmnibarState extends State<Omnibar> {
         decoration: BoxDecoration(
           color: isFocusedOrHasText
               ? colorScheme.surfaceContainerHighest.withValues(
-                  alpha: settings.plusEnableGlassmorphism ? 0.7 : 0.95,
+                  alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 0.95,
                 )
               : colorScheme.surfaceContainerHigh.withValues(
-                  alpha: settings.plusEnableGlassmorphism ? 0.45 : 0.7,
+                  alpha: plusSettings.plusEnableGlassmorphism ? 0.45 : 0.7,
                 ),
           borderRadius: BorderRadius.circular(currentRadius),
           border: Border.all(
@@ -265,7 +262,7 @@ class _OmnibarState extends State<Omnibar> {
                 : isFocusedOrHasText
                 ? colorScheme.primary.withValues(alpha: 0.8)
                 : colorScheme.outlineVariant.withValues(
-                    alpha: settings.plusEnableGlassmorphism ? 0.3 : 0.25,
+                    alpha: plusSettings.plusEnableGlassmorphism ? 0.3 : 0.25,
                   ),
             width: isFocusedOrHasText || _isValidUrl || _urlError != null ? 1.8 : 1.0,
           ),
@@ -283,7 +280,7 @@ class _OmnibarState extends State<Omnibar> {
                     offset: const Offset(0, 2),
                   ),
                 ]
-              : (settings.plusEnableGlassmorphism
+              : (plusSettings.plusEnableGlassmorphism
                   ? [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
@@ -299,7 +296,7 @@ class _OmnibarState extends State<Omnibar> {
             children: [
               // Backdrop blur clipped to the bar — must stay inside
               // ClipRRect or it blurs the whole screen behind it
-              if (settings.plusEnableGlassmorphism)
+              if (plusSettings.plusEnableGlassmorphism)
                 Positioned.fill(
                   child: ConditionalBlur(
                     enabled: true,
@@ -308,7 +305,7 @@ class _OmnibarState extends State<Omnibar> {
                   ),
                 ),
               // Inner sheen
-              if (settings.plusEnableGlassmorphism)
+              if (plusSettings.plusEnableGlassmorphism)
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -539,12 +536,12 @@ class AppActionsFAB extends StatelessWidget {
   const AppActionsFAB({super.key});
 
   static void showAddAppMenu(BuildContext context) {
-    final settings = context.read<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final sheetRadius = radius.clamp(24.0, 48.0);
 
     showModalBottomSheet(
@@ -560,9 +557,9 @@ class AppActionsFAB extends StatelessWidget {
       builder: (ctx) {
         final sheet = Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(
-              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
-            ),
+            color: enableGlass
+                ? colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                : colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),
@@ -624,7 +621,7 @@ class AppActionsFAB extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // Add by URL
-                          if (settings.plusFabShowAddByUrl)
+                          if (plusSettings.plusFabShowAddByUrl)
                             _buildMenuItem(
                               context,
                               icon: Icons.link_rounded,
@@ -639,7 +636,7 @@ class AppActionsFAB extends StatelessWidget {
                               },
                             ),
 
-                          if (settings.plusFabShowGithubStarred)
+                          if (plusSettings.plusFabShowGithubStarred)
                             _buildMenuItem(
                               context,
                               icon: Icons.star_rounded,
@@ -662,7 +659,7 @@ class AppActionsFAB extends StatelessWidget {
                               },
                             ),
 
-                          if (settings.plusFabShowGithubPersonalRepos)
+                          if (plusSettings.plusFabShowGithubPersonalRepos)
                             _buildMenuItem(
                               context,
                               icon: Icons.person_rounded,
@@ -683,7 +680,7 @@ class AppActionsFAB extends StatelessWidget {
                               },
                             ),
 
-                          if (settings.plusFabShowImportInstalled)
+                          if (plusSettings.plusFabShowImportInstalled)
                             _buildMenuItem(
                               context,
                               icon: Icons.install_mobile_rounded,
@@ -698,7 +695,7 @@ class AppActionsFAB extends StatelessWidget {
                               },
                             ),
 
-                          if (settings.plusDeveloperMode)
+                          if (plusSettings.plusDeveloperMode)
                             _buildMenuItem(
                               context,
                               icon: Icons.qr_code_scanner_rounded,
@@ -716,11 +713,11 @@ class AppActionsFAB extends StatelessWidget {
                             ),
 
                           // Fallback when every item is disabled
-                          if (!settings.plusFabShowAddByUrl &&
-                              !settings.plusFabShowGithubStarred &&
-                              !settings.plusFabShowGithubPersonalRepos &&
-                              !settings.plusFabShowImportInstalled &&
-                              !settings.plusDeveloperMode)
+                          if (!plusSettings.plusFabShowAddByUrl &&
+                              !plusSettings.plusFabShowGithubStarred &&
+                              !plusSettings.plusFabShowGithubPersonalRepos &&
+                              !plusSettings.plusFabShowImportInstalled &&
+                              !plusSettings.plusDeveloperMode)
                             _buildMenuItem(
                               context,
                               icon: Icons.link_rounded,
@@ -770,10 +767,10 @@ class AppActionsFAB extends StatelessWidget {
     Color? containerColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.read<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.5).clamp(8.0, 16.0);
 
     void handleTap() {
@@ -811,8 +808,8 @@ class AppActionsFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final fabRadius = CardMetrics.pill(settings.plusGlobalCornerRadius);
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final fabRadius = CardMetrics.pill(plusSettings.plusGlobalCornerRadius);
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final colorScheme = Theme.of(context).colorScheme;
 

@@ -5,7 +5,6 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -20,7 +19,6 @@ class ActiveOperationsBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appsProvider = context.watch<AppsProvider>();
-    final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
 
     final bool isCheckingUpdates =
@@ -34,9 +32,9 @@ class ActiveOperationsBanner extends StatelessWidget {
     final bool glassEnabled = plusSettings.plusEnableGlassmorphism;
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final innerRadius = CardMetrics.inner(radius);
     final colorScheme = Theme.of(context).colorScheme;
 

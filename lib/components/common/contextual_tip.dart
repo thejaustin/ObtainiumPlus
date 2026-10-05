@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
 class ContextualTip extends StatefulWidget {
@@ -25,13 +26,14 @@ class _ContextualTipState extends State<ContextualTip> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     if (!settings.enableContextualTips || _dismissed) {
       return const SizedBox.shrink();
     }
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: settings.plusEnableGlassmorphism
+      color: plusSettings.plusEnableGlassmorphism
           ? Theme.of(
               context,
             ).colorScheme.tertiaryContainer.withValues(alpha: 0.45)
