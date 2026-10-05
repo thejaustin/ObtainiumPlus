@@ -8,8 +8,8 @@
 
 ### 🐛 Bug Fixes
 
-#### 🎨 Settings
-- **White background in light mode** — Settings sections now stand out from the page background instead of blending into a flat white sheet.
+#### 🎨 UI
+- **White background in light mode** — Cards, settings sections, the About panel, the app context menu, and the Discover results all now stand out from the page background in light mode instead of blending into a flat white sheet.
 
 #### 📋 App List
 - **Odd glow on update cards** — Cards with pending updates no longer show a colored halo; the shadow is now neutral and subtle.

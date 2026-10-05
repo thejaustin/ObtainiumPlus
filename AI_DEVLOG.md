@@ -61,9 +61,91 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 7. **Upstream merge (v1.6.10 → v1.6.17)** — Merged in prior session; settings UI dark NavigationBar fix (`backgroundColor: Theme.of(context).colorScheme.surfaceContainer`) and `material_ui.DefaultMaterialLocalizations.delegate` added to `main.dart` to prevent null crash on all `material_ui` widgets.
 
 **Open backlog (carried forward):**
-- [ ] `git filter-repo` history rewrite to remove APK blobs (~196MB, requires force push — needs explicit approval)
-- [ ] Performance: `context.watch<AppsProvider>()` in many leaf widgets causes full rebuilds on any AppsProvider change — audit and migrate high-frequency widgets to `context.select`
-- [ ] Issue #330 (ANR/freeze) — likely resolved by PageStorageKey fix; monitor Sentry for recurrence
+- [x] `git filter-repo` history rewrite to remove APK blobs — done: mirror clone → filter-repo --strip-blobs-bigger-than 10M → force push; GitHub repo shrunk from 111 MiB to 26 MiB; all branches/tags rewritten; local worktrees reset --hard to origin/main; CI green post-push (2026-10-05)
+- [x] Performance: `context.watch<AppsProvider>()` audit — fixed 3 widgets (2026-10-05, PR #333):
+  - `CategoryEditorSelector`: changed to `context.read()` in callback (never needed to rebuild on AppsProvider changes)
+  - `CategorySections`: removed `context.watch<AppsProvider>()`, now receives `pendingUpdates` as prop from `apps.dart` (already memoized there)
+  - `statistics.dart`: `getAppValues()` → `getAppValues(deepCopy: false)` — read-only page
+  - Dead code note: `AppListView` is unreferenced — category list rendering goes through `CategorySections` → `AppListTile` directly
+  - `AppListTile` already uses `context.select` for per-app selection/checking state (well-optimized)
+  - Remaining: high-frequency icon-load rebuilds would require architectural change (separate icon notification path)
+- [x] Issue #330 (ANR/freeze) — **root cause identified and fixed (PR #334, 2026-10-05):** grid/list tiles used `glassBlurSigma` (24) instead of `glassBlurSigmaSoft` (12); 20+ `BackdropFilter` layers at sigma-24 stacked GPU layers causing ANR/jank on scroll; also fixed shadow spread bleeding between cards
+
+---
+
+### 2026-10-05 (Session 14) — Claude Code (Sonnet 4.6)
+
+**Visual fixes, performance fix, install UX, NaN export crash (PR #334):**
+
+1. **BackdropFilter sigma bug (major ANR/performance fix, #330)** — Grid tiles and list tiles were passing `sigma: 24` (`glassBlurSigma`) to their `ConditionalBlur`/`BackdropFilter`. The design token table documents `glassBlurSigma` for dialogs/omnibar sheet only; cards should use `glassBlurSigmaSoft` (12). With 20+ visible grid cards each creating a separate GPU compositor layer at sigma-24, the layer stack caused the ANR and scroll jank in #330.
+
+2. **Card shadow glow bleeding** — `AppShadows.glow()` had `spreadRadius: 2` and `4`, which expanded the shadow *outside* card boundaries, visually blending adjacent grid cells. Changed to `spreadRadius: -1/-2` (contained within bounds). Glow now only applied when `plusEnableGlassmorphism` is on; when glass is off, the 2px primary border + `primaryContainer` background communicate selection state without any shadow.
+
+3. **Install phase label** — All three install UI surfaces (grid tile, list tile, active operations banner) now append the file size during install phase (`Installing · 45 MB`) when `downloadTotalBytes` is known.
+
+4. **Export NaN crash (#241, #240)** — `apps_provider.export()` called `JsonEncoder.convert(finalExport)` without `sanitizeJsonValue()`. Fixed by adding the sanitize step, matching the `AppExportService` path.
+
+**Carried forward:**
+- [ ] Issues #299, #298 (SIGSEGV) — no stack trace available; monitor Sentry for recurrence
+- [ ] Issues #304, #303 (bool→double TypeError) — PageStorageKey fix (session 12) should resolve; Sentry events are from 2026-09-14, no new events; monitor
+
+---
+
+### 2026-10-05 (Session 16b) — Claude Code (Sonnet 4.6)
+
+**Backend robustness (branch `feat/active-ops-improvements`, commit `3f5d9ff9`):**
+
+1. **Missing `await` in `BackgroundService.onStart`** — `bgUpdateCheck` was fire-and-forget: handler returned immediately, any exception was unhandled. `onRepeatEvent` already used `.catchError`; `onStart` now uses `await` to match.
+
+2. **Dead offline-queue code removed from `OfflineService`** — `initialize()`, `_subscription`, `_isOffline`, `onOnline`, `addToQueue()`, `removeFromQueue()`, and `dispose()` were never called from anywhere (confirmed via grep). The retry queue is the only live path. Removed ~70 lines of dead code and added `clearAppsFromRetryQueue(List<String>)` for batch removal.
+
+3. **Retry queue not pruned on app deletion** — `removeApps()` in `apps_provider.dart` was not cleaning up retry queue entries for deleted apps; orphaned entries would accumulate in SharedPreferences and be iterated every BG check. Added `OfflineService().clearAppsFromRetryQueue(appIds, updateSettings)` call.
+
+4. **Thundering-herd retry jitter in `AppUpdateService`** — Five concurrent update-check workers all retried at exactly [1s, 2s, 4s] after a transient failure, hammering the same source simultaneously. Added +0–50% random jitter so workers spread their retries across 1.0–1.5s / 2.0–3.0s / 4.0–6.0s windows.
+
+---
+
+### 2026-10-05 (Session 16) — Claude Code (Sonnet 4.6)
+
+**Code-review fix-up (branch `feat/active-ops-improvements`, commit `2249a48c`):**
+
+Applied 4 bugs surfaced by the 7-angle code review run at end of session 15:
+
+1. **Stale `refreshTotal` read in banner** — `active_operations_banner.dart` was reading `appsProvider.refreshTotal.value` bare inside a `ValueListenableBuilder` subscribed only to `refreshProgress`. If `refreshTotal` updated first, the widget would show a stale total. Fixed by replacing with `ListenableBuilder(listenable: Listenable.merge([appsProvider.refreshProgress, appsProvider.refreshTotal]), ...)` so the widget rebuilds on either change.
+
+2. **Missing `speedBytesPerSec` in live download notifications** — `app_download_service.dart` had `speedBytesPerSec` in the callback scope but was not passing it to `DownloadNotification()`. Notifications showed size but no speed/ETA. Added `speedBytesPerSec: speedBytesPerSec` to the call.
+
+3. **Dead constructor params on `CheckingUpdatesNotification`** — The `{int? checked, int? total}` params added in session 15 were never passed by the background service (which mutates the mutable base-class fields post-construction). Removed them to avoid misleading future readers. Constructor simplified back to single `appName` positional arg.
+
+4. **Progress threshold suppressed first ~4%** — `background_update_service.dart` initialized `lastNotifiedProgPercent = -1`; the abs-delta-<5 guard then suppressed updates for progPercent 1–4. Changed to `lastNotifiedProgPercent = 0`.
+
+**Teardown ordering** (was also a review finding): code was already correct after session 15 — `refreshProgress.value = null` fires before `refreshTotal.value = 0` in the `apps_provider.dart` finally block. No change needed.
+
+**Status:** PR #334 merged. PR #335 (`feat/active-ops-improvements`) opened with 8 commits — waiting for CI.
+
+---
+
+### 2026-10-05 (Session 15) — Claude Code (Sonnet 4.6)
+
+**Active operations feedback quality (branch `feat/active-ops-improvements`):**
+
+1. **Background update-check notification progress** — `BackgroundUpdateService.bgUpdateCheck()` now adds a `ValueNotifier` listener on `appsProvider.refreshProgress` before calling `checkUpdates()`. As each app is checked, the listener fires at ≥5% intervals, mutating `notif.progPercent` and `notif.message` ("12 / 48") and re-calling `notificationsProvider.notify()`. The listener is always removed in `finally`. The notification now shows a live progress bar and counter during background checks instead of a static "Checking for updates" string.
+
+2. **Download notification speed + ETA** — `DownloadNotification` now accepts `speedBytesPerSec` and builds the body with `_buildBody()`: "24 MB / 68 MB · 3.1 MB/s · 14s left". `apps_provider.dart` passes `speedBytesPerSec` from the download callback. Import in `notifications_provider.dart` extended to include `formatBytes`, `formatEta`, `formatSpeed`.
+
+3. **Install-phase notification file size** — The `-1` (installing) `DownloadNotification` was created without `totalBytes`, showing an empty body. Now passes `apps[app.id]!.downloadTotalBytes` so the notification body shows the file size (e.g. "45 MB") during install.
+
+4. **Add-app slow-loading hint** — `addApp()` now starts an 8-second timer that sets `gettingAppInfoSlow = true` if the request is still pending. When true, a "Please wait" label appears below the spinner. Timer is cancelled in `finally` and `dispose()`.
+
+5. **`CheckingUpdatesNotification` progress support** — Constructor extended with optional `checked`/`total` params; sets `onlyAlertOnce: true` and a `progPercent` when provided. The background service listener uses the mutable base-class fields rather than the typed constructor. *(Constructor params removed in session 16 — were never passed; post-construction mutation is the live path.)*
+
+6. **Banner "X / Y" counter** — Added `refreshTotal: ValueNotifier<int>` to `AppsProvider` (set to `totalToProcess` when check starts, reset to 0 on completion). Active operations banner now shows "12 / 48" in place of "25%" when a total is known.
+
+**Open backlog (carried forward):**
+- [x] PR #334 merged (blur sigma fix, shadow containment, install label, NaN export fix)
+- [x] PR #335 opened (`feat/active-ops-improvements`) — 8 commits, CI in progress
+- [ ] Issues #299, #298 (SIGSEGV) — no stack trace; monitor Sentry
+- [ ] Issues #304, #303 (bool→double) — PageStorageKey fix (session 12) should resolve; monitor
 
 ---
 
