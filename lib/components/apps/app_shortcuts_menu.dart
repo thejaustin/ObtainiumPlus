@@ -9,7 +9,7 @@ import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
@@ -27,8 +27,7 @@ void showAppShortcutsMenu(
   final appsProvider = context.read<AppsProvider>();
   final appInMemory = appsProvider.apps[appId];
   if (appInMemory == null) return;
-  final settings = context.watch<SettingsProvider>();
-  final enableGlass = settings.plusEnableGlassmorphism;
+  final enableGlass = context.read<PlusSettingsProvider>().plusEnableGlassmorphism;
   final colorScheme = Theme.of(context).colorScheme;
 
   AppHaptics.heavyImpact();
@@ -40,9 +39,9 @@ void showAppShortcutsMenu(
     builder: (ctx) {
       final sheet = Container(
         decoration: BoxDecoration(
-          color: colorScheme.surface.withValues(
-            alpha: enableGlass ? 0.78 : 1.0,
-          ),
+          color: enableGlass
+              ? colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+              : colorScheme.surfaceContainerLow,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: enableGlass
               ? Border(
