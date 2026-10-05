@@ -6,6 +6,21 @@
      versioned format: ## [X.Y.Z-pN] — YYYY-MM-DD
      Major releases use: ## [X.Y.Z-rN — Major Release] — YYYY-MM-DD -->
 
+### 🐛 Bug Fixes
+
+#### 🎨 Settings
+- **White background in light mode** — Settings sections now stand out from the page background instead of blending into a flat white sheet.
+
+#### 📋 App List
+- **Odd glow on update cards** — Cards with pending updates no longer show a colored halo; the shadow is now neutral and subtle.
+
+#### 🪟 Startup
+- **Two popups on launch after update** — The app no longer shows the What's New sheet *and* a second dialog on the same startup. One notification per update.
+
+#### 🔔 What's New sheet
+- **Awkward loading spinner** — The loading circle while release notes fetch now appears at a fixed, sensible size instead of filling the whole sheet.
+
+
 ---
 
 ## [1.6.17-p6] — 2026-10-05
