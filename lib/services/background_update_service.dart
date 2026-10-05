@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -260,28 +258,32 @@ class BackgroundUpdateService {
               if (toCheckAppMatch.isEmpty) continue;
               var toCheckApp = toCheckAppMatch.first;
 
-              if (toCheckApp.value < maxAttempts) {
+              // Rate-limit errors don't benefit from immediate in-session
+              // retries — the source won't respond differently in 5s. Skip
+              // straight to user notification so we don't burn 4 × 5s
+              // requests against an already-exhausted quota.
+              if (err is RateLimitError) {
+                toThrow.add(key, err, appName: errors?.appIdNames[key]);
+              } else if (toCheckApp.value < maxAttempts) {
                 toRetry.add(MapEntry(toCheckApp.key, toCheckApp.value + 1));
-                int minRetryIntervalForThisApp = err is RateLimitError
-                    ? (err.remainingMinutes * 60)
-                    : (15 * 60);
-                if (minRetryIntervalForThisApp > maxRetryWaitSeconds) {
-                  minRetryIntervalForThisApp = maxRetryWaitSeconds;
+                const retryDelaySeconds = 15 * 60;
+                if (retryDelaySeconds > maxRetryWaitSeconds) {
+                  // capped at maxRetryWaitSeconds for in-session retries
                 }
-                if (minRetryIntervalForThisApp > retryAfterXSeconds) {
-                  retryAfterXSeconds = minRetryIntervalForThisApp;
+                final waitSeconds = retryDelaySeconds.clamp(
+                  0,
+                  maxRetryWaitSeconds,
+                );
+                if (waitSeconds > retryAfterXSeconds) {
+                  retryAfterXSeconds = waitSeconds;
                 }
               } else {
-                if (err is! RateLimitError) {
-                  offlineService.addAppToRetryQueue(
-                    key,
-                    appsProvider.updateSettings,
-                    reason: err.toString(),
-                  );
-                  logs.add('BG update task: Queued $key for persistent retry');
-                } else {
-                  toThrow.add(key, err, appName: errors?.appIdNames[key]);
-                }
+                offlineService.addAppToRetryQueue(
+                  key,
+                  appsProvider.updateSettings,
+                  reason: err.toString(),
+                );
+                logs.add('BG update task: Queued $key for persistent retry');
               }
             }
           } else {
@@ -428,21 +430,5 @@ class BackgroundUpdateService {
       }
     }
     appsProvider.updateSettings.lastCompletedBGCheckTime = DateTime.now();
-
-    // --- Save status for potential cloud sync ---
-    try {
-      final status = {
-        'timestamp': DateTime.now().toIso8601String(),
-        'appsChecked': toCheck.length,
-        'updatesFound': updates.length,
-        'success': true,
-      };
-      final file = File(
-        '${appsProvider.apkDir.parent.path}/last_update_status.json',
-      );
-      await file.writeAsString(jsonEncode(status));
-    } catch (e) {
-      talker.error('Failed to save BG status: $e');
-    }
   }
 }

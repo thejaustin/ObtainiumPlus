@@ -548,6 +548,7 @@ class AppDownloadService {
     List<String> downloadedIds = [];
 
     Future<void> downloadFn(MapEntry<String, String> fileUrl, App app) async {
+      DateTime? lastExportNotifTime;
       try {
         String downloadPath =
             '${await AppInstallService.getStorageRootPath()}/Download';
@@ -556,8 +557,16 @@ class AppDownloadService {
           fileUrl.key,
           true,
           (double? progress) {
+            final pct = progress?.ceil() ?? 0;
+            final now = DateTime.now();
+            if (pct < 100 &&
+                lastExportNotifTime != null &&
+                now.difference(lastExportNotifTime!).inMilliseconds < 300) {
+              return;
+            }
+            lastExportNotifTime = now;
             notificationsProvider.notify(
-              DownloadNotification(fileUrl.key, progress?.ceil() ?? 0),
+              DownloadNotification(fileUrl.key, pct),
             );
           },
           downloadPath,
