@@ -797,6 +797,7 @@ class AppsProvider with ChangeNotifier {
   /// WITHOUT triggering a full [notify] (which would rerun the expensive app
   /// list pipeline on every listener each tick and stutter the UI).
   final ValueNotifier<double?> refreshProgress = ValueNotifier<double?>(null);
+  final ValueNotifier<int> refreshTotal = ValueNotifier<int>(0);
   LogsProvider logs = LogsProvider();
 
   bool isSelectionMode = false;
@@ -2580,6 +2581,7 @@ class AppsProvider with ChangeNotifier {
 
         final int totalToProcess = appIds.length;
         int completedCount = 0;
+        refreshTotal.value = totalToProcess;
         refreshProgress.value = totalToProcess > 0 ? 0.0 : null;
 
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
@@ -2626,6 +2628,7 @@ class AppsProvider with ChangeNotifier {
       } finally {
         gettingUpdates = false;
         refreshProgress.value = null;
+        refreshTotal.value = 0;
         checkingUpdateIds.clear();
         notify();
       }
@@ -2808,6 +2811,7 @@ class AppsProvider with ChangeNotifier {
     _widgetUpdateDebounce?.cancel();
     _eventSubscription?.cancel();
     refreshProgress.dispose();
+    refreshTotal.dispose();
     super.dispose();
   }
 

@@ -153,8 +153,13 @@ class ActiveOperationsBanner extends StatelessWidget {
                                       if (progress == null || progress <= 0) {
                                         return const SizedBox.shrink();
                                       }
+                                      final total =
+                                          appsProvider.refreshTotal.value;
+                                      final label = total > 0
+                                          ? '${(progress * total).round()} / $total'
+                                          : '${(progress * 100).toInt()}%';
                                       return Text(
-                                        '${(progress * 100).toInt()}%',
+                                        label,
                                         style: Theme.of(context)
                                             .textTheme
                                             .labelSmall
