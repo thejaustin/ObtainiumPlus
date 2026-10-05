@@ -12,6 +12,8 @@ All notable changes to Obtainium+ are documented in this file.
 - **Export / Share Crash (NaN)**: Prevented JSON encoding failure when app metadata contained `NaN` or `Infinity` values, which could crash the share/export flow.
 - **Version History Crash**: Added `PageStorageKey` to the version history expansion tile to prevent a `bool`/`double` type mismatch crash when scrolling back to a previously-visited app.
 - **Update Check Unresponsiveness**: Yielded to the UI thread between each update check to prevent the app from becoming unresponsive during large background scans.
+- **Aurora / Play Store Auth Lost on Restart**: `AuthProvider` and `SourceConfigProvider` were never initialized with `SharedPreferences`, so Aurora Store dispensers, auth mode, spoofed Android ID, device profile, and all source config keys (custom API tokens, etc.) were silently discarded on every app restart. All three affected providers (`AuthProvider`, `SourceConfigProvider`, `PluginProvider`) are now properly initialized before the widget tree starts.
+- **Installed Plugins Cleared on Restart**: `PluginProvider` was not wired to `SharedPreferences`, so installed plugins were lost between sessions. Also hardened plugin loading against corrupted entries so a single bad record no longer blocks all others.
 
 ---
 
