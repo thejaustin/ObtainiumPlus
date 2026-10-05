@@ -614,12 +614,12 @@ class AppListTile extends StatelessWidget {
                       ? 1.5
                       : 1.0,
                 ),
-                boxShadow: isSelected
+                boxShadow: isSelected && plusSettings.plusEnableGlassmorphism
                     ? AppShadows.glow(
                         color: Theme.of(context).colorScheme.primary,
-                        intensity: 0.6,
+                        intensity: 0.7,
                       )
-                    : hasUpdate && !isCompact
+                    : hasUpdate && !isCompact && plusSettings.plusEnableGlassmorphism
                     ? AppShadows.smooth(
                         color: Theme.of(context).colorScheme.secondary,
                         opacity: 0.08,
@@ -642,7 +642,7 @@ class AppListTile extends StatelessWidget {
                           Positioned.fill(
                             child: ConditionalBlur(
                               enabled: true,
-                              sigma: AppConstants.glassBlurSigma,
+                              sigma: AppConstants.glassBlurSigmaSoft,
                               child: Container(color: Colors.transparent),
                             ),
                           ),
@@ -938,8 +938,12 @@ class AppListTile extends StatelessWidget {
                                                     child: Builder(
                                                       builder: (context) {
                                                         if (downloadProgress < 0) {
+                                                          final total = appInMemory.downloadTotalBytes;
+                                                          final label = total != null && total > 0
+                                                              ? '${tr('installing')} · ${formatBytes(total)}'
+                                                              : tr('installing');
                                                           return Text(
-                                                            tr('installing'),
+                                                            label,
                                                             style: Theme.of(context)
                                                                 .textTheme
                                                                 .labelSmall

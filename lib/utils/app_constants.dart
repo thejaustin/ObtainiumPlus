@@ -278,17 +278,19 @@ class AppShadows {
   }
 
   /// A diffuse glow effect for selected or highlighted items.
+  /// spreadRadius stays ≤ 0 so the shadow never bleeds outside the card bounds
+  /// into adjacent cards in a tight grid layout.
   static List<BoxShadow> glow({required Color color, double intensity = 1.0}) {
     return [
       BoxShadow(
-        color: color.withValues(alpha: 0.2 * intensity),
-        blurRadius: 20,
-        spreadRadius: 2,
+        color: color.withValues(alpha: 0.28 * intensity),
+        blurRadius: 16,
+        spreadRadius: -1,
       ),
       BoxShadow(
-        color: color.withValues(alpha: 0.1 * intensity),
-        blurRadius: 40,
-        spreadRadius: 4,
+        color: color.withValues(alpha: 0.14 * intensity),
+        blurRadius: 32,
+        spreadRadius: -2,
       ),
     ];
   }
