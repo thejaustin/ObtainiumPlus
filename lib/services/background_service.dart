@@ -107,7 +107,7 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     talker.debug('onStart(starter: ${starter.name})');
-    BackgroundUpdateService.bgUpdateCheck('bg_check', null);
+    await BackgroundUpdateService.bgUpdateCheck('bg_check', null);
   }
 
   @override

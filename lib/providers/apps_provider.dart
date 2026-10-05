@@ -37,6 +37,7 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/offline_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -2404,6 +2405,7 @@ class AppsProvider with ChangeNotifier {
         }
       }),
     );
+    OfflineService().clearAppsFromRetryQueue(appIds, updateSettings);
     if (appIds.isNotEmpty) {
       notifyListeners();
       scheduleAutoExport();
