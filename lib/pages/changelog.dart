@@ -100,7 +100,13 @@ class _ChangelogPageState extends State<ChangelogPage> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: ExpressiveCircularProgressIndicator());
+            return const Center(
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: ExpressiveCircularProgressIndicator(),
+                      ),
+                    );
           }
           if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
             return _ErrorState(
@@ -182,7 +188,13 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                   future: _future,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: ExpressiveCircularProgressIndicator());
+                      return const Center(
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: ExpressiveCircularProgressIndicator(),
+                      ),
+                    );
                     }
                     if (snapshot.hasError ||
                         !snapshot.hasData ||

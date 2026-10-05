@@ -621,8 +621,8 @@ class AppListTile extends StatelessWidget {
                       )
                     : hasUpdate && !isCompact && plusSettings.plusEnableGlassmorphism
                     ? AppShadows.smooth(
-                        color: Theme.of(context).colorScheme.secondary,
-                        opacity: 0.08,
+                        color: Theme.of(context).colorScheme.shadow,
+                        opacity: 0.12,
                       )
                     : null,
               ),

@@ -139,6 +139,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           await showWhatsNewSheet(context, targetVersion: currentVersion);
         }
         plusSettings.plusLastSeenVersion = currentVersion;
+        // Don't follow up with the verification warning on the same launch —
+        // two consecutive startup modals after an update is terrible UX.
+        sp.googleVerificationWarningShown = true;
       } else if (!sp.welcomeShown) {
         await showDialog(
           context: context,

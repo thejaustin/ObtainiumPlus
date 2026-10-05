@@ -259,8 +259,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             child: Card(
             elevation: 0,
             margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
-            color:
-                (isDark ? colorScheme.surfaceContainerLow : colorScheme.surface)
+            color: colorScheme.surfaceContainerLow
                     .withValues(
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
                     ),
