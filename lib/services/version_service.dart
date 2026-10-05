@@ -172,7 +172,14 @@ Set<String> findStandardFormatsForVersion(
     for (final entry in patterns)
       if (entry.value.hasMatch(version)) entry.key,
   };
-  if (cache.length >= _maxFormatCacheSize) cache.clear();
+  if (cache.length >= _maxFormatCacheSize) {
+    // Evict the oldest half rather than nuking the entire cache, so the
+    // most-recently-seen version strings stay warm.
+    final toRemove = cache.keys.take(_maxFormatCacheSize ~/ 2).toList();
+    for (final k in toRemove) {
+      cache.remove(k);
+    }
+  }
   cache[version] = results;
   return results;
 }

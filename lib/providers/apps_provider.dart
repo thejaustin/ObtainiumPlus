@@ -37,6 +37,7 @@ import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/offline_service.dart';
 export 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
 import 'package:obtainium/providers/notifications_provider.dart';
@@ -797,6 +798,7 @@ class AppsProvider with ChangeNotifier {
   /// WITHOUT triggering a full [notify] (which would rerun the expensive app
   /// list pipeline on every listener each tick and stutter the UI).
   final ValueNotifier<double?> refreshProgress = ValueNotifier<double?>(null);
+  final ValueNotifier<int> refreshTotal = ValueNotifier<int>(0);
   LogsProvider logs = LogsProvider();
 
   bool isSelectionMode = false;
@@ -1190,6 +1192,7 @@ class AppsProvider with ChangeNotifier {
             appId: app.id,
             receivedBytes: received,
             totalBytes: total,
+            speedBytesPerSec: speedBytesPerSec,
           );
           final now = DateTime.now();
           final shouldNotify = prog != null &&
@@ -1227,7 +1230,12 @@ class AppsProvider with ChangeNotifier {
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = -1;
         notifyListeners();
-        notif = DownloadNotification(app.finalName, -1, appId: app.id);
+        notif = DownloadNotification(
+          app.finalName,
+          -1,
+          appId: app.id,
+          totalBytes: apps[app.id]!.downloadTotalBytes,
+        );
         notificationsProvider?.notify(notif);
       }
       PackageInfo? newInfo;
@@ -2397,6 +2405,7 @@ class AppsProvider with ChangeNotifier {
         }
       }),
     );
+    OfflineService().clearAppsFromRetryQueue(appIds, updateSettings);
     if (appIds.isNotEmpty) {
       notifyListeners();
       scheduleAutoExport();
@@ -2574,6 +2583,7 @@ class AppsProvider with ChangeNotifier {
 
         final int totalToProcess = appIds.length;
         int completedCount = 0;
+        refreshTotal.value = totalToProcess;
         refreshProgress.value = totalToProcess > 0 ? 0.0 : null;
 
         // Trigger dispenser ban warning if enabled and a large query (exceeding custom threshold) is run
@@ -2620,6 +2630,7 @@ class AppsProvider with ChangeNotifier {
       } finally {
         gettingUpdates = false;
         refreshProgress.value = null;
+        refreshTotal.value = 0;
         checkingUpdateIds.clear();
         notify();
       }
@@ -2802,6 +2813,7 @@ class AppsProvider with ChangeNotifier {
     _widgetUpdateDebounce?.cancel();
     _eventSubscription?.cancel();
     refreshProgress.dispose();
+    refreshTotal.dispose();
     super.dispose();
   }
 

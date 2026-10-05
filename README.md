@@ -10,7 +10,9 @@ Obtainium+ is an independent, privacy-focused version (fork) of the original **O
 
 While the original Obtainium is excellent, Obtainium+ elevates the experience with a modern interface, smart update management, and privacy-respecting tools.
 
-Currently supported App sources:
+<details>
+<summary>📋 Supported App Sources (30+)</summary>
+
 - Open Source - General:
   - [GitHub](https://github.com/)
   - [GitLab](https://gitlab.com/)
@@ -49,6 +51,8 @@ You can find crowdsourced app configurations at [apps.obtainium.page](https://ap
 If you can't find the configuration for an app you want, feel free to leave a request on the [issues page](https://github.com/ImranR98/apps.obtainium.imranr.dev/issues).
 
 Or, contribute some configurations to the website by creating a PR at [this repo](https://github.com/ImranR98/apps.obtainium.imranr.dev).
+
+</details>
 
 | Feature | Original Obtainium | Obtainium+ |
 | :--- | :--- | :--- |
@@ -98,7 +102,8 @@ Obtainium+ automatically detects other app stores installed on your device (like
 ### 🌐 Private Diagnostics & Troubleshooting
 If an app fails to update, you don't need to guess why. A built-in real-time logger captures network warnings, download errors, and system events. All crash statistics and error logs are stored safely on your device and are never sent to external servers.
 
-## Troubleshooting
+<details>
+<summary>🔧 Troubleshooting</summary>
 
 ### App not updating even when a new version is available
 - **Check the source settings** — Some sources require additional configuration (e.g., GitHub releases need the correct repository URL format)
@@ -121,6 +126,8 @@ If an app fails to update, you don't need to guess why. A built-in real-time log
 - If you see "Signature verification failed", ensure you haven't modified the APK after download
 - The SHA-256 hash in the app settings should match the downloaded APK
 
+</details>
+
 ---
 
 ## 📦 Installation
@@ -136,7 +143,8 @@ To ensure you have a genuine, unmodified build of Obtainium+, you can verify the
 
 ---
 
-## ❤️ Credits & Open Source Acknowledgments
+<details>
+<summary>❤️ Credits & Open Source Acknowledgments</summary>
 
 Obtainium+ is built on the shoulders of giants. We are deeply grateful to the original creators and the open-source community:
 
@@ -146,6 +154,8 @@ Obtainium+ is built on the shoulders of giants. We are deeply grateful to the or
 *   **[Background Fetch](https://pub.dev/packages/background_fetch) & [Flutter Foreground Task](https://pub.dev/packages/flutter_foreground_task):** Power the reliable, battery-efficient background update checker.
 *   **[Easy Localization](https://pub.dev/packages/easy_localization):** Manages translation assets to make the app accessible in dozens of languages.
 *   **[Sentry Flutter](https://pub.dev/packages/sentry_flutter):** Powers our opt-in, telemetry-free crash analytics engine.
+
+</details>
 
 ---
 

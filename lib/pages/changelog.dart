@@ -609,7 +609,14 @@ Future<List<_ReleaseItem>> _fetchRecentList({
 
 String _cleanBody(String body) {
   var cleaned = body;
-  cleaned = cleaned.replaceAll(RegExp(r'---\s*\[Full Changelog\].*$', multiLine: false, dotAll: true), '');
+  cleaned = cleaned.replaceAll(
+    RegExp(r'\n---\n<details>.*?</details>', dotAll: true),
+    '',
+  );
+  cleaned = cleaned.replaceAll(
+    RegExp(r'---\s*\[Full Changelog\].*$', multiLine: false, dotAll: true),
+    '',
+  );
   return cleaned.trim();
 }
 

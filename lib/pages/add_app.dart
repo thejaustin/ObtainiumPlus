@@ -58,6 +58,8 @@ class AddAppPage extends StatefulWidget {
 
 class AddAppPageState extends State<AddAppPage> {
   bool gettingAppInfo = false;
+  bool gettingAppInfoSlow = false;
+  Timer? _slowHintTimer;
   bool searching = false;
 
   String userInput = '';
@@ -121,6 +123,7 @@ class AddAppPageState extends State<AddAppPage> {
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _slowHintTimer?.cancel();
     super.dispose();
   }
 
@@ -337,6 +340,13 @@ class AddAppPageState extends State<AddAppPage> {
     addApp({bool resetUserInputAfter = false}) async {
       setState(() {
         gettingAppInfo = true;
+        gettingAppInfoSlow = false;
+      });
+      _slowHintTimer?.cancel();
+      _slowHintTimer = Timer(const Duration(seconds: 8), () {
+        if (mounted && gettingAppInfo) {
+          setState(() => gettingAppInfoSlow = true);
+        }
       });
       try {
         var userPickedTrackOnly = additionalSettings['trackOnly'] == true;
@@ -439,9 +449,12 @@ class AddAppPageState extends State<AddAppPage> {
       } catch (e) {
         if (context.mounted) showError(e, context);
       } finally {
+        _slowHintTimer?.cancel();
+        _slowHintTimer = null;
         if (mounted) {
           setState(() {
             gettingAppInfo = false;
+            gettingAppInfoSlow = false;
             if (resetUserInputAfter) {
               changeUserInput('', false, true);
             }
@@ -490,8 +503,24 @@ class AddAppPageState extends State<AddAppPage> {
         ),
         const SizedBox(width: 16),
         gettingAppInfo
-            ? const Center(
-                child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Center(
+                    child: ExpressiveCircularProgressIndicator(strokeWidth: 3),
+                  ),
+                  if (gettingAppInfoSlow) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      tr('pleaseWait'),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ],
               )
             : FilledButton.icon(
                 onPressed:

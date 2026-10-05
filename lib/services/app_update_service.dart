@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -300,9 +301,12 @@ class AppUpdateService {
                     e.toString().toLowerCase().contains('timeoutexception');
                 if (retries > 0 && isNetworkError) {
                   final attempt = 3 - retries;
-                  final delays = [1, 2, 4];
+                  final baseMs = [1000, 2000, 4000][attempt];
+                  final jitterMs = (Random().nextDouble() * baseMs * 0.5).round();
                   retries--;
-                  await Future.delayed(Duration(seconds: delays[attempt]));
+                  await Future.delayed(
+                    Duration(milliseconds: baseMs + jitterMs),
+                  );
                   continue;
                 }
                 if ((e is RateLimitError || e is SocketException) &&

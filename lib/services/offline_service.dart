@@ -1,85 +1,10 @@
-import 'dart:async';
 import 'dart:math';
-import 'package:connectivity_plus/connectivity_plus.dart';
-
 import 'package:obtainium/providers/update_settings_provider.dart';
 
 class OfflineService {
   static final OfflineService _instance = OfflineService._internal();
   factory OfflineService() => _instance;
   OfflineService._internal();
-
-  final Connectivity _connectivity = Connectivity();
-  StreamSubscription<List<ConnectivityResult>>? _subscription;
-  bool _isOffline = false;
-  bool get isOffline => _isOffline;
-
-  // Callback to process queue when back online
-  Function(List<String>)? onOnline;
-
-  Future<void> initialize(
-    UpdateSettingsProvider settingsProvider,
-    Function(List<String>) onOnlineCallback,
-  ) async {
-    onOnline = onOnlineCallback;
-
-    // Initial check
-    final result = await _connectivity.checkConnectivity();
-    _updateStatus(result);
-
-    // Listen
-    _subscription = _connectivity.onConnectivityChanged.listen((result) {
-      bool wasOffline = _isOffline;
-      _updateStatus(result);
-
-      if (wasOffline && !_isOffline) {
-        // Back online, process queue
-        final queue = settingsProvider.offlineQueue;
-        if (queue.isNotEmpty) {
-          onOnline?.call(List.from(queue));
-          // Clear queue after handing off (or let callback clear it)
-          settingsProvider.offlineQueue = [];
-        }
-      }
-    });
-  }
-
-  void _updateStatus(List<ConnectivityResult> result) {
-    _isOffline =
-        result.contains(ConnectivityResult.none) ||
-        result.isEmpty ||
-        (result.contains(ConnectivityResult.vpn) &&
-            result.length ==
-                1); // Assume VPN-only might be flaky/no-net depending on context, but usually fine. Sticking to simple logic: none/empty = offline.
-
-    // Refined logic: if ANY interface is available (wifi, mobile, ethernet), we are online.
-    if (result.contains(ConnectivityResult.wifi) ||
-        result.contains(ConnectivityResult.mobile) ||
-        result.contains(ConnectivityResult.ethernet)) {
-      _isOffline = false;
-    } else if (result.length == 1 && result.contains(ConnectivityResult.vpn)) {
-      // VPN only - assume online for now, but strict check would be ping.
-      _isOffline = false;
-    } else {
-      _isOffline = true;
-    }
-  }
-
-  void addToQueue(String appId, UpdateSettingsProvider settingsProvider) {
-    final queue = settingsProvider.offlineQueue;
-    if (!queue.contains(appId)) {
-      queue.add(appId);
-      settingsProvider.offlineQueue = queue;
-    }
-  }
-
-  void removeFromQueue(String appId, UpdateSettingsProvider settingsProvider) {
-    final queue = settingsProvider.offlineQueue;
-    if (queue.contains(appId)) {
-      queue.remove(appId);
-      settingsProvider.offlineQueue = queue;
-    }
-  }
 
   // --- Retry Queue Logic ---
 
@@ -91,7 +16,7 @@ class OfflineService {
     final queue = settingsProvider.retryQueue;
     int currentPersistentAttempts = queue[appId]?['attempts'] ?? 0;
 
-    // Exponential backoff: 15min * 2^attempts
+    // Exponential backoff: 15min * 2^attempts, capped at 2^6 (960 min)
     int nextBackoffMinutes = (15 * pow(2, min(currentPersistentAttempts, 6)))
         .toInt();
     int nextRetryTime = DateTime.now()
@@ -133,7 +58,18 @@ class OfflineService {
     }
   }
 
-  void dispose() {
-    unawaited(_subscription?.cancel() ?? Future.value());
+  /// Removes all retry-queue entries for the given app IDs. Call when apps
+  /// are deleted so stale entries don't accumulate in SharedPreferences.
+  void clearAppsFromRetryQueue(
+    List<String> appIds,
+    UpdateSettingsProvider settingsProvider,
+  ) {
+    if (appIds.isEmpty) return;
+    final queue = settingsProvider.retryQueue;
+    bool changed = false;
+    for (final id in appIds) {
+      if (queue.remove(id) != null) changed = true;
+    }
+    if (changed) settingsProvider.retryQueue = queue;
   }
 }
