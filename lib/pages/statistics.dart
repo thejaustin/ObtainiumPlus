@@ -107,7 +107,7 @@ class _StatisticsPageState extends State<StatisticsPage>
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final appsProvider = context.watch<AppsProvider>();
-    final allApps = appsProvider.getAppValues().toList();
+    final allApps = appsProvider.getAppValues(deepCopy: false).toList();
 
     final totalApps = allApps.length;
     final installedApps = allApps.where((a) => a.installedInfo != null).length;

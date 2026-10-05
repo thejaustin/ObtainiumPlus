@@ -18,6 +18,7 @@ class CategorySections extends StatelessWidget {
   final List<AppInMemory> listedApps;
   final List<String?> listedCategories;
   final Set<String> selectedAppIds;
+  final Set<String> pendingUpdates;
   final String? activeAppId;
   final Function(App) toggleAppSelected;
   final Function(App) onAppTap;
@@ -29,6 +30,7 @@ class CategorySections extends StatelessWidget {
     required this.listedApps,
     required this.listedCategories,
     required this.selectedAppIds,
+    required this.pendingUpdates,
     this.activeAppId,
     required this.toggleAppSelected,
     required this.onAppTap,
@@ -49,8 +51,6 @@ class CategorySections extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final appsProvider = context.watch<AppsProvider>();
-    final pendingUpdates = appsProvider.findAllPendingUpdates().updates;
     final isGridView = viewSettings.globalViewMode == ViewMode.grid;
 
     // Single-pass O(N) grouping by category to eliminate redundant multi-pass scans
