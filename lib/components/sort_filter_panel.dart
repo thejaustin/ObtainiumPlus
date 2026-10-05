@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -120,21 +119,20 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settingsProvider = context.watch<ViewSettingsProvider>();
-    final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
     final sourceProvider = SourceProvider();
     final isDark = theme.brightness == Brightness.dark;
 
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final sheetRadius = radius.clamp(28.0, 48.0);
 
     return ClipRRect(
       borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
       child: ConditionalBlur(
         sigma: 16,
-        enabled: settings.plusEnableGlassmorphism,
+        enabled: plusSettings.plusEnableGlassmorphism,
         child: Container(
           decoration: BoxDecoration(
             color:
@@ -142,14 +140,14 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                         ? theme.colorScheme.surfaceContainerHigh
                         : theme.colorScheme.surface)
                     .withValues(
-                      alpha: settings.plusEnableGlassmorphism ? 0.75 : 1.0,
+                      alpha: plusSettings.plusEnableGlassmorphism ? 0.75 : 1.0,
                     ),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),
             border: Border(
               top: BorderSide(
-                color: settings.plusEnableGlassmorphism
+                color: plusSettings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
                     : theme.colorScheme.outlineVariant.withValues(
                         alpha: AppOpacity.subtle,
@@ -157,12 +155,12 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 width: 1.5,
               ),
               left: BorderSide(
-                color: settings.plusEnableGlassmorphism
+                color: plusSettings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
                     : Colors.transparent,
               ),
               right: BorderSide(
-                color: settings.plusEnableGlassmorphism
+                color: plusSettings.plusEnableGlassmorphism
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
                     : Colors.transparent,
               ),
@@ -171,7 +169,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           child: Stack(
             children: [
               // Glass sheen
-              if (settings.plusEnableGlassmorphism)
+              if (plusSettings.plusEnableGlassmorphism)
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -257,7 +255,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                             ),
 
                             // Sort section
-                            if (settings.plusEnableAdvancedSorting) ...[
+                            if (plusSettings.plusEnableAdvancedSorting) ...[
                               _buildAnimatedSection(
                                 1,
                                 _buildSortSection(

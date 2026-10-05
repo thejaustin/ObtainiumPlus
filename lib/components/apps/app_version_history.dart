@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -22,12 +21,11 @@ class AppVersionHistoryWidget extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(radius);
 
     final appSource = SourceProvider().getSource(

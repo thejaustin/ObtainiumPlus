@@ -259,10 +259,9 @@ class _CommandCenterState extends State<CommandCenter> {
     final isUrl = _isDirectUrl(_query);
     final plusSettings = context.watch<PlusSettingsProvider>();
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
-    final settings = context.watch<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final sheetRadius = radius.clamp(24.0, 48.0);
     final isDark = theme.brightness == Brightness.dark;
 
