@@ -1816,6 +1816,7 @@ class AppsPageState extends State<AppsPage>
           listedApps: listedApps,
           listedCategories: listedCategories,
           selectedAppIds: selectedAppIds,
+          pendingUpdates: existingUpdates,
           toggleAppSelected: toggleAppSelected,
           onAppTap: (app) {
             AppHaptics.selectionClick();

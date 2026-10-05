@@ -30,7 +30,6 @@ class _CategoryEditorSelectorState extends State<CategoryEditorSelector> {
   @override
   Widget build(BuildContext context) {
     var viewSettings = context.watch<ViewSettingsProvider>();
-    var appsProvider = context.watch<AppsProvider>();
     storedValues = viewSettings.categories.map(
       (key, value) => MapEntry(
         key,
@@ -64,7 +63,7 @@ class _CategoryEditorSelectorState extends State<CategoryEditorSelector> {
               values['categories'] as Map<String, MapEntry<int, bool>>;
           viewSettings.setCategories(
             storedValues.map((key, value) => MapEntry(key, value.key)),
-            appsProvider: appsProvider,
+            appsProvider: context.read<AppsProvider>(),
           );
           if (widget.onSelected != null) {
             widget.onSelected!(
