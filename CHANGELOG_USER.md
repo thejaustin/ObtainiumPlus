@@ -6,32 +6,34 @@
      versioned format: ## [X.Y.Z-pN] — YYYY-MM-DD
      Major releases use: ## [X.Y.Z-rN — Major Release] — YYYY-MM-DD -->
 
-### 🔔 What's happening while you wait
+---
 
-Ever stare at the "Checking for updates…" notification and wonder how far along it is? This update makes Obtainium+ a lot more communicative about what it's doing in the background.
+## [1.6.17-p6] — 2026-10-05
+
+### 🔔 Active Operations Feedback
 
 #### 📊 Progress While Checking for Updates
-- The background update-check notification now shows a live counter and progress bar: **"12 / 48 apps checked"** instead of a static "Checking for updates". You can see it ticking up in the status bar.
-- The in-app banner (the card that appears at the top of your app list during a check) also shows the same counter so you don't have to pull down the notification shade.
+- The background update-check notification now shows a live counter and progress bar: **"12 / 48 apps checked"** instead of a static "Checking for updates".
+- The in-app banner also shows the same counter while a check is running.
 
 #### 📥 More Info While Downloading
-- Download notifications now show **download speed** and **time remaining** alongside the progress percentage — e.g. `68% · 3.1 MB/s · 14s left`. No more guessing whether a download is actually moving.
-- When an app is being installed (the download finished and the installer is running), the notification now shows the **file size** of what was just downloaded, so you know what landed on your device.
+- Download notifications now show **download speed** and **time remaining** alongside the progress percentage — e.g. `68% · 3.1 MB/s · 14s left`.
+- Install notifications show the **file size** of what was just downloaded.
 
 #### ⏳ Slow Source? You'll Know
-- Added a **"Please wait…"** hint under the spinner when adding a new app and the source is taking a while to respond. After about 8 seconds with no response it lets you know it's still working — not frozen.
+- Added a **"Please wait…"** hint under the spinner when adding a new app and the source is slow to respond.
 
 #### 🐛 Bug Fixes
-- Fixed an edge case where shadow effects on app cards bled slightly outside their rounded corners.
-- Corrected a blur intensity mismatch that made some cards look hazier than intended.
-- Install action buttons now have clearer labels distinguishing a fresh install from an update.
-- Fixed a rendering glitch where the progress counter in the banner could show a stale number briefly.
+- Fixed shadow effects on app cards bleeding slightly outside rounded corners.
+- Corrected blur intensity mismatch making some cards look hazier than intended.
+- Install action buttons now clearly distinguish a fresh install from an update.
+- Fixed a rendering glitch where the progress counter could show a stale number briefly.
 
-#### 🔧 Reliability Improvements (under the hood)
-- **Deleted apps are now properly forgotten.** If an app in the background retry queue gets deleted, its queued retry entry is also cleaned up. Previously deleted apps could leave behind stale entries that got checked every update cycle.
-- **Rate-limited sources fail faster and more gracefully.** When a source like GitHub says "slow down," Obtainium+ now immediately notifies you instead of silently retrying the same request four more times before giving up.
-- **Background update checks no longer drop errors silently.** Fixed an internal oversight where errors during the initial background check startup weren't being logged or surfaced.
-- **Large app libraries handle version comparisons more efficiently.** The internal cache used to detect version format changes now retains recently-seen entries instead of clearing everything at once when full.
+#### 🔧 Reliability
+- **Deleted apps are now properly forgotten** from the background retry queue.
+- **Rate-limited sources fail faster** — immediate notification instead of silent retries.
+- **Background check errors are now logged** instead of silently dropped.
+- **Version comparison cache** retains recent entries instead of clearing all at once when full.
 
 ---
 
