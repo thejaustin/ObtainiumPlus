@@ -283,7 +283,7 @@ class DownloadNotification extends ObtainiumNotification {
          Importance.low,
          onlyAlertOnce: true,
          progPercent: progPercent,
-         androidActions: appId != null
+         androidActions: appId != null && progPercent >= 0
              ? [
                  AndroidNotificationAction(
                    '$cancelDownloadActionPrefix$appId',
