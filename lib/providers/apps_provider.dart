@@ -1228,7 +1228,12 @@ class AppsProvider with ChangeNotifier {
       if (apps[app.id] != null) {
         apps[app.id]!.downloadProgress = -1;
         notifyListeners();
-        notif = DownloadNotification(app.finalName, -1, appId: app.id);
+        notif = DownloadNotification(
+          app.finalName,
+          -1,
+          appId: app.id,
+          totalBytes: apps[app.id]!.downloadTotalBytes,
+        );
         notificationsProvider?.notify(notif);
       }
       PackageInfo? newInfo;
