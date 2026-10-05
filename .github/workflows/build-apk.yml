@@ -121,7 +121,7 @@ jobs:
 
           if [ "$IS_FULL_RELEASE" = "true" ]; then
             # Full release: change -p to -r and reset to 1, or bump existing -r
-            LATEST_R=$(git tag -l "v${BASE_VERSION}-r*" | sed -E 's/.*-r//' | sort -n | tail -n 1)
+            LATEST_R=$(git tag -l "v${BASE_VERSION}-r*" | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+-r[0-9]+$" | sed -E 's/.*-r//' | sort -n | tail -n 1)
             NEW_R=1
             if [ -n "$LATEST_R" ]; then
               if [ "$CURRENT_VERSION" = "${BASE_VERSION}-r${LATEST_R}" ]; then
@@ -138,7 +138,7 @@ jobs:
             fi
           else
             # Check existing tags for this base version
-            LATEST_P=$(git tag -l "v${BASE_VERSION}-p*" | sed -E 's/.*-p//' | sort -n | tail -n 1)
+            LATEST_P=$(git tag -l "v${BASE_VERSION}-p*" | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+-p[0-9]+$" | sed -E 's/.*-p//' | sort -n | tail -n 1)
 
             if [ "$CURRENT_VERSION" = "${BASE_VERSION}-p1" ] && [ -z "$LATEST_P" ]; then
               # Already pre-set to p1 for this base version and not yet released
@@ -291,14 +291,35 @@ jobs:
           fi
 
           if [ -n "$USER_NOTES" ]; then
+            if [ -n "$PREV_TAG" ]; then
+              RANGE="${PREV_TAG}..HEAD"
+              RANGE_LABEL="Changes since ${PREV_TAG}"
+            else
+              RANGE="HEAD"
+              RANGE_LABEL="Recent Changes"
+            fi
+            FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
+            FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
+            OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
             {
               echo "$USER_NOTES"
               echo
+              if [ -n "$FEATS" ] || [ -n "$FIXES" ] || [ -n "$OTHERS" ]; then
+                echo "---"
+                printf '<details>\n<summary>🔧 Technical changes</summary>\n\n'
+                echo "## $RANGE_LABEL"
+                echo
+                if [ -n "$FEATS" ]; then printf '### ✨ New Features\n%s\n\n' "$FEATS"; fi
+                if [ -n "$FIXES" ]; then printf '### 🐛 Bug Fixes\n%s\n\n' "$FIXES"; fi
+                if [ -n "$OTHERS" ]; then printf '### 🔧 Improvements & Maintenance\n%s\n\n' "$OTHERS"; fi
+                echo "</details>"
+                echo
+              fi
               if [ -n "$PREV_TAG" ]; then
                 echo "---"
                 echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
+                echo
               fi
-              echo
               echo "---"
               echo "[![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google)"
             } > release_body.md
