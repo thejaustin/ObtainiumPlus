@@ -87,7 +87,6 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final plusSettings = Provider.of<PlusSettingsProvider>(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCompact = plusSettings.plusUseCompactSettings;
     final colorScheme = Theme.of(context).colorScheme;
 
