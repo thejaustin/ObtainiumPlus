@@ -207,7 +207,7 @@ class BackgroundUpdateService {
         int lastNotifiedProgPercent = -1;
         void onRefreshProgress() {
           final progress = appsProvider.refreshProgress.value;
-          if (progress == null || progress <= 0) return;
+          if (progress == null || progress <= 0 || total == 0) return;
           final checked = (progress * total).round().clamp(0, total);
           final progPercent = ((checked / total) * 100).round().clamp(1, 100);
           if ((progPercent - lastNotifiedProgPercent).abs() < 5 &&
