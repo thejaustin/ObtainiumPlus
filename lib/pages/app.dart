@@ -1951,9 +1951,9 @@ class _AppPageState extends State<AppPage> {
         sigma: AppConstants.glassBlurSigma,
         child: Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(
-              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
-            ),
+            color: enableGlass
+                ? colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                : colorScheme.surfaceContainerLow,
             border: Border(
               top: BorderSide(
                 color: enableGlass
@@ -2059,9 +2059,9 @@ class _AppPageState extends State<AppPage> {
           enabled: plusSettings.plusEnableGlassmorphism,
           sigma: 20,
           child: Container(
-            color: Theme.of(context).colorScheme.surface.withValues(
-              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
-            ),
+            color: plusSettings.plusEnableGlassmorphism
+                ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)
+                : Theme.of(context).colorScheme.surfaceContainerLow,
             child: scaffold,
           ),
         ),
