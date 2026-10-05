@@ -52,6 +52,7 @@ class AppVersionHistoryWidget extends StatelessWidget {
               dividerColor: Colors.transparent,
             ),
             child: ExpansionTile(
+              key: PageStorageKey<String>('version_history:${app.id}'),
               tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               childrenPadding: EdgeInsets.zero,
               leading: Container(
