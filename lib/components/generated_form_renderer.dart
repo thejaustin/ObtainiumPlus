@@ -7,6 +7,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -846,12 +847,12 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final dialogRadius = radius.clamp(24.0, 48.0);
 
     return Dialog(

@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -80,10 +79,10 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final about = widget.app.app.additionalSettings['about']?.toString();
 
-    if (about == null || about.isEmpty || !settings.plusEnablePopupSlider) {
+    if (about == null || about.isEmpty || !plusSettings.plusEnablePopupSlider) {
       return const SizedBox.shrink();
     }
 
@@ -116,14 +115,14 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                 borderRadius: BorderRadius.circular(28),
                 child: ConditionalBlur(
                   sigma: 15,
-                  enabled: settings.plusEnableGlassmorphism,
+                  enabled: plusSettings.plusEnableGlassmorphism,
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
                     width: double.infinity,
                     height: 80 + (_heightFactor.value * 300),
                     decoration: BoxDecoration(
                       color: colorScheme.surfaceContainerLow.withValues(
-                                alpha: settings.plusEnableGlassmorphism
+                                alpha: plusSettings.plusEnableGlassmorphism
                                     ? 0.7
                                     : 1.0,
                               ),
@@ -136,8 +135,8 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                       ),
                       boxShadow: AppShadows.smooth(
                         color: Colors.black,
-                        opacity: settings.plusEnableGlassmorphism ? 0.2 : 0.1,
-                        blurFactor: settings.plusEnableGlassmorphism
+                        opacity: plusSettings.plusEnableGlassmorphism ? 0.2 : 0.1,
+                        blurFactor: plusSettings.plusEnableGlassmorphism
                             ? 1.2
                             : 1.0,
                       ),

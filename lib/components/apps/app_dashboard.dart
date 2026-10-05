@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
@@ -112,7 +111,7 @@ class _AppDashboardState extends State<AppDashboard>
   @override
   Widget build(BuildContext context) {
     final appsProvider = context.watch<AppsProvider>();
-    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
     final appsRevision = appsProvider.appsRevision;
@@ -142,9 +141,9 @@ class _AppDashboardState extends State<AppDashboard>
     final pinnedApps = _cachedPinnedApps!;
     final installedCount = _cachedInstalledCount;
 
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -158,7 +157,7 @@ class _AppDashboardState extends State<AppDashboard>
               _card0Anim,
               _buildBatchActionsHub(context, appsProvider, radius),
             )
-          else if (settings.plusShowDashboardSearch)
+          else if (plusSettings.plusShowDashboardSearch)
             // Omnibar - Unified Search/Add
             Omnibar(
               onSearchQuery: widget.onSearchQuery,
@@ -209,7 +208,7 @@ class _AppDashboardState extends State<AppDashboard>
               updatesCount: updatesAvailable,
               installedCount: installedCount,
               radius: radius,
-              isGlass: settings.plusEnableGlassmorphism,
+              isGlass: plusSettings.plusEnableGlassmorphism,
             ),
           ),
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
 
@@ -46,10 +45,10 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(radius);
     final innerRadius = CardMetrics.inner(radius);
     final colorScheme = Theme.of(context).colorScheme;
