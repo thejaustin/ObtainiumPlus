@@ -325,6 +325,8 @@ Future<void> _runObtainium() async {
   final viewSettings = ViewSettingsProvider();
   final updateSettings = UpdateSettingsProvider();
   final pluginProvider = PluginProvider();
+  final sourceConfigProvider = SourceConfigProvider();
+  final authProvider = AuthProvider();
 
   await Future.wait([
     sp.initializeSettings(),
@@ -334,6 +336,8 @@ Future<void> _runObtainium() async {
     viewSettings.initializeSettings(prefs),
     updateSettings.initializeSettings(prefs),
     pluginProvider.initialize(prefs),
+    sourceConfigProvider.initializeSettings(prefs),
+    authProvider.initialize(prefs),
   ]);
 
   plusSettings.addListener(() {
@@ -365,9 +369,9 @@ Future<void> _runObtainium() async {
           update: (context, appsProvider, tagProvider) =>
               TagProvider(appsProvider),
         ),
-        ChangeNotifierProvider(create: (context) => SourceConfigProvider()),
+        ChangeNotifierProvider(create: (context) => sourceConfigProvider),
         ChangeNotifierProvider(create: (context) => pluginProvider),
-        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => authProvider),
         Provider(create: (context) => np),
         Provider(create: (context) => LogsProvider()),
         Provider(create: (context) => SourceProvider()),
