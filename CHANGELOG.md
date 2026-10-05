@@ -2,6 +2,18 @@
 
 All notable changes to Obtainium+ are documented in this file.
 
+## [Unreleased]
+
+### 🐛 Bug Fixes & Polish
+
+- **Light Mode Card Backgrounds**: Fixed app shortcuts menu, omnibar's add-app sheet, sort/filter panel, selection modal, version history, and several other surfaces using the page background color (`surface`) instead of the elevated card tone (`surfaceContainerLow`) in light mode — cards were invisible against the page.
+- **Settings Changes Now Apply Immediately**: Plus settings (glassmorphism, corner radius, expressive progress, contextual tips, etc.) now update live as soon as you change them. Previously, components were listening to the wrong provider and would not rebuild until you navigated away.
+- **Export / Share Crash (NaN)**: Prevented JSON encoding failure when app metadata contained `NaN` or `Infinity` values, which could crash the share/export flow.
+- **Version History Crash**: Added `PageStorageKey` to the version history expansion tile to prevent a `bool`/`double` type mismatch crash when scrolling back to a previously-visited app.
+- **Update Check Unresponsiveness**: Yielded to the UI thread between each update check to prevent the app from becoming unresponsive during large background scans.
+
+---
+
 ## [v1.6.10-r1] - Official Release (2026-09-24)
 
 ### 📱 Samsung OneUI Reachability Header
