@@ -219,8 +219,8 @@ class _OnboardingPageState extends State<OnboardingPage>
     Color? iconColor,
     VoidCallback? onTap,
   }) {
-    final settings = context.watch<SettingsProvider>();
-    final enableGlass = settings.plusEnableGlassmorphism;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget cardContent = ListTile(

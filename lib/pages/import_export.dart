@@ -19,7 +19,6 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/nav_helper.dart';
 import 'package:provider/provider.dart';
@@ -50,11 +49,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
     SourceProvider sourceProvider = SourceProvider();
     var appsProvider = context.watch<AppsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
-    final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final cardRadius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
 
     final exportDirKey = behaviorSettings.prefs?.safeString('exportDir');
     if (_exportDirFuture == null || exportDirKey != _lastExportDirKey) {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/pages/apps.dart' hide AppsFilter;
 import 'package:obtainium/pages/system_updates.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 
 class UpdatesPage extends StatefulWidget {
@@ -31,8 +31,8 @@ class _UpdatesPageState extends State<UpdatesPage>
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
-    final showSystemTab = settingsProvider.plusEnableSystemUpdateScanner;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final showSystemTab = plusSettings.plusEnableSystemUpdateScanner;
 
     if (!showSystemTab) {
       var updatesFilter = AppsFilter();

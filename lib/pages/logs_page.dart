@@ -6,7 +6,6 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -77,11 +76,10 @@ $logs''';
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final cardRadius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final enableGlass = plusSettings.plusEnableGlassmorphism;
 
     return Scaffold(

@@ -13,7 +13,6 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
@@ -421,7 +420,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   @override
   Widget build(BuildContext context) {
     final appsProvider = context.watch<AppsProvider>();
-    final settings = context.watch<SettingsProvider>();
     final filteredApps = _getFilteredApps();
     final allLabels = _getAllLabels();
     final hasLabels = allLabels.isNotEmpty;
@@ -829,10 +827,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         flexibleSpace: ClipRRect(
           child: ConditionalBlur(
             sigma: 15,
-            enabled: settings.plusEnableGlassmorphism,
+            enabled: plusSettings.plusEnableGlassmorphism,
             child: Container(
               color: Theme.of(context).colorScheme.surface.withValues(
-                alpha: settings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
               ),
             ),
           ),
@@ -973,7 +971,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       Theme.of(
                         context,
                       ).colorScheme.surfaceContainerHigh.withValues(
-                        alpha: settings.plusEnableGlassmorphism
+                        alpha: plusSettings.plusEnableGlassmorphism
                             ? AppOpacity.half
                             : 1.0,
                       ),
