@@ -36,11 +36,9 @@ Future<T?> showDraggableModalBottomSheet<T>({
               sigma: AppConstants.glassBlurSigmaSoft,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface.withValues(
-                    alpha: enableGlass
-                        ? AppConstants.glassSurfaceAlphaStrong
-                        : 1.0,
-                  ),
+                  color: enableGlass
+                      ? Theme.of(context).colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlphaStrong)
+                      : Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(28),
                   ),

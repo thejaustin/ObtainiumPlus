@@ -531,7 +531,7 @@ class DeveloperSettingsPage extends StatelessWidget {
         final enableGlass = plusSettings.plusEnableGlassmorphism;
         final sheet = Container(
           decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            color: enableGlass ? cs.surface.withValues(alpha: 0.78) : cs.surfaceContainerLow,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
@@ -924,7 +924,7 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final content = Container(
       decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+        color: enableGlass ? cs.surface.withValues(alpha: 0.78) : cs.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(
@@ -1027,7 +1027,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
 
     final content = Container(
       decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+        color: enableGlass ? cs.surface.withValues(alpha: 0.78) : cs.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(

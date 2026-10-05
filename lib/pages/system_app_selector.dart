@@ -221,7 +221,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(28),
                 ),
@@ -477,9 +477,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           enabled: plusSettings.plusEnableGlassmorphism,
           sigma: 20,
           child: Container(
-            color: Theme.of(context).colorScheme.surface.withValues(
-              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 1.0,
-            ),
+            color: plusSettings.plusEnableGlassmorphism
+                ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)
+                : Theme.of(context).colorScheme.surfaceContainerLow,
             child: Scaffold(
               backgroundColor: Colors.transparent,
               body: Column(
@@ -829,9 +829,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             sigma: 15,
             enabled: plusSettings.plusEnableGlassmorphism,
             child: Container(
-              color: Theme.of(context).colorScheme.surface.withValues(
-                alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
-              ),
+              color: plusSettings.plusEnableGlassmorphism
+                  ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.7)
+                  : Theme.of(context).colorScheme.surfaceContainerLow,
             ),
           ),
         ),
