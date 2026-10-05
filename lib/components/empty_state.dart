@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
@@ -67,7 +66,6 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
     return FadeTransition(
