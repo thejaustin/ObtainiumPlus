@@ -33,7 +33,6 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
     if (settings.isEmpty) return const SizedBox.shrink();
     return Consumer2<T, PlusSettingsProvider>(
       builder: (context, provider, plusSettings, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         final colorScheme = Theme.of(context).colorScheme;
         final screenWidth = MediaQuery.of(context).size.width;
         final crossAxisCount = screenWidth > 600 ? 3 : 2;

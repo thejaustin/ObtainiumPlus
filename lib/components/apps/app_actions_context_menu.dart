@@ -23,7 +23,6 @@ class AppActionsContextMenu {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
         final plusSettings = context.watch<PlusSettingsProvider>();
         final sheetRadius = plusSettings.plusGlobalCornerRadius.clamp(
           16.0,
@@ -34,9 +33,7 @@ class AppActionsContextMenu {
         return Container(
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark
-                ? theme.colorScheme.surfaceContainerHigh
-                : theme.colorScheme.surface,
+            color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(sheetRadius),
           ),
           child: SafeArea(

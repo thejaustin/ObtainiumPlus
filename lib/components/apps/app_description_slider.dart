@@ -88,7 +88,6 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
     }
 
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AnimatedBuilder(
       animation: _heightFactor,
@@ -123,11 +122,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                     width: double.infinity,
                     height: 80 + (_heightFactor.value * 300),
                     decoration: BoxDecoration(
-                      color:
-                          (isDark
-                                  ? colorScheme.surfaceContainerHighest
-                                  : colorScheme.surface)
-                              .withValues(
+                      color: colorScheme.surfaceContainerLow.withValues(
                                 alpha: settings.plusEnableGlassmorphism
                                     ? 0.7
                                     : 1.0,

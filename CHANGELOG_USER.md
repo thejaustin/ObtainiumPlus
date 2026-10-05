@@ -14,6 +14,7 @@
 #### 📋 App List
 - **Odd glow on update cards** — Cards with pending updates no longer show a colored halo; the shadow is now neutral and subtle.
 - **Crash when browsing by category** — Fixed a rare crash where the category expand/collapse state could corrupt the scroll position storage, causing a startup crash on the app list screen.
+- **Crash when sharing selected apps** — Fixed a crash when using "Share" on a selection of apps whose metadata contained invalid numeric values.
 
 #### 🪟 Startup
 - **Two popups on launch after update** — The app no longer shows the What's New sheet *and* a second dialog on the same startup. One notification per update.

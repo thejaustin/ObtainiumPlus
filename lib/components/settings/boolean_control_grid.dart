@@ -29,7 +29,6 @@ class BooleanControlGrid extends StatelessWidget {
     return Consumer<SettingsProvider>(
       builder: (context, settingsProvider, child) {
         final settings = settingsProvider;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return ClipRRect(
           borderRadius: BorderRadius.circular(24.0),

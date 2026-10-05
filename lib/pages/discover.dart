@@ -401,13 +401,9 @@ class DiscoverPageState extends State<DiscoverPage> {
           duration: Duration(milliseconds: animsEnabled ? 300 : 0),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color:
-                (isDark
-                        ? theme.colorScheme.surfaceContainerHigh
-                        : theme.colorScheme.surface)
-                    .withValues(
-                      alpha: settings.plusEnableGlassmorphism ? 0.65 : 1.0,
-                    ),
+            color: theme.colorScheme.surfaceContainerLow.withValues(
+                  alpha: settings.plusEnableGlassmorphism ? 0.65 : 1.0,
+                ),
             borderRadius: BorderRadius.circular(cardRadius),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(

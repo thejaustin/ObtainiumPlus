@@ -153,7 +153,6 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final enableAnims = plusSettings.plusEnableEnhancedAnimations;
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final radius = plusSettings.plusGlobalCornerRadius;
 
     return ClipRRect(
@@ -165,10 +164,7 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
           duration: Duration(milliseconds: enableAnims ? 260 : 0),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: (isDark
-                    ? colorScheme.surfaceContainerLow
-                    : colorScheme.surface)
-                .withValues(
+            color: colorScheme.surfaceContainerLow.withValues(
                   alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
                 ),
             borderRadius: BorderRadius.vertical(top: Radius.circular(radius + 4)),

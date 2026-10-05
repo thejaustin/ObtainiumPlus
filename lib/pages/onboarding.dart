@@ -221,7 +221,6 @@ class _OnboardingPageState extends State<OnboardingPage>
   }) {
     final settings = context.watch<SettingsProvider>();
     final enableGlass = settings.plusEnableGlassmorphism;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget cardContent = ListTile(
@@ -246,7 +245,7 @@ class _OnboardingPageState extends State<OnboardingPage>
 
     Widget container = Container(
       decoration: BoxDecoration(
-        color: (isDark ? colorScheme.surfaceContainerHigh : colorScheme.surface)
+        color: colorScheme.surfaceContainerLow
             .withValues(alpha: enableGlass ? 0.45 : 1.0),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
