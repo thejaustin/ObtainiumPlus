@@ -145,7 +145,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                         ),
                       ),
                       filled: true,
-                      fillColor: cs.surface.withValues(alpha: 0.5),
+                      fillColor: cs.surfaceContainerLow,
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -216,7 +216,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: 0.5),
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: cs.outline.withValues(alpha: 0.05)),
       ),

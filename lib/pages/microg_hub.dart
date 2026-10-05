@@ -409,7 +409,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: 0.5),
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
       ),
       child: CheckboxListTile(
@@ -444,7 +444,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: 0.5),
+            color: cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
           ),
           child: SwitchListTile(
