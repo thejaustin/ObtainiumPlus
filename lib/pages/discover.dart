@@ -321,10 +321,10 @@ class DiscoverPageState extends State<DiscoverPage> {
     String sourceName, {
     String? iconUrl,
   }) {
-    final settings = context.read<SettingsProvider>();
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     return ScaleTouchWrapper(
       onTap: () {
         AppHaptics.selectionClick();
@@ -374,7 +374,7 @@ class DiscoverPageState extends State<DiscoverPage> {
 
   Widget _buildAppGrid(
     String url,
-    SettingsProvider settings, {
+    PlusSettingsProvider plusSettings, {
     Map<String, MapEntry<String, List<String>>>? from,
     String? iconUrl,
   }) {
@@ -387,34 +387,34 @@ class DiscoverPageState extends State<DiscoverPage> {
     final isDark = theme.brightness == Brightness.dark;
     final animsEnabled = context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
 
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(radius);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(cardRadius),
       child: ConditionalBlur(
         sigma: 12,
-        enabled: settings.plusEnableGlassmorphism,
+        enabled: plusSettings.plusEnableGlassmorphism,
         child: AnimatedContainer(
           duration: Duration(milliseconds: animsEnabled ? 300 : 0),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow.withValues(
-                  alpha: settings.plusEnableGlassmorphism ? 0.65 : 1.0,
+                  alpha: plusSettings.plusEnableGlassmorphism ? 0.65 : 1.0,
                 ),
             borderRadius: BorderRadius.circular(cardRadius),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(
-                alpha: settings.plusEnableGlassmorphism ? 0.15 : 0.08,
+                alpha: plusSettings.plusEnableGlassmorphism ? 0.15 : 0.08,
               ),
               width: 1.2,
             ),
           ),
           child: Stack(
             children: [
-              if (settings.plusEnableGlassmorphism)
+              if (plusSettings.plusEnableGlassmorphism)
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -538,7 +538,6 @@ class DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isGridView = viewSettings.discoverViewMode == ViewMode.grid;
@@ -793,7 +792,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                         final url = suggestionResults.keys.elementAt(index);
                         return _buildAppGrid(
                           url,
-                          settings,
+                          plusSettings,
                           from: suggestionResults,
                           iconUrl: suggestionIcons[url],
                         );
@@ -892,7 +891,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _buildAppGrid(
                           results.keys.elementAt(index),
-                          settings,
+                          plusSettings,
                         ),
                         childCount: results.length,
                       ),
@@ -1043,8 +1042,8 @@ class DiscoverCategoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
-    final cornerRadius = settings.plusGlobalCornerRadius;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final cornerRadius = plusSettings.plusGlobalCornerRadius;
     return SizedBox(
       height: 50,
       child: ListView(

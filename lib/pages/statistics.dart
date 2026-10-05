@@ -17,7 +17,6 @@ import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -454,11 +453,11 @@ class _StatisticsPageState extends State<StatisticsPage>
   }
 
   Widget _buildMetricsGrid(BuildContext context, List<_MetricItem> items) {
-    final settings = context.watch<SettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final theme = Theme.of(context);
-    final radius = settings.plusOverrideIndividualCornerRadius
-        ? settings.plusHomeCornerRadius
-        : settings.plusGlobalCornerRadius;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     final itemRadius = (radius * 0.75).clamp(12.0, 24.0);
 
     return LayoutBuilder(
@@ -502,16 +501,16 @@ class _StatisticsPageState extends State<StatisticsPage>
                   borderRadius: BorderRadius.circular(itemRadius),
                   child: ConditionalBlur(
                     sigma: 12,
-                    enabled: settings.plusEnableGlassmorphism,
+                    enabled: plusSettings.plusEnableGlassmorphism,
                     child: Container(
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerLow.withValues(
-                          alpha: settings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                          alpha: plusSettings.plusEnableGlassmorphism ? 0.5 : 1.0,
                         ),
                         borderRadius: BorderRadius.circular(itemRadius),
                         border: Border.all(
                           color: theme.colorScheme.outline.withValues(
-                            alpha: settings.plusEnableGlassmorphism
+                            alpha: plusSettings.plusEnableGlassmorphism
                                 ? 0.12
                                 : 0.08,
                           ),

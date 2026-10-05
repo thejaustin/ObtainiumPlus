@@ -446,14 +446,13 @@ class _AppPageState extends State<AppPage> {
   @override
   Widget build(BuildContext context) {
     var appsProvider = context.watch<AppsProvider>();
-    var settingsProvider = context.watch<SettingsProvider>();
     var plusSettings = context.watch<PlusSettingsProvider>();
     var viewSettings = context.watch<ViewSettingsProvider>();
     var updateSettings = context.watch<UpdateSettingsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
-    final cardRadius = settingsProvider.plusOverrideIndividualCornerRadius
-        ? settingsProvider.plusHomeCornerRadius
-        : settingsProvider.plusGlobalCornerRadius;
+    final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
     var showAppWebpageFinal =
         (viewSettings.showAppWebpage && !widget.showOppositeOfPreferredView) ||
         (!viewSettings.showAppWebpage && widget.showOppositeOfPreferredView);
