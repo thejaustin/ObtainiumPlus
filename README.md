@@ -1,5 +1,9 @@
 # ![Obtainium Icon](./assets/graphics/icon_small.png) Obtainium+
 
+[![GitHub Release](https://img.shields.io/github/v/release/thejaustin/ObtainiumPlus?style=flat-square&color=36BCF7&labelColor=1a1b27&label=Latest)](https://github.com/thejaustin/ObtainiumPlus/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/thejaustin/ObtainiumPlus/total?style=flat-square&color=3DDC84&labelColor=1a1b27&logo=android&label=Downloads)](https://github.com/thejaustin/ObtainiumPlus/releases)
+[![Stars](https://img.shields.io/github/stars/thejaustin/ObtainiumPlus?style=flat-square&color=FFD700&labelColor=1a1b27&logo=github&label=Stars)](https://github.com/thejaustin/ObtainiumPlus/stargazers)
+
 Android app updates straight from the source, with a gorgeous modern look and privacy-first features.
 
 Obtainium+ is an independent, privacy-focused version (fork) of the original **Obtainium** app. It allows you to download, install, and update Android apps directly from their developers (like GitHub, GitLab, or custom websites) rather than relying on a commercial app store. You get the latest updates instantly, without third-party tracking, middle-men, or telemetry.
