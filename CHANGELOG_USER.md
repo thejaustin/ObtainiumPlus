@@ -1,4 +1,11 @@
-### 🔔 What's happening while you wait — 1.6.17-p6 (upcoming)
+<!-- UPCOMING RELEASE NOTES (top section, above the first --- divider)
+     CI picks up this section verbatim as the GitHub release body for every
+     patch build, so users see readable notes in the in-app "What's New" sheet.
+     Keep it user-facing: no commit hashes, no technical jargon.
+     After a milestone full release, archive this section below the divider
+     and start a fresh block here for the next cycle. -->
+
+### 🔔 What's happening while you wait
 
 Ever stare at the "Checking for updates…" notification and wonder how far along it is? This update makes Obtainium+ a lot more communicative about what it's doing in the background.
 

@@ -279,9 +279,20 @@ jobs:
         run: |
           TAG_NAME="${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || format('v{0}', steps.bump_version.outputs.version) }}"
           PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[pr][0-9]+)?$' | head -1)
-          if [ -f "CHANGELOG_USER.md" ] && [ "${{ steps.bump_version.outputs.is_full_release }}" = "true" ]; then
+          # Extract the top section of CHANGELOG_USER.md (everything before the
+          # first '---' divider) as user-friendly notes. If that section has
+          # content, use it for every release — not just full ones — so the
+          # in-app "What's New" sheet always shows readable notes instead of
+          # raw commit messages. Fall back to the auto-generated commit log
+          # only when no user-facing notes have been written yet.
+          USER_NOTES=""
+          if [ -f "CHANGELOG_USER.md" ]; then
+            USER_NOTES=$(awk '/^---/{exit} {print}' CHANGELOG_USER.md | sed '/^[[:space:]]*$/{ /./!d }' | sed -e 's/[[:space:]]*$//' | awk 'NF{found=1} found' | sed -e 's/[[:space:]]*$//')
+          fi
+
+          if [ -n "$USER_NOTES" ]; then
             {
-              cat CHANGELOG_USER.md
+              echo "$USER_NOTES"
               echo
               if [ -n "$PREV_TAG" ]; then
                 echo "---"
