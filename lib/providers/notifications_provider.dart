@@ -10,7 +10,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:obtainium/main.dart';
-import 'package:obtainium/providers/apps_provider.dart' show formatDownloadSize;
+import 'package:obtainium/providers/apps_provider.dart'
+    show formatBytes, formatDownloadSize, formatEta, formatSpeed;
 import 'package:obtainium/utils/nav_helper.dart';
 import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 import 'package:obtainium/providers/source_provider.dart';
@@ -241,6 +242,29 @@ class DownloadNotification extends ObtainiumNotification {
   static int idForKey(String idKey) =>
       notificationIdForKey(idKey, _baseId, downloadNotificationIdRange);
 
+  static String _buildBody(
+    int? received,
+    int? total,
+    double? speedBytesPerSec,
+    int progress,
+  ) {
+    if (progress < 0) {
+      // Installing phase — show total file size if known
+      final totalStr = total != null && total > 0 ? formatBytes(total) : null;
+      return totalStr ?? '';
+    }
+    final parts = <String>[];
+    final sizeStr = formatDownloadSize(received, total);
+    if (sizeStr != null) parts.add(sizeStr);
+    final speedStr = formatSpeed(speedBytesPerSec);
+    if (speedStr != null) parts.add(speedStr);
+    if (speedBytesPerSec != null && received != null && total != null) {
+      final etaStr = formatEta(total - received, speedBytesPerSec);
+      if (etaStr != null) parts.add('$etaStr left');
+    }
+    return parts.join(' · ');
+  }
+
   DownloadNotification(
     String appName,
     int progPercent, {
@@ -248,10 +272,11 @@ class DownloadNotification extends ObtainiumNotification {
     String? idKey,
     int? receivedBytes,
     int? totalBytes,
+    double? speedBytesPerSec,
   }) : super(
          idForKey(idKey ?? appId ?? appName),
          tr('downloadingX', args: [appName]),
-         formatDownloadSize(receivedBytes, totalBytes) ?? '',
+         _buildBody(receivedBytes, totalBytes, speedBytesPerSec, progPercent),
          'APP_DOWNLOADING',
          tr('downloadingXNotifChannel', args: [tr('app')]),
          tr('downloadNotifDescription'),
@@ -300,15 +325,21 @@ ObtainiumNotification get completeInstallationNotification =>
     );
 
 class CheckingUpdatesNotification extends ObtainiumNotification {
-  CheckingUpdatesNotification(String appName)
+  CheckingUpdatesNotification(String appName, {int? checked, int? total})
     : super(
         4,
         tr('checkingForUpdates'),
-        appName,
+        checked != null && total != null && total > 0
+            ? '$checked / $total'
+            : appName,
         'BG_UPDATE_CHECK',
         tr('checkingForUpdatesNotifChannel'),
         tr('checkingForUpdatesNotifDescription'),
         Importance.min,
+        onlyAlertOnce: true,
+        progPercent: checked != null && total != null && total > 0
+            ? ((checked / total) * 100).round().clamp(1, 100)
+            : null,
       );
 }
 

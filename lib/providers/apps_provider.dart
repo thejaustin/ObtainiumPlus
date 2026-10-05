@@ -1190,6 +1190,7 @@ class AppsProvider with ChangeNotifier {
             appId: app.id,
             receivedBytes: received,
             totalBytes: total,
+            speedBytesPerSec: speedBytesPerSec,
           );
           final now = DateTime.now();
           final shouldNotify = prog != null &&

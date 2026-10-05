@@ -203,6 +203,23 @@ class BackgroundUpdateService {
           }
         }());
 
+        final total = toCheck.length;
+        int lastNotifiedProgPercent = -1;
+        void onRefreshProgress() {
+          final progress = appsProvider.refreshProgress.value;
+          if (progress == null || progress <= 0) return;
+          final checked = (progress * total).round().clamp(0, total);
+          final progPercent = ((checked / total) * 100).round().clamp(1, 100);
+          if ((progPercent - lastNotifiedProgPercent).abs() < 5 &&
+              progPercent < 99) return;
+          lastNotifiedProgPercent = progPercent;
+          notif.message = '$checked / $total';
+          notif.progPercent = progPercent;
+          notif.onlyAlertOnce = true;
+          notificationsProvider.notify(notif);
+        }
+
+        appsProvider.refreshProgress.addListener(onRefreshProgress);
         try {
           notificationsProvider.notify(notif, cancelExisting: true);
           updates = await appsProvider.checkUpdates(
@@ -272,6 +289,7 @@ class BackgroundUpdateService {
             rethrow;
           }
         } finally {
+          appsProvider.refreshProgress.removeListener(onRefreshProgress);
           notificationsProvider.cancel(notif.id);
         }
 
