@@ -51,7 +51,13 @@ class PluginProvider with ChangeNotifier {
   Future<void> initialize(SharedPreferences prefs) async {
     _prefs = prefs;
     final data = _prefs?.safeStringList('installed_plugins') ?? [];
-    _plugins.addAll(data.map((e) => ObtainiumPlugin.fromJson(jsonDecode(e))));
+    for (final e in data) {
+      try {
+        _plugins.add(ObtainiumPlugin.fromJson(jsonDecode(e)));
+      } catch (_) {
+        // Skip corrupted plugin entries
+      }
+    }
     notifyListeners();
   }
 
