@@ -146,10 +146,14 @@ class ActiveOperationsBanner extends StatelessWidget {
                                           ),
                                     ),
                                   ),
-                                  ValueListenableBuilder<double?>(
-                                    valueListenable:
-                                        appsProvider.refreshProgress,
-                                    builder: (context, progress, _) {
+                                  ListenableBuilder(
+                                    listenable: Listenable.merge([
+                                      appsProvider.refreshProgress,
+                                      appsProvider.refreshTotal,
+                                    ]),
+                                    builder: (context, _) {
+                                      final progress =
+                                          appsProvider.refreshProgress.value;
                                       if (progress == null || progress <= 0) {
                                         return const SizedBox.shrink();
                                       }

@@ -325,21 +325,16 @@ ObtainiumNotification get completeInstallationNotification =>
     );
 
 class CheckingUpdatesNotification extends ObtainiumNotification {
-  CheckingUpdatesNotification(String appName, {int? checked, int? total})
+  CheckingUpdatesNotification(String appName)
     : super(
         4,
         tr('checkingForUpdates'),
-        checked != null && total != null && total > 0
-            ? '$checked / $total'
-            : appName,
+        appName,
         'BG_UPDATE_CHECK',
         tr('checkingForUpdatesNotifChannel'),
         tr('checkingForUpdatesNotifDescription'),
         Importance.min,
         onlyAlertOnce: true,
-        progPercent: checked != null && total != null && total > 0
-            ? ((checked / total) * 100).round().clamp(1, 100)
-            : null,
       );
 }
 
