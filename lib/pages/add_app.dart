@@ -1377,11 +1377,9 @@ class AddAppPageState extends State<AddAppPage> {
           sigma: AppConstants.glassBlurSigma,
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(
-                alpha: plusSettings.plusEnableGlassmorphism
-                    ? AppConstants.glassSurfaceAlpha
-                    : 1.0,
-              ),
+              color: plusSettings.plusEnableGlassmorphism
+                  ? Theme.of(context).colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                  : Theme.of(context).colorScheme.surfaceContainerLow,
               border: Border(
                 top: BorderSide(
                   color: plusSettings.plusEnableGlassmorphism
