@@ -320,15 +320,24 @@ class _ActiveDownloadTile extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 5),
-                            Text(
-                              tr('installing'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: colorScheme.secondary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                            Flexible(
+                              child: Text(
+                                () {
+                                  final total = appInMemory.downloadTotalBytes;
+                                  return total != null && total > 0
+                                      ? '${tr('installing')} · ${formatBytes(total)}'
+                                      : tr('installing');
+                                }(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: colorScheme.secondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
                           ] else if (downloadProgress != null &&
                               downloadProgress >= 0) ...[

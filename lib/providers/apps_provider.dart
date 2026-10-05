@@ -1,6 +1,6 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode;
+import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode, sanitizeJsonValue;
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -2731,7 +2731,7 @@ class AppsProvider with ChangeNotifier {
         displayName:
             '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}${isAuto ? '-auto' : ''}.json',
         mimeType: 'application/json',
-        bytes: Uint8List.fromList(utf8.encode(encoder.convert(finalExport))),
+        bytes: Uint8List.fromList(utf8.encode(encoder.convert(sanitizeJsonValue(finalExport)))),
       );
       if (result == null) {
         throw ObtainiumError(tr('unexpectedError'));

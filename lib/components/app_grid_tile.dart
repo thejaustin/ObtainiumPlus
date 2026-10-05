@@ -213,22 +213,24 @@ class _AppGridTileState extends State<AppGridTile>
         }
 
         List<BoxShadow>? cardShadow;
-        if (widget.isSelected) {
+        if (widget.isSelected && plusSettings.plusEnableGlassmorphism) {
+          // Glow only when glass is on — border+background already signal
+          // selection when glass is off, and glow without clipping bleeds.
           cardShadow = AppShadows.glow(
             color: colorScheme.primary,
-            intensity: 0.5,
+            intensity: 0.6,
           );
-        } else if (widget.hasUpdate) {
+        } else if (widget.hasUpdate && plusSettings.plusEnableGlassmorphism) {
           cardShadow = AppShadows.smooth(
             color: widget.isAmbiguous ? colorScheme.tertiary : colorScheme.secondary,
-            opacity: isDark ? 0.22 : 0.10,
-            blurFactor: 0.8,
+            opacity: isDark ? 0.18 : 0.10,
+            blurFactor: 0.7,
           );
         } else {
           cardShadow = [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.04),
-              blurRadius: isDark ? 8 : 10,
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.04),
+              blurRadius: isDark ? 6 : 8,
               offset: const Offset(0, 2),
             ),
           ];
@@ -258,11 +260,13 @@ class _AppGridTileState extends State<AppGridTile>
               child: Stack(
                 children: [
                   // 1. Backdrop blur (clipped inside card)
+                  // Cards use glassBlurSigmaSoft (12) not glassBlurSigma (24) —
+                  // strong blur on 20+ grid cards causes GPU layer overload.
                   if (plusSettings.plusEnableGlassmorphism)
                     Positioned.fill(
                       child: ConditionalBlur(
                         enabled: true,
-                        sigma: AppConstants.glassBlurSigma,
+                        sigma: AppConstants.glassBlurSigmaSoft,
                         child: const SizedBox.expand(),
                       ),
                     ),
@@ -961,7 +965,12 @@ class _AppGridTileState extends State<AppGridTile>
                         Flexible(
                           child: Text(
                             () {
-                              if (downloadProgress < 0) return tr('installing');
+                              if (downloadProgress < 0) {
+                                final total = widget.appInMemory.downloadTotalBytes;
+                                return total != null && total > 0
+                                    ? '${tr('installing')} · ${formatBytes(total)}'
+                                    : tr('installing');
+                              }
                               final speed = formatSpeed(
                                 widget.appInMemory.downloadSpeedBytesPerSec,
                               );
