@@ -84,6 +84,7 @@ class DeepLinkService {
                   items: const [],
                   additionalWidgets: [
                     ExpansionTile(
+                      key: const PageStorageKey<String>('deep_link_raw_json'),
                       title: const Text('Raw JSON'),
                       children: [
                         Text(

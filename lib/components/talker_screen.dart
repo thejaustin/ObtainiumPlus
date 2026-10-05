@@ -196,6 +196,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ExpansionTile(
+                          key: PageStorageKey<String>('talker_log:${log.timestamp.millisecondsSinceEpoch}:$index'),
                           leading: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
