@@ -2883,6 +2883,10 @@ class AppsProvider with ChangeNotifier {
         index++;
         if (current >= items.length) break;
         await action(items[current]);
+        // Yield to the event loop so the UI can process frames between checks.
+        // Without this, synchronous HTML/JSON parsing across many apps starves
+        // the main thread and triggers ANR on lower-end devices.
+        await Future.delayed(Duration.zero);
       }
     }
 

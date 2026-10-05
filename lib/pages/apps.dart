@@ -1112,6 +1112,7 @@ class AppsPageState extends State<AppsPage>
 
       capFirstChar(String str) => str[0].toUpperCase() + str.substring(1);
       return ExpansionTile(
+        key: PageStorageKey<String>('category_tile:${listedCategories[index] ?? '__uncategorized__'}'),
         initiallyExpanded: true,
         title: Text(
           capFirstChar(listedCategories[index] ?? tr('noCategory')),
@@ -1501,10 +1502,10 @@ class AppsPageState extends State<AppsPage>
                       : () {
                           var encoder = const JsonEncoder.withIndent("    ");
                           var exportJSON = encoder.convert(
-                            appsProvider.generateExportJSON(
+                            sanitizeJsonValue(appsProvider.generateExportJSON(
                               appIds: selectedApps.map((e) => e.id).toList(),
                               overrideExportSettings: 0,
-                            ),
+                            )),
                           );
                           String fn =
                               '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}-count-${selectedApps.length}';

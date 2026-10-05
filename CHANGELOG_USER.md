@@ -13,12 +13,16 @@
 
 #### 📋 App List
 - **Odd glow on update cards** — Cards with pending updates no longer show a colored halo; the shadow is now neutral and subtle.
+- **Crash when browsing by category** — Fixed a rare crash where the category expand/collapse state could corrupt the scroll position storage, causing a startup crash on the app list screen.
 
 #### 🪟 Startup
 - **Two popups on launch after update** — The app no longer shows the What's New sheet *and* a second dialog on the same startup. One notification per update.
 
 #### 🔔 What's New sheet
 - **Awkward loading spinner** — The loading circle while release notes fetch now appears at a fixed, sensible size instead of filling the whole sheet.
+
+### ⚡ Performance
+- **Less UI jank during update checks** — The background update checker now yields to the UI thread between each app, so the app list stays responsive even while checking 50+ sources simultaneously.
 
 
 ---

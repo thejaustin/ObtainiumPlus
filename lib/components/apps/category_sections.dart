@@ -396,6 +396,7 @@ class CategorySections extends StatelessWidget {
         ),
       ),
       child: ExpansionTile(
+        key: PageStorageKey<String>('category_tile:${categoryName ?? '__uncategorized__'}'),
         initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
         title: categoryTitle,
         trailing: Row(
