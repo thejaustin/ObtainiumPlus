@@ -52,6 +52,24 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Sync pulse animation when the enhanced-animations setting changes.
+    // _checkQuality sets the initial state; this keeps it in sync thereafter.
+    final animsEnabled = context
+        .read<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
+    if (_quality == NetworkQuality.offline) {
+      if (animsEnabled && !_pulseController.isAnimating) {
+        _pulseController.repeat();
+      } else if (!animsEnabled && _pulseController.isAnimating) {
+        _pulseController.stop();
+        _pulseController.reset();
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _pulseController.dispose();
     super.dispose();

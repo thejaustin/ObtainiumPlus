@@ -580,7 +580,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
               },
             ).then((value) {
               String? label = value?['label'];
-              if (label != null) {
+              if (label != null && mounted) {
                 setState(() {
                   var temp =
                       values[fieldKey] as Map<String, MapEntry<int, bool>>?;

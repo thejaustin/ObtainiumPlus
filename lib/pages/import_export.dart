@@ -95,7 +95,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
           );
         },
       ).then((values) {
-        if (values != null) {
+        if (values != null && mounted) {
           var urls = (values['appURLList'] as String).split('\n');
           setState(() {
             importInProgress = true;

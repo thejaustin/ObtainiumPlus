@@ -22,6 +22,10 @@ All notable changes to Obtainium+ are documented in this file.
 - **Logs Toolbar TV Detection**: `_buildFloatingToolbar` redundantly re-read `isTV` from `context.read<SettingsProvider>()` instead of using the value already computed in `build()`.
 - **System App Selector Animation**: The animated container inside the label-editor sheet used `context.read<PlusSettingsProvider>()` in a `ValueListenableBuilder` builder, so enabling/disabling enhanced animations had no effect until the sheet was reopened.
 - **Category Sections Selection Not Highlighted**: Tapping to multi-select apps in the "Group by Category" list view did not visually highlight selected tiles. `AppListTile` read selection state from `AppsProvider` while the apps page managed selection locally; the two were never in sync. Fixed by adding an optional `selected` parameter to `AppListTile` and passing the local state through `CategorySections`.
+- **Network Offline Pulse Not Responding to Animation Toggle**: The offline status dot's pulse animation was started once at init and never re-evaluated when the enhanced-animations setting changed. Toggling animations on while already offline would leave the pulse static until the next network quality check. Fixed by syncing the `AnimationController` in `didChangeDependencies()`.
+- **Logs Dialog Crash on Quick Dismiss**: Closing the app-logs dialog before the log fetch completed would trigger a `setState` on a disposed widget, causing a crash. Added a `mounted` guard around the `.then()` callback.
+- **Import From URL List Crash on Back-Navigate**: Navigating away from the Import/Export screen while the URL-list import dialog was still open could cause `setState` to be called after the page was disposed. Added a `mounted` check before starting the import.
+- **Generated Form Tag Label Crash**: Adding a tag label via the inline dialog in a generated form (e.g. the add-app form) could crash if the parent dialog was dismissed while the label dialog was still open. Added a `mounted` check before applying the new label in the `.then()` callback.
 
 ---
 
