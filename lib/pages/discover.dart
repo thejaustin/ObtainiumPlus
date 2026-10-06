@@ -385,7 +385,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     final sourceName = result.key;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final animsEnabled = context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
 
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius

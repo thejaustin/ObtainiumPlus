@@ -295,7 +295,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         ..._providers.keys.map((String value) {
           final isSelected = _selectedProvider == value;
           return AnimatedContainer(
-            duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
+            duration: Duration(milliseconds: animsEnabled ? 200 : 0),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: isSelected
