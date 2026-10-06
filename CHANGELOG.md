@@ -14,6 +14,13 @@ All notable changes to Obtainium+ are documented in this file.
 - **Update Check Unresponsiveness**: Yielded to the UI thread between each update check to prevent the app from becoming unresponsive during large background scans.
 - **Aurora / Play Store Auth Lost on Restart**: `AuthProvider` and `SourceConfigProvider` were never initialized with `SharedPreferences`, so Aurora Store dispensers, auth mode, spoofed Android ID, device profile, and all source config keys (custom API tokens, etc.) were silently discarded on every app restart. All three affected providers (`AuthProvider`, `SourceConfigProvider`, `PluginProvider`) are now properly initialized before the widget tree starts.
 - **Installed Plugins Cleared on Restart**: `PluginProvider` was not wired to `SharedPreferences`, so installed plugins were lost between sessions. Also hardened plugin loading against corrupted entries so a single bad record no longer blocks all others.
+- **MicroG Hub Stuck After Partial Add**: Deployment progress UI could get stuck indefinitely when selected components were already tracked (resulting in no new downloads). The spinner now resets correctly in this case.
+- **Settings Changes Now Apply Immediately (More Fixes)**: Several more build-phase helper methods in the command center, tag editor, and plugin manager were calling `context.read<PlusSettingsProvider>()` instead of `context.watch`, meaning animations and corner-radius changes in those surfaces required an app restart to take effect.
+- **App Detail Update Crash**: `getUpdate` (app detail page) called `setState` in both its try-block and `finally` without checking `mounted`, causing a crash if the user navigated away during an update check.
+- **Notification Cancel After Dispose**: `context.read<NotificationsProvider>()` was called in `.then()` callbacks in the app list and app detail pages without verifying `context.mounted` first, risking a use-after-disposal assertion error when the widget unmounted while an install/update was in progress.
+- **Discover Corner Radius Not Live**: The `_buildListResultTile` helper in Discover used `context.read<PlusSettingsProvider>()` instead of `watch`, so corner-radius changes did not update discover result cards without a restart.
+- **Logs Toolbar TV Detection**: `_buildFloatingToolbar` redundantly re-read `isTV` from `context.read<SettingsProvider>()` instead of using the value already computed in `build()`.
+- **System App Selector Animation**: The animated container inside the label-editor sheet used `context.read<PlusSettingsProvider>()` in a `ValueListenableBuilder` builder, so enabling/disabling enhanced animations had no effect until the sheet was reopened.
 
 ---
 

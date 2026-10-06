@@ -163,10 +163,9 @@ class _LogsPageState extends State<LogsPage> {
   /// pill, rather than scattering them across the app bar and multiple FABs.
   /// Android TV has no share sheet, so the share action is replaced with a
   /// copy-to-clipboard action there.
-  Widget _buildFloatingToolbar(BuildContext context) {
+  Widget _buildFloatingToolbar(BuildContext context, {required bool isTV}) {
     final cs = Theme.of(context).colorScheme;
     final hasLogs = _logs.isNotEmpty;
-    final isTV = context.read<SettingsProvider>().isTV;
     return Material(
       elevation: 3,
       color: cs.surfaceContainer,
@@ -292,7 +291,7 @@ class _LogsPageState extends State<LogsPage> {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: Align(
                     alignment: Alignment.bottomCenter,
-                    child: _buildFloatingToolbar(context),
+                    child: _buildFloatingToolbar(context, isTV: isTV),
                   ),
                 ),
               ),

@@ -283,7 +283,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             final colorScheme = Theme.of(context).colorScheme;
 
                             return AnimatedContainer(
-                              duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
+                              duration: Duration(milliseconds: context.watch<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
                               curve: Easing.emphasizedDecelerate,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(

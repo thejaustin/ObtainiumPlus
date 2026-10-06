@@ -458,9 +458,7 @@ class _AppPageState extends State<AppPage> {
         (!viewSettings.showAppWebpage && widget.showOppositeOfPreferredView);
     getUpdate(String id, {bool resetVersion = false}) async {
       try {
-        setState(() {
-          updating = true;
-        });
+        if (mounted) setState(() { updating = true; });
         await appsProvider.checkUpdate(id);
         if (resetVersion) {
           appsProvider.apps[id]?.app.additionalSettings['versionDetection'] =
@@ -480,9 +478,7 @@ class _AppPageState extends State<AppPage> {
           showError(err, context);
         }
       } finally {
-        setState(() {
-          updating = false;
-        });
+        if (mounted) setState(() { updating = false; });
       }
     }
 
@@ -1610,7 +1606,7 @@ class _AppPageState extends State<AppPage> {
               if (res.isNotEmpty && context.mounted) {
                 Navigator.of(context).pop();
               }
-              if (res.isNotEmpty) {
+              if (res.isNotEmpty && context.mounted) {
                 var np = context.read<NotificationsProvider>();
                 np.cancel(UpdateNotification([]).id);
                 np.cancel(SilentUpdateAttemptNotification([], id: res[0].hashCode).id);

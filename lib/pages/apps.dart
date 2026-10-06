@@ -810,7 +810,7 @@ class AppsPageState extends State<AppsPage>
                         listedApps[appIndex].app.id,
                       ], globalNavigatorKey.currentContext)
                       .then((res) {
-                        if (res.isNotEmpty) {
+                        if (res.isNotEmpty && context.mounted) {
                           var np = context.read<NotificationsProvider>();
                           np.cancel(UpdateNotification([]).id);
                           np.cancel(
@@ -1273,8 +1273,8 @@ class AppsPageState extends State<AppsPage>
                         globalNavigatorKey.currentContext,
                       )
                       .then((value) {
-                        if (value.isNotEmpty) {
-                          if (shouldInstallUpdates && context.mounted) {
+                        if (value.isNotEmpty && context.mounted) {
+                          if (shouldInstallUpdates) {
                             showMessage(tr('appsUpdated'), context);
                           }
                           var np = context.read<NotificationsProvider>();
@@ -1299,8 +1299,10 @@ class AppsPageState extends State<AppsPage>
                               context,
                             );
                           }
-                          var np = context.read<NotificationsProvider>();
-                          np.cancel(UpdateNotification([]).id);
+                          if (context.mounted) {
+                            var np = context.read<NotificationsProvider>();
+                            np.cancel(UpdateNotification([]).id);
+                          }
                         }
                         if (context.mounted) showError(e, context);
                         return <String>[];

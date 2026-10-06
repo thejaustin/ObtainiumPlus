@@ -321,7 +321,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     String sourceName, {
     String? iconUrl,
   }) {
-    final plusSettings = context.read<PlusSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
