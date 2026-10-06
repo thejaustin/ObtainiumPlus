@@ -167,6 +167,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             if (result.isEmpty) {
               return;
             }
+            if (!mounted) return;
             setState(() {
               importInProgress = true;
             });
@@ -280,6 +281,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               },
             );
             if (values != null) {
+              if (!mounted) return;
               setState(() {
                 importInProgress = true;
               });
@@ -363,6 +365,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               },
             );
             if (values != null) {
+              if (!mounted) return;
               setState(() {
                 importInProgress = true;
               });

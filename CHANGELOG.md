@@ -29,6 +29,7 @@ All notable changes to Obtainium+ are documented in this file.
 - **Logs Dialog Crash on Quick Dismiss**: Closing the app-logs dialog before the log fetch completed would trigger a `setState` on a disposed widget, causing a crash. Added a `mounted` guard around the `.then()` callback.
 - **Import From URL List Crash on Back-Navigate**: Navigating away from the Import/Export screen while the URL-list import dialog was still open could cause `setState` to be called after the page was disposed. Added a `mounted` check before starting the import.
 - **Generated Form Tag Label Crash**: Adding a tag label via the inline dialog in a generated form (e.g. the add-app form) could crash if the parent dialog was dismissed while the label dialog was still open. Added a `mounted` check before applying the new label in the `.then()` callback.
+- **Import/Export setState After Dismiss**: Three import flows (file import, source search import, mass-source import) called `setState` to set `importInProgress = true` after an async picker or dialog returned, without first checking `mounted`. Navigating away while those pickers were open would cause a "setState called after dispose" crash. Added `mounted` guards before each of the three `setState` calls.
 
 ---
 
