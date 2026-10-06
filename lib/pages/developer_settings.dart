@@ -1019,6 +1019,12 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
   bool _isLoading = false;
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final cs = Theme.of(context).colorScheme;
