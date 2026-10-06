@@ -21,6 +21,7 @@ All notable changes to Obtainium+ are documented in this file.
 - **Discover Corner Radius Not Live**: The `_buildListResultTile` helper in Discover used `context.read<PlusSettingsProvider>()` instead of `watch`, so corner-radius changes did not update discover result cards without a restart.
 - **Logs Toolbar TV Detection**: `_buildFloatingToolbar` redundantly re-read `isTV` from `context.read<SettingsProvider>()` instead of using the value already computed in `build()`.
 - **System App Selector Animation**: The animated container inside the label-editor sheet used `context.read<PlusSettingsProvider>()` in a `ValueListenableBuilder` builder, so enabling/disabling enhanced animations had no effect until the sheet was reopened.
+- **Category Sections Selection Not Highlighted**: Tapping to multi-select apps in the "Group by Category" list view did not visually highlight selected tiles. `AppListTile` read selection state from `AppsProvider` while the apps page managed selection locally; the two were never in sync. Fixed by adding an optional `selected` parameter to `AppListTile` and passing the local state through `CategorySections`.
 
 ---
 

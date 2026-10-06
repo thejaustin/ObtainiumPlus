@@ -24,6 +24,9 @@ class AppListTile extends StatelessWidget {
   final VoidCallback? onLongPress;
   final VoidCallback? onShowChanges;
   final Color? categoryColor;
+  // When provided, overrides the AppsProvider-based selection check.
+  // Use this when the caller manages selection state locally (e.g. CategorySections).
+  final bool? selected;
 
   const AppListTile({
     super.key,
@@ -33,6 +36,7 @@ class AppListTile extends StatelessWidget {
     this.onLongPress,
     this.onShowChanges,
     this.categoryColor,
+    this.selected,
   });
 
   @override
@@ -40,7 +44,7 @@ class AppListTile extends StatelessWidget {
     final appsProvider = context.read<AppsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();
-    final isSelected = context.select<AppsProvider, bool>(
+    final isSelected = selected ?? context.select<AppsProvider, bool>(
       (p) => p.selectedAppIds.contains(appInMemory.app.id),
     );
     final isCheckingUpdate = context.select<AppsProvider, bool>(

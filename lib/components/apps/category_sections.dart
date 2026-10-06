@@ -419,7 +419,7 @@ class CategorySections extends StatelessWidget {
                 hasUpdate: app.app.installedVersion == null
                     ? app.app.additionalSettings['trackOnly'] != true
                     : pendingUpdates.contains(app.app.id),
-
+                selected: selectedAppIds.contains(app.app.id),
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);
