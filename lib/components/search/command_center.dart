@@ -537,7 +537,7 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildLocalResult(AppInMemory app) {
-    final plusSettings = context.read<PlusSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -933,7 +933,7 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildActionChip(IconData icon, String label, VoidCallback onPressed) {
-    final plusSettings = context.read<PlusSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -960,7 +960,7 @@ class _CommandCenterState extends State<CommandCenter> {
         .toList();
     if (searchableSources.isEmpty) return const SizedBox.shrink();
 
-    final plusSettings = context.read<PlusSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;

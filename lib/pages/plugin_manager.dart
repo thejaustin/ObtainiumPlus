@@ -24,6 +24,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
   @override
   Widget build(BuildContext context) {
     final pluginProvider = context.watch<PluginProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -31,7 +32,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildInstallCard(cs, pluginProvider),
+          _buildInstallCard(cs, pluginProvider, plusSettings),
           const SizedBox(height: 32),
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 16),
@@ -56,7 +57,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     );
   }
 
-  Widget _buildInstallCard(ColorScheme cs, PluginProvider pluginProvider) {
+  Widget _buildInstallCard(ColorScheme cs, PluginProvider pluginProvider, PlusSettingsProvider plusSettings) {
     return Card(
       elevation: 0,
       color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
@@ -96,7 +97,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                 final isActive = isFocused || hasText;
 
                 return AnimatedContainer(
-                  duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
+                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(isActive ? 16.0 : 26.0),
