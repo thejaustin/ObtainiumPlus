@@ -1413,8 +1413,7 @@ class _AppPageState extends State<AppPage> {
         app.app.additionalSettings = values;
         if (source?.enforceTrackOnly == true) {
           app.app.additionalSettings['trackOnly'] = true;
-          // ignore: use_build_context_synchronously
-          showMessage(tr('appsFromSourceAreTrackOnly'), context);
+          if (context.mounted) showMessage(tr('appsFromSourceAreTrackOnly'), context);
         }
         var versionDetectionEnabled =
             app.app.additionalSettings['versionDetection'] == true &&

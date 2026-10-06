@@ -1708,7 +1708,7 @@ class AppsPageState extends State<AppsPage>
           );
         },
       );
-      if (values != null) {
+      if (values != null && mounted) {
         setState(() {
           filter.setFormValuesFromMap(values);
         });
