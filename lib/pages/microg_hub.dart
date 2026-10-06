@@ -94,11 +94,13 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         );
       }
 
-      // We don't pop immediately, but wait for progress to start or show success
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(tr('deploymentStartedMessage'))));
+        if (addedAppIds.isEmpty) {
+          setState(() => _isDownloading = false);
+        }
       }
     } catch (e) {
       if (mounted) {
