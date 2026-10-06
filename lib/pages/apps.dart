@@ -2734,6 +2734,7 @@ class _TVSearchBarState extends State<_TVSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final isShifted = _isFocused || widget.controller.text.isNotEmpty;
     final currentRadius = isShifted ? 18.0 : 28.0;
     return Column(
@@ -2742,7 +2743,7 @@ class _TVSearchBarState extends State<_TVSearchBar> {
           textFocusNode: _textFocus,
           borderRadius: currentRadius,
           child: AnimatedContainer(
-            duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 250 : 0),
+            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
             curve: Easing.emphasizedDecelerate,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(currentRadius),

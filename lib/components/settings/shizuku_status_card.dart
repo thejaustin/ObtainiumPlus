@@ -101,6 +101,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final info = _info;
 
     final isInstalled = info?.isInstalled ?? false;
@@ -155,7 +156,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     }
 
     return AnimatedContainer(
-      duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 300 : 0),
+      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 300 : 0),
       margin: widget.margin,
       decoration: BoxDecoration(
         color: containerColor,
@@ -247,9 +248,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                   // Animated Status Indicator Dot
                   FadeTransition(
                     opacity: (isRunning || _isTesting) &&
-                            context
-                                .watch<PlusSettingsProvider>()
-                                .plusEnableEnhancedAnimations
+                            plusSettings.plusEnableEnhancedAnimations
                         ? _pulseAnimation
                         : const AlwaysStoppedAnimation(1.0),
                     child: Container(
