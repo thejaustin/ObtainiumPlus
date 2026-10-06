@@ -25,7 +25,6 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   bool _installFakeStore = false;
   bool _isRooted = false;
   bool _isDownloading = false;
-  double _downloadProgress = 0;
 
   final Map<String, String> _providers = {
     'Official (microG Project)': 'microg/GmsCore',
@@ -57,7 +56,6 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     final appsProvider = context.read<AppsProvider>();
     setState(() {
       _isDownloading = true;
-      _downloadProgress = 0;
     });
 
     try {
