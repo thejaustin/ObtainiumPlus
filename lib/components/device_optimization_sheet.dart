@@ -341,6 +341,7 @@ class _DeviceOptimizationSheetContentState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final activeOEM = _selectedOEM ?? _detectedOEM;
     final guide = DeviceCompatibilityService.getGuideForOEM(activeOEM);
     final isViewingDetected = activeOEM == _detectedOEM;
@@ -797,7 +798,7 @@ class _DeviceOptimizationSheetContentState
                     const SizedBox(height: 16),
 
                     AnimatedSwitcher(
-                      duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 260 : 0),
+                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
                       transitionBuilder: (child, anim) {

@@ -318,7 +318,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
           curve: Curves.easeOutCubic,
           reverseCurve: Curves.easeInCubic,
           duration: Duration(
-            milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 260 : 0,
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0,
           ),
         ),
         initiallyExpanded: widget.initiallyExpanded,

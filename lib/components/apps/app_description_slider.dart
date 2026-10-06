@@ -117,7 +117,7 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                   sigma: 15,
                   enabled: plusSettings.plusEnableGlassmorphism,
                   child: AnimatedContainer(
-                    duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
+                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                     width: double.infinity,
                     height: 80 + (_heightFactor.value * 300),
                     decoration: BoxDecoration(

@@ -110,6 +110,7 @@ class _InstallationSectionState extends State<InstallationSection>
   Widget build(BuildContext context) {
     final bool isSearching =
         widget.searchQuery != null && widget.searchQuery!.isNotEmpty;
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, behaviorSettings, child) {
@@ -495,7 +496,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
             if (behaviorSettings.useShizuku &&
-                context.read<PlusSettingsProvider>().plusSettingsUseHeroCards)
+                plusSettings.plusSettingsUseHeroCards)
               const ShizukuStatusCard(
                 margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               ),
@@ -503,7 +504,7 @@ class _InstallationSectionState extends State<InstallationSection>
             // Animated nested child option: Shizuku Pretend to be Google Play
             if (_matches(tr('shizukuPretendToBeGooglePlay')))
               AnimatedSize(
-                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
+                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: behaviorSettings.useShizuku
@@ -562,7 +563,7 @@ class _InstallationSectionState extends State<InstallationSection>
             // Animated nested child: Fallback to stock when binder unavailable
             if (_matches(tr('shizukuFallbackToSystem'), isAdvanced: true))
               AnimatedSize(
-                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
+                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: behaviorSettings.useShizuku
@@ -621,7 +622,7 @@ class _InstallationSectionState extends State<InstallationSection>
             // Animated nested child: Binder latency diagnostics button
             if (_isShizukuGranted && _matches('shizuku binder latency diagnostics test'))
               AnimatedSize(
-                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
+                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
                 child: behaviorSettings.useShizuku
@@ -660,7 +661,7 @@ class _InstallationSectionState extends State<InstallationSection>
                                 color: Theme.of(context).colorScheme.tertiary,
                               ),
                               title: AnimatedSwitcher(
-                                duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 200 : 0),
+                                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                                 child: Text(
                                   _isTestingBinder
                                       ? tr('testingBinder')

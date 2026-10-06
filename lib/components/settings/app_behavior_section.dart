@@ -29,6 +29,7 @@ class AppBehaviorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
     final hasHaptics = _matches(tr('enableHapticFeedback')) ||
         _matches(tr('enableUndoForAppRemoval'));
@@ -91,7 +92,7 @@ class AppBehaviorSection extends StatelessWidget {
                 Consumer<BehaviorSettingsProvider>(
                   builder: (context, settings, child) {
                     return AnimatedSize(
-                      duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 250 : 0),
+                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
                       curve: Curves.easeInOutCubic,
                       child: settings.enableSwipeGestures
                           ? Column(
@@ -378,7 +379,7 @@ class AppBehaviorSection extends StatelessWidget {
                     },
                   ),
                   AnimatedSize(
-                    duration: Duration(milliseconds: context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 250 : 0),
+                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
                     curve: Curves.easeInOutCubic,
                     child: settings.plusEnableBanWarnings
                         ? Padding(
