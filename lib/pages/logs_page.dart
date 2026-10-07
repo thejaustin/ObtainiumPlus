@@ -6,6 +6,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart' show obtainiumId;
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/app_constants.dart';

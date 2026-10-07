@@ -167,7 +167,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         children: [
           _buildInfoCard(cs),
           const SizedBox(height: 24),
-          _buildProviderSection(cs, context),
+          _buildProviderSection(cs, context, animsEnabled),
           const SizedBox(height: 24),
           _buildComponentsSection(cs),
           const SizedBox(height: 24),
@@ -278,7 +278,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildProviderSection(ColorScheme cs, BuildContext context) {
+  Widget _buildProviderSection(ColorScheme cs, BuildContext context, bool animsEnabled) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

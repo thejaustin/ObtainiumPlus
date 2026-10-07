@@ -379,7 +379,7 @@ class AppBehaviorSection extends StatelessWidget {
                     },
                   ),
                   AnimatedSize(
-                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
+                    duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
                     curve: Curves.easeInOutCubic,
                     child: settings.plusEnableBanWarnings
                         ? Padding(

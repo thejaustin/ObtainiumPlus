@@ -201,7 +201,7 @@ class _SelectionModalState extends State<SelectionModal> {
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                        child: _buildContent(context, radius, colorScheme),
+                        child: _buildContent(context, radius, colorScheme, plusSettings),
                       ),
                     ),
                     const Divider(height: 1, thickness: 0.5),
@@ -268,6 +268,7 @@ class _SelectionModalState extends State<SelectionModal> {
     BuildContext context,
     double radius,
     ColorScheme colorScheme,
+    PlusSettingsProvider plusSettings,
   ) {
     final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
     return Column(

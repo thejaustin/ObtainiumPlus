@@ -304,6 +304,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     Widget? leadingWidget,
   }) {
     if (!widget.isExpandable) return content;
+    final plusSettings = context.watch<PlusSettingsProvider>();
 
     return Theme(
       // Remove the default ExpansionTile dividers
