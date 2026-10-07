@@ -38,6 +38,20 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animsEnabled = context
+        .read<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
+    if (animsEnabled && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!animsEnabled && _controller.isAnimating) {
+      _controller.stop();
+      _controller.value = 0.65;
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();

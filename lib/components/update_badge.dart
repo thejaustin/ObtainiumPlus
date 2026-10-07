@@ -36,6 +36,20 @@ class _UpdateBadgeState extends State<UpdateBadge>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animsEnabled = context
+        .read<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
+    if (animsEnabled && !_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    } else if (!animsEnabled && _pulseController.isAnimating) {
+      _pulseController.stop();
+      _pulseController.reset();
+    }
+  }
+
+  @override
   void dispose() {
     _pulseController.dispose();
     super.dispose();
