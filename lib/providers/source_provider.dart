@@ -483,8 +483,7 @@ class SourceProvider {
       currentApp?.installedVersion,
       apk.version,
       apk.apkUrls,
-      currentApp?.preferredApkIndex ??
-          (apk.apkUrls.isNotEmpty ? apk.apkUrls.length - 1 : 0),
+      _resolvePreferredApkIndex(currentApp, apk.apkUrls),
       additionalSettings,
       DateTime.now(),
       currentApp?.pinned ?? false,
@@ -1111,4 +1110,38 @@ Map<String, dynamic> appJSONCompatibilityModifiers(Map<String, dynamic> json) {
   json['additionalSettings'] = safeJsonEncode(additionalSettings);
   _migrateFdroidOverrides(json);
   return json;
+}
+
+// Matches version-like tokens (1.2.3, v2.0) and long build numbers so asset
+// names from different releases of the same variant compare equal.
+final RegExp _apkNameVersionToken = RegExp(r'v?\d+(?:\.\d+)+|\d{4,}');
+
+/// Picks the APK index for a refreshed app. The previously chosen asset is
+/// re-found by name (then by version-stripped name) so a reordered or resized
+/// asset list can't silently switch to a differently signed variant; falls
+/// back to the stored position, or the last asset for new apps.
+int _resolvePreferredApkIndex(
+  App? currentApp,
+  List<MapEntry<String, String>> newUrls,
+) {
+  if (newUrls.isEmpty) return currentApp?.preferredApkIndex ?? 0;
+  if (currentApp == null) return newUrls.length - 1;
+  final oldIdx = currentApp.preferredApkIndex;
+  final oldUrls = currentApp.apkUrls;
+  if (oldIdx >= 0 && oldIdx < oldUrls.length) {
+    final oldName = oldUrls[oldIdx].key;
+    final exact = newUrls.indexWhere((e) => e.key == oldName);
+    if (exact >= 0) return exact;
+    String norm(String n) =>
+        n.toLowerCase().replaceAll(_apkNameVersionToken, '#');
+    final target = norm(oldName);
+    final matches = [
+      for (var i = 0; i < newUrls.length; i++)
+        if (norm(newUrls[i].key) == target) i,
+    ];
+    if (matches.isNotEmpty) {
+      return matches.contains(oldIdx) ? oldIdx : matches.first;
+    }
+  }
+  return oldIdx;
 }
