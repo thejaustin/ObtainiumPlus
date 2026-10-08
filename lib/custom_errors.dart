@@ -349,10 +349,10 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
 String _formatInstallError(Map<String, dynamic>? data) {
   final msg = data?['message']?.toString();
   final code = data?['errorCode'];
-  if (msg == 'STATUS_FAILURE_CONFLICT' || code == 5) {
+  if (msg == 'STATUS_FAILURE_CONFLICT' || code == 5 || code == -7) {
     return tr('installFailedConflict');
   }
-  if (msg == 'STATUS_FAILURE_STORAGE' || code == 6) {
+  if (msg == 'STATUS_FAILURE_STORAGE' || code == 6 || code == -4) {
     return tr('installFailedStorage');
   }
   if (msg == 'STATUS_FAILURE_INCOMPATIBLE' || code == 7) {
@@ -361,7 +361,7 @@ String _formatInstallError(Map<String, dynamic>? data) {
   if (msg == 'STATUS_FAILURE_BLOCKED' || code == 2) {
     return tr('installFailedBlocked');
   }
-  if (msg == 'STATUS_FAILURE_INVALID' || code == 4) {
+  if (msg == 'STATUS_FAILURE_INVALID' || code == 4 || code == -2) {
     return tr('installFailedInvalid');
   }
   if (msg != null && msg.isNotEmpty && !msg.startsWith('STATUS_FAILURE')) {

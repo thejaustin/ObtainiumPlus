@@ -418,7 +418,9 @@ class AppFileService {
           final probeRes = probeResponse.value.value;
           final remoteLength = probeRes.contentLength;
           probeClient.close();
-          if (remoteLength == existingSize || remoteLength <= 0) {
+          // Only reuse when the remote length is known and matches; an unknown
+          // length can't rule out a stale file from a mutable URL.
+          if (remoteLength > 0 && remoteLength == existingSize) {
             logs?.add('Reusing existing valid file: ${downloadedFile.uri.pathSegments.last}');
             return downloadedFile;
           }

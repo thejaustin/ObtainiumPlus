@@ -66,9 +66,14 @@ class RootInstaller extends Installer {
       ].join('\n');
       final result = await _runAsRoot(script);
       if (result.exitCode != 0) {
-        final detail = result.stderr.toString().trim();
-        AppLogger.warn('Root pm install failed for $appId: $detail');
-        return InstallResult.error(result.exitCode);
+        final stderrText = result.stderr.toString().trim();
+        final stdoutText = result.stdout.toString().trim();
+        AppLogger.warn(
+          'Root pm install failed for $appId: $stderrText $stdoutText',
+        );
+        return InstallResult.error(
+          _parsePmFailure('$stdoutText\n$stderrText') ?? result.exitCode,
+        );
       }
       return InstallResult.success();
     } on ProcessException catch (e) {
@@ -82,6 +87,21 @@ class RootInstaller extends Installer {
 
   Future<ProcessResult> _runAsRoot(String cmd) =>
       Process.run('su', ['-c', cmd]);
+
+  /// Maps `Failure [INSTALL_FAILED_*]` output from `pm install` to
+  /// PackageManager-style negative error codes, or null if unrecognised.
+  static int? _parsePmFailure(String output) {
+    final match = RegExp(r'INSTALL_FAILED_[A-Z_]+').firstMatch(output);
+    if (match == null) return null;
+    return switch (match.group(0)) {
+      'INSTALL_FAILED_ALREADY_EXISTS' => -1,
+      'INSTALL_FAILED_INVALID_APK' => -2,
+      'INSTALL_FAILED_INSUFFICIENT_STORAGE' => -4,
+      'INSTALL_FAILED_UPDATE_INCOMPATIBLE' => -7,
+      'INSTALL_FAILED_VERSION_DOWNGRADE' => -25,
+      _ => null,
+    };
+  }
 
   static String _quoteShell(String path) =>
       "'${path.replaceAll("'", "'\\''")}'";

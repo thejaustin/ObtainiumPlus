@@ -134,11 +134,16 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
     }
     return;
   }
-  await BackgroundUpdateService.bgUpdateCheck(taskId, null);
   try {
-    BackgroundFetch.finish(taskId);
+    await BackgroundUpdateService.bgUpdateCheck(taskId, null);
   } catch (e) {
-    print('BackgroundFetch.finish failed: $e');
+    print('Headless bgUpdateCheck failed: $e');
+  } finally {
+    try {
+      BackgroundFetch.finish(taskId);
+    } catch (e) {
+      print('BackgroundFetch.finish failed: $e');
+    }
   }
 }
 
@@ -633,19 +638,31 @@ class _ObtainiumState extends State<Obtainium> {
               : NetworkType.ANY,
         ),
         (String taskId) async {
-          await BackgroundUpdateService.bgUpdateCheck(taskId, null);
           try {
-            BackgroundFetch.finish(taskId);
+            await BackgroundUpdateService.bgUpdateCheck(taskId, null);
           } catch (e) {
-            print('BackgroundFetch.finish failed: $e');
+            print('bgUpdateCheck failed: $e');
+          } finally {
+            try {
+              BackgroundFetch.finish(taskId);
+            } catch (e) {
+              print('BackgroundFetch.finish failed: $e');
+            }
           }
         },
         (String taskId) async {
-          context.read<LogsProvider>().add('BG update task timed out.');
           try {
-            BackgroundFetch.finish(taskId);
+            if (mounted) {
+              context.read<LogsProvider>().add('BG update task timed out.');
+            }
           } catch (e) {
-            print('BackgroundFetch.finish failed: $e');
+            print('Timeout log failed: $e');
+          } finally {
+            try {
+              BackgroundFetch.finish(taskId);
+            } catch (e) {
+              print('BackgroundFetch.finish failed: $e');
+            }
           }
         },
       );

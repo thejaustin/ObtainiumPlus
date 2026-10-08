@@ -26,11 +26,16 @@ class BackgroundService {
       }
       return;
     }
-    await BackgroundUpdateService.bgUpdateCheck(taskId, null);
     try {
-      BackgroundFetch.finish(taskId);
+      await BackgroundUpdateService.bgUpdateCheck(taskId, null);
     } catch (e) {
-      talker.warning('BackgroundFetch.finish failed: $e');
+      talker.warning('Headless bgUpdateCheck failed: $e');
+    } finally {
+      try {
+        BackgroundFetch.finish(taskId);
+      } catch (e) {
+        talker.warning('BackgroundFetch.finish failed: $e');
+      }
     }
   }
 
