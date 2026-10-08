@@ -201,6 +201,12 @@ class ActiveOperationsBanner extends StatelessWidget {
                             if (activeDownloads.length > 2) ...[
                               _BulkSummaryRow(
                                 total: activeDownloads.length,
+                                bulkTotal: appsProvider.bulkUpdateTotal,
+                                bulkDone: appsProvider.bulkUpdateDone,
+                                onCancelAll: () {
+                                  AppHaptics.selectionClick();
+                                  appsProvider.cancelAllDownloads();
+                                },
                                 fraction: () {
                                   double sum = 0;
                                   for (final d in activeDownloads) {
@@ -253,6 +259,24 @@ class ActiveOperationsBanner extends StatelessWidget {
                                 ),
                               ),
                             ],
+                            if (activeDownloads.length > 2)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  tr(
+                                    'activeMoreCount',
+                                    args: [
+                                      (activeDownloads.length - 2).toString(),
+                                    ],
+                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -451,8 +475,17 @@ class _ActiveDownloadTile extends StatelessWidget {
 class _BulkSummaryRow extends StatelessWidget {
   final int total;
   final double fraction;
+  final int bulkTotal;
+  final int bulkDone;
+  final VoidCallback onCancelAll;
 
-  const _BulkSummaryRow({required this.total, required this.fraction});
+  const _BulkSummaryRow({
+    required this.total,
+    required this.fraction,
+    required this.bulkTotal,
+    required this.bulkDone,
+    required this.onCancelAll,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -467,7 +500,12 @@ class _BulkSummaryRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                plural('apps', total),
+                bulkTotal > 0
+                    ? tr(
+                        'bulkUpdatingApps',
+                        args: [bulkTotal.toString(), bulkDone.toString()],
+                      )
+                    : plural('apps', total),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
@@ -485,6 +523,13 @@ class _BulkSummaryRow extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         ExpressiveProgressIndicator(value: fraction, height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: onCancelAll,
+            child: Text(tr('cancelAll')),
+          ),
+        ),
       ],
     );
   }

@@ -195,8 +195,12 @@ class ShizukuInstaller extends Installer {
   static bool isBlockedByAutoBlocker(int code) => code == -21 || code == 21;
 
   /// Translates raw Android PackageInstaller status codes into actionable diagnostic messages.
+  static const int unknownInstallerErrorCode = -1000;
+
   static String getDiagnosticMessageForErrorCode(int code) {
     switch (code) {
+      case unknownInstallerErrorCode:
+        return 'Unexpected installer error';
       case -21:
       case 21:
         return 'Installation blocked by system policy (e.g. Samsung One UI Auto Blocker). Disable Auto Blocker or exempt ObtainiumPlus.';
@@ -423,7 +427,8 @@ class ShizukuInstaller extends Installer {
       }
     }).catchError((err) {
       if (!completer.isCompleted) {
-        completer.complete(InstallResult.error(1));
+        // Not a PackageInstaller status: use a distinct unknown code.
+        completer.complete(InstallResult.error(unknownInstallerErrorCode));
       }
     });
 

@@ -32,6 +32,13 @@ import 'package:obtainium/providers/update_settings_provider.dart';
 
 import 'package:obtainium/utils/source_utils.dart';
 
+/// Cache file stem for a downloaded asset; includes the target version so a
+/// same-URL new release cannot reuse an older cache entry.
+String _cacheStem(App app, String downloadUrl) {
+  final v = app.latestVersion.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  return '${app.id}-$v-${downloadUrl.hashCode}';
+}
+
 class AppDownloadService {
   AppDownloadService._();
 
@@ -79,7 +86,7 @@ class AppDownloadService {
       // sanitize before it's used to build a file path below.
       app.id = URLValidator.sanitizeAppId(newInfo.packageName!);
       downloadedFile = downloadedFile.renameSync(
-        '${downloadedFile.parent.path}/${app.id}-${downloadUrl.hashCode}.${downloadedFile.path.split('.').last}',
+        '${downloadedFile.parent.path}/${_cacheStem(app, downloadUrl)}.${downloadedFile.path.split('.').last}',
       );
       if (apps[originalAppId] != null) {
         await removeApps([originalAppId]);
@@ -319,7 +326,7 @@ class AppDownloadService {
       notificationsProvider?.cancel(notif.id);
       int? prevProg;
       DateTime? lastNotificationTime;
-      var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
+      var fileNameNoExt = _cacheStem(app, downloadUrl);
       if (source.urlsAlwaysHaveExtension) {
         fileNameNoExt =
             '$fileNameNoExt.${app.apkUrls[apkIndex].key.split('.').last}';

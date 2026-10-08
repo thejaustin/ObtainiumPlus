@@ -683,7 +683,23 @@ class AppInstallService {
     }
     int? code;
     var allAPKs = [file.file.path];
-    allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
+    for (final a in additionalAPKs) {
+      try {
+        final splitInfo = await pm.getPackageArchiveInfo(
+          archiveFilePath: a.file.path,
+        );
+        final splitPkg = splitInfo?.packageName;
+        if (splitPkg != null && splitPkg != targetPackageName) {
+          logs.add(
+            'Dropping split "${a.file.path}" with mismatched package "$splitPkg" (expected "$targetPackageName")',
+          );
+          continue;
+        }
+      } catch (e) {
+        // Archive info unavailable: keep the split.
+      }
+      allAPKs.add(a.file.path);
+    }
 
     // Pre-flight signer check. Android rejects an update signed by an
     // unrelated key with a generic "package conflicts with an existing
@@ -774,7 +790,7 @@ class AppInstallService {
             // Definitive PackageInstaller verdicts (invalid, conflict, storage,
             // incompatible) would fail identically in the stock installer, so
             // report them directly instead of retrying and hiding the cause.
-            if (const {4, 5, 6, 7}.contains(commitCode)) {
+            if (const {4, 5, 6, 7, -2, -4, -7}.contains(commitCode)) {
               throw InstallError(commitCode!, appId: file.appId);
             }
             throw Exception("Root installer failed with code $commitCode");
@@ -811,7 +827,7 @@ class AppInstallService {
             // Definitive PackageInstaller verdicts (invalid, conflict, storage,
             // incompatible) would fail identically in the stock installer, so
             // report them directly instead of retrying and hiding the cause.
-            if (const {4, 5, 6, 7}.contains(commitCode)) {
+            if (const {4, 5, 6, 7, -2, -4, -7}.contains(commitCode)) {
               throw InstallError(commitCode!, appId: file.appId);
             }
             throw Exception("External installer failed with code $commitCode");
@@ -856,7 +872,7 @@ class AppInstallService {
             // Definitive PackageInstaller verdicts (invalid, conflict, storage,
             // incompatible) would fail identically in the stock installer, so
             // report them directly instead of retrying and hiding the cause.
-            if (const {4, 5, 6, 7}.contains(commitCode)) {
+            if (const {4, 5, 6, 7, -2, -4, -7}.contains(commitCode)) {
               throw InstallError(commitCode!, appId: file.appId);
             }
             throw Exception("Shizuku failed with code $commitCode");

@@ -927,6 +927,33 @@ class AppsProvider with ChangeNotifier {
     _downloadCancellations.remove(appId);
   }
 
+  /// Bulk update progress, shown by the active operations banner.
+  int bulkUpdateTotal = 0;
+  int bulkUpdateDone = 0;
+  bool _bulkCancelRequested = false;
+
+  /// Cancels every in-flight download and prevents not-yet-started apps of
+  /// the current bulk run from starting.
+  void cancelAllDownloads() {
+    if (_disposed) return;
+    _bulkCancelRequested = true;
+    final ids = apps.entries
+        .where((e) => (e.value.downloadProgress ?? -1) >= 0)
+        .map((e) => e.key)
+        .toList();
+    for (final id in ids) {
+      cancelDownload(id);
+    }
+    notify();
+  }
+
+  /// Cache file name stem for a downloaded asset; includes the target version
+  /// so a same-URL new release cannot reuse an older cache entry.
+  String _cacheFileStem(App app, String downloadUrl) {
+    final v = (app.latestVersion).replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    return '${app.id}-$v-${downloadUrl.hashCode}';
+  }
+
   /// Requests cancellation of an ongoing download for [appId], if any.
   void cancelDownload(String appId) {
     if (_disposed) return;
@@ -1098,7 +1125,7 @@ class AppsProvider with ChangeNotifier {
       // sanitize before it's used to build a file path below.
       app.id = URLValidator.sanitizeAppId(newInfo.packageName!);
       downloadedFile = downloadedFile.renameSync(
-        '${downloadedFile.parent.path}/${app.id}-${downloadUrl.hashCode}.${downloadedFile.path.split('.').last}',
+        '${downloadedFile.parent.path}/${_cacheFileStem(app, downloadUrl)}.${downloadedFile.path.split('.').last}',
       );
       if (apps[originalAppId] != null) {
         await removeApps([originalAppId]);
@@ -1166,7 +1193,7 @@ class AppsProvider with ChangeNotifier {
       notificationsProvider?.cancel(notif.id);
       int? prevProg;
       DateTime? lastNotificationTime;
-      var fileNameNoExt = '${app.id}-${downloadUrl.hashCode}';
+      var fileNameNoExt = _cacheFileStem(app, downloadUrl);
       if (source.urlsAlwaysHaveExtension) {
         fileNameNoExt =
             '$fileNameNoExt.${app.apkUrls[app.preferredApkIndex].key.split('.').last}';
@@ -1631,6 +1658,34 @@ class AppsProvider with ChangeNotifier {
     for (var id in appIds) {
       registerDownloadCancellation(id);
     }
+    final isBulk = appIds.length > 1;
+    final startedIds = <String>{};
+    final finishedIds = <String>{};
+    if (isBulk) {
+      _bulkCancelRequested = false;
+      bulkUpdateTotal = appIds.length;
+      bulkUpdateDone = 0;
+      notifyListeners();
+    }
+    // Per-app completion is detected from downloadProgress transitions
+    // (non-null while an app is working, back to null when it finishes or fails).
+    void notifyAndTrack() {
+      if (isBulk) {
+        for (final id in appIds) {
+          final p = apps[id]?.downloadProgress;
+          if (p != null) {
+            startedIds.add(id);
+          } else if (startedIds.contains(id)) {
+            finishedIds.add(id);
+          }
+        }
+        if (finishedIds.length != bulkUpdateDone) {
+          bulkUpdateDone = finishedIds.length;
+        }
+      }
+      forceNotifyListeners();
+    }
+
     try {
       final installedIds =
           await AppDownloadService.downloadAndInstallLatestApps(
@@ -1642,7 +1697,7 @@ class AppsProvider with ChangeNotifier {
             updateSettings: updateSettings,
             logs: logs,
             APKDir: apkDir,
-            notifyListeners: forceNotifyListeners,
+            notifyListeners: notifyAndTrack,
             saveApps: saveApps,
             removeApps: removeApps,
             checkUpdate: checkUpdate,
@@ -1654,7 +1709,9 @@ class AppsProvider with ChangeNotifier {
             forceParallelDownloads: forceParallelDownloads,
             useExisting: useExisting,
             isCancelled:
-                (appId) => _downloadCancellations[appId]?.isCancelled ?? false,
+                (appId) =>
+                    (isBulk && _bulkCancelRequested) ||
+                    (_downloadCancellations[appId]?.isCancelled ?? false),
           );
       if (context != null && installedIds.isNotEmpty) {
         AppHaptics.success();
@@ -1675,6 +1732,12 @@ class AppsProvider with ChangeNotifier {
     } finally {
       for (var id in appIds) {
         clearDownloadCancellation(id);
+      }
+      if (isBulk) {
+        _bulkCancelRequested = false;
+        bulkUpdateTotal = 0;
+        bulkUpdateDone = 0;
+        if (!_disposed) notifyListeners();
       }
     }
   }
