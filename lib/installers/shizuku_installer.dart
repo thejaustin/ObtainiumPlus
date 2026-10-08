@@ -199,37 +199,26 @@ class ShizukuInstaller extends Installer {
 
   static String getDiagnosticMessageForErrorCode(int code) {
     switch (code) {
-      case unknownInstallerErrorCode:
-        return 'Unexpected installer error';
       case -21:
       case 21:
         return 'Installation blocked by system policy (e.g. Samsung One UI Auto Blocker). Disable Auto Blocker or exempt ObtainiumPlus.';
-      // PackageInstaller.STATUS_* (positive).
-      case 1:
-        return 'Package installation failed (generic installer failure).';
-      case 2:
-        return 'Installation was blocked by the system or a device policy.';
-      case 3:
-        return 'Installation was aborted or cancelled.';
-      case 4:
-        return 'The APK is invalid or the installer session expired. The file may be corrupted or incomplete.';
-      case 5:
-        return 'Package conflict: the installed app was signed with a different key (or is owned by another installer). Uninstall it first or use the matching APK variant.';
-      case 6:
-        return 'Insufficient device storage. Free up internal storage to proceed.';
-      case 7:
-        return 'Incompatible device architecture (ABI) or minimum SDK requirement not met.';
-      // PackageManager INSTALL_FAILED_* (negative, from pm/shell installs).
       case -1:
-        return 'A package with this name is already installed.';
+      case 1:
+        return 'Signature conflict or downgrade disallowed. An existing version with conflicting keys is installed.';
       case -2:
+      case 2:
         return 'Package parsing error. The APK file may be corrupted, truncated, or incomplete.';
-      case -4:
+      case -3:
+      case 3:
         return 'Insufficient device storage. Free up internal storage to proceed.';
       case -7:
-        return 'Signature conflict: the installed app was signed with a different key. Uninstall it first or use the matching APK variant.';
-      case -25:
-        return 'Downgrade is not allowed for this app.';
+      case 7:
+        return 'Incompatible device architecture (ABI) or minimum SDK requirement not met.';
+      case -4:
+      case 4:
+        return 'Package installer session became invalid or expired.';
+      case unknownInstallerErrorCode:
+        return 'Unexpected installer error.';
       default:
         return 'Package installation failed with status code $code.';
     }
