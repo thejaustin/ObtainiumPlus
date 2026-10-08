@@ -2067,7 +2067,13 @@ class AppsProvider with ChangeNotifier {
               'Skipped missing/unreadable app file ${item.path}: $err',
             );
           } else {
-            rethrow;
+            // A file that parses but has a wrong type/missing field must not
+            // abort the whole load and hide every other app; skip it (the
+            // file is left in place so it can be recovered).
+            logs.add(
+              'Skipped unreadable app file ${item.path}: $err',
+              level: LogLevel.warning,
+            );
           }
         }
         if (app != null) {
@@ -2131,6 +2137,18 @@ class AppsProvider with ChangeNotifier {
       // AppInstallService.getAllInstalledInfo() uses lightweight flags (no
       // signing certs) and has its own 15 s timeout with error logging.
       final installedAppsData = await getAllInstalledInfo();
+      // A real device always reports at least its system packages, so an
+      // empty result means the query timed out or failed. Reconciling against
+      // it would clear every app's install state (and delete apps when
+      // removeOnExternalUninstall is on), so leave state untouched instead.
+      if (installedAppsData.isEmpty && apps.isNotEmpty) {
+        logs.add(
+          'Installed-package query returned nothing; skipping install-state reconciliation',
+          level: LogLevel.warning,
+        );
+        notifyListeners();
+        return;
+      }
       final Map<String, PackageInfo> installedAppsMap = {
         for (var i in installedAppsData)
           if (i.packageName != null) i.packageName!: i,
@@ -2324,10 +2342,14 @@ class AppsProvider with ChangeNotifier {
     Map<String, PackageInfo>? bulkInstalledMap;
     if (!reuseInstalledInfo && apps.length > 1) {
       final all = await getAllInstalledInfo();
-      bulkInstalledMap = {
-        for (final p in all)
-          if (p.packageName != null) p.packageName!: p,
-      };
+      // Empty means the bulk query failed; fall back to per-app lookups
+      // rather than treating every app as uninstalled.
+      if (all.isNotEmpty) {
+        bulkInstalledMap = {
+          for (final p in all)
+            if (p.packageName != null) p.packageName!: p,
+        };
+      }
     }
     await Future.wait(
       apps.map((a) async {

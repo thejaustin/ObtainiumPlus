@@ -489,6 +489,7 @@ class SourceProvider {
       DateTime.now(),
       currentApp?.pinned ?? false,
       categories: currentApp?.categories ?? const [],
+      tags: currentApp != null ? List<String>.from(currentApp.tags) : const [],
       releaseDate: apk.releaseDate,
       changeLog: apk.changeLog,
       releaseUrl: apk.releaseUrl,

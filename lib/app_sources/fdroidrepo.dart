@@ -119,7 +119,7 @@ class FDroidRepo extends AppSource {
   @override
   String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
     var standardUri = Uri.parse(url);
-    final pathSegments = standardUri.pathSegments;
+    final pathSegments = List<String>.of(standardUri.pathSegments);
     if (pathSegments.isNotEmpty &&
         (pathSegments.last == 'index.xml' ||
             pathSegments.last == 'index-v2.json')) {

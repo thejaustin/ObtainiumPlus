@@ -1259,6 +1259,8 @@ class GitHub extends AppSource {
             !message.toLowerCase().contains('rate limit')) {
           throw ObtainiumError(message);
         }
+      } on ObtainiumError {
+        rethrow;
       } catch (_) {
         // Not a JSON error body; fall through to the generic handler.
       }
