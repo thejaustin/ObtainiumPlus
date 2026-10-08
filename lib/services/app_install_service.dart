@@ -120,24 +120,60 @@ class AppInstallService {
   static Future<bool> canDowngradeApps() async =>
       (await getInstalledInfo('com.berdik.letmedowngrade')) != null;
 
+  static String? _ownPackageId;
+
+  /// The package id this build is actually running as. Debug and F-Droid
+  /// builds carry an applicationIdSuffix, so the hard-coded constant would
+  /// point at an app that is not installed.
+  static Future<String> ownPackageId() async {
+    final cached = _ownPackageId;
+    if (cached != null) return cached;
+    try {
+      final String? id = await const MethodChannel(
+        'dev.thejaustin.obtainiumplus/native',
+      ).invokeMethod<String>('getPackageName');
+      if (id != null && id.isNotEmpty) {
+        _ownPackageId = id;
+        return id;
+      }
+    } catch (e) {
+      talker.warning('ownPackageId failed: $e');
+    }
+    return AppConstants.obtainiumPlusId;
+  }
+
+  static Future<String> _resolveOwnId(String appId) async =>
+      appId == AppConstants.obtainiumPlusId ? await ownPackageId() : appId;
+
+  static Future<void> _launchSettingsIntent(AndroidIntent intent) async {
+    try {
+      await intent.launch();
+    } catch (e) {
+      talker.warning('Failed to launch settings intent: $e');
+      rethrow;
+    }
+  }
+
   static Future<void> openAppSettings(String appId) async {
-    final info = await getInstalledInfo(appId, printErr: false);
-    final targetPkg = info?.packageName ?? appId;
+    final resolved = await _resolveOwnId(appId);
+    final info = await getInstalledInfo(resolved, printErr: false);
+    final targetPkg = info?.packageName ?? resolved;
     final AndroidIntent intent = AndroidIntent(
       action: 'action_application_details_settings',
       data: 'package:$targetPkg',
     );
-    await intent.launch();
+    await _launchSettingsIntent(intent);
   }
 
   static Future<void> openNotificationSettings(String appId) async {
-    final info = await getInstalledInfo(appId, printErr: false);
-    final targetPkg = info?.packageName ?? appId;
+    final resolved = await _resolveOwnId(appId);
+    final info = await getInstalledInfo(resolved, printErr: false);
+    final targetPkg = info?.packageName ?? resolved;
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.APP_NOTIFICATION_SETTINGS',
       arguments: <String, dynamic>{'android.provider.extra.APP_PACKAGE': targetPkg},
     );
-    await intent.launch();
+    await _launchSettingsIntent(intent);
   }
 
   static Future<void> openBatteryOptimizationSettings() async {
@@ -172,19 +208,21 @@ class AppInstallService {
   }
 
   static Future<void> openInstallUnknownAppsSettings(String appId) async {
+    final resolved = await _resolveOwnId(appId);
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.MANAGE_UNKNOWN_APP_SOURCES',
-      data: 'package:$appId',
+      data: 'package:$resolved',
     );
-    await intent.launch();
+    await _launchSettingsIntent(intent);
   }
 
   static Future<void> openOverlaySettings(String appId) async {
+    final resolved = await _resolveOwnId(appId);
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.action.MANAGE_OVERLAY_PERMISSION',
-      data: 'package:$appId',
+      data: 'package:$resolved',
     );
-    await intent.launch();
+    await _launchSettingsIntent(intent);
   }
 
   static Future<void> openUsageAccessSettings() async {

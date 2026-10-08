@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
-import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -483,9 +482,6 @@ class _AppGridTileState extends State<AppGridTile>
         // Footer: Action Pill or Status Pill
         if (widget.hasUpdate) ...[
           _buildUpdateVersionPill(colorScheme),
-        ] else if (widget.appInMemory.app.installedVersion == null &&
-            widget.appInMemory.app.additionalSettings['trackOnly'] != true) ...[
-          _buildInstallPill(colorScheme),
         ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
           _buildUpToDatePill(colorScheme, viewSettings),
         ],
@@ -542,10 +538,6 @@ class _AppGridTileState extends State<AppGridTile>
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
                 _buildUpdateVersionPill(colorScheme),
-              ] else if (widget.appInMemory.app.installedVersion == null &&
-                  widget.appInMemory.app.additionalSettings['trackOnly'] != true) ...[
-                const SizedBox(height: 4),
-                _buildInstallPill(colorScheme),
               ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
                 const SizedBox(height: 3),
                 _buildUpToDatePill(colorScheme, viewSettings),
@@ -624,26 +616,26 @@ class _AppGridTileState extends State<AppGridTile>
             ),
           ),
         ),
-        // Update badge — accent dot that seams into the card background
-        if (widget.hasUpdate)
-          Positioned(
-            right: -1,
-            top: -1,
-            child: Container(
-              width: 11,
-              height: 11,
-              decoration: BoxDecoration(
-                color: widget.isAmbiguous
-                    ? colorScheme.tertiary
-                    : colorScheme.secondary,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: cardColor,
-                  width: 2,
-                ),
-              ),
-            ),
+        // Update / install / progress action attached to the icon corner
+        Positioned(
+          right: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
+          bottom: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
+          child: AppIconActionBadge(
+            appInMemory: widget.appInMemory,
+            hasUpdate: widget.hasUpdate,
+            needsInstall:
+                widget.appInMemory.app.installedVersion == null &&
+                widget.appInMemory.app.additionalSettings['trackOnly'] != true,
+            isAmbiguous: widget.isAmbiguous,
+            iconSize: iconSize,
+            ringColor: cardColor,
+            onPressed: () {
+              context.read<AppsProvider>().downloadAndInstallLatestApps([
+                widget.appInMemory.app.id,
+              ], context);
+            },
           ),
+        ),
       ],
     );
   }
@@ -658,120 +650,38 @@ class _AppGridTileState extends State<AppGridTile>
     return inst ?? tr('notInstalled');
   }
 
-  /// Interactive update pill with 1-tap download & install action
+  /// Passive label showing the update target; the action lives on the icon badge
   Widget _buildUpdateVersionPill(ColorScheme colorScheme) {
     final app = widget.appInMemory.app;
     final version = app.latestVersion?.isNotEmpty == true
         ? app.latestVersion!
         : tr('update');
-    return ScaleTouchWrapper(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-          onTap: () {
-            AppHaptics.selectionClick();
-            context.read<AppsProvider>().downloadAndInstallLatestApps([
-              widget.appInMemory.app.id,
-            ], context);
-          },
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: widget.isAmbiguous
-                  ? colorScheme.tertiary
-                  : colorScheme.secondary,
-              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  widget.isAmbiguous
-                      ? Icons.help_outline_rounded
-                      : Icons.download_rounded,
-                  size: 11,
-                  color: widget.isAmbiguous
-                      ? colorScheme.onTertiary
-                      : colorScheme.onSecondary,
-                ),
-                const SizedBox(width: 3.5),
-                Flexible(
-                  child: Text(
-                    version,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: widget.isAmbiguous
-                          ? colorScheme.onTertiary
-                          : colorScheme.onSecondary,
-                      fontFamily: 'monospace',
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+    final fg = widget.isAmbiguous
+        ? colorScheme.onTertiaryContainer
+        : colorScheme.onSecondaryContainer;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: widget.isAmbiguous
+            ? colorScheme.tertiaryContainer
+            : colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+      ),
+      child: Text(
+        version,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: fg,
+          fontFamily: 'monospace',
+          letterSpacing: 0.1,
         ),
       ),
     );
   }
 
-  /// Interactive direct install pill with 1-tap download & install action (M3E)
-  Widget _buildInstallPill(ColorScheme colorScheme) {
-    return ScaleTouchWrapper(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-          onTap: () {
-            AppHaptics.selectionClick();
-            context.read<AppsProvider>().downloadAndInstallLatestApps([
-              widget.appInMemory.app.id,
-            ], context);
-          },
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.4),
-                width: 0.8,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.download_rounded,
-                  size: 11,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-                const SizedBox(width: 3.5),
-                Flexible(
-                  child: Text(
-                    tr('install'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onPrimaryContainer,
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildUpToDatePill(
     ColorScheme colorScheme,
@@ -1058,5 +968,167 @@ class _AppGridTileState extends State<AppGridTile>
     }
 
     return label.toString();
+  }
+}
+
+/// Update / install / progress action that lives on the corner of an app icon.
+/// Tap starts the update (or opens the ambiguous-update flow); while a download
+/// is running it shows a progress ring and tapping cancels it.
+class AppIconActionBadge extends StatelessWidget {
+  final AppInMemory appInMemory;
+  final bool hasUpdate;
+  final bool needsInstall;
+  final bool isAmbiguous;
+  final double iconSize;
+  final VoidCallback? onPressed;
+  final VoidCallback? onAmbiguous;
+  final Color? ringColor;
+
+  const AppIconActionBadge({
+    super.key,
+    required this.appInMemory,
+    required this.hasUpdate,
+    required this.needsInstall,
+    required this.iconSize,
+    this.isAmbiguous = false,
+    this.onPressed,
+    this.onAmbiguous,
+    this.ringColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final animate = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
+    final checking = context.select<AppsProvider, bool>(
+      (p) => p.checkingUpdateIds.contains(appInMemory.app.id),
+    );
+    final appId = appInMemory.app.id;
+    final border = ringColor ?? cs.surfaceContainerLow;
+
+    return ValueListenableBuilder<double?>(
+      valueListenable: appInMemory.downloadProgressNotifier,
+      builder: (ctx, progress, _) {
+        final downloading = progress != null && progress >= 0;
+        final installing = progress != null && progress < 0;
+        if (!(progress != null || checking || hasUpdate || needsInstall)) {
+          return const SizedBox.shrink();
+        }
+        final d = (iconSize * 0.46).clamp(20.0, 28.0).toDouble();
+        final installStyle = needsInstall && !isAmbiguous;
+        final Color bg = isAmbiguous
+            ? cs.tertiaryContainer
+            : (installStyle ? cs.primaryContainer : cs.secondaryContainer);
+        final Color fg = isAmbiguous
+            ? cs.onTertiaryContainer
+            : (installStyle ? cs.onPrimaryContainer : cs.onSecondaryContainer);
+
+        final String stateName;
+        final Widget face;
+        final String label;
+        VoidCallback? tap;
+        if (downloading) {
+          stateName = 'download';
+          label = tr('cancel');
+          face = Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: d - 6,
+                height: d - 6,
+                child: CircularProgressIndicator(
+                  value: ((progress ?? 0.0) / 100).clamp(0.0, 1.0).toDouble(),
+                  strokeWidth: 2.5,
+                  color: fg,
+                  backgroundColor: fg.withValues(alpha: 0.2),
+                ),
+              ),
+              Icon(Icons.close_rounded, size: d * 0.4, color: fg),
+            ],
+          );
+          tap = () {
+            AppHaptics.selectionClick();
+            context.read<AppsProvider>().cancelDownload(appId);
+          };
+        } else if (installing || checking) {
+          stateName = 'busy';
+          label = installing ? tr('installing') : tr('update');
+          face = SizedBox(
+            width: d - 6,
+            height: d - 6,
+            child: ExpressiveCircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: fg,
+            ),
+          );
+          tap = null;
+        } else {
+          stateName = isAmbiguous ? 'ambiguous' : 'idle';
+          label = isAmbiguous
+              ? tr('ambiguousUpdate')
+              : (needsInstall ? tr('install') : tr('update'));
+          face = Icon(
+            isAmbiguous
+                ? Icons.help_outline_rounded
+                : Icons.download_rounded,
+            size: d * 0.6,
+            color: fg,
+          );
+          if (isAmbiguous && onAmbiguous != null) {
+            tap = () {
+              AppHaptics.heavyImpact();
+              onAmbiguous!();
+            };
+          } else if (onPressed != null) {
+            final cb = onPressed!;
+            tap = () {
+              AppHaptics.selectionClick();
+              cb();
+            };
+          }
+        }
+
+        return Semantics(
+          button: true,
+          label: label,
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkResponse(
+                onTap: tap,
+                customBorder: const CircleBorder(),
+                radius: 22,
+                child: Center(
+                  child: Tooltip(
+                    message: label,
+                    child: Container(
+                      width: d,
+                      height: d,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: bg,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: border, width: 2),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: animate ? 250 : 0),
+                        child: KeyedSubtree(
+                          key: ValueKey(stateName),
+                          child: face,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

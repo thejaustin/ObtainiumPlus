@@ -42,11 +42,19 @@ class NotificationSettingsSection extends StatelessWidget {
         final List<Widget> children = [
           if (_matches(tr('notificationSettings')))
             ScaleTouchWrapper(
-              onTap: () {
+              onTap: () async {
                 AppHaptics.selectionClick();
-                AppInstallService.openNotificationSettings(
-                  AppConstants.obtainiumPlusId,
-                );
+                try {
+                  await AppInstallService.openNotificationSettings(
+                    AppConstants.obtainiumPlusId,
+                  );
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(tr('error'))));
+                  }
+                }
               },
               child: ListTile(
                 leading: Icon(

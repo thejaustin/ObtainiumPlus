@@ -14,7 +14,6 @@ import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/app_constants.dart';
-import 'package:obtainium/providers/apps_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Section for system settings shortcuts and troubleshooting
@@ -209,33 +208,6 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         subtitle: tr('clearIconCacheDescription'),
         onTap: () => _clearIconCache(context),
       ),
-      if (plusSettings.plusDeveloperMode)
-        _buildCleanupTile(
-          context,
-          icon: Icons.block_flipped,
-          title: tr('forceStopAll'),
-          subtitle: tr('forceStopAllDescription'),
-          onTap: () async {
-            final appsProvider = context.read<AppsProvider>();
-            final appIds = appsProvider.apps.keys.toList();
-            int successCount = 0;
-            for (final id in appIds) {
-              try {
-                // await AppInstallService.pm.forceStopApp(id); // TODO: implement
-                successCount++;
-              } catch (_) {}
-            }
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    tr('forceStoppedXApps', args: [successCount.toString()]),
-                  ),
-                ),
-              );
-            }
-          },
-        ),
     ];
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -295,12 +267,20 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
     BuildContext context, {
     required IconData icon,
     required String title,
-    required VoidCallback onTap,
+    required Future<void> Function() onTap,
   }) {
     return ScaleTouchWrapper(
-      onTap: () {
+      onTap: () async {
         AppHaptics.lightImpact();
-        onTap();
+        try {
+          await onTap();
+        } catch (_) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(tr('error'))));
+          }
+        }
       },
       child: ListTile(
         leading: Icon(

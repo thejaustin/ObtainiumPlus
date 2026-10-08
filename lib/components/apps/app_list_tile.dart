@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:obtainium/components/app_grid_tile.dart' show AppIconActionBadge;
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'dart:ui';
@@ -47,249 +48,51 @@ class AppListTile extends StatelessWidget {
     final isSelected = selected ?? context.select<AppsProvider, bool>(
       (p) => p.selectedAppIds.contains(appInMemory.app.id),
     );
-    final isCheckingUpdate = context.select<AppsProvider, bool>(
-      (p) => p.checkingUpdateIds.contains(appInMemory.app.id),
-    );
-
     final isCompact = viewSettings.appListDensity == AppListDensity.compact;
     final isAmbiguous =
         hasUpdate &&
         appInMemory.app.additionalSettings['isAmbiguousUpdate'] == true;
 
-    Widget getUpdateButton() {
-      if (isCheckingUpdate) {
-        return const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
-          ),
-        );
-      }
-      if (isAmbiguous) {
-        return IconButton.filled(
-          icon: const Icon(Icons.help_outline_rounded),
-          onPressed: () {
-            AppHaptics.heavyImpact();
-            showDialog(
-              context: context,
-              builder: (ctx) => GlassDialog(
-                icon: Icons.help_outline_rounded,
-                title: tr('ambiguousUpdateTitle'),
-                content: Text(
-                  tr(
-                    'ambiguousUpdateMessage',
-                    args: [
-                      appInMemory.app.latestVersion,
-                      appInMemory.app.installedVersion ?? '',
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      appInMemory.app.installedVersion =
-                          appInMemory.app.latestVersion;
-                      appsProvider.saveApps([appInMemory.app]);
-                      Navigator.pop(ctx);
-                    },
-                    child: Text(tr('markAsSame')),
-                  ),
-                  FilledButton(
-                    onPressed: () {
-                      appsProvider.downloadAndInstallLatestApps([
-                        appInMemory.app.id,
-                      ], context);
-                      Navigator.pop(ctx);
-                    },
-                    child: Text(tr('installAnyway')),
-                  ),
-                ],
-              ),
-            );
-          },
-          tooltip: tr('ambiguousUpdate'),
-          style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
-            foregroundColor: Theme.of(context).colorScheme.onTertiaryContainer,
-          ),
-        );
-      }
-      return ScaleTouchWrapper(
-        scaleDownFactor: 0.92,
-        child: plusSettings.plusUpdateExpressiveBadge
-            // Expressive pill: "↓ 2.4.0"
-            ? Tooltip(
-                message: tr('installUpdate'),
-                child: FilledButton.tonal(
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    appsProvider.downloadAndInstallLatestApps([
-                      appInMemory.app.id,
-                    ], context);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.secondaryContainer,
-                    foregroundColor:
-                        Theme.of(context).colorScheme.onSecondaryContainer,
-                    elevation: 0.8,
-                    shadowColor: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withValues(alpha: 0.25),
-                    side: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withValues(alpha: 0.35),
-                      width: 0.8,
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? 10 : 13,
-                      vertical: 0,
-                    ),
-                    minimumSize: Size(0, isCompact ? 28 : 34),
-                    shape: const StadiumBorder(),
-                    textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
-                        ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.download_rounded, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        appInMemory.app.latestVersion?.isNotEmpty == true
-                            ? appInMemory.app.latestVersion!
-                            : tr('update'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            // Classic circular download button (original behaviour).
-            : IconButton.filledTonal(
-                icon: const Icon(Icons.download_rounded, size: 18),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  appsProvider.downloadAndInstallLatestApps([
-                    appInMemory.app.id,
-                  ], context);
-                },
-                tooltip: tr('installUpdate'),
-                style: IconButton.styleFrom(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.secondaryContainer,
-                  foregroundColor:
-                      Theme.of(context).colorScheme.onSecondaryContainer,
-                  side: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .secondary
-                        .withValues(alpha: 0.3),
-                    width: 0.8,
-                  ),
-                ),
-              ),
-      );
-    }
+    final needsInstall =
+        appInMemory.app.installedVersion == null &&
+        appInMemory.app.additionalSettings['trackOnly'] != true;
 
-    Widget getInstallButton() {
-      if (isCheckingUpdate) {
-        return const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+    void showAmbiguousDialog() {
+      showDialog(
+        context: context,
+        builder: (ctx) => GlassDialog(
+          icon: Icons.help_outline_rounded,
+          title: tr('ambiguousUpdateTitle'),
+          content: Text(
+            tr(
+              'ambiguousUpdateMessage',
+              args: [
+                appInMemory.app.latestVersion,
+                appInMemory.app.installedVersion ?? '',
+              ],
+            ),
           ),
-        );
-      }
-      return ScaleTouchWrapper(
-        scaleDownFactor: 0.92,
-        child: plusSettings.plusUpdateExpressiveBadge
-            // Expressive pill: "↓ Install"
-            ? Tooltip(
-                message: tr('install'),
-                child: FilledButton.tonal(
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    appsProvider.downloadAndInstallLatestApps([
-                      appInMemory.app.id,
-                    ], context);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                    foregroundColor:
-                        Theme.of(context).colorScheme.onPrimaryContainer,
-                    elevation: 0.8,
-                    shadowColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.28),
-                    side: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.35),
-                      width: 0.8,
-                    ),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? 10 : 13,
-                      vertical: 0,
-                    ),
-                    minimumSize: Size(0, isCompact ? 28 : 34),
-                    shape: const StadiumBorder(),
-                    textStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
-                        ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.download_rounded, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        tr('install'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            // Classic circular download button
-            : IconButton.filledTonal(
-                icon: const Icon(Icons.download_rounded, size: 18),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  appsProvider.downloadAndInstallLatestApps([
-                    appInMemory.app.id,
-                  ], context);
-                },
-                tooltip: tr('install'),
-                style: IconButton.styleFrom(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor:
-                      Theme.of(context).colorScheme.onPrimaryContainer,
-                  side: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.3),
-                    width: 0.8,
-                  ),
-                ),
-              ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                appInMemory.app.installedVersion =
+                    appInMemory.app.latestVersion;
+                appsProvider.saveApps([appInMemory.app]);
+                Navigator.pop(ctx);
+              },
+              child: Text(tr('markAsSame')),
+            ),
+            FilledButton(
+              onPressed: () {
+                appsProvider.downloadAndInstallLatestApps([
+                  appInMemory.app.id,
+                ], context);
+                Navigator.pop(ctx);
+              },
+              child: Text(tr('installAnyway')),
+            ),
+          ],
+        ),
       );
     }
 
@@ -307,7 +110,7 @@ class AppListTile extends StatelessWidget {
             : plusSettings.plusGlobalCornerRadius,
       );
 
-      return Hero(
+      final iconWidget = Hero(
         tag: 'app_icon_${appInMemory.app.id}',
         child: Container(
           width: 44,
@@ -374,6 +177,35 @@ class AppListTile extends StatelessWidget {
                     ).colorScheme.primary.withValues(alpha: 0.5),
                   ),
           ),
+        ),
+      );
+
+      return SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            iconWidget,
+            Positioned(
+              right: -8,
+              bottom: -8,
+              child: AppIconActionBadge(
+                appInMemory: appInMemory,
+                hasUpdate: hasUpdate,
+                needsInstall: needsInstall,
+                isAmbiguous: isAmbiguous,
+                iconSize: 44,
+                onPressed: () {
+                  appsProvider.downloadAndInstallLatestApps([
+                    appInMemory.app.id,
+                  ], context);
+                },
+                onAmbiguous: showAmbiguousDialog,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -444,11 +276,6 @@ class AppListTile extends StatelessWidget {
             onPressed: onShowChanges,
             tooltip: tr('viewChanges'),
           ),
-        if (hasUpdate)
-          getUpdateButton()
-        else if (appInMemory.app.installedVersion == null &&
-            appInMemory.app.additionalSettings['trackOnly'] != true)
-          getInstallButton(),
         PopupMenuButton<String>(
           tooltip: tr('more'),
           icon: Icon(

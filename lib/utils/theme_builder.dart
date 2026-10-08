@@ -36,6 +36,12 @@ class ThemeBuilder {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      scaffoldBackgroundColor: colorScheme.surface,
+      canvasColor: colorScheme.surfaceContainerHigh,
+      popupMenuTheme: PopupMenuThemeData(
+        color: colorScheme.surfaceContainerHigh,
+        surfaceTintColor: Colors.transparent,
+      ),
       fontFamily: useSystemFont ? 'SystemFont' : 'Roboto',
       // M3 sparkle ripple is the expressive touch feedback; shader-based, so
       // it also avoids the clipped-ripple artifacts of the legacy ink splash
@@ -287,6 +293,7 @@ class ThemeBuilder {
   ) {
     return CardThemeData(
       color: colorScheme.surfaceContainerLow,
+      surfaceTintColor: Colors.transparent,
       // M3 tonal elevation: hierarchy comes from the surface container
       // colour, not shadows (heavy shadows also read muddy on the pure-black
       // AMOLED theme)
@@ -364,6 +371,7 @@ class ThemeBuilder {
   ) {
     return DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
+      surfaceTintColor: Colors.transparent,
       elevation: 6,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(
@@ -392,6 +400,7 @@ class ThemeBuilder {
     return BottomSheetThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       modalBackgroundColor: colorScheme.surfaceContainerLow,
+      surfaceTintColor: Colors.transparent,
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
@@ -410,6 +419,7 @@ class ThemeBuilder {
   ) {
     return NavigationBarThemeData(
       backgroundColor: colorScheme.surfaceContainer,
+      surfaceTintColor: Colors.transparent,
       elevation: 3,
       indicatorColor: colorScheme.secondaryContainer,
       indicatorShape: const StadiumBorder(),

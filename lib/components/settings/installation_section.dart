@@ -269,9 +269,19 @@ class _InstallationSectionState extends State<InstallationSection>
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               trailing: const Icon(Icons.open_in_new, size: 18),
-              onTap: () => AppInstallService.openInstallUnknownAppsSettings(
-                AppConstants.obtainiumPlusId,
-              ),
+              onTap: () async {
+                try {
+                  await AppInstallService.openInstallUnknownAppsSettings(
+                    AppConstants.obtainiumPlusId,
+                  );
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(tr('error'))));
+                  }
+                }
+              },
             ),
 
           // Import Installed Apps

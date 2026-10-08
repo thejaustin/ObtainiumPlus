@@ -385,6 +385,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final currentIndex = (showNavBar || isTopNav)
         ? (selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last)
         : 0;
+    // The add-app FAB belongs to the Apps tab only (index 0).
+    final showAddFab =
+        plusSettings.plusEnableFAB && !settingsProvider.isTV && currentIndex == 0;
 
     // With transitions disabled, render the page directly:
     // PageTransitionSwitcher with Duration.zero can leave the incoming
@@ -468,10 +471,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ],
           ),
-          floatingActionButton:
-              plusSettings.plusEnableFAB && !settingsProvider.isTV
-              ? const AppActionsFAB()
-              : null,
+          floatingActionButton: showAddFab ? const AppActionsFAB() : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           body: pageBody,
         ),
@@ -506,8 +506,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         backgroundColor: Theme.of(context).colorScheme.surface,
         // The omnibar "+" — the single entry point for the combined
         // add/search/discover flow, visible on every tab.
-        floatingActionButton:
-            plusSettings.plusEnableFAB && !settingsProvider.isTV && !isSelecting
+        floatingActionButton: showAddFab && !isSelecting
             ? const AppActionsFAB()
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -613,11 +612,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (isFloating) {
       // Floating pill dock — frosted when glassmorphism is on, solid otherwise.
       return RepaintBoundary(
+        key: _bottomNavBarKey,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: ClipRRect(
-              key: _bottomNavBarKey,
               borderRadius: BorderRadius.circular(32),
               child: ConditionalBlur(
                 enabled: enableGlass,
@@ -653,8 +652,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     // Classic flat-edge bar — frosted when glassmorphism is on, solid otherwise.
     return RepaintBoundary(
+      key: _bottomNavBarKey,
       child: ClipRRect(
-        key: _bottomNavBarKey,
         child: ConditionalBlur(
           enabled: enableGlass,
           sigma: 12,

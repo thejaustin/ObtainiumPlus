@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart'
+    show MaterialUiCompatibilityBridge;
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/theme.dart';
@@ -259,9 +261,7 @@ class AppIcon extends StatelessWidget {
                 child: Center(
                   child: Image(
                     image: const AssetImage('assets/graphics/icon_small.png'),
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.5)
-                        : Colors.white.withValues(alpha: 0.4),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                     colorBlendMode: BlendMode.modulate,
                     gaplessPlayback: true,
                     excludeFromSemantics: true,

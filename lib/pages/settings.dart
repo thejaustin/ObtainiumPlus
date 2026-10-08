@@ -1,5 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/appearance_hub.dart';
@@ -14,6 +14,8 @@ import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -40,27 +42,39 @@ class _SettingsPageState extends State<SettingsPage> {
   late Future<AndroidDeviceInfo> _androidInfoFuture;
   int _selectedSectionIndex = 0;
   int _previousSectionIndex = 0;
+  late final Future<dynamic> _versionFuture = getInstalledInfo(obtainiumId);
+  final GlobalKey _resultsKey = GlobalKey();
+  final List<GlobalKey> _chipKeys = List.generate(5, (_) => GlobalKey());
+  bool _noResults = false;
+
+  static int _mapInitialTab(int t) {
+    if (t <= 2) return 0;
+    if (t == 3 || t == 4) return 1;
+    if (t == 5) return 2;
+    if (t == 6) return 3;
+    return 4;
+  }
+
+  void _scheduleEmptyCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = _resultsKey.currentContext?.findRenderObject();
+      final empty = _searchQuery.isNotEmpty &&
+          box is RenderBox &&
+          box.hasSize &&
+          box.size.height < 1;
+      if (empty != _noResults) setState(() => _noResults = empty);
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    int initTab = widget.initialTab ?? 0;
-    if (initTab <= 2) {
-      initTab = 0;
-    } else if (initTab == 3 || initTab == 4) {
-      initTab = 1;
-    } else if (initTab == 5) {
-      initTab = 2;
-    } else if (initTab == 6) {
-      initTab = 3;
-    } else if (initTab == 7 || initTab == 8) {
-      initTab = 4;
-    }
-    _selectedSectionIndex = initTab.clamp(0, 4);
+    _selectedSectionIndex = _mapInitialTab(widget.initialTab ?? 0);
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       setState(() {
-        _searchQuery = _searchController.text;
+        _searchQuery = _searchController.text.trim();
       });
     });
   }
@@ -70,20 +84,8 @@ class _SettingsPageState extends State<SettingsPage> {
     super.didUpdateWidget(oldWidget);
     if (widget.initialTab != oldWidget.initialTab &&
         widget.initialTab != null) {
-      int initTab = widget.initialTab!;
-      if (initTab <= 2) {
-        initTab = 0;
-      } else if (initTab == 3 || initTab == 4) {
-        initTab = 1;
-      } else if (initTab == 5) {
-        initTab = 2;
-      } else if (initTab == 6) {
-        initTab = 3;
-      } else if (initTab == 7 || initTab == 8) {
-        initTab = 4;
-      }
       setState(() {
-        _selectedSectionIndex = initTab.clamp(0, 4);
+        _selectedSectionIndex = _mapInitialTab(widget.initialTab!);
       });
     }
   }
@@ -99,6 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    _scheduleEmptyCheck();
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -235,6 +238,16 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          if (_searchQuery.isEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              sliver: SliverToBoxAdapter(
+                child: _SettingsHeaderCard(
+                  versionFuture: _versionFuture,
+                  links: _links(context),
+                ),
+              ),
+            ),
           if (!plusSettings.plusSettingsBottomNavBar && _searchQuery.isEmpty)
             SliverToBoxAdapter(
               child: SizedBox(
@@ -271,6 +284,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: ChoiceChip(
+                        key: _chipKeys[entry.key],
+                        materialTapTargetSize: MaterialTapTargetSize.padded,
                         avatar: Icon(
                           tab.icon,
                           size: 16,
@@ -292,24 +307,22 @@ class _SettingsPageState extends State<SettingsPage> {
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeOutCubic,
                             );
-                            if (_tabsScrollController.hasClients) {
-                              final targetOffset =
-                                  (entry.key * 130.0 - 48.0).clamp(
-                                0.0,
-                                _tabsScrollController
-                                    .position.maxScrollExtent,
-                              );
-                              _tabsScrollController.animateTo(
-                                targetOffset,
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final chipContext =
+                                  _chipKeys[entry.key].currentContext;
+                              if (!mounted || chipContext == null) return;
+                              Scrollable.ensureVisible(
+                                chipContext,
+                                alignment: 0.5,
                                 duration: const Duration(milliseconds: 250),
                                 curve: Curves.easeOutCubic,
                               );
-                            }
+                            });
                           }
                         },
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
-                            plusSettings.plusGlobalCornerRadius,
+                            CardMetrics.pill(),
                           ),
                         ),
                         side: BorderSide.none,
@@ -376,11 +389,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (_searchQuery.isNotEmpty && _noResults)
+                        _SettingsEmptyState(onClear: _searchController.clear),
+                      Column(
+                        key: _resultsKey,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 0) ...[
                         if (_searchQuery.isEmpty &&
                             plusSettings.plusSettingsUseSubmenuHub) ...[
-                          const SettingsLayoutSelector(),
                           const VisualThemeSelector(),
                           const SizedBox(height: 4),
                           AppearanceHub(
@@ -418,6 +436,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               subCategory: 'motion',
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          const SettingsLayoutSelector(),
                         ] else ...[
                           ThemeSettingsSection(
                             searchQuery: _searchQuery,
@@ -477,9 +497,13 @@ class _SettingsPageState extends State<SettingsPage> {
                               plusSettings.plusShowAdvancedSettings,
                         ),
                       ],
-                      const SizedBox(height: 48),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                       _buildFooter(context),
-                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: 24 + MediaQuery.paddingOf(context).bottom,
+                      ),
                     ],
                   ),
                 ),
@@ -491,32 +515,35 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildFooter(BuildContext context) {
-    if (_searchQuery.isNotEmpty) return const SizedBox.shrink();
-
+  List<_SettingsLink> _links(BuildContext context) {
     final settingsProvider = context.read<SettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-
-    final links = [
-      (
+    return [
+      _SettingsLink(
         icon: Icons.code_rounded,
         label: tr('appSource'),
         url: settingsProvider.sourceUrl,
         color: colorScheme.primary,
       ),
-      (
+      _SettingsLink(
         icon: Icons.help_outline_rounded,
         label: tr('wiki'),
         url: 'https://wiki.obtainium.imranr.dev/',
         color: colorScheme.secondary,
       ),
-      (
+      _SettingsLink(
         icon: Icons.apps_rounded,
         label: tr('crowdsourcedConfigsLabel'),
         url: 'https://apps.obtainium.imranr.dev/',
         color: colorScheme.tertiary,
       ),
     ];
+  }
+
+  Widget _buildFooter(BuildContext context) {
+    if (_searchQuery.isNotEmpty) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
@@ -527,7 +554,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         const SizedBox(height: 12),
         Row(
-          children: links.map((link) {
+          children: _links(context).map((link) {
             return Expanded(
               child: _FooterIcon(
                 icon: link.icon,
@@ -539,6 +566,140 @@ class _SettingsPageState extends State<SettingsPage> {
           }).toList(),
         ),
       ],
+    );
+  }
+}
+
+class _SettingsLink {
+  final IconData icon;
+  final String label;
+  final String url;
+  final Color color;
+  const _SettingsLink({
+    required this.icon,
+    required this.label,
+    required this.url,
+    required this.color,
+  });
+}
+
+Future<void> _openSettingsUrl(String url) async {
+  try {
+    await launchUrlString(url, mode: LaunchMode.externalApplication);
+  } catch (_) {}
+}
+
+class _SettingsHeaderCard extends StatelessWidget {
+  final Future<dynamic> versionFuture;
+  final List<_SettingsLink> links;
+  const _SettingsHeaderCard({required this.versionFuture, required this.links});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final radius = CardMetrics.card(
+      context.watch<PlusSettingsProvider>().plusGlobalCornerRadius,
+    );
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(CardMetrics.inner(radius)),
+            ),
+            child: Icon(
+              Icons.info_outline_rounded,
+              color: colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Obtainium+',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                FutureBuilder<dynamic>(
+                  future: versionFuture,
+                  builder: (context, snap) {
+                    final String? v = snap.data?.versionName as String?;
+                    if (v == null || v.isEmpty) return const SizedBox.shrink();
+                    return Text(
+                      v,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          ...links.map(
+            (l) => IconButton.filledTonal(
+              tooltip: l.label,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: Icon(l.icon),
+              onPressed: () {
+                AppHaptics.selectionClick();
+                _openSettingsUrl(l.url);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsEmptyState extends StatelessWidget {
+  final VoidCallback onClear;
+  const _SettingsEmptyState({required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.search_off_rounded,
+              size: 32,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            tr('noResultsFound'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonal(onPressed: onClear, child: Text(tr('clear'))),
+        ],
+      ),
     );
   }
 }
@@ -563,7 +724,10 @@ class _FooterIcon extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => launchUrlString(url, mode: LaunchMode.externalApplication),
+      onTap: () {
+        AppHaptics.selectionClick();
+        _openSettingsUrl(url);
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Column(

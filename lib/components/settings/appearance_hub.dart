@@ -103,7 +103,7 @@ class AppearanceHub extends StatelessWidget {
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: hubCards.map((card) {
@@ -156,7 +156,7 @@ class AppearanceHub extends StatelessWidget {
               height: MediaQuery.of(context).size.height * 0.88,
               decoration: BoxDecoration(
                 color: plusSettings.plusEnableGlassmorphism
-                    ? colorScheme.surface.withValues(alpha: 0.9)
+                    ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.9)
                     : (Theme.of(context).brightness == Brightness.dark
                         ? colorScheme.surfaceContainerHigh
                         : colorScheme.surfaceContainerLow),

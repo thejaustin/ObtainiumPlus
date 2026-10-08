@@ -759,6 +759,29 @@ class AppsPageState extends State<AppsPage>
       ];
     }
 
+    void startUpdate(int appIndex) {
+      appsProvider
+          .downloadAndInstallLatestApps([
+            listedApps[appIndex].app.id,
+          ], globalNavigatorKey.currentContext)
+          .then((res) {
+            if (res.isNotEmpty && context.mounted) {
+              var np = context.read<NotificationsProvider>();
+              np.cancel(UpdateNotification([]).id);
+              np.cancel(
+                SilentUpdateAttemptNotification(
+                  [],
+                  id: res[0].hashCode,
+                ).id,
+              );
+            }
+          })
+          .catchError((e) {
+            if (context.mounted) showError(e, context);
+            return <String>[];
+          });
+    }
+
     getUpdateButton(int appIndex) {
       return ScaleTouchWrapper(
         scaleDownFactor: 0.92,
@@ -778,28 +801,7 @@ class AppsPageState extends State<AppsPage>
               : tr('update'),
           onPressed: appsProvider.areDownloadsRunning()
               ? null
-              : () {
-                  appsProvider
-                      .downloadAndInstallLatestApps([
-                        listedApps[appIndex].app.id,
-                      ], globalNavigatorKey.currentContext)
-                      .then((res) {
-                        if (res.isNotEmpty && context.mounted) {
-                          var np = context.read<NotificationsProvider>();
-                          np.cancel(UpdateNotification([]).id);
-                          np.cancel(
-                            SilentUpdateAttemptNotification(
-                              [],
-                              id: res[0].hashCode,
-                            ).id,
-                          );
-                        }
-                      })
-                      .catchError((e) {
-                        if (context.mounted) showError(e, context);
-                        return <String>[];
-                      });
-                },
+              : () => startUpdate(appIndex),
           icon: Icon(
             listedApps[appIndex].app.additionalSettings['trackOnly'] == true
                 ? Icons.check_circle_outline
@@ -875,10 +877,10 @@ class AppsPageState extends State<AppsPage>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          (hasUpdate || needsInstall)
+          (settingsProvider.isTV && (hasUpdate || needsInstall))
               ? getUpdateButton(index)
               : const SizedBox.shrink(),
-          (hasUpdate || needsInstall)
+          (settingsProvider.isTV && (hasUpdate || needsInstall))
               ? const SizedBox(width: 5)
               : const SizedBox.shrink(),
           InkWell(
@@ -982,6 +984,7 @@ class AppsPageState extends State<AppsPage>
         ),
         child: ListTile(
           autofocus: index == 0 && settingsProvider.isTV,
+          minLeadingWidth: 48,
           tileColor: listedApps[index].app.pinned
               ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
               : Colors.transparent,
@@ -1011,10 +1014,39 @@ class AppsPageState extends State<AppsPage>
                     toggleAppSelected(listedApps[index].app);
                   },
                 )
-              : AppIconWidget(
-                  appId: listedApps[index].app.id,
-                  installed: listedApps[index].installedInfo != null,
-                  appsProvider: appsProvider,
+              : SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      AppIconWidget(
+                        appId: listedApps[index].app.id,
+                        installed: listedApps[index].installedInfo != null,
+                        appsProvider: appsProvider,
+                      ),
+                      Positioned(
+                        right: -8,
+                        bottom: -8,
+                        child: AppIconActionBadge(
+                          appInMemory: listedApps[index],
+                          hasUpdate: hasUpdate,
+                          needsInstall: needsInstall,
+                          isAmbiguous:
+                              hasUpdate &&
+                              listedApps[index]
+                                      .app
+                                      .additionalSettings['isAmbiguousUpdate'] ==
+                                  true,
+                          iconSize: 40,
+                          onPressed: appsProvider.areDownloadsRunning()
+                              ? null
+                              : () => startUpdate(index),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
           title: Text(
             maxLines: 1,
@@ -1839,6 +1871,9 @@ class AppsPageState extends State<AppsPage>
                     appInMemory: app,
                     isSelected: selectedAppIds.contains(app.app.id),
                     hasUpdate: existingUpdates.contains(app.app.id),
+                    isAmbiguous:
+                        existingUpdates.contains(app.app.id) &&
+                        app.app.additionalSettings['isAmbiguousUpdate'] == true,
                     categoryColor: categoryColor,
                     entranceDelay: plusSettings.plusEnableEnhancedAnimations
                         ? Duration(

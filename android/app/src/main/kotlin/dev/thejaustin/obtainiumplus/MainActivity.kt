@@ -305,6 +305,9 @@ class MainActivity : FlutterActivity() {
                         result.success(null)
                     }
                 }
+                "getPackageName" -> {
+                    result.success(packageName)
+                }
                 "isUsageAccessGranted" -> {
                     result.success(isUsageAccessGranted())
                 }
