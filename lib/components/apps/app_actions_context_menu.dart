@@ -1,4 +1,3 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/device_utils.dart';
 
 class AppActionsContextMenu {
   static void show(
@@ -17,6 +17,11 @@ class AppActionsContextMenu {
     AppInMemory appInMemory, {
     VoidCallback? onEnterMultiSelect,
   }) {
+    // Created once so sheet rebuilds don't re-query the platform; uses the
+    // cached DeviceUtils lookup (#62).
+    final sdkIntFuture = DeviceUtils.getAndroidInfo().then(
+      (info) => info.version.sdkInt,
+    );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -151,9 +156,7 @@ class AppActionsContextMenu {
                 ),
                 if (appInMemory.installedInfo != null)
                   FutureBuilder<int>(
-                    future: DeviceInfoPlugin().androidInfo.then(
-                      (info) => info.version.sdkInt,
-                    ),
+                    future: sdkIntFuture,
                     builder: (context, snapshot) {
                       if ((snapshot.data ?? 0) < 34) {
                         return const SizedBox.shrink();
