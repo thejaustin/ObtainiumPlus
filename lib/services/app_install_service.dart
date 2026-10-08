@@ -29,6 +29,8 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/signing_cert_utils.dart';
+import 'package:obtainium/models/typed_settings.dart';
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -683,6 +685,61 @@ class AppInstallService {
     var allAPKs = [file.file.path];
     allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
 
+    // Pre-flight signer check. Android rejects an update signed by an
+    // unrelated key with a generic "package conflicts with an existing
+    // package" error, so catch it first with a clear, actionable message.
+    // Skipped (never blocks) when signing info is unavailable.
+    try {
+      final apkHashes = await apkFilesSigningCertHashes(allAPKs);
+      if (apkHashes.isNotEmpty) {
+        final userHashes = parseAllowedSigningCertHashes(
+          apps[file.appId]?.app.settings.getStringOrNull(
+            'allowedSigningCertHashes',
+          ),
+        );
+        if (userHashes.isNotEmpty && !apkHashes.every(userHashes.contains)) {
+          logs.add(
+            'Blocked install of "$targetPackageName": signer not in the allowed list',
+            level: LogLevel.warning,
+          );
+          throw SigningCertMismatchError(
+            hardBlock: true,
+            expected: userHashes,
+            actual: apkHashes,
+          );
+        }
+        // The lightweight installed-info query omits signing certificates,
+        // so fetch them for just this package.
+        Set<String> installedHashes = {};
+        if (appInfo != null) {
+          final withSigning = await pm.getPackageInfo(
+            packageName: appInfo.packageName ?? targetPackageName,
+            flags: packageInfoFlags,
+          );
+          installedHashes = certHashesFromSigningInfo(withSigning?.signingInfo);
+        }
+        // Only block when the two signers share nothing: a rotated key
+        // (lineage overlap) is still a valid update.
+        if (settingsProvider.verifySigningCertHashes &&
+            installedHashes.isNotEmpty &&
+            apkHashes.intersection(installedHashes).isEmpty) {
+          logs.add(
+            'Blocked install of "$targetPackageName": signer differs from the installed app',
+            level: LogLevel.warning,
+          );
+          throw SigningCertMismatchError(
+            hardBlock: false,
+            expected: installedHashes,
+            actual: apkHashes,
+          );
+        }
+      }
+    } on SigningCertMismatchError {
+      rethrow;
+    } catch (e) {
+      logs.add('Signer pre-check skipped: $e', level: LogLevel.warning);
+    }
+
     Future<void> executeBgWorkaroundIfNeeded() async {
       // The getInstalledInfo/canDowngradeApps awaits above can outlast the app
       // being removed/untracked elsewhere in the meantime — skip, don't crash.
@@ -714,9 +771,16 @@ class AppInstallService {
             commitCode = rootResult.errorCode ?? 1;
           }
           if (commitCode != 0 && commitCode != 3) {
+            // Definitive PackageInstaller verdicts (invalid, conflict, storage,
+            // incompatible) would fail identically in the stock installer, so
+            // report them directly instead of retrying and hiding the cause.
+            if (const {4, 5, 6, 7}.contains(commitCode)) {
+              throw InstallError(commitCode!, appId: file.appId);
+            }
             throw Exception("Root installer failed with code $commitCode");
           }
         } catch (e) {
+          if (e is InstallError) rethrow;
           logs.add(
             'Root install failed: $e, falling back to AndroidPackageInstaller',
           );
@@ -744,9 +808,16 @@ class AppInstallService {
             commitCode = extResult.errorCode ?? 1;
           }
           if (commitCode != 0 && commitCode != 3) {
+            // Definitive PackageInstaller verdicts (invalid, conflict, storage,
+            // incompatible) would fail identically in the stock installer, so
+            // report them directly instead of retrying and hiding the cause.
+            if (const {4, 5, 6, 7}.contains(commitCode)) {
+              throw InstallError(commitCode!, appId: file.appId);
+            }
             throw Exception("External installer failed with code $commitCode");
           }
         } catch (e) {
+          if (e is InstallError) rethrow;
           logs.add(
             'External install failed: $e, falling back to AndroidPackageInstaller',
           );
@@ -782,9 +853,16 @@ class AppInstallService {
             commitCode = shizukuResult.errorCode ?? 1;
           }
           if (commitCode != 0 && commitCode != 3) {
+            // Definitive PackageInstaller verdicts (invalid, conflict, storage,
+            // incompatible) would fail identically in the stock installer, so
+            // report them directly instead of retrying and hiding the cause.
+            if (const {4, 5, 6, 7}.contains(commitCode)) {
+              throw InstallError(commitCode!, appId: file.appId);
+            }
             throw Exception("Shizuku failed with code $commitCode");
           }
         } catch (e) {
+          if (e is InstallError) rethrow;
           logs.add(
             'Shizuku install failed: $e, falling back to AndroidPackageInstaller',
           );
