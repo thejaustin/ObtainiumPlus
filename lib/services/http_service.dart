@@ -213,7 +213,9 @@ class HttpService {
             request.write(jsonEncode(postBody));
           }
         }
-        final response = await request.close();
+        final response = await request.close().timeout(
+          const Duration(seconds: 30),
+        );
 
         if (followRedirects &&
             (response.statusCode >= 300 && response.statusCode <= 399)) {
@@ -252,7 +254,7 @@ class HttpService {
         return MapEntry(currentUrl, MapEntry(httpClient, response));
       } catch (e) {
         // Never leak the client when a request or redirect handling throws.
-        httpClient.close();
+        httpClient.close(force: true);
         rethrow;
       }
     }

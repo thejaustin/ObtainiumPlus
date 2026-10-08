@@ -150,6 +150,7 @@ class ItchIO extends AppSource {
 
     final DateFormat abbrTimeFormat = DateFormat(
       "dd MMMM yyyy '@' HH:mm 'UTC'",
+      'en_US',
     );
     final List<DateTime> abbrDates = [];
     for (var abbrElement in abbrElements) {

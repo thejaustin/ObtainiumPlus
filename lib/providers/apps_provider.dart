@@ -1065,7 +1065,11 @@ class AppsProvider with ChangeNotifier {
       }
       _initCompleter.complete();
     }().catchError((e) {
+      _readyCompleter.future.ignore();
       if (!_readyCompleter.isCompleted) _readyCompleter.completeError(e);
+      // Fail (rather than hang) anyone awaiting initializationDone.
+      _initCompleter.future.ignore();
+      if (!_initCompleter.isCompleted) _initCompleter.completeError(e);
       initError = e.toString();
       AppLogger.error(e, message: 'AppsProvider async init error');
     });
@@ -1381,11 +1385,25 @@ class AppsProvider with ChangeNotifier {
     NotificationsProvider notificationsProvider = context
         .read<NotificationsProvider>();
     if (!isForeground) {
-      await notificationsProvider.notify(
-        completeInstallationNotification,
-        cancelExisting: true,
-      );
-      while (await FGBGEvents.instance.stream.first != FGBGType.foreground) {}
+      // Subscribe before notifying so a foreground event emitted during the
+      // notify await (or between loop iterations) is not missed.
+      final returned = Completer<void>();
+      final sub = FGBGEvents.instance.stream.listen((event) {
+        if (event == FGBGType.foreground && !returned.isCompleted) {
+          returned.complete();
+        }
+      });
+      try {
+        await notificationsProvider.notify(
+          completeInstallationNotification,
+          cancelExisting: true,
+        );
+        if (!isForeground) {
+          await returned.future;
+        }
+      } finally {
+        await sub.cancel();
+      }
       await notificationsProvider.cancel(completeInstallationNotification.id);
     }
   }
@@ -2329,6 +2347,8 @@ class AppsProvider with ChangeNotifier {
     return null;
   }
 
+  int _saveTmpCounter = 0;
+
   Future<void> saveApps(
     List<App> apps, {
     bool attemptToCorrectInstallStatus = true,
@@ -2373,7 +2393,9 @@ class AppsProvider with ChangeNotifier {
         }
         if (!onlyIfExists || this.apps.containsKey(app.id)) {
           String filePath = '$appsDirPath/${app.id}.json';
-          final tmpFile = File('$filePath.tmp');
+          // Unique tmp name so concurrent saves of one app can't clobber
+          // each other's tmp file.
+          final tmpFile = File('$filePath.${_saveTmpCounter++}.tmp');
           await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
           await tmpFile.rename(filePath);
         }
@@ -2409,28 +2431,40 @@ class AppsProvider with ChangeNotifier {
   Future<void> removeApps(List<String> appIds) async {
     var apkFiles = apkDir.listSync();
     final appsDirPath = (await getAppsDir()).path;
-    await Future.wait(
-      appIds.map((appId) async {
-        File file = File('$appsDirPath/$appId.json');
-        if (file.existsSync()) {
-          deleteFile(file);
-        }
-        apkFiles
-            .where(
-              (element) => element.path.split('/').last.startsWith('$appId-'),
-            )
-            .forEach((element) {
-              element.delete(recursive: true);
-            });
-        if (apps.containsKey(appId)) {
-          apps.remove(appId);
-        }
-      }),
-    );
-    OfflineService().clearAppsFromRetryQueue(appIds, updateSettings);
-    if (appIds.isNotEmpty) {
-      notifyListeners();
-      scheduleAutoExport();
+    try {
+      await Future.wait(
+        appIds.map((appId) async {
+          try {
+            File file = File('$appsDirPath/$appId.json');
+            if (file.existsSync()) {
+              deleteFile(file);
+            }
+            await Future.wait(
+              apkFiles
+                  .where(
+                    (element) =>
+                        element.path.split('/').last.startsWith('$appId-'),
+                  )
+                  .map(
+                    (element) => element
+                        .delete(recursive: true)
+                        .then<void>((_) {})
+                        .catchError((_) {}),
+                  ),
+            );
+          } finally {
+            // Drop from memory even if file cleanup failed, so UI stays in
+            // sync with what the user removed.
+            apps.remove(appId);
+          }
+        }),
+      );
+    } finally {
+      OfflineService().clearAppsFromRetryQueue(appIds, updateSettings);
+      if (appIds.isNotEmpty) {
+        notifyListeners();
+        scheduleAutoExport();
+      }
     }
   }
 
@@ -2714,12 +2748,21 @@ class AppsProvider with ChangeNotifier {
       if (shouldExportSettings < 2) {
         settingsValueKeys?.removeWhere((k) => k.endsWith('-creds'));
       }
-      finalExport['settings'] = Map<String, Object?>.fromEntries(
+      final settingsExport = Map<String, Object?>.fromEntries(
         (settingsValueKeys
                 ?.map((key) => MapEntry(key, settingsProvider.prefs?.get(key)))
                 .toList()) ??
             [],
       );
+      // Credentials live in secure storage, not prefs; include them only for
+      // the "export including credentials" level.
+      if (shouldExportSettings >= 2) {
+        for (final k in const ['github-creds', 'gitlab-creds']) {
+          final v = settingsProvider.getSettingString(k);
+          if (v != null) settingsExport[k] = v;
+        }
+      }
+      finalExport['settings'] = settingsExport;
     }
     return finalExport;
   }
@@ -2731,6 +2774,7 @@ class AppsProvider with ChangeNotifier {
   }) async {
     BehaviorSettingsProvider behaviorSettings = bsp ?? this.behaviorSettings;
     var exportDir = await behaviorSettings.getExportDir();
+    var oldAutoFiles = <saf.DocumentFile>[];
     if (isAuto) {
       if (behaviorSettings.autoExportOnChanges != true) {
         return null;
@@ -2738,15 +2782,13 @@ class AppsProvider with ChangeNotifier {
       if (exportDir == null) {
         return null;
       }
-      var files = await saf
-          .listFiles(exportDir, columns: [saf.DocumentFileColumn.id])
-          .where((f) => f.uri.pathSegments.last.endsWith('-auto.json'))
-          .toList();
-      if (files.isNotEmpty) {
-        for (var f in files) {
-          saf.delete(f.uri);
-        }
-      }
+      // Old auto backups are deleted only after the new one is written.
+      try {
+        oldAutoFiles = await saf
+            .listFiles(exportDir, columns: [saf.DocumentFileColumn.id])
+            .where((f) => f.uri.pathSegments.last.endsWith('-auto.json'))
+            .toList();
+      } catch (_) {}
     }
     if (exportDir == null || pickOnly) {
       await behaviorSettings.pickExportDir();
@@ -2768,6 +2810,12 @@ class AppsProvider with ChangeNotifier {
       );
       if (result == null) {
         throw ObtainiumError(tr('unexpectedError'));
+      }
+      for (final f in oldAutoFiles) {
+        if (f.uri == result.uri) continue;
+        try {
+          await saf.delete(f.uri);
+        } catch (_) {}
       }
       returnPath = exportDir.pathSegments
           .join('/')
@@ -2797,22 +2845,38 @@ class AppsProvider with ChangeNotifier {
     notifyListeners();
     if (newFormat && decodedJSON['settings'] != null) {
       var settingsMap = decodedJSON['settings'] as Map<String, Object?>;
+      final pending = <Future<dynamic>>[];
       settingsMap.forEach((key, value) {
-        if (value is int) {
-          settingsProvider.prefs?.setInt(key, value);
-        } else if (value is double) {
-          settingsProvider.prefs?.setDouble(key, value);
-        } else if (value is bool) {
-          settingsProvider.prefs?.setBool(key, value);
-        } else if (value is List) {
-          settingsProvider.prefs?.setStringList(
-            key,
-            value.map((e) => e as String).toList(),
-          );
-        } else {
-          settingsProvider.prefs?.setString(key, value as String);
+        if (value == null) return;
+        if (key == 'github-creds' || key == 'gitlab-creds') {
+          // Secure-storage keys must not be written to plain prefs.
+          if (value is String) settingsProvider.setSettingString(key, value);
+          return;
+        }
+        try {
+          if (value is int) {
+            pending.add(settingsProvider.prefs!.setInt(key, value));
+          } else if (value is double) {
+            pending.add(settingsProvider.prefs!.setDouble(key, value));
+          } else if (value is bool) {
+            pending.add(settingsProvider.prefs!.setBool(key, value));
+          } else if (value is List) {
+            pending.add(
+              settingsProvider.prefs!.setStringList(
+                key,
+                value.map((e) => e.toString()).toList(),
+              ),
+            );
+          } else if (value is String) {
+            pending.add(settingsProvider.prefs!.setString(key, value));
+          }
+        } catch (e) {
+          AppLogger.error(e, message: 'Skipped invalid imported setting $key');
         }
       });
+      await Future.wait(pending);
+      // Drop stale cached values so imported settings take effect now.
+      plusSettings.clearCache();
     }
     return MapEntry<List<App>, bool>(
       importedApps,

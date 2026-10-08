@@ -96,7 +96,11 @@ class _ImportExportPageState extends State<ImportExportPage> {
         },
       ).then((values) {
         if (values != null && mounted) {
-          var urls = (values['appURLList'] as String).split('\n');
+          var urls = (values['appURLList'] as String)
+              .split('\n')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
           setState(() {
             importInProgress = true;
           });
@@ -181,7 +185,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             } catch (e) {
               throw ObtainiumError(tr('invalidInput'));
             }
-            appsProvider.import(data).then((value) {
+            return appsProvider.import(data).then((value) {
               if (!context.mounted) return;
               appsProvider.addMissingCategories(context.read());
               showMessage(
@@ -215,6 +219,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
               var path = result.first.path;
               if (path == null) return;
               var data = await File(path).readAsString();
+              if (!context.mounted) return;
               urlListImport(
                 overrideInitValid: true,
                 initValue: RegExp(r'https?://[^\s"]+')
@@ -241,6 +246,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             }
           })
           .catchError((e) {
+            if (!context.mounted) return;
             if (e is PlatformException || e is MissingPluginException) {
               showError(ObtainiumError(tr('noFilePickerAvailable')), context);
             } else {

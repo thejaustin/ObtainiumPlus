@@ -435,12 +435,14 @@ class AppFileService {
       logs?.add(
         'Download actively running in concurrent worker: ${tempDownloadedFile.uri.pathSegments.last}',
       );
-      int pollCycles = 0;
-      while (_activeDownloadPaths.contains(tempDownloadedFile.path) && pollCycles++ < 40) {
+      while (_activeDownloadPaths.contains(tempDownloadedFile.path)) {
         await Future.delayed(const Duration(milliseconds: 500));
         if (downloadedFile.existsSync()) {
           return downloadedFile;
         }
+      }
+      if (downloadedFile.existsSync()) {
+        return downloadedFile;
       }
     }
 
@@ -499,9 +501,20 @@ class AppFileService {
       // Check Content-Disposition for proper filename/extension
       final contentDisposition = response.headers.value('content-disposition');
       if (contentDisposition != null && !fileNameHasExt) {
-        var parsedExt = contentDisposition.split('.').last;
-        if (parsedExt.endsWith('"') || parsedExt.endsWith('other')) {
-          parsedExt = parsedExt.substring(0, parsedExt.length - 1);
+        var parsedExt = '';
+        final cdMatch = RegExp(
+          r'''filename\*?=(?:UTF-8'')?"?([^";]+)''',
+          caseSensitive: false,
+        ).firstMatch(contentDisposition);
+        if (cdMatch != null) {
+          final cdName = cdMatch.group(1)!.trim().split('/').last;
+          if (cdName.contains('.') &&
+              AppSource.isApkOrContainerFile(
+                cdName,
+                includeArchives: true,
+              )) {
+            parsedExt = cdName.split('.').last;
+          }
         }
         if (parsedExt.isNotEmpty && parsedExt != 'attachment') {
           final newTarget = File('$destDir/$fileName.$parsedExt');
@@ -617,9 +630,11 @@ class AppFileService {
       }
       rethrow;
     } finally {
-      await sink?.close();
       responseClient?.close();
       _activeDownloadPaths.remove(tempDownloadedFile.path);
+      try {
+        await sink?.close();
+      } catch (_) {}
     }
 
     if (onProgress != null) {

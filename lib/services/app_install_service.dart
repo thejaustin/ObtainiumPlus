@@ -341,9 +341,15 @@ class AppInstallService {
       return false;
     }
 
-    var osInfo = await DeviceInfoPlugin().androidInfo.timeout(
-      const Duration(seconds: 15),
-    );
+    final AndroidDeviceInfo osInfo;
+    try {
+      osInfo = await DeviceInfoPlugin().androidInfo.timeout(
+        const Duration(seconds: 15),
+      );
+    } catch (e) {
+      logs.add('Failed to get device info: ${app.id} (${e.toString()})');
+      return false;
+    }
     String? installerPackageName;
     try {
       installerPackageName = osInfo.version.sdkInt >= 30

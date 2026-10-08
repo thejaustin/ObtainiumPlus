@@ -114,18 +114,22 @@ class BehaviorSettingsProvider with ChangeNotifier {
 
   Future<Uri?> getExportDir() async {
     var uriString = prefs?.safeString('exportDir');
-    if (uriString != null) {
-      Uri? uri = Uri.parse(uriString);
-      if (!(await saf.canRead(uri) ?? false) ||
-          !(await saf.canWrite(uri) ?? false)) {
-        uri = null;
-        prefs?.remove('exportDir');
-        notifyListeners();
-      }
-      return uri;
-    } else {
+    if (uriString == null) {
       return null;
     }
+    final uri = Uri.parse(uriString);
+    // The directory may be temporarily unavailable (e.g. a mount not ready
+    // right after a reboot). Keep the stored URI so it can be retried later;
+    // it is only cleared via pickExportDir.
+    try {
+      if (!(await saf.canRead(uri) ?? false) ||
+          !(await saf.canWrite(uri) ?? false)) {
+        return null;
+      }
+    } catch (_) {
+      return null;
+    }
+    return uri;
   }
 
   Future<void> pickExportDir({bool remove = false}) async {
@@ -138,6 +142,8 @@ class BehaviorSettingsProvider with ChangeNotifier {
       } catch (_) {
         throw ObtainiumError(tr('noFilePickerAvailable'));
       }
+      // Picker cancelled: keep the current directory and permissions.
+      if (newOneWayDataSyncDir == null) return;
     }
     if (currentOneWayDataSyncDir?.path != newOneWayDataSyncDir?.path) {
       if (newOneWayDataSyncDir == null) {
@@ -148,7 +154,10 @@ class BehaviorSettingsProvider with ChangeNotifier {
       notifyListeners();
     }
     for (var e in existingSAFPerms) {
-      await saf.releasePersistableUriPermission(e.uri);
+      if (e.uri == newOneWayDataSyncDir) continue;
+      try {
+        await saf.releasePersistableUriPermission(e.uri);
+      } catch (_) {}
     }
   }
 

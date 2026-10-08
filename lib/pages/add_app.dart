@@ -248,7 +248,10 @@ class AddAppPageState extends State<AddAppPage> {
             }
           });
         } else {
+          _searchDebounce?.cancel();
+          _activeLiveSearchQuery = '';
           liveResults = {};
+          liveSearching = false;
         }
       });
     }

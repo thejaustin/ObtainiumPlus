@@ -354,7 +354,7 @@ class GitHub extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
   ) async =>
-      '${await getAPIHost(additionalSettings)}/repos${standardUrl.substring('https://${hosts[0]}'.length)}';
+      '${await getAPIHost(additionalSettings)}/repos${Uri.parse(standardUrl).path}';
 
   /// Checks if the repository has been renamed or transferred.
   ///
@@ -851,6 +851,12 @@ class GitHub extends AppSource {
     if (uri == null || uri.pathSegments.length < 2) {
       throw NoReleasesError();
     }
+    // This scraper only knows github.com; never send other hosts' tokens there.
+    if (uri.host != hosts[0] && uri.host != 'www.${hosts[0]}') {
+      throw NoReleasesError();
+    }
+    additionalSettings = Map<String, dynamic>.from(additionalSettings)
+      ..['skipAuth'] = true;
     final owner = uri.pathSegments[0];
     final repo = uri.pathSegments[1];
     final atomUrl = 'https://github.com/$owner/$repo/releases.atom';
@@ -1009,7 +1015,12 @@ class GitHub extends AppSource {
         }
       }
 
-      if (apkUrls.isNotEmpty || additionalSettings['trackOnly'] == true) {
+      final bool hasMatchingApk = filterApks(
+        apkUrls,
+        additionalSettings['apkFilterRegEx'] as String?,
+        additionalSettings['invertAPKFilter'] as bool?,
+      ).isNotEmpty;
+      if (hasMatchingApk || additionalSettings['trackOnly'] == true) {
         talker.info(
           'GitHub Atom fallback scraper succeeded for $owner/$repo (tag: $tag, ${apkUrls.length} APKs)',
         );

@@ -1589,7 +1589,11 @@ class _AppPageState extends State<AppPage> {
               final scheme = defaultStorePackage == 'org.fdroid.fdroid'
                   ? 'fdroid.app://details?id='
                   : 'market://details?id=';
-              await _openInStore(defaultStorePackage, scheme, app!.app.id);
+              try {
+                await _openInStore(defaultStorePackage, scheme, app!.app.id);
+              } catch (e) {
+                if (context.mounted) showError(e, context);
+              }
               return;
             }
             try {

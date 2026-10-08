@@ -347,7 +347,7 @@ class Uptodown extends AppSource {
 DateTime? _parseUptodownDate(String? dateString) {
   if (dateString == null) return null;
   try {
-    return DateFormat('MMM dd, yyyy').parse(dateString);
+    return DateFormat('MMM dd, yyyy', 'en_US').parse(dateString);
   } catch (_) {
     AppLogger.error(
       'Failed to parse Uptodown release date (short format): $dateString',
@@ -356,7 +356,7 @@ DateTime? _parseUptodownDate(String? dateString) {
     );
   }
   try {
-    return DateFormat('MMMM dd, yyyy').parse(dateString);
+    return DateFormat('MMMM dd, yyyy', 'en_US').parse(dateString);
   } catch (_) {
     AppLogger.error(
       'Failed to parse Uptodown release date: $dateString',

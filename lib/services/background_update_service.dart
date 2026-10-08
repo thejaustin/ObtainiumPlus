@@ -19,7 +19,30 @@ import 'package:obtainium/utils/logger.dart';
 class BackgroundUpdateService {
   BackgroundUpdateService._();
 
+  static bool _running = false;
+  static AppsProvider? _activeProvider;
+
   static Future<void> bgUpdateCheck(
+    String taskId,
+    Map<String, dynamic>? initialParams,
+  ) async {
+    if (_running) {
+      talker.debug('BG task $taskId skipped: previous run still active');
+      return;
+    }
+    _running = true;
+    try {
+      await _bgUpdateCheckImpl(taskId, initialParams);
+    } finally {
+      try {
+        _activeProvider?.dispose();
+      } catch (_) {}
+      _activeProvider = null;
+      _running = false;
+    }
+  }
+
+  static Future<void> _bgUpdateCheckImpl(
     String taskId,
     Map<String, dynamic>? initialParams,
   ) async {
@@ -31,6 +54,7 @@ class BackgroundUpdateService {
     LogsProvider logs = LogsProvider();
     NotificationsProvider notificationsProvider = NotificationsProvider();
     AppsProvider appsProvider = AppsProvider(isBg: true);
+    _activeProvider = appsProvider;
     await appsProvider
         .initializationDone; // Ensure directories and apps are loaded
     await notificationsProvider.initialize();

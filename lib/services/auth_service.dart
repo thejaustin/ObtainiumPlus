@@ -135,9 +135,6 @@ class AuthService {
       if (e.message?.contains('UnregisteredOnApiConsole') == true) {
         message =
             'microG error: UnregisteredOnApiConsole. Try signing out and back in to the account in microG Settings.';
-        // Instead of throwing an unhandled exception, return an empty string or a distinct value
-        // that won't crash the app globally, but can still be checked by callers.
-        return '';
       }
       throw ObtainiumError(message);
     } catch (e, stack) {

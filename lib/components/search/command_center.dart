@@ -249,7 +249,7 @@ class _CommandCenterState extends State<CommandCenter> {
         });
       }
     } finally {
-      if (mounted) setState(() => _isSearching = false);
+      if (mounted && _query == query) setState(() => _isSearching = false);
     }
   }
 
@@ -902,13 +902,14 @@ class _CommandCenterState extends State<CommandCenter> {
             runSpacing: 8,
             children: [
               _buildActionChip(Icons.sync, tr('checkUpdates'), () {
+                final ctx = globalNavigatorKey.currentContext;
                 Navigator.pop(context);
                 context
                     .read<AppsProvider>()
                     .checkUpdates(ignoreAppsCheckedAfter: DateTime.now())
                     .catchError((e) {
-                      if (mounted) {
-                        showError(e is Map ? e['errors'] : e, context);
+                      if (ctx != null && ctx.mounted) {
+                        showError(e is Map ? e['errors'] : e, ctx);
                       }
                       return <App>[];
                     });

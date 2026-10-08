@@ -29,6 +29,10 @@ class _TalkerScreenState extends State<TalkerScreen> {
               ) ||
               entry.title.toLowerCase().contains(_searchQuery.toLowerCase());
           if (_filterType == 'ALL') return matchesSearch;
+          if (_filterType == 'EXCEPTION') {
+            return matchesSearch &&
+                (entry.title == 'EXCEPTION' || entry.title == 'ERROR');
+          }
           return matchesSearch && entry.title == _filterType;
         })
         .toList()

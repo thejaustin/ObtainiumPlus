@@ -41,7 +41,12 @@ class SamsungGalaxyStore extends AppSource {
     var names = AppNames(runtimeType.toString(), appId);
 
     var versionElement = document.querySelector('.version-class-placeholder');
-    String version = versionElement?.text.trim() ?? 'Unknown';
+    // The selector does not exist on current pages; fail explicitly rather than
+    // reporting a bogus 'Unknown' version with no APKs.
+    final String? version = versionElement?.text.trim();
+    if (version == null || version.isEmpty) {
+      throw NoVersionError();
+    }
 
     return APKDetails(version, [], names, releaseDate: null, changeLog: null);
   }

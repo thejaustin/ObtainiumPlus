@@ -99,6 +99,7 @@ class SourceHut extends AppSource {
             releaseDate = releaseDateString != null
                 ? DateFormat(
                     'EEE, dd MMM yyyy HH:mm:ss Z',
+                    'en_US',
                   ).parse(releaseDateString)
                 : null;
           } catch (e) {

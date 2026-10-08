@@ -58,11 +58,13 @@ Future<void> _runMassImport(
     builder: (_) => const Center(child: ExpressiveCircularProgressIndicator()),
   );
 
+  var loadingOpen = true;
   try {
     final urlsWithDescriptions = await source.getUrlsWithDescriptions(
       values.values.map((e) => e.toString()).toList(),
     );
     nav.pop(); // close loading
+    loadingOpen = false;
     if (!context.mounted) return;
 
     if (urlsWithDescriptions.isEmpty) {
@@ -98,9 +100,11 @@ Future<void> _runMassImport(
       }
     }
   } catch (e) {
-    try {
-      nav.pop();
-    } catch (_) {} // dismiss loading if still showing
+    if (loadingOpen) {
+      try {
+        nav.pop();
+      } catch (_) {} // dismiss loading if still showing
+    }
     if (context.mounted) showError(e, context);
   }
 }
