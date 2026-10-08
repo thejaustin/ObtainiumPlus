@@ -8,6 +8,8 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/pages/app.dart';
+import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 
 /// A Material 3 Expressive banner displaying live in-flight background operations
@@ -21,8 +23,8 @@ class ActiveOperationsBanner extends StatelessWidget {
     final appsProvider = context.watch<AppsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
 
-    final bool isCheckingUpdates =
-        appsProvider.gettingUpdates || appsProvider.checkingUpdateIds.isNotEmpty;
+    // Single-app checks are already shown by the per-tile spinner.
+    final bool isCheckingUpdates = appsProvider.gettingUpdates;
     final List<AppInMemory> activeDownloads = appsProvider.apps.values
         .where((e) => e.downloadProgress != null)
         .toList();
@@ -196,8 +198,27 @@ class ActiveOperationsBanner extends StatelessWidget {
                             ],
 
                             // Active Downloads & Finishing Installations
+                            if (activeDownloads.length > 2) ...[
+                              _BulkSummaryRow(
+                                total: activeDownloads.length,
+                                fraction: () {
+                                  double sum = 0;
+                                  for (final d in activeDownloads) {
+                                    final p = d.downloadProgress;
+                                    sum += (p == null || p < 0)
+                                        ? 1.0
+                                        : (p / 100.0).clamp(0.0, 1.0);
+                                  }
+                                  return sum / activeDownloads.length;
+                                }(),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Divider(height: 1),
+                              ),
+                            ],
                             for (int i = 0;
-                                i < activeDownloads.length;
+                                i < activeDownloads.length && i < 2;
                                 i++) ...[
                               if (i > 0)
                                 const Padding(
@@ -205,15 +226,31 @@ class ActiveOperationsBanner extends StatelessWidget {
                                       EdgeInsets.symmetric(vertical: 8.0),
                                   child: Divider(height: 1),
                                 ),
-                              _ActiveDownloadTile(
-                                appInMemory: activeDownloads[i],
-                                innerRadius: innerRadius,
-                                onCancel: () {
+                              InkWell(
+                                borderRadius:
+                                    BorderRadius.circular(innerRadius),
+                                onTap: () {
                                   AppHaptics.selectionClick();
-                                  appsProvider.cancelDownload(
-                                    activeDownloads[i].app.id,
+                                  final appId = activeDownloads[i].app.id;
+                                  showDraggableModalBottomSheet(
+                                    context: context,
+                                    builder: (context, controller) => AppPage(
+                                      appId: appId,
+                                      isModal: true,
+                                      scrollController: controller,
+                                    ),
                                   );
                                 },
+                                child: _ActiveDownloadTile(
+                                  appInMemory: activeDownloads[i],
+                                  innerRadius: innerRadius,
+                                  onCancel: () {
+                                    AppHaptics.selectionClick();
+                                    appsProvider.cancelDownload(
+                                      activeDownloads[i].app.id,
+                                    );
+                                  },
+                                ),
                               ),
                             ],
                           ],
@@ -406,6 +443,49 @@ class _ActiveDownloadTile extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// Aggregate row shown when many apps are updating at once.
+class _BulkSummaryRow extends StatelessWidget {
+  final int total;
+  final double fraction;
+
+  const _BulkSummaryRow({required this.total, required this.fraction});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.downloading_rounded, size: 20, color: colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                plural('apps', total),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+              ),
+            ),
+            Text(
+              '${(fraction * 100).toInt()}%',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ExpressiveProgressIndicator(value: fraction, height: 4),
+      ],
     );
   }
 }

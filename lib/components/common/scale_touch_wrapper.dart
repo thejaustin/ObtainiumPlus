@@ -75,27 +75,46 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     _controller.reverse();
   }
 
+  Widget _withGestures(Widget inner) {
+    if (widget.onTap == null && widget.onLongPress == null) return inner;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap == null
+          ? null
+          : () {
+              if (widget.hapticOnTap) AppHaptics.selectionClick();
+              widget.onTap!();
+            },
+      onLongPress: widget.onLongPress == null
+          ? null
+          : () {
+              if (widget.hapticOnLongPress) AppHaptics.mediumImpact();
+              widget.onLongPress!();
+            },
+      child: inner,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final plusEnableAnimations = context.select<PlusSettingsProvider, bool>(
       (p) => p.plusEnableEnhancedAnimations,
     );
 
-    if (!plusEnableAnimations) return widget.child;
+    if (!plusEnableAnimations) return _withGestures(widget.child);
 
-    return Listener(
-      onPointerDown: _onPointerDown,
-      onPointerUp: _onPointerUp,
-      onPointerCancel: _onPointerCancel,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        child: widget.child,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
-        },
+    return _withGestures(
+      Listener(
+        onPointerDown: _onPointerDown,
+        onPointerUp: _onPointerUp,
+        onPointerCancel: _onPointerCancel,
+        child: AnimatedBuilder(
+          animation: _scaleAnimation,
+          child: widget.child,
+          builder: (context, child) {
+            return Transform.scale(scale: _scaleAnimation.value, child: child);
+          },
+        ),
       ),
     );
   }

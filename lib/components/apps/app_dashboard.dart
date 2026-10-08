@@ -136,8 +136,16 @@ class _AppDashboardState extends State<AppDashboard>
 
     final apps = _cachedApps!;
     final totalApps = apps.length;
-    final updateApps = _cachedUpdateApps!;
-    final updatesAvailable = updateApps.length;
+    // In-flight apps are shown by the operations banner and their tiles, so
+    // the quick-access strip only lists apps that are still waiting.
+    final updateApps = _cachedUpdateApps!
+        .where((a) => a.downloadProgress == null)
+        .toList();
+    final updatesAvailable = _cachedUpdateApps!.length;
+    final idleUpdates = updateApps.length;
+    final showRecent = idleUpdates > 0 &&
+        !appsProvider.gettingUpdates &&
+        (totalApps >= 5 || updatesAvailable > 1);
     final pinnedApps = _cachedPinnedApps!;
     final installedCount = _cachedInstalledCount;
 
@@ -216,9 +224,7 @@ class _AppDashboardState extends State<AppDashboard>
           AnimatedSize(
             duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 320 : 0),
             curve: Easing.emphasizedDecelerate,
-            child:
-                (updatesAvailable > 0 &&
-                    (totalApps >= 5 || updatesAvailable > 1))
+            child: showRecent
                 ? _animated(
                     _updatesAnim,
                     Column(
@@ -236,12 +242,23 @@ class _AppDashboardState extends State<AppDashboard>
                                   ),
                             ),
                             const Spacer(),
-                            if (updatesAvailable > 5)
-                              Text(
-                                plural('apps', updatesAvailable),
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(color: colorScheme.primary),
+                            ScaleTouchWrapper(
+                              onTap: () {
+                                AppHaptics.selectionClick();
+                                widget.onFilterChanged('updates');
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                child: Text(
+                                  plural('apps', idleUpdates),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: colorScheme.primary),
+                                ),
                               ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -249,7 +266,7 @@ class _AppDashboardState extends State<AppDashboard>
                           height: 64,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            itemCount: updatesAvailable.clamp(0, 10),
+                            itemCount: idleUpdates.clamp(0, 10),
                             separatorBuilder: (_, __) =>
                                 const SizedBox(width: 12),
                             itemBuilder: (context, index) =>
@@ -270,6 +287,27 @@ class _AppDashboardState extends State<AppDashboard>
     );
   }
 
+  void _openApp(BuildContext context, AppInMemory app) {
+    final provider = context.read<AppsProvider>();
+    AppHaptics.selectionClick();
+    if (provider.selectedAppIds.isNotEmpty) {
+      provider.toggleAppSelection(app.app.id);
+      return;
+    }
+    showDraggableModalBottomSheet(
+      context: context,
+      builder: (context, controller) => AppPage(
+        appId: app.app.id,
+        isModal: true,
+        scrollController: controller,
+      ),
+    );
+  }
+
+  void _toggleSelect(BuildContext context, AppInMemory app) {
+    context.read<AppsProvider>().toggleAppSelection(app.app.id);
+  }
+
   Widget _buildPinnedIcon(
     BuildContext context,
     AppInMemory app,
@@ -279,17 +317,8 @@ class _AppDashboardState extends State<AppDashboard>
     return Tooltip(
       message: app.name,
       child: ScaleTouchWrapper(
-        onTap: () {
-          AppHaptics.selectionClick();
-          showDraggableModalBottomSheet(
-            context: context,
-            builder: (context, controller) => AppPage(
-              appId: app.app.id,
-              isModal: true,
-              scrollController: controller,
-            ),
-          );
-        },
+        onTap: () => _openApp(context, app),
+        onLongPress: () => _toggleSelect(context, app),
         child: Container(
           width: 56,
           height: 56,
@@ -341,17 +370,8 @@ class _AppDashboardState extends State<AppDashboard>
     return Tooltip(
       message: app.name,
       child: ScaleTouchWrapper(
-        onTap: () {
-          AppHaptics.selectionClick();
-          showDraggableModalBottomSheet(
-            context: context,
-            builder: (context, controller) => AppPage(
-              appId: app.app.id,
-              isModal: true,
-              scrollController: controller,
-            ),
-          );
-        },
+        onTap: () => _openApp(context, app),
+        onLongPress: () => _toggleSelect(context, app),
         child: Container(
           width: 60,
           height: 60,
@@ -387,8 +407,8 @@ class _AppDashboardState extends State<AppDashboard>
                       child: Image.memory(
                         app.icon!,
                       fit: BoxFit.cover,
-                      width: 64,
-                      height: 64,
+                      width: 60,
+                      height: 60,
                       filterQuality: FilterQuality.high,
                     ),
                   )

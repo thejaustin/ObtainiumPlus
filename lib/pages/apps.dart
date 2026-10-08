@@ -174,7 +174,6 @@ class AppsPageState extends State<AppsPage>
   );
   Set<String> selectedAppIds = {};
   String? activeTag;
-  DateTime? refreshingSince;
 
   // Inline discover search state
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
@@ -307,11 +306,6 @@ class AppsPageState extends State<AppsPage>
 
     refresh() {
       AppHaptics.lightImpact();
-      if (mounted) {
-        setState(() {
-          refreshingSince = DateTime.now();
-        });
-      }
       var refreshFailed = false;
       return appsProvider
           .checkUpdates()
@@ -325,11 +319,6 @@ class AppsPageState extends State<AppsPage>
               AppHaptics.heavyImpact();
             } else {
               AppHaptics.lightImpact();
-            }
-            if (mounted) {
-              setState(() {
-                refreshingSince = null;
-              });
             }
           });
     }
@@ -763,24 +752,9 @@ class AppsPageState extends State<AppsPage>
               ),
             ),
           ),
-        if (refreshingSince != null || appsProvider.loadingApps)
-          SliverToBoxAdapter(
-            child: ExpressiveProgressIndicator(
-              value: appsProvider.loadingApps
-                  ? null
-                  : appsProvider.apps.values
-                            .where(
-                              (element) =>
-                                  !(element.app.lastUpdateCheck?.isBefore(
-                                        refreshingSince ?? DateTime.now(),
-                                      ) ??
-                                      true),
-                            )
-                            .length /
-                        (appsProvider.apps.isNotEmpty
-                            ? appsProvider.apps.length
-                            : 1),
-            ),
+        if (appsProvider.loadingApps && listedApps.isNotEmpty)
+          const SliverToBoxAdapter(
+            child: ExpressiveProgressIndicator(value: null),
           ),
       ];
     }
@@ -2457,29 +2431,6 @@ class _AppIconWidgetState extends State<AppIconWidget> {
             showOppositeOfPreferredView: true,
             isModal: true,
             scrollController: controller,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _RefreshProgressBar extends StatelessWidget {
-  const _RefreshProgressBar();
-
-  @override
-  Widget build(BuildContext context) {
-    final progressNotifier = context.read<AppsProvider>().refreshProgress;
-    return ValueListenableBuilder<double?>(
-      valueListenable: progressNotifier,
-      builder: (context, refreshProgress, _) {
-        if (refreshProgress == null) {
-          return const SliverToBoxAdapter(child: SizedBox.shrink());
-        }
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(32, 0, 32, 8),
-            child: ExpressiveProgressIndicator(value: refreshProgress),
           ),
         );
       },
