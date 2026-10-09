@@ -257,6 +257,20 @@ class AppInstallService {
     'dev.thejaustin.obtainiumplus/native',
   );
 
+  /// Abandons leftover PackageInstaller sessions for [packageName] so a fresh
+  /// install does not hit STATUS_FAILURE_CONFLICT. Returns how many were cleared.
+  static Future<int> abandonStaleSessions(String packageName) async {
+    try {
+      final int? n = await _nativeChannel.invokeMethod<int>(
+        'abandonStaleSessions',
+        {'packageName': packageName},
+      );
+      return n ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
   static Future<bool> setUpdateOwnership(String packageName) async {
     try {
       final bool? result = await _nativeChannel.invokeMethod<bool>(

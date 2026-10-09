@@ -308,6 +308,26 @@ class MainActivity : FlutterActivity() {
                 "getPackageName" -> {
                     result.success(packageName)
                 }
+                "abandonStaleSessions" -> {
+                    // Abandoned/leaked PackageInstaller sessions for the same package make the
+                    // next commit fail with STATUS_FAILURE_CONFLICT; clear ours before installing.
+                    val target = call.argument<String>("packageName")
+                    var abandoned = 0
+                    try {
+                        val installer = packageManager.packageInstaller
+                        for (info in installer.mySessions) {
+                            if (target == null || info.appPackageName == target) {
+                                try {
+                                    installer.abandonSession(info.sessionId)
+                                    abandoned++
+                                } catch (_: Exception) {
+                                }
+                            }
+                        }
+                    } catch (_: Exception) {
+                    }
+                    result.success(abandoned)
+                }
                 "isUsageAccessGranted" -> {
                     result.success(isUsageAccessGranted())
                 }

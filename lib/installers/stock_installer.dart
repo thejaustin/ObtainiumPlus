@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/string_utils.dart';
@@ -97,6 +98,7 @@ class StockInstaller extends Installer {
     required String appId,
     Map<String, dynamic> installOptions = const {},
   }) async {
+    await AppInstallService.abandonStaleSessions(appId);
     final code = await AndroidPackageInstaller.installApk(
       apkFilePath: apkFilePaths.join(','),
     );
