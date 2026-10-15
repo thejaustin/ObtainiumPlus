@@ -169,11 +169,22 @@ Future<File> downloadFileWithRetry(
     // should be retried like transport failures.
     final bool retryableHTTPError =
         e is HTTPStatusError && (e.statusCode == 429 || e.statusCode >= 500);
+    // dart:io HTTP/2 throws HttpException for 4xx responses instead of
+    // returning a response with a non-2xx status code.  Parse the status
+    // from the message and apply the same retry policy as retryableHTTPError.
+    final bool retryableHttpException = () {
+      if (e is! HttpException) return false;
+      final match = RegExp(r'status code (\d+)').firstMatch(e.message);
+      if (match == null) return true; // no status code → network error, retry
+      final code = int.tryParse(match.group(1) ?? '');
+      if (code == null) return true;
+      return code == 429 || code >= 500;
+    }();
     if (retries > 0 &&
         (e is ClientException ||
             e is SocketException ||
             e is TimeoutException ||
-            e is HttpException ||
+            retryableHttpException ||
             retryableHTTPError)) {
       await Future.delayed(const Duration(seconds: _retryDelaySeconds));
       return await downloadFileWithRetry(
@@ -361,6 +372,17 @@ Future<File> downloadFile(
   );
   final headersClient = probeResponse.value.key;
   final HttpClientResponse headersResponse = probeResponse.value.value;
+  if (headersResponse.statusCode < 200 || headersResponse.statusCode > 299) {
+    await headersResponse.drain<void>().catchError((_) {});
+    headersClient.close();
+    throw HTTPStatusError(
+      headersResponse.statusCode,
+      headersResponse.reasonPhrase.isNotEmpty
+          ? headersResponse.reasonPhrase
+          : tr('errorWithHttpStatusCode',
+              args: [headersResponse.statusCode.toString()]),
+    )..url = url;
+  }
   final resHeaders = headersResponse.headers;
   headersClient.close();
 
@@ -816,25 +838,25 @@ class AppsProvider with ChangeNotifier {
       selectedAppIds.add(appId);
       isSelectionMode = true;
     }
-    notifyListeners();
+    _notifyUiOnly();
   }
 
   void selectAll() {
     selectedAppIds = apps.keys.toSet();
     isSelectionMode = true;
-    notifyListeners();
+    _notifyUiOnly();
   }
 
   void deselectAll() {
     selectedAppIds.clear();
     isSelectionMode = false;
-    notifyListeners();
+    _notifyUiOnly();
   }
 
   void clearSelection() {
     selectedAppIds.clear();
     isSelectionMode = false;
-    notifyListeners();
+    _notifyUiOnly();
   }
 
 
@@ -2076,7 +2098,7 @@ class AppsProvider with ChangeNotifier {
     }
     appsLoadingCompleter = Completer<void>();
     loadingApps = true;
-    notifyListeners();
+    _notifyUiOnly();
     try {
       await _loadAppsPhase1(singleId);
     } finally {
@@ -2313,11 +2335,19 @@ class AppsProvider with ChangeNotifier {
         behaviorSettings.removeOnExternalUninstall) {
       await removeApps(removedAppIds);
     }
-    // Proactively fetch any missing icons in the background without UI blocking
-    for (final id in apps.keys) {
-      if (apps[id]?.icon == null && apps[id]?.installedInfo != null) {
-        unawaited(updateAppIcon(id));
-      }
+    // Proactively fetch any missing icons in the background without UI blocking.
+    // Use a concurrency limit so icon fetches don't all compete at once and
+    // cause rapid-fire notifyListeners calls that saturate the UI thread.
+    final missingIconIds = [
+      for (final id in apps.keys)
+        if (apps[id]?.icon == null && apps[id]?.installedInfo != null) id,
+    ];
+    if (missingIconIds.isNotEmpty) {
+      unawaited(_runWithConcurrencyLimit(
+        missingIconIds,
+        4,
+        (id) => updateAppIcon(id),
+      ));
     }
     notifyListeners();
   }
@@ -2395,7 +2425,7 @@ class AppsProvider with ChangeNotifier {
     _iconBatchScheduled = true;
     Future.microtask(() {
       _iconBatchScheduled = false;
-      notifyListeners();
+      _notifyUiOnly();
     });
   }
 
@@ -2992,6 +3022,12 @@ class AppsProvider with ChangeNotifier {
         .toList();
     return errors;
   }
+
+  /// Notify listeners without bumping [appsRevision] or invalidating the
+  /// pending-update cache.  Use this for high-frequency, non-structural
+  /// changes that don't affect filter/sort order (selection state, icon loads,
+  /// loadingApps flag).  All other callers should use [notifyListeners].
+  void _notifyUiOnly() => super.notifyListeners();
 
   @override
   void notifyListeners() {
