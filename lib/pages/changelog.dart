@@ -311,7 +311,7 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                 ? Icon(Icons.new_releases_rounded, size: 14, color: cs.primary)
                 : null,
             labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: isSelected ? cs.onSecondaryContainer : cs.onSurfaceVariant,
+              color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
             visualDensity: VisualDensity.compact,

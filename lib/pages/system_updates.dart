@@ -169,7 +169,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
           '${update.currentVersion} → ${update.latestVersion}',
           style: TextStyle(
             fontSize: 12,
-            color: Theme.of(context).colorScheme.secondary,
+            color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.w500,
           ),
         ),
