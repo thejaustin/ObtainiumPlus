@@ -179,16 +179,20 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: FilledButton.icon(
-                onPressed: _startDeployment,
-                icon: const Icon(Icons.download_for_offline_outlined),
-                label: Text(tr('startDeployment')),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(60),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+              child: ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: FilledButton.icon(
+                  onPressed: _startDeployment,
+                  icon: const Icon(Icons.download_for_offline_outlined),
+                  label: Text(tr('startDeployment')),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 4,
                   ),
-                  elevation: 4,
                 ),
               ),
             ),
