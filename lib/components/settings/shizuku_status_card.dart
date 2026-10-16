@@ -359,6 +359,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
               ] else if (hasActivePort && !isRunning) ...[
                 const SizedBox(height: 10),
                 ScaleTouchWrapper(
+                  hapticOnPressDown: true,
                   child: Material(
                   color: Colors.transparent,
                   child: InkWell(

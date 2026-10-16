@@ -62,10 +62,8 @@ class PlusFeaturesSection extends StatelessWidget {
               dense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               secondary: ScaleTouchWrapper(
-                onTap: () {
-                  AppHaptics.selectionClick();
-                  showPlusFeaturesSheet(context: context);
-                },
+                hapticOnPressDown: true,
+                onTap: () => showPlusFeaturesSheet(context: context),
                 child: AnimatedSwitcher(
                   duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
                   transitionBuilder: (child, anim) =>
