@@ -238,10 +238,10 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget _buildInfoCard(ColorScheme cs) {
     return Card(
       elevation: 0,
-      color: cs.secondaryContainer.withValues(alpha: AppOpacity.medium),
+      color: cs.primaryContainer.withValues(alpha: AppOpacity.medium),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: cs.secondaryContainer.withValues(alpha: 0.5)),
+        side: BorderSide(color: cs.primary.withValues(alpha: 0.22)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),

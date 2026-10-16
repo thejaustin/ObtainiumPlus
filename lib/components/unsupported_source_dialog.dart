@@ -250,12 +250,12 @@ Widget _buildSourceChip(BuildContext context, String source) {
     decoration: BoxDecoration(
       color: Theme.of(
         context,
-      ).colorScheme.secondaryContainer.withValues(alpha: AppOpacity.half),
+      ).colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
         color: Theme.of(
           context,
-        ).colorScheme.secondary.withValues(alpha: AppOpacity.medium),
+        ).colorScheme.primary.withValues(alpha: AppOpacity.medium),
         width: 1,
       ),
     ),
@@ -265,7 +265,7 @@ Widget _buildSourceChip(BuildContext context, String source) {
         Icon(
           _getSourceIcon(source),
           size: 16,
-          color: Theme.of(context).colorScheme.secondary,
+          color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(width: 6),
         Text(

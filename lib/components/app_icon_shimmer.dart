@@ -13,11 +13,11 @@ class AppIconShimmer extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
     final baseColor = isDark
-        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.65);
+        ? colorScheme.primaryContainer.withValues(alpha: 0.20)
+        : colorScheme.primaryContainer.withValues(alpha: 0.35);
     final highlightColor = isDark
-        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.85)
-        : colorScheme.surface;
+        ? colorScheme.primaryContainer.withValues(alpha: 0.55)
+        : colorScheme.primaryContainer.withValues(alpha: 0.80);
 
     return Shimmer.fromColors(
       baseColor: baseColor,

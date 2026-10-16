@@ -226,10 +226,10 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: cs.secondaryContainer.withValues(alpha: 0.5),
+            color: cs.primaryContainer.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(Icons.extension_rounded, color: cs.secondary),
+          child: Icon(Icons.extension_rounded, color: cs.primary),
         ),
         title: Text(
           plugin.name,

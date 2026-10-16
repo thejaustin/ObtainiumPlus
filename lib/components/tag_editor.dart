@@ -295,11 +295,11 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
     decoration: BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          Theme.of(context).colorScheme.secondaryContainer.withValues(
-            alpha: enableGlass ? 0.3 : 0.5,
+          Theme.of(context).colorScheme.primary.withValues(
+            alpha: enableGlass ? 0.10 : 0.07,
           ),
-          Theme.of(context).colorScheme.secondaryContainer.withValues(
-            alpha: enableGlass ? 0.15 : 0.25,
+          Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
+            alpha: enableGlass ? 0.40 : 0.90,
           ),
         ],
         begin: Alignment.topLeft,

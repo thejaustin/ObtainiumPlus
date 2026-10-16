@@ -1250,9 +1250,15 @@ class _AppPageState extends State<AppPage> {
                       boxShadow: app?.icon != null
                           ? [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 20,
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 24,
                                 offset: const Offset(0, 10),
+                              ),
+                              BoxShadow(
+                                color: colorScheme.primary.withValues(alpha: 0.10),
+                                blurRadius: 32,
+                                spreadRadius: -2,
+                                offset: const Offset(0, 4),
                               ),
                             ]
                           : null,

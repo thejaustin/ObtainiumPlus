@@ -983,7 +983,7 @@ class _DeviceOptimizationSheetContentState
                               height: 24,
                               margin: const EdgeInsets.only(right: 10, top: 1),
                               decoration: BoxDecoration(
-                                color: colorScheme.secondaryContainer,
+                                color: colorScheme.primaryContainer,
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -991,7 +991,7 @@ class _DeviceOptimizationSheetContentState
                                   '${entry.key + 1}',
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSecondaryContainer,
+                                    color: colorScheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
