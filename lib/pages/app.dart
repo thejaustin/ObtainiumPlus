@@ -966,7 +966,7 @@ class _AppPageState extends State<AppPage> {
     }) {
       final actionRadius = CardMetrics.inner(cardRadius).clamp(14.0, 20.0);
       return ScaleTouchWrapper(
-        onTap: onTap,
+        hapticOnPressDown: true,
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -987,10 +987,7 @@ class _AppPageState extends State<AppPage> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(actionRadius),
           child: InkWell(
-            onTap: () {
-              AppHaptics.selectionClick();
-              onTap();
-            },
+            onTap: onTap,
             borderRadius: BorderRadius.circular(actionRadius),
             splashColor: color.withValues(alpha: 0.18),
             highlightColor: color.withValues(alpha: 0.08),

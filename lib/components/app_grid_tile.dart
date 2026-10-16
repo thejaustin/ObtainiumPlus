@@ -237,8 +237,8 @@ class _AppGridTileState extends State<AppGridTile>
 
         return AnimatedScale(
           scale: _isPressed ? 0.96 : 1.0,
-          duration: const Duration(milliseconds: 100),
-          curve: curve,
+          duration: Duration(milliseconds: _isPressed ? 80 : 320),
+          curve: _isPressed ? Curves.easeIn : AppConstants.expressiveSpring,
           child: AnimatedContainer(
             duration: Duration(
               milliseconds: plusSettings.plusEnableEnhancedAnimations
@@ -349,13 +349,12 @@ class _AppGridTileState extends State<AppGridTile>
                       label: _buildSemanticLabel(),
                       button: true,
                       selected: widget.isSelected,
-                      child: Material(
+                      child: Listener(
+                        onPointerDown: (_) => AppHaptics.tapDown(),
+                        child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {
-                            AppHaptics.selectionClick();
-                            widget.onTap();
-                          },
+                          onTap: widget.onTap,
                           onLongPress: () {
                             AppHaptics.mediumImpact();
                             widget.onLongPress();
@@ -390,6 +389,7 @@ class _AppGridTileState extends State<AppGridTile>
                                     cardColor,
                                   ),
                           ),
+                        ),
                         ),
                       ),
                     ),

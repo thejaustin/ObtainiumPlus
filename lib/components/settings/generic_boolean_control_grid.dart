@@ -186,6 +186,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
     final tileRadius = (cardRadius * 0.6).clamp(8.0, 16.0);
 
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: AnimatedContainer(
       duration: Duration(milliseconds: animsEnabled ? 200 : 0),
       curve: Curves.easeOutCubic,

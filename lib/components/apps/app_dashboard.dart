@@ -319,6 +319,7 @@ class _AppDashboardState extends State<AppDashboard>
       child: ScaleTouchWrapper(
         onTap: () => _openApp(context, app),
         onLongPress: () => _toggleSelect(context, app),
+        hapticOnPressDown: true,
         child: Container(
           width: 56,
           height: 56,
@@ -372,6 +373,7 @@ class _AppDashboardState extends State<AppDashboard>
       child: ScaleTouchWrapper(
         onTap: () => _openApp(context, app),
         onLongPress: () => _toggleSelect(context, app),
+        hapticOnPressDown: true,
         child: Container(
           width: 60,
           height: 60,

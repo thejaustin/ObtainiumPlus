@@ -378,6 +378,7 @@ class AppListTile extends StatelessWidget {
           onTap: onTap,
           onLongPress: onLongPress,
           scaleDownFactor: 0.98,
+          hapticOnPressDown: true,
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: isCompact ? 4 : 8,

@@ -557,6 +557,7 @@ class _CommandCenterState extends State<CommandCenter> {
           ),
         ),
         child: ScaleTouchWrapper(
+          hapticOnPressDown: true,
           child: InkWell(
             borderRadius: BorderRadius.circular(itemRadius),
             onTap: () {
@@ -699,6 +700,7 @@ class _CommandCenterState extends State<CommandCenter> {
               color: theme.colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(itemRadius),
               child: ScaleTouchWrapper(
+                hapticOnPressDown: true,
                 child: ListTile(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(itemRadius),
