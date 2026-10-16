@@ -379,13 +379,13 @@ class _AppDashboardState extends State<AppDashboard>
             borderRadius: BorderRadius.circular(itemRadius),
             color: colorScheme.surfaceContainerLow,
             border: Border.all(
-              color: colorScheme.secondary.withValues(alpha: 0.5),
+              color: colorScheme.primary.withValues(alpha: 0.50),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.secondary.withValues(alpha: 0.08),
-                blurRadius: 6,
+                color: colorScheme.primary.withValues(alpha: 0.12),
+                blurRadius: 8,
                 spreadRadius: -1,
               ),
             ],
@@ -467,8 +467,8 @@ class _AppDashboardState extends State<AppDashboard>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                colorScheme.primaryContainer.withValues(alpha: 0.25),
-                colorScheme.tertiaryContainer.withValues(alpha: 0.12),
+                colorScheme.primaryContainer.withValues(alpha: 0.40),
+                colorScheme.tertiaryContainer.withValues(alpha: 0.20),
               ],
             ),
             borderRadius: BorderRadius.circular(itemRadius),

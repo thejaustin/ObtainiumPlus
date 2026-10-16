@@ -143,6 +143,26 @@ class _CustomAppBarState extends State<CustomAppBar> {
           return Stack(
             fit: StackFit.expand,
             children: [
+              // Vivid primary tint gradient when expanded
+              if (curvedT > 0.15)
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: ((curvedT - 0.15) / 0.85).clamp(0.0, 1.0),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            colorScheme.primaryContainer.withValues(alpha: 0.14),
+                            colorScheme.surface.withValues(alpha: 0.0),
+                          ],
+                          stops: const [0.0, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               // Glassmorphic background blur when content is scrolled under
               if (enableGlass && curvedT < 0.8)
                 Positioned.fill(
