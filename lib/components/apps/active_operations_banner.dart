@@ -59,16 +59,16 @@ class ActiveOperationsBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(radius),
                   side: BorderSide(
                     color: glassEnabled
-                        ? colorScheme.onSurface
-                            .withValues(alpha: AppConstants.glassBorderAlpha)
-                        : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        ? colorScheme.primary
+                            .withValues(alpha: 0.22)
+                        : colorScheme.primary.withValues(alpha: 0.30),
                     width: 1,
                   ),
                 ),
                 color: glassEnabled
                     ? colorScheme.surface
                         .withValues(alpha: AppConstants.glassSurfaceAlpha)
-                    : colorScheme.surfaceContainerLow,
+                    : colorScheme.primaryContainer.withValues(alpha: 0.10),
                 child: Stack(
                   children: [
                     // Glass blur layer

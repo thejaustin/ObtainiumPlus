@@ -419,8 +419,8 @@ class AppListTile extends StatelessWidget {
                   color: isSelected
                       ? Theme.of(context).colorScheme.primary
                       : hasUpdate
-                      ? Theme.of(context).colorScheme.secondary.withValues(
-                          alpha: 0.45,
+                      ? Theme.of(context).colorScheme.primary.withValues(
+                          alpha: 0.42,
                         )
                       : appInMemory.app.pinned &&
                             plusSettings.plusPinnedBorderAccent
@@ -874,10 +874,10 @@ class AppListTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
         decoration: BoxDecoration(
-          color: colorScheme.secondary.withValues(alpha: 0.14),
+          color: colorScheme.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
           border: Border.all(
-            color: colorScheme.secondary.withValues(alpha: 0.32),
+            color: colorScheme.primary.withValues(alpha: 0.30),
             width: 0.6,
           ),
         ),
@@ -887,7 +887,7 @@ class AppListTile extends StatelessWidget {
             Icon(
               Icons.arrow_upward_rounded,
               size: 9,
-              color: colorScheme.secondary,
+              color: colorScheme.primary,
             ),
             const SizedBox(width: 3),
             Text(
@@ -895,7 +895,7 @@ class AppListTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.w700,
-                color: colorScheme.secondary,
+                color: colorScheme.primary,
                 fontFamily: 'monospace',
                 letterSpacing: 0.1,
               ),

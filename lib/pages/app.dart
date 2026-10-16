@@ -1209,9 +1209,9 @@ class _AppPageState extends State<AppPage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
+          color: color.withValues(alpha: 0.16),
           borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.32)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
