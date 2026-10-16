@@ -1755,18 +1755,25 @@ class _AppPageState extends State<AppPage> {
               children: [
                 Expanded(child: getInstallOrUpdateButton()),
                   const SizedBox(width: 8.0),
-                  IconButton.filledTonal(
-                    icon: const Icon(Icons.storefront_outlined),
-                    tooltip: tr('openInStore'),
-                  onPressed: app?.app.id != null
-                      ? () {
-                          AppHaptics.selectionClick();
-                          _showStoreChooser(context, app!.app.id);
-                        }
-                      : null,
-                ),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: app?.app.id != null,
+                    scaleDownFactor: 0.92,
+                    child: IconButton.filledTonal(
+                      icon: const Icon(Icons.storefront_outlined),
+                      tooltip: tr('openInStore'),
+                    onPressed: app?.app.id != null
+                        ? () {
+                            AppHaptics.selectionClick();
+                            _showStoreChooser(context, app!.app.id);
+                          }
+                        : null,
+                    ),
+                  ),
                 const SizedBox(width: 4.0),
-                PopupMenuButton<String>(
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.92,
+                  child: PopupMenuButton<String>(
                   tooltip: tr('more'),
                   icon: Icon(
                     Icons.more_vert,
@@ -1912,6 +1919,7 @@ class _AppPageState extends State<AppPage> {
                       ),
                     ];
                   },
+                  ),
                 ),
               ],
             ),
