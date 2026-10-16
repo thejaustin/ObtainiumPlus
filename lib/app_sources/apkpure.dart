@@ -148,6 +148,10 @@ class APKPure extends AppSource {
     );
   }
 
+  // Mobile client User-Agent used by APKPure's own Android app.  Including it
+  // on API calls avoids bot-detection 403s from tapi.pureapk.com.
+  static const String _apiUserAgent = 'APKPure/3.19.39 (Aegon)';
+
   @override
   Future<Map<String, String>?> getRequestHeaders(
     Map<String, dynamic> additionalSettings,
@@ -160,13 +164,14 @@ class APKPure extends AppSource {
       try {
         final androidInfo = await DeviceInfoPlugin().androidInfo;
         return {
+          'User-Agent': _apiUserAgent,
           'Ual-Access-Businessid': 'projecta',
           'Ual-Access-ProjectA':
               '{"device_info":{"os_ver":"${androidInfo.version.sdkInt}"}}',
         };
       } catch (e) {
         AppLogger.error(e, message: 'Failed to get device info headers');
-        return null;
+        return {'User-Agent': _apiUserAgent};
       }
     }
   }

@@ -291,11 +291,25 @@ class HttpService {
 
   ObtainiumError getHttpError(http.Response res) {
     if (res.statusCode == 404) return NoReleasesError();
-    if (res.statusCode == 429 || res.statusCode == 403) {
+    if (res.statusCode == 429) {
       final retryAfter = res.headers['retry-after'];
       final secs = retryAfter != null ? int.tryParse(retryAfter) : null;
       if (secs != null) return RateLimitError((secs / 60).ceil());
       return RateLimitError(1);
+    }
+    // 403 Forbidden: treat as a rate limit only when the server says so via
+    // Retry-After.  Otherwise classify as a hard HTTP error so batch update
+    // loops don't back off and the user sees "403 Forbidden" (e.g. Cloudflare
+    // bot-protection) rather than the misleading "try again in 1 minute".
+    if (res.statusCode == 403) {
+      final retryAfter = res.headers['retry-after'];
+      final secs = retryAfter != null ? int.tryParse(retryAfter) : null;
+      if (secs != null) return RateLimitError((secs / 60).ceil());
+      final reason =
+          res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty
+              ? res.reasonPhrase!
+              : tr('errorWithHttpStatusCode', args: ['403']);
+      return ObtainiumHttpError(403, reason);
     }
     return ObtainiumError(
       (res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty)
