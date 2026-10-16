@@ -16,9 +16,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
-import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/utils/logger.dart';
 
 /// App installation and update settings
 class InstallationSection extends StatefulWidget {

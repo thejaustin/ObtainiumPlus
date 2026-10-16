@@ -209,13 +209,14 @@ abstract class AppSource {
 
   /// Some additional data may be needed for Apps regardless of Source
   List<List<GeneratedFormItem>> get _commonAppSettingFormItems => [
-    [GeneratedFormSwitch('trackOnly', label: tr('trackOnly'))],
+    [GeneratedFormSwitch('trackOnly', label: tr('trackOnly'), tooltip: tr('trackOnlyTooltip'))],
     [
       GeneratedFormTextField(
         'versionExtractionRegEx',
         label: tr('trimVersionString'),
         required: false,
         additionalValidators: [(value) => regExValidator(value)],
+        tooltip: tr('trimVersionStringTooltip'),
       ),
     ],
     [
@@ -224,6 +225,7 @@ abstract class AppSource {
         label: tr('matchGroupToUseForX', args: [tr('trimVersionString')]),
         required: false,
         hint: '\$0',
+        tooltip: tr('matchGroupToUseTooltip'),
       ),
     ],
     [
@@ -251,6 +253,7 @@ abstract class AppSource {
             return regExValidator(value);
           },
         ],
+        tooltip: tr('apkFilterRegExTooltip'),
       ),
     ],
     [
