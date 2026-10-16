@@ -587,7 +587,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       indicatorColor: colorScheme.primaryContainer,
       indicatorShape: const StadiumBorder(),
       labelBehavior: labelBehavior,
-      animationDuration: const Duration(milliseconds: 300),
+      animationDuration: Duration(
+        milliseconds: plusSettings.plusEnableEnhancedAnimations ? 400 : 250,
+      ),
       destinations: pages
           .map(
             (e) => NavigationDestination(
@@ -620,26 +622,57 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(32),
               child: ConditionalBlur(
                 enabled: enableGlass,
-                sigma: 16,
+                sigma: 20,
                 child: Container(
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHigh.withValues(
-                      alpha: enableGlass ? 0.82 : 1.0,
+                      alpha: enableGlass ? 0.72 : 1.0,
                     ),
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
                       color: colorScheme.outlineVariant.withValues(
-                        alpha: enableGlass ? 0.3 : 0.15,
+                        alpha: enableGlass ? 0.35 : 0.18,
                       ),
                     ),
                     boxShadow: [
+                      // Ambient shadow — wide and soft
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 20,
-                        spreadRadius: -2,
-                        offset: const Offset(0, 8),
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 36,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
                       ),
+                      // Key shadow — tighter, more directional
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.14),
+                        blurRadius: 14,
+                        spreadRadius: -4,
+                        offset: const Offset(0, 10),
+                      ),
+                      // Tinted glow when frosted
+                      if (enableGlass)
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.06),
+                          blurRadius: 28,
+                          spreadRadius: 2,
+                          offset: Offset.zero,
+                        ),
                     ],
+                  ),
+                  // Inner top-edge highlight — the "layered" depth layer
+                  foregroundDecoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colorScheme.onSurface.withValues(
+                          alpha: enableGlass ? 0.06 : 0.04,
+                        ),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.38],
+                    ),
                   ),
                   child: wrapWithFocus(navBar),
                 ),
@@ -656,9 +689,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: ClipRRect(
         child: ConditionalBlur(
           enabled: enableGlass,
-          sigma: 12,
+          sigma: 16,
           child: Container(
-            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.8 : 1.0),
+            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
             child: wrapWithFocus(
               Column(
                 mainAxisSize: MainAxisSize.min,
