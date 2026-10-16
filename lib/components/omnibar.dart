@@ -783,7 +783,7 @@ class AppActionsFAB extends StatelessWidget {
     }
 
     return ScaleTouchWrapper(
-      onTap: handleTap,
+      hapticOnPressDown: true,
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),

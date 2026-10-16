@@ -111,6 +111,7 @@ class BooleanControlGrid extends StatelessWidget {
     required Function(bool) onChanged,
   }) {
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainer,

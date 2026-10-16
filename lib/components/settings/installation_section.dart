@@ -507,7 +507,7 @@ class _InstallationSectionState extends State<InstallationSection>
 
       return ScaleTouchWrapper(
         scaleDownFactor: 0.98,
-        onTap: enabled ? onActivate : null,
+        hapticOnPressDown: enabled,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(

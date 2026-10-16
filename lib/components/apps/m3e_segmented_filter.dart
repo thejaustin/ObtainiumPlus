@@ -208,7 +208,7 @@ class _SegmentItem extends StatelessWidget {
 
     return ScaleTouchWrapper(
       scaleDownFactor: 0.94,
-      onTap: onTap,
+      hapticOnPressDown: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,

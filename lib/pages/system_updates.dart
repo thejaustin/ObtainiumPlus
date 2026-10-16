@@ -120,10 +120,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
           },
         ),
         floatingActionButton: ScaleTouchWrapper(
-          onTap: () {
-            AppHaptics.selectionClick();
-            _startScan();
-          },
+          hapticOnPressDown: true,
           scaleDownFactor: 0.95,
           child: FloatingActionButton(
             onPressed: () {

@@ -230,10 +230,8 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
     required VoidCallback onTap,
   }) {
     return ScaleTouchWrapper(
-      onTap: () {
-        AppHaptics.selectionClick();
-        onTap();
-      },
+      hapticOnPressDown: true,
+      onTap: onTap,
       child: ListTile(
         leading: Icon(
           icon,
@@ -270,8 +268,8 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
     required Future<void> Function() onTap,
   }) {
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       onTap: () async {
-        AppHaptics.lightImpact();
         try {
           await onTap();
         } catch (_) {

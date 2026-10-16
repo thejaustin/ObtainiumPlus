@@ -242,6 +242,7 @@ class _LayoutModeButton extends StatelessWidget {
         .plusEnableEnhancedAnimations;
 
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(

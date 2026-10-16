@@ -183,16 +183,7 @@ Future<List<String>?> showTagEditor({
                                 const SizedBox(width: 8),
                                 ScaleTouchWrapper(
                                   scaleDownFactor: 0.92,
-                                  onTap: () {
-                                    if (_controller.text.trim().isNotEmpty) {
-                                      setSheetState(() {
-                                        selectedTags.add(
-                                          _controller.text.trim(),
-                                        );
-                                        _controller.clear();
-                                      });
-                                    }
-                                  },
+                                  hapticOnPressDown: true,
                                   child: IconButton.filled(
                                     icon: const Icon(Icons.add),
                                     tooltip: tr('add'),

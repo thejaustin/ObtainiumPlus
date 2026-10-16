@@ -243,10 +243,8 @@ class _AppDashboardState extends State<AppDashboard>
                             ),
                             const Spacer(),
                             ScaleTouchWrapper(
-                              onTap: () {
-                                AppHaptics.selectionClick();
-                                widget.onFilterChanged('updates');
-                              },
+                              hapticOnPressDown: true,
+                              onTap: () => widget.onFilterChanged('updates'),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 4,

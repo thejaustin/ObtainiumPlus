@@ -42,8 +42,8 @@ class NotificationSettingsSection extends StatelessWidget {
         final List<Widget> children = [
           if (_matches(tr('notificationSettings')))
             ScaleTouchWrapper(
+              hapticOnPressDown: true,
               onTap: () async {
-                AppHaptics.selectionClick();
                 try {
                   await AppInstallService.openNotificationSettings(
                     AppConstants.obtainiumPlusId,
@@ -143,10 +143,8 @@ class NotificationSettingsSection extends StatelessWidget {
                           child: settings.plusEnableNotificationQuietHours &&
                                   _matches(tr('quietHoursSchedule'))
                               ? ScaleTouchWrapper(
-                                  onTap: () {
-                                    AppHaptics.selectionClick();
-                                    _showQuietHoursDialog(context, settings);
-                                  },
+                                  hapticOnPressDown: true,
+                                  onTap: () => _showQuietHoursDialog(context, settings),
                                   child: ListTile(
                                     leading: Icon(
                                       Icons.schedule_outlined,

@@ -247,7 +247,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                           child: ExpressiveCircularProgressIndicator(strokeWidth: 2.5),
                         )
                       : ScaleTouchWrapper(
-                          onTap: _runBenchmark,
+                          hapticOnPressDown: true,
                           child: FilledButton.tonal(
                             onPressed: _runBenchmark,
                             style: FilledButton.styleFrom(

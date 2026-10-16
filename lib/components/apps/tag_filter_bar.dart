@@ -40,10 +40,7 @@ class TagFilterBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 3.5),
               child: ScaleTouchWrapper(
                 scaleDownFactor: 0.94,
-                onTap: () {
-                  AppHaptics.selectionClick();
-                  onTagSelected(tag);
-                },
+                hapticOnPressDown: true,
                 child: FilterChip(
                   label: Text(tag ?? tr('all')),
                   selected: isSelected,
