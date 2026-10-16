@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -1099,35 +1100,39 @@ class AppIconActionBadge extends StatelessWidget {
           }
         }
 
-        return Semantics(
-          button: true,
-          label: label,
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: Material(
-              type: MaterialType.transparency,
-              child: InkResponse(
-                onTap: tap,
-                customBorder: const CircleBorder(),
-                radius: 22,
-                child: Center(
-                  child: Tooltip(
-                    message: label,
-                    child: Container(
-                      width: d,
-                      height: d,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: bg,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: border, width: 2),
-                      ),
-                      child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: animate ? 250 : 0),
-                        child: KeyedSubtree(
-                          key: ValueKey(stateName),
-                          child: face,
+        return ScaleTouchWrapper(
+          hapticOnPressDown: tap != null,
+          scaleDownFactor: 0.85,
+          child: Semantics(
+            button: true,
+            label: label,
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkResponse(
+                  onTap: tap,
+                  customBorder: const CircleBorder(),
+                  radius: 22,
+                  child: Center(
+                    child: Tooltip(
+                      message: label,
+                      child: Container(
+                        width: d,
+                        height: d,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: bg,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: border, width: 2),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: Duration(milliseconds: animate ? 250 : 0),
+                          child: KeyedSubtree(
+                            key: ValueKey(stateName),
+                            child: face,
+                          ),
                         ),
                       ),
                     ),

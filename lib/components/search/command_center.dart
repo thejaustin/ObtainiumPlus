@@ -435,13 +435,30 @@ class _CommandCenterState extends State<CommandCenter> {
 
                     // Content
                     Expanded(
-                      child: _query.isEmpty
-                          ? AnimatedSwitcher(
-                              duration: Duration(milliseconds: animsEnabled ? 300 : 0),
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: animsEnabled ? 260 : 0),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.04),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            )),
+                            child: child,
+                          ),
+                        ),
+                        child: _query.isEmpty
+                          ? KeyedSubtree(
+                              key: const ValueKey('initial'),
                               child: _buildInitialState(),
                             )
-                          : AnimatedSwitcher(
-                              duration: Duration(milliseconds: animsEnabled ? 300 : 0),
+                          : KeyedSubtree(
+                              key: const ValueKey('results'),
                               child: ListView(
                                 keyboardDismissBehavior:
                                     ScrollViewKeyboardDismissBehavior.onDrag,
@@ -511,6 +528,7 @@ class _CommandCenterState extends State<CommandCenter> {
                                 ],
                               ),
                             ),
+                      ),
                     ),
                   ],
                 ),
