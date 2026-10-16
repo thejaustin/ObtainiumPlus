@@ -9,6 +9,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 // ignore: must_be_immutable
 class SelectionModal extends StatefulWidget {
@@ -316,16 +317,19 @@ class _SelectionModalState extends State<SelectionModal> {
             });
           }
 
-          var urlLink = GestureDetector(
-            onTap: !widget.titlesAreLinks
-                ? null
-                : () {
-                    launchUrlString(
-                      entry.key,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
-            child: Column(
+          var urlLink = ScaleTouchWrapper(
+            hapticOnPressDown: widget.titlesAreLinks,
+            scaleDownFactor: 0.96,
+            child: GestureDetector(
+              onTap: !widget.titlesAreLinks
+                  ? null
+                  : () {
+                      launchUrlString(
+                        entry.key,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -348,6 +352,7 @@ class _SelectionModalState extends State<SelectionModal> {
                     ),
                   ),
               ],
+            ),
             ),
           );
 

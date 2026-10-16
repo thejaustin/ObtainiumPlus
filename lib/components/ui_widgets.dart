@@ -14,6 +14,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 Future<void> copyToClipboard(BuildContext context, String text) async {
   await Clipboard.setData(ClipboardData(text: text));
@@ -433,17 +434,21 @@ class LinkText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       link: true,
-      child: TvFocusRing(
-        borderRadius: 4,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(4),
-          onTap: () => unawaited(
-            launchUrlString(url, mode: LaunchMode.externalApplication),
-          ),
-          child: Text(
-            text,
-            style: (style ?? const TextStyle()).copyWith(
-              decoration: TextDecoration.underline,
+      child: ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.93,
+        child: TvFocusRing(
+          borderRadius: 4,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(4),
+            onTap: () => unawaited(
+              launchUrlString(url, mode: LaunchMode.externalApplication),
+            ),
+            child: Text(
+              text,
+              style: (style ?? const TextStyle()).copyWith(
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
         ),
