@@ -932,7 +932,10 @@ class DiscoverPageState extends State<DiscoverPage> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: FilledButton.tonal(
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: !_loadingMore,
+                  scaleDownFactor: 0.96,
+                  child: FilledButton.tonal(
                   onPressed: _loadingMore ? null : _loadMoreBrowse,
                   child: _loadingMore
                       ? const SizedBox(
@@ -943,6 +946,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                           ),
                         )
                       : Text(tr('loadMore')),
+                ),
                 ),
               ),
             ),
