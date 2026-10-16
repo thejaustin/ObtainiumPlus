@@ -171,7 +171,7 @@ class _AppGridTileState extends State<AppGridTile>
             alpha: AppConstants.glassSurfaceAlpha,
           );
         } else if (widget.hasUpdate) {
-          cardColor = colorScheme.secondaryContainer.withValues(
+          cardColor = colorScheme.primaryContainer.withValues(
             alpha: isDark ? 0.22 : 0.14,
           );
         } else if (widget.appInMemory.app.pinned) {
@@ -667,13 +667,13 @@ class _AppGridTileState extends State<AppGridTile>
         : tr('update');
     final fg = widget.isAmbiguous
         ? colorScheme.onTertiaryContainer
-        : colorScheme.onSecondaryContainer;
+        : colorScheme.onPrimaryContainer;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: widget.isAmbiguous
             ? colorScheme.tertiaryContainer
-            : colorScheme.secondaryContainer,
+            : colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
       ),
       child: Text(

@@ -504,15 +504,22 @@ class _StatisticsPageState extends State<StatisticsPage>
                     enabled: plusSettings.plusEnableGlassmorphism,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerLow.withValues(
-                          alpha: plusSettings.plusEnableGlassmorphism ? 0.5 : 1.0,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            item.color.withValues(
+                              alpha: plusSettings.plusEnableGlassmorphism ? 0.07 : 0.09,
+                            ),
+                            theme.colorScheme.surfaceContainerLow.withValues(
+                              alpha: plusSettings.plusEnableGlassmorphism ? 0.45 : 1.0,
+                            ),
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(itemRadius),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(
-                            alpha: plusSettings.plusEnableGlassmorphism
-                                ? 0.12
-                                : 0.08,
+                          color: item.color.withValues(
+                            alpha: plusSettings.plusEnableGlassmorphism ? 0.18 : 0.14,
                           ),
                           width: 1.2,
                         ),
@@ -526,7 +533,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: item.color.withValues(alpha: 0.1),
+                                color: item.color.withValues(alpha: 0.16),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -610,10 +617,17 @@ class _StatisticsPageState extends State<StatisticsPage>
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: bgColor,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primaryColor.withValues(alpha: 0.06),
+                bgColor,
+              ],
+            ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.05),
+              color: primaryColor.withValues(alpha: 0.16),
             ),
           ),
           child: CustomPaint(
@@ -726,7 +740,7 @@ class _ActivityPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          color.withValues(alpha: AppOpacity.medium),
+          color.withValues(alpha: 0.42),
           color.withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromLTRB(0, 0, size.width, size.height));

@@ -397,7 +397,7 @@ class AppListTile extends StatelessWidget {
                         context,
                       ).colorScheme.primaryContainer.withValues(alpha: 0.7)
                     : hasUpdate
-                    ? Theme.of(context).colorScheme.secondaryContainer
+                    ? Theme.of(context).colorScheme.primaryContainer
                           .withValues(
                             alpha: plusSettings.plusEnableGlassmorphism
                                 ? 0.35

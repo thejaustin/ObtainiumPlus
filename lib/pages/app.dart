@@ -683,7 +683,7 @@ class _AppPageState extends State<AppPage> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondaryContainer,
+                                color: Theme.of(context).colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                               ),
                               child: Row(
@@ -692,7 +692,7 @@ class _AppPageState extends State<AppPage> {
                                   Icon(
                                     Icons.arrow_upward_rounded,
                                     size: 14,
-                                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -967,8 +967,24 @@ class _AppPageState extends State<AppPage> {
       final actionRadius = CardMetrics.inner(cardRadius).clamp(14.0, 20.0);
       return ScaleTouchWrapper(
         onTap: onTap,
-        child: Material(
-          color: color.withValues(alpha: 0.10),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.16),
+                color.withValues(alpha: 0.06),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(actionRadius),
+            border: Border.all(
+              color: color.withValues(alpha: 0.22),
+              width: 0.8,
+            ),
+          ),
+          child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(actionRadius),
           child: InkWell(
             onTap: () {
@@ -998,6 +1014,7 @@ class _AppPageState extends State<AppPage> {
               ),
             ),
           ),
+        ),
         ),
       );
     }

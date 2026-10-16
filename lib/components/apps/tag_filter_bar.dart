@@ -52,11 +52,11 @@ class TagFilterBar extends StatelessWidget {
                     onTagSelected(tag);
                   },
                   shape: const StadiumBorder(),
-                  selectedColor: colorScheme.secondaryContainer,
-                  checkmarkColor: colorScheme.onSecondaryContainer,
+                  selectedColor: colorScheme.primaryContainer,
+                  checkmarkColor: colorScheme.onPrimaryContainer,
                   side: BorderSide(
                     color: isSelected
-                        ? colorScheme.secondary.withValues(alpha: 0.6)
+                        ? colorScheme.primary.withValues(alpha: 0.6)
                         : colorScheme.outlineVariant.withValues(alpha: 0.35),
                     width: isSelected ? 1.2 : 0.8,
                   ),

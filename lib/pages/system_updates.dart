@@ -154,8 +154,8 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       child: ExpansionTile(
         key: PageStorageKey<String>('system_update:${update.packageName}'),
         leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
           child: Text(
             update.name.isNotEmpty ? update.name[0].toUpperCase() : '?',
             style: const TextStyle(fontWeight: FontWeight.bold),

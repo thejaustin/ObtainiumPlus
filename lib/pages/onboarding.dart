@@ -454,28 +454,28 @@ class _OnboardingPageState extends State<OnboardingPage>
               Padding(
                 padding: const EdgeInsets.only(top: 0),
                 child: Card(
-                  color: colorScheme.secondaryContainer,
+                  color: colorScheme.primaryContainer,
                   elevation: 0,
                   margin: EdgeInsets.zero,
                   child: ListTile(
                     leading: Icon(
                       Icons.key_outlined,
                       size: 20,
-                      color: colorScheme.onSecondaryContainer,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                     title: Text(
                       tr('githubTokenOptional'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: colorScheme.onSecondaryContainer,
+                        color: colorScheme.onPrimaryContainer,
                       ),
                     ),
                     subtitle: Text(
                       tr('githubTokenSettingsNote'),
                       style: TextStyle(
                         fontSize: 11,
-                        color: colorScheme.onSecondaryContainer,
+                        color: colorScheme.onPrimaryContainer,
                       ),
                     ),
                     dense: true,

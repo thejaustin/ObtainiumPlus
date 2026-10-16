@@ -52,7 +52,7 @@ class _SideloadingNoticeState extends State<SideloadingNotice> {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      color: colorScheme.secondaryContainer,
+      color: colorScheme.primaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -62,7 +62,7 @@ class _SideloadingNoticeState extends State<SideloadingNotice> {
               children: [
                 Icon(
                   Icons.info_outline_rounded,
-                  color: colorScheme.onSecondaryContainer,
+                  color: colorScheme.onPrimaryContainer,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -70,7 +70,7 @@ class _SideloadingNoticeState extends State<SideloadingNotice> {
                     tr('sideloadingNoticeTitle'),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.onSecondaryContainer,
+                      color: colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
@@ -79,7 +79,7 @@ class _SideloadingNoticeState extends State<SideloadingNotice> {
             const SizedBox(height: 8),
             Text(
               tr('sideloadingNoticeBody'),
-              style: TextStyle(color: colorScheme.onSecondaryContainer),
+              style: TextStyle(color: colorScheme.onPrimaryContainer),
             ),
             const SizedBox(height: 8),
             Row(

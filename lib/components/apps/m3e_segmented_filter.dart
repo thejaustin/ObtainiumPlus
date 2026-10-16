@@ -105,7 +105,7 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                 width: segmentWidth,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer,
+                    color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(innerPillRadius),
                     boxShadow: [
                       BoxShadow(
