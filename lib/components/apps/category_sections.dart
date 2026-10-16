@@ -413,22 +413,29 @@ class CategorySections extends StatelessWidget {
           ],
         ),
         children: appsInCategory
+            .asMap()
+            .entries
             .map(
-              (app) => AppListTile(
-                appInMemory: app,
-                hasUpdate: app.app.installedVersion == null
-                    ? app.app.additionalSettings['trackOnly'] != true
-                    : pendingUpdates.contains(app.app.id),
-                selected: selectedAppIds.contains(app.app.id),
+              (entry) => AppListTile(
+                appInMemory: entry.value,
+                hasUpdate: entry.value.app.installedVersion == null
+                    ? entry.value.app.additionalSettings['trackOnly'] != true
+                    : pendingUpdates.contains(entry.value.app.id),
+                selected: selectedAppIds.contains(entry.value.app.id),
+                entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                    ? Duration(
+                        milliseconds: entry.key < 8 ? entry.key * 25 : 0,
+                      )
+                    : Duration.zero,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
-                    toggleAppSelected(app.app);
+                    toggleAppSelected(entry.value.app);
                   } else {
-                    onAppTap(app.app);
+                    onAppTap(entry.value.app);
                   }
                 },
-                onLongPress: () => toggleAppSelected(app.app),
-                onShowChanges: getChangeLogFn(context, app.app),
+                onLongPress: () => toggleAppSelected(entry.value.app),
+                onShowChanges: getChangeLogFn(context, entry.value.app),
               ),
             )
             .toList(),

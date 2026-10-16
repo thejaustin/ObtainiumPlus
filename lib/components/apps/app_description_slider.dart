@@ -263,7 +263,6 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
               ),
             ),
           ),
-          ),
         );
       },
     );
