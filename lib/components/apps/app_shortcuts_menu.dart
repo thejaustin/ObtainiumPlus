@@ -16,6 +16,7 @@ import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 /// Context menu sheet shown on long-press of an app in grid or list view.
 void showAppShortcutsMenu(
@@ -84,136 +85,186 @@ void showAppShortcutsMenu(
               ),
               const Divider(),
 
-              ListTile(
-                leading: const Icon(Icons.launch_outlined),
-                title: Text(tr('launch')),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  AppInstallService.openApp(appId);
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.launch_outlined),
+                  title: Text(tr('launch')),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    AppInstallService.openApp(appId);
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: const Icon(Icons.system_update_outlined),
-                title: Text(tr('update')),
-                enabled:
+              ScaleTouchWrapper(
+                hapticOnPressDown:
                     appInMemory.app.installedVersion != null &&
                     AppUpdateService.areVersionsDifferent(
                       appInMemory.app,
                       appInMemory.app.installedVersion,
                       appInMemory.app.latestVersion,
                     ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  appsProvider.downloadAndInstallLatestApps([appId], context);
-                },
-              ),
-
-              ListTile(
-                leading: Icon(
-                  appInMemory.app.pinned
-                      ? Icons.push_pin_outlined
-                      : Icons.push_pin,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.system_update_outlined),
+                  title: Text(tr('update')),
+                  enabled:
+                      appInMemory.app.installedVersion != null &&
+                      AppUpdateService.areVersionsDifferent(
+                        appInMemory.app,
+                        appInMemory.app.installedVersion,
+                        appInMemory.app.latestVersion,
+                      ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    appsProvider.downloadAndInstallLatestApps([appId], context);
+                  },
                 ),
-                title: Text(appInMemory.app.pinned ? tr('unpin') : tr('pin')),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  appInMemory.app.pinned = !appInMemory.app.pinned;
-                  appsProvider.saveApps([appInMemory.app]);
-                },
               ),
 
-              ListTile(
-                leading: const Icon(Icons.category_outlined),
-                title: Text(tr('categorize')),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  final newCategories = await showDialog<Set<String>>(
-                    context: context,
-                    builder: (dCtx) => GlassDialog(
-                      title: tr('categorize'),
-                      icon: Icons.category_outlined,
-                      content: SizedBox(
-                        width: double.maxFinite,
-                        child: SingleChildScrollView(
-                          child: CategoryEditorSelector(
-                            alignment: WrapAlignment.start,
-                            preselected: appInMemory.app.categories.toSet(),
-                            onSelected: (categories) =>
-                                Navigator.pop(dCtx, categories),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: Icon(
+                    appInMemory.app.pinned
+                        ? Icons.push_pin_outlined
+                        : Icons.push_pin,
+                  ),
+                  title: Text(appInMemory.app.pinned ? tr('unpin') : tr('pin')),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    appInMemory.app.pinned = !appInMemory.app.pinned;
+                    appsProvider.saveApps([appInMemory.app]);
+                  },
+                ),
+              ),
+
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.category_outlined),
+                  title: Text(tr('categorize')),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final newCategories = await showDialog<Set<String>>(
+                      context: context,
+                      builder: (dCtx) => GlassDialog(
+                        title: tr('categorize'),
+                        icon: Icons.category_outlined,
+                        content: SizedBox(
+                          width: double.maxFinite,
+                          child: SingleChildScrollView(
+                            child: CategoryEditorSelector(
+                              alignment: WrapAlignment.start,
+                              preselected: appInMemory.app.categories.toSet(),
+                              onSelected: (categories) =>
+                                  Navigator.pop(dCtx, categories),
+                            ),
                           ),
                         ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dCtx),
+                            child: Text(tr('cancel')),
+                          ),
+                        ],
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dCtx),
-                          child: Text(tr('cancel')),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (newCategories != null) {
-                    appInMemory.app.categories = newCategories.toList();
-                    appsProvider.saveApps([appInMemory.app]);
-                  }
-                },
+                    );
+                    if (newCategories != null) {
+                      appInMemory.app.categories = newCategories.toList();
+                      appsProvider.saveApps([appInMemory.app]);
+                    }
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: const Icon(Icons.label_outline),
-                title: Text(tr('tags')),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showTagEditorStandalone(context, appInMemory);
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.label_outline),
+                  title: Text(tr('tags')),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showTagEditorStandalone(context, appInMemory);
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: const Icon(Icons.settings_outlined),
-                title: Text(tr('editAppSettings')),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  showDraggableModalBottomSheet(
-                    context: context,
-                    builder: (context, controller) => AppPage(
-                      appId: appId,
-                      isModal: true,
-                      scrollController: controller,
-                    ),
-                  );
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.settings_outlined),
+                  title: Text(tr('editAppSettings')),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    showDraggableModalBottomSheet(
+                      context: context,
+                      builder: (context, controller) => AppPage(
+                        appId: appId,
+                        isModal: true,
+                        scrollController: controller,
+                      ),
+                    );
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: const Icon(Icons.share_outlined),
-                title: Text(tr('share')),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Share.share(appUrl);
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.share_outlined),
+                  title: Text(tr('share')),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Share.share(appUrl);
+                  },
+                ),
               ),
 
               const Divider(),
 
-              ListTile(
-                leading: const Icon(Icons.select_all_outlined),
-                title: Text(tr('select')),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  onToggleSelected();
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: const Icon(Icons.select_all_outlined),
+                  title: Text(tr('select')),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    onToggleSelected();
+                  },
+                ),
               ),
 
-              ListTile(
-                leading: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
-                title: Text(
-                  tr('remove'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.97,
+                child: ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  title: Text(
+                    tr('remove'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    appsProvider.removeAppsWithModal(
+                      context,
+                      [appInMemory.app],
+                    );
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  appsProvider.removeAppsWithModal(context, [appInMemory.app]);
-                },
               ),
 
               const SizedBox(height: 8),
