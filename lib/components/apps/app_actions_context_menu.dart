@@ -10,6 +10,7 @@ import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/device_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class AppActionsContextMenu {
   static void show(
@@ -92,67 +93,92 @@ class AppActionsContextMenu {
                 const Divider(height: 1),
 
                 // Actions
-                ListTile(
-                  leading: const Icon(Icons.download_rounded),
-                  title: Text(tr('update')),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    Navigator.pop(context);
-                    context.read<AppsProvider>().downloadAndInstallLatestApps([
-                      appInMemory.app.id,
-                    ], context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.edit_rounded),
-                  title: Text(tr('editApp')),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    Navigator.pop(context);
-                    showAddAppSheet(
-                      context: context,
-                      appId: appInMemory.app.id,
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    appInMemory.app.pinned
-                        ? Icons.push_pin_rounded
-                        : Icons.push_pin_outlined,
-                    color: theme.colorScheme.primary,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: const Icon(Icons.download_rounded),
+                    title: Text(tr('update')),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(context);
+                      context.read<AppsProvider>().downloadAndInstallLatestApps(
+                        [appInMemory.app.id],
+                        context,
+                      );
+                    },
                   ),
-                  title: Text(appInMemory.app.pinned ? tr('unpin') : tr('pin')),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    Navigator.pop(context);
-                    final appsProvider = context.read<AppsProvider>();
-                    appInMemory.app.pinned = !appInMemory.app.pinned;
-                    appsProvider.saveApps([appInMemory.app]);
-                  },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.settings_outlined),
-                  title: Text(tr('systemSettings')),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    Navigator.pop(context);
-                    context.read<AppsProvider>().openAppSettings(
-                      appInMemory.app.id,
-                    );
-                  },
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: const Icon(Icons.edit_rounded),
+                    title: Text(tr('editApp')),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(context);
+                      showAddAppSheet(
+                        context: context,
+                        appId: appInMemory.app.id,
+                      );
+                    },
+                  ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.copy_rounded),
-                  title: Text(tr('copyAppURL')),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    Navigator.pop(context);
-                    Clipboard.setData(ClipboardData(text: appInMemory.app.url));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(tr('copiedToClipboard'))),
-                    );
-                  },
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: Icon(
+                      appInMemory.app.pinned
+                          ? Icons.push_pin_rounded
+                          : Icons.push_pin_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    title: Text(
+                      appInMemory.app.pinned ? tr('unpin') : tr('pin'),
+                    ),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(context);
+                      final appsProvider = context.read<AppsProvider>();
+                      appInMemory.app.pinned = !appInMemory.app.pinned;
+                      appsProvider.saveApps([appInMemory.app]);
+                    },
+                  ),
+                ),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(tr('systemSettings')),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(context);
+                      context.read<AppsProvider>().openAppSettings(
+                        appInMemory.app.id,
+                      );
+                    },
+                  ),
+                ),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: const Icon(Icons.copy_rounded),
+                    title: Text(tr('copyAppURL')),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(context);
+                      Clipboard.setData(
+                        ClipboardData(text: appInMemory.app.url),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(tr('copiedToClipboard'))),
+                      );
+                    },
+                  ),
                 ),
                 if (appInMemory.installedInfo != null)
                   FutureBuilder<int>(
@@ -161,52 +187,67 @@ class AppActionsContextMenu {
                       if ((snapshot.data ?? 0) < 34) {
                         return const SizedBox.shrink();
                       }
-                      return ListTile(
-                        leading: const Icon(Icons.archive_outlined),
-                        title: Text(tr('archiveApp')),
-                        subtitle: Text(tr('archiveAppSubtitle')),
-                        onTap: () async {
-                          AppHaptics.selectionClick();
-                          Navigator.pop(context);
-                          final ok = await AppInstallService.requestArchive(
-                            appInMemory.app.id,
-                          );
-                          if (context.mounted && !ok) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(tr('archiveAppFailed'))),
+                      return ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.97,
+                        child: ListTile(
+                          leading: const Icon(Icons.archive_outlined),
+                          title: Text(tr('archiveApp')),
+                          subtitle: Text(tr('archiveAppSubtitle')),
+                          onTap: () async {
+                            AppHaptics.selectionClick();
+                            Navigator.pop(context);
+                            final ok = await AppInstallService.requestArchive(
+                              appInMemory.app.id,
                             );
-                          }
-                        },
+                            if (context.mounted && !ok) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(tr('archiveAppFailed')),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       );
                     },
                   ),
                 if (onEnterMultiSelect != null)
-                  ListTile(
-                    leading: const Icon(Icons.checklist_rounded),
-                    title: Text(tr('select')),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      Navigator.pop(context);
-                      onEnterMultiSelect();
-                    },
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.97,
+                    child: ListTile(
+                      leading: const Icon(Icons.checklist_rounded),
+                      title: Text(tr('select')),
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        Navigator.pop(context);
+                        onEnterMultiSelect();
+                      },
+                    ),
                   ),
                 const Divider(height: 1),
-                ListTile(
-                  leading: Icon(
-                    Icons.delete_outline_rounded,
-                    color: theme.colorScheme.error,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: theme.colorScheme.error,
+                    ),
+                    title: Text(
+                      tr('remove'),
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                    onTap: () {
+                      AppHaptics.heavyImpact();
+                      Navigator.pop(context);
+                      context.read<AppsProvider>().removeAppsWithModal(
+                        context,
+                        [appInMemory.app],
+                      );
+                    },
                   ),
-                  title: Text(
-                    tr('remove'),
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                  onTap: () {
-                    AppHaptics.heavyImpact();
-                    Navigator.pop(context);
-                    context.read<AppsProvider>().removeAppsWithModal(context, [
-                      appInMemory.app,
-                    ]);
-                  },
                 ),
               ],
             ),
