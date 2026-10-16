@@ -656,9 +656,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       ),
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: enableGlass ? 0.35 : 0.18,
-                        ),
+                        color: enableGlass
+                            ? colorScheme.primary.withValues(alpha: 0.18)
+                            : colorScheme.outlineVariant.withValues(alpha: 0.18),
                       ),
                     ),
                     child: Stack(
@@ -671,12 +671,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  colorScheme.onSurface.withValues(
-                                    alpha: enableGlass ? 0.06 : 0.04,
+                                  colorScheme.primaryContainer.withValues(
+                                    alpha: enableGlass ? 0.10 : 0.04,
                                   ),
                                   Colors.transparent,
                                 ],
-                                stops: const [0.0, 0.38],
+                                stops: const [0.0, 0.45],
                               ),
                             ),
                           ),
