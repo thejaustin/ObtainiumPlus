@@ -414,7 +414,10 @@ class _OmnibarState extends State<Omnibar> {
                     duration: Duration(milliseconds: animsEnabled ? 300 : 0),
                     curve: Curves.easeOutCubic,
                     child: _controller.text.isNotEmpty
-                        ? Semantics(
+                        ? ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: Semantics(
                             label: tr('clear'),
                             button: true,
                             child: IconButton(
@@ -426,6 +429,7 @@ class _OmnibarState extends State<Omnibar> {
                               },
                               padding: const EdgeInsets.only(right: 8),
                             ),
+                          ),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -441,7 +445,10 @@ class _OmnibarState extends State<Omnibar> {
                               top: 6,
                               bottom: 6,
                             ),
-                            child: Semantics(
+                            child: ScaleTouchWrapper(
+                              hapticOnPressDown: true,
+                              scaleDownFactor: 0.93,
+                              child: Semantics(
                               label: tr('add'),
                               button: true,
                               child: FilledButton.tonal(
@@ -485,6 +492,7 @@ class _OmnibarState extends State<Omnibar> {
                                   _isValidUrl ? tr('add') : tr('sources'),
                                 ),
                               ),
+                            ),
                             ),
                           )
                         : (_controller.text.trim().isNotEmpty

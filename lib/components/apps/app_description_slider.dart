@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -143,8 +144,11 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                     ),
                     child: Material(
                       color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _toggleExpansion,
+                      child: ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.98,
+                        child: InkWell(
+                          onTap: _toggleExpansion,
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
@@ -253,10 +257,12 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                         ),
                       ),
                     ),
+                    ),
                   ),
                 ),
               ),
             ),
+          ),
           ),
         );
       },
